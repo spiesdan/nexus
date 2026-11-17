@@ -1,0 +1,39 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T12:33:05.727Z",
+  "criados": {
+    "contatos": 1000,
+    "pedidos": 2
+  },
+  "medidas": [
+    {
+      "tela": "desktop",
+      "pedidos": {
+        "tempoAtePrimeiraPintura": 3537,
+        "valorAltoVisivel": true,
+        "valorBaixoVisivel": true,
+        "overflow": 0,
+        "msGoto": 8204
+      },
+      "contatos": {
+        "linhasRenderizadas": 25,
+        "totalDeclarado": "25",
+        "dizHaMais": true,
+        "overflow": 0,
+        "msAtePrimeiraLinha": 526,
+        "linhasDepoisDeMais": 50
+      }
+    },
+    {
+      "tela": "estreito",
+      "pedidos": {
+        "tempoAtePrimeiraPintura": 3445,
+        "valorAltoVisivel": true,
+        "valorBaixoVisivel": true,
+        "overflow": 0,
+        "msGoto": 3448
+      }
+    }
+  ],
+  "limpo": true
+}

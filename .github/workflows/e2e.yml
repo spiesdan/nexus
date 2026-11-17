@@ -349,6 +349,8 @@ jobs:
         followup-builder.spec.ts followup-queue.spec.ts
         distribuicao-atendimento.spec.ts followup-journey.spec.ts
         capacidades-do-agente.spec.ts
+        axe-telas-principais.spec.ts
+        campanhas-tela.spec.ts
         escopo-de-funil-do-agente.spec.ts
         followup-dossie.spec.ts followup-tempo-adaptativo.spec.ts
         gatilho-de-etapa.spec.ts gatilho-de-caso.spec.ts

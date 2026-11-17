@@ -4,6 +4,7 @@ import * as React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
 import { ProspeccaoClient } from "../prospeccao/_client";
@@ -44,14 +45,18 @@ export function CampanhasClient({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight">{t("Campanha")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t(
-            "Fale com os clientes cadastrados na sua região e encontre empresas novas — o mesmo lugar, duas campanhas.",
-          )}
-        </p>
-      </div>
+      {/* `NexusPageHeader`, não um `<h1 className="text-xl">` próprio: a
+          varredura §100 mede o tamanho do primeiro `<h1>` de cada rota e
+          exige tipografia única (`text-2xl`, 24 px). Esta tela respondia
+          20 px e entrava como família separada — e ela é o destino de
+          `/app/prospeccao`, que só existe como alias: quem era medido ali
+          não era o alias, era esta tela. */}
+      <NexusPageHeader
+        title={t("Campanha")}
+        subtitle={t(
+          "Fale com os clientes cadastrados na sua região e encontre empresas novas — o mesmo lugar, duas campanhas.",
+        )}
+      />
 
       <Tabs value={subtela} onValueChange={trocarSubtela}>
         <TabsList>

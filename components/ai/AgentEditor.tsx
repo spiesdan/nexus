@@ -80,8 +80,7 @@ function diffPatch(initial: FormState, current: FormState): AgentPatch {
   }
   if (initial.is_active !== current.is_active) patch.is_active = current.is_active;
   if (initial.model !== current.model) patch.model = current.model;
-  if (initial.system_prompt !== current.system_prompt)
-    patch.system_prompt = current.system_prompt;
+  if (initial.system_prompt !== current.system_prompt) patch.system_prompt = current.system_prompt;
   if (JSON.stringify(initial.config) !== JSON.stringify(current.config)) {
     patch.config = current.config;
   }
@@ -175,7 +174,13 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">{agent.name}</h2>
+          {/* `<h1>` e `text-2xl`: é o título da TELA de edição do agente — e ela
+              não tinha nenhum. Medido em 16/11/2026, abrindo
+              `/app/ai/agents/<id>` real: `h1: []`, e a aba "Geral" idem. A V-16
+              corrigiu o mesmo defeito em `AgentForm` (a tela de criação) e não
+              alcançou esta, porque o detalhe usa `AgentEditor`. A varredura de
+              aceite não pegou: `/app/ai/agents/[id]` é rota dinâmica. */}
+          <h1 className="text-2xl font-medium tracking-tight text-text">{agent.name}</h1>
           <p className="text-xs text-muted-foreground">
             {agent.is_default ? `${t("Agent default")} · ` : ""}
             {t("Criado em")} {new Date(agent.created_at).toLocaleDateString(tagDoIdioma)}
@@ -233,7 +238,8 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <Label htmlFor="is_active">{t("Agent ativo")}</Label>
             </div>
             <div className="rounded-2xl bg-muted/40 p-3 text-xs text-muted-foreground">
-              <strong>{t("Default:")}</strong> {agent.is_default ? t("Sim") : t("Não")} ({t("read-only — gerenciado pelo backend")}).
+              <strong>{t("Default:")}</strong> {agent.is_default ? t("Sim") : t("Não")} (
+              {t("read-only — gerenciado pelo backend")}).
             </div>
           </Card>
         </TabsContent>
@@ -247,7 +253,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
                 onValueChange={(v) => patchForm({ model: v as AgentModel })}
                 disabled={disabled}
               >
-                <SelectTrigger>
+                <SelectTrigger aria-label={t("Modelo")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,6 +276,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>Temperature (0–2)</Label>
                 <Input
+                  aria-label="Temperature (0–2)"
                   type="number"
                   step="0.05"
                   min={0}
@@ -282,6 +289,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>Max tokens (64–4096)</Label>
                 <Input
+                  aria-label="Max tokens (64–4096)"
                   type="number"
                   step="1"
                   min={64}
@@ -294,14 +302,13 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>{t("Janela de contexto (msgs, 1–50)")}</Label>
                 <Input
+                  aria-label={t("Janela de contexto (msgs, 1–50)")}
                   type="number"
                   step="1"
                   min={1}
                   max={50}
                   value={formState.config.context_message_window}
-                  onChange={(e) =>
-                    patchConfig({ context_message_window: Number(e.target.value) })
-                  }
+                  onChange={(e) => patchConfig({ context_message_window: Number(e.target.value) })}
                   disabled={disabled}
                 />
               </div>
@@ -315,6 +322,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>Top K (1–20)</Label>
                 <Input
+                  aria-label="Top K (1–20)"
                   type="number"
                   step="1"
                   min={1}
@@ -327,6 +335,7 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>Similarity threshold (0–1)</Label>
                 <Input
+                  aria-label="Similarity threshold (0–1)"
                   type="number"
                   step="0.01"
                   min={0}
@@ -341,14 +350,13 @@ export function AgentEditor({ agentId, initialData, readOnly = false }: Props) {
               <div className="space-y-1">
                 <Label>Confidence threshold (0–1)</Label>
                 <Input
+                  aria-label="Confidence threshold (0–1)"
                   type="number"
                   step="0.01"
                   min={0}
                   max={1}
                   value={formState.config.confidence_threshold}
-                  onChange={(e) =>
-                    patchConfig({ confidence_threshold: Number(e.target.value) })
-                  }
+                  onChange={(e) => patchConfig({ confidence_threshold: Number(e.target.value) })}
                   disabled={disabled}
                 />
               </div>

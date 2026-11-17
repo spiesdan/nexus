@@ -1,0 +1,985 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "producao2-publica",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/login/forgot",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1085,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_login_forgot.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Recuperar senha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Recuperar senha"
+      ],
+      "textoVisivel": 127,
+      "url": "/login/forgot"
+    },
+    {
+      "rota": "/login/mfa",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1350,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_login_mfa.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/login",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 873,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/login/recovery",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 885,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_login_recovery.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Recuperar acesso · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Recuperar acesso"
+      ],
+      "textoVisivel": 239,
+      "url": "/login/recovery"
+    },
+    {
+      "rota": "/login/reset",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 843,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_login_reset.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Nova senha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Definir nova senha"
+      ],
+      "textoVisivel": 107,
+      "url": "/login/reset"
+    },
+    {
+      "rota": "/signup",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 884,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_signup.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Criar conta · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Criar conta"
+      ],
+      "textoVisivel": 121,
+      "url": "/signup"
+    },
+    {
+      "rota": "/403",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 977,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_403.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "textoVisivel": 76,
+      "url": "/403"
+    },
+    {
+      "rota": "/500",
+      "largura": "desktop",
+      "status": 500,
+      "ms": 876,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_500.png",
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "falhasDeRede": [
+        "500 /500"
+      ],
+      "titulo": "Erro interno · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "500 — Erro interno"
+      ],
+      "textoVisivel": 108,
+      "url": "/500"
+    },
+    {
+      "rota": "/503",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 818,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_503.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Em manutenção · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "503 — Em manutenção"
+      ],
+      "textoVisivel": 54,
+      "url": "/503"
+    },
+    {
+      "rota": "/account-suspended",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 867,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_account_suspended.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conta suspensa · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conta suspensa"
+      ],
+      "textoVisivel": 121,
+      "url": "/account-suspended"
+    },
+    {
+      "rota": "/design",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 911,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_design.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Design Showcase — Nexus · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 12,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Nexus",
+        "Showcase de Design System — Nexus"
+      ],
+      "textoVisivel": 2523,
+      "url": "/design"
+    },
+    {
+      "rota": "/legal/privacy",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 869,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_legal_privacy.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Política de Privacidade · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Política de Privacidade"
+      ],
+      "textoVisivel": 2548,
+      "url": "/legal/privacy"
+    },
+    {
+      "rota": "/legal/terms",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 859,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_legal_terms.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Termos de Uso · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Termos de Uso"
+      ],
+      "textoVisivel": 2910,
+      "url": "/legal/terms"
+    },
+    {
+      "rota": "/onboarding/connect-nuvemshop",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1366,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_connect_nuvemshop.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/connect-whatsapp",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1370,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_connect_whatsapp.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/done",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1393,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_done.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/funil",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1484,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_funil.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/invite-team",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1414,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_invite_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1421,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/setup-ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1464,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_setup_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/testar",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1318,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_testar.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/welcome",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1335,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_onboarding_welcome.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 38,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 669,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/vitrine-agenda",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 896,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_vitrine_agenda.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Kit visual da Agenda · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 166,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Kit visual da Agenda"
+      ],
+      "textoVisivel": 4324,
+      "url": "/vitrine-agenda"
+    },
+    {
+      "rota": "/login/forgot",
+      "largura": "celular",
+      "status": 200,
+      "ms": 848,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_login_forgot.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Recuperar senha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Recuperar senha"
+      ],
+      "textoVisivel": 127,
+      "url": "/login/forgot"
+    },
+    {
+      "rota": "/login/mfa",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1405,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_login_mfa.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/login",
+      "largura": "celular",
+      "status": 200,
+      "ms": 884,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/login/recovery",
+      "largura": "celular",
+      "status": 200,
+      "ms": 868,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_login_recovery.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Recuperar acesso · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Recuperar acesso"
+      ],
+      "textoVisivel": 239,
+      "url": "/login/recovery"
+    },
+    {
+      "rota": "/login/reset",
+      "largura": "celular",
+      "status": 200,
+      "ms": 853,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_login_reset.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Nova senha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Definir nova senha"
+      ],
+      "textoVisivel": 107,
+      "url": "/login/reset"
+    },
+    {
+      "rota": "/signup",
+      "largura": "celular",
+      "status": 200,
+      "ms": 875,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_signup.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Criar conta · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Criar conta"
+      ],
+      "textoVisivel": 121,
+      "url": "/signup"
+    },
+    {
+      "rota": "/403",
+      "largura": "celular",
+      "status": 200,
+      "ms": 984,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_403.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "textoVisivel": 76,
+      "url": "/403"
+    },
+    {
+      "rota": "/500",
+      "largura": "celular",
+      "status": 500,
+      "ms": 866,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_500.png",
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "falhasDeRede": [
+        "500 /500"
+      ],
+      "titulo": "Erro interno · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "500 — Erro interno"
+      ],
+      "textoVisivel": 108,
+      "url": "/500"
+    },
+    {
+      "rota": "/503",
+      "largura": "celular",
+      "status": 200,
+      "ms": 824,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_503.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Em manutenção · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "503 — Em manutenção"
+      ],
+      "textoVisivel": 54,
+      "url": "/503"
+    },
+    {
+      "rota": "/account-suspended",
+      "largura": "celular",
+      "status": 200,
+      "ms": 872,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_account_suspended.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conta suspensa · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conta suspensa"
+      ],
+      "textoVisivel": 121,
+      "url": "/account-suspended"
+    },
+    {
+      "rota": "/design",
+      "largura": "celular",
+      "status": 200,
+      "ms": 876,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_design.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Design Showcase — Nexus · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 12,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Nexus",
+        "Showcase de Design System — Nexus"
+      ],
+      "textoVisivel": 2523,
+      "url": "/design"
+    },
+    {
+      "rota": "/legal/privacy",
+      "largura": "celular",
+      "status": 200,
+      "ms": 857,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_legal_privacy.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Política de Privacidade · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Política de Privacidade"
+      ],
+      "textoVisivel": 2548,
+      "url": "/legal/privacy"
+    },
+    {
+      "rota": "/legal/terms",
+      "largura": "celular",
+      "status": 200,
+      "ms": 904,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_legal_terms.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Termos de Uso · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Termos de Uso"
+      ],
+      "textoVisivel": 2910,
+      "url": "/legal/terms"
+    },
+    {
+      "rota": "/onboarding/connect-nuvemshop",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1373,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_connect_nuvemshop.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/connect-whatsapp",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1314,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_connect_whatsapp.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/done",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1370,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_done.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/funil",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1330,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_funil.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/invite-team",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1285,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_invite_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1359,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/setup-ai",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1378,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_setup_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/testar",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1297,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_testar.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/onboarding/welcome",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1297,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_onboarding_welcome.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 312,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/vitrine-agenda",
+      "largura": "celular",
+      "status": 200,
+      "ms": 884,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_vitrine_agenda.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Kit visual da Agenda · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 151,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Kit visual da Agenda"
+      ],
+      "textoVisivel": 4324,
+      "url": "/vitrine-agenda"
+    }
+  ]
+}

@@ -15,14 +15,10 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 
 import type { AgentVersionRow } from "@/hooks/ai/useAgentVersions";
 import { revertToVersionAction } from "../_actions";
@@ -70,6 +66,7 @@ function pickCounterpart(
 
 export function VersionHistory({ agentId, versions, readOnly }: Props) {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const router = useRouter();
   const [diffOpen, setDiffOpen] = React.useState(false);
   const [diffPair, setDiffPair] = React.useState<{
@@ -128,8 +125,7 @@ export function VersionHistory({ agentId, versions, readOnly }: Props) {
     <>
       <ol className="flex flex-col gap-2">
         {sorted.map((v) => {
-          const canRevert =
-            !readOnly && v.status !== "draft" && v.status !== "archived";
+          const canRevert = !readOnly && v.status !== "draft" && v.status !== "archived";
           return (
             <li
               key={v.id}
@@ -140,14 +136,14 @@ export function VersionHistory({ agentId, versions, readOnly }: Props) {
               </Badge>
               <span className="font-mono">v{v.version_number}</span>
               <span className="text-xs text-muted-foreground">
-                {new Date(v.created_at).toLocaleString()}
+                {new Date(v.created_at).toLocaleString(tagDoIdioma)}
               </span>
               <span className="font-mono text-xs text-muted-foreground">
                 {v.provider}/{v.model}
               </span>
               {v.published_at ? (
                 <span className="text-xs text-muted-foreground">
-                  {t("publicada em")} {new Date(v.published_at).toLocaleString()}
+                  {t("publicada em")} {new Date(v.published_at).toLocaleString(tagDoIdioma)}
                 </span>
               ) : null}
               <div className="ml-auto flex gap-2">
@@ -155,11 +151,7 @@ export function VersionHistory({ agentId, versions, readOnly }: Props) {
                   {t("Diff")}
                 </Button>
                 {canRevert ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRevertTarget(v)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setRevertTarget(v)}>
                     {t("Reverter")}
                   </Button>
                 ) : null}
@@ -196,7 +188,9 @@ export function VersionHistory({ agentId, versions, readOnly }: Props) {
             <>
               {t("Uma nova versão idêntica a v")}
               {revertTarget.version_number}
-              {t(" será criada e publicada imediatamente. A versão atualmente publicada vira superseded.")}
+              {t(
+                " será criada e publicada imediatamente. A versão atualmente publicada vira superseded.",
+              )}
             </>
           }
           confirmLabel={t("Confirmar revert")}

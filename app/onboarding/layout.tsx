@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
@@ -9,6 +11,19 @@ import { branding } from "@/lib/branding";
 import { passosVisiveis } from "@/lib/onboarding/passos";
 import { env } from "@/lib/env";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { tituloDaRota } from "@/lib/navigation/titulos";
+
+/**
+ * Título da aba no wizard. O rótulo de cada passo vem de `lib/onboarding/passos.ts`
+ * — a MESMA definição que alimenta o indicador de progresso e o roteador. Três
+ * listas de passos já divergiram neste repo; uma quarta, só para o `<title>`,
+ * seria a primeira a envelhecer.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const caminho = (await headers()).get("x-pathname") ?? "";
+  const titulo = tituloDaRota(caminho);
+  return titulo ? { title: titulo } : {};
+}
 
 export default async function OnboardingLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAuth();

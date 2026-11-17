@@ -24,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { NexusConfirmDialog } from "@/components/nexus-ui/forms/NexusConfirmDialog";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import { Clock, MagnifyingGlass, Trash } from "@/lib/ui/icons";
 import { useT } from "@/hooks/i18n/useT";
 import { rotuloDoStatus, tomDoStatus } from "@/lib/followup/eventos-legiveis";
@@ -118,7 +119,8 @@ export function QueueTab({ canWrite }: Props) {
     }),
     [status, pointerId, q],
   );
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useFollowupQueue(filters);
+  const { data, isLoading, hasNextPage, isFetchingNextPage, isPaused, fetchNextPage } =
+    useFollowupQueue(filters);
   const cancelEnrollment = useCancelFollowupEnrollment();
   const cancelPromise = useCancelFollowupPromise();
 
@@ -258,13 +260,17 @@ export function QueueTab({ canWrite }: Props) {
         </div>
       )}
 
-      {hasNextPage && (
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-            {isFetchingNextPage ? t("Carregando...") : t("Carregar mais")}
-          </Button>
-        </div>
-      )}
+      {hasNextPage &&
+        // Offline a busca fica PAUSADA e o botão não faria nada (V-42).
+        (isPaused ? (
+          <AvisoSemConexao />
+        ) : (
+          <div className="flex justify-center">
+            <Button variant="outline" size="sm" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+              {isFetchingNextPage ? t("Carregando...") : t("Carregar mais")}
+            </Button>
+          </div>
+        ))}
 
       {pendingCancel && (
         <NexusConfirmDialog

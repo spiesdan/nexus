@@ -49,17 +49,28 @@ export default async function CarteiraPage() {
     activeOrg.orgId,
     "2000-01-01",
   );
+  // 10.001 e não 10.000: o 10.001º é o que PROVA que a lista foi cortada.
+  // Antes eram 10.000 cegos — acima disso a carteira encolhia em silêncio e o
+  // total anunciado era o da amostra, apresentado como o da base.
+  const TETO_DA_CARTEIRA = 10_000;
   const promessaContatos = supabase
     .from("contacts")
     .select("id, display_name, name, phone_number")
     .eq("organization_id", activeOrg.orgId)
-    .limit(10000);
+    // Mesclado é a mesma pessoa (ponteiro para a canônica) e anonimizado é o
+    // que a LGPD mandou apagar. Nenhum dos dois é cliente da carteira; os dois
+    // entravam, inflando "prospects" e duplicando a pessoa.
+    .is("is_merged_into", null)
+    .eq("is_anonymized", false)
+    .limit(TETO_DA_CARTEIRA + 1);
 
-  const [{ data: org }, { linhas: vendasCruas }, { data: contatos }] = await Promise.all([
+  const [{ data: org }, { linhas: vendasCruas }, { data: contatosCrus }] = await Promise.all([
     promessaOrg,
     promessaVendas,
     promessaContatos,
   ]);
+  const amostraParcial = (contatosCrus ?? []).length > TETO_DA_CARTEIRA;
+  const contatos = (contatosCrus ?? []).slice(0, TETO_DA_CARTEIRA);
 
   const fuso = fusoValido((org as unknown as { timezone?: string | null } | null)?.timezone ?? null);
   const hoje = new Intl.DateTimeFormat("en-CA", { timeZone: fuso, year: "numeric", month: "2-digit", day: "2-digit" }).format(
@@ -74,7 +85,7 @@ export default async function CarteiraPage() {
       dia: diaNoFuso(p.created_at, fuso),
     }));
   const nomes = new Map(
-    ((contatos ?? []) as { id: string; display_name: string | null; name: string | null; phone_number: string | null }[]).map(
+    (contatos as { id: string; display_name: string | null; name: string | null; phone_number: string | null }[]).map(
       (c) => [c.id, { nome: c.display_name ?? c.name ?? "—", fone: c.phone_number }],
     ),
   );
@@ -120,5 +131,12 @@ export default async function CarteiraPage() {
   });
   linhas.sort((a, b) => (a.dias_parado ?? 999999) - (b.dias_parado ?? 999999));
 
-  return <CarteiraClient linhas={linhas} resumo={resumo} total={nomes.size} />;
+  return (
+    <CarteiraClient
+      linhas={linhas}
+      resumo={resumo}
+      total={nomes.size}
+      amostraParcial={amostraParcial}
+    />
+  );
 }

@@ -22,9 +22,9 @@ import { randomUUID } from "node:crypto";
 
 import { type NextRequest } from "next/server";
 
-import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { roleAtLeast } from "@/lib/auth/types";
 import { aplicarPatchDeItens } from "@/lib/comercial/patch-itens";
 import { logger } from "@/lib/logger";
 import { itensPatchSchema } from "@/lib/schemas/pedidos";
@@ -98,11 +98,24 @@ export async function PATCH(
     patch: parsed.data,
     userId: authz.user.id,
     requestId,
+    // A mesma alçada da criação: gerente (ou admin de plataforma) pode furar
+    // tabela/estoque; o vendedor, não.
+    podeIgnorar:
+      authz.user.is_platform_admin === true || roleAtLeast(authz.org.role, "manager"),
   });
 
   if (!resultado.ok) {
     if (resultado.motivo === "nao_encontrado") {
       return fail("not_found", "Pedido não encontrado.", 404, { requestId });
+    }
+    // Falha de GRAVAÇÃO não é erro de quem chamou. Antes, `{ok:false}` sem motivo
+    // caía no 422 "Um dos itens não pertence a este pedido" — e o usuário via
+    // "erro ao remover" quando o banco havia recusado a escrita (medido em
+    // 17/11/2026: `duplicate key ... commercial_order_items_pkey`).
+    if (resultado.motivo === "falha_ao_gravar" || resultado.motivo === undefined) {
+      return fail("internal_error", "Não foi possível atualizar os itens. Tente novamente.", 500, {
+        requestId,
+      });
     }
     if (resultado.motivo === "produto_desconhecido") {
       // A posição chega 0-based; a tela e a mensagem falam em 1-based, e a
@@ -114,6 +127,21 @@ export async function PATCH(
         422,
         { requestId, details: { itens: [`item ${item}: produto não encontrado`] } },
       );
+    }
+    // As regras comerciais da criação, agora aplicadas à edição: preço de
+    // tabela, estoque e alçada de desconto. A mensagem é a mesma que a criação
+    // devolveria — a tela mostra o motivo, não um "erro ao salvar".
+    if (
+      resultado.motivo === "preco_fora_da_tabela" ||
+      resultado.motivo === "estoque_insuficiente" ||
+      resultado.motivo === "desconto_maior_que_subtotal" ||
+      resultado.motivo === "desconto_acima_da_alcada"
+    ) {
+      const detalhe = resultado.detalhe ?? "A alteração viola uma regra comercial.";
+      return fail("validation_failed", detalhe, 422, {
+        requestId,
+        details: { itens: [detalhe] },
+      });
     }
     // `remover`/`ajustar` com id que não é deste pedido é erro de quem
     // chamou. Devolver 200 aqui faria a tela dizer "2 itens removidos" tendo
@@ -133,6 +161,11 @@ export async function PATCH(
       "O pedido está marcado como exige NF. Se a nota já foi emitida, precisa ser cancelada e refeita com os itens novos.",
     );
   }
+  if (resultado.aprovacao_necessaria) {
+    avisos.push(
+      "O desconto passou do teto do vendedor: o pedido voltou para análise e precisa da aprovação de um gerente.",
+    );
+  }
 
   logger.info("itens do pedido alterados", {
     pedidoId: id,
@@ -147,7 +180,8 @@ export async function PATCH(
       ajustados: resultado.ajustados ?? 0,
       subtotal_cents: resultado.subtotal_cents,
       total_cents: resultado.total_cents,
-      status: pedido.status,
+      status: resultado.status ?? pedido.status,
+      aprovacao_necessaria: resultado.aprovacao_necessaria ?? false,
       avisos,
     },
     { requestId },

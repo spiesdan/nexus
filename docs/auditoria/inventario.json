@@ -1,0 +1,8136 @@
+{
+  "resumo": {
+    "gerado_em": "2026-11-16T01:10:32.592Z",
+    "commit": "9f8e6faa",
+    "telas": 143,
+    "resolvers": 13,
+    "apis": 418,
+    "layouts": 13,
+    "erros": 7,
+    "estados": 8,
+    "arquivos_especiais": 2,
+    "migrations": {
+      "total": 292,
+      "primeira": "00001_initial_schema.sql",
+      "ultima": "20261118120000_0311_entrada_do_destino.sql",
+      "semPadrao": [
+        "00001_initial_schema.sql"
+      ],
+      "duplicadas": []
+    },
+    "testes": {
+      "tests/unit": 627,
+      "lib": 258,
+      "tests/invariants": 159,
+      "tests/e2e": 99,
+      "app": 60,
+      "tests/fiscal": 10,
+      "components": 7,
+      "tests/api": 6,
+      "tests/shell": 5,
+      "tests/journeys": 4,
+      "scripts": 2
+    },
+    "componentes": {
+      "inbox": 39,
+      "admin": 31,
+      "nexus-ui": 25,
+      "assistente": 22,
+      "kanban": 20,
+      "ui": 19,
+      "ai": 16,
+      "shell": 15,
+      "contacts": 11,
+      "agenda": 10,
+      "auth": 10,
+      "connections": 9,
+      "empty": 3,
+      "feedback": 3,
+      "app": 2,
+      "branding": 2,
+      "filters": 2,
+      "fotos": 1,
+      "operacao": 1,
+      "prospeccao": 1
+    },
+    "apis_por_prefixo": {
+      "/api/v1/ai": 68,
+      "/api/v1/prospecting": 32,
+      "/api/v1/cron": 30,
+      "/api/v1/shipments": 25,
+      "/api/v1/admin": 21,
+      "/api/v1/conversations": 21,
+      "/api/v1/leads": 13,
+      "/api/v1/commercial-orders": 11,
+      "/api/v1/contacts": 10,
+      "/api/v1/invoices": 10,
+      "/api/v1/team": 10,
+      "/api/v1/products": 9,
+      "/api/v1/webhooks": 9,
+      "/api/v1/financeiro": 8,
+      "/api/v1/fiscal-entradas": 8,
+      "/api/v1/pipelines": 7,
+      "/api/v1/agenda": 6,
+      "/api/v1/automatic-sales": 5,
+      "/api/v1/automation-rules": 5,
+      "/api/v1/channels": 5,
+      "/api/v1/fleet": 5,
+      "/api/v1/lgpd": 5,
+      "/api/v1/system": 5,
+      "/api/v1/channel-sessions": 4,
+      "/api/v1/fiscal-inutilizacoes": 4,
+      "/api/v1/fiscal-ibpt": 3,
+      "/api/v1/price-tables": 3,
+      "/api/v1/purchase-orders": 3,
+      "/api/v1/settings": 3,
+      "/api/v1/webhook-sources": 3,
+      "/api/v1/alertas": 2,
+      "/api/v1/assistente": 2,
+      "/api/v1/attendants": 2,
+      "/api/v1/audit": 2,
+      "/api/v1/categories": 2,
+      "/api/v1/commissions": 2,
+      "/api/v1/fiscal-cfop-equivalentes": 2,
+      "/api/v1/fiscal-settings": 2,
+      "/api/v1/inventory": 2,
+      "/api/v1/message-templates": 2,
+      "/api/v1/messages": 2,
+      "/api/v1/metrics": 2,
+      "/api/v1/onboarding": 2,
+      "/api/v1/tarefas": 2,
+      "/api/v1/titulos": 2,
+      "/api/internal/agents": 1,
+      "/api/mcp": 1,
+      "/api/v1/atividades": 1,
+      "/api/v1/auth": 1,
+      "/api/v1/comercial": 1,
+      "/api/v1/commercial-goals": 1,
+      "/api/v1/commercial-policies": 1,
+      "/api/v1/conversation-tags": 1,
+      "/api/v1/copilot": 1,
+      "/api/v1/demandas": 1,
+      "/api/v1/faturamento": 1,
+      "/api/v1/financial-pagaveis": 1,
+      "/api/v1/fiscal-eventos": 1,
+      "/api/v1/fiscal-events": 1,
+      "/api/v1/fiscal-fornecedores": 1,
+      "/api/v1/fiscal-jobs": 1,
+      "/api/v1/fiscal-manifestacoes": 1,
+      "/api/v1/fiscal-produtos": 1,
+      "/api/v1/fiscal-relatorios": 1,
+      "/api/v1/fiscal-sincronizacoes": 1,
+      "/api/v1/health": 1,
+      "/api/v1/home": 1,
+      "/api/v1/indicadores": 1,
+      "/api/v1/integrations": 1,
+      "/api/v1/lead-captures": 1,
+      "/api/v1/marca": 1,
+      "/api/v1/mcp": 1,
+      "/api/v1/notifications": 1,
+      "/api/v1/public": 1,
+      "/api/v1/radar-compras": 1,
+      "/api/v1/roadmap": 1,
+      "/api/v1/rotas": 1,
+      "/api/v1/sales-brain": 1,
+      "/api/v1/sped": 1,
+      "/api/v1/suppliers": 1,
+      "/auth/confirm": 1,
+      "/icone-512": 1
+    },
+    "telas_por_grupo": {
+      "administração": 20,
+      "app (outros)": 6,
+      "atendimento": 2,
+      "configuração": 21,
+      "crm": 5,
+      "expedição": 7,
+      "financeiro": 2,
+      "fiscal": 13,
+      "ia": 22,
+      "insights": 4,
+      "onboarding": 8,
+      "público e legal": 16,
+      "receita": 9,
+      "vendas e catálogo": 8
+    }
+  },
+  "itens": [
+    {
+      "tipo": "erro",
+      "rota": "/",
+      "arquivo": "app/(public)/error.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "client"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "layout",
+      "rota": "/",
+      "arquivo": "app/(public)/layout.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 82
+    },
+    {
+      "tipo": "erro",
+      "rota": "/",
+      "arquivo": "app/error.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "client"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "erro",
+      "rota": "/",
+      "arquivo": "app/global-error.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "client"
+      ],
+      "linhas": 112
+    },
+    {
+      "tipo": "arquivo-especial",
+      "rota": "/",
+      "arquivo": "app/icon.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 104
+    },
+    {
+      "tipo": "layout",
+      "rota": "/",
+      "arquivo": "app/layout.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "client",
+        "metadata"
+      ],
+      "linhas": 314
+    },
+    {
+      "tipo": "arquivo-especial",
+      "rota": "/",
+      "arquivo": "app/manifest.ts",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 33
+    },
+    {
+      "tipo": "erro",
+      "rota": "/",
+      "arquivo": "app/not-found.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 7
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/",
+      "arquivo": "app/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/403",
+      "arquivo": "app/403/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 7
+    },
+    {
+      "tipo": "tela",
+      "rota": "/500",
+      "arquivo": "app/500/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 18
+    },
+    {
+      "tipo": "tela",
+      "rota": "/503",
+      "arquivo": "app/503/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 11
+    },
+    {
+      "tipo": "tela",
+      "rota": "/account-suspended",
+      "arquivo": "app/account-suspended/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 26
+    },
+    {
+      "tipo": "layout",
+      "rota": "/admin",
+      "arquivo": "app/admin/(protected)/layout.tsx",
+      "grupo": "administração",
+      "flags": [
+        "redirect",
+        "platform-admin"
+      ],
+      "linhas": 32
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/admin",
+      "arquivo": "app/admin/(protected)/page.tsx",
+      "grupo": "administração",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 6
+    },
+    {
+      "tipo": "layout",
+      "rota": "/admin",
+      "arquivo": "app/admin/layout.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 13
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/audit",
+      "arquivo": "app/admin/(protected)/audit/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 10
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/audit/:entryId",
+      "arquivo": "app/admin/(protected)/audit/[entryId]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 15
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/dashboard",
+      "arquivo": "app/admin/(protected)/dashboard/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/forbidden",
+      "arquivo": "app/admin/forbidden/page.tsx",
+      "grupo": "administração",
+      "flags": [
+        "platform-admin"
+      ],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/google",
+      "arquivo": "app/admin/(protected)/google/page.tsx",
+      "grupo": "administração",
+      "flags": [
+        "redirect",
+        "notFound",
+        "platform-admin",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 89
+    },
+    {
+      "tipo": "layout",
+      "rota": "/admin/inbox",
+      "arquivo": "app/admin/(protected)/inbox/layout.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 23
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/inbox",
+      "arquivo": "app/admin/(protected)/inbox/page.tsx",
+      "grupo": "administração",
+      "flags": [
+        "platform-admin"
+      ],
+      "linhas": 23
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/inbox/:conversationId",
+      "arquivo": "app/admin/(protected)/inbox/[conversationId]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 11
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/incidents",
+      "arquivo": "app/admin/(protected)/incidents/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/incidents/:id",
+      "arquivo": "app/admin/(protected)/incidents/[id]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 13
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/lgpd",
+      "arquivo": "app/admin/(protected)/lgpd/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 10
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/lgpd/requests/:id",
+      "arquivo": "app/admin/(protected)/lgpd/requests/[id]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 15
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/marca",
+      "arquivo": "app/admin/(protected)/marca/page.tsx",
+      "grupo": "administração",
+      "flags": [
+        "redirect",
+        "notFound",
+        "platform-admin",
+        "force-dynamic"
+      ],
+      "linhas": 115
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/platform-admins",
+      "arquivo": "app/admin/(protected)/platform-admins/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/tenants",
+      "arquivo": "app/admin/(protected)/tenants/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "layout",
+      "rota": "/admin/tenants/:id",
+      "arquivo": "app/admin/(protected)/tenants/[id]/layout.tsx",
+      "grupo": "administração",
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 93
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/tenants/:id",
+      "arquivo": "app/admin/(protected)/tenants/[id]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 11
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/tenants/:id/health",
+      "arquivo": "app/admin/(protected)/tenants/[id]/health/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 11
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/tenants/new",
+      "arquivo": "app/admin/(protected)/tenants/new/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/usage",
+      "arquivo": "app/admin/(protected)/usage/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/users",
+      "arquivo": "app/admin/(protected)/users/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/admin/users/:id",
+      "arquivo": "app/admin/(protected)/users/[id]/page.tsx",
+      "grupo": "administração",
+      "flags": [],
+      "linhas": 13
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/internal/agents/run",
+      "arquivo": "app/api/internal/agents/run/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 115
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/mcp",
+      "arquivo": "app/api/mcp/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 75
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/audit",
+      "arquivo": "app/api/v1/admin/audit/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 177
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/audit/:entryId",
+      "arquivo": "app/api/v1/admin/audit/[entryId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 132
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/dashboard/kpis",
+      "arquivo": "app/api/v1/admin/dashboard/kpis/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 326
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/impersonate/end",
+      "arquivo": "app/api/v1/admin/impersonate/end/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "platform-admin"
+      ],
+      "linhas": 63
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/inbox/conversations",
+      "arquivo": "app/api/v1/admin/inbox/conversations/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 157
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/inbox/conversations/:id",
+      "arquivo": "app/api/v1/admin/inbox/conversations/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 128
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/incidents",
+      "arquivo": "app/api/v1/admin/incidents/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 151
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/incidents/:id",
+      "arquivo": "app/api/v1/admin/incidents/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 81
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/incidents/:id/resolve",
+      "arquivo": "app/api/v1/admin/incidents/[id]/resolve/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 116
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/lgpd/requests",
+      "arquivo": "app/api/v1/admin/lgpd/requests/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 209
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/lgpd/requests/:id",
+      "arquivo": "app/api/v1/admin/lgpd/requests/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/platform-admins",
+      "arquivo": "app/api/v1/admin/platform-admins/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 212
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants",
+      "arquivo": "app/api/v1/admin/tenants/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 246
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants/:id",
+      "arquivo": "app/api/v1/admin/tenants/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 161
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants/:id/health",
+      "arquivo": "app/api/v1/admin/tenants/[id]/health/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 331
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants/:id/impersonate",
+      "arquivo": "app/api/v1/admin/tenants/[id]/impersonate/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 147
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants/:id/reactivate",
+      "arquivo": "app/api/v1/admin/tenants/[id]/reactivate/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 120
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/tenants/:id/suspend",
+      "arquivo": "app/api/v1/admin/tenants/[id]/suspend/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 115
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/usage",
+      "arquivo": "app/api/v1/admin/usage/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 295
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/users",
+      "arquivo": "app/api/v1/admin/users/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 351
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/admin/users/:id",
+      "arquivo": "app/api/v1/admin/users/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role"
+      ],
+      "linhas": 135
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/agendamentos",
+      "arquivo": "app/api/v1/agenda/agendamentos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole"
+      ],
+      "linhas": 288
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/google/callback",
+      "arquivo": "app/api/v1/agenda/google/callback/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 440
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/google/connect",
+      "arquivo": "app/api/v1/agenda/google/connect/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "redirect",
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 121
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/google/desconectar",
+      "arquivo": "app/api/v1/agenda/google/desconectar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 159
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/horarios-livres",
+      "arquivo": "app/api/v1/agenda/horarios-livres/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole"
+      ],
+      "linhas": 165
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/agenda/tipos",
+      "arquivo": "app/api/v1/agenda/tipos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 229
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents",
+      "arquivo": "app/api/v1/ai/agents/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 243
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id",
+      "arquivo": "app/api/v1/ai/agents/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 269
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/duplicate",
+      "arquivo": "app/api/v1/ai/agents/[id]/duplicate/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/pause",
+      "arquivo": "app/api/v1/ai/agents/[id]/pause/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 75
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/proposals",
+      "arquivo": "app/api/v1/ai/agents/[id]/proposals/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 74
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/proposals/:pid/apply",
+      "arquivo": "app/api/v1/ai/agents/[id]/proposals/[pid]/apply/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 80
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/publish",
+      "arquivo": "app/api/v1/ai/agents/[id]/publish/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 138
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/runs",
+      "arquivo": "app/api/v1/ai/agents/[id]/runs/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 214
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/tool-usage",
+      "arquivo": "app/api/v1/ai/agents/[id]/tool-usage/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 145
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/versions",
+      "arquivo": "app/api/v1/ai/agents/[id]/versions/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 194
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/versions/:vid",
+      "arquivo": "app/api/v1/ai/agents/[id]/versions/[vid]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 144
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/:id/versions/:vid/test",
+      "arquivo": "app/api/v1/ai/agents/[id]/versions/[vid]/test/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 250
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/agents/assignable",
+      "arquivo": "app/api/v1/ai/agents/assignable/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 104
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/automatico-ativo",
+      "arquivo": "app/api/v1/ai/automatico-ativo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/budget",
+      "arquivo": "app/api/v1/ai/budget/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 335
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/cases",
+      "arquivo": "app/api/v1/ai/cases/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 50
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/cases/:id",
+      "arquivo": "app/api/v1/ai/cases/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/cases/:id/reply",
+      "arquivo": "app/api/v1/ai/cases/[id]/reply/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 220
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/controle/resumo",
+      "arquivo": "app/api/v1/ai/controle/resumo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 68
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/credentials",
+      "arquivo": "app/api/v1/ai/credentials/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 118
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/credentials/:id",
+      "arquivo": "app/api/v1/ai/credentials/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 100
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/credentials/:id/revalidate",
+      "arquivo": "app/api/v1/ai/credentials/[id]/revalidate/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 111
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/decisions/:id/decide",
+      "arquivo": "app/api/v1/ai/decisions/[id]/decide/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 88
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/decisions/:id/executar",
+      "arquivo": "app/api/v1/ai/decisions/[id]/executar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 134
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/decisions/propose",
+      "arquivo": "app/api/v1/ai/decisions/propose/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 130
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/evolution",
+      "arquivo": "app/api/v1/ai/evolution/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 243
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followup-flows",
+      "arquivo": "app/api/v1/ai/followup-flows/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 84
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followup-flows/:id",
+      "arquivo": "app/api/v1/ai/followup-flows/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 227
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followup-flows/:id/disable",
+      "arquivo": "app/api/v1/ai/followup-flows/[id]/disable/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 68
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followup-flows/:id/publish",
+      "arquivo": "app/api/v1/ai/followup-flows/[id]/publish/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 179
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followup-flows/:id/rollback",
+      "arquivo": "app/api/v1/ai/followup-flows/[id]/rollback/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 103
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments",
+      "arquivo": "app/api/v1/ai/followups/enrollments/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 88
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 249
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id/cancel",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/cancel/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 98
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id/pause",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/pause/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 54
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id/resume",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/resume/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 55
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id/skip",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/skip/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 76
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/enrollments/:id/snooze",
+      "arquivo": "app/api/v1/ai/followups/enrollments/[id]/snooze/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 72
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/promises/:id/cancel",
+      "arquivo": "app/api/v1/ai/followups/promises/[id]/cancel/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 93
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/followups/queue",
+      "arquivo": "app/api/v1/ai/followups/queue/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 280
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/guardrail-layers",
+      "arquivo": "app/api/v1/ai/guardrail-layers/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 137
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/inbox",
+      "arquivo": "app/api/v1/ai/inbox/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/inbox/:id",
+      "arquivo": "app/api/v1/ai/inbox/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 73
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/chave",
+      "arquivo": "app/api/v1/ai/knowledge/chave/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 61
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/sources",
+      "arquivo": "app/api/v1/ai/knowledge/sources/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 318
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/sources/:id",
+      "arquivo": "app/api/v1/ai/knowledge/sources/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 295
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/sources/:id/reindex",
+      "arquivo": "app/api/v1/ai/knowledge/sources/[id]/reindex/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 114
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/sources/:id/trechos",
+      "arquivo": "app/api/v1/ai/knowledge/sources/[id]/trechos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 87
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/knowledge/sources/upload",
+      "arquivo": "app/api/v1/ai/knowledge/sources/upload/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 216
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/memory",
+      "arquivo": "app/api/v1/ai/memory/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 126
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/memory/entries",
+      "arquivo": "app/api/v1/ai/memory/entries/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 65
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/memory/entries/:id",
+      "arquivo": "app/api/v1/ai/memory/entries/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 68
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/memory/versions/:id",
+      "arquivo": "app/api/v1/ai/memory/versions/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 45
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/operator-metrics",
+      "arquivo": "app/api/v1/ai/operator-metrics/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 90
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/pacing",
+      "arquivo": "app/api/v1/ai/pacing/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 208
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/policies",
+      "arquivo": "app/api/v1/ai/policies/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/providers",
+      "arquivo": "app/api/v1/ai/providers/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 332
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/providers/:provider/models",
+      "arquivo": "app/api/v1/ai/providers/[provider]/models/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/routers",
+      "arquivo": "app/api/v1/ai/routers/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 158
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/routers/:id",
+      "arquivo": "app/api/v1/ai/routers/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 211
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/routers/:id/members",
+      "arquivo": "app/api/v1/ai/routers/[id]/members/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 119
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/routers/:id/test",
+      "arquivo": "app/api/v1/ai/routers/[id]/test/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 132
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/runs",
+      "arquivo": "app/api/v1/ai/runs/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 141
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/skills",
+      "arquivo": "app/api/v1/ai/skills/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 97
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/skills/:name",
+      "arquivo": "app/api/v1/ai/skills/[name]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 73
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/skills/:name/install",
+      "arquivo": "app/api/v1/ai/skills/[name]/install/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/skills/import",
+      "arquivo": "app/api/v1/ai/skills/import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 85
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/ai/usage",
+      "arquivo": "app/api/v1/ai/usage/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 180
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/alertas",
+      "arquivo": "app/api/v1/alertas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 123
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/alertas/:id",
+      "arquivo": "app/api/v1/alertas/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 116
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/assistente/chat",
+      "arquivo": "app/api/v1/assistente/chat/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 181
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/assistente/executar",
+      "arquivo": "app/api/v1/assistente/executar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 76
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/atividades",
+      "arquivo": "app/api/v1/atividades/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 95
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/attendants/availability",
+      "arquivo": "app/api/v1/attendants/availability/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 108
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/attendants/availability/:user_id",
+      "arquivo": "app/api/v1/attendants/availability/[user_id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 120
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/audit",
+      "arquivo": "app/api/v1/audit/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/audit/export",
+      "arquivo": "app/api/v1/audit/export/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 104
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/auth/realtime-token",
+      "arquivo": "app/api/v1/auth/realtime-token/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automatic-sales/campaigns",
+      "arquivo": "app/api/v1/automatic-sales/campaigns/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 145
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automatic-sales/campaigns/:id",
+      "arquivo": "app/api/v1/automatic-sales/campaigns/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 109
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automatic-sales/campaigns/:id/painel",
+      "arquivo": "app/api/v1/automatic-sales/campaigns/[id]/painel/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 71
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automatic-sales/campaigns/:id/queue",
+      "arquivo": "app/api/v1/automatic-sales/campaigns/[id]/queue/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 54
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automatic-sales/queue/:id",
+      "arquivo": "app/api/v1/automatic-sales/queue/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 163
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automation-rules",
+      "arquivo": "app/api/v1/automation-rules/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 95
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automation-rules/:id",
+      "arquivo": "app/api/v1/automation-rules/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 131
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automation-rules/:id/runs",
+      "arquivo": "app/api/v1/automation-rules/[id]/runs/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 42
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automation-rules/runs",
+      "arquivo": "app/api/v1/automation-rules/runs/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 37
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/automation-rules/runs/:runId/resend",
+      "arquivo": "app/api/v1/automation-rules/runs/[runId]/resend/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 154
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/categories",
+      "arquivo": "app/api/v1/categories/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 89
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/categories/:id",
+      "arquivo": "app/api/v1/categories/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 143
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channel-sessions",
+      "arquivo": "app/api/v1/channel-sessions/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 195
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channel-sessions/:id",
+      "arquivo": "app/api/v1/channel-sessions/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 524
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channel-sessions/:id/qr",
+      "arquivo": "app/api/v1/channel-sessions/[id]/qr/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channel-sessions/:id/reconnect",
+      "arquivo": "app/api/v1/channel-sessions/[id]/reconnect/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 158
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channels/official",
+      "arquivo": "app/api/v1/channels/official/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 217
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channels/partner",
+      "arquivo": "app/api/v1/channels/partner/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 164
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channels/partner/templates",
+      "arquivo": "app/api/v1/channels/partner/templates/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 255
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channels/partner/templates/media",
+      "arquivo": "app/api/v1/channels/partner/templates/media/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 100
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/channels/templates",
+      "arquivo": "app/api/v1/channels/templates/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 200
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/comercial/inativos",
+      "arquivo": "app/api/v1/comercial/inativos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 48
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-goals",
+      "arquivo": "app/api/v1/commercial-goals/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 101
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders",
+      "arquivo": "app/api/v1/commercial-orders/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 185
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id",
+      "arquivo": "app/api/v1/commercial-orders/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 374
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/duplicar",
+      "arquivo": "app/api/v1/commercial-orders/[id]/duplicar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 187
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/itens",
+      "arquivo": "app/api/v1/commercial-orders/[id]/itens/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 156
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/mercos",
+      "arquivo": "app/api/v1/commercial-orders/[id]/mercos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 103
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/orcamento",
+      "arquivo": "app/api/v1/commercial-orders/[id]/orcamento/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role"
+      ],
+      "linhas": 154
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/pdf",
+      "arquivo": "app/api/v1/commercial-orders/[id]/pdf/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/:id/timeline",
+      "arquivo": "app/api/v1/commercial-orders/[id]/timeline/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 77
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/importar-ia",
+      "arquivo": "app/api/v1/commercial-orders/importar-ia/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 461
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/importar-mercos",
+      "arquivo": "app/api/v1/commercial-orders/importar-mercos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 82
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-orders/pdf",
+      "arquivo": "app/api/v1/commercial-orders/pdf/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 69
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commercial-policies",
+      "arquivo": "app/api/v1/commercial-policies/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 30
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commissions",
+      "arquivo": "app/api/v1/commissions/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 124
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/commissions/baixas",
+      "arquivo": "app/api/v1/commissions/baixas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 109
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts",
+      "arquivo": "app/api/v1/contacts/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 116
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id",
+      "arquivo": "app/api/v1/contacts/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 144
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id/avatar",
+      "arquivo": "app/api/v1/contacts/[id]/avatar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 95
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id/crm-summary",
+      "arquivo": "app/api/v1/contacts/[id]/crm-summary/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 160
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id/proposals",
+      "arquivo": "app/api/v1/contacts/[id]/proposals/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 57
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id/proposals/:proposal_id",
+      "arquivo": "app/api/v1/contacts/[id]/proposals/[proposal_id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 193
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/:id/timeline",
+      "arquivo": "app/api/v1/contacts/[id]/timeline/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 156
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/bulk-tag",
+      "arquivo": "app/api/v1/contacts/bulk-tag/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 98
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/cnpj-lookup",
+      "arquivo": "app/api/v1/contacts/cnpj-lookup/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/contacts/import",
+      "arquivo": "app/api/v1/contacts/import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 303
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversation-tags",
+      "arquivo": "app/api/v1/conversation-tags/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations",
+      "arquivo": "app/api/v1/conversations/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 93
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id",
+      "arquivo": "app/api/v1/conversations/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 108
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/claim",
+      "arquivo": "app/api/v1/conversations/[id]/claim/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 115
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/close",
+      "arquivo": "app/api/v1/conversations/[id]/close/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 110
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/draft-reply",
+      "arquivo": "app/api/v1/conversations/[id]/draft-reply/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/mark-read",
+      "arquivo": "app/api/v1/conversations/[id]/mark-read/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 49
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/media",
+      "arquivo": "app/api/v1/conversations/[id]/media/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 107
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/messages",
+      "arquivo": "app/api/v1/conversations/[id]/messages/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 72
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/no-send",
+      "arquivo": "app/api/v1/conversations/[id]/no-send/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 150
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/notes",
+      "arquivo": "app/api/v1/conversations/[id]/notes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 147
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/notes/:noteId",
+      "arquivo": "app/api/v1/conversations/[id]/notes/[noteId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 65
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/pause-ai",
+      "arquivo": "app/api/v1/conversations/[id]/pause-ai/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 161
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/reactivate-bot",
+      "arquivo": "app/api/v1/conversations/[id]/reactivate-bot/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/release",
+      "arquivo": "app/api/v1/conversations/[id]/release/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 82
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/retention",
+      "arquivo": "app/api/v1/conversations/[id]/retention/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 92
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/snooze",
+      "arquivo": "app/api/v1/conversations/[id]/snooze/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 101
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/transfer",
+      "arquivo": "app/api/v1/conversations/[id]/transfer/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 142
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/:id/usable-for-rag",
+      "arquivo": "app/api/v1/conversations/[id]/usable-for-rag/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/arquivar-todas",
+      "arquivo": "app/api/v1/conversations/arquivar-todas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 120
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/counts",
+      "arquivo": "app/api/v1/conversations/counts/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 96
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/conversations/open-with-contact",
+      "arquivo": "app/api/v1/conversations/open-with-contact/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 61
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/copilot/context",
+      "arquivo": "app/api/v1/copilot/context/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 253
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/agenda-google-push",
+      "arquivo": "app/api/v1/cron/agenda-google-push/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 260
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/agenda-google-refresh",
+      "arquivo": "app/api/v1/cron/agenda-google-refresh/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 229
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/agenda-google-sync",
+      "arquivo": "app/api/v1/cron/agenda-google-sync/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 359
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/agent-dispatcher",
+      "arquivo": "app/api/v1/cron/agent-dispatcher/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 53
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/attendant-heartbeat",
+      "arquivo": "app/api/v1/cron/attendant-heartbeat/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 70
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/automatic-sales",
+      "arquivo": "app/api/v1/cron/automatic-sales/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/channel-health",
+      "arquivo": "app/api/v1/cron/channel-health/route.ts",
+      "grupo": "api",
+      "metodos": [],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 158
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/contact-avatars",
+      "arquivo": "app/api/v1/cron/contact-avatars/route.ts",
+      "grupo": "api",
+      "metodos": [],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 241
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/contact-phones",
+      "arquivo": "app/api/v1/cron/contact-phones/route.ts",
+      "grupo": "api",
+      "metodos": [],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 204
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/contact-proposals-watcher",
+      "arquivo": "app/api/v1/cron/contact-proposals-watcher/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 106
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/data-retention",
+      "arquivo": "app/api/v1/cron/data-retention/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 288
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/event-log-drain",
+      "arquivo": "app/api/v1/cron/event-log-drain/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/expedition-notices",
+      "arquivo": "app/api/v1/cron/expedition-notices/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/fiscal-drain",
+      "arquivo": "app/api/v1/cron/fiscal-drain/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 68
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/fiscal-entradas-sync",
+      "arquivo": "app/api/v1/cron/fiscal-entradas-sync/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 124
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/followup-flow-worker",
+      "arquivo": "app/api/v1/cron/followup-flow-worker/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 143
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/kb-conversations-batch",
+      "arquivo": "app/api/v1/cron/kb-conversations-batch/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 138
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/lgpd-sla-watcher",
+      "arquivo": "app/api/v1/cron/lgpd-sla-watcher/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 210
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/mercos-import",
+      "arquivo": "app/api/v1/cron/mercos-import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 69
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/meu-dia-alertas",
+      "arquivo": "app/api/v1/cron/meu-dia-alertas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 621
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/prospecting-drain",
+      "arquivo": "app/api/v1/cron/prospecting-drain/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 52
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/prospecting-fit",
+      "arquivo": "app/api/v1/cron/prospecting-fit/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 82
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/prospecting-send",
+      "arquivo": "app/api/v1/cron/prospecting-send/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/recover-stuck-messages",
+      "arquivo": "app/api/v1/cron/recover-stuck-messages/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 249
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/risk-watcher",
+      "arquivo": "app/api/v1/cron/risk-watcher/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 163
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/routing-worker",
+      "arquivo": "app/api/v1/cron/routing-worker/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 82
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/snooze-watcher",
+      "arquivo": "app/api/v1/cron/snooze-watcher/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 130
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/storage-redaction",
+      "arquivo": "app/api/v1/cron/storage-redaction/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 50
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/sync-model-catalog",
+      "arquivo": "app/api/v1/cron/sync-model-catalog/route.ts",
+      "grupo": "api",
+      "metodos": [],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 167
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/webhook-log-retention",
+      "arquivo": "app/api/v1/cron/webhook-log-retention/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 76
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/demandas/:id",
+      "arquivo": "app/api/v1/demandas/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 115
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/faturamento",
+      "arquivo": "app/api/v1/faturamento/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 92
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/conciliacao",
+      "arquivo": "app/api/v1/financeiro/conciliacao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 124
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/dashboard",
+      "arquivo": "app/api/v1/financeiro/dashboard/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 110
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/fluxo",
+      "arquivo": "app/api/v1/financeiro/fluxo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 84
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/gerar",
+      "arquivo": "app/api/v1/financeiro/gerar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 80
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/pagamentos/:id",
+      "arquivo": "app/api/v1/financeiro/pagamentos/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 46
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/recebiveis",
+      "arquivo": "app/api/v1/financeiro/recebiveis/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 232
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/recebiveis/:id",
+      "arquivo": "app/api/v1/financeiro/recebiveis/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 86
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financeiro/recebiveis/:id/pagamentos",
+      "arquivo": "app/api/v1/financeiro/recebiveis/[id]/pagamentos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 80
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/financial-pagaveis",
+      "arquivo": "app/api/v1/financial-pagaveis/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 38
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-cfop-equivalentes",
+      "arquivo": "app/api/v1/fiscal-cfop-equivalentes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 77
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-cfop-equivalentes/:id",
+      "arquivo": "app/api/v1/fiscal-cfop-equivalentes/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PUT",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas",
+      "arquivo": "app/api/v1/fiscal-entradas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 167
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 94
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/conferencia",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/conferencia/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 94
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/ignorar",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/ignorar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 55
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/importar",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/importar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 270
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/itens/:itemId",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/itens/[itemId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 117
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/manifestar",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/manifestar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 184
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-entradas/:id/xml",
+      "arquivo": "app/api/v1/fiscal-entradas/[id]/xml/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 60
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-eventos",
+      "arquivo": "app/api/v1/fiscal-eventos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-events/:id/retransmitir",
+      "arquivo": "app/api/v1/fiscal-events/[id]/retransmitir/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 86
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-fornecedores",
+      "arquivo": "app/api/v1/fiscal-fornecedores/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 60
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-ibpt/consulta",
+      "arquivo": "app/api/v1/fiscal-ibpt/consulta/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-ibpt/importar",
+      "arquivo": "app/api/v1/fiscal-ibpt/importar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-ibpt/importar-siscomex",
+      "arquivo": "app/api/v1/fiscal-ibpt/importar-siscomex/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 134
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-inutilizacoes",
+      "arquivo": "app/api/v1/fiscal-inutilizacoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 142
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-inutilizacoes/:id/retransmitir",
+      "arquivo": "app/api/v1/fiscal-inutilizacoes/[id]/retransmitir/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-inutilizacoes/lacunas",
+      "arquivo": "app/api/v1/fiscal-inutilizacoes/lacunas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 45
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-inutilizacoes/puladas",
+      "arquivo": "app/api/v1/fiscal-inutilizacoes/puladas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 145
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-jobs",
+      "arquivo": "app/api/v1/fiscal-jobs/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-manifestacoes",
+      "arquivo": "app/api/v1/fiscal-manifestacoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-produtos",
+      "arquivo": "app/api/v1/fiscal-produtos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-relatorios",
+      "arquivo": "app/api/v1/fiscal-relatorios/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 161
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-settings",
+      "arquivo": "app/api/v1/fiscal-settings/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 204
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-settings/certificado",
+      "arquivo": "app/api/v1/fiscal-settings/certificado/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 175
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fiscal-sincronizacoes",
+      "arquivo": "app/api/v1/fiscal-sincronizacoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 56
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fleet",
+      "arquivo": "app/api/v1/fleet/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 45
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fleet/drivers",
+      "arquivo": "app/api/v1/fleet/drivers/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 85
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fleet/drivers/:id",
+      "arquivo": "app/api/v1/fleet/drivers/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 106
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fleet/vehicles",
+      "arquivo": "app/api/v1/fleet/vehicles/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/fleet/vehicles/:id",
+      "arquivo": "app/api/v1/fleet/vehicles/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 97
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/health",
+      "arquivo": "app/api/v1/health/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 275
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/home/mes",
+      "arquivo": "app/api/v1/home/mes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 126
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/indicadores/perguntar",
+      "arquivo": "app/api/v1/indicadores/perguntar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 133
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/integrations/nuvemshop/callback",
+      "arquivo": "app/api/v1/integrations/nuvemshop/callback/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 171
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/inventory/movements",
+      "arquivo": "app/api/v1/inventory/movements/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 129
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/inventory/sugestoes",
+      "arquivo": "app/api/v1/inventory/sugestoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 107
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices",
+      "arquivo": "app/api/v1/invoices/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id",
+      "arquivo": "app/api/v1/invoices/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 207
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/ajustes",
+      "arquivo": "app/api/v1/invoices/[id]/ajustes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/cancel",
+      "arquivo": "app/api/v1/invoices/[id]/cancel/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 172
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/carta-correcao",
+      "arquivo": "app/api/v1/invoices/[id]/carta-correcao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 109
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/danfe",
+      "arquivo": "app/api/v1/invoices/[id]/danfe/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/reemitir",
+      "arquivo": "app/api/v1/invoices/[id]/reemitir/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 70
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/:id/xml",
+      "arquivo": "app/api/v1/invoices/[id]/xml/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 46
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/importar-xmls",
+      "arquivo": "app/api/v1/invoices/importar-xmls/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 159
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/invoices/validar",
+      "arquivo": "app/api/v1/invoices/validar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 254
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lead-captures",
+      "arquivo": "app/api/v1/lead-captures/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 97
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads",
+      "arquivo": "app/api/v1/leads/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 89
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id",
+      "arquivo": "app/api/v1/leads/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 63
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/lose",
+      "arquivo": "app/api/v1/leads/[id]/lose/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/move",
+      "arquivo": "app/api/v1/leads/[id]/move/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 203
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/next-action",
+      "arquivo": "app/api/v1/leads/[id]/next-action/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 143
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/reactivation",
+      "arquivo": "app/api/v1/leads/[id]/reactivation/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 202
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/timeline",
+      "arquivo": "app/api/v1/leads/[id]/timeline/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/:id/win",
+      "arquivo": "app/api/v1/leads/[id]/win/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 56
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/at-risk",
+      "arquivo": "app/api/v1/leads/at-risk/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 60
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/bulk",
+      "arquivo": "app/api/v1/leads/bulk/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 343
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/import",
+      "arquivo": "app/api/v1/leads/import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 256
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/proposals",
+      "arquivo": "app/api/v1/leads/proposals/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 192
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/leads/reactivations",
+      "arquivo": "app/api/v1/leads/reactivations/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 51
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lgpd/anonymize",
+      "arquivo": "app/api/v1/lgpd/anonymize/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 177
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lgpd/requests",
+      "arquivo": "app/api/v1/lgpd/requests/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lgpd/requests/:id",
+      "arquivo": "app/api/v1/lgpd/requests/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 97
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lgpd/requests/:id/approve",
+      "arquivo": "app/api/v1/lgpd/requests/[id]/approve/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 205
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/lgpd/requests/:id/preview",
+      "arquivo": "app/api/v1/lgpd/requests/[id]/preview/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 124
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/marca/logo",
+      "arquivo": "app/api/v1/marca/logo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "platform-admin",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 490
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/mcp/tools",
+      "arquivo": "app/api/v1/mcp/tools/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 59
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/message-templates",
+      "arquivo": "app/api/v1/message-templates/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 85
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/message-templates/:id",
+      "arquivo": "app/api/v1/message-templates/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 94
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/messages",
+      "arquivo": "app/api/v1/messages/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/messages/:id/media",
+      "arquivo": "app/api/v1/messages/[id]/media/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 148
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/metrics/atrito",
+      "arquivo": "app/api/v1/metrics/atrito/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 249
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/metrics/attendants",
+      "arquivo": "app/api/v1/metrics/attendants/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 119
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/notifications/push",
+      "arquivo": "app/api/v1/notifications/push/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 117
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/onboarding/whatsapp/qr",
+      "arquivo": "app/api/v1/onboarding/whatsapp/qr/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [],
+      "linhas": 44
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/onboarding/whatsapp/session",
+      "arquivo": "app/api/v1/onboarding/whatsapp/session/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [],
+      "linhas": 190
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines",
+      "arquivo": "app/api/v1/pipelines/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 177
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/:id",
+      "arquivo": "app/api/v1/pipelines/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 291
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/:id/agent-mapping",
+      "arquivo": "app/api/v1/pipelines/[id]/agent-mapping/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 282
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/:id/board",
+      "arquivo": "app/api/v1/pipelines/[id]/board/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 436
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/:id/stages",
+      "arquivo": "app/api/v1/pipelines/[id]/stages/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 77
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/:id/stages/:stageId",
+      "arquivo": "app/api/v1/pipelines/[id]/stages/[stageId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 112
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/pipelines/default",
+      "arquivo": "app/api/v1/pipelines/default/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 55
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/price-tables",
+      "arquivo": "app/api/v1/price-tables/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 85
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/price-tables/:id",
+      "arquivo": "app/api/v1/price-tables/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 103
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/price-tables/:id/items",
+      "arquivo": "app/api/v1/price-tables/[id]/items/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 99
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products",
+      "arquivo": "app/api/v1/products/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 112
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/:id",
+      "arquivo": "app/api/v1/products/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 118
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/:id/images",
+      "arquivo": "app/api/v1/products/[id]/images/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 159
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/:id/images/:imageId",
+      "arquivo": "app/api/v1/products/[id]/images/[imageId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 103
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/afins",
+      "arquivo": "app/api/v1/products/afins/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 122
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/images",
+      "arquivo": "app/api/v1/products/images/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 101
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/import",
+      "arquivo": "app/api/v1/products/import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 233
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/ncm-completar",
+      "arquivo": "app/api/v1/products/ncm-completar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 297
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/ncm-sugestao",
+      "arquivo": "app/api/v1/products/ncm-sugestao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns",
+      "arquivo": "app/api/v1/prospecting/campaigns/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 412
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 476
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/controle",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/controle/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 605
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/executar",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/executar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 218
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/laboratorio",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/laboratorio/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 321
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/liberar-reservas",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/liberar-reservas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 126
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/painel",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/painel/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 175
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/publico",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/publico/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/reenviar-falhas-de-pagamento",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/reenviar-falhas-de-pagamento/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 224
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/canais",
+      "arquivo": "app/api/v1/prospecting/campaigns/canais/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 81
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/midia",
+      "arquivo": "app/api/v1/prospecting/campaigns/midia/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 119
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/numeros",
+      "arquivo": "app/api/v1/prospecting/campaigns/numeros/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 52
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/opcoes",
+      "arquivo": "app/api/v1/prospecting/campaigns/opcoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 106
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/preview",
+      "arquivo": "app/api/v1/prospecting/campaigns/preview/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 118
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/recuperacao",
+      "arquivo": "app/api/v1/prospecting/campaigns/recuperacao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role"
+      ],
+      "linhas": 160
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/recuperacao/preview",
+      "arquivo": "app/api/v1/prospecting/campaigns/recuperacao/preview/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 126
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/regiao",
+      "arquivo": "app/api/v1/prospecting/campaigns/regiao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role"
+      ],
+      "linhas": 203
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/regiao/cidades",
+      "arquivo": "app/api/v1/prospecting/campaigns/regiao/cidades/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 62
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/regiao/preview",
+      "arquivo": "app/api/v1/prospecting/campaigns/regiao/preview/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 126
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/consumo",
+      "arquivo": "app/api/v1/prospecting/consumo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 86
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/mensagens-por-categoria",
+      "arquivo": "app/api/v1/prospecting/mensagens-por-categoria/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 144
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/mercado",
+      "arquivo": "app/api/v1/prospecting/mercado/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 245
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects",
+      "arquivo": "app/api/v1/prospecting/prospects/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 413
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/:id",
+      "arquivo": "app/api/v1/prospecting/prospects/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 242
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/:id/raio-x",
+      "arquivo": "app/api/v1/prospecting/prospects/[id]/raio-x/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/categorias",
+      "arquivo": "app/api/v1/prospecting/prospects/categorias/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 189
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/disparar",
+      "arquivo": "app/api/v1/prospecting/prospects/disparar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 1054
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/import",
+      "arquivo": "app/api/v1/prospecting/prospects/import/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 205
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/prospects/import-arquivo",
+      "arquivo": "app/api/v1/prospecting/prospects/import-arquivo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 72
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/searches",
+      "arquivo": "app/api/v1/prospecting/searches/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 295
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/searches/:id",
+      "arquivo": "app/api/v1/prospecting/searches/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 105
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/settings",
+      "arquivo": "app/api/v1/prospecting/settings/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 108
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/public/orcamento/:token",
+      "arquivo": "app/api/v1/public/orcamento/[token]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role"
+      ],
+      "linhas": 71
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/purchase-orders",
+      "arquivo": "app/api/v1/purchase-orders/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 144
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/purchase-orders/:id",
+      "arquivo": "app/api/v1/purchase-orders/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 108
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/purchase-orders/:id/receber",
+      "arquivo": "app/api/v1/purchase-orders/[id]/receber/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 168
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/radar-compras",
+      "arquivo": "app/api/v1/radar-compras/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 206
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/roadmap",
+      "arquivo": "app/api/v1/roadmap/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 110
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/rotas",
+      "arquivo": "app/api/v1/rotas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 59
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/sales-brain",
+      "arquivo": "app/api/v1/sales-brain/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 117
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/settings/api-tokens",
+      "arquivo": "app/api/v1/settings/api-tokens/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 104
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/settings/api-tokens/:id/revoke",
+      "arquivo": "app/api/v1/settings/api-tokens/[id]/revoke/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 57
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/settings/routing",
+      "arquivo": "app/api/v1/settings/routing/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 151
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments",
+      "arquivo": "app/api/v1/shipments/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 217
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id",
+      "arquivo": "app/api/v1/shipments/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 305
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/conciliar",
+      "arquivo": "app/api/v1/shipments/[id]/conciliar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 277
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/destinos/:destinationId/confirmar",
+      "arquivo": "app/api/v1/shipments/[id]/destinos/[destinationId]/confirmar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/destinos/:destinationId/entrada/confirmar",
+      "arquivo": "app/api/v1/shipments/[id]/destinos/[destinationId]/entrada/confirmar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 200
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/destinos/:destinationId/rejeitar",
+      "arquivo": "app/api/v1/shipments/[id]/destinos/[destinationId]/rejeitar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 103
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/destinos/:destinationId/reverter",
+      "arquivo": "app/api/v1/shipments/[id]/destinos/[destinationId]/reverter/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 113
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/fechamento",
+      "arquivo": "app/api/v1/shipments/[id]/fechamento/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 294
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/fechamento/pdf",
+      "arquivo": "app/api/v1/shipments/[id]/fechamento/pdf/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 84
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/orders",
+      "arquivo": "app/api/v1/shipments/[id]/orders/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 240
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/orders/:orderId",
+      "arquivo": "app/api/v1/shipments/[id]/orders/[orderId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 267
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/orders/:orderId/proof",
+      "arquivo": "app/api/v1/shipments/[id]/orders/[orderId]/proof/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "redirect",
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 135
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/romaneio",
+      "arquivo": "app/api/v1/shipments/[id]/romaneio/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 192
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota",
+      "arquivo": "app/api/v1/shipments/[id]/rota/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 73
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/distribuicao",
+      "arquivo": "app/api/v1/shipments/[id]/rota/distribuicao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 513
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/finalizar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/finalizar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 17
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/geocodificar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/geocodificar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 163
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/iniciar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/iniciar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 16
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/manual",
+      "arquivo": "app/api/v1/shipments/[id]/rota/manual/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/ordem",
+      "arquivo": "app/api/v1/shipments/[id]/rota/ordem/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 133
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/otimizar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/otimizar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 196
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/otimizar/veiculos",
+      "arquivo": "app/api/v1/shipments/[id]/rota/otimizar/veiculos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 370
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/posicao",
+      "arquivo": "app/api/v1/shipments/[id]/rota/posicao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 101
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/recuperacoes",
+      "arquivo": "app/api/v1/shipments/[id]/rota/recuperacoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 208
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/recuperar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/recuperar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 207
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/sped/arquivo",
+      "arquivo": "app/api/v1/sped/arquivo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 282
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/suppliers",
+      "arquivo": "app/api/v1/suppliers/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 86
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/system/agent",
+      "arquivo": "app/api/v1/system/agent/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 210
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/system/instalacao",
+      "arquivo": "app/api/v1/system/instalacao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 141
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/system/relogio/tick",
+      "arquivo": "app/api/v1/system/relogio/tick/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 91
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/system/update",
+      "arquivo": "app/api/v1/system/update/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 134
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/system/version",
+      "arquivo": "app/api/v1/system/version/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 156
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/tarefas",
+      "arquivo": "app/api/v1/tarefas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 116
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/tarefas/:id",
+      "arquivo": "app/api/v1/tarefas/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 95
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team",
+      "arquivo": "app/api/v1/team/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 88
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id",
+      "arquivo": "app/api/v1/team/[user_id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 17
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/canais",
+      "arquivo": "app/api/v1/team/[user_id]/canais/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [],
+      "linhas": 19
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/motorista",
+      "arquivo": "app/api/v1/team/[user_id]/motorista/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [],
+      "linhas": 18
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/nome",
+      "arquivo": "app/api/v1/team/[user_id]/nome/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [],
+      "linhas": 17
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/revoke",
+      "arquivo": "app/api/v1/team/[user_id]/revoke/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 84
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/role",
+      "arquivo": "app/api/v1/team/[user_id]/role/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 17
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/:user_id/setor",
+      "arquivo": "app/api/v1/team/[user_id]/setor/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH"
+      ],
+      "flags": [],
+      "linhas": 17
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/assignable",
+      "arquivo": "app/api/v1/team/assignable/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 65
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/team/invite",
+      "arquivo": "app/api/v1/team/invite/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 160
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/titulos",
+      "arquivo": "app/api/v1/titulos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 114
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/titulos/baixas",
+      "arquivo": "app/api/v1/titulos/baixas/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 112
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhook-sources",
+      "arquivo": "app/api/v1/webhook-sources/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 111
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhook-sources/:id",
+      "arquivo": "app/api/v1/webhook-sources/[id]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 136
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhook-sources/:id/events",
+      "arquivo": "app/api/v1/webhook-sources/[id]/events/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 45
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/channel/:token",
+      "arquivo": "app/api/v1/webhooks/channel/[token]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 160
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/in/:token",
+      "arquivo": "app/api/v1/webhooks/in/[token]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 645
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/meta/:token",
+      "arquivo": "app/api/v1/webhooks/meta/[token]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 260
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/nuvemshop/:event",
+      "arquivo": "app/api/v1/webhooks/nuvemshop/[event]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 175
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/nuvemshop/customer-data-request",
+      "arquivo": "app/api/v1/webhooks/nuvemshop/customer-data-request/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 302
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/nuvemshop/customer-redact",
+      "arquivo": "app/api/v1/webhooks/nuvemshop/customer-redact/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 275
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/nuvemshop/store-redact",
+      "arquivo": "app/api/v1/webhooks/nuvemshop/store-redact/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 273
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/waha",
+      "arquivo": "app/api/v1/webhooks/waha/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 185
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/webhooks/waha/:token",
+      "arquivo": "app/api/v1/webhooks/waha/[token]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 182
+    },
+    {
+      "tipo": "erro",
+      "rota": "/app",
+      "arquivo": "app/app/error.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "client"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "layout",
+      "rota": "/app",
+      "arquivo": "app/app/layout.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "service-role"
+      ],
+      "linhas": 253
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app",
+      "arquivo": "app/app/loading.tsx",
+      "grupo": "app (outros)",
+      "flags": [],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app",
+      "arquivo": "app/app/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 136
+    },
+    {
+      "tipo": "erro",
+      "rota": "/app/agenda",
+      "arquivo": "app/app/agenda/error.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "client"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/agenda",
+      "arquivo": "app/app/agenda/loading.tsx",
+      "grupo": "app (outros)",
+      "flags": [],
+      "linhas": 17
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/agenda",
+      "arquivo": "app/app/agenda/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 285
+    },
+    {
+      "tipo": "layout",
+      "rota": "/app/ai",
+      "arquivo": "app/app/ai/layout.tsx",
+      "grupo": "ia",
+      "flags": [],
+      "linhas": 14
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai",
+      "arquivo": "app/app/ai/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 28
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/agents",
+      "arquivo": "app/app/ai/agents/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/agents/:id",
+      "arquivo": "app/app/ai/agents/[id]/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 187
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/agents/new",
+      "arquivo": "app/app/ai/agents/new/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 63
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/cases",
+      "arquivo": "app/app/ai/cases/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 32
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/controle",
+      "arquivo": "app/app/ai/controle/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 35
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/credentials",
+      "arquivo": "app/app/ai/credentials/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 66
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/decisoes",
+      "arquivo": "app/app/ai/decisoes/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/evolution",
+      "arquivo": "app/app/ai/evolution/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 47
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/followups",
+      "arquivo": "app/app/ai/followups/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 59
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/followups/:id",
+      "arquivo": "app/app/ai/followups/[id]/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 68
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/followups/enrollments/:id",
+      "arquivo": "app/app/ai/followups/enrollments/[id]/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/inbox",
+      "arquivo": "app/app/ai/inbox/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/knowledge/sources",
+      "arquivo": "app/app/ai/knowledge/sources/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 118
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/memory",
+      "arquivo": "app/app/ai/memory/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 81
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/proposals",
+      "arquivo": "app/app/ai/proposals/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 43
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/providers",
+      "arquivo": "app/app/ai/providers/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/routers",
+      "arquivo": "app/app/ai/routers/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 59
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/routers/:id",
+      "arquivo": "app/app/ai/routers/[id]/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/runs",
+      "arquivo": "app/app/ai/runs/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 27
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/skills",
+      "arquivo": "app/app/ai/skills/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 71
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/ai/usage",
+      "arquivo": "app/app/ai/usage/page.tsx",
+      "grupo": "ia",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 72
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/audit",
+      "arquivo": "app/app/audit/loading.tsx",
+      "grupo": "configuração",
+      "flags": [],
+      "linhas": 20
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/audit",
+      "arquivo": "app/app/audit/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 32
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/busca",
+      "arquivo": "app/app/busca/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 30
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/campanhas",
+      "arquivo": "app/app/campanhas/page.tsx",
+      "grupo": "atendimento",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 92
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/carteira",
+      "arquivo": "app/app/carteira/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 125
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/comissoes",
+      "arquivo": "app/app/comissoes/page.tsx",
+      "grupo": "financeiro",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 65
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/compras",
+      "arquivo": "app/app/compras/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 24
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/compras/:id",
+      "arquivo": "app/app/compras/[id]/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/connections",
+      "arquivo": "app/app/connections/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/contacts",
+      "arquivo": "app/app/contacts/loading.tsx",
+      "grupo": "crm",
+      "flags": [],
+      "linhas": 16
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/contacts",
+      "arquivo": "app/app/contacts/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/contacts/:id",
+      "arquivo": "app/app/contacts/[id]/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/estoque",
+      "arquivo": "app/app/estoque/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 27
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao",
+      "arquivo": "app/app/expedicao/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 213
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao/:id",
+      "arquivo": "app/app/expedicao/[id]/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao/:id/fechamento",
+      "arquivo": "app/app/expedicao/[id]/fechamento/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao/:id/motorista",
+      "arquivo": "app/app/expedicao/[id]/motorista/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao/:id/rota",
+      "arquivo": "app/app/expedicao/[id]/rota/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/expedicao/nova",
+      "arquivo": "app/app/expedicao/nova/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 133
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/faturamento",
+      "arquivo": "app/app/faturamento/page.tsx",
+      "grupo": "financeiro",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 50
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/financeiro",
+      "arquivo": "app/app/financeiro/page.tsx",
+      "grupo": "financeiro",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 43
+    },
+    {
+      "tipo": "layout",
+      "rota": "/app/fiscal",
+      "arquivo": "app/app/fiscal/layout.tsx",
+      "grupo": "fiscal",
+      "flags": [],
+      "linhas": 17
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal",
+      "arquivo": "app/app/fiscal/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 304
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/configuracoes",
+      "arquivo": "app/app/fiscal/configuracoes/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 142
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/eventos",
+      "arquivo": "app/app/fiscal/eventos/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/fornecedores",
+      "arquivo": "app/app/fiscal/fornecedores/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 108
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/manifestacoes",
+      "arquivo": "app/app/fiscal/manifestacoes/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 131
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/notas",
+      "arquivo": "app/app/fiscal/notas/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/notas/:id",
+      "arquivo": "app/app/fiscal/notas/[id]/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 521
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/pendentes",
+      "arquivo": "app/app/fiscal/pendentes/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 51
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/produtos",
+      "arquivo": "app/app/fiscal/produtos/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/relatorios",
+      "arquivo": "app/app/fiscal/relatorios/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 411
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/resumos",
+      "arquivo": "app/app/fiscal/resumos/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 39
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/sincronizacoes",
+      "arquivo": "app/app/fiscal/sincronizacoes/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 133
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/fiscal/xml",
+      "arquivo": "app/app/fiscal/xml/page.tsx",
+      "grupo": "fiscal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 38
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/frota",
+      "arquivo": "app/app/frota/page.tsx",
+      "grupo": "expedição",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 64
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/inbox",
+      "arquivo": "app/app/inbox/loading.tsx",
+      "grupo": "atendimento",
+      "flags": [],
+      "linhas": 26
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/inbox",
+      "arquivo": "app/app/inbox/page.tsx",
+      "grupo": "atendimento",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 27
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/inbox/:id",
+      "arquivo": "app/app/inbox/[id]/page.tsx",
+      "grupo": "atendimento",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 13
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/indicadores",
+      "arquivo": "app/app/indicadores/page.tsx",
+      "grupo": "insights",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 213
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/integrations/nuvemshop",
+      "arquivo": "app/app/integrations/nuvemshop/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "service-role",
+        "suspense"
+      ],
+      "linhas": 167
+    },
+    {
+      "tipo": "erro",
+      "rota": "/app/inteligencia",
+      "arquivo": "app/app/inteligencia/error.tsx",
+      "grupo": "insights",
+      "flags": [
+        "client"
+      ],
+      "linhas": 11
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/inteligencia",
+      "arquivo": "app/app/inteligencia/loading.tsx",
+      "grupo": "insights",
+      "flags": [],
+      "linhas": 12
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/inteligencia",
+      "arquivo": "app/app/inteligencia/page.tsx",
+      "grupo": "insights",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 25
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/kanban",
+      "arquivo": "app/app/kanban/loading.tsx",
+      "grupo": "crm",
+      "flags": [],
+      "linhas": 20
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/kanban",
+      "arquivo": "app/app/kanban/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "redirect",
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 67
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/laboratorio",
+      "arquivo": "app/app/laboratorio/page.tsx",
+      "grupo": "insights",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/leads/:id",
+      "arquivo": "app/app/leads/[id]/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 51
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/lgpd/requests",
+      "arquivo": "app/app/lgpd/requests/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 36
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/lgpd/requests/:id",
+      "arquivo": "app/app/lgpd/requests/[id]/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/metrics",
+      "arquivo": "app/app/metrics/page.tsx",
+      "grupo": "insights",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 16
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/meu-dia",
+      "arquivo": "app/app/meu-dia/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 27
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/notas",
+      "arquivo": "app/app/notas/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 659
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/pedidos",
+      "arquivo": "app/app/pedidos/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 266
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/pedidos/:id",
+      "arquivo": "app/app/pedidos/[id]/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 131
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/pedidos/imprimir",
+      "arquivo": "app/app/pedidos/imprimir/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 225
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/pedidos/novo",
+      "arquivo": "app/app/pedidos/novo/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 145
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/pipelines/:id",
+      "arquivo": "app/app/pipelines/[id]/page.tsx",
+      "grupo": "crm",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/products",
+      "arquivo": "app/app/products/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 209
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/prospeccao",
+      "arquivo": "app/app/prospeccao/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "estado",
+      "rota": "/app/prospeccao/campanhas/:id",
+      "arquivo": "app/app/prospeccao/campanhas/[id]/loading.tsx",
+      "grupo": "receita",
+      "flags": [],
+      "linhas": 16
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/prospeccao/campanhas/:id",
+      "arquivo": "app/app/prospeccao/campanhas/[id]/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 28
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/prospeccao/nova",
+      "arquivo": "app/app/prospeccao/nova/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 38
+    },
+    {
+      "tipo": "layout",
+      "rota": "/app/radar",
+      "arquivo": "app/app/radar/layout.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 20
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar",
+      "arquivo": "app/app/radar/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar/categorias",
+      "arquivo": "app/app/radar/categorias/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar/oportunidades",
+      "arquivo": "app/app/radar/oportunidades/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar/prospeccao",
+      "arquivo": "app/app/radar/prospeccao/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar/recuperacao",
+      "arquivo": "app/app/radar/recuperacao/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/radar/risco",
+      "arquivo": "app/app/radar/risco/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 9
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/recuperacao",
+      "arquivo": "app/app/recuperacao/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 15
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/relatorios",
+      "arquivo": "app/app/relatorios/page.tsx",
+      "grupo": "insights",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 130
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings",
+      "arquivo": "app/app/settings/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 40
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/api-tokens",
+      "arquivo": "app/app/settings/api-tokens/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 32
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/atendimento",
+      "arquivo": "app/app/settings/atendimento/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 74
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/atualizacao",
+      "arquivo": "app/app/settings/atualizacao/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 19
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/billing",
+      "arquivo": "app/app/settings/billing/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 54
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/settings/canal-oficial",
+      "arquivo": "app/app/settings/canal-oficial/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 13
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/marca",
+      "arquivo": "app/app/settings/marca/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "notFound",
+        "force-dynamic"
+      ],
+      "linhas": 110
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/notifications",
+      "arquivo": "app/app/settings/notifications/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 99
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/profile",
+      "arquivo": "app/app/settings/profile/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 47
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/security",
+      "arquivo": "app/app/settings/security/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 75
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/settings/templates",
+      "arquivo": "app/app/settings/templates/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 13
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/tenant",
+      "arquivo": "app/app/settings/tenant/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 95
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/tenant/agenda",
+      "arquivo": "app/app/settings/tenant/agenda/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 98
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/settings/tenant/pipelines",
+      "arquivo": "app/app/settings/tenant/pipelines/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 58
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/settings/tenant/whatsapp",
+      "arquivo": "app/app/settings/tenant/whatsapp/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 8
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/tarefas",
+      "arquivo": "app/app/tarefas/page.tsx",
+      "grupo": "app (outros)",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 21
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/team",
+      "arquivo": "app/app/team/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 96
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/team/invite",
+      "arquivo": "app/app/team/invite/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 31
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/templates",
+      "arquivo": "app/app/templates/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 36
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/app/titulos",
+      "arquivo": "app/app/titulos/page.tsx",
+      "grupo": "financeiro",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 14
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/venda-automatica",
+      "arquivo": "app/app/venda-automatica/page.tsx",
+      "grupo": "receita",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 106
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/webhooks",
+      "arquivo": "app/app/webhooks/page.tsx",
+      "grupo": "configuração",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 30
+    },
+    {
+      "tipo": "api",
+      "rota": "/auth/confirm",
+      "arquivo": "app/auth/confirm/route.ts",
+      "grupo": "público e legal",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 154
+    },
+    {
+      "tipo": "layout",
+      "rota": "/design",
+      "arquivo": "app/design/layout.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 21
+    },
+    {
+      "tipo": "tela",
+      "rota": "/design",
+      "arquivo": "app/design/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "client"
+      ],
+      "linhas": 123
+    },
+    {
+      "tipo": "api",
+      "rota": "/icone-512",
+      "arquivo": "app/icone-512/route.ts",
+      "grupo": "público e legal",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 53
+    },
+    {
+      "tipo": "layout",
+      "rota": "/legal",
+      "arquivo": "app/legal/layout.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 45
+    },
+    {
+      "tipo": "tela",
+      "rota": "/legal/privacy",
+      "arquivo": "app/legal/privacy/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 156
+    },
+    {
+      "tipo": "tela",
+      "rota": "/legal/terms",
+      "arquivo": "app/legal/terms/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 157
+    },
+    {
+      "tipo": "tela",
+      "rota": "/login",
+      "arquivo": "app/(public)/login/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 112
+    },
+    {
+      "tipo": "tela",
+      "rota": "/login/forgot",
+      "arquivo": "app/(public)/login/forgot/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 38
+    },
+    {
+      "tipo": "tela",
+      "rota": "/login/mfa",
+      "arquivo": "app/(public)/login/mfa/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 43
+    },
+    {
+      "tipo": "tela",
+      "rota": "/login/recovery",
+      "arquivo": "app/(public)/login/recovery/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 45
+    },
+    {
+      "tipo": "tela",
+      "rota": "/login/reset",
+      "arquivo": "app/(public)/login/reset/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 30
+    },
+    {
+      "tipo": "tela",
+      "rota": "/o/:token",
+      "arquivo": "app/o/[token]/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 135
+    },
+    {
+      "tipo": "layout",
+      "rota": "/onboarding",
+      "arquivo": "app/onboarding/layout.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect"
+      ],
+      "linhas": 64
+    },
+    {
+      "tipo": "resolver",
+      "rota": "/onboarding",
+      "arquivo": "app/onboarding/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 26
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/connect-nuvemshop",
+      "arquivo": "app/onboarding/connect-nuvemshop/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 23
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/connect-whatsapp",
+      "arquivo": "app/onboarding/connect-whatsapp/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 43
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/done",
+      "arquivo": "app/onboarding/done/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 26
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/funil",
+      "arquivo": "app/onboarding/funil/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 47
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/invite-team",
+      "arquivo": "app/onboarding/invite-team/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 45
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/setup-ai",
+      "arquivo": "app/onboarding/setup-ai/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 72
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/testar",
+      "arquivo": "app/onboarding/testar/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 55
+    },
+    {
+      "tipo": "tela",
+      "rota": "/onboarding/welcome",
+      "arquivo": "app/onboarding/welcome/page.tsx",
+      "grupo": "onboarding",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 44
+    },
+    {
+      "tipo": "tela",
+      "rota": "/signup",
+      "arquivo": "app/(public)/signup/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 73
+    },
+    {
+      "tipo": "tela",
+      "rota": "/team/accept-invite/:token",
+      "arquivo": "app/team/accept-invite/[token]/page.tsx",
+      "grupo": "público e legal",
+      "flags": [
+        "force-dynamic"
+      ],
+      "linhas": 160
+    },
+    {
+      "tipo": "tela",
+      "rota": "/vitrine-agenda",
+      "arquivo": "app/vitrine-agenda/page.tsx",
+      "grupo": "público e legal",
+      "flags": [],
+      "linhas": 30
+    }
+  ]
+}

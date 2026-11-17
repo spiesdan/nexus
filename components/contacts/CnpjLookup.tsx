@@ -23,6 +23,15 @@ export interface DadosDaReceita {
   cidade: string | null;
   uf: string | null;
   cep: string | null;
+  /**
+   * IE do CNPJ na UF da empresa, quando o cadastro público publica.
+   *
+   * A BrasilAPI não traz inscrição estadual; ela vem da consulta paralela a
+   * `publica.cnpj.ws` (`lib/brasil/inscricao-estadual.ts`). `null` significa
+   * "não há IE publicada nesta UF" — e é por isso que o campo pode continuar
+   * vazio sem que a busca tenha falhado.
+   */
+  ie: string | null;
 }
 
 /**

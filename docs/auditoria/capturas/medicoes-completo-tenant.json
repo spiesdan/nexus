@@ -1,0 +1,1861 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "completo-tenant",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "resultados": [
+    {
+      "rota": "/app",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3184,
+      "erro": null,
+      "arquivo": "desktop_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 62,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3449,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/agenda",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4639,
+      "erro": null,
+      "arquivo": "desktop_app_agenda.png",
+      "errosDeConsole": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ],
+      "falhasDeRede": [],
+      "titulo": "Agenda · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 255,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agenda"
+      ],
+      "textoVisivel": 1333,
+      "url": "/app/agenda"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1947,
+      "erro": null,
+      "arquivo": "desktop_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agente de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1662,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/app/ai/agents",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2840,
+      "erro": null,
+      "arquivo": "desktop_app_ai_agents.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agentes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Agents de IA"
+      ],
+      "textoVisivel": 580,
+      "url": "/app/ai/agents"
+    },
+    {
+      "rota": "/app/ai/agents/new",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5170,
+      "erro": null,
+      "arquivo": "desktop_app_ai_agents_new.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "textoVisivel": 76,
+      "url": "/403"
+    },
+    {
+      "rota": "/app/ai/cases",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5296,
+      "erro": null,
+      "arquivo": "desktop_app_ai_cases.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Casos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 654,
+      "url": "/app/ai/cases"
+    },
+    {
+      "rota": "/app/ai/controle",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4702,
+      "erro": null,
+      "arquivo": "desktop_app_ai_controle.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Controle de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 37,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Controle de IA"
+      ],
+      "textoVisivel": 841,
+      "url": "/app/ai/controle"
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4964,
+      "erro": null,
+      "arquivo": "desktop_app_ai_credentials.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Credenciais · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 30,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "textoVisivel": 744,
+      "url": "/app/ai/credentials"
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 8348,
+      "erro": null,
+      "arquivo": "desktop_app_ai_decisoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Decisões · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 36,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "textoVisivel": 796,
+      "url": "/app/ai/decisoes"
+    },
+    {
+      "rota": "/app/ai/evolution",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 19666,
+      "erro": null,
+      "arquivo": "desktop_app_ai_evolution.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Evolução da IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 39,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Evolução da IA"
+      ],
+      "textoVisivel": 4867,
+      "url": "/app/ai/evolution"
+    },
+    {
+      "rota": "/app/ai/followups",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 16936,
+      "erro": null,
+      "arquivo": "desktop_app_ai_followups.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Follow-ups · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 33,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "textoVisivel": 701,
+      "url": "/app/ai/followups"
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 8145,
+      "erro": null,
+      "arquivo": "desktop_app_ai_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Alertas · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 30,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "textoVisivel": 494,
+      "url": "/app/ai/inbox"
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 11397,
+      "erro": null,
+      "arquivo": "desktop_app_ai_knowledge_sources.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Conhecimento · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "textoVisivel": 1119,
+      "url": "/app/ai/knowledge/sources"
+    },
+    {
+      "rota": "/app/ai/memory",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 10824,
+      "erro": null,
+      "arquivo": "desktop_app_ai_memory.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Memória · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "textoVisivel": 1162,
+      "url": "/app/ai/memory"
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 12448,
+      "erro": null,
+      "arquivo": "desktop_app_ai_proposals.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Propostas · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 30,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "textoVisivel": 521,
+      "url": "/app/ai/proposals"
+    },
+    {
+      "rota": "/app/ai/providers",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 26321,
+      "erro": null,
+      "arquivo": "desktop_app_ai_providers.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Provedores · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 36,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Provedores de IA"
+      ],
+      "textoVisivel": 1365,
+      "url": "/app/ai/providers"
+    },
+    {
+      "rota": "/app/ai/routers",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 24051,
+      "erro": null,
+      "arquivo": "desktop_app_ai_routers.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Roteadores · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 30,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "textoVisivel": 735,
+      "url": "/app/ai/routers"
+    },
+    {
+      "rota": "/app/ai/runs",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 45142,
+      "erro": "page.goto: Timeout 45000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3011/app/ai/runs\", waiting until ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/skills",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 18665,
+      "erro": null,
+      "arquivo": "desktop_app_ai_skills.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Skills · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 33,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Skills da IA"
+      ],
+      "textoVisivel": 1406,
+      "url": "/app/ai/skills"
+    },
+    {
+      "rota": "/app/ai/usage",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 24261,
+      "erro": null,
+      "arquivo": "desktop_app_ai_usage.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Uso e orçamento · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "textoVisivel": 1179,
+      "url": "/app/ai/usage"
+    },
+    {
+      "rota": "/app/audit",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 45032,
+      "erro": "page.goto: Timeout 45000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3011/app/audit\", waiting until \"n",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/busca",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 44598,
+      "erro": "page.goto: net::ERR_EMPTY_RESPONSE at http://localhost:3011/app/busca\nCall log:\n\u001b[2m  - navigating to \"http://localhost:",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/campanhas",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 592,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/campanhas\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/carteira",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/carteira\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/comissoes\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 25,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/compras\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/connections",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/connections\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/contacts\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/estoque\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/expedicao\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/expedicao/nova",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/expedicao/nova\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/faturamento",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/faturamento\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal\nCall log:\n\u001b[2m  - navigating to \"http://local",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/configuracoes",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/configuracoes\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/eventos",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/eventos\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/fornecedores",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/fornecedores\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/manifestacoes",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/manifestacoes\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/notas",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/notas\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/pendentes",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/pendentes\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/produtos",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/produtos\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/relatorios",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/relatorios\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/resumos",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/resumos\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/sincronizacoes",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/sincronizacoes\nCall log:\n\u001b[2m  - navigating t",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/xml",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/xml\nCall log:\n\u001b[2m  - navigating to \"http://l",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/frota",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/frota\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/inbox\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/indicadores\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/integrations/nuvemshop",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/integrations/nuvemshop\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/inteligencia",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/inteligencia\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/kanban\nCall log:\n\u001b[2m  - navigating to \"http://local",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/laboratorio",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/laboratorio\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 15,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/lgpd/requests\nCall log:\n\u001b[2m  - navigating to \"http:",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/meu-dia",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/meu-dia\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/notas",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/notas\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos/imprimir\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos/novo\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/products",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/products\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/prospeccao/nova\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/categorias\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/oportunidades",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 4,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/oportunidades\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/prospeccao",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/prospeccao\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/recuperacao\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/risco",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/risco\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/relatorios\nCall log:\n\u001b[2m  - navigating to \"http://l",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/api-tokens\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/atendimento\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/atualizacao\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/billing\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/marca\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 18,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/notifications\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 19,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/profile\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/security\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant/agenda\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant/pipelines\nCall log:\n\u001b[2m  - navigati",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/tarefas",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/tarefas\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/team",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/team\nCall log:\n\u001b[2m  - navigating to \"http://localho",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/team/invite",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/team/invite\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/templates",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/templates\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/venda-automatica\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "largura": "desktop",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/webhooks\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app",
+      "largura": "celular",
+      "status": 0,
+      "ms": 4,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app\nCall log:\n\u001b[2m  - navigating to \"http://localhost:30",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/agenda",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/agenda\nCall log:\n\u001b[2m  - navigating to \"http://local",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai\nCall log:\n\u001b[2m  - navigating to \"http://localhost",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/agents",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/agents\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/agents/new",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/agents/new\nCall log:\n\u001b[2m  - navigating to \"http:",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/cases\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/controle",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/controle\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "largura": "celular",
+      "status": 0,
+      "ms": 15,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/credentials\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/decisoes\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/evolution",
+      "largura": "celular",
+      "status": 0,
+      "ms": 16,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/evolution\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/followups",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/followups\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/inbox\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/knowledge/sources\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/memory",
+      "largura": "celular",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/memory\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "largura": "celular",
+      "status": 0,
+      "ms": 17,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/proposals\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/providers",
+      "largura": "celular",
+      "status": 0,
+      "ms": 4,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/providers\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/routers",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/routers\nCall log:\n\u001b[2m  - navigating to \"http://l",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/runs",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/runs\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/skills",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/skills\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/ai/usage",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/ai/usage\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/audit",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/audit\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/busca",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/busca\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/campanhas",
+      "largura": "celular",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/campanhas\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/carteira",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/carteira\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/comissoes\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/compras\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/connections",
+      "largura": "celular",
+      "status": 0,
+      "ms": 15,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/connections\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/contacts\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/estoque\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "celular",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/expedicao\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/expedicao/nova",
+      "largura": "celular",
+      "status": 0,
+      "ms": 20,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/expedicao/nova\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/faturamento",
+      "largura": "celular",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/faturamento\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal\nCall log:\n\u001b[2m  - navigating to \"http://local",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/configuracoes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/configuracoes\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/eventos",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/eventos\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/fornecedores",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/fornecedores\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/manifestacoes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/manifestacoes\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/notas",
+      "largura": "celular",
+      "status": 0,
+      "ms": 4,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/notas\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/pendentes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/pendentes\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/produtos",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/produtos\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/relatorios",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/relatorios\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/resumos",
+      "largura": "celular",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/resumos\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/sincronizacoes",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/sincronizacoes\nCall log:\n\u001b[2m  - navigating t",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/fiscal/xml",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/fiscal/xml\nCall log:\n\u001b[2m  - navigating to \"http://l",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/frota",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/frota\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "celular",
+      "status": 0,
+      "ms": 4,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/inbox\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/indicadores\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/integrations/nuvemshop",
+      "largura": "celular",
+      "status": 0,
+      "ms": 5,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/integrations/nuvemshop\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/inteligencia",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/inteligencia\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "celular",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/kanban\nCall log:\n\u001b[2m  - navigating to \"http://local",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/laboratorio",
+      "largura": "celular",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/laboratorio\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/lgpd/requests\nCall log:\n\u001b[2m  - navigating to \"http:",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/meu-dia",
+      "largura": "celular",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/meu-dia\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/notas",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/notas\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "celular",
+      "status": 0,
+      "ms": 7,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos/imprimir\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/pedidos/novo\nCall log:\n\u001b[2m  - navigating to \"http:/",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/products",
+      "largura": "celular",
+      "status": 0,
+      "ms": 11,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/products\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/prospeccao/nova\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar\nCall log:\n\u001b[2m  - navigating to \"http://localh",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/categorias\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/oportunidades",
+      "largura": "celular",
+      "status": 0,
+      "ms": 14,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/oportunidades\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/prospeccao",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/prospeccao\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "largura": "celular",
+      "status": 0,
+      "ms": 16,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/recuperacao\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/radar/risco",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/radar/risco\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/relatorios\nCall log:\n\u001b[2m  - navigating to \"http://l",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/api-tokens\nCall log:\n\u001b[2m  - navigating to ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/atendimento\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/atualizacao\nCall log:\n\u001b[2m  - navigating to",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/billing\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "largura": "celular",
+      "status": 0,
+      "ms": 9,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/marca\nCall log:\n\u001b[2m  - navigating to \"http",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/notifications\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/profile\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/security\nCall log:\n\u001b[2m  - navigating to \"h",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "largura": "celular",
+      "status": 0,
+      "ms": 15,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant\nCall log:\n\u001b[2m  - navigating to \"htt",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "largura": "celular",
+      "status": 0,
+      "ms": 10,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant/agenda\nCall log:\n\u001b[2m  - navigating ",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "largura": "celular",
+      "status": 0,
+      "ms": 13,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/settings/tenant/pipelines\nCall log:\n\u001b[2m  - navigati",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/tarefas",
+      "largura": "celular",
+      "status": 0,
+      "ms": 6,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/tarefas\nCall log:\n\u001b[2m  - navigating to \"http://loca",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/team",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/team\nCall log:\n\u001b[2m  - navigating to \"http://localho",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/team/invite",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/team/invite\nCall log:\n\u001b[2m  - navigating to \"http://",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/templates",
+      "largura": "celular",
+      "status": 0,
+      "ms": 8,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/templates\nCall log:\n\u001b[2m  - navigating to \"http://lo",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/venda-automatica\nCall log:\n\u001b[2m  - navigating to \"ht",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "largura": "celular",
+      "status": 0,
+      "ms": 12,
+      "erro": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3011/app/webhooks\nCall log:\n\u001b[2m  - navigating to \"http://loc",
+      "arquivo": null,
+      "errosDeConsole": [],
+      "falhasDeRede": []
+    }
+  ]
+}

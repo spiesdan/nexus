@@ -1,0 +1,163 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T11:09:27.292Z",
+  "metodo": "Interações roteirizadas (tecla no primeiro campo, clique na primeira aba, clique em filtro). INP = maior duração por interactionId. Laboratório, não CrUX.",
+  "resultados": [
+    {
+      "rota": "/app/pedidos",
+      "condicao": "desktop",
+      "interacoes": 1,
+      "inp": 64,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 64,
+        "inicio": 2972,
+        "interacao": 9865,
+        "alvo": "BUTTON"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/contacts",
+      "condicao": "desktop",
+      "interacoes": 4,
+      "inp": 48,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 48,
+        "inicio": 2739,
+        "interacao": 530,
+        "alvo": "INPUT"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/inbox",
+      "condicao": "desktop",
+      "interacoes": 4,
+      "inp": 64,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 64,
+        "inicio": 2702,
+        "interacao": 3277,
+        "alvo": "INPUT"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/financeiro",
+      "condicao": "desktop",
+      "interacoes": 1,
+      "inp": 64,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 64,
+        "inicio": 2765,
+        "interacao": 2578,
+        "alvo": "BUTTON"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/kanban",
+      "condicao": "desktop",
+      "interacoes": 0,
+      "inp": 0,
+      "pior": null,
+      "semInteracao": true,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/ai",
+      "condicao": "desktop",
+      "interacoes": 0,
+      "inp": 0,
+      "pior": null,
+      "semInteracao": true,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/pedidos",
+      "condicao": "celular",
+      "interacoes": 1,
+      "inp": 96,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 96,
+        "inicio": 3087,
+        "interacao": 8895,
+        "alvo": "BUTTON"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/contacts",
+      "condicao": "celular",
+      "interacoes": 4,
+      "inp": 56,
+      "pior": {
+        "nome": "keydown",
+        "duracao": 56,
+        "inicio": 2790,
+        "interacao": 6721,
+        "alvo": "INPUT"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/inbox",
+      "condicao": "celular",
+      "interacoes": 4,
+      "inp": 48,
+      "pior": {
+        "nome": "keydown",
+        "duracao": 48,
+        "inicio": 2821,
+        "interacao": 4886,
+        "alvo": "INPUT"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/financeiro",
+      "condicao": "celular",
+      "interacoes": 1,
+      "inp": 64,
+      "pior": {
+        "nome": "pointerdown",
+        "duracao": 64,
+        "inicio": 2736,
+        "interacao": 9038,
+        "alvo": "BUTTON"
+      },
+      "semInteracao": false,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/kanban",
+      "condicao": "celular",
+      "interacoes": 0,
+      "inp": 0,
+      "pior": null,
+      "semInteracao": true,
+      "acimaDe200": 0
+    },
+    {
+      "rota": "/app/ai",
+      "condicao": "celular",
+      "interacoes": 0,
+      "inp": 0,
+      "pior": null,
+      "semInteracao": true,
+      "acimaDe200": 0
+    }
+  ]
+}

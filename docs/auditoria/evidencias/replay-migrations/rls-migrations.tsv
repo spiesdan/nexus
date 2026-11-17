@@ -1,0 +1,12 @@
+comando_sem_politica	public.system_update_runs	DELETE
+comando_sem_politica	public.system_update_runs	INSERT
+comando_sem_politica	public.system_update_runs	SELECT
+comando_sem_politica	public.system_update_runs	UPDATE
+comando_sem_politica	public.system_version	DELETE
+comando_sem_politica	public.system_version	INSERT
+comando_sem_politica	public.system_version	SELECT
+comando_sem_politica	public.system_version	UPDATE
+dono	public.system_update_runs	postgres
+dono	public.system_version	postgres
+rls_sem_politica	public.system_update_runs	deny-all para anon/authenticated
+rls_sem_politica	public.system_version	deny-all para anon/authenticated

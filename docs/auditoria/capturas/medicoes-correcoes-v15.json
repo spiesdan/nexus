@@ -1,0 +1,177 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "correcoes-v15",
+  "perfil": "dono",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app/audit",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2209,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_audit.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Audit Log · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Audit Log"
+      ],
+      "textoVisivel": 6465,
+      "url": "/app/audit"
+    },
+    {
+      "rota": "/app/settings/profile",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1583,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_settings_profile.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Perfil · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 35,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Perfil"
+      ],
+      "textoVisivel": 732,
+      "url": "/app/settings/profile"
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1726,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_admin_tenants_new.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Novo Tenant — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 20,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Novo Tenant"
+      ],
+      "textoVisivel": 514,
+      "url": "/admin/tenants/new"
+    },
+    {
+      "rota": "/app/webhooks",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1460,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_webhooks.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Webhooks · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 624,
+      "url": "/app/webhooks"
+    },
+    {
+      "rota": "/app/audit",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1260,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_app_audit.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Audit Log · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Audit Log"
+      ],
+      "textoVisivel": 2395,
+      "url": "/app/audit"
+    },
+    {
+      "rota": "/app/settings/profile",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1363,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_app_settings_profile.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Perfil · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 5,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Perfil"
+      ],
+      "textoVisivel": 430,
+      "url": "/app/settings/profile"
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1718,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_admin_tenants_new.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Novo Tenant — Admin Plataforma",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Novo Tenant"
+      ],
+      "textoVisivel": 326,
+      "url": "/admin/tenants/new"
+    },
+    {
+      "rota": "/app/webhooks",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1452,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_app_webhooks.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Webhooks · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 5,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 343,
+      "url": "/app/webhooks"
+    }
+  ]
+}

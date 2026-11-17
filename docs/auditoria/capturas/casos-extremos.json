@@ -1,0 +1,50 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T10:57:00.183Z",
+  "nomeRealista": 50,
+  "nomePatologico": 107,
+  "emailLongo": 87,
+  "telas": [
+    {
+      "tela": "desktop",
+      "realista": {
+        "achou": true,
+        "alturaDaLinha": 53,
+        "truncado": true,
+        "larguraTexto": 232,
+        "alturaTexto": 20,
+        "linhas": 1
+      },
+      "patologico": {
+        "achou": true,
+        "alturaDaLinha": 53,
+        "truncado": true,
+        "larguraTexto": 232,
+        "alturaTexto": 20,
+        "linhas": 1
+      },
+      "overflowHorizontal": 0
+    },
+    {
+      "tela": "estreito",
+      "realista": {
+        "achou": true,
+        "alturaDaLinha": 49,
+        "truncado": true,
+        "larguraTexto": 224,
+        "alturaTexto": 20,
+        "linhas": 1
+      },
+      "patologico": {
+        "achou": true,
+        "alturaDaLinha": 49,
+        "truncado": true,
+        "larguraTexto": 224,
+        "alturaTexto": 20,
+        "linhas": 1
+      },
+      "overflowHorizontal": 0
+    }
+  ],
+  "limpo": true
+}

@@ -13,6 +13,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { fail } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { tagDeIdioma } from "@/lib/i18n/datas";
 import { nomeDoPdfPuladas, renderPuladasPdf, type LacunaPulada, type SeriePuladas } from "@/lib/fiscal/puladas-pdf";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -130,6 +131,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     { nome: o.legal_name ?? o.display_name ?? "Empresa", documento: o.cnpj },
     series,
     serieFiltro === "" ? null : serieFiltro,
+    // O idioma já vem resolvido do `requireRole` (preferência da pessoa → da
+    // organização → padrão do produto). O PDF não adivinha mais pelo servidor.
+    tagDeIdioma(authz.user.idioma),
   );
 
   const nome = nomeDoPdfPuladas(serieFiltro === "" ? null : serieFiltro);

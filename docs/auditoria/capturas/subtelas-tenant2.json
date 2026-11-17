@@ -1,0 +1,1424 @@
+{
+  "geradoEm": "2026-11-16T08:38:35.711Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 32,
+  "resultados": [
+    {
+      "rota": "/app/agenda",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agenda"
+      ],
+      "textoVisivel": 1457,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ]
+    },
+    {
+      "rota": "/app/ai/agents",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agents de IA"
+      ],
+      "textoVisivel": 1050,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/agents",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Renomear agent",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 389,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Abertos",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Concluídos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Casos"
+      ],
+      "textoVisivel": 465,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/cases",
+      "tipo": "aba",
+      "subtela": "Contato sem nome",
+      "familia": "aba-caseira",
+      "naoMedida": "elemento não encontrado no DOM (aba-caseira)"
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "textoVisivel": 406,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Adicionar credencial",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "textoVisivel": 904,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "tipo": "aba",
+      "subtela": "Aguardando decisão",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "tipo": "aba",
+      "subtela": "Já decididas",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "textoVisivel": 889,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "textoVisivel": 2431,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups",
+      "tipo": "aba",
+      "subtela": "Fluxos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "textoVisivel": 2431,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups",
+      "tipo": "aba",
+      "subtela": "Fila",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "textoVisivel": 1804,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/followups",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Novo fluxo de follow-up",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "textoVisivel": 1218,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "tipo": "aba",
+      "subtela": "Abertos",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "tipo": "aba",
+      "subtela": "Resolvidos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "textoVisivel": 678,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "textoVisivel": 872,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Ensinar algo novo ao agente",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/memory",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "textoVisivel": 1190,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/memory",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Versão",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "textoVisivel": 410,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "tipo": "aba",
+      "subtela": "Aguardando decisão",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "tipo": "aba",
+      "subtela": "Já decididas",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "textoVisivel": 400,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/routers",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "textoVisivel": 474,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/routers",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Novo roteador",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/ai/usage",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "textoVisivel": 1207,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/ai/usage",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Orçamento de IA",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/campanhas",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha"
+      ],
+      "textoVisivel": 652,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/campanhas",
+      "tipo": "aba",
+      "subtela": "Campanha",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha"
+      ],
+      "textoVisivel": 652,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/campanhas",
+      "tipo": "aba",
+      "subtela": "Prospecção",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha",
+        "Prospecção"
+      ],
+      "textoVisivel": 708,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/campanhas",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Campanha por região",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Enviar mensagem para   empresas",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Importar arquivo",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 575,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "aba",
+      "subtela": "Pedidos",
+      "familia": "aba-caseira",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 575,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "aba",
+      "subtela": "Fornecedores",
+      "familia": "aba-caseira",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 546,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "modal",
+      "subtela": "Novo fornecedor",
+      "gatilho": "Novo fornecedor",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 667,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Nova compra",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/contacts",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1718,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts",
+      "tipo": "aba",
+      "subtela": "Pessoa jurídica",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/contacts",
+      "tipo": "aba",
+      "subtela": "Pessoa física",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/contacts",
+      "tipo": "modal",
+      "subtela": "Importar clientes de planilha",
+      "gatilho": "Importar CSV",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1964,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/contacts",
+      "tipo": "modal",
+      "subtela": "Novo cliente",
+      "gatilho": "Novo cliente",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 2051,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/estoque",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 333,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/estoque",
+      "tipo": "modal",
+      "subtela": "Novo movimento",
+      "gatilho": "Novo movimento",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 509,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 704,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Contas a receber",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 704,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Contas a pagar",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 607,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Cobranças",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 442,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Conciliação",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 1943,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Fluxo de caixa",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 660,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/financeiro",
+      "tipo": "aba",
+      "subtela": "Títulos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 3966,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/fiscal",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "NF-e recebidas"
+      ],
+      "textoVisivel": 1053,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/fiscal",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Associar item ao catálogo",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/frota",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Frota"
+      ],
+      "textoVisivel": 640,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/frota",
+      "tipo": "aba",
+      "subtela": "Veículos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Frota"
+      ],
+      "textoVisivel": 640,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/frota",
+      "tipo": "aba",
+      "subtela": "Motoristas",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Frota"
+      ],
+      "textoVisivel": 619,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/inbox",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 736,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/kanban",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 432,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/kanban",
+      "tipo": "modal",
+      "subtela": "Importar leads de uma planilha",
+      "gatilho": "Importar planilha",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 633,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/notas",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "textoVisivel": 1297,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/notas",
+      "tipo": "modal",
+      "subtela": "Corrigir nota",
+      "gatilho": "Corrigir",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "textoVisivel": 2087,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/notas",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        },
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        },
+        {
+          "titulo": "Associar item ao catálogo",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "textoVisivel": 961,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "tipo": "aba",
+      "subtela": "Pessoa jurídica",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "tipo": "aba",
+      "subtela": "Pessoa física",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "tipo": "modal",
+      "subtela": "Novo cliente",
+      "gatilho": "Cadastrar novo cliente",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "textoVisivel": 1331,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Prévia do pedido",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Adicionar produtos com IA / Confira os produtos encontrados",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 3034,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 3034,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Promoções",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 775,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Destaques",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 775,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Configurações",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 590,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Categorias",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 590,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Tabelas de preço",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Catálogo"
+      ],
+      "textoVisivel": 566,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Produtos e tabelas",
+      "familia": "aba-caseira",
+      "naoMedida": "elemento não encontrado no DOM (aba-caseira)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Importar fotos",
+      "familia": "aba-caseira",
+      "naoMedida": "elemento não encontrado no DOM (aba-caseira)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Informações gerais / há um NCM sugerido",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Variações",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "aba",
+      "subtela": "Peso e dimensões",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/products",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Foto do produto",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/prospeccao",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha",
+        "Prospecção"
+      ],
+      "textoVisivel": 708,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/prospeccao",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Enviar mensagem para   empresas",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Importar arquivo",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Nova campanha"
+      ],
+      "textoVisivel": 2352,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/radar",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Radar Comercial"
+      ],
+      "textoVisivel": 1370,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/radar",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Campanha de recuperação",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Radar Comercial"
+      ],
+      "textoVisivel": 648,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Radar Comercial"
+      ],
+      "textoVisivel": 727,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Campanha de recuperação",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/settings/security",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Segurança"
+      ],
+      "textoVisivel": 932,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Configure a verificação em duas etapas",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Escaneie o QR code",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        },
+        {
+          "titulo": "Códigos de recuperação",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Venda Automática"
+      ],
+      "textoVisivel": 225,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "(rótulo dinâmico)",
+          "motivo": "rótulo dinâmico — o gatilho não é derivável"
+        }
+      ]
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 413,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "aba",
+      "subtela": "Receber dados",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 413,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "aba",
+      "subtela": "Leads recebidos",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 1542,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "aba",
+      "subtela": "Automações",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 312,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "aba",
+      "subtela": "Atividade",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Webhooks"
+      ],
+      "textoVisivel": 1773,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/webhooks",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Nova fonte de captação",
+          "motivo": "nenhum botão visível abriu este diálogo (exploração com bloqueio de verbo destrutivo)"
+        }
+      ]
+    }
+  ]
+}

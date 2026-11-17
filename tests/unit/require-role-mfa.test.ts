@@ -147,4 +147,38 @@ describe("requireRole — MFA é política de sessão, não de cadastro", () => 
       expect(corpo.error.code).toBe("forbidden_role");
     }
   });
+
+  it("platform admin com fator em aal1 cai no MFA mesmo com allowPlatformAdmin", async () => {
+    // O atalho do platform admin pulava o rank do tenant — e, antes, também
+    // pulava o gate de MFA: um platform admin com TOTP cadastrado alcançava
+    // token de API/LGPD/admin em aal1.
+    preparar({ role: "viewer", temFator: true, aal: "aal1", isPlatformAdmin: true });
+    const r = await requireRole("admin", {
+      requestId: "req-pa-1",
+      allowPlatformAdmin: true,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      const corpo = (await r.response.json()) as { error: { code: string } };
+      expect(corpo.error.code).toBe("mfa_required");
+    }
+  });
+
+  it("platform admin em aal2 passa pelo atalho", async () => {
+    preparar({ role: "viewer", temFator: true, aal: "aal2", isPlatformAdmin: true });
+    const r = await requireRole("admin", {
+      requestId: "req-pa-2",
+      allowPlatformAdmin: true,
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it("platform admin sem fator cadastrado passa (senão não conseguiria cadastrar)", async () => {
+    preparar({ role: "viewer", temFator: false, aal: "aal1", isPlatformAdmin: true });
+    const r = await requireRole("admin", {
+      requestId: "req-pa-3",
+      allowPlatformAdmin: true,
+    });
+    expect(r.ok).toBe(true);
+  });
 });

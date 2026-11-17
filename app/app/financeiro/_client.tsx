@@ -9,7 +9,11 @@ import { EmptyFilterResults } from "@/components/empty";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
-import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
+import {
+  NexusKpi,
+  NexusKpiGrid,
+  NexusKpiSkeleton,
+} from "@/components/nexus-ui/kpi/nexus-kpi";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
@@ -110,6 +114,7 @@ export function FinanceiroClient({
   const [de, setDe] = React.useState("");
   const [ate, setAte] = React.useState("");
   const [kpis, setKpis] = React.useState<Record<string, number> | null>(null);
+  const [amostraKpis, setAmostraKpis] = React.useState(false);
   const [erroRecebiveis, setErroRecebiveis] = React.useState(false);
   const [erroConciliacao, setErroConciliacao] = React.useState(false);
   const [divergencias, setDivergencias] = React.useState<
@@ -141,12 +146,20 @@ export function FinanceiroClient({
     [],
   );
 
-  const carregarKpis = React.useCallback(async () => {
+  // Os KPIs têm de seguir o MESMO filtro de data da lista. O cartão diz
+  // "Recebido (período)" e a rota era chamada sem `de`/`ate`: o número exibido
+  // ao lado de um filtro visível era o total histórico.
+  const carregarKpis = React.useCallback(async (de: string, ate: string) => {
     try {
-      const corpo = await apiClient.get<{ data: Record<string, number> }>(
-        "/api/v1/financeiro/dashboard",
-      );
+      const qs = new URLSearchParams();
+      if (de) qs.set("de", de);
+      if (ate) qs.set("ate", ate);
+      const corpo = await apiClient.get<{
+        data: Record<string, number>;
+        meta?: { amostra_parcial?: boolean };
+      }>(`/api/v1/financeiro/dashboard${qs.size > 0 ? `?${qs}` : ""}`);
       setKpis(corpo.data ?? null);
+      setAmostraKpis(corpo.meta?.amostra_parcial === true);
     } catch {
       setKpis(null);
     }
@@ -169,7 +182,7 @@ export function FinanceiroClient({
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void carregar(1, { busca: "", status: "", de: "", ate: "" });
-    void carregarKpis();
+    void carregarKpis("", "");
   }, [carregar, carregarKpis]);
 
   React.useEffect(() => {
@@ -180,6 +193,7 @@ export function FinanceiroClient({
   function aplicarFiltros() {
     setPagina(1);
     void carregar(1, { busca, status, de, ate });
+    void carregarKpis(de, ate);
   }
 
   function filtroRapido(qual: "hoje" | "vencidos" | "7d" | "30d") {
@@ -205,6 +219,7 @@ export function FinanceiroClient({
       ate: qual === "vencidos" ? "" : qual === "hoje" ? h : maisDias(qual === "7d" ? 7 : 30),
     };
     void carregar(1, f);
+    void carregarKpis(f.de, f.ate);
   }
 
   const totalPaginas = Math.max(1, Math.ceil(total / 50));
@@ -224,11 +239,14 @@ export function FinanceiroClient({
       />
 
       {kpis === null ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
+        // O esqueleto segue o grid e o cartão de verdade (ver NexusKpiSkeleton):
+        // os dois últimos KPIs têm a linha de comparação no rodapé.
+        <NexusKpiGrid>
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton comRodape />
+          <NexusKpiSkeleton comRodape />
+        </NexusKpiGrid>
       ) : (
         <NexusKpiGrid>
           <NexusKpi label={t("A receber")} value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")} />
@@ -248,6 +266,14 @@ export function FinanceiroClient({
             comparison={`${t("Vendas")}: ${comoMoeda(kpis.vendas_periodo_cents ?? 0, "BRL")}`}
           />
         </NexusKpiGrid>
+      )}
+
+      {amostraKpis && (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t(
+            "A base passou do teto de leitura: os números deste painel são da amostra carregada, não da carteira inteira.",
+          )}
+        </p>
       )}
 
       <Tabs value={aba} onValueChange={setAba}>
@@ -457,7 +483,7 @@ export function FinanceiroClient({
                                 podeRegistrar={podeRegistrar}
                                 aoMudar={() => {
                                   void carregar(pagina, { busca: buscaAplicada, status, de, ate });
-                                  void carregarKpis();
+                                  void carregarKpis(de, ate);
                                 }}
                               />
                             </TableCell>
@@ -619,7 +645,12 @@ function AbaPagar() {
   if (pagaveis === null) {
     return (
       <div className="space-y-2" aria-live="polite">
-        <Skeleton className="h-24 w-full" />
+        <NexusKpiGrid>
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+        </NexusKpiGrid>
         <Skeleton className="h-10 w-full" />
       </div>
     );

@@ -1,10 +1,25 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { loadAuthUser } from "@/lib/auth/server";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AuthProvider } from "@/hooks/auth/AuthProvider";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
+import { tituloDaRota } from "@/lib/navigation/titulos";
+
+/**
+ * Título da aba do admin de plataforma. As páginas que já declaram
+ * `metadata` próprio (dashboard, tenants, audit, usage, marca, incidentes,
+ * usuários…) continuam vencendo — isto cobre o que faltava e o que nascer
+ * depois, sem uma lista paralela para envelhecer.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const caminho = (await headers()).get("x-pathname") ?? "";
+  const titulo = tituloDaRota(caminho);
+  return titulo ? { title: titulo } : {};
+}
 
 export default async function ProtectedAdminLayout({ children }: { children: ReactNode }) {
   // Duas leituras, propósitos diferentes: `requirePlatformAdmin` é a GUARDA

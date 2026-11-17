@@ -122,6 +122,13 @@ export default async function FiscalVisaoGeralPage() {
       ? Date.parse(cert.validade) - agora < 30 * 24 * 60 * 60 * 1000
       : false;
   const atrasado = cur?.max_nsu !== undefined && cur.max_nsu > (cur?.ult_nsu ?? 0);
+  // O erro da SEFAZ era LIDO e nunca renderizado: a porta do módulo dizia
+  // "tudo certo" com a última sincronização recusada. 656 tem cartão próprio
+  // (backoff); 100 é sucesso.
+  const erroSefaz =
+    cfg?.ultimo_cstat && !["100", "656"].includes(cfg.ultimo_cstat)
+      ? `${cfg.ultimo_cstat}${cfg.ultimo_motivo ? ` — ${cfg.ultimo_motivo}` : ""}`
+      : (cur?.ultimo_erro ?? null);
 
   return (
     <div className="space-y-6">
@@ -155,7 +162,7 @@ export default async function FiscalVisaoGeralPage() {
         />
       </NexusKpiGrid>
 
-      {(emBackoff || certificadoVencendo || atrasado || !cfg) && (
+      {(emBackoff || certificadoVencendo || atrasado || erroSefaz || !cfg) && (
         <div className="space-y-2">
           {!cfg && (
             <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm">
@@ -163,6 +170,15 @@ export default async function FiscalVisaoGeralPage() {
               em{" "}
               <Link href="/app/fiscal/configuracoes" className="underline underline-offset-4">
                 Configurações Fiscais
+              </Link>
+              .
+            </p>
+          )}
+          {erroSefaz && (
+            <p className="rounded-lg border border-error/40 bg-error-bg px-4 py-3 text-sm text-error-fg">
+              <strong>A SEFAZ recusou a última sincronização.</strong> {erroSefaz}. Veja{" "}
+              <Link href="/app/fiscal/sincronizacoes" className="underline underline-offset-4">
+                Sincronizações
               </Link>
               .
             </p>

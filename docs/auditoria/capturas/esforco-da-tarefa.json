@@ -1,0 +1,33 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T11:12:15.856Z",
+  "metodo": "Eventos reais (pointerdown/keydown) contados por listener injetado antes do primeiro script. Tarefas de leitura, nenhum dado é gravado.",
+  "resultados": [
+    {
+      "tarefa": "achar cliente e abrir a ficha",
+      "rota": "/app/contacts",
+      "cliques": 2,
+      "teclas": 7,
+      "chegou": true,
+      "abriu": "Escalação E2E"
+    },
+    {
+      "tarefa": "abrir o pedido do topo da lista",
+      "rota": "/app/pedidos",
+      "cliques": 1,
+      "teclas": 0,
+      "chegou": true,
+      "navegou": true,
+      "painel": false,
+      "abriu": "PED-0062"
+    },
+    {
+      "tarefa": "ver os recebíveis vencidos",
+      "rota": "/app/financeiro",
+      "cliques": 1,
+      "teclas": 0,
+      "chegou": true,
+      "linhas": 1
+    }
+  ]
+}

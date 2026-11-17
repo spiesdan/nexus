@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import {
-  buscarEntidades,
+  buscarEntidadesComFalhas,
   MINIMO_DE_LETRAS,
   telasQueCasam,
   type ItemDeBusca,
@@ -40,6 +40,19 @@ export function BuscaClient({ q }: { q: string }) {
   const { user, activeOrg } = useAuth();
   const [busca, setBusca] = useState(q);
   const [secoes, setSecoes] = useState<SecaoDeBusca[]>([]);
+  /**
+   * A busca é assíncrona e a tela mostrava "Nada encontrado" ANTES da resposta:
+   * o `blocos.length === 0` do primeiro render era lido como ausência de
+   * resultado. Quem digitava "maria" e tinha 40 clientes via a página afirmar
+   * que não existia nada. Só se declara vazio depois que a consulta DESTE termo
+   * terminou.
+   */
+  const [carregando, setCarregando] = useState(false);
+  // Entidades que NÃO puderam ser consultadas nesta busca. Sem isto, a seção
+  // ausente virava "nada encontrado" — uma afirmação sobre o negócio em cima de
+  // uma falha de rede.
+  const [falharam, setFalharam] = useState<string[]>([]);
+  const consultaAtual = useRef(0);
 
   const visiveis = useMemo(
     () => searchable(user.is_platform_admin, activeOrg?.role ?? null),
@@ -49,11 +62,24 @@ export function BuscaClient({ q }: { q: string }) {
   const telas = useMemo(() => telasQueCasam(visiveis, busca), [busca, visiveis]);
 
   const buscar = useDebouncedCallback((termo: string) => {
+    const seq = ++consultaAtual.current;
     if (termo.trim().length < MINIMO_DE_LETRAS) {
       setSecoes([]);
+      setFalharam([]);
+      setCarregando(false);
       return;
     }
-    void buscarEntidades(termo, 10).then(setSecoes);
+    setCarregando(true);
+    void buscarEntidadesComFalhas(termo, 10)
+      .then((r) => {
+        // Resposta de um termo antigo não sobrescreve a do termo atual.
+        if (seq !== consultaAtual.current) return;
+        setSecoes(r.secoes);
+        setFalharam(r.falharam);
+      })
+      .finally(() => {
+        if (seq === consultaAtual.current) setCarregando(false);
+      });
   }, 300);
 
   useEffect(() => {
@@ -77,7 +103,22 @@ export function BuscaClient({ q }: { q: string }) {
     return saida;
   }, [telas, secoes, t]);
 
-  const vazia = busca.trim() !== "" && blocos.length === 0;
+  // "Vazio" só depois da resposta, e só se o termo tem tamanho para buscar.
+  const vazia =
+    busca.trim().length >= MINIMO_DE_LETRAS &&
+    !carregando &&
+    blocos.length === 0 &&
+    falharam.length === 0;
+  // Nomes legíveis do que falhou — a chave crua não diz nada a quem lê.
+  const ROTULO_FALHA: Record<string, string> = {
+    conversas: t("conversas"),
+    clientes: t("clientes"),
+    pedidos: t("pedidos"),
+    leads: t("leads"),
+    produtos: t("produtos"),
+    titulos: t("títulos"),
+  };
+  const curta = busca.trim().length > 0 && busca.trim().length < MINIMO_DE_LETRAS;
 
   function aoTeclar(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== "Enter") return;
@@ -106,9 +147,23 @@ export function BuscaClient({ q }: { q: string }) {
         />
       </div>
 
-      {busca.trim() === "" ? (
+      {busca.trim() === "" || curta ? (
         <p className="text-sm text-muted-foreground">
           {t("Digite ao menos 2 letras para varrer o sistema inteiro.")}
+        </p>
+      ) : null}
+
+      {!carregando && falharam.length > 0 ? (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t("Não consegui buscar em:")}{" "}
+          {falharam.map((f) => ROTULO_FALHA[f] ?? f).join(", ")}.{" "}
+          {t("O resultado acima está incompleto — tente de novo.")}
+        </p>
+      ) : null}
+
+      {carregando ? (
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {t("Buscando…")}
         </p>
       ) : null}
 

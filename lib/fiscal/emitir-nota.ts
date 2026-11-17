@@ -121,11 +121,18 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
       avulsa.itens.reduce((soma, i) => soma + subtotalDoItem(i.quantidade, i.preco_cents, i.desconto_pct), 0) +
       avulsa.frete_cents;
 
-    const destinatario = await carregarDestinatario(supabase, orgId, {
-      cliente_nome: avulsa.cliente_nome ?? undefined,
-      cliente_documento: avulsa.cliente_documento ?? null,
-      contact_id: avulsa.contato_id ?? null,
-    });
+    const destinatario = await carregarDestinatario(
+      supabase,
+      orgId,
+      {
+        cliente_nome: avulsa.cliente_nome ?? undefined,
+        cliente_documento: avulsa.cliente_documento ?? null,
+        contact_id: avulsa.contato_id ?? null,
+      },
+      // O que a pessoa digitou na tela vence o cadastro — é o ajuste manual
+      // de nome/CPF-CNPJ/IE que a emissão oferece antes de mandar.
+      extras?.destinatario,
+    );
     const entrega = extras?.entrega ?? destinatario.entrega;
 
     if (escolha === "spednfe" && !entrega) {
@@ -301,7 +308,13 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   //
   // O que a pessoa digitou em `extras.entrega` vence o cadastro: quem digitou
   // tinha um motivo (endereço de entrega diferente do cobrança, por exemplo).
-  const destinatario = await carregarDestinatario(supabase, orgId, ped);
+  const destinatario = await carregarDestinatario(
+    supabase,
+    orgId,
+    ped,
+    // Nome, CPF/CNPJ e IE digitados na tela vencem o cadastro/ snapshot.
+    extras?.destinatario,
+  );
   const entrega = extras?.entrega ?? destinatario.entrega;
 
   // A SEFAZ recusa a NF-e sem o endereço do destinatário (rejeição 726), e o

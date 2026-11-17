@@ -14,6 +14,9 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { validateRequest } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ajustarEstoque } from "@/lib/estoque/ajustar";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +96,61 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     .eq("id", id);
   if (error) return fail("internal_error", "Erro ao atualizar o pedido.", 500, { requestId });
 
+  // ─── CANCELAR COMPRA ESTORNA O QUE JÁ ENTROU (decisão do dono, 17/11) ───
+  //
+  // `enviado` pode ter recebimento PARCIAL. Cancelar sem estornar deixaria o
+  // saldo com mercadoria de uma compra que não existe mais. O estorno é
+  // automático: baixa a quantidade recebida pelo CAS e registra o movimento,
+  // para o razão de estoque contar a história. `recebido_qtd` volta a zero
+  // depois do estorno — repetir o cancelamento não estorna duas vezes.
+  const avisos: string[] = [];
+  if (input.status === "cancelado") {
+    const admin = createAdminClient();
+    const { data: itens } = await supabase
+      .from("purchase_order_items")
+      .select("id, product_id, produto_codigo, recebido_qtd")
+      .eq("organization_id", orgId)
+      .eq("purchase_order_id", id);
+    for (const it of (itens ?? []) as {
+      id: string;
+      product_id: string | null;
+      produto_codigo: string | null;
+      recebido_qtd: number;
+    }[]) {
+      if (!it.product_id || it.recebido_qtd <= 0) continue;
+      const r = await ajustarEstoque(admin, {
+        organizationId: orgId,
+        productId: it.product_id,
+        delta: -it.recebido_qtd,
+      });
+      if (!r.ok) {
+        avisos.push(`Estoque de ${it.produto_codigo ?? it.product_id} não estornado (${r.motivo}).`);
+        logger.error("[purchase-orders] estorno de compra cancelada falhou", {
+          organization_id: orgId,
+          purchase_order_id: id,
+          product_id: it.product_id,
+          motivo: r.motivo,
+        });
+        continue;
+      }
+      await admin.from("inventory_movements").insert({
+        organization_id: orgId,
+        product_id: it.product_id,
+        tipo: "saida",
+        quantidade: it.recebido_qtd,
+        origem: "compra_cancelada",
+        purchase_order_id: id,
+        observacao: "Estorno automático de compra cancelada",
+        created_by: authz.user.id,
+      });
+      await supabase
+        .from("purchase_order_items")
+        .update({ recebido_qtd: 0 })
+        .eq("organization_id", orgId)
+        .eq("id", it.id);
+    }
+  }
+
   await audit({
     action: "purchase.status",
     actorUserId: authz.user.id,
@@ -103,5 +161,5 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     metadata: { de: st, para: input.status },
   });
   const d = await detalhe(supabase, orgId, id);
-  return ok(d, { requestId });
+  return ok(avisos.length > 0 ? { ...(d as object), avisos } : d, { requestId });
 }

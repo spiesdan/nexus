@@ -160,7 +160,11 @@ export function TemplateFormDialog({ open, onOpenChange, canShare, template }: P
               {t("Cancelar")}
             </Button>
             <Button type="submit" disabled={pending}>
-              {isEdit ? t("Salvar") : t("Criar template")}
+              {pending
+                ? t("Salvando…")
+                : isEdit
+                  ? t("Salvar")
+                  : t("Criar template")}
             </Button>
           </DialogFooter>
         </form>

@@ -197,10 +197,10 @@ function Saidas({ status, sessionName }: { status: Status; sessionName: string }
         onClick={() =>
           startTransition(async () => {
             try {
-              await markWhatsappConfigured(
-                sessionName,
-                status === "WORKING" ? "WORKING" : "configured",
-              );
+              // O servidor confirma a sessão no transporte antes de dar o passo
+              // por cumprido — o clique não é prova de conexão.
+              const res = await markWhatsappConfigured(sessionName, "configured");
+              if (res && !res.ok) toast.error(res.error);
             } catch (err) {
               if (isRedirectError(err)) throw err;
               toast.error(`${t("Falha ao marcar passo:")} ${String(err)}`);
@@ -220,7 +220,7 @@ export function ConnectWhatsappClient({
   oficialPodeReceber,
 }: Props) {
   const t = useT();
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [forma, setForma] = useState<Forma | null>(null);
   const [info, setInfo] = useState<SessionInfo>({ status: "INIT", session: sessionName });
   const [qrTick, setQrTick] = useState(0);
@@ -314,7 +314,8 @@ export function ConnectWhatsappClient({
     if (status !== "WORKING") return;
     startTransition(async () => {
       try {
-        await markWhatsappConfigured(sessionName, "WORKING");
+        const res = await markWhatsappConfigured(sessionName, "WORKING");
+        if (res && !res.ok) toast.error(res.error);
       } catch (err) {
         if (isRedirectError(err)) throw err;
         toast.error("Falha ao avançar: " + String(err));

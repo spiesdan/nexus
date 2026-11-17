@@ -1,3 +1,8 @@
+import {
+  type InscricaoEstadual,
+  buscarInscricoesEstaduais,
+  escolherIe,
+} from "@/lib/brasil/inscricao-estadual";
 import { normalizarTelefone } from "@/lib/prospeccao/normalizacao";
 
 /**
@@ -6,9 +11,26 @@ import { normalizarTelefone } from "@/lib/prospeccao/normalizacao";
  * Fonte: BrasilAPI (`/api/cnpj/v1/{cnpj}`), pública e sem chave. Timeout de
  * 10s e erros NOMEADOS (cnpj_invalido, nao_encontrado, servico_indisponivel)
  * para a tela dizer o motivo em vez de "algo deu errado".
+ *
+ * **A IE vem de outra fonte, e é de propósito.** A BrasilAPI não publica
+ * inscrição estadual (verificado em 16/11/2026), e é ela que a NF-e exige —
+ * rejeição 232 é exatamente isso. As duas consultas saem em paralelo, e a de
+ * IE pode falhar sem derrubar o cadastro: cliente sem IE ainda é cliente.
  */
 
 const CNPJ_DIGITS = /^\d{14}$/;
+
+/**
+ * A BrasilAPI responde **403 ao User-Agent padrão do Node** (`node`), medido em
+ * 16/11/2026: `curl` recebia 200 e o `fetch` do servidor, 403 — o cadastro
+ * aparecia como "Receita indisponível" sem a Receita ter caído. Identificar o
+ * cliente devolve 200. Não é cosmético: é o que separa "fonte fora do ar" de
+ * "fonte recusou o cliente".
+ */
+const CABECALHOS_HTTP = {
+  accept: "application/json",
+  "user-agent": "nexus-selfhost/1.0 (+https://github.com/spiesdan/nexus)",
+} as const;
 
 /**
  * Dígitos verificadores (módulo 11, pesos 5→2 e 6→2 — algoritmo da Receita).
@@ -56,6 +78,8 @@ export interface EmpresaReceita {
   uf: string | null;
   cep: string | null;
   situacao: string | null;
+  /** IEs publicadas para o CNPJ, uma por UF. Vazio quando a fonte não tem. */
+  inscricoes_estaduais: InscricaoEstadual[];
 }
 
 export type ErroCnpj = "cnpj_invalido" | "nao_encontrado" | "servico_indisponivel";
@@ -67,16 +91,23 @@ export async function buscarCnpj(
 ): Promise<{ ok: true; empresa: EmpresaReceita } | { ok: false; erro: ErroCnpj }> {
   const digitos = normalizarCnpj(raw);
   if (!digitos || !isValidCnpj(digitos)) return { ok: false, erro: "cnpj_invalido" };
+
+  // As duas fontes saem juntas. A de IE nunca rejeita (tem catch próprio), e o
+  // resultado dela é lido só no caminho de sucesso — cadastro não depende dela.
+  const iesPromessa = buscarInscricoesEstaduais(digitos, fetchFn);
+
   const controle = new AbortController();
   const limite = setTimeout(() => controle.abort(), 10000);
   try {
     const res = await fetchFn(`https://brasilapi.com.br/api/cnpj/v1/${digitos}`, {
       signal: controle.signal,
+      headers: CABECALHOS_HTTP,
     });
     if (res.status === 404) return { ok: false, erro: "nao_encontrado" };
     if (!res.ok) return { ok: false, erro: "servico_indisponivel" };
     const j = (await res.json()) as Record<string, unknown>;
     const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const ies = await iesPromessa;
     return {
       ok: true,
       empresa: {
@@ -84,8 +115,7 @@ export async function buscarCnpj(
         razao_social: str(j.razao_social) ?? "",
         nome_fantasia: str(j.nome_fantasia),
         email: str(j.email),
-        telefone:
-          [str(j.ddd_telefone_1), str(j.ddd_telefone_2)].find((t) => t) ?? null,
+        telefone: [str(j.ddd_telefone_1), str(j.ddd_telefone_2)].find((t) => t) ?? null,
         logradouro: str(j.logradouro),
         numero: str(j.numero),
         bairro: str(j.bairro),
@@ -93,6 +123,7 @@ export async function buscarCnpj(
         uf: str(j.uf),
         cep: typeof j.cep === "string" ? j.cep.replace(/\D/g, "") || null : null,
         situacao: str(j.descricao_situacao_cadastral),
+        inscricoes_estaduais: ies.inscricoes,
       },
     };
   } catch {
@@ -115,6 +146,12 @@ export interface ContatoPreenchido {
   cidade: string | null;
   uf: string | null;
   cep: string | null;
+  /**
+   * IE do CNPJ na UF da empresa — `null` quando a fonte não publica nenhuma
+   * para aquele estado. É o que a tela de cliente preenche e o que evita a
+   * rejeição 232 na primeira nota.
+   */
+  ie: string | null;
   source_metadata: Record<string, unknown>;
 }
 
@@ -134,12 +171,23 @@ export function mapearParaContato(e: EmpresaReceita): ContatoPreenchido {
     cidade: e.municipio,
     uf: e.uf,
     cep: e.cep,
+    ie: escolherIe(e.inscricoes_estaduais, e.uf),
     source_metadata: {
       receita: {
         situacao: e.situacao,
-        endereco: [e.logradouro, e.numero, e.bairro, e.municipio && e.uf ? `${e.municipio}/${e.uf}` : null, e.cep]
+        endereco: [
+          e.logradouro,
+          e.numero,
+          e.bairro,
+          e.municipio && e.uf ? `${e.municipio}/${e.uf}` : null,
+          e.cep,
+        ]
           .filter(Boolean)
           .join(", "),
+        // Guardar TODAS as IEs, e não só a escolhida: a empresa pode ter
+        // inscrição em mais de um estado, e quem muda o destinatário de UF
+        // precisa da outra sem consultar de novo.
+        inscricoes_estaduais: e.inscricoes_estaduais,
       },
     },
   };

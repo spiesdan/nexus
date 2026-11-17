@@ -145,9 +145,7 @@ export function NewLeadDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo Lead</DialogTitle>
-          <DialogDescription>
-            {t("Crie um lead manualmente neste pipeline.")}
-          </DialogDescription>
+          <DialogDescription>{t("Crie um lead manualmente neste pipeline.")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
@@ -171,11 +169,8 @@ export function NewLeadDialog({
 
           <div className="space-y-2">
             <Label>Etapa</Label>
-            <Select
-              value={stageId}
-              onValueChange={(v) => form.setValue("stage_id", v)}
-            >
-              <SelectTrigger>
+            <Select value={stageId} onValueChange={(v) => form.setValue("stage_id", v)}>
+              <SelectTrigger aria-label="Etapa">
                 <SelectValue placeholder="Selecione a etapa" />
               </SelectTrigger>
               <SelectContent>
@@ -201,9 +196,7 @@ export function NewLeadDialog({
               />
               <EcoDoValor control={form.control} />
               {form.formState.errors.valueReais && (
-                <p className="text-xs text-error-fg">
-                  {form.formState.errors.valueReais.message}
-                </p>
+                <p className="text-xs text-error-fg">{form.formState.errors.valueReais.message}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -218,11 +211,7 @@ export function NewLeadDialog({
 
           <div className="space-y-2">
             <Label htmlFor="tagsRaw">{t("Tags (separadas por vírgula)")}</Label>
-            <Input
-              id="tagsRaw"
-              placeholder="vip, recompra"
-              {...form.register("tagsRaw")}
-            />
+            <Input id="tagsRaw" placeholder="vip, recompra" {...form.register("tagsRaw")} />
           </div>
 
           <DialogFooter>

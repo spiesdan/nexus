@@ -1,0 +1,36 @@
+{
+  "geradoEm": "2026-11-16T08:25:16.983Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 2,
+  "resultados": [
+    {
+      "rota": "/admin",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Dashboard"
+      ],
+      "textoVisivel": 567,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/admin/inbox",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox da plataforma"
+      ],
+      "textoVisivel": 1347,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}

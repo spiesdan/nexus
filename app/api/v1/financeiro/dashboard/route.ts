@@ -86,11 +86,23 @@ export async function GET(req: NextRequest): Promise<Response> {
     .not("status", "in", "(rascunho,cancelado)")
     .limit(10000);
   if (de) vendasQ = vendasQ.gte("created_at", `${de}T00:00:00Z`);
-  if (ate) vendasQ = vendasQ.lt("created_at", `${ate}T00:00:00Z`);
+  if (ate) {
+    // O recebido filtra `dia <= ate`; as vendas filtravam `< ate 00:00Z` — o
+    // MESMO "período" cobria um dia a menos nas vendas, e o cartão "Recebido
+    // (período) × Vendas" comparava janelas diferentes. Fim INCLUSIVO.
+    const proximo = new Date(`${ate}T12:00:00Z`);
+    proximo.setUTCDate(proximo.getUTCDate() + 1);
+    vendasQ = vendasQ.lt("created_at", `${proximo.toISOString().slice(0, 10)}T00:00:00Z`);
+  }
   const { data: vendas } = await vendasQ;
   const listaVendas = (vendas ?? []) as unknown as { total_cents: number; contact_id: string | null }[];
   const vendasPeriodo = listaVendas.reduce((s, v) => s + v.total_cents, 0);
   const compradores = new Set(listaVendas.map((v) => v.contact_id).filter(Boolean)).size;
+
+  // Tetos de leitura — se bateram, os números são da AMOSTRA. O fluxo já
+  // declara `amostra_parcial`; o painel somava o que veio e chamava de total.
+  const amostraParcial =
+    linhas.length >= 5000 || (pags ?? []).length >= 10000 || listaVendas.length >= 10000;
 
   return ok(
     {
@@ -104,6 +116,6 @@ export async function GET(req: NextRequest): Promise<Response> {
       compradores,
       qtd_recebiveis: linhas.length,
     },
-    { requestId },
+    { requestId, meta: { amostra_parcial: amostraParcial } },
   );
 }

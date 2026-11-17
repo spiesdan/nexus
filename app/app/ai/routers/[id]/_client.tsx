@@ -123,12 +123,14 @@ export function RouterEditorClient({
     [router, members],
   );
 
-  const currentMembers = draftMembers.map(({ agent_id, intent_name, intent_description, examples }) => ({
-    agent_id,
-    intent_name,
-    intent_description,
-    examples,
-  }));
+  const currentMembers = draftMembers.map(
+    ({ agent_id, intent_name, intent_description, examples }) => ({
+      agent_id,
+      intent_name,
+      intent_description,
+      examples,
+    }),
+  );
 
   const dirty =
     name !== baseline.name ||
@@ -241,11 +243,21 @@ export function RouterEditorClient({
           </Badge>
         </div>
         {canManage && (
-          <Button variant="ghost" size="sm" onClick={() => setDeleteOpen(true)} className="text-destructive">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+            className="text-destructive"
+          >
             <Trash /> {t("Excluir roteador")}
           </Button>
         )}
       </div>
+
+      {/* O TÍTULO DA TELA. Medido em 17/11/2026: esta rota não tinha `h1` —
+          só `<h3>` de seção e o link "Roteadores" de volta. Quem navega por
+          cabeçalhos não sabia em que roteador estava (V-45). */}
+      <h1 className="text-2xl font-medium tracking-tight text-text">{router.name}</h1>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
@@ -302,9 +314,14 @@ export function RouterEditorClient({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={AUTO}>{t("Automático — usa o provedor da organização")}</SelectItem>
+                  <SelectItem value={AUTO}>
+                    {t("Automático — usa o provedor da organização")}
+                  </SelectItem>
                   {classifierModels.map((m) => (
-                    <SelectItem key={`${m.provider}::${m.model_id}`} value={`${m.provider}::${m.model_id}`}>
+                    <SelectItem
+                      key={`${m.provider}::${m.model_id}`}
+                      value={`${m.provider}::${m.model_id}`}
+                    >
                       {m.display_name} · {m.provider}
                       {m.origem === "plataforma" ? ` (${t("chave desta instalação")})` : ""}
                     </SelectItem>
@@ -336,7 +353,9 @@ export function RouterEditorClient({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE}>{t("Nenhum — responde com o atendimento padrão")}</SelectItem>
+                  <SelectItem value={NONE}>
+                    {t("Nenhum — responde com o atendimento padrão")}
+                  </SelectItem>
                   {agents.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
                       {a.name}
@@ -408,7 +427,11 @@ export function RouterEditorClient({
 
           {canManage && (
             <div className="flex sm:justify-end">
-              <Button onClick={handleSave} disabled={!dirty || !isValid || saving} className="w-full sm:w-auto">
+              <Button
+                onClick={handleSave}
+                disabled={!dirty || !isValid || saving}
+                className="w-full sm:w-auto"
+              >
                 {saving ? t("Salvando…") : t("Salvar")}
               </Button>
             </div>
@@ -460,6 +483,7 @@ function IntentRow({
         <div className="flex-1 space-y-1">
           <Label>{t("Nome da intenção")}</Label>
           <Input
+            aria-label={t("Nome da intenção")}
             value={member.intent_name}
             onChange={(e) => onChange({ intent_name: e.target.value })}
             placeholder={t("Ex.: quer comprar")}
@@ -470,8 +494,12 @@ function IntentRow({
         </div>
         <div className="flex-1 space-y-1">
           <Label>{t("Agente que atende")}</Label>
-          <Select value={member.agent_id || undefined} onValueChange={(v) => onChange({ agent_id: v })} disabled={disabled}>
-            <SelectTrigger>
+          <Select
+            value={member.agent_id || undefined}
+            onValueChange={(v) => onChange({ agent_id: v })}
+            disabled={disabled}
+          >
+            <SelectTrigger aria-label={t("Agente que atende")}>
               <SelectValue placeholder={t("Selecione o agente")} />
             </SelectTrigger>
             <SelectContent>
@@ -498,6 +526,7 @@ function IntentRow({
       <div className="space-y-1">
         <Label>{t("Quando escolher esta intenção")}</Label>
         <Textarea
+          aria-label={t("Quando escolher esta intenção")}
           value={member.intent_description}
           onChange={(e) => onChange({ intent_description: e.target.value })}
           placeholder={t(
@@ -659,7 +688,8 @@ function TestPanel({
         {result && (
           <div className="rounded-2xl border border-border/60 p-3 text-sm">
             <p>
-              {t("Intenção")}: <span className="font-medium">{result.intent_name ?? t("nenhuma casou")}</span>
+              {t("Intenção")}:{" "}
+              <span className="font-medium">{result.intent_name ?? t("nenhuma casou")}</span>
               {result.intent_name && (
                 <span className="ml-2 text-xs text-muted-foreground">
                   {t("confiança")} {(result.confidence * 100).toFixed(0)}%
@@ -668,8 +698,9 @@ function TestPanel({
             </p>
             {belowThreshold && (
               <p className="text-xs text-amber-600">
-                {t("Confiança")} {(result.confidence * 100).toFixed(0)}% — {t("abaixo do mínimo de")}{" "}
-                {(result.min_confidence * 100).toFixed(0)}%, {t("cairia no atendimento padrão em produção.")}
+                {t("Confiança")} {(result.confidence * 100).toFixed(0)}% —{" "}
+                {t("abaixo do mínimo de")} {(result.min_confidence * 100).toFixed(0)}%,{" "}
+                {t("cairia no atendimento padrão em produção.")}
               </p>
             )}
             <p>

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { isMfaEnrolled, loadAuthUser, requiresMfa, resolveActiveOrg } from "@/lib/auth/server";
@@ -25,6 +26,24 @@ import { RegistrarServiceWorker } from "./_components/RegistrarServiceWorker";
 import { SincronizadorOffline } from "./_components/SincronizadorOffline";
 import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
+import { tituloDaRota } from "@/lib/navigation/titulos";
+
+/**
+ * O TÍTULO DA ABA — resolvido de `lib/navigation/titulos.ts`, não redigitado.
+ *
+ * Por que aqui e não em 127 `page.tsx`: o nome de cada tela já existe em
+ * `lib/navigation/registry.ts`, com gate de completude. Duplicá-lo em cada
+ * página criaria uma segunda cópia sem gate, que envelhece calada.
+ *
+ * Medido em 15/11/2026, antes disto: **36 de 40** páginas com o mesmo `<title>`.
+ * Página que declara `metadata` próprio continua vencendo — no Next, o segmento
+ * mais profundo manda.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const caminho = (await headers()).get("x-pathname") ?? "";
+  const titulo = tituloDaRota(caminho);
+  return titulo ? { title: titulo } : {};
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await loadAuthUser();

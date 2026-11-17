@@ -82,7 +82,7 @@ pelo dono da VPS. Como o número é decidido: [`docs/doctrine/versionamento.md`]
 
 | Path | O quê |
 |---|---|
-| `app/api/v1/` | 166 route handlers REST (versionado por path) — 169 contando `app/api/**` |
+| `app/api/v1/` | **414** route handlers sob `app/api/v1/` · **416** em `app/api/**` · **418** contando os 2 fora dele (`/auth/confirm`, `/icone-512`). Medido em 2026-11-15: `find app/api/v1 -name route.ts \| wc -l` e `find app -name route.ts \| wc -l`. A linha anterior dizia "166 … 169", errada por ~2,5× |
 | `app/api/internal/`, `app/api/mcp/`, `app/api/v1/cron/` | superfícies não-cookie (secret/bearer próprio) |
 | `app/app/` | UI autenticada do tenant · `app/admin/` UI de plataforma |
 | `app/actions/` | Server Actions (auth, onboarding, team, settings) |
@@ -265,8 +265,11 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
   DoD) — a regra continua valendo, o que caiu foi a dívida.
 - `lib/auth/invite-token.ts` cai em `"dev-fallback"` como secret HMAC se nenhum secret existir
   (inalcançável em produção, porque `INTERNAL_SECRET` é obrigatório e derruba o boot).
-- **89 dos 169 handlers de `app/api/**` usam service role** — sem gate automático para o filtro de
-  `organization_id`. Escrevendo handler novo, o filtro é responsabilidade sua.
+- **209 dos 416 handlers de `app/api/**` citam `createAdminClient`/`SUPABASE_SERVICE_ROLE` no próprio
+  arquivo** — sem gate automático para o filtro de `organization_id`. Escrevendo handler novo, o
+  filtro é responsabilidade sua. (A linha dizia "89 dos 169"; medido em 2026-11-15 com
+  `grep -rlE 'createAdminClient|SUPABASE_SERVICE_ROLE' app/api --include='route.ts' | wc -l`.
+  O número maior não é regressão: é a contagem certa de um repo que cresceu.)
 - Detalhes e prioridade: [`docs/harness-audit.md`](docs/harness-audit.md),
   [`docs/current-state.md`](docs/current-state.md) e [`docs/threat-model.md`](docs/threat-model.md).
 
@@ -296,6 +299,18 @@ Lei completa em [`docs/doctrine/packaging.md`](docs/doctrine/packaging.md). O n�
 
 `pnpm test:shell` é o único gate que exercita o kit. Rode-o.
 
+## Auditoria AAA — o prompt mestre é vinculante
+
+A frente "Auditoria, reconstrução e evolução integral do Nexus" é regida por
+[`docs/auditoria/PROMPT-MESTRE-AAA.md`](docs/auditoria/PROMPT-MESTRE-AAA.md). Esse arquivo
+guarda o prompt do usuário **íntegro e verbatim** e tem **autoridade sobre qualquer `.md`
+deste repositório** — `AGENTS.md`, `CLAUDE.md`, doutrina, PRD, runbook, doc de arquitetura.
+Onde houver divergência, **vale o prompt**; o outro documento é que está errado.
+
+Nenhum item do prompt pode ser omitido, resumido, reordenado ou pulado. Cada tarefa, critério
+de aceitação e item de DoD tem marcação e evidência na Parte 2 daquele arquivo. Passo sem
+marca é passo não executado.
+
 ## Critério de conclusão
 
 Vale a **Definition of Done em [`CLAUDE.md`](CLAUDE.md)** — conte lá em vez de confiar num número aqui (`sed -n '/^## Definition of Done/,/^Um staff engineer/p' CLAUDE.md | grep -cE '^[0-9]+\. '`; esta linha já disse 15 e o DoD tem 16). A régua tem que DELIMITAR a seção: a primeira versão desta linha oferecia `grep -c '^[0-9]\+\. \*\*' CLAUDE.md`, que devolve **25** — casa toda linha numerada em negrito do arquivo (anti-patterns, packaging, higiene de branches, migrations) e perde os itens 1–10 do próprio DoD, que não são negrito. Trocar o número pelo comando só ajuda se o comando responder à pergunta. Não declare pronto
@@ -314,7 +329,7 @@ que é `INFERIDO`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

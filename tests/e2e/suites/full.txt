@@ -22,6 +22,8 @@ auth.spec.ts
 automacao-diz-a-verdade.spec.ts
 campanha-controle-entrega.spec.ts
 capacidades-do-agente.spec.ts
+axe-telas-principais.spec.ts
+campanhas-tela.spec.ts
 central-de-avisos-capacidades.spec.ts
 compras-do-rascunho-ao-estoque.spec.ts
 confirmar-dado-do-contato.spec.ts

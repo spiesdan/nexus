@@ -59,6 +59,9 @@ const PROXIMO_STATUS: Partial<Record<StatusDoPedido, StatusDoPedido>> = {
   expedido: "entregue",
 };
 
+/** Onde "Marcar como concluído" aparece: o pedido ainda está em negociação. */
+const PODE_CONCLUIR: StatusDoPedido[] = ["rascunho", "em_analise", "aprovado"];
+
 const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
   rascunho: "Aprovar pedido",
   em_analise: "Aprovar pedido",
@@ -106,9 +109,7 @@ interface RevisaoDoPedido {
 function revisaoDoPedido(summary: Record<string, unknown> | null | undefined, numero: number) {
   const lista = summary?.revisao;
   if (!Array.isArray(lista)) return null;
-  return (
-    (lista as RevisaoDoPedido[]).find((r) => Number(r?.numero) === numero) ?? null
-  );
+  return (lista as RevisaoDoPedido[]).find((r) => Number(r?.numero) === numero) ?? null;
 }
 
 /**
@@ -119,7 +120,8 @@ function revisaoDoPedido(summary: Record<string, unknown> | null | undefined, nu
  * um aviso honesto de "ainda está rodando", porque o worker termina sozinho e
  * o dado aparece no próximo carregamento.
  */
-async function esperarExecucaoDoMercos(id: string): Promise<ExecucaoMercosNaTela | null> {  for (let tentativa = 0; tentativa < 90; tentativa += 1) {
+async function esperarExecucaoDoMercos(id: string): Promise<ExecucaoMercosNaTela | null> {
+  for (let tentativa = 0; tentativa < 90; tentativa += 1) {
     const corpo = await apiClient.get<{ data: { execucao: ExecucaoMercosNaTela | null } }>(
       `/api/v1/commercial-orders/importar-mercos?id=${encodeURIComponent(id)}`,
     );
@@ -133,16 +135,11 @@ async function esperarExecucaoDoMercos(id: string): Promise<ExecucaoMercosNaTela
 }
 
 /** Um valor da revisão como a ficha mostra: dinheiro formatado, resto literal. */
-function valorDaMudanca(
-  campo: string,
-  valor: string | number | null,
-  moeda: string,
-): string {
+function valorDaMudanca(campo: string, valor: string | number | null, moeda: string): string {
   if (valor === null || valor === undefined || valor === "") return "—";
   if (MUDANCA_EM_DINHEIRO.has(campo)) return comoMoeda(Number(valor), moeda);
   return String(valor);
 }
-
 
 /**
  * Seção FINANCEIRO da ficha do pedido — recebíveis gerados, com ação de
@@ -150,8 +147,25 @@ function valorDaMudanca(
  */
 function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: string }) {
   const t = useT();
-  const [linhas, setLinhas] = React.useState<{ id: string; parcela_n: number; total_parcelas: number; valor_original_cents: number; vencimento: string; situacao: string; saldo_cents: number }[] | null>(null);
+  const tagDoIdioma = useTagDeIdioma();
+  const [linhas, setLinhas] = React.useState<
+    | {
+        id: string;
+        parcela_n: number;
+        total_parcelas: number;
+        valor_original_cents: number;
+        vencimento: string;
+        situacao: string;
+        saldo_cents: number;
+      }[]
+    | null
+  >(null);
   const [gerando, setGerando] = React.useState(false);
+  // Falha de leitura NÃO é "sem financeiro": o catch antigo fazia
+  // `setLinhas([])` e a tela dizia "Sem financeiro gerado para este pedido"
+  // depois de um erro de rede — o operador gerava de novo um financeiro que
+  // já existia. O estado de erro é próprio e tem saída (tentar de novo).
+  const [erroLeitura, setErroLeitura] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -159,8 +173,9 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
         `/api/v1/financeiro/recebiveis?pedido_id=${pedidoId}&limit=100`,
       );
       setLinhas(corpo.data ?? []);
+      setErroLeitura(false);
     } catch {
-      setLinhas([]);
+      setErroLeitura(true);
     }
     // O `status` viaja nas dependências de propósito: o "Faturar pedido" gera
     // os recebíveis DENTRO do PATCH, e sem este refetch o card continuava
@@ -191,9 +206,20 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FINANCEIRO")}</p>
       {linhas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
+      ) : erroLeitura ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-error-fg">
+            {t("Não foi possível carregar o financeiro deste pedido.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void recarregar()}>
+            {t("Tentar de novo")}
+          </Button>
+        </div>
       ) : linhas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm text-muted-foreground">{t("Sem financeiro gerado para este pedido.")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("Sem financeiro gerado para este pedido.")}
+          </p>
           <Button size="sm" variant="outline" onClick={() => void gerar()} disabled={gerando}>
             {gerando ? t("Gerando…") : t("Gerar financeiro")}
           </Button>
@@ -206,7 +232,8 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
                 {l.parcela_n}/{l.total_parcelas} · {comoMoeda(l.valor_original_cents, "BRL")}
               </span>
               <span className="text-xs text-muted-foreground">
-                {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString()} · {l.situacao}
+                {new Date(`${l.vencimento}T12:00:00Z`).toLocaleDateString(tagDoIdioma)} ·{" "}
+                {l.situacao}
               </span>
               <span className="ml-auto">
                 <Button size="sm" variant="ghost" asChild>
@@ -228,9 +255,21 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
 function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
   const t = useT();
   const [notas, setNotas] = React.useState<
-    { id: string; numero: number | null; serie: string; status: string; chave_acesso: string | null; erro: string | null }[] | null
+    | {
+        id: string;
+        numero: number | null;
+        serie: string;
+        status: string;
+        chave_acesso: string | null;
+        erro: string | null;
+      }[]
+    | null
   >(null);
   const [emitindo, setEmitindo] = React.useState(false);
+  // Mesmo defeito do financeiro: falha de rede virava "Pedido sem nota
+  // fiscal", e o operador emitia uma segunda NF-e sem saber que a primeira
+  // existia. Erro é erro; vazio é vazio.
+  const [erroLeitura, setErroLeitura] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -238,8 +277,9 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
         `/api/v1/invoices?order_id=${pedidoId}`,
       );
       setNotas(corpo.data ?? []);
+      setErroLeitura(false);
     } catch {
-      setNotas([]);
+      setErroLeitura(true);
     }
   }, [pedidoId]);
 
@@ -266,6 +306,15 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FISCAL")}</p>
       {notas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
+      ) : erroLeitura ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-error-fg">
+            {t("Não foi possível carregar as notas deste pedido.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void recarregar()}>
+            {t("Tentar de novo")}
+          </Button>
+        </div>
       ) : notas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-muted-foreground">{t("Pedido sem nota fiscal.")}</p>
@@ -284,12 +333,20 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
               {n.erro && <span className="text-xs text-error-fg">{n.erro}</span>}
               <span className="ml-auto flex gap-2">
                 <Button size="sm" variant="ghost" asChild>
-                  <a href={`/api/v1/invoices/${n.id}/xml`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`/api/v1/invoices/${n.id}/xml`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     XML
                   </a>
                 </Button>
                 <Button size="sm" variant="ghost" asChild>
-                  <a href={`/api/v1/invoices/${n.id}/danfe`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`/api/v1/invoices/${n.id}/danfe`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     DANFE
                   </a>
                 </Button>
@@ -310,7 +367,6 @@ function LinhaDetalhe({ rotulo, valor }: { rotulo: string; valor: string }) {
     </div>
   );
 }
-
 
 /**
  * O número da seção, como no Mercos (1 CLIENTE · 2 REPRESENTADA · 3 PRODUTOS ·
@@ -381,9 +437,7 @@ export function DetalheDoPedido({
   const [transportadora, setTransportadora] = React.useState(inicial.transportadora_nome ?? "");
   // 0276 — os dois campos do bloco 4 que não existiam.
   const [rastreamento, setRastreamento] = React.useState(inicial.rastreamento ?? "");
-  const [contatoNoCliente, setContatoNoCliente] = React.useState(
-    inicial.contato_no_cliente ?? "",
-  );
+  const [contatoNoCliente, setContatoNoCliente] = React.useState(inicial.contato_no_cliente ?? "");
   const [obs, setObs] = React.useState(inicial.observacoes ?? "");
   /**
    * 0305 — as **Informações Fiscais** do pedido: o texto que a emissão grava
@@ -391,11 +445,17 @@ export function DetalheDoPedido({
    * detalhes dedicado à ordem de compra etc.; o `observacoes` legado continua
    * sendo a fonte do pedido quando este fica vazio.
    */
-  const [informacoesFiscais, setInformacoesFiscais] = React.useState(inicial.informacoes_fiscais ?? "");
-  const [timeline, setTimeline] = React.useState<{ acao: string; por: string; em: string }[] | null>(null);
+  const [informacoesFiscais, setInformacoesFiscais] = React.useState(
+    inicial.informacoes_fiscais ?? "",
+  );
+  const [timeline, setTimeline] = React.useState<
+    { acao: string; por: string; em: string }[] | null
+  >(null);
   const [trocando, setTrocando] = React.useState(false);
   const [buscaCliente, setBuscaCliente] = React.useState("");
-  const [candidatos, setCandidatos] = React.useState<{ id: string; display_name: string | null; name: string | null }[]>([]);
+  const [candidatos, setCandidatos] = React.useState<
+    { id: string; display_name: string | null; name: string | null }[]
+  >([]);
   // O link de aprovação do orçamento. Fica na tela depois de gerado porque é o
   // que o operador precisa: copiar e colar na conversa que já está aberta. Com o
   // WhatsApp da conexão fora do ar, é o ÚNICO caminho que funciona.
@@ -410,7 +470,9 @@ export function DetalheDoPedido({
   React.useEffect(() => {
     let vivo = true;
     apiClient
-      .get<{ data: { acao: string; por: string; em: string }[] }>(`/api/v1/commercial-orders/${inicial.id}/timeline`)
+      .get<{ data: { acao: string; por: string; em: string }[] }>(
+        `/api/v1/commercial-orders/${inicial.id}/timeline`,
+      )
       .then((l) => {
         if (vivo) setTimeline(l.data ?? []);
       })
@@ -494,14 +556,41 @@ export function DetalheDoPedido({
             : t("Pedido encerrado não aceita atualização do Mercos."),
         );
       } else if (execucao.status === "error" || execucao.status === "partial") {
-        toast.error(t("A sincronização do Mercos terminou com erro. Veja o histórico da importação."));
+        toast.error(
+          t("A sincronização do Mercos terminou com erro. Veja o histórico da importação."),
+        );
       } else {
-        toast.info(t("A sincronização terminou sem revisar este pedido. Tente de novo em instantes."));
+        toast.info(
+          t("A sincronização terminou sem revisar este pedido. Tente de novo em instantes."),
+        );
       }
     } catch (e) {
       showApiError(e);
     } finally {
       setSincronizandoMercos(false);
+    }
+  }
+
+  /**
+   * CONCLUIR O PEDIDO — o ato que fecha a venda no vocabulário do Mercos.
+   *
+   * O caminho "natural" (`aprovado → faturado → expedido → entregue`) pressupõe
+   * nota e depósito. Nem toda venda passa por ali: quem vendeu e recebeu fecha o
+   * pedido como **Concluído** e segue. O status já existia no vocabulário e no
+   * CHECK do banco, mas nenhuma tela chegava nele — o pedido encalhava em
+   * "Aprovado" sem próxima ação.
+   *
+   * As travas são as mesmas da aprovação (teto de desconto e alçada de gerente):
+   * concluir também compromete a venda, e passar por cima da alçada seria um
+   * atalho.
+   */
+  async function concluir() {
+    try {
+      await apiClient.patch(`/api/v1/commercial-orders/${pedido.id}`, { status: "concluido" });
+      toast.success(t("Pedido concluído."));
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
     }
   }
 
@@ -533,7 +622,9 @@ export function DetalheDoPedido({
 
   async function excluir() {
     const ok = await confirmar({
-      title: t("Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso."),
+      title: t(
+        "Excluir este pedido? Estoque baixado volta. Com NF ou em carga, é barrado com aviso.",
+      ),
       confirmLabel: t("Excluir"),
     });
     if (!ok) {
@@ -575,9 +666,9 @@ export function DetalheDoPedido({
     }
     try {
       const qs = new URLSearchParams({ search: termo.trim(), limit: "6" });
-      const corpo = await apiClient.get<{ data: { id: string; display_name: string | null; name: string | null }[] }>(
-        `/api/v1/contacts?${qs}`,
-      );
+      const corpo = await apiClient.get<{
+        data: { id: string; display_name: string | null; name: string | null }[];
+      }>(`/api/v1/contacts?${qs}`);
       setCandidatos(corpo.data ?? []);
     } catch (e) {
       showApiError(e);
@@ -678,8 +769,17 @@ export function DetalheDoPedido({
                 {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
               </Button>
             )}
+            {podeEditar && PODE_CONCLUIR.includes(pedido.status as StatusDoPedido) && (
+              <Button size="sm" variant="outline" onClick={() => void concluir()}>
+                {t("Marcar como concluído")}
+              </Button>
+            )}
             <Button size="sm" variant="outline" asChild>
-              <Link href={`/api/v1/commercial-orders/${pedido.id}/pdf`} target="_blank" rel="noopener noreferrer">
+              <Link
+                href={`/api/v1/commercial-orders/${pedido.id}/pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 {t("Visualizar")}
               </Link>
             </Button>
@@ -704,7 +804,9 @@ export function DetalheDoPedido({
             )}
             {contato?.email && (
               <Button size="sm" variant="outline" asChild>
-                <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>{t("Enviar por e-mail")}</a>
+                <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>
+                  {t("Enviar por e-mail")}
+                </a>
               </Button>
             )}
             <Button size="sm" variant="outline" onClick={copiarLink}>
@@ -736,9 +838,7 @@ export function DetalheDoPedido({
                       disabled={sincronizandoMercos}
                       onSelect={() => void atualizarDoMercos()}
                     >
-                      {sincronizandoMercos
-                        ? t("Atualizando do Mercos…")
-                        : t("Atualizar do Mercos")}
+                      {sincronizandoMercos ? t("Atualizando do Mercos…") : t("Atualizar do Mercos")}
                     </DropdownMenuItem>
                   )}
                 {podeEditar && (
@@ -788,9 +888,7 @@ export function DetalheDoPedido({
                 {": "}
                 {valorDaMudanca(m.campo, m.de, pedido.moeda)}
                 {" → "}
-                <span className="font-medium">
-                  {valorDaMudanca(m.campo, m.para, pedido.moeda)}
-                </span>
+                <span className="font-medium">{valorDaMudanca(m.campo, m.para, pedido.moeda)}</span>
               </li>
             ))}
           </ul>
@@ -808,7 +906,7 @@ export function DetalheDoPedido({
       {linkDoOrcamento && (
         <div className="rounded-xl border bg-muted/30 p-3 text-sm">
           <p className="font-medium">{t("Link de aprovação do orçamento")}</p>
-          <p className="mt-1 break-all text-xs text-muted-foreground">{linkDoOrcamento}</p>
+          <p className="mt-1 text-xs break-all text-muted-foreground">{linkDoOrcamento}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" variant="outline" onClick={() => void copiarLinkDoOrcamento()}>
               {t("Copiar link")}
@@ -917,7 +1015,12 @@ export function DetalheDoPedido({
               usuário procurar onde mexer nos produtos de um pedido que já está
               pronto — que é exatamente a dúvida que ele tem. */}
           {podeEditar && !editandoItens && (
-            <Button size="sm" variant="outline" className="ml-auto" onClick={() => setEditandoItens(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="ml-auto"
+              onClick={() => setEditandoItens(true)}
+            >
               {t("Adicionar produto ao pedido")}
             </Button>
           )}
@@ -949,7 +1052,9 @@ export function DetalheDoPedido({
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{it.produto_codigo || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {it.produto_codigo || "—"}
+                    </TableCell>
                     <TableCell className="font-medium">{it.produto_nome}</TableCell>
                     <TableCell className="text-right tabular-nums">{it.quantidade}</TableCell>
                     <TableCell className="text-right tabular-nums">
@@ -1017,7 +1122,10 @@ export function DetalheDoPedido({
             rotulo={t("Data da emissão")}
             valor={new Date(pedido.created_at).toLocaleDateString(tagIdioma)}
           />
-          <LinhaDetalhe rotulo={t("Vendedor")} valor={nomeVendedor ?? (pedido.vendedor_user_id ?? "").slice(0, 8) ?? "—"} />
+          <LinhaDetalhe
+            rotulo={t("Vendedor")}
+            valor={nomeVendedor ?? (pedido.vendedor_user_id ?? "").slice(0, 8) ?? "—"}
+          />
           <LinhaDetalhe rotulo={t("Cond. de pagamento")} valor={pedido.condicao_pagamento ?? ""} />
           {/* O pedido importado do Mercos não traz endereço próprio: o destino
               É o endereço principal do cliente. A ficha mostrava vazio e
@@ -1034,10 +1142,7 @@ export function DetalheDoPedido({
             valor={pedido.frete_cents > 0 ? comoMoeda(pedido.frete_cents, pedido.moeda) : ""}
           />
           <LinhaDetalhe rotulo={t("Rastreamento")} valor={pedido.rastreamento ?? ""} />
-          <LinhaDetalhe
-            rotulo={t("Contato no cliente")}
-            valor={pedido.contato_no_cliente ?? ""}
-          />
+          <LinhaDetalhe rotulo={t("Contato no cliente")} valor={pedido.contato_no_cliente ?? ""} />
           <LinhaDetalhe rotulo={t("Origem")} valor={pedido.origem} />
           <LinhaDetalhe
             rotulo={t("Atualizado em")}
@@ -1056,10 +1161,7 @@ export function DetalheDoPedido({
           {pedido.origem === "mercos" && pedido.mercos_observacoes && (
             // Texto do ERP, só leitura. Não confundir com "Informações
             // adicionais" do CRM, editável logo abaixo e que vai para a nota.
-            <LinhaDetalhe
-              rotulo={t("Observações do Mercos")}
-              valor={pedido.mercos_observacoes}
-            />
+            <LinhaDetalhe rotulo={t("Observações do Mercos")} valor={pedido.mercos_observacoes} />
           )}
         </dl>
         {(pedido.informacoes_fiscais || pedido.observacoes || pedido.obs_interna) && (
@@ -1087,8 +1189,16 @@ export function DetalheDoPedido({
         {podeEditar &&
           (editando ? (
             <div className="grid gap-2 sm:grid-cols-2">
-              <Input value={condicao} onChange={(e) => setCondicao(e.target.value)} placeholder={t("Condição de pagamento")} />
-              <Input value={transportadora} onChange={(e) => setTransportadora(e.target.value)} placeholder={t("Transportadora")} />
+              <Input
+                value={condicao}
+                onChange={(e) => setCondicao(e.target.value)}
+                placeholder={t("Condição de pagamento")}
+              />
+              <Input
+                value={transportadora}
+                onChange={(e) => setTransportadora(e.target.value)}
+                placeholder={t("Transportadora")}
+              />
               <Input
                 value={rastreamento}
                 onChange={(e) => setRastreamento(e.target.value)}
@@ -1107,7 +1217,11 @@ export function DetalheDoPedido({
               />
               {!endereco.trim() && contato?.endereco && (
                 <div className="sm:col-span-2">
-                  <Button size="sm" variant="outline" onClick={() => setEndereco(contato.endereco ?? "")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEndereco(contato.endereco ?? "")}
+                  >
                     {t("Usar endereço do cliente")}
                   </Button>
                 </div>
@@ -1148,7 +1262,9 @@ export function DetalheDoPedido({
 
       {/* HISTÓRICO */}
       <Card className="hover-raise p-4">
-        <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">{t("HISTÓRICO")}</p>
+        <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground">
+          {t("HISTÓRICO")}
+        </p>
         {timeline === null ? (
           <p className="text-xs text-muted-foreground">…</p>
         ) : timeline.length === 0 ? (

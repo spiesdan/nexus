@@ -20,7 +20,9 @@
  * para `/login` ou `/api/auth/signout` apaga o cache inteiro — o próximo login
  * no mesmo aparelho não enxerga a tela de quem saiu.
  */
-const CACHE = "nexus-app-v1";
+const VERSAO = new URL(self.location.href).searchParams.get("v") || "v1";
+const CACHE = `nexus-app-${VERSAO}`;
+const PREFIXO = "nexus-app-";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -30,7 +32,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((chaves) => Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((chaves) =>
+        Promise.all(
+          chaves
+            .filter((k) => k.startsWith(PREFIXO) && k !== CACHE)
+            .map((k) => caches.delete(k)),
+        ),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -52,10 +60,19 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Sessão e logout nunca saem do cache — e apagam o que houver.
+  // Sessão e logout nunca saem do cache — e apagam o que houver. Apaga TODAS
+  // as versões (`nexus-app-*`): uma versão anterior guarda o HTML de quem
+  // saiu, e deixá-la no aparelho recriaria o vazamento que a purga existe
+  // para impedir.
   if (url.pathname === "/login" || url.pathname.startsWith("/api/auth/")) {
     event.respondWith(
-      caches.delete(CACHE).catch(() => false).then(() => fetch(request)),
+      caches
+        .keys()
+        .then((chaves) =>
+          Promise.all(chaves.filter((k) => k.startsWith(PREFIXO)).map((k) => caches.delete(k))),
+        )
+        .catch(() => false)
+        .then(() => fetch(request)),
     );
     return;
   }
@@ -106,4 +123,64 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+});
+
+/*
+ * ─── BANDEJA E WEB PUSH ─────────────────────────────────────────────────────
+ *
+ * Estes tratadores moravam em `/notify-sw.js`, registrado com `scope: "/"` — e
+ * um escopo só tem UM service worker: ativar notificações SUBSTITUÍA este
+ * arquivo e o cache offline morria em silêncio (medido em 17/11/2026). Passam a
+ * viver aqui, no mesmo worker, para o escopo ter um dono só.
+ */
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "show-os-notify") return;
+  const title = event.data.title || "";
+  const opts = event.data.opts || {};
+  event.waitUntil(self.registration.showNotification(title, opts));
+});
+
+/* Clique na bandeja foca a janela e abre a conversa. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const href = (event.notification.data && event.notification.data.href) || "";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientes) => {
+      const origem = self.location.origin;
+      const url = href ? new URL(href, origem).href : origem + "/app/inbox";
+      const alvo = clientes.find((c) => "focus" in c);
+      if (alvo) {
+        return alvo.focus().then(() => {
+          if ("navigate" in alvo) return alvo.navigate(url);
+          alvo.postMessage({ type: "notify-open", href: url });
+        });
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(url);
+      return undefined;
+    }),
+  );
+});
+
+self.addEventListener("push", (event) => {
+  event.waitUntil(
+    (async () => {
+      const clientes = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const visiveis = clientes.filter((c) => c.visibilityState === "visible").length;
+      if (visiveis > 0) return;
+      let data = { title: "Nova mensagem", body: "", tag: "msg", href: "/app/inbox", icon: "" };
+      try {
+        if (event.data) data = { ...data, ...event.data.json() };
+      } catch {
+        // payload não-JSON
+      }
+      await self.registration.showNotification(data.title, {
+        body: data.body,
+        tag: data.tag,
+        icon: data.icon || undefined,
+        badge: self.location.origin + "/icon",
+        renotify: true,
+        data: { href: data.href || "/app/inbox" },
+      });
+    })(),
+  );
 });

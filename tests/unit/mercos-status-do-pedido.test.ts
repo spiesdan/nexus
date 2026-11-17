@@ -18,7 +18,7 @@
 import { describe, expect, it } from "vitest";
 
 import { STATUS_EMBARCAVEIS } from "@/lib/schemas/expedicao";
-import { STATUS_DO_PEDIDO } from "@/lib/schemas/pedidos";
+import { ROTULO_DO_STATUS, STATUS_DO_PEDIDO } from "@/lib/schemas/pedidos";
 import { STATUS } from "@/workers/mercos/status.mjs";
 
 describe("status do pedido do Mercos", () => {
@@ -50,6 +50,14 @@ describe("status do pedido do Mercos", () => {
   it("os passos que a Expedição lê continuam alcançáveis pelo importador", () => {
     expect(STATUS.Faturado).toBe("faturado");
     expect(STATUS["Aguardando Faturamento"]).toBe("aprovado");
+  });
+
+  it("o pedido nasce como 'Em orçamento' — o vocabulário do Mercos, não 'Rascunho'", () => {
+    // Pedido do dono em 17/11/2026: o pedido fica em orçamento e depois é
+    // concluído. O rótulo era "Rascunho" no vocabulário e "Em orçamento" na
+    // lista — duas palavras para o mesmo estado.
+    expect(ROTULO_DO_STATUS.rascunho).toBe("Em orçamento");
+    expect(ROTULO_DO_STATUS.concluido).toBe("Concluído");
   });
 
   it("só devolve status que o CHECK de commercial_orders aceita", () => {

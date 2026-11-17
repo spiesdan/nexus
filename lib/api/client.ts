@@ -185,9 +185,19 @@ async function request<T>(
       if (opts.signal?.aborted) {
         throw err;
       }
-      // Network error / timeout — retry
+      // Network error / timeout.
+      //
+      // Em método que GRAVA, repetir é apostar: "sem resposta" não distingue
+      // "o servidor não recebeu" de "o servidor gravou e a resposta se perdeu".
+      // Medido em 17/11/2026: um clique em "Criar cliente" virou TRÊS POSTs
+      // idênticos (mesma Idempotency-Key) — o cliente não dedupe, e só DUAS
+      // rotas do produto leem a chave. O contato não triplicou por acidente do
+      // schema (unique org+telefone), não por desenho.
+      //
+      // 429/503 explícitos continuam sendo repetidos (o servidor disse "não
+      // processei, tente depois"); erro de rede em mutação, não.
       lastError = err;
-      if (attempt < MAX_ATTEMPTS) {
+      if (!MUTATING_METHODS.has(method) && attempt < MAX_ATTEMPTS) {
         await sleep(backoffMs(attempt), opts.signal);
         continue;
       }

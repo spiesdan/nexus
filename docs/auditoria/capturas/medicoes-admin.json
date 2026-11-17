@@ -1,0 +1,372 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "admin",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "atualizado_em": "2026-11-17T11:02:14.187Z",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/admin",
+      "largura": "celular",
+      "status": 200,
+      "ms": 964,
+      "erro": null,
+      "arquivo": "celular_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    },
+    {
+      "rota": "/admin",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2051,
+      "erro": null,
+      "arquivo": "desktop_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    },
+    {
+      "rota": "/admin",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1035,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1634,
+      "erro": null,
+      "arquivo": "celular_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1394,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4497,
+      "erro": null,
+      "arquivo": "desktop_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1664,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1100,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agente de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1396,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1752,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_lgpd_requests.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 23,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3099,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1654,
+      "erro": null,
+      "arquivo": "celular_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 684,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2955,
+      "erro": null,
+      "arquivo": "desktop_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 954,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1370,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Configurações · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 686,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1869,
+      "erro": null,
+      "arquivo": "celular_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 424,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3757,
+      "erro": null,
+      "arquivo": "desktop_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 858,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1227,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Equipe · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 499,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/settings",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1309,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_settings.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Configurações · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Configurações"
+      ],
+      "textoVisivel": 699,
+      "url": "/app/settings"
+    },
+    {
+      "rota": "/app/team",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1168,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_team.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Equipe · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 512,
+      "url": "/app/team"
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1752,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_lgpd_requests.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 26,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bom dia, E2E."
+      ],
+      "textoVisivel": 3112,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1090,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agente de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1409,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/admin",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1036,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_admin.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Acesso negado — Admin Plataforma · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Acesso negado"
+      ],
+      "textoVisivel": 171,
+      "url": "/admin/forbidden"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T04:25:21.389Z",
+  "metodo": "POST interceptado e abortado após 2,5 s: nada grava. Mede-se o estado pendente e a contagem de requisições por dois cliques.",
+  "resultados": [
+    {
+      "caso": "Cliente (novo)",
+      "rota": "/app/contacts",
+      "rotuloAntes": "Criar cliente",
+      "desabilitadoAntes": false,
+      "desabilitadoDurante": true,
+      "rotuloDurante": "Criando…",
+      "mudouRotulo": true,
+      "requisicoes": 1,
+      "chamadas": [
+        {
+          "metodo": "POST",
+          "url": "/api/v1/contacts"
+        }
+      ],
+      "erroVisivel": true,
+      "avisosDeConsole": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    },
+    {
+      "caso": "Template (novo)",
+      "rota": "/app/templates",
+      "rotuloAntes": "Criar template",
+      "desabilitadoAntes": false,
+      "desabilitadoDurante": true,
+      "rotuloDurante": "Salvando…",
+      "mudouRotulo": true,
+      "requisicoes": 1,
+      "chamadas": [
+        {
+          "metodo": "POST",
+          "url": "/api/v1/message-templates"
+        }
+      ],
+      "erroVisivel": true,
+      "avisosDeConsole": [
+        "Failed to load resource: net::ERR_FAILED"
+      ]
+    }
+  ]
+}

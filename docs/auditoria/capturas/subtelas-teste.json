@@ -1,0 +1,48 @@
+{
+  "geradoEm": "2026-11-16T08:00:40.631Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 1,
+  "resultados": [
+    {
+      "rota": "/app/compras",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 575,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "modal",
+      "subtela": "Nova compra",
+      "gatilho": "Nova compra",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 764,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/compras",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Novo fornecedor",
+          "motivo": "nenhum botão visível com nome relacionado"
+        }
+      ]
+    }
+  ]
+}

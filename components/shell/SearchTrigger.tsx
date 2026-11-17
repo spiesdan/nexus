@@ -25,8 +25,7 @@ import { CommandPalette } from "@/components/shell/CommandPalette";
  * mismatch e sem efeito.
  */
 const semAssinatura = () => () => {};
-const atalhoNoCliente = () =>
-  /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K";
+const atalhoNoCliente = () => (/Mac|iPhone|iPad|iPod/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K");
 const atalhoNoServidor = () => "⌘K";
 
 export function SearchTrigger() {
@@ -40,11 +39,18 @@ export function SearchTrigger() {
 
   return (
     <>
+      {/* O nome acessível diz O QUE ele busca. Antes era só "Buscar", e numa
+          tela com filtro local (Compras, Estoque, Carteira) existiam DOIS
+          controles chamados "Buscar": este botão do shell e o campo de filtro
+          da página. Medido em 16/11/2026 por `filterbar-unica-nas-listas`, que
+          reprovou com `strict mode violation: getByLabel('Buscar') resolved to
+          2 elements`. Para quem usa leitor de tela o problema é o mesmo, e
+          pior: dois "Buscar" na mesma árvore de acessibilidade. */}
       <Button
         variant="outline"
         size="sm"
         className="h-11 w-11 justify-center gap-0 border-0 bg-transparent px-0 text-muted-foreground md:h-9 md:w-64 md:justify-start md:gap-2 md:border md:border-input md:bg-background md:px-3 lg:w-80 xl:w-96"
-        aria-label={t("Buscar")}
+        aria-label={t("Buscar em todo o sistema")}
         title={t("Buscar")}
         aria-keyshortcuts="Meta+K Control+K"
         onClick={() => setOpen(true)}

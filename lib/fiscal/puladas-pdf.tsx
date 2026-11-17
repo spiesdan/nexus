@@ -76,6 +76,15 @@ export async function renderPuladasPdf(
   emitente: { nome: string; documento: string | null },
   series: SeriePuladas[],
   serieFiltro: string | null,
+  /**
+   * O idioma de quem PEDIU o documento (tag BCP-47, ex.: `pt-BR`).
+   *
+   * O rodapé usava `new Date().toLocaleString()` sem argumento, que segue o
+   * locale da MÁQUINA — num contêiner Docker isso sai `11/17/2026, 2:03:12 PM`
+   * num documento fiscal brasileiro. Quem lê é o operador, não o servidor: a
+   * data segue o idioma da sessão, como o resto do produto.
+   */
+  tagDoIdioma: string,
 ): Promise<Buffer> {
   const comLacunas = series.filter((s) => s.lacunas.length > 0);
 
@@ -124,11 +133,8 @@ export async function renderPuladasPdf(
         )}
 
         <Text style={styles.rodape}>
-          {/* Sem idioma fixo: o PDF é um documento gerado aqui, e a data do
-              rodapé segue o locale da máquina de quem emite — o guarda de
-              `i18n-a-data-segue-o-idioma` reprova idioma escrito à mão. */}
-          Emitido em {new Date().toLocaleString()} · lacunas = números sem nota entre o
-          primeiro e o último emitido de cada série
+          Emitido em {new Date().toLocaleString(tagDoIdioma)} · lacunas = números sem nota
+          entre o primeiro e o último emitido de cada série
         </Text>
       </Page>
     </Document>,

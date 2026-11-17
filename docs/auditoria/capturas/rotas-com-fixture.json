@@ -1,0 +1,94 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T11:24:03.962Z",
+  "aviso": "Medido com FIXTURE criada por este instrumento e apagada no fim — não é dado de operação. `sobrou` lista o que não pôde ser apagado.",
+  "criados": [
+    {
+      "tabela": "ai_routers",
+      "id": "2f866f12-f01f-4d22-b030-4eee23082096"
+    },
+    {
+      "tabela": "lgpd_requests",
+      "id": "2bb7c129-16cc-42a7-8171-423e56a88a05"
+    },
+    {
+      "tabela": "incidents",
+      "id": "00009432-d474-43f4-8593-a5e18cfb5465"
+    }
+  ],
+  "medidas": [
+    {
+      "rota": "/app/ai/routers/2f866f12-f01f-4d22-b030-4eee23082096",
+      "largura": "desktop",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "Fixture de auditoria",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/app/ai/routers/2f866f12-f01f-4d22-b030-4eee23082096",
+      "largura": "celular",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "Fixture de auditoria",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/app/lgpd/requests/2bb7c129-16cc-42a7-8171-423e56a88a05",
+      "largura": "desktop",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "#2bb7c129",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/app/lgpd/requests/2bb7c129-16cc-42a7-8171-423e56a88a05",
+      "largura": "celular",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "#2bb7c129",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/admin/lgpd/requests/2bb7c129-16cc-42a7-8171-423e56a88a05",
+      "largura": "desktop",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "#2bb7c129",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/admin/lgpd/requests/2bb7c129-16cc-42a7-8171-423e56a88a05",
+      "largura": "celular",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "#2bb7c129",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/admin/incidents/00009432-d474-43f4-8593-a5e18cfb5465",
+      "largura": "desktop",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "fixture_auditoria",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    },
+    {
+      "rota": "/admin/incidents/00009432-d474-43f4-8593-a5e18cfb5465",
+      "largura": "celular",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "h1": "fixture_auditoria",
+      "naoEncontrado": false,
+      "errosDeConsole": []
+    }
+  ],
+  "sobrou": []
+}

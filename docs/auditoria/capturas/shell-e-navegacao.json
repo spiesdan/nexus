@@ -1,0 +1,98 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T15:31:05.873Z",
+  "telas": [
+    {
+      "rota": "/app",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": false,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/pedidos",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": false,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/contacts",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": false,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/financeiro",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": false,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/settings",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": false,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": true,
+      "atalhoVisivel": true,
+      "tenant": true
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "sidebar": true,
+      "topbar": true,
+      "busca": true,
+      "avisos": true,
+      "menuDoUsuario": true,
+      "trilha": true,
+      "atalhoVisivel": true,
+      "tenant": true
+    }
+  ],
+  "paleta": {
+    "atalhoTestado": "Meta+K",
+    "abriu": true,
+    "focoNoCampo": true,
+    "foco": {
+      "tag": "INPUT",
+      "placeholder": "Buscar telas, clientes, conversas…"
+    },
+    "fechouComEscape": true
+  },
+  "celular": {
+    "temBotao": true,
+    "gavetaAbriu": true,
+    "gavetaFechou": true
+  }
+}

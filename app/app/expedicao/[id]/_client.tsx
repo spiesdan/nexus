@@ -228,6 +228,17 @@ export function CargaClient({
   async function mudarStatus(status: string) {
     // Sair/concluir passam pela rota (carimba início/fim); o resto, direto.
     const rota = status === "em_rota" ? "iniciar" : status === "concluida" ? "finalizar" : null;
+    // Iniciar a rota é irreversível pelo botão e NOTIFICA todos os clientes.
+    // A confirmação existe para o clique errado não virar mensagem no celular
+    // de quem está esperando.
+    if (status === "em_rota") {
+      const ok = await confirmar({
+        title: t("Iniciar a rota? Os clientes serão avisados e a carga sai de 'montando'."),
+        confirmLabel: t("Iniciar rota"),
+        cancelLabel: t("Cancelar"),
+      });
+      if (!ok) return;
+    }
     try {
       if (rota) await apiClient.post(`/api/v1/shipments/${cargaId}/rota/${rota}`, {});
       else await apiClient.patch(`/api/v1/shipments/${cargaId}`, { status });
@@ -242,6 +253,15 @@ export function CargaClient({
     status: "em_atendimento" | "entregue" | "devolvido",
     motivoDev?: MotivoDevolucao,
   ) {
+    if (status === "entregue") {
+      // Entregue é terminal: avança o pedido e não volta pelo botão.
+      const ok = await confirmar({
+        title: t("Marcar esta entrega como entregue? O pedido avança para 'entregue'."),
+        confirmLabel: t("Entregar"),
+        cancelLabel: t("Cancelar"),
+      });
+      if (!ok) return;
+    }
     try {
       // Na entrega, carimba onde o aparelho está (best-effort: sem GPS, vale igual).
       let geo: { latitude?: number; longitude?: number } = {};
@@ -270,6 +290,14 @@ export function CargaClient({
   }
 
   async function tirarDaCarga(orderId: string) {
+    // Tira o pedido da carga e o devolve à fila — ação que muda o que o
+    // motorista leva. O clique errado não pode ser silencioso.
+    const ok = await confirmar({
+      title: t("Tirar este pedido da carga? Ele volta para a fila de embarque."),
+      confirmLabel: t("Tirar da carga"),
+      cancelLabel: t("Cancelar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.delete(`/api/v1/shipments/${cargaId}/orders/${orderId}`);
       toast.success(t("Pedido de volta na fila de embarque."));

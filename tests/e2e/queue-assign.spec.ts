@@ -122,7 +122,7 @@ test.describe("G5-03 — fila com posição + atribuição", () => {
     ).toHaveCount(0, { timeout: 15_000 });
 
     // (4) Aparece em "Minhas" do dono.
-    await page.getByRole("tab", { name: /Minhas/ }).click();
+    await page.getByRole("group", { name: /Filtro de conversas/ }).getByRole("button", { name: /Minhas/ }).click();
     await expect(
       page.getByRole("button").filter({ hasText: q.contact_name }),
     ).toBeVisible({ timeout: 15_000 });

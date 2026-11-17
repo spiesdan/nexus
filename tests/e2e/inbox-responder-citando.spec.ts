@@ -98,6 +98,19 @@ function bolhas(page: Page) {
 }
 
 test.describe("responder citando", () => {
+  // O ORÇAMENTO TEM DE CABER NO PIOR CASO DO PRÓPRIO TESTE.
+  //
+  // `abrirConversaComMensagens` percorre até 8 conversas esperando 4 s por
+  // bolha: 32 s no pior caso, contra os 30 s padrão da suíte. Medido em
+  // 16/11/2026: sem conversa com mensagem (instalação local sem WAHA), o laço
+  // estourava o prazo e o teste reprovava — em vez de chegar ao
+  // `test.skip(!temMensagens)`, que é a resposta honesta. O vermelho acusava
+  // "a feature quebrou" quando o fato era "não havia o que testar".
+  //
+  // Com 120 s os dois casos se comportam: passam quando há conversa com
+  // mensagem, pulam com motivo quando não há.
+  test.setTimeout(120_000);
+
   test("o botão de responder revela a faixa, e o × a desfaz", async ({ page }) => {
     await login(page, creds.users.agent!.email);
     const temMensagens = await abrirConversaComMensagens(page);

@@ -1,0 +1,311 @@
+{
+  "geradoEm": "2026-11-16T08:38:57.610Z",
+  "base": "http://localhost:3011",
+  "largura": 1440,
+  "telas": 5,
+  "resultados": [
+    {
+      "rota": "/app/ai/agents/new",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Novo agente"
+      ],
+      "textoVisivel": 7461,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 1549,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "Números por QR",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 1549,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "API Oficial (Meta)",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 907,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "Provedor parceiro",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 1004,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "Conexão",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 1004,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "Modelos do parceiro",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Conexões"
+      ],
+      "textoVisivel": 786,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    {
+      "rota": "/app/connections",
+      "tipo": "aba",
+      "subtela": "Templates da Meta",
+      "familia": "aba",
+      "naoMedida": "elemento não encontrado no DOM (aba)"
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "API Tokens"
+      ],
+      "textoVisivel": 819,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tipo": "modal",
+      "subtela": "Criar novo token",
+      "gatilho": "Criar token",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "API Tokens"
+      ],
+      "textoVisivel": 1394,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tipo": "modal",
+      "subtela": "Token criado",
+      "gatilho": "Criar token",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "API Tokens"
+      ],
+      "textoVisivel": 1394,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 1108,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "aba",
+      "subtela": "Membros",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": true,
+      "selecionou": true,
+      "mudouConteudo": false,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 1108,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "aba",
+      "subtela": "Atendimento",
+      "familia": "aba",
+      "status": 200,
+      "jaAtiva": false,
+      "selecionou": true,
+      "mudouConteudo": true,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 1228,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "modal",
+      "subtela": "Horário de",
+      "gatilho": "Editar horário de E2E Admin",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 2047,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "modal",
+      "subtela": "Números que enxerga",
+      "gatilho": "Buscar em todo o sistema",
+      "porExploracao": true,
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Equipe"
+      ],
+      "textoVisivel": 1402,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/team",
+      "tipo": "nao-abertas",
+      "itens": [
+        {
+          "titulo": "Revogar acesso",
+          "motivo": "título destrutivo — não abro por heurística"
+        }
+      ]
+    },
+    {
+      "rota": "/app/templates",
+      "tipo": "base",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Respostas rápidas"
+      ],
+      "textoVisivel": 408,
+      "dialogos": 0,
+      "dialogosSemNome": 0,
+      "console": []
+    },
+    {
+      "rota": "/app/templates",
+      "tipo": "modal",
+      "subtela": "Editar template / Novo template",
+      "gatilho": "Novo template",
+      "status": 200,
+      "overflowHorizontal": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Respostas rápidas"
+      ],
+      "textoVisivel": 626,
+      "dialogos": 1,
+      "dialogosSemNome": 0,
+      "console": []
+    }
+  ]
+}

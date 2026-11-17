@@ -9,6 +9,8 @@ import {
   type PedidoCreate,
 } from "@/lib/schemas/pedidos";
 import { precoEfetivo } from "@/lib/schemas/precos";
+import { ajustarEstoque } from "@/lib/estoque/ajustar";
+import { logger } from "@/lib/logger";
 
 /**
  * CRIAR PEDIDO — o serviço único, chamado pela rota REST e pela tool de IA.
@@ -394,16 +396,33 @@ export async function criarPedidoComercial(
   }
 
   // Baixa de estoque só fora do rascunho: rascunho é intenção, não venda.
+  //
+  // A baixa passa pelo `ajustarEstoque` (compare-and-swap): o `select` +
+  // `update` antigo perdia uma das duas baixas quando dois pedidos saíam
+  // juntos. O check `quantidade >= 0` do banco transformava a corrida em baixa
+  // silenciosa, não em erro.
   if (statusFinal !== "rascunho") {
     for (const item of itensMontados) {
       if (!item.product_id) continue;
       const prod = produtos.get(item.product_id);
       if (!prod?.controla_estoque) continue;
-      await admin
-        .from("catalog_products")
-        .update({ quantidade: prod.quantidade - item.quantidade })
-        .eq("id", item.product_id)
-        .eq("organization_id", ctx.orgId);
+      const ajuste = await ajustarEstoque(admin, {
+        organizationId: ctx.orgId,
+        productId: item.product_id,
+        delta: -item.quantidade,
+      });
+      if (!ajuste.ok) {
+        // A pré-checagem acima já recusou o caso comum; chegar aqui é corrida
+        // entre dois pedidos. Não dá para desfazer o pedido inteiro sem
+        // estornar os itens anteriores, então a falha fica VISÍVEL no log e no
+        // saldo (que não foi decrementado).
+        logger.error("[criar-pedido] baixa de estoque não aplicada", {
+          organization_id: ctx.orgId,
+          order_id: pedidoId,
+          product_id: item.product_id,
+          motivo: ajuste.motivo,
+        });
+      }
     }
   }
 

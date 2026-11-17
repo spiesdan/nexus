@@ -1,0 +1,57 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T12:43:35.909Z",
+  "metodo": "Celular 390 com CPU 4× (mesma condição do desempenho.mjs). Conta longtasks desde o início da navegação e o tempo bloqueado acima de 50 ms por tarefa.",
+  "resultados": [
+    {
+      "rota": "/app/indicadores",
+      "temGrafico": true,
+      "graficos": 5,
+      "svgs": 21,
+      "canvases": 0,
+      "tarefasLongas": 6,
+      "tbt": 280,
+      "maiorTarefa": 152
+    },
+    {
+      "rota": "/app",
+      "temGrafico": true,
+      "graficos": 4,
+      "svgs": 24,
+      "canvases": 0,
+      "tarefasLongas": 4,
+      "tbt": 321,
+      "maiorTarefa": 172
+    },
+    {
+      "rota": "/app/financeiro",
+      "temGrafico": false,
+      "graficos": 0,
+      "svgs": 1,
+      "canvases": 0,
+      "tarefasLongas": 2,
+      "tbt": 124,
+      "maiorTarefa": 157
+    },
+    {
+      "rota": "/app/radar",
+      "temGrafico": true,
+      "graficos": 4,
+      "svgs": 4,
+      "canvases": 0,
+      "tarefasLongas": 5,
+      "tbt": 215,
+      "maiorTarefa": 147
+    },
+    {
+      "rota": "/app/settings",
+      "temGrafico": false,
+      "graficos": 0,
+      "svgs": 14,
+      "canvases": 0,
+      "tarefasLongas": 1,
+      "tbt": 1,
+      "maiorTarefa": 51
+    }
+  ]
+}

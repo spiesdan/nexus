@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import {
   extrasFiscaisSchema,
   FORMAS_DE_PAGAMENTO,
@@ -63,6 +64,16 @@ export type ItemDaVendaAvulsa = {
   product_id?: string | null;
 };
 
+/** O item como a prévia da nota lê (GET /commercial-orders/[id]). */
+type ItemDaNota = {
+  id: string;
+  produto_codigo: string;
+  produto_nome: string;
+  quantidade: number;
+  preco_unit_cents: number;
+  subtotal_cents: number;
+};
+
 /** Tudo vira string no formulário; a conversão acontece na montagem dos extras. */
 export type ExtrasDoFormulario = {
   modalidade: string;
@@ -79,6 +90,9 @@ export type ExtrasDoFormulario = {
   diasEntre: string;
   informacoesComplementares: string;
   informacoesFisco: string;
+  destinatarioNome: string;
+  destinatarioDocumento: string;
+  destinatarioIe: string;
   entregaLogradouro: string;
   entregaNumero: string;
   entregaComplemento: string;
@@ -109,6 +123,9 @@ export const EXTRAS_VAZIOS: ExtrasDoFormulario = {
   diasEntre: "30",
   informacoesComplementares: "",
   informacoesFisco: "",
+  destinatarioNome: "",
+  destinatarioDocumento: "",
+  destinatarioIe: "",
   entregaLogradouro: "",
   entregaNumero: "",
   entregaComplemento: "",
@@ -167,7 +184,8 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
       parcelas: Math.trunc(numero(v.parcelas)),
       dias_entre: Math.trunc(numero(v.diasEntre)),
     };
-    if (v.primeiroVencimento.trim() !== "") cobranca.primeiro_vencimento = v.primeiroVencimento.trim();
+    if (v.primeiroVencimento.trim() !== "")
+      cobranca.primeiro_vencimento = v.primeiroVencimento.trim();
     const descricao = v.descricaoPagamento.trim();
     if (descricao !== "") cobranca.descricao = descricao;
     extras.cobranca = cobranca;
@@ -180,6 +198,20 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
     if (complementares !== "") adicionais.informacoes_complementares = complementares;
     if (fisco !== "") adicionais.informacoes_fisco = fisco;
     extras.adicionais = adicionais;
+  }
+
+  // Destinatário EDITÁVEL: o cadastro pode estar sem CPF/CNPJ (ou com nome
+  // antigo). O que for digitado aqui vale para esta nota e fica gravado nela;
+  // o que ficar vazio cai no cadastro.
+  const nomeDest = v.destinatarioNome.trim();
+  const documentoDest = v.destinatarioDocumento.replace(/\D/g, "");
+  const ieDest = v.destinatarioIe.trim();
+  if (nomeDest !== "" || documentoDest !== "" || ieDest !== "") {
+    extras.destinatario = {
+      ...(nomeDest !== "" && { nome: nomeDest }),
+      ...(documentoDest !== "" && { documento: documentoDest }),
+      ...(ieDest !== "" && { ie: ieDest }),
+    } as ExtrasFiscais["destinatario"];
   }
 
   const endereco = {
@@ -224,6 +256,7 @@ export function EmitirNota({
   textos: Textos;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [pedidoId, setPedidoId] = React.useState("");
@@ -237,8 +270,12 @@ export function EmitirNota({
    */
   const [agrupados, setAgrupados] = React.useState<string[]>([]);
   const [emitindo, setEmitindo] = React.useState(false);
-  const [pendencias, setPendencias] = React.useState<{ campo: string; mensagem: string; onde: string }[] | null>(null);
+  const [pendencias, setPendencias] = React.useState<
+    { campo: string; mensagem: string; onde: string }[] | null
+  >(null);
   const [extras, setExtras] = React.useState<ExtrasDoFormulario>(EXTRAS_VAZIOS);
+  /** Itens do pedido para a prévia "campo por campo" (buscados ao escolher). */
+  const [itensDaNota, setItensDaNota] = React.useState<ItemDaNota[] | null>(null);
   /**
    * Modo de emissão: NF-e de PEDIDO (concluído/faturado/expedido/entregue) ou NF-e de
    * VENDA AVULSA — venda sem pedido (balcão). Na avulsa o fato entra em
@@ -277,7 +314,9 @@ export function EmitirNota({
     setAvulsa((atual) => ({ ...atual, contato_id: id ?? "", cliente_nome: nome }));
     if (!id) return;
     void (async () => {
-      const r = await apiClient.get<{ data: ContatoFiscal }>(`/api/v1/contacts/${id}`).catch(() => null);
+      const r = await apiClient
+        .get<{ data: ContatoFiscal }>(`/api/v1/contacts/${id}`)
+        .catch(() => null);
       const contato = r?.data;
       if (!contato) return;
       const documento = (contato.cnpj ?? "").replace(/\D/g, "");
@@ -291,13 +330,63 @@ export function EmitirNota({
   }, []);
 
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
+
+  React.useEffect(() => {
+    if (!pedidoId) {
+      setItensDaNota(null);
+      return;
+    }
+    let vivo = true;
+    void apiClient
+      .get<{ data: { itens: ItemDaNota[] } }>(`/api/v1/commercial-orders/${pedidoId}`)
+      .then((r) => {
+        if (vivo) setItensDaNota(r.data.itens ?? []);
+      })
+      .catch(() => {
+        if (vivo) setItensDaNota([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [pedidoId]);
+
+  // O que a nota vai levar, com o formulário vencendo o cadastro. É a MESMA
+  // regra que o servidor aplica em `montarExtras` + `montarDestinatario`.
+  const entregaResolvida = escolhido?.destinatario?.entrega ?? null;
+  const nomeEfetivo =
+    extras.destinatarioNome.trim() ||
+    escolhido?.destinatario?.nome ||
+    escolhido?.cliente_nome ||
+    "";
+  const documentoEfetivo =
+    extras.destinatarioDocumento.replace(/\D/g, "") ||
+    escolhido?.destinatario?.documento ||
+    escolhido?.cliente_documento ||
+    "";
+  const ieEfetiva = extras.destinatarioIe.trim() || escolhido?.destinatario?.ie || "";
+  const enderecoEfetivo = [
+    extras.entregaLogradouro.trim() || entregaResolvida?.logradouro,
+    extras.entregaNumero.trim() || entregaResolvida?.numero,
+    extras.entregaBairro.trim() || entregaResolvida?.bairro,
+    [
+      extras.entregaMunicipio.trim() || entregaResolvida?.municipio,
+      extras.entregaUf.trim() || entregaResolvida?.uf,
+    ]
+      .filter(Boolean)
+      .join("/"),
+    extras.entregaCep.replace(/\D/g, "") || entregaResolvida?.cep,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   const selecionados = pedidoId ? [pedidoId, ...agrupados] : [];
   const pedidosDaNota = faturados.filter((p) => selecionados.includes(p.id));
   const totalDaNota = pedidosDaNota.reduce((soma, p) => soma + p.total_cents, 0);
   // Só entram na lista os pedidos do mesmo cliente do pedido principal.
   const doMesmoCliente = escolhido
     ? faturados.filter(
-        (p) => p.id !== escolhido.id && p.contact_id != null && p.contact_id === escolhido.contact_id,
+        (p) =>
+          p.id !== escolhido.id && p.contact_id != null && p.contact_id === escolhido.contact_id,
       )
     : [];
 
@@ -322,6 +411,9 @@ export function EmitirNota({
       // Trocar de pedido troca o texto, como troca o endereço: manter o do
       // anterior seria pôr a ordem de compra de um cliente na nota de outro.
       informacoesComplementares: (pedido?.informacoes_fiscais ?? pedido?.observacoes ?? "").trim(),
+      destinatarioNome: pedido?.destinatario?.nome ?? pedido?.cliente_nome ?? "",
+      destinatarioDocumento: pedido?.destinatario?.documento ?? pedido?.cliente_documento ?? "",
+      destinatarioIe: pedido?.destinatario?.ie ?? "",
       entregaLogradouro: entrega?.logradouro ?? "",
       entregaNumero: entrega?.numero ?? "",
       entregaComplemento: entrega?.complemento ?? "",
@@ -436,6 +528,14 @@ export function EmitirNota({
       }
       extrasValidados = checagem.data;
     }
+    // Emitir é irreversível e consome número da SEFAZ. A confirmação mostra o
+    // destinatário e o total — o que a tela já resolveu, não um "tem certeza?".
+    const ok = await confirmar({
+      title: `${t("Emitir a NF-e de")} ${nomeEfetivo || t("cliente")} (${documentoEfetivo || t("sem documento")}) — ${comoMoeda(escolhido?.total_cents ?? 0, escolhido?.moeda ?? "BRL")}?`,
+      confirmLabel: t("Emitir NF-e"),
+      cancelLabel: t("Revisar"),
+    });
+    if (!ok) return;
     setEmitindo(true);
     setPendencias(null);
     try {
@@ -447,15 +547,17 @@ export function EmitirNota({
       // segundo pedido derrubaria a nota inteira depois de a SEFAZ já ter
       // consumido número. O gate é aqui, onde ainda dá para corrigir.
       for (const id of selecionados) {
-        const prev = await apiClient.post<{ data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] } }>(
-          "/api/v1/invoices/validar",
-          { order_id: id },
-        );
+        const prev = await apiClient.post<{
+          data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] };
+        }>("/api/v1/invoices/validar", { order_id: id });
         if (!prev.data.ok) {
           const ped = faturados.find((p) => p.id === id);
           setPendencias(
             ped && selecionados.length > 1
-              ? prev.data.pendencias.map((x) => ({ ...x, onde: `${numeroDoPedido(ped.numero)} · ${x.onde}` }))
+              ? prev.data.pendencias.map((x) => ({
+                  ...x,
+                  onde: `${numeroDoPedido(ped.numero)} · ${x.onde}`,
+                }))
               : prev.data.pendencias,
           );
           return;
@@ -501,408 +603,547 @@ export function EmitirNota({
       )}
 
       <div className="flex gap-2">
-        <Button variant={modo === "pedido" ? "default" : "outline"} size="sm" onClick={() => setModo("pedido")}>
+        <Button
+          variant={modo === "pedido" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setModo("pedido")}
+        >
           {t("NF-e de pedido")}
         </Button>
-        <Button variant={modo === "avulsa" ? "default" : "outline"} size="sm" onClick={() => setModo("avulsa")}>
+        <Button
+          variant={modo === "avulsa" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setModo("avulsa")}
+        >
           {t("NF-e de venda avulsa")}
         </Button>
       </div>
 
       {modo === "pedido" ? (
         faturados.length === 0 ? (
-        <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-          {textos.semFaturados}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <div className="max-w-xl space-y-1.5">
-            <Label htmlFor="pedido-nota">{textos.escolherPedido}</Label>
-            <select
-              id="pedido-nota"
-              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-              value={pedidoId}
-              onChange={(e) => escolherPedido(e.target.value)}
-            >
-              <option value="">{textos.selecione}</option>
-              {faturados.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {numeroDoPedido(p.numero)} · {p.cliente_nome} · {comoMoeda(p.total_cents, p.moeda)}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            {textos.semFaturados}
           </div>
-
-          {doMesmoCliente.length > 0 && (
-            <div className="max-w-xl space-y-1.5 rounded-lg border border-border bg-muted/20 p-3">
-              <p className="text-sm font-medium text-text">{t("Juntar outros pedidos deste cliente")}</p>
-              <p className="text-xs text-muted-foreground">
-                {t("Os pedidos marcados saem numa nota só, com todos os itens.")}
-              </p>
-              <ul className="mt-1 space-y-1">
-                {doMesmoCliente.map((p) => (
-                  <li key={p.id}>
-                    <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-muted/40">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded-md border-border"
-                        checked={agrupados.includes(p.id)}
-                        onChange={(e) =>
-                          setAgrupados((atual) =>
-                            e.target.checked ? [...atual, p.id] : atual.filter((id) => id !== p.id),
-                          )
-                        }
-                      />
-                      <span className="tabular-nums">{numeroDoPedido(p.numero)}</span>
-                      <span className="text-muted-foreground">
-                        {new Date(p.created_at).toLocaleDateString(tagIdioma)}
-                      </span>
-                      <span className="ml-auto tabular-nums">{comoMoeda(p.total_cents, p.moeda)}</span>
-                    </label>
-                  </li>
+        ) : (
+          <div className="space-y-3">
+            <div className="max-w-xl space-y-1.5">
+              <Label htmlFor="pedido-nota">{textos.escolherPedido}</Label>
+              <select
+                id="pedido-nota"
+                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                value={pedidoId}
+                onChange={(e) => escolherPedido(e.target.value)}
+              >
+                <option value="">{textos.selecione}</option>
+                {faturados.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {numeroDoPedido(p.numero)} · {p.cliente_nome} ·{" "}
+                    {comoMoeda(p.total_cents, p.moeda)}
+                  </option>
                 ))}
-              </ul>
-              {agrupados.length > 0 && (
-                <p className="pt-1 text-sm font-medium text-text">
-                  {t("Nota com")} {selecionados.length} {t("pedidos")} ·{" "}
-                  <span className="tabular-nums">{comoMoeda(totalDaNota, escolhido?.moeda ?? "BRL")}</span>
-                </p>
-              )}
+              </select>
             </div>
-          )}
 
-          {escolhido && (
-            <div className="grid max-w-xl grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-              <div>
-                <p className="text-xs text-muted-foreground">{textos.escolherPedido}</p>
-                <p className="font-medium tabular-nums">{numeroDoPedido(escolhido.numero)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{textos.cliente}</p>
-                <p
-                  className="truncate font-medium"
-                  title={escolhido.destinatario?.nome || escolhido.cliente_nome}
-                >
-                  {escolhido.destinatario?.nome || escolhido.cliente_nome}
+            {doMesmoCliente.length > 0 && (
+              <div className="max-w-xl space-y-1.5 rounded-lg border border-border bg-muted/20 p-3">
+                <p className="text-sm font-medium text-text">
+                  {t("Juntar outros pedidos deste cliente")}
                 </p>
+                <p className="text-xs text-muted-foreground">
+                  {t("Os pedidos marcados saem numa nota só, com todos os itens.")}
+                </p>
+                <ul className="mt-1 space-y-1">
+                  {doMesmoCliente.map((p) => (
+                    <li key={p.id}>
+                      <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-muted/40">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded-md border-border"
+                          checked={agrupados.includes(p.id)}
+                          onChange={(e) =>
+                            setAgrupados((atual) =>
+                              e.target.checked
+                                ? [...atual, p.id]
+                                : atual.filter((id) => id !== p.id),
+                            )
+                          }
+                        />
+                        <span className="tabular-nums">{numeroDoPedido(p.numero)}</span>
+                        <span className="text-muted-foreground">
+                          {new Date(p.created_at).toLocaleDateString(tagIdioma)}
+                        </span>
+                        <span className="ml-auto tabular-nums">
+                          {comoMoeda(p.total_cents, p.moeda)}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                {agrupados.length > 0 && (
+                  <p className="pt-1 text-sm font-medium text-text">
+                    {t("Nota com")} {selecionados.length} {t("pedidos")} ·{" "}
+                    <span className="tabular-nums">
+                      {comoMoeda(totalDaNota, escolhido?.moeda ?? "BRL")}
+                    </span>
+                  </p>
+                )}
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">{textos.valor}</p>
-                <p className="font-medium tabular-nums">{comoMoeda(escolhido.total_cents, escolhido.moeda)}</p>
-              </div>
-            </div>
-          )}
+            )}
 
-          <details className="max-w-xl rounded-lg border border-border bg-muted/30 p-3">
-            <summary className="cursor-pointer text-sm font-medium text-text">
-              {t("Dados adicionais da emissão (opcional)")}
-            </summary>
-            <div className="mt-3 space-y-4">
-              <p className="text-xs text-muted-foreground">
-                {t("Ficam gravados nesta nota: reemitir não pede de novo.")}
-              </p>
-
-              <section className="space-y-2">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("Transporte")}
-                </h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="space-y-1.5 sm:col-span-3">
-                    <Label htmlFor="ex-modalidade">{t("Modalidade do frete")}</Label>
-                    <select
-                      id="ex-modalidade"
-                      aria-label={t("Modalidade do frete")}
-                      className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                      value={extras.modalidade}
-                      onChange={alterar("modalidade")}
-                    >
-                      {MODALIDADES_DE_FRETE.map((m) => (
-                        <option key={m} value={m}>
-                          {ROTULO_DA_MODALIDADE_DE_FRETE[m]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-3">
-                    <Label htmlFor="ex-transp-nome">{t("Transportador — nome ou razão social")}</Label>
-                    <Input
-                      id="ex-transp-nome"
-                      value={extras.transportadorNome}
-                      onChange={alterar("transportadorNome")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-transp-doc">{t("CPF ou CNPJ")}</Label>
-                    <Input
-                      id="ex-transp-doc"
-                      inputMode="numeric"
-                      maxLength={14}
-                      value={extras.transportadorDocumento}
-                      onChange={alterar("transportadorDocumento")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-vol-qtd">{t("Volumes")}</Label>
-                    <Input
-                      id="ex-vol-qtd"
-                      type="number"
-                      min={1}
-                      placeholder={t("Qtd.")}
-                      value={extras.volumesQuantidade}
-                      onChange={alterar("volumesQuantidade")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-vol-especie">{t("Espécie")}</Label>
-                    <Input
-                      id="ex-vol-especie"
-                      maxLength={60}
-                      placeholder={t("Ex.: CAIXAS")}
-                      value={extras.volumesEspecie}
-                      onChange={alterar("volumesEspecie")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-vol-peso-l">{t("Peso líquido (kg)")}</Label>
-                    <Input
-                      id="ex-vol-peso-l"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={extras.pesoLiquido}
-                      onChange={alterar("pesoLiquido")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-vol-peso-b">{t("Peso bruto (kg)")}</Label>
-                    <Input
-                      id="ex-vol-peso-b"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={extras.pesoBruto}
-                      onChange={alterar("pesoBruto")}
-                    />
-                  </div>
+            {escolhido && (
+              <div className="grid max-w-xl grid-cols-3 gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">{textos.escolherPedido}</p>
+                  <p className="font-medium tabular-nums">{numeroDoPedido(escolhido.numero)}</p>
                 </div>
-              </section>
-
-              <section className="space-y-2">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("Cobrança")}
-                </h3>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-forma">{t("Forma de pagamento")}</Label>
-                    <select
-                      id="ex-forma"
-                      aria-label={t("Forma de pagamento")}
-                      className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-                      value={extras.formaPagamento}
-                      onChange={alterar("formaPagamento")}
-                    >
-                      <option value="">{t("Não informar")}</option>
-                      {FORMAS_DE_PAGAMENTO.map((f) => (
-                        <option key={f} value={f}>
-                          {ROTULO_DA_FORMA_DE_PAGAMENTO[f]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {extras.formaPagamento !== "" && (
-                    <>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="ex-parcelas">{t("Parcelas")}</Label>
-                        <Input
-                          id="ex-parcelas"
-                          type="number"
-                          min={1}
-                          max={120}
-                          value={extras.parcelas}
-                          onChange={alterar("parcelas")}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="ex-dias">{t("Dias entre vencimentos")}</Label>
-                        <Input
-                          id="ex-dias"
-                          type="number"
-                          min={0}
-                          max={365}
-                          value={extras.diasEntre}
-                          onChange={alterar("diasEntre")}
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="ex-vencimento">{t("Primeiro vencimento")}</Label>
-                        <Input
-                          id="ex-vencimento"
-                          type="date"
-                          value={extras.primeiroVencimento}
-                          onChange={alterar("primeiroVencimento")}
-                        />
-                      </div>
-                      <div className="space-y-1.5 sm:col-span-3">
-                        <Label htmlFor="ex-descricao">
-                          {t("Descrição da forma de pagamento (obrigatória em Outros)")}
-                        </Label>
-                        <Input
-                          id="ex-descricao"
-                          maxLength={60}
-                          value={extras.descricaoPagamento}
-                          onChange={alterar("descricaoPagamento")}
-                        />
-                      </div>
-                    </>
-                  )}
-                </div>
-              </section>
-
-              <section className="space-y-2">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("Adicionais")}
-                </h3>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ex-inf-cpl">{t("Informações complementares")}</Label>
-                  <Textarea
-                    id="ex-inf-cpl"
-                    rows={3}
-                    maxLength={5000}
-                    value={extras.informacoesComplementares}
-                    onChange={alterar("informacoesComplementares")}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t(
-                      "Vem das Informações adicionais do pedido. O que você editar aqui vence — é este texto que sai no campo de informações complementares da nota.",
-                    )}
+                <div>
+                  <p className="text-xs text-muted-foreground">{textos.cliente}</p>
+                  <p
+                    className="truncate font-medium"
+                    title={escolhido.destinatario?.nome || escolhido.cliente_nome}
+                  >
+                    {escolhido.destinatario?.nome || escolhido.cliente_nome}
                   </p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="ex-inf-fisco">{t("Informações de interesse do Fisco")}</Label>
-                  <Textarea
-                    id="ex-inf-fisco"
-                    rows={2}
-                    maxLength={2000}
-                    value={extras.informacoesFisco}
-                    onChange={alterar("informacoesFisco")}
-                  />
+                <div>
+                  <p className="text-xs text-muted-foreground">{textos.valor}</p>
+                  <p className="font-medium tabular-nums">
+                    {comoMoeda(escolhido.total_cents, escolhido.moeda)}
+                  </p>
                 </div>
-              </section>
+              </div>
+            )}
 
-              <section className="space-y-2">
-                <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {t("Endereço do destinatário")}
-                </h3>
+            {escolhido && (
+              <details className="max-w-xl rounded-lg border border-border bg-muted/30 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-text">
+                  {t("Conferir a nota campo por campo")}
+                </summary>
+                <div className="mt-3 space-y-4 text-sm">
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Destinatário")}
+                    </h3>
+                    <dl className="mt-1 grid grid-cols-[130px_1fr] gap-x-3 gap-y-1">
+                      <dt className="text-muted-foreground">{t("Nome")}</dt>
+                      <dd>{nomeEfetivo || t("falta")}</dd>
+                      <dt className="text-muted-foreground">{t("CPF/CNPJ")}</dt>
+                      <dd className="tabular-nums">{documentoEfetivo || t("falta")}</dd>
+                      <dt className="text-muted-foreground">{t("IE")}</dt>
+                      <dd>{ieEfetiva || t("não contribuinte")}</dd>
+                      <dt className="text-muted-foreground">{t("Endereço")}</dt>
+                      <dd>{enderecoEfetivo || t("falta")}</dd>
+                    </dl>
+                  </section>
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Itens")}
+                    </h3>
+                    {itensDaNota === null ? (
+                      <p className="mt-1 text-muted-foreground">{t("Carregando…")}</p>
+                    ) : itensDaNota.length === 0 ? (
+                      <p className="mt-1 text-muted-foreground">{t("Sem itens.")}</p>
+                    ) : (
+                      <ul className="mt-1 space-y-1">
+                        {itensDaNota.map((i) => (
+                          <li
+                            key={i.id}
+                            className="flex flex-wrap justify-between gap-2 border-b border-border/60 pb-1 last:border-0"
+                          >
+                            <span>
+                              {i.produto_codigo} · {i.produto_nome}
+                            </span>
+                            <span className="tabular-nums text-muted-foreground">
+                              {i.quantidade} × {comoMoeda(i.preco_unit_cents, escolhido.moeda)} ={" "}
+                              {comoMoeda(i.subtotal_cents, escolhido.moeda)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Totais")}
+                    </h3>
+                    <dl className="mt-1 grid grid-cols-[130px_1fr] gap-x-3 gap-y-1 tabular-nums">
+                      <dt className="text-muted-foreground">{t("Subtotal")}</dt>
+                      <dd>{comoMoeda(escolhido.subtotal_cents, escolhido.moeda)}</dd>
+                      <dt className="text-muted-foreground">{t("Desconto")}</dt>
+                      <dd>{comoMoeda(escolhido.desconto_cents, escolhido.moeda)}</dd>
+                      <dt className="text-muted-foreground">{t("Frete")}</dt>
+                      <dd>{comoMoeda(escolhido.frete_cents, escolhido.moeda)}</dd>
+                      <dt className="font-medium">{t("Total")}</dt>
+                      <dd className="font-medium">{comoMoeda(escolhido.total_cents, escolhido.moeda)}</dd>
+                    </dl>
+                  </section>
+                </div>
+              </details>
+            )}
+
+            <details className="max-w-xl rounded-lg border border-border bg-muted/30 p-3">
+              <summary className="cursor-pointer text-sm font-medium text-text">
+                {t("Dados adicionais da emissão (opcional)")}
+              </summary>
+              <div className="mt-3 space-y-4">
                 <p className="text-xs text-muted-foreground">
-                  {t("A SEFAZ exige este endereço na NF-e; ele também é usado como local de entrega.")}
+                  {t("Ficam gravados nesta nota: reemitir não pede de novo.")}
                 </p>
-                {escolhido?.destinatario &&
-                  (escolhido.destinatario.entrega ? (
-                    <p className="text-xs text-muted-foreground">
-                      {t("Preenchido com o cadastro do cliente. Pode corrigir aqui — vale o que estiver nesta tela.")}
-                    </p>
-                  ) : (
-                    <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
-                      {t("Falta no cadastro do cliente:")}{" "}
-                      {escolhido.destinatario.faltando.join(", ") || t("endereço completo")}.{" "}
-                      {t("Dá para completar aqui ou no cadastro do cliente.")}
-                    </p>
-                  ))}
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="ex-ent-logradouro">{t("Logradouro")}</Label>
-                    <Input
-                      id="ex-ent-logradouro"
-                      maxLength={60}
-                      value={extras.entregaLogradouro}
-                      onChange={alterar("entregaLogradouro")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-numero">{t("Número")}</Label>
-                    <Input
-                      id="ex-ent-numero"
-                      maxLength={60}
-                      value={extras.entregaNumero}
-                      onChange={alterar("entregaNumero")}
-                    />
-                  </div>
-                  <div className="space-y-1.5 sm:col-span-2">
-                    <Label htmlFor="ex-ent-complemento">{t("Complemento")}</Label>
-                    <Input
-                      id="ex-ent-complemento"
-                      maxLength={60}
-                      value={extras.entregaComplemento}
-                      onChange={alterar("entregaComplemento")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-bairro">{t("Bairro")}</Label>
-                    <Input
-                      id="ex-ent-bairro"
-                      maxLength={60}
-                      value={extras.entregaBairro}
-                      onChange={alterar("entregaBairro")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-municipio">{t("Município")}</Label>
-                    <Input
-                      id="ex-ent-municipio"
-                      maxLength={60}
-                      value={extras.entregaMunicipio}
-                      onChange={alterar("entregaMunicipio")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-cod-mun">{t("Código IBGE")}</Label>
-                    <Input
-                      id="ex-ent-cod-mun"
-                      inputMode="numeric"
-                      maxLength={7}
-                      placeholder="0000000"
-                      value={extras.entregaCodigoMunicipio}
-                      onChange={alterar("entregaCodigoMunicipio")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-uf">{t("UF")}</Label>
-                    <Input
-                      id="ex-ent-uf"
-                      maxLength={2}
-                      placeholder="SP"
-                      value={extras.entregaUf}
-                      onChange={alterar("entregaUf")}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="ex-ent-cep">{t("CEP")}</Label>
-                    <Input
-                      id="ex-ent-cep"
-                      inputMode="numeric"
-                      maxLength={9}
-                      placeholder="00000-000"
-                      value={extras.entregaCep}
-                      onChange={alterar("entregaCep")}
-                    />
-                  </div>
-                </div>
-              </section>
-            </div>
-          </details>
 
-          <div>
-            <Button onClick={() => void emitir()} disabled={emitindo || !configInicial || !pedidoId}>
-              {emitindo ? t("Enviando…") : textos.emitir}
-            </Button>
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Destinatário")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "É o que sai na nota. O cadastro preenche; o que você digitar aqui vence para esta emissão.",
+                    )}
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label htmlFor="dest-nome">{t("Nome / razão social")}</Label>
+                      <Input
+                        id="dest-nome"
+                        maxLength={60}
+                        value={extras.destinatarioNome}
+                        onChange={alterar("destinatarioNome")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="dest-doc">{t("CPF ou CNPJ")}</Label>
+                      <Input
+                        id="dest-doc"
+                        inputMode="numeric"
+                        maxLength={14}
+                        value={extras.destinatarioDocumento}
+                        onChange={alterar("destinatarioDocumento")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="dest-ie">{t("Inscrição estadual")}</Label>
+                      <Input
+                        id="dest-ie"
+                        maxLength={20}
+                        placeholder={t("ISENTO ou vazio")}
+                        value={extras.destinatarioIe}
+                        onChange={alterar("destinatarioIe")}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Transporte")}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1.5 sm:col-span-3">
+                      <Label htmlFor="ex-modalidade">{t("Modalidade do frete")}</Label>
+                      <select
+                        id="ex-modalidade"
+                        aria-label={t("Modalidade do frete")}
+                        className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                        value={extras.modalidade}
+                        onChange={alterar("modalidade")}
+                      >
+                        {MODALIDADES_DE_FRETE.map((m) => (
+                          <option key={m} value={m}>
+                            {ROTULO_DA_MODALIDADE_DE_FRETE[m]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-3">
+                      <Label htmlFor="ex-transp-nome">
+                        {t("Transportador — nome ou razão social")}
+                      </Label>
+                      <Input
+                        id="ex-transp-nome"
+                        value={extras.transportadorNome}
+                        onChange={alterar("transportadorNome")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-transp-doc">{t("CPF ou CNPJ")}</Label>
+                      <Input
+                        id="ex-transp-doc"
+                        inputMode="numeric"
+                        maxLength={14}
+                        value={extras.transportadorDocumento}
+                        onChange={alterar("transportadorDocumento")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-vol-qtd">{t("Volumes")}</Label>
+                      <Input
+                        id="ex-vol-qtd"
+                        type="number"
+                        min={1}
+                        placeholder={t("Qtd.")}
+                        value={extras.volumesQuantidade}
+                        onChange={alterar("volumesQuantidade")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-vol-especie">{t("Espécie")}</Label>
+                      <Input
+                        id="ex-vol-especie"
+                        maxLength={60}
+                        placeholder={t("Ex.: CAIXAS")}
+                        value={extras.volumesEspecie}
+                        onChange={alterar("volumesEspecie")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-vol-peso-l">{t("Peso líquido (kg)")}</Label>
+                      <Input
+                        id="ex-vol-peso-l"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={extras.pesoLiquido}
+                        onChange={alterar("pesoLiquido")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-vol-peso-b">{t("Peso bruto (kg)")}</Label>
+                      <Input
+                        id="ex-vol-peso-b"
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        value={extras.pesoBruto}
+                        onChange={alterar("pesoBruto")}
+                      />
+                    </div>
+                  </div>
+                </section>
+
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Cobrança")}
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-forma">{t("Forma de pagamento")}</Label>
+                      <select
+                        id="ex-forma"
+                        aria-label={t("Forma de pagamento")}
+                        className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                        value={extras.formaPagamento}
+                        onChange={alterar("formaPagamento")}
+                      >
+                        <option value="">{t("Não informar")}</option>
+                        {FORMAS_DE_PAGAMENTO.map((f) => (
+                          <option key={f} value={f}>
+                            {ROTULO_DA_FORMA_DE_PAGAMENTO[f]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {extras.formaPagamento !== "" && (
+                      <>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="ex-parcelas">{t("Parcelas")}</Label>
+                          <Input
+                            id="ex-parcelas"
+                            type="number"
+                            min={1}
+                            max={120}
+                            value={extras.parcelas}
+                            onChange={alterar("parcelas")}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="ex-dias">{t("Dias entre vencimentos")}</Label>
+                          <Input
+                            id="ex-dias"
+                            type="number"
+                            min={0}
+                            max={365}
+                            value={extras.diasEntre}
+                            onChange={alterar("diasEntre")}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="ex-vencimento">{t("Primeiro vencimento")}</Label>
+                          <Input
+                            id="ex-vencimento"
+                            type="date"
+                            value={extras.primeiroVencimento}
+                            onChange={alterar("primeiroVencimento")}
+                          />
+                        </div>
+                        <div className="space-y-1.5 sm:col-span-3">
+                          <Label htmlFor="ex-descricao">
+                            {t("Descrição da forma de pagamento (obrigatória em Outros)")}
+                          </Label>
+                          <Input
+                            id="ex-descricao"
+                            maxLength={60}
+                            value={extras.descricaoPagamento}
+                            onChange={alterar("descricaoPagamento")}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </section>
+
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Adicionais")}
+                  </h3>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ex-inf-cpl">{t("Informações complementares")}</Label>
+                    <Textarea
+                      id="ex-inf-cpl"
+                      rows={3}
+                      maxLength={5000}
+                      value={extras.informacoesComplementares}
+                      onChange={alterar("informacoesComplementares")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t(
+                        "Vem das Informações adicionais do pedido. O que você editar aqui vence — é este texto que sai no campo de informações complementares da nota.",
+                      )}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="ex-inf-fisco">{t("Informações de interesse do Fisco")}</Label>
+                    <Textarea
+                      id="ex-inf-fisco"
+                      rows={2}
+                      maxLength={2000}
+                      value={extras.informacoesFisco}
+                      onChange={alterar("informacoesFisco")}
+                    />
+                  </div>
+                </section>
+
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Endereço do destinatário")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "A SEFAZ exige este endereço na NF-e; ele também é usado como local de entrega.",
+                    )}
+                  </p>
+                  {escolhido?.destinatario &&
+                    (escolhido.destinatario.entrega ? (
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          "Preenchido com o cadastro do cliente. Pode corrigir aqui — vale o que estiver nesta tela.",
+                        )}
+                      </p>
+                    ) : (
+                      <p className="rounded-lg border border-warning/40 bg-warning-bg p-2 text-xs text-warning-fg">
+                        {t("Falta no cadastro do cliente:")}{" "}
+                        {escolhido.destinatario.faltando.join(", ") || t("endereço completo")}.{" "}
+                        {t("Dá para completar aqui ou no cadastro do cliente.")}
+                      </p>
+                    ))}
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label htmlFor="ex-ent-logradouro">{t("Logradouro")}</Label>
+                      <Input
+                        id="ex-ent-logradouro"
+                        maxLength={60}
+                        value={extras.entregaLogradouro}
+                        onChange={alterar("entregaLogradouro")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-numero">{t("Número")}</Label>
+                      <Input
+                        id="ex-ent-numero"
+                        maxLength={60}
+                        value={extras.entregaNumero}
+                        onChange={alterar("entregaNumero")}
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label htmlFor="ex-ent-complemento">{t("Complemento")}</Label>
+                      <Input
+                        id="ex-ent-complemento"
+                        maxLength={60}
+                        value={extras.entregaComplemento}
+                        onChange={alterar("entregaComplemento")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-bairro">{t("Bairro")}</Label>
+                      <Input
+                        id="ex-ent-bairro"
+                        maxLength={60}
+                        value={extras.entregaBairro}
+                        onChange={alterar("entregaBairro")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-municipio">{t("Município")}</Label>
+                      <Input
+                        id="ex-ent-municipio"
+                        maxLength={60}
+                        value={extras.entregaMunicipio}
+                        onChange={alterar("entregaMunicipio")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-cod-mun">{t("Código IBGE")}</Label>
+                      <Input
+                        id="ex-ent-cod-mun"
+                        inputMode="numeric"
+                        maxLength={7}
+                        placeholder="0000000"
+                        value={extras.entregaCodigoMunicipio}
+                        onChange={alterar("entregaCodigoMunicipio")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-uf">{t("UF")}</Label>
+                      <Input
+                        id="ex-ent-uf"
+                        maxLength={2}
+                        placeholder="SP"
+                        value={extras.entregaUf}
+                        onChange={alterar("entregaUf")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="ex-ent-cep">{t("CEP")}</Label>
+                      <Input
+                        id="ex-ent-cep"
+                        inputMode="numeric"
+                        maxLength={9}
+                        placeholder="00000-000"
+                        value={extras.entregaCep}
+                        onChange={alterar("entregaCep")}
+                      />
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </details>
+
+            <div>
+              <Button
+                onClick={() => void emitir()}
+                disabled={emitindo || !configInicial || !pedidoId}
+              >
+                {emitindo ? t("Enviando…") : textos.emitir}
+              </Button>
+            </div>
           </div>
-        </div>
         )
       ) : (
         <div className="max-w-xl space-y-4">
           <p className="text-xs text-muted-foreground">
-            {t("Venda sem pedido (balcão): a nota nasce da venda informada, sem precisar gerar pedido.")}
+            {t(
+              "Venda sem pedido (balcão): a nota nasce da venda informada, sem precisar gerar pedido.",
+            )}
           </p>
           <CustomerSelector
             contatos={[]}
@@ -940,14 +1181,25 @@ export function EmitirNota({
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Itens da venda")}</h3>
+              <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {t("Itens da venda")}
+              </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() =>
                   setAvulsa({
                     ...avulsa,
-                    itens: [...avulsa.itens, { descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+                    itens: [
+                      ...avulsa.itens,
+                      {
+                        descricao: "",
+                        quantidade: "1",
+                        preco_cents: "",
+                        desconto_pct: "0",
+                        ncm: "",
+                      },
+                    ],
                   })
                 }
               >
@@ -955,62 +1207,103 @@ export function EmitirNota({
               </Button>
             </div>
             {avulsa.itens.map((item, idx) => (
-              <div key={idx} className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-6">
+              <div
+                key={idx}
+                className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-6"
+              >
                 <div className="space-y-1.5 sm:col-span-3">
                   <Label>{t("Descrição")}</Label>
                   <Input
+                    aria-label={t("Descrição")}
                     value={item.descricao}
                     onChange={(e) =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, descricao: e.target.value } : x)) })
+                      setAvulsa({
+                        ...avulsa,
+                        itens: avulsa.itens.map((x, j) =>
+                          j === idx ? { ...x, descricao: e.target.value } : x,
+                        ),
+                      })
                     }
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("Qtd.")}</Label>
                   <Input
+                    aria-label={t("Qtd.")}
                     type="number"
                     min={1}
                     value={item.quantidade}
                     onChange={(e) =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, quantidade: e.target.value } : x)) })
+                      setAvulsa({
+                        ...avulsa,
+                        itens: avulsa.itens.map((x, j) =>
+                          j === idx ? { ...x, quantidade: e.target.value } : x,
+                        ),
+                      })
                     }
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("Preço (centavos)")}</Label>
                   <Input
+                    aria-label={t("Preço (centavos)")}
                     type="number"
                     min={0}
                     value={item.preco_cents}
                     onChange={(e) =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, preco_cents: e.target.value } : x)) })
+                      setAvulsa({
+                        ...avulsa,
+                        itens: avulsa.itens.map((x, j) =>
+                          j === idx ? { ...x, preco_cents: e.target.value } : x,
+                        ),
+                      })
                     }
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("Desconto (%)")}</Label>
                   <Input
+                    aria-label={t("Desconto (%)")}
                     type="number"
                     min={0}
                     max={100}
                     value={item.desconto_pct}
                     onChange={(e) =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, desconto_pct: e.target.value } : x)) })
+                      setAvulsa({
+                        ...avulsa,
+                        itens: avulsa.itens.map((x, j) =>
+                          j === idx ? { ...x, desconto_pct: e.target.value } : x,
+                        ),
+                      })
                     }
                   />
                 </div>
                 <div className="space-y-1.5">
                   <Label>{t("NCM")}</Label>
                   <Input
+                    aria-label={t("NCM")}
                     value={item.ncm}
                     onChange={(e) =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.map((x, j) => (j === idx ? { ...x, ncm: e.target.value } : x)) })
+                      setAvulsa({
+                        ...avulsa,
+                        itens: avulsa.itens.map((x, j) =>
+                          j === idx ? { ...x, ncm: e.target.value } : x,
+                        ),
+                      })
                     }
                   />
                 </div>
                 <div className="flex items-end gap-2">
-                  <ProdutoParaItem onSelecionar={(produto) => selecionarProdutoDoItem(idx, produto)} />
-                  <Button variant="outline" size="sm" onClick={() => setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })}>
+                  <ProdutoParaItem
+                    onSelecionar={(produto) => selecionarProdutoDoItem(idx, produto)}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })
+                    }
+                  >
                     {t("Remover")}
                   </Button>
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
+import Link from "next/link";
 import { useState } from "react";
 import { formatDistanceToNowStrict } from "date-fns";
 
@@ -87,6 +88,11 @@ function InboxRow({
     addSuffix: true,
     locale: localeDaData,
   });
+  // O aviso aponta para a conversa; sem o link, o operador sabe que uma
+  // mensagem não saiu mas não tem para onde ir — e a demanda fica sem próximo
+  // passo. O inbox abre por `?id=<conversa>`.
+  const href =
+    item.ref_kind === "conversation" && item.ref_id ? `/app/inbox?id=${item.ref_id}` : null;
   return (
     <li className="flex items-start gap-3 px-4 py-3" data-testid="inbox-item">
       <Badge variant={SEVERITY_VARIANT[item.severity]} className="mt-0.5 shrink-0">
@@ -99,17 +105,31 @@ function InboxRow({
         </p>
         {item.body ? <p className="mt-1 text-xs text-muted-foreground">{item.body}</p> : null}
       </div>
-      {canResolve ? (
-        item.status === "resolved" ? (
-          <Button size="sm" variant="ghost" disabled={pending} onClick={() => onToggle("open")}>
-            {t("Reabrir")}
-          </Button>
-        ) : (
-          <Button size="sm" variant="outline" disabled={pending} onClick={() => onToggle("resolved")}>
-            <Check size={14} aria-hidden />
-            {t("Marcar resolvido")}
-          </Button>
-        )
+      {canResolve || href ? (
+        <div className="flex shrink-0 items-center gap-2">
+          {href ? (
+            <Button asChild size="sm" variant="ghost">
+              <Link href={href}>{t("Abrir conversa")}</Link>
+            </Button>
+          ) : null}
+          {canResolve ? (
+            item.status === "resolved" ? (
+              <Button size="sm" variant="ghost" disabled={pending} onClick={() => onToggle("open")}>
+                {t("Reabrir")}
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={pending}
+                onClick={() => onToggle("resolved")}
+              >
+                <Check size={14} aria-hidden />
+                {t("Marcar resolvido")}
+              </Button>
+            )
+          ) : null}
+        </div>
       ) : null}
     </li>
   );

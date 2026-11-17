@@ -25,6 +25,13 @@ export const ApiErrorCodes = {
   // 403 — authz
   forbidden: "forbidden",
   forbidden_role: "forbidden_role",
+  /**
+   * O administrador de plataforma existe, tem MFA, e o escopo dele é
+   * `support_readonly` — enxerga tudo e não escreve (`platform_admins.scope`).
+   * Separado de `forbidden_role` porque a saída é outra: não é pedir um papel
+   * maior no tenant, é pedir a um admin de plataforma com escopo `full`.
+   */
+  forbidden_scope: "forbidden_scope",
   forbidden_tenant: "forbidden_tenant",
   lgpd_anonymization_irreversible: "lgpd_anonymization_irreversible",
 
@@ -62,6 +69,13 @@ export const ApiErrorCodes = {
 
   // 409 — conflito
   idempotency_conflict: "idempotency_conflict",
+  /**
+   * Contato já existe nesta organização (índice único parcial de telefone,
+   * e-mail ou CPF). Era `500 internal_error`: a tela dizia "erro interno" para
+   * um caso que o usuário resolve escolhendo outro telefone — ou abrindo a
+   * ficha que já existe.
+   */
+  contato_duplicado: "contato_duplicado",
   state_conflict: "state_conflict",
   invalid_state: "invalid_state", // resposta a um agent_case que saiu de awaiting_human (spec 15 §7)
   tenant_already_exists: "tenant_already_exists",

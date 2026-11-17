@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ok, fail } from "@/lib/api/wrappers";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
+import { roleAtLeast } from "@/lib/auth/types";
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
 import { CHANNEL_PROVIDER_WAHA } from "@/lib/channels/capabilities";
 import {
@@ -135,6 +136,14 @@ export async function POST(req: Request) {
   if (!user) return fail("unauthenticated", "Sessão expirada", 401);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) return fail("tenant_not_found", "Sem organização ativa", 404);
+  // CONECTAR NÚMERO NÃO É ATO DE `viewer`. Medido em 17/11/2026: a rota só
+  // checava cookie, então qualquer membro autenticado criava sessão/QR no WAHA
+  // (recurso externo, com custo). A régua é a mesma das outras mutações de
+  // canal; `agent` é o piso. Não se usa `requireRole` aqui para não arrastar a
+  // exigência de MFA para dentro do onboarding, que acontece antes dele.
+  if (!roleAtLeast(activeOrg.role, "agent")) {
+    return fail("forbidden_role", "Seu perfil não conecta número.", 403, { requestId });
+  }
   const waha = getWahaClient();
   if (!waha) return fail("waha_not_configured", "Suba o Docker (docker compose up -d waha) e tente novamente.", 503);
   const sessionName = defaultSessionName(activeOrg.orgId);

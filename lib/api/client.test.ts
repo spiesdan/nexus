@@ -89,7 +89,42 @@ describe("apiClient", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it("t7: opts.idempotencyKey overrides auto-uuid", async () => {
+  it("t7: erro de rede em POST NÃO repete — gravar não se repete no escuro", async () => {
+    // Medido em 17/11/2026: um clique em "Criar cliente" fazia TRÊS POSTs
+    // idênticos. "Sem resposta" não distingue "não chegou" de "gravou e a
+    // resposta se perdeu"; repetir é o que duplica.
+    fetchMock.mockRejectedValue(new TypeError("Failed to fetch"));
+    await expect(apiClient.post("/x", { a: 1 })).rejects.toBeInstanceOf(TypeError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("t8: erro de rede em GET continua repetindo (leitura é segura)", async () => {
+    vi.useFakeTimers();
+    fetchMock
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockResolvedValueOnce(jsonResponse(200, { data: { ok: true } }));
+    const promessa = apiClient.get<{ data: { ok: boolean } }>("/x");
+    await vi.runAllTimersAsync();
+    await expect(promessa).resolves.toEqual({ data: { ok: true } });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("t9: 429 em POST continua repetindo (o servidor disse que não processou)", async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(
+          429,
+          { error: { code: "rate_limited", message: "slow down" } },
+          { "Retry-After": "0" },
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse(200, { data: { ok: true } }));
+    await apiClient.post<{ data: { ok: boolean } }>("/x", {});
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("t10: opts.idempotencyKey overrides auto-uuid", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, { data: { ok: true } }));
     await apiClient.post("/x", { a: 1 }, { idempotencyKey: "custom-key-123" });
     const headers = fetchMock.mock.calls[0]![1].headers as Record<string, string>;

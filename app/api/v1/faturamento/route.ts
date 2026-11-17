@@ -12,6 +12,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +50,25 @@ export async function GET(req: NextRequest): Promise<Response> {
     .order("created_at", { ascending: false })
     .limit(2000);
   if (de) q = q.gte("created_at", `${de}T00:00:00Z`);
-  if (ate) q = q.lt("created_at", `${ate}T00:00:00Z`);
+  if (ate) {
+    // "Até 15/11" inclui o dia 15 inteiro. Com `.lt(15T00:00Z)` o dia 15
+    // ficava de fora — o operador pedia o mês e o último dia sumia.
+    const fim = new Date(`${ate}T00:00:00Z`);
+    fim.setUTCDate(fim.getUTCDate() + 1);
+    q = q.lt("created_at", fim.toISOString());
+  }
   const { data: pedidos, error: erroPedidos } = await q;
   if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
+  // Teto de 2.000: não corta em silêncio — o log diz que a janela pedida veio
+  // truncada. A tela ainda não mostra isso (paginação é o F-30).
+  if ((pedidos ?? []).length === 2000) {
+    logger.warn("[faturamento] janela truncada em 2.000 pedidos", {
+      organization_id: authz.org.orgId,
+      de,
+      ate,
+      requestId,
+    });
+  }
 
   const ids = ((pedidos ?? []) as { id: string }[]).map((p) => p.id);
   let notas = new Map<string, { serie: string; numero: number | null; status: string }>();

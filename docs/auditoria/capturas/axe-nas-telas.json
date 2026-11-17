@@ -1,0 +1,55 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T13:54:23.574Z",
+  "regras": "wcag2a + wcag2aa",
+  "resultados": [
+    {
+      "rota": "/app",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/pedidos",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/contacts",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/inbox",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/financeiro",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/notas",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/settings",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/login",
+      "violacoes": [],
+      "total": 0,
+      "porImpacto": {}
+    }
+  ]
+}

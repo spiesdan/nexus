@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
+import { centavosDeBr } from "@/lib/format/moeda";
 import {
   ehStatusCompra,
   rotuloStatusCompra,
@@ -102,10 +103,18 @@ export function ComprasClient({ podeEscrever }: { podeEscrever: boolean }) {
         title="Compras"
         subtitle="Pedidos de compra aos fornecedores e quem os fornece."
         navigation={
+          // `aria-current`, não só classe. As outras barras de aba do produto
+          // (`/app/products`, `/app/prospeccao`, `/app/expedicao/[id]`) marcam a
+          // aba ativa com `aria-current="page"`; esta marcava **só** por
+          // `className`. Medido em 16/11/2026: um leitor de tela anunciava dois
+          // botões "Pedidos" e "Fornecedores" sem dizer qual está aberto — e o
+          // inventário de subtelas não conseguia nem enumerá-las, porque não há
+          // `role=tab` nem `aria-current` para ler.
           <nav className="flex gap-4">
             <button
               type="button"
               onClick={() => trocarAba("pedidos")}
+              aria-current={aba === "pedidos" ? "page" : undefined}
               className={aba === "pedidos" ? "font-medium text-text" : "hover:text-text"}
             >
               Pedidos
@@ -113,6 +122,7 @@ export function ComprasClient({ podeEscrever }: { podeEscrever: boolean }) {
             <button
               type="button"
               onClick={() => trocarAba("fornecedores")}
+              aria-current={aba === "fornecedores" ? "page" : undefined}
               className={aba === "fornecedores" ? "font-medium text-text" : "hover:text-text"}
             >
               Fornecedores
@@ -459,10 +469,7 @@ function DialogNovaCompra({
           .map((i) => ({
             product_id: i.product_id,
             quantidade: Math.max(1, Math.trunc(Number(i.quantidade.replace(",", ".")) || 0)),
-            custo_unit_cents: Math.max(
-              0,
-              Math.round(Number(i.custo_reais.replace(",", ".")) * 100) || 0,
-            ),
+            custo_unit_cents: Math.max(0, centavosDeBr(i.custo_reais) ?? 0),
           })),
       };
       if (corpo.itens.length === 0) throw new Error("Adicione ao menos um item.");
@@ -498,7 +505,7 @@ function DialogNovaCompra({
           <div className="space-y-2">
             <Label>Fornecedor (opcional)</Label>
             <Select value={supplierId || "sem"} onValueChange={(v) => setSupplierId(v === "sem" ? "" : v)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Fornecedor (opcional)">
                 <SelectValue placeholder="Sem fornecedor" />
               </SelectTrigger>
               <SelectContent>
@@ -547,7 +554,11 @@ function DialogNovaCompra({
                     onChange={(e) => trocarItem(i, { custo_reais: e.target.value })}
                     onBlur={() => {
                       if (!item.custo_reais && produto?.custo_cents != null) {
-                        trocarItem(i, { custo_reais: (produto.custo_cents / 100).toFixed(2) });
+                        trocarItem(i, {
+                          custo_reais: (produto.custo_cents / 100).toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          }),
+                        });
                       }
                     }}
                   />

@@ -11,6 +11,7 @@
  */
 
 import { Storefront } from "@/lib/ui/icons";
+import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
@@ -46,13 +47,21 @@ async function loadIntegration(orgId: string): Promise<IntegrationRow | null> {
 export default async function NuvemshopIntegrationPage() {
   const user = await loadAuthUser();
   const activeOrg = user ? await resolveActiveOrg(user) : null;
-  const configured = isConfigured();
   const idioma = normalizarIdioma(user?.locale ?? null);
 
+  // ─── A PÁGINA TINHA O PAPEL SÓ NO MENU ───────────────────────────────────
+  //
+  // O registry marca `/app/integrations/nuvemshop` como `admin`, mas a página
+  // não redirecionava ninguém: quem digitasse a URL — inclusive um `viewer` —
+  // via a integração da loja. E o dado era lido com `createAdminClient`, que
+  // bypassa RLS. O gate tem de vir ANTES da leitura, senão o registro já foi
+  // buscado e serializado antes de alguém decidir que não podia.
+  const isAdmin = activeOrg?.role === "admin" || user?.is_platform_admin === true;
+  if (!isAdmin) redirect("/app");
+
+  const configured = isConfigured();
   const integration =
     activeOrg && configured ? await loadIntegration(activeOrg.orgId) : null;
-
-  const isAdmin = activeOrg?.role === "admin" || user?.is_platform_admin === true;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6">

@@ -125,7 +125,7 @@ export function DashboardHome(inicial: DadosDashboard) {
   return (
     <div className="space-y-4 p-4 sm:space-y-6 sm:p-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-medium tracking-tight text-foreground">
           {cumprimento}
           {primeiro ? `, ${primeiro}` : ""}.
         </h1>

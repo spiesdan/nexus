@@ -72,13 +72,31 @@ test("as 12 subtelas do módulo fiscal abrem com sessão real", async ({ page })
   }
 });
 
-test("a porta do sidebar é /app/fiscal e a navegação lista as subtelas", async ({ page }) => {
+test("a porta do sidebar é /app/notas (emissão) e a navegação lista as subtelas", async ({
+  page,
+}) => {
   await loginComoAdmin(page, lerCreds());
 
+  // A PORTA DO SIDEBAR É A EMISSÃO, e isso é decisão de produto, não descuido:
+  // `5eee8923` (04/11/2026) trocou o item de `/app/fiscal` (recebimento, vazio
+  // numa instalação nova) para `/app/notas` (emissão, o uso diário), e renomeou
+  // o recebimento para "NF-e recebidas". O commit atualizou o título de
+  // `TELAS` e **não** atualizou esta asserção — que continuou exigindo
+  // `/app/fiscal` para um link chamado "Notas fiscais" e passou a reprovar.
+  //
+  // Medido em 16/11/2026: o link casava `/app/notas` e a spec esperava
+  // `/app/fiscal`. Quem estava errado era a spec.
   await page.goto("/app");
-  const porta = page.getByRole("link", { name: /notas fiscais/i }).first();
+  const porta = page.getByRole("link", { name: /^notas fiscais$/i }).first();
   await expect(porta).toBeVisible({ timeout: 20_000 });
-  await expect(porta).toHaveAttribute("href", "/app/fiscal");
+  await expect(porta).toHaveAttribute("href", "/app/notas");
+
+  // "NF-e recebidas" NÃO é item de sidebar — é o título de `/app/fiscal` e uma
+  // entrada do ⌘K (o registro em `lib/navigation/registry.ts` só liga
+  // `sidebar: true` na emissão). A primeira versão desta correção exigia o link
+  // no sidebar e reprovou: era exigir do produto o que ele não promete. O que
+  // se verifica é que as duas superfícies existem — a porta da emissão acima, e
+  // o título do recebimento já coberto pelo laço de `TELAS` no topo do arquivo.
 
   await page.goto("/app/fiscal");
   const nav = page.getByRole("navigation", { name: /notas fiscais|fiscal/i }).first();
@@ -108,9 +126,9 @@ test("nota inexistente cai na tela de 404, não em erro de servidor", async ({ p
   // O status HTTP é 200 porque a resposta já começou a streamar antes do
   // `notFound()`; o que importa para quem usa é a tela — e ela é a de 404, não
   // um 500 nem uma nota vazia.
-  await expect(
-    page.getByRole("heading", { level: 1, name: /404/ }),
-  ).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { level: 1, name: /404/ })).toBeVisible({
+    timeout: 20_000,
+  });
   await page.screenshot({
     path: "evidence/fiscal-entrada/14-nota-inexistente-404.png",
     fullPage: true,

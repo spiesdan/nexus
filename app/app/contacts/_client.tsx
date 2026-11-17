@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import {
   FilterBar,
   FilterChips,
@@ -213,16 +214,25 @@ export function ContactsListClient() {
               {allContacts.length} {allContacts.length === 1 ? t("cliente") : t("clientes")}
               {q.hasNextPage ? ` ${t("carregados — há mais resultados")}` : ""}
             </p>
-            {q.hasNextPage && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => q.fetchNextPage()}
-                disabled={q.isFetchingNextPage}
-              >
-                {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
-              </Button>
-            )}
+            {q.hasNextPage &&
+              // OFFLINE, A BUSCA FICA PAUSADA — e a tela tem de dizer isso.
+              // O TanStack Query, no modo `online` (padrão), não dispara a
+              // requisição sem rede: sem este ramo, o botão continuava escrito
+              // "Carregar mais" e o clique não fazia absolutamente nada.
+              // Medido em 17/11/2026 com o navegador offline: 0 requisições, 0
+              // toasts, 0 mudança de estado.
+              (q.isPaused ? (
+                <AvisoSemConexao />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => q.fetchNextPage()}
+                  disabled={q.isFetchingNextPage}
+                >
+                  {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
+                </Button>
+              ))}
           </div>
         </>
       )}

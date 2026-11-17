@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { ROTULO_RECOMPRA, type SituacaoRecompra } from "@/lib/comercial/radar-compras";
 import { comoMoeda } from "@/lib/format/moeda";
@@ -86,7 +87,11 @@ function contarPorGrupo(linhas: LinhaRadar[]) {
   for (const l of linhas) {
     if (l.situacao === "em_risco") risco += 1;
     else if (l.situacao === "recompra_atrasada") recompra += 1;
-    else if (l.situacao === "oportunidade_aberta" || l.situacao === "em_voo" || l.situacao === "primeira_compra") {
+    else if (
+      l.situacao === "oportunidade_aberta" ||
+      l.situacao === "em_voo" ||
+      l.situacao === "primeira_compra"
+    ) {
       oportunidade += 1;
     }
   }
@@ -97,6 +102,7 @@ const STATUS_VENCIDO = new Set(["active", "waiting_reply", "agendada"]);
 
 export function ClientesParaAgir() {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const radar = useRadarDoDashboard();
   const fila = useQuery({
     queryKey: ["nexus", "fila-followups-vencidos"],
@@ -104,29 +110,39 @@ export function ClientesParaAgir() {
     // O corte "vencido" acontece no fetch (fora do render, que é puro) e vale
     // enquanto o cache durar — mesma janela do staleTime.
     queryFn: () =>
-      apiClient
-        .get<{ data: FilaFollowup[] }>("/api/v1/ai/followups/queue?limit=100")
-        .then((r) => {
-          const agora = Date.now();
-          return (r.data ?? []).filter(
-            (f) =>
-              f.next_fire_at != null && STATUS_VENCIDO.has(f.status) && new Date(f.next_fire_at).getTime() < agora,
-          );
-        }),
+      apiClient.get<{ data: FilaFollowup[] }>("/api/v1/ai/followups/queue?limit=100").then((r) => {
+        const agora = Date.now();
+        return (r.data ?? []).filter(
+          (f) =>
+            f.next_fire_at != null &&
+            STATUS_VENCIDO.has(f.status) &&
+            new Date(f.next_fire_at).getTime() < agora,
+        );
+      }),
   });
 
   const linhas = radar.data ?? [];
   const contagens = contarPorGrupo(linhas);
   const vencidos = fila.data ?? [];
   // Prioridade do radar: risco → recompra → oportunidade (mesma ordem da rota).
-  const ORDEM: SituacaoRecompra[] = ["em_risco", "recompra_atrasada", "oportunidade_aberta", "em_voo", "primeira_compra"];
-  const paraAgir = ORDEM.map((s) => linhas.filter((l) => l.situacao === s)).flat().slice(0, 5);
+  const ORDEM: SituacaoRecompra[] = [
+    "em_risco",
+    "recompra_atrasada",
+    "oportunidade_aberta",
+    "em_voo",
+    "primeira_compra",
+  ];
+  const paraAgir = ORDEM.map((s) => linhas.filter((l) => l.situacao === s))
+    .flat()
+    .slice(0, 5);
 
   const carregando = radar.isLoading || fila.isLoading;
 
   return (
     <section aria-label={t("Clientes para agir")} className="space-y-3">
-      <h2 className="text-sm font-semibold tracking-wide text-foreground">{t("Clientes para agir")}</h2>
+      <h2 className="text-sm font-semibold tracking-wide text-foreground">
+        {t("Clientes para agir")}
+      </h2>
 
       {carregando ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -155,7 +171,9 @@ export function ClientesParaAgir() {
       <div className="grid gap-3 lg:grid-cols-2">
         <Card className="hover-raise space-y-3 p-4">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-medium text-foreground">{t("Recompra, risco e oportunidade")}</h3>
+            <h3 className="text-sm font-medium text-foreground">
+              {t("Recompra, risco e oportunidade")}
+            </h3>
             <Button size="sm" variant="ghost" asChild>
               <Link href="/app/radar">{t("Abrir radar")}</Link>
             </Button>
@@ -167,7 +185,9 @@ export function ClientesParaAgir() {
               className="border-0 py-6"
             />
           ) : paraAgir.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("Ninguém precisa de atenção agora.")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("Ninguém precisa de atenção agora.")}
+            </p>
           ) : (
             <ul className="space-y-2">
               {paraAgir.map((l) => (
@@ -215,7 +235,10 @@ export function ClientesParaAgir() {
           ) : (
             <ul className="space-y-2">
               {vencidos.slice(0, 5).map((f) => (
-                <li key={`${f.source}:${f.id}`} className="flex items-center justify-between gap-2 text-sm">
+                <li
+                  key={`${f.source}:${f.id}`}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
                   {f.contact?.id ? (
                     <Link href={`/app/contacts/${f.contact.id}`} className="hover:underline">
                       <span className="font-medium">{f.contact.name ?? t("Sem nome")}</span>
@@ -224,7 +247,9 @@ export function ClientesParaAgir() {
                     <span className="font-medium">{f.contact?.name ?? t("Sem cliente")}</span>
                   )}
                   <span className="text-xs text-muted-foreground">
-                    {f.next_fire_at ? new Date(f.next_fire_at).toLocaleString() : t("sem hora")}
+                    {f.next_fire_at
+                      ? new Date(f.next_fire_at).toLocaleString(tagDoIdioma)
+                      : t("sem hora")}
                     {f.flow_name ? ` · ${f.flow_name}` : ""}
                   </span>
                 </li>
@@ -243,18 +268,20 @@ function brl(cents: number): string {
 
 export function SalesRoadmap() {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const roadmap = useQuery({
     queryKey: ["nexus", "roadmap-dashboard"],
     staleTime: 10 * 60_000,
-    queryFn: () =>
-      apiClient.get<{ data: RespostaRoadmap }>("/api/v1/roadmap").then((r) => r.data),
+    queryFn: () => apiClient.get<{ data: RespostaRoadmap }>("/api/v1/roadmap").then((r) => r.data),
   });
 
   if (roadmap.isLoading) return <Skeleton className="h-64 w-full" aria-live="polite" />;
   if (roadmap.isError || !roadmap.data) {
     return (
       <section aria-label={t("Sales roadmap")} className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-foreground">{t("Sales roadmap")}</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-foreground">
+          {t("Sales roadmap")}
+        </h2>
         <NexusErrorState
           description={t("Não foi possível carregar o roadmap agora.")}
           onRetry={() => roadmap.refetch()}
@@ -273,7 +300,9 @@ export function SalesRoadmap() {
   return (
     <section aria-label={t("Sales roadmap")} className="space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold tracking-wide text-foreground">{t("Sales roadmap")}</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-foreground">
+          {t("Sales roadmap")}
+        </h2>
         <span className="text-xs text-muted-foreground">
           {t("Realizado × meta; projeção só no mês em andamento.")}
         </span>
@@ -283,14 +312,20 @@ export function SalesRoadmap() {
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={dados} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.4} />
-              <XAxis dataKey="rotulo" tick={{ fontSize: 11 }} interval={0} angle={-20} height={52} />
+              <XAxis
+                dataKey="rotulo"
+                tick={{ fontSize: 11 }}
+                interval={0}
+                angle={-20}
+                height={52}
+              />
               <YAxis
                 tickFormatter={(v: number) => `${Math.round(v / 100 / 1000)}k`}
                 tick={{ fontSize: 11 }}
                 width={44}
               />
               <Tooltip formatter={(v) => brl(Math.round(Number(v ?? 0)))} />
-              <Legend />
+              <Legend formatter={(valor) => <span className="text-text-muted">{valor}</span>} />
               <Bar dataKey="realizado" name={t("Realizado")} fill="#2563eb" radius={[4, 4, 0, 0]} />
               <Bar dataKey="projecao" name={t("Projeção")} fill="#93c5fd" radius={[4, 4, 0, 0]} />
               <Line

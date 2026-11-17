@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import {
   curvaABC,
@@ -35,6 +36,11 @@ export default async function RelatoriosPage({
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
+  // O menu pede `manager`; a página não pedia nada. Relatório comercial é
+  // visão de gestão — um `agent` digitando a URL via faturamento por vendedor.
+  if (!user.is_platform_admin && ROLE_RANK[activeOrg.role] < ROLE_RANK.manager) {
+    redirect("/app");
+  }
 
   const dias = Math.min(365, Math.max(7, Number((await searchParams).dias ?? 30) || 30));
   const agoraMs = new Date().getTime();

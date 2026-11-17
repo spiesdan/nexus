@@ -1,0 +1,149 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T11:36:33.911Z",
+  "viewport": "320x844",
+  "resultados": [
+    {
+      "rota": "/app",
+      "titulos": 1,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 0,
+      "alvosNaDobra": 0,
+      "maiorLinhaCh": 39,
+      "exemploDaLinhaLonga": "Acompanhe o desempenho das suas vendas, com gráficos e métri",
+      "cards": 4
+    },
+    {
+      "rota": "/app/pedidos",
+      "titulos": 1,
+      "primarias": 1,
+      "primariasComTexto": [
+        "Criar pedido"
+      ],
+      "secundarias": 7,
+      "alvosNaDobra": 14,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 0
+    },
+    {
+      "rota": "/app/contacts",
+      "titulos": 1,
+      "primarias": 1,
+      "primariasComTexto": [
+        "Novo cliente"
+      ],
+      "secundarias": 15,
+      "alvosNaDobra": 25,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 0
+    },
+    {
+      "rota": "/app/inbox",
+      "titulos": 1,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 10,
+      "alvosNaDobra": 11,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 0
+    },
+    {
+      "rota": "/app/kanban",
+      "titulos": 1,
+      "primarias": 1,
+      "primariasComTexto": [
+        "Novo funil"
+      ],
+      "secundarias": 6,
+      "alvosNaDobra": 7,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 0
+    },
+    {
+      "rota": "/app/financeiro",
+      "titulos": 1,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 7,
+      "alvosNaDobra": 8,
+      "maiorLinhaCh": 29,
+      "exemploDaLinhaLonga": "Centro financeiro integrado às vendas: receber, pagar, cobra",
+      "cards": 4
+    },
+    {
+      "rota": "/app/notas",
+      "titulos": 1,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 2,
+      "alvosNaDobra": 3,
+      "maiorLinhaCh": 26,
+      "exemploDaLinhaLonga": "Emita a partir do pedido concluído, faturado ou expedido e a",
+      "cards": 0
+    },
+    {
+      "rota": "/app/expedicao",
+      "titulos": 2,
+      "primarias": 1,
+      "primariasComTexto": [
+        "Nova carga"
+      ],
+      "secundarias": 8,
+      "alvosNaDobra": 10,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 0
+    },
+    {
+      "rota": "/app/prospeccao",
+      "titulos": 2,
+      "primarias": 1,
+      "primariasComTexto": [
+        "Criar campanha"
+      ],
+      "secundarias": 10,
+      "alvosNaDobra": 13,
+      "maiorLinhaCh": 35,
+      "exemploDaLinhaLonga": "Fale com os clientes cadastrados na sua região e encontre em",
+      "cards": 0
+    },
+    {
+      "rota": "/app/ai",
+      "titulos": 3,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 5,
+      "alvosNaDobra": 5,
+      "maiorLinhaCh": 24,
+      "exemploDaLinhaLonga": "Tudo que define quem atende por você — e como acompanhar o q",
+      "cards": 0
+    },
+    {
+      "rota": "/app/settings",
+      "titulos": 2,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 5,
+      "alvosNaDobra": 5,
+      "maiorLinhaCh": 24,
+      "exemploDaLinhaLonga": "As colunas de cada funil, o vocabulário do negócio e os moti",
+      "cards": 0
+    },
+    {
+      "rota": "/admin",
+      "titulos": 1,
+      "primarias": 0,
+      "primariasComTexto": [],
+      "secundarias": 0,
+      "alvosNaDobra": 0,
+      "maiorLinhaCh": null,
+      "exemploDaLinhaLonga": null,
+      "cards": 5
+    }
+  ]
+}

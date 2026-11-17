@@ -39,6 +39,9 @@ interface Tabelas {
   commercial_orders: Linha[];
   commercial_order_items: Linha[];
   catalog_products: Linha[];
+  commercial_policies: Linha[];
+  price_tables: Linha[];
+  price_table_items: Linha[];
 }
 
 /**
@@ -86,11 +89,17 @@ function banco(tabelas: Tabelas): never {
         // do teste acontece, e é o mesmo instante em que o serviço real
         // commitaria.
         update: (muda: Linha | Linha[]) => {
-          // O Supabase aceita objeto OU array no `update`, e o serviço usa os
-          // dois: array para os itens (um por linha) e objeto para o total do
-          // pedido (colunas de uma linha só). Normalizar aqui evita a
-          // divergência silenciosa de "o duplo é que não sabia".
-          mudas.push(...(Array.isArray(muda) ? muda : [muda]));
+          // `update(array)` NÃO existe no PostgREST: o corpo de um PATCH é um
+          // objeto, e array vira inserção (`duplicate key ... _pkey`). Este
+          // dublê aceitava array e por isso o teste passava enquanto o produto
+          // devolvia 422 ao remover item do pedido (medido em 17/11/2026).
+          // Agora ele REPROVA o que o banco reprova.
+          if (Array.isArray(muda)) {
+            throw new Error(
+              "update() recebeu array: o PostgREST trata o corpo de PATCH como objeto único",
+            );
+          }
+          mudas.push(muda);
           return q;
         },
         // `delete` também é ADIADO, pelo mesmo motivo: `.delete().eq().in()`
@@ -172,9 +181,28 @@ function cenario(over: Partial<Tabelas> = {}): Tabelas {
       },
     ],
     catalog_products: [
-      { id: PROD_A, organization_id: ORG, codigo: "A", nome: "Produto A" },
-      { id: PROD_B, organization_id: ORG, codigo: "B", nome: "Produto B" },
+      {
+        id: PROD_A,
+        organization_id: ORG,
+        codigo: "A",
+        nome: "Produto A",
+        preco_cents: 1000,
+        controla_estoque: false,
+        quantidade: 0,
+      },
+      {
+        id: PROD_B,
+        organization_id: ORG,
+        codigo: "B",
+        nome: "Produto B",
+        preco_cents: 5000,
+        controla_estoque: false,
+        quantidade: 0,
+      },
     ],
+    commercial_policies: [],
+    price_tables: [],
+    price_table_items: [],
     ...over,
   } as Tabelas;
 }
@@ -246,6 +274,25 @@ describe("aplicarPatchDeItens", () => {
     expect(r.removidos).toBe(1);
     expect(r.total_cents).toBe(2000);
     expect(t.commercial_order_items.some((i) => i.id === "i2")).toBe(false);
+  });
+
+  it("REGRESSÃO 17/11: remover item de um pedido com 2 itens GRAVA sem estourar a pkey", async () => {
+    // O defeito que o usuário viu: "erro ao remover produtos do pedido", com
+    // 422. A causa era `update(array)` — o PostgREST trata o corpo de PATCH como
+    // um objeto único e, com array, chamava a inserção: `duplicate key value
+    // violates unique constraint "commercial_order_items_pkey"`. O dublê antigo
+    // aceitava array, então o teste passava e o produto não.
+    //
+    // Com 2 itens na lista, remover 1 obriga a regravar posições. Se alguém
+    // voltar a mandar array, este teste ESTOURA aqui (o dublê agora recusa).
+    const t = cenario();
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: { adicionar: [], remover: ["i1"], ajustar: [] },
+    });
+    expect(r.ok).toBe(true);
+    expect(r.removidos).toBe(1);
+    expect(t.commercial_order_items.filter((i) => i.order_id === PEDIDO)).toHaveLength(1);
   });
 
   it("remover reindexa posicao sem buraco", async () => {
@@ -414,5 +461,199 @@ describe("aplicarPatchDeItens", () => {
     // 10 x 1000 = 10.000, mais 5.000 do i2 = 15.000.
     expect(r.ok).toBe(true);
     expect(r.total_cents).toBe(15000);
+  });
+
+  it("preserva o desconto em R$ já gravado ao recalcular o total", async () => {
+    // O patch antigo aplicava só o `desconto_pct` e descartava o
+    // `desconto_cents` — editar um item derrubava o total em silêncio.
+    const t = cenario({ commercial_orders: [
+      {
+        id: PEDIDO,
+        organization_id: ORG,
+        status: "rascunho",
+        desconto_pct: 0,
+        desconto_cents: 500,
+        frete_cents: 200,
+        total_cents: 0,
+        price_table_id: null,
+      },
+    ] });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: { adicionar: [], remover: [], ajustar: [{ id: "i2", quantidade: 1 }] },
+    });
+    expect(r.ok).toBe(true);
+    // subtotal 7000 − 500 de desconto + 200 de frete = 6700.
+    expect(r.total_cents).toBe(6700);
+  });
+
+  it("desconto acima do teto em pedido aprovado volta para análise", async () => {
+    const t = cenario({
+      commercial_orders: [
+        {
+          id: PEDIDO,
+          organization_id: ORG,
+          status: "aprovado",
+          desconto_pct: 0,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 0,
+          price_table_id: null,
+        },
+      ],
+      commercial_policies: [
+        { id: "pol-1", organization_id: ORG, desconto_max_vendedor_pct: 5, permite_estoque_negativo: false },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: { adicionar: [], remover: [], ajustar: [{ id: "i2", desconto_pct: 50 }] },
+    });
+    expect(r.ok).toBe(true);
+    expect(r.status).toBe("em_analise");
+    expect(r.aprovacao_necessaria).toBe(true);
+    expect(t.commercial_orders[0]!.status).toBe("em_analise");
+  });
+
+  it("desconto acima do teto em pedido COMPROMETIDO é recusado, não rebaixado", async () => {
+    const t = cenario({
+      commercial_orders: [
+        {
+          id: PEDIDO,
+          organization_id: ORG,
+          status: "concluido",
+          desconto_pct: 0,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 0,
+          price_table_id: null,
+        },
+      ],
+      commercial_policies: [
+        { id: "pol-1", organization_id: ORG, desconto_max_vendedor_pct: 5, permite_estoque_negativo: false },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: { adicionar: [], remover: [], ajustar: [{ id: "i2", desconto_pct: 50 }] },
+    });
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toBe("desconto_acima_da_alcada");
+  });
+
+  it("gerente (podeIgnorar) passa pela alçada sem rebaixar o pedido", async () => {
+    const t = cenario({
+      commercial_orders: [
+        {
+          id: PEDIDO,
+          organization_id: ORG,
+          status: "concluido",
+          desconto_pct: 0,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 0,
+          price_table_id: null,
+        },
+      ],
+      commercial_policies: [
+        { id: "pol-1", organization_id: ORG, desconto_max_vendedor_pct: 5, permite_estoque_negativo: false },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      podeIgnorar: true,
+      patch: { adicionar: [], remover: [], ajustar: [{ id: "i2", desconto_pct: 50 }] },
+    });
+    expect(r.ok).toBe(true);
+    expect(r.status).toBe("concluido");
+    expect(r.aprovacao_necessaria).toBe(false);
+  });
+
+  it("preço fora da tabela é recusado", async () => {
+    const t = cenario({
+      commercial_orders: [
+        {
+          id: PEDIDO,
+          organization_id: ORG,
+          status: "rascunho",
+          desconto_pct: 0,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 0,
+          price_table_id: "t1",
+        },
+      ],
+      price_tables: [{ id: "t1", organization_id: ORG, desconto_pct: 0, ativo: true }],
+      price_table_items: [
+        { id: "pti-1", price_table_id: "t1", organization_id: ORG, product_id: PROD_A, preco_cents: 800 },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: {
+        adicionar: [{ product_id: PROD_A, quantidade: 1, preco_unit_cents: 1000, desconto_pct: 0 }],
+        remover: [],
+        ajustar: [],
+      },
+    });
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toBe("preco_fora_da_tabela");
+    expect(String(r.detalhe)).toContain("tabela: 800");
+  });
+
+  it("preço da tabela entra sem recusa", async () => {
+    const t = cenario({
+      commercial_orders: [
+        {
+          id: PEDIDO,
+          organization_id: ORG,
+          status: "rascunho",
+          desconto_pct: 0,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 0,
+          price_table_id: "t1",
+        },
+      ],
+      price_tables: [{ id: "t1", organization_id: ORG, desconto_pct: 0, ativo: true }],
+      price_table_items: [
+        { id: "pti-1", price_table_id: "t1", organization_id: ORG, product_id: PROD_A, preco_cents: 800 },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: {
+        adicionar: [{ product_id: PROD_A, quantidade: 1, preco_unit_cents: 800, desconto_pct: 0 }],
+        remover: [],
+        ajustar: [],
+      },
+    });
+    expect(r.ok).toBe(true);
+  });
+
+  it("estoque insuficiente recusa a adição", async () => {
+    const t = cenario({
+      catalog_products: [
+        {
+          id: PROD_A,
+          organization_id: ORG,
+          codigo: "A",
+          nome: "Produto A",
+          preco_cents: 1000,
+          controla_estoque: true,
+          quantidade: 2,
+        },
+      ],
+    });
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: {
+        adicionar: [{ product_id: PROD_A, quantidade: 5, preco_unit_cents: 1000, desconto_pct: 0 }],
+        remover: [],
+        ajustar: [],
+      },
+    });
+    expect(r.ok).toBe(false);
+    expect(r.motivo).toBe("estoque_insuficiente");
   });
 });

@@ -18,6 +18,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import {
+  type CadastroPublico,
+  type PlanoDeCorrecao,
+  planejarCorrecaoAutomatica,
+  resumirPlano,
+} from "@/lib/fiscal/correcao-automatica";
 import { Warning } from "@/lib/ui/icons";
 
 /**
@@ -129,6 +135,31 @@ export function CorrigirNota({
   const [complementares, setComplementares] = React.useState("");
   const [aplicarNoCadastro, setAplicarNoCadastro] = React.useState(true);
   const [salvando, setSalvando] = React.useState<"salvar" | "reenviar" | null>(null);
+  /** Consulta ao cadastro público em andamento — desabilita o botão e diz "consultando". */
+  const [consultando, setConsultando] = React.useState(false);
+  /** IE preenchida pela consulta, e não digitada: a tela diz de onde ela veio. */
+  const [ieVeioDoCnpj, setIeVeioDoCnpj] = React.useState(false);
+  const [avisoDaBusca, setAvisoDaBusca] = React.useState<string | null>(null);
+  /** O cadastro público consultado — a fonte do plano de correção. */
+  const [cadastroPublico, setCadastroPublico] = React.useState<CadastroPublico | null>(null);
+  /** O plano pendente de revisão: mudanças propostas + o que a máquina não resolve. */
+  const [plano, setPlano] = React.useState<PlanoDeCorrecao | null>(null);
+  /** Última combinação CNPJ:UF consultada — evita repetir a chamada em cada render. */
+  const cadastroConsultado = React.useRef<string | null>(null);
+  /** A mesma chave, em estado: `cadastroAtual` é calculado no render, e ler ref no
+   * render é proibido pelo React Compiler (e daria plano com dado de outro CNPJ). */
+  const [chaveConsultada, setChaveConsultada] = React.useState<string | null>(null);
+  /**
+   * O cadastro só vale para o CNPJ:UF de agora. Trocar o documento no campo
+   * sem consultar de novo usaria o cadastro do cliente ANTERIOR para preencher
+   * o endereço — e isso grava endereço errado na nota. Chave diferente = nulo.
+   */
+  const cadastroAtual =
+    contato &&
+    chaveConsultada ===
+      `${soDigitos(contato.documento ?? "")}:${(contato.uf ?? "").trim().toUpperCase()}`
+      ? cadastroPublico
+      : null;
 
   React.useEffect(() => {
     if (!aberto) return;
@@ -163,6 +194,186 @@ export function CorrigirNota({
       vivo = false;
     };
   }, [aberto, id, t]);
+
+  /**
+   * CONSULTA O CADASTRO PÚBLICO — a fonte de tudo que a máquina consegue
+   * preencher sozinha (IE, endereço, razão social).
+   *
+   * Devolve o cadastro para quem chamou, e guarda em estado porque o plano é
+   * montado a partir dele. Três regras:
+   *
+   * 1. **Sem CNPJ + UF não há o que consultar.** A UF importa porque IE de
+   *    outro estado é rejeição garantida — a rota só devolve a IE da UF pedida.
+   * 2. **Uma consulta por CNPJ:UF.** O mesmo par não vai à rede duas vezes
+   *    (abrir o diálogo já dispara a busca); trocar documento ou UF invalida.
+   * 3. **Fonte fora do ar não vira erro da nota.** Aviso na tela, campo à mão.
+   */
+  async function consultarCadastro(origem: "auto" | "manual"): Promise<CadastroPublico | null> {
+    if (!contato) return null;
+    const digitos = soDigitos(contato.documento ?? "");
+    const uf = (contato.uf ?? "").trim().toUpperCase();
+    if (digitos.length !== 14 || uf.length !== 2) {
+      if (origem === "manual") {
+        toast.error(t("Informe o CNPJ e a UF do destinatário para consultar o cadastro."));
+      }
+      return null;
+    }
+    const chave = `${digitos}:${uf}`;
+    if (origem === "auto" && cadastroConsultado.current === chave) return cadastroPublico;
+    cadastroConsultado.current = chave;
+    setChaveConsultada(chave);
+
+    setConsultando(true);
+    setAvisoDaBusca(null);
+    try {
+      const resposta = await apiClient.get<{ data: CadastroPublico }>(
+        `/api/v1/fiscal/cadastro-do-cnpj?cnpj=${digitos}&uf=${uf}`,
+      );
+      const dados = resposta.data;
+      setCadastroPublico(dados);
+      if (!dados.ie) {
+        // Campo vazio sem explicação é o que faz o operador reenviar e tomar a
+        // mesma rejeição. O aviso diz qual das duas situações é o caso.
+        setAvisoDaBusca(
+          dados.ufs_com_inscricao.length > 0
+            ? `${t("O CNPJ tem IE ativa em")} ${dados.ufs_com_inscricao.join(", ")}, ${t(
+                "mas o destinatário está em",
+              )} ${uf}. ${t("Confira a UF ou informe ISENTO.")}`
+            : t(
+                "Nenhuma IE publicada para este CNPJ. Se a empresa é isenta de inscrição estadual, escreva ISENTO.",
+              ),
+        );
+      }
+      return dados;
+    } catch {
+      setAvisoDaBusca(
+        t("Não consegui consultar o cadastro agora — preencha à mão e tente de novo."),
+      );
+      return null;
+    } finally {
+      setConsultando(false);
+    }
+  }
+
+  /** Monta o plano a partir do que está na tela + o cadastro consultado. */
+  function planejar(cadastro: CadastroPublico | null): PlanoDeCorrecao | null {
+    if (!contato) return null;
+    return planejarCorrecaoAutomatica({
+      destinatario: contato,
+      itens: itens.map((form, pos) => ({
+        order_item_id: form.order_item_id,
+        descricao: form.descricao,
+        ncm: form.ncm,
+        cfop: form.cfop,
+        unidade: form.unidade,
+        ncm_do_cadastro: quadro?.itens[pos]?.ncm_do_cadastro ?? null,
+      })),
+      cadastro,
+    });
+  }
+
+  /**
+   * CORRIGIR AUTOMATICAMENTE — consulta (se preciso) e mostra o plano.
+   *
+   * Nada é gravado nem aplicado aqui: o operador vê o que muda, de onde veio e
+   * o que a máquina NÃO consegue resolver, e então aplica nos campos. Salvar
+   * continua sendo o botão de salvar — corrigir não é emitir.
+   */
+  async function corrigirAutomaticamente() {
+    const cadastro = cadastroAtual ?? (await consultarCadastro("manual"));
+    if (!cadastro) return;
+    const proposto = planejar(cadastro);
+    if (!proposto) return;
+    setPlano(proposto);
+  }
+
+  /** Botão ao lado do campo de IE: consulta e preenche só se o campo está vazio. */
+  async function buscarIePeloCnpj() {
+    const cadastro = await consultarCadastro("manual");
+    if (!cadastro) return;
+    if (!cadastro.ie) {
+      const proposto = planejar(cadastro);
+      if (proposto) setPlano(proposto);
+      return;
+    }
+    const jaTem = (contato?.ie ?? "").trim() !== "";
+    setContato((atual) => {
+      if (!atual) return atual;
+      // Nunca pisa no que a pessoa digitou — nem quando ela digitou "ISENTO".
+      if ((atual.ie ?? "").trim() !== "") return atual;
+      return { ...atual, ie: cadastro.ie };
+    });
+    setIeVeioDoCnpj(true);
+    toast[jaTem ? "info" : "success"](
+      jaTem
+        ? `${t("O cadastro público tem IE")} ${cadastro.ie} — ${t("o campo já estava preenchido e não foi alterado.")}`
+        : `${t("IE preenchida pelo CNPJ")} (${contato?.uf ?? ""}) — ${t("confira antes de reenviar.")}`,
+    );
+  }
+
+  /**
+   * Aplica o plano NO ESTADO da tela — sem salvar. Depois disso o operador
+   * confere campo a campo e usa "Salvar" / "Salvar e reenviar" como sempre.
+   */
+  function aplicarPlano() {
+    if (!plano) return;
+    const total = plano.mudancas.length;
+    if (Object.keys(plano.destinatario).length > 0) {
+      setContato((atual) => (atual ? { ...atual, ...plano.destinatario } : atual));
+      if (plano.mudancas.some((m) => m.campo === "ie")) setIeVeioDoCnpj(true);
+    }
+    if (plano.itens.length > 0) {
+      setItens((atual) =>
+        atual.map((form) => {
+          const mudanca = plano.itens.find((i) => i.order_item_id === form.order_item_id);
+          if (!mudanca) return form;
+          return {
+            ...form,
+            ...(mudanca.ncm ? { ncm: mudanca.ncm } : {}),
+            ...(mudanca.cfop ? { cfop: mudanca.cfop } : {}),
+            ...(mudanca.unidade ? { unidade: mudanca.unidade } : {}),
+          };
+        }),
+      );
+    }
+    toast.success(
+      `${t("Preenchido")}: ${total} ${total === 1 ? t("campo") : t("campos")}. ${t(
+        "Confira antes de reenviar.",
+      )}`,
+    );
+    setPlano(null);
+  }
+
+  // Ao abrir a nota, se falta cadastro do destinatário, o sistema já consulta e
+  // deixa o plano pronto para revisão. A guarda por CNPJ:UF impede a repetição.
+  React.useEffect(() => {
+    if (!aberto || !contato || !quadro) return;
+    const digitos = soDigitos(contato.documento ?? "");
+    const uf = (contato.uf ?? "").trim();
+    const faltaAlgo =
+      (contato.ie ?? "").trim() === "" ||
+      contato.logradouro.trim() === "" ||
+      contato.numero.trim() === "" ||
+      contato.bairro.trim() === "" ||
+      contato.cidade.trim() === "" ||
+      uf === "" ||
+      soDigitos(contato.cep).length !== 8;
+    if (!faltaAlgo || digitos.length !== 14 || uf.length !== 2) return;
+    let vivo = true;
+    // `consultarCadastro` liga o indicador de "consultando" no início; o plano
+    // nasce da resposta da rede. Não há como evitar o setState dentro do efeito
+    // — a guarda `vivo` impede atualizar componente desmontado.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void consultarCadastro("auto").then((cadastro) => {
+      if (!vivo || !cadastro) return;
+      const proposto = planejar(cadastro);
+      if (proposto && proposto.mudancas.length > 0) setPlano(proposto);
+    });
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roda quando o quadro abre; a chave da rede é CNPJ:UF, guardada em `cadastroConsultado`
+  }, [aberto, quadro]);
 
   function montarCorpo(reenviar: boolean) {
     if (!quadro || !contato) return null;
@@ -224,9 +435,7 @@ export function CorrigirNota({
       }>(`/api/v1/invoices/${id}/ajustes`, corpo);
       const d = r.data;
       toast.success(
-        reenviar
-          ? t("Correção salva — a nota voltou para a fila.")
-          : t("Correção salva."),
+        reenviar ? t("Correção salva — a nota voltou para a fila.") : t("Correção salva."),
       );
       if (d.cadastro_atualizado) toast.success(t("Cadastro do cliente atualizado."));
       aoFechar();
@@ -282,11 +491,76 @@ export function CorrigirNota({
               </div>
             )}
 
-            {falta.length > 0 && (
-              <p className="rounded-lg border border-border bg-surface p-3 text-xs text-muted-foreground">
-                <span className="font-medium text-text">{t("Falta para a nota sair")}: </span>
-                {falta.join(" · ")}
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              {falta.length > 0 ? (
+                <p className="flex-1 rounded-lg border border-border bg-surface p-3 text-xs text-muted-foreground">
+                  <span className="font-medium text-text">{t("Falta para a nota sair")}: </span>
+                  {falta.join(" · ")}
+                </p>
+              ) : (
+                <span />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                disabled={consultando}
+                onClick={() => void corrigirAutomaticamente()}
+                title={t("Consulta o cadastro público e propõe o que dá para preencher sozinho")}
+              >
+                {consultando ? t("Consultando…") : t("Corrigir automaticamente")}
+              </Button>
+            </div>
+
+            {plano && (
+              <section
+                aria-labelledby="plano-titulo"
+                className="rounded-lg border border-info/40 bg-info-bg p-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p id="plano-titulo" className="text-sm font-medium text-text">
+                    {t("Correção automática")} — {resumirPlano(plano)}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {plano.mudancas.length > 0 && (
+                      <Button type="button" size="sm" onClick={aplicarPlano}>
+                        {t("Aplicar nos campos")}
+                      </Button>
+                    )}
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setPlano(null)}>
+                      {t("Dispensar")}
+                    </Button>
+                  </div>
+                </div>
+                {plano.mudancas.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                    {plano.mudancas.map((m) => (
+                      <li key={`${m.campo}-${m.rotulo}`}>
+                        <span className="font-medium text-text">{m.rotulo}</span>
+                        {": "}
+                        {m.de ? `${m.de} → ` : `${t("vazio")} → `}
+                        <span className="font-mono text-text">{m.para}</span>
+                        {" — "}
+                        {m.motivo}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {plano.pendencias.length > 0 && (
+                  <ul className="mt-2 space-y-1 text-xs text-warning-fg">
+                    {plano.pendencias.map((pd) => (
+                      <li key={`${pd.campo}-${pd.acao}`}>
+                        <span className="font-medium">{pd.rotulo}</span>
+                        {": "}
+                        {pd.motivo}
+                        {" — "}
+                        {pd.acao}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             )}
 
             <fieldset className="space-y-3">
@@ -309,17 +583,43 @@ export function CorrigirNota({
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="ajuste-ie">{t("Inscrição Estadual")}</Label>
-                  <Input
-                    id="ajuste-ie"
-                    value={contato.ie ?? ""}
-                    onChange={(e) => setContato({ ...contato, ie: e.target.value })}
-                    placeholder={t("Número da IE ou ISENTO")}
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    {t(
-                      "Rejeição 232 é isto: o CNPJ tem IE ativa na UF e o cadastro está sem ela.",
-                    )}
+                  <div className="flex gap-2">
+                    <Input
+                      id="ajuste-ie"
+                      value={contato.ie ?? ""}
+                      onChange={(e) => {
+                        setContato({ ...contato, ie: e.target.value });
+                        setIeVeioDoCnpj(false);
+                      }}
+                      placeholder={t("Número da IE ou ISENTO")}
+                      aria-describedby="ajuste-ie-ajuda"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={consultando}
+                      onClick={() => void buscarIePeloCnpj()}
+                      title={t("Consulta o cadastro público pelo CNPJ e preenche a IE da UF")}
+                    >
+                      {consultando ? t("Buscando…") : t("Buscar pelo CNPJ")}
+                    </Button>
+                  </div>
+                  <p id="ajuste-ie-ajuda" className="text-[11px] text-muted-foreground">
+                    {ieVeioDoCnpj
+                      ? t(
+                          "Preenchida pelo cadastro público a partir do CNPJ — confira antes de reenviar.",
+                        )
+                      : t(
+                          "Rejeição 232 é isto: o CNPJ tem IE ativa na UF e o cadastro está sem ela.",
+                        )}
                   </p>
+                  {avisoDaBusca ? (
+                    <p role="status" className="text-[11px] text-warning-fg">
+                      {avisoDaBusca}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="ajuste-logradouro">{t("Logradouro")}</Label>
@@ -396,7 +696,9 @@ export function CorrigirNota({
                     onChange={(e) => setAplicarNoCadastro(e.target.checked)}
                   />
                   <span>
-                    <span className="block font-medium">{t("Salvar também no cadastro do cliente")}</span>
+                    <span className="block font-medium">
+                      {t("Salvar também no cadastro do cliente")}
+                    </span>
                     <span className="block text-xs text-muted-foreground">
                       {t(
                         "Assim a próxima nota já sai certa. Desmarcado, a correção vale só para esta nota.",

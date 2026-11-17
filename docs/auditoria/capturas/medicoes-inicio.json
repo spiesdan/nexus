@@ -1,0 +1,525 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "inicio",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "atualizado_em": "2026-11-17T11:01:48.049Z",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 8635,
+      "erro": null,
+      "arquivo": "desktop_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 62,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3449,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2906,
+      "erro": null,
+      "arquivo": "desktop_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 96,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 2799,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2325,
+      "erro": null,
+      "arquivo": "desktop_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 36,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 404,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3365,
+      "erro": null,
+      "arquivo": "desktop_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 123,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 2031,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/app/ai",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2245,
+      "erro": null,
+      "arquivo": "desktop_app_ai.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Agente de IA · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 29,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "textoVisivel": 1662,
+      "url": "/app/ai"
+    },
+    {
+      "rota": "/login",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1237,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/app",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1654,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 23,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3099,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1317,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 370,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1157,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 138,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1292,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 75,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1323,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/login",
+      "largura": "compacto",
+      "status": 200,
+      "ms": 878,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "compacto_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/app",
+      "largura": "compacto",
+      "status": 200,
+      "ms": 1479,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "compacto_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 23,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3099,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "compacto",
+      "status": 200,
+      "ms": 1282,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "compacto_app_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 370,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "compacto",
+      "status": 200,
+      "ms": 1135,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "compacto_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 138,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "compacto",
+      "status": 200,
+      "ms": 1282,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "compacto_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 75,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1323,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/login",
+      "largura": "grande",
+      "status": 200,
+      "ms": 894,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "grande_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/app",
+      "largura": "grande",
+      "status": 200,
+      "ms": 1467,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "grande_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 22,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Boa noite, E2E."
+      ],
+      "textoVisivel": 3099,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "grande",
+      "status": 200,
+      "ms": 1399,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "grande_app_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 370,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "grande",
+      "status": 200,
+      "ms": 1153,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "grande_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 138,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "grande",
+      "status": 200,
+      "ms": 1403,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "grande_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 74,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1323,
+      "url": "/app/contacts"
+    },
+    {
+      "rota": "/login",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1128,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_login.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Entrar · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Entrar"
+      ],
+      "textoVisivel": 78,
+      "url": "/login"
+    },
+    {
+      "rota": "/app",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1546,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Dashboard · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 26,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Bom dia, E2E."
+      ],
+      "textoVisivel": 3112,
+      "url": "/app"
+    },
+    {
+      "rota": "/app/inbox",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1333,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_inbox.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Inbox · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Inbox"
+      ],
+      "textoVisivel": 377,
+      "url": "/app/inbox"
+    },
+    {
+      "rota": "/app/kanban",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1092,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_kanban.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Funis · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 2,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Funis"
+      ],
+      "textoVisivel": 151,
+      "url": "/app/kanban"
+    },
+    {
+      "rota": "/app/contacts",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1102,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_contacts.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Clientes · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 88,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "textoVisivel": 1336,
+      "url": "/app/contacts"
+    }
+  ]
+}

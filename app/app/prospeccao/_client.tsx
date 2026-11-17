@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { LockKey, MagnifyingGlass, Plus } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -161,6 +161,26 @@ export function ProspeccaoClient({
   // Abas controladas (B1): quem decide a aba é o estado + a URL — "Ver
   // empresas" troca de aba mesmo sem recarregar a página.
   const [aba, setAba] = React.useState<string>(() => abaInicial(paramsUrl));
+  const router = useRouter();
+  const pathname = usePathname();
+  /**
+   * Trocar de aba ESCREVE a aba na URL.
+   *
+   * O estado sozinho não sobrevive a uma remontagem (e a tela remonta quando a
+   * URL muda por baixo — era o que acontecia com o filtro das Empresas). Com
+   * `?aba=` na URL, a aba clicada é a aba que a tela reabre, e o link
+   * compartilhado abre no mesmo lugar. Era o que o comentário acima prometia e
+   * o código não fazia (F-27).
+   */
+  const trocarAba = React.useCallback(
+    (valor: string) => {
+      setAba(valor);
+      const qs = new URLSearchParams(paramsUrl.toString());
+      qs.set("aba", valor);
+      router.replace(`${pathname}?${qs.toString()}`, { scroll: false });
+    },
+    [paramsUrl, pathname, router],
+  );
   React.useEffect(() => {
     // Mesma rota com query nova (Link) preserva o componente — o initializer
     // não roda de novo, então a troca reage à URL aqui. `?aba=` tem precedência
@@ -245,7 +265,7 @@ export function ProspeccaoClient({
       await recarregar();
       // Encontrar empresas é assíncrono: cai na aba Pesquisas para ver o
       // progresso; "Ver empresas" (com os critérios) leva aos resultados.
-      setAba("pesquisas");
+      trocarAba("pesquisas");
     } catch (e) {
       showApiError(e);
     } finally {
@@ -275,7 +295,12 @@ export function ProspeccaoClient({
 
   return (
     <div className="min-h-full space-y-4 p-4 sm:p-6">
+      {/* `headingLevel={2}`: esta tela é SUBTELA de `/app/campanhas`, que já
+          desenha o `h1` da página. Sem isso a rota tinha dois títulos de nível 1
+          — medido em produção em 16/11/2026 (`h1-em-producao.json`): "Campanha"
+          e "Prospecção" na mesma árvore de acessibilidade. */}
       <NexusPageHeader
+        headingLevel={2}
         title={textos.titulo}
         subtitle={textos.subtitulo}
         actions={
@@ -290,7 +315,7 @@ export function ProspeccaoClient({
         }
       />
 
-      <Tabs value={aba} onValueChange={setAba}>
+      <Tabs value={aba} onValueChange={trocarAba}>
         {/*
           DUAS SUPERFÍCIES, NÃO SEIS ABAS.
           A tela tinha seis abas do mesmo peso — criar campanha, buscar, ver
@@ -314,7 +339,7 @@ export function ProspeccaoClient({
               size="sm"
               variant={aba === "buscar" ? "secondary" : "ghost"}
               aria-current={aba === "buscar" ? "page" : undefined}
-              onClick={() => setAba("buscar")}
+              onClick={() => trocarAba("buscar")}
             >
               {textos.abaBuscar}
             </Button>
@@ -323,7 +348,7 @@ export function ProspeccaoClient({
               size="sm"
               variant={aba === "pesquisas" ? "secondary" : "ghost"}
               aria-current={aba === "pesquisas" ? "page" : undefined}
-              onClick={() => setAba("pesquisas")}
+              onClick={() => trocarAba("pesquisas")}
             >
               {textos.abaPesquisas}
             </Button>
@@ -332,7 +357,7 @@ export function ProspeccaoClient({
               size="sm"
               variant={aba === "mercado" ? "secondary" : "ghost"}
               aria-current={aba === "mercado" ? "page" : undefined}
-              onClick={() => setAba("mercado")}
+              onClick={() => trocarAba("mercado")}
             >
               {textos.abaMercado}
             </Button>
@@ -342,7 +367,7 @@ export function ProspeccaoClient({
                 size="sm"
                 variant={aba === "config" ? "secondary" : "ghost"}
                 aria-current={aba === "config" ? "page" : undefined}
-                onClick={() => setAba("config")}
+                onClick={() => trocarAba("config")}
               >
                 {textos.abaConfig}
               </Button>

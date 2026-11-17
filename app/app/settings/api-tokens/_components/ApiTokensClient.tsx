@@ -74,8 +74,25 @@ export function ApiTokensClient() {
 
   const tokens = data?.data ?? [];
 
+  /**
+   * Erro do NOME, na página.
+   *
+   * O campo tinha `required`, então o navegador recusava — com o balão nativo,
+   * que some ao sair do campo, não usa a tipografia de erro do produto e não
+   * põe `aria-invalid` no controle. Medido em 16/11/2026 pelo instrumento de
+   * escrita: `mensagens: []`, `ariaInvalid: 0`. O mesmo diálogo já valida
+   * ESCOPOS em JS (`erroEscopos`), então o nome era a única metade que falava
+   * outra língua. Agora as duas falam a mesma.
+   */
+  const [erroNome, setErroNome] = useState<string | null>(null);
+
   const onCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.trim().length < 2) {
+      setErroNome(t("Dê um nome ao token — pelo menos 2 letras."));
+      return;
+    }
+    setErroNome(null);
     if (scopes.length === 0) {
       setErroEscopos(t("Selecione ao menos um escopo."));
       return;
@@ -151,7 +168,9 @@ export function ApiTokensClient() {
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {tok.expires_at ? new Date(tok.expires_at).toLocaleDateString(tagDoIdioma) : "—"}
+                    {tok.expires_at
+                      ? new Date(tok.expires_at).toLocaleDateString(tagDoIdioma)
+                      : "—"}
                   </TableCell>
                   <TableCell>
                     {!tok.revoked_at ? (
@@ -179,15 +198,16 @@ export function ApiTokensClient() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("Criar novo token")}</DialogTitle>
-            <DialogDescription>
-              {t("O plaintext será mostrado apenas uma vez.")}
-            </DialogDescription>
+            <DialogDescription>{t("O plaintext será mostrado apenas uma vez.")}</DialogDescription>
           </DialogHeader>
-          <form onSubmit={onCreate} className="space-y-4">
-            <FormField id="t-name" label={t("Nome")} obrigatorio>
+          <form onSubmit={onCreate} noValidate className="space-y-4">
+            <FormField id="t-name" label={t("Nome")} obrigatorio erro={erroNome ?? undefined}>
               <Input
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (erroNome) setErroNome(null);
+                }}
                 placeholder={t("Worker de import")}
                 minLength={2}
                 maxLength={100}
@@ -233,7 +253,7 @@ export function ApiTokensClient() {
                 {t("Cancelar")}
               </Button>
               <Button type="submit" disabled={create.isPending}>
-                {t("Criar")}
+                {create.isPending ? t("Criando…") : t("Criar")}
               </Button>
             </DialogFooter>
           </form>
@@ -250,7 +270,7 @@ export function ApiTokensClient() {
           </DialogHeader>
           {created ? (
             <div className="space-y-3">
-              <code className="block break-all rounded-md border bg-muted p-3 text-sm">
+              <code className="block rounded-md border bg-muted p-3 text-sm break-all">
                 {created.plaintext}
               </code>
               <Button

@@ -37,7 +37,13 @@ function documentoDoMercos(metadados: unknown): string | null {
   const mercos = (metadados as Record<string, unknown>).mercos;
   if (!mercos || typeof mercos !== "object") return null;
   const documento = (mercos as Record<string, unknown>).documento;
-  return typeof documento === "string" ? documento : null;
+  if (typeof documento === "string") return documento;
+  // O importador antigo gravou o documento como NÚMERO em alguns contatos.
+  // `String(42040906991)` volta a ser CPF; o tamanho é validado depois.
+  if (typeof documento === "number" && Number.isSafeInteger(documento)) {
+    return String(documento);
+  }
+  return null;
 }
 
 /**

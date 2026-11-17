@@ -1,0 +1,4071 @@
+{
+  "medido_em": "2026-11-17T13:20:27.951Z",
+  "resumo": {
+    "tabelas": 180,
+    "documentadas": 76,
+    "comOrganizationId": 170,
+    "globais": 10,
+    "comSoftDelete": 0,
+    "fksTotal": 315,
+    "onDelete": {
+      "cascade": 215,
+      "restrict": 3,
+      "setNull": 88
+    },
+    "cronsComLimpeza": 3
+  },
+  "crons": [
+    {
+      "rota": "/cron/agenda-google-sync",
+      "tabelas": [
+        "calendar_external_events"
+      ],
+      "rpcs": [],
+      "mencionaRetencao": false
+    },
+    {
+      "rota": "/cron/data-retention",
+      "tabelas": [],
+      "rpcs": [
+        "fn_podar_fila_de_jobs",
+        "fn_expurgar_auditoria_vencida",
+        "fn_expurgar_espelho_da_agenda",
+        "fn_expurgar_nonces_de_oauth"
+      ],
+      "mencionaRetencao": true
+    },
+    {
+      "rota": "/cron/webhook-log-retention",
+      "tabelas": [],
+      "rpcs": [],
+      "mencionaRetencao": true
+    }
+  ],
+  "semComentario": [
+    "ai_agent_runs",
+    "ai_agent_versions",
+    "ai_agents",
+    "ai_budgets",
+    "ai_chunks",
+    "ai_faq_items",
+    "ai_knowledge_sources",
+    "ai_knowledge_versions",
+    "ai_models",
+    "ai_pricing",
+    "ai_provider_credentials",
+    "api_tokens",
+    "channel_session_warmup",
+    "channel_sessions",
+    "conversations",
+    "crm_lead_activities",
+    "crm_lead_links",
+    "crm_leads",
+    "crm_pipelines",
+    "crm_stages",
+    "idempotency_keys",
+    "incidents",
+    "lgpd_requests",
+    "merge_queue",
+    "messages",
+    "nuvemshop_products",
+    "orders",
+    "storage_redaction_queue",
+    "tenant_integrations",
+    "user_organizations",
+    "user_recovery_codes",
+    "webhook_events_log",
+    "conversation_assignment_events",
+    "webhook_sources",
+    "automation_rules",
+    "automation_rule_runs",
+    "attendant_availability",
+    "attendant_availability",
+    "agent_inbox_items",
+    "job_queue",
+    "send_ledger",
+    "playbook_versions",
+    "playbook_pointers",
+    "channel_session_health",
+    "watchdog_cursors",
+    "llm_calls",
+    "lead_checkpoints",
+    "lead_state",
+    "lead_state_transitions",
+    "metrics",
+    "channel_knobs",
+    "pacing_ledger",
+    "outbound_copies",
+    "cron_jobs",
+    "reentry_template_versions",
+    "reentry_template_pointers",
+    "lead_notes",
+    "skill_versions",
+    "skill_pointers",
+    "promise_table_versions",
+    "promise_table_pointers",
+    "disclosure_template_versions",
+    "disclosure_template_pointers",
+    "before_send_traces",
+    "flywheel_judge_verdicts",
+    "flywheel_distiller_proposals",
+    "judge_alignment_pool",
+    "reentry_knob_versions",
+    "reentry_knob_pointers",
+    "followup_flow_versions",
+    "followup_flow_pointers",
+    "followup_enrollments",
+    "followup_enrollment_events",
+    "message_templates",
+    "conversation_notes",
+    "agent_cases",
+    "agent_case_events",
+    "org_memory_versions",
+    "org_memory_pointers",
+    "org_memory_entries",
+    "skill_activations",
+    "ai_routers",
+    "ai_router_members",
+    "ai_router_decisions",
+    "knowledge_searches",
+    "demanda_conversas",
+    "org_guardrail_layers",
+    "commercial_order_counters",
+    "commercial_shipment_counters",
+    "prospect_search_results",
+    "shipment_positions",
+    "financial_receivables",
+    "financial_payments",
+    "fiscal_jobs",
+    "fiscal_events",
+    "fiscal_inutilizacoes",
+    "fiscal_cfop_equivalentes",
+    "purchase_order_counters",
+    "purchase_order_items",
+    "operational_alerts",
+    "lab_avaliacoes",
+    "prospecting_sends",
+    "mercos_import_runs",
+    "prospecting_message_presets"
+  ],
+  "detalhes": [
+    {
+      "tabela": "ai_agent_runs",
+      "colunas": 9,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_agent_versions",
+      "colunas": 10,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_agents",
+      "colunas": 6,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_budgets",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_chunks",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_faq_items",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_invocations",
+      "colunas": 6,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_knowledge_sources",
+      "colunas": 6,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_knowledge_versions",
+      "colunas": 6,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_models",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_pricing",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_provider_credentials",
+      "colunas": 4,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "api_audit_log",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "api_tokens",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "channel_session_warmup",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "channel_sessions",
+      "colunas": 9,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "contacts",
+      "colunas": 9,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "conversations",
+      "colunas": 13,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_lead_activities",
+      "colunas": 2,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_lead_links",
+      "colunas": 1,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_leads",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_pipelines",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_stages",
+      "colunas": 8,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "event_log",
+      "colunas": 4,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "idempotency_keys",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "incidents",
+      "colunas": 4,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "lgpd_requests",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "merge_queue",
+      "colunas": 2,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "messages",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "nuvemshop_products",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "orders",
+      "colunas": 7,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "organizations",
+      "colunas": 8,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "platform_admins",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "storage_redaction_queue",
+      "colunas": 3,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "tenant_integrations",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "user_organizations",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "user_recovery_codes",
+      "colunas": 2,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "webhook_events_log",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "conversation_assignment_events",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 5,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 3
+      }
+    },
+    {
+      "tabela": "webhook_sources",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_pipelines",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_stages",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "automation_rules",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "automation_rule_runs",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "automation_rules",
+          "acao": "no action"
+        },
+        {
+          "alvo": "event_log",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "attendant_availability",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "attendant_availability",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "agent_inbox_items",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "job_queue",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "send_ledger",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "job_queue",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "playbook_versions",
+      "colunas": 5,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "playbook_pointers",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "playbook_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "channel_session_health",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "watchdog_cursors",
+      "colunas": 4,
+      "destinos": [],
+      "documentada": false,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "llm_calls",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "job_queue",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "lead_checkpoints",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "job_queue",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "lead_state",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "lead_state_transitions",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "job_queue",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "metrics",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "channel_knobs",
+      "colunas": 5,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "pacing_ledger",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "outbound_copies",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "cron_jobs",
+      "colunas": 16,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "reentry_template_versions",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "reentry_template_pointers",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "reentry_template_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "lead_notes",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "skill_versions",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "skill_pointers",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "skill_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "promise_table_versions",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "promise_table_pointers",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "promise_table_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "disclosure_template_versions",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "disclosure_template_pointers",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "disclosure_template_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "before_send_traces",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "job_queue",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 4,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "flywheel_judge_verdicts",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "flywheel_distiller_proposals",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "judge_alignment_pool",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "reentry_knob_versions",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "reentry_knob_pointers",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "reentry_knob_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "followup_flow_versions",
+      "colunas": 5,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "followup_flow_pointers",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "followup_flow_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "followup_enrollments",
+      "colunas": 19,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "followup_flow_pointers",
+          "acao": "no action"
+        },
+        {
+          "alvo": "followup_flow_versions",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 5,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "followup_enrollment_events",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "followup_enrollments",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "message_templates",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "conversation_notes",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "agent_cases",
+      "colunas": 16,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "agent_case_events",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "agent_cases",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "org_memory_versions",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "org_memory_pointers",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "org_memory_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "org_memory_entries",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "flywheel_distiller_proposals",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "skill_activations",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "skill_versions",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "crm_lead_scores",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_lead_risk_states",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_lead_reactivations",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "ai_routers",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "channel_sessions",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "ai_router_members",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_routers",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_router_decisions",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_routers",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "knowledge_searches",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "system_version",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "system_update_runs",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "meta_templates",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "demandas",
+      "colunas": 18,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "agent_cases",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 5,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 3
+      }
+    },
+    {
+      "tabela": "demanda_conversas",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "demandas",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "ai_purpose_bindings",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_provider_credentials",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "contact_field_proposals",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "messages",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 6,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 4
+      }
+    },
+    {
+      "tabela": "org_guardrail_layers",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "platform_branding",
+      "colunas": 10,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "push_subscriptions",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "webhook_lead_captures",
+      "colunas": 18,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "webhook_sources",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 3
+      }
+    },
+    {
+      "tabela": "calendar_event_types",
+      "colunas": 24,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "calendar_appointments",
+      "colunas": 33,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "calendar_event_types",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "calendar_appointments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "ai_agents",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 8,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 1,
+        "setNull": 6
+      }
+    },
+    {
+      "tabela": "calendar_availability_exceptions",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "calendar_connections",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "calendar_connection_calendars",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "calendar_connections",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "calendar_external_events",
+      "colunas": 14,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "calendar_connections",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "calendar_oauth_nonces",
+      "colunas": 5,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "platform_google_oauth",
+      "colunas": 5,
+      "destinos": [],
+      "documentada": true,
+      "temOrganizationId": false,
+      "softDelete": false,
+      "fks": 0,
+      "acoes": {
+        "cascade": 0,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "catalog_products",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_order_counters",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_orders",
+      "colunas": 20,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 3
+      }
+    },
+    {
+      "tabela": "commercial_order_items",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "product_categories",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "product_categories",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "price_tables",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "price_table_items",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "price_tables",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "shipments",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "commercial_shipment_counters",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "shipment_orders",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 1,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_settings",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "invoices",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "shipment_proofs",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "product_images",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "prospecting_searches",
+      "colunas": 32,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "business_prospects",
+      "colunas": 45,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "business_prospects",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 6,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 5
+      }
+    },
+    {
+      "tabela": "prospect_search_results",
+      "colunas": 5,
+      "destinos": [
+        {
+          "alvo": "prospecting_searches",
+          "acao": "no action"
+        },
+        {
+          "alvo": "business_prospects",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "prospecting_campaigns",
+      "colunas": 13,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "prospecting_settings",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_policies",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_goals",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_commission_baixas",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_titulo_baixas",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "commercial_tasks",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "business_prospects",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "commercial_activities",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "shipment_positions",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "financial_receivables",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "invoices",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 3
+      }
+    },
+    {
+      "tabela": "financial_payments",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "financial_receivables",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_jobs",
+      "colunas": 13,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "invoices",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_events",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "invoices",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_inutilizacoes",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_cfop_equivalentes",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_entradas",
+      "colunas": 23,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "fiscal_entrada_cursor",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "financial_pagaveis",
+      "colunas": 16,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "fiscal_entradas",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    },
+    {
+      "tabela": "ai_execution_policies",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "followup_flow_pointers",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "inventory_movements",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 1,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "suppliers",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "purchase_order_counters",
+      "colunas": 3,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "purchase_orders",
+      "colunas": 9,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "suppliers",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "purchase_order_items",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "purchase_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "automatic_sales_campaigns",
+      "colunas": 18,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "automatic_sales_queue",
+      "colunas": 18,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "automatic_sales_campaigns",
+          "acao": "no action"
+        },
+        {
+          "alvo": "business_prospects",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        },
+        {
+          "alvo": "conversations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "messages",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 7,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 5
+      }
+    },
+    {
+      "tabela": "automatic_sales_events",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "automatic_sales_campaigns",
+          "acao": "no action"
+        },
+        {
+          "alvo": "automatic_sales_queue",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "prospecting_cache_hits",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "prospecting_searches",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "fiscal_emitidas_cursor",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_ibpt",
+      "colunas": 18,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "crm_lead_risk_decisions",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "crm_leads",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "operational_alerts",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "lab_avaliacoes",
+      "colunas": 13,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "shipment_closings",
+      "colunas": 15,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "prospecting_sends",
+      "colunas": 7,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "prospecting_campaigns",
+          "acao": "no action"
+        },
+        {
+          "alvo": "business_prospects",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "mercos_import_runs",
+      "colunas": 16,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "prospecting_message_presets",
+      "colunas": 6,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": false,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_certificates",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_document_items",
+      "colunas": 23,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "fiscal_entradas",
+          "acao": "no action"
+        },
+        {
+          "alvo": "catalog_products",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "fiscal_document_events",
+      "colunas": 13,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "fiscal_entradas",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_manifestations",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "fiscal_entradas",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fiscal_sync_logs",
+      "colunas": 17,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "invoice_orders",
+      "colunas": 4,
+      "destinos": [
+        {
+          "alvo": "invoices",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "shipment_notices",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "commercial_orders",
+          "acao": "no action"
+        },
+        {
+          "alvo": "messages",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 4,
+      "acoes": {
+        "cascade": 3,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "fleet_vehicles",
+      "colunas": 8,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 1,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 0
+      }
+    },
+    {
+      "tabela": "fleet_drivers",
+      "colunas": 10,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "shipment_route_versions",
+      "colunas": 12,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipments",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "shipment_destinations",
+      "colunas": 19,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "contacts",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 2,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "shipment_destination_recoveries",
+      "colunas": 11,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "shipment_destinations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 2,
+        "restrict": 0,
+        "setNull": 1
+      }
+    },
+    {
+      "tabela": "endereco_entradas",
+      "colunas": 14,
+      "destinos": [
+        {
+          "alvo": "organizations",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        },
+        {
+          "alvo": "auth",
+          "acao": "no action"
+        }
+      ],
+      "documentada": true,
+      "temOrganizationId": true,
+      "softDelete": false,
+      "fks": 3,
+      "acoes": {
+        "cascade": 1,
+        "restrict": 0,
+        "setNull": 2
+      }
+    }
+  ]
+}

@@ -83,7 +83,7 @@ export function UsageFilters({ agents, initial }: Props) {
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">{t("Agente")}</Label>
         <Select value={agentId} onValueChange={setAgentId}>
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Agente")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -100,7 +100,7 @@ export function UsageFilters({ agents, initial }: Props) {
       <div className="space-y-1">
         <Label className="text-xs text-muted-foreground">{t("Tipo de uso")}</Label>
         <Select value={kind} onValueChange={setKind}>
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Tipo de uso")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -117,24 +117,14 @@ export function UsageFilters({ agents, initial }: Props) {
         <Label htmlFor="usage-from" className="text-xs text-muted-foreground">
           {t("De")}
         </Label>
-        <Input
-          id="usage-from"
-          type="date"
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
-        />
+        <Input id="usage-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="usage-to" className="text-xs text-muted-foreground">
           {t("Até")}
         </Label>
-        <Input
-          id="usage-to"
-          type="date"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-        />
+        <Input id="usage-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
       </div>
     </div>
   );

@@ -65,11 +65,6 @@ export async function GET(req: NextRequest): Promise<Response> {
   // via RLS de sessão custa 10× por página e estoura qualquer timeout.
   const supabase = createAdminClient();
   const orgId = authz.org.orgId;
-  // TEMP diagnóstico: tempos por fase no log do servidor (sai antes de fechar).
-  const tFase = Date.now();
-  const marca = (fase: string): void => {
-    console.error(`[radar-compras] ${fase}: ${Date.now() - tFase}ms (${requestId})`);
-  };
   const COLS = "id, contact_id, total_cents, status, origem, created_at, vendedor_user_id";
   const TETO_LINHAS = 25000;
 
@@ -82,6 +77,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
   }
   const total = Math.min(count ?? 0, TETO_LINHAS);
+  // O teto de 25.000 corta a base EM SILÊNCIO: os KPIs (monitorados, em risco,
+  // potencial) passavam a descrever a amostra e a tela os anunciava como a
+  // carteira. O fluxo financeiro já devolve `amostra_parcial`; o Radar não.
+  const amostraParcial = (count ?? 0) > TETO_LINHAS;
   const faixas: [number, number][] = [];
   for (let de = 0; de < total; de += 1000) faixas.push([de, Math.min(de + 999, total - 1)]);
 
@@ -115,7 +114,6 @@ export async function GET(req: NextRequest): Promise<Response> {
       });
     }
   }
-  marca(`pedidos ${pedidos.length}`);
 
   const porContato = new Map<string, typeof pedidos>();
   for (const p of pedidos) {
@@ -164,7 +162,6 @@ export async function GET(req: NextRequest): Promise<Response> {
       });
     }
   }
-  marca(`contatos ${nomes.size}`);
 
   const linhas = [...porContato.entries()].map(([contactId, lista]) => {
     // Sem o `vendas` completo: a tela usa `ultimos` + agregados, e o array
@@ -201,5 +198,12 @@ export async function GET(req: NextRequest): Promise<Response> {
     .sort((a, b) => PRIORIDADE[a.situacao] - PRIORIDADE[b.situacao] || b.atraso_dias - a.atraso_dias)
     .slice(0, limit);
 
-  return ok(filtradas, { requestId });
+  return ok(filtradas, {
+    requestId,
+    meta: {
+      amostra_parcial: amostraParcial,
+      pedidos_na_base: count ?? 0,
+      pedidos_lidos: pedidos.length,
+    },
+  });
 }

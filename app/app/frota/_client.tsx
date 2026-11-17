@@ -339,14 +339,14 @@ function Veiculos({
                         <div className="flex justify-end gap-1">
                           {emEdicao ? (
                             <>
-                              <Button size="sm" disabled={salvando} onClick={() => void salvar(v.id)}>
-                                {t("Salvar")}
-                              </Button>
                               <Button
                                 size="sm"
-                                variant="ghost"
-                                onClick={() => setEditando(null)}
+                                disabled={salvando}
+                                onClick={() => void salvar(v.id)}
                               >
+                                {t("Salvar")}
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => setEditando(null)}>
                                 {t("Cancelar")}
                               </Button>
                             </>
@@ -530,9 +530,7 @@ function Motoristas({
               min={30}
               max={1440}
               value={novo.capacidade_jornada_min}
-              onChange={(e) =>
-                setNovo({ ...novo, capacidade_jornada_min: e.target.value })
-              }
+              onChange={(e) => setNovo({ ...novo, capacidade_jornada_min: e.target.value })}
             />
           </Campo>
           <div className="flex items-end">
@@ -619,7 +617,11 @@ function Motoristas({
                         <div className="flex justify-end gap-1">
                           {emEdicao ? (
                             <>
-                              <Button size="sm" disabled={salvando} onClick={() => void salvar(m.id)}>
+                              <Button
+                                size="sm"
+                                disabled={salvando}
+                                onClick={() => void salvar(m.id)}
+                              >
                                 {t("Salvar")}
                               </Button>
                               <Button size="sm" variant="ghost" onClick={() => setEditando(null)}>
@@ -665,10 +667,15 @@ function Motoristas({
 }
 
 function Campo({ rotulo, children }: { rotulo: string; children: React.ReactNode }) {
+  // O CONTROLE DENTRO DO `<label>`. Antes era `<Label>{rotulo}</Label>` e o
+  // campo como irmão: o `<label>` de `ui/label` sem `htmlFor` não rotula nada, e
+  // o `<Input aria-label={rotulo}>` do irmão ficava sem nome acessível — medido em 16/11/2026 na aba
+  // "Motoristas" (2 campos sem rótulo). Embrulhar associa pelo próprio DOM e não
+  // exige `id` único, que aqui só existiria com `useId()` em cada chamada.
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
-      <Label className="text-xs text-muted-foreground">{rotulo}</Label>
+    <Label className="flex min-w-0 flex-col gap-1.5 text-xs font-normal text-muted-foreground">
+      {rotulo}
       {children}
-    </div>
+    </Label>
   );
 }

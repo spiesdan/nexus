@@ -103,23 +103,23 @@ describe("InboxFilters render — 3 visões + escopo", () => {
   it("agent em modo own*: mostra Minhas e Fila, esconde Todas", () => {
     setOrg("agent", "own_and_unassigned");
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    expect(screen.getByRole("tab", { name: /Minhas/ })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: /Fila/ })).toBeInTheDocument();
-    expect(screen.queryByRole("tab", { name: /Todas/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Minhas/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Fila/ })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Todas/ })).not.toBeInTheDocument();
   });
 
   it("manager: mostra Todas", () => {
     setOrg("manager", "own_and_unassigned");
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    expect(screen.getByRole("tab", { name: /Todas/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Todas/ })).toBeInTheDocument();
   });
 
   it("contagens por visão são renderizadas (Fila=3, Minhas=2)", () => {
     setOrg("manager", "all");
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    expect(screen.getByRole("tab", { name: /Fila/ })).toHaveTextContent("3");
-    expect(screen.getByRole("tab", { name: /Minhas/ })).toHaveTextContent("2");
-    expect(screen.getByRole("tab", { name: /Todas/ })).toHaveTextContent("5");
+    expect(screen.getByRole("button", { name: /Fila/ })).toHaveTextContent("3");
+    expect(screen.getByRole("button", { name: /Minhas/ })).toHaveTextContent("2");
+    expect(screen.getByRole("button", { name: /Todas/ })).toHaveTextContent("5");
   });
 });
 
@@ -218,7 +218,7 @@ describe("InboxFilters — busca com debounce", () => {
     });
     // Radix ativa a aba no `mousedown` (activationMode automático); um `click`
     // solto não a seleciona em jsdom.
-    fireEvent.mouseDown(screen.getByRole("tab", { name: /Todas/ }), { button: 0 });
+    fireEvent.click(screen.getByRole("button", { name: /Todas/ }));
 
     act(() => {
       vi.advanceTimersByTime(300);

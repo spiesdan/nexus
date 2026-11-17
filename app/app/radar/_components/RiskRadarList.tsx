@@ -72,7 +72,26 @@ function sugestaoTitulo(lead: AtRiskLead, tag: string, t: (texto: string) => str
 
 export function RiskRadarList() {
   const t = useT();
-  const { data, isLoading } = useAtRiskLeads();
+  const { data, isLoading, isError, refetch } = useAtRiskLeads();
+
+  // Falha NÃO é "nenhuma demanda em risco". Sem este ramo, o `/leads/at-risk`
+  // fora do ar (ou 403) caía no `!data` do estado vazio e a tela afirmava que
+  // está tudo em dia — o inverso do que o Radar existe para mostrar.
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-warning/40 bg-warning-bg py-10 text-center">
+        <p className="text-sm font-medium text-warning-fg">
+          {t("Não consegui ler as demandas em risco.")}
+        </p>
+        <p className="text-xs text-warning-fg">
+          {t("Isto não quer dizer que está tudo em dia — a leitura falhou.")}
+        </p>
+        <Button size="sm" variant="outline" onClick={() => void refetch()}>
+          {t("Tentar novamente")}
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

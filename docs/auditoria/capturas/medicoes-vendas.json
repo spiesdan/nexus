@@ -1,0 +1,410 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "vendas",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "atualizado_em": "2026-11-17T11:01:57.661Z",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app/pedidos",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4875,
+      "erro": null,
+      "arquivo": "desktop_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 96,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 2738,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 7201,
+      "erro": null,
+      "arquivo": "desktop_app_prospeccao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 43,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Prospecção"
+      ],
+      "textoVisivel": 884,
+      "url": "/app/prospeccao"
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3681,
+      "erro": null,
+      "arquivo": "desktop_app_relatorios.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 35,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "textoVisivel": 2823,
+      "url": "/app/relatorios"
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4404,
+      "erro": null,
+      "arquivo": "desktop_app_comissoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 78,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Comissões"
+      ],
+      "textoVisivel": 2816,
+      "url": "/app/comissoes"
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 7892,
+      "erro": null,
+      "arquivo": "desktop_app_indicadores.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 61,
+      "camposSemRotulo": 3,
+      "h1": [
+        "Indicadores"
+      ],
+      "textoVisivel": 4761,
+      "url": "/app/indicadores"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2112,
+      "erro": null,
+      "arquivo": "celular_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 54,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 1985,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2020,
+      "erro": null,
+      "arquivo": "celular_app_prospeccao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 7,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Prospecção"
+      ],
+      "textoVisivel": 614,
+      "url": "/app/prospeccao"
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1568,
+      "erro": null,
+      "arquivo": "celular_app_relatorios.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "textoVisivel": 2553,
+      "url": "/app/relatorios"
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1988,
+      "erro": null,
+      "arquivo": "celular_app_comissoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 26,
+      "camposSemRotulo": 1,
+      "h1": [
+        "Comissões"
+      ],
+      "textoVisivel": 2314,
+      "url": "/app/comissoes"
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "celular",
+      "status": 200,
+      "ms": 3125,
+      "erro": null,
+      "arquivo": "celular_app_indicadores.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 3,
+      "h1": [
+        "Indicadores"
+      ],
+      "textoVisivel": 4446,
+      "url": "/app/indicadores"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1635,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 99,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 3644,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1621,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_prospeccao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Campanha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 9,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha"
+      ],
+      "textoVisivel": 703,
+      "url": "/app/campanhas"
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1295,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_relatorios.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Relatórios · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "textoVisivel": 3127,
+      "url": "/app/relatorios"
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1447,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_comissoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Comissões · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 39,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "textoVisivel": 3440,
+      "url": "/app/comissoes"
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1838,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_indicadores.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Indicadores · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "textoVisivel": 4747,
+      "url": "/app/indicadores"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1622,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 112,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 4928,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1517,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_prospeccao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Campanha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 8,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha"
+      ],
+      "textoVisivel": 716,
+      "url": "/app/campanhas"
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1280,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_relatorios.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Relatórios · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "textoVisivel": 3199,
+      "url": "/app/relatorios"
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1466,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_comissoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Comissões · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 40,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "textoVisivel": 3641,
+      "url": "/app/comissoes"
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1778,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_indicadores.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Indicadores · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "textoVisivel": 4760,
+      "url": "/app/indicadores"
+    }
+  ]
+}

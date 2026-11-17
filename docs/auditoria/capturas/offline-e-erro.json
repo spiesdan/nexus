@@ -1,0 +1,102 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T05:20:06.607Z",
+  "metodo": "Tela carregada; navegador em modo offline; reload. Registra-se o que aparece — nada é julgado aqui.",
+  "resultados": [
+    {
+      "rota": "/app/pedidos",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Pedidos Os pedidos da loja, do rascunho à entrega. Importar pedidos Mercos Imprimir Criar pedido Pedidos ativos Rascunho",
+      "toastDeErro": null,
+      "semAcaoParaMedir": true,
+      "textoDepois": "Pedidos Os pedidos da loja, do rascunho à entrega. Importar pedidos Mercos Imprimir Criar pedido Pedidos ativos Rascunho Em análise Aprovado Faturado Concluído Expedido Entregue Cancelado Todos os vendedores Só meus pedidos E2E Admin E2E Dono do Servidor E2E Agent f264910a E2E Manager Todas as plataformas IA Vendedor WhatsApp B2B De Até Hoje Ontem Últimos 7 dias Filtros avançados Cartões Tabela Qu",
+      "paginaTemMain": true,
+      "titulo": "Pedidos · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": false,
+      "textoDeErro": "",
+      "tituloDaPagina": "Pedidos"
+    },
+    {
+      "rota": "/app/contacts",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as o",
+      "toastDeErro": "Sem conexão. O que já carregou continua na tela; o resto vem quando a rede voltar.",
+      "textoAposAcaoOffline": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as origens Manual WhatsApp Nuvemshop Importa",
+      "textoDepois": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as origens Manual WhatsApp Nuvemshop Importado (CSV) Por página 25 50 100 Algo deu errado Erro ao carregar clientes. Tentar novamente",
+      "paginaTemMain": true,
+      "titulo": "Clientes · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": true,
+      "textoDeErro": "Algo deu erradoErro ao carregar clientes.Tentar novamente",
+      "tituloDaPagina": "Clientes"
+    },
+    {
+      "rota": "/app/inbox",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Inbox Fila 2 Minhas 1 Todas 17 Fechadas Automático 12 Todos os números Todos Apenas não lidos Q1 Aguardando há 1 dia Que",
+      "toastDeErro": null,
+      "semAcaoParaMedir": true,
+      "textoDepois": "Inbox Fila Minhas Todas Fechadas Automático Todos Apenas não lidos Algo deu errado Erro ao carregar conversas. Tentar novamente Selecione uma conversa Selecione uma conversa para ver detalhes do contato.",
+      "paginaTemMain": true,
+      "titulo": "Inbox · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": true,
+      "textoDeErro": "Algo deu erradoErro ao carregar conversas.Tentar novamente",
+      "tituloDaPagina": "Inbox"
+    },
+    {
+      "rota": "/app/financeiro",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Financeiro Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação. A RECEBER R$ 49,90 VEN",
+      "toastDeErro": null,
+      "semAcaoParaMedir": true,
+      "textoDepois": "Financeiro Centro financeiro integrado às vendas: receber, pagar, cobranças, fluxo e conciliação. RÓTULO R$ 0,00 RÓTULO R$ 0,00 RÓTULO R$ 0,00 comparação RÓTULO R$ 0,00 comparação Contas a receber Contas a pagar Cobranças Conciliação Fluxo de caixa Títulos Buscar Status Todos Vence de Vence até Filtrar Hoje Vencidos Próximos 7 dias Próximos 30 dias Algo deu errado Não foi possível carregar estes d",
+      "paginaTemMain": true,
+      "titulo": "Contas a Receber · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": true,
+      "textoDeErro": "Algo deu erradoNão foi possível carregar estes dados. Tente novamente.Tentar novamente",
+      "tituloDaPagina": "Financeiro"
+    },
+    {
+      "rota": "/app/audit",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QU",
+      "toastDeErro": "Sem conexão. O que já carregou continua na tela; o resto vem quando a rede voltar.",
+      "textoAposAcaoOffline": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QUANDO ATOR AÇÃO RECURSO REQUEST ID METADA",
+      "textoDepois": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QUANDO ATOR AÇÃO RECURSO REQUEST ID METADATA Não foi possível carregar o log. Tente novamente.",
+      "paginaTemMain": true,
+      "titulo": "Audit Log · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": false,
+      "textoDeErro": "Não foi possível carregar o log. Tente novamente.",
+      "tituloDaPagina": "Audit Log"
+    }
+  ]
+}

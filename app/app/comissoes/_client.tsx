@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -47,6 +48,7 @@ export function ComissoesClient({
   const router = useRouter();
   const tagIdioma = useTagDeIdioma();
   const t = useT();
+  const confirmar = useConfirmar();
   const [mes, setMes] = React.useState(mesInicial);
   const [vendedor, setVendedor] = React.useState("");
   const [linhas, setLinhas] = React.useState<LinhaComissao[]>([]);
@@ -107,7 +109,36 @@ export function ComissoesClient({
     void carregar(mes, novo);
   }
 
+  /**
+   * A situação da comissão, por VALOR — não pela existência da linha de baixa.
+   *
+   * O `baixado_em` existia e a tela mostrava "Baixada", somando `comissao_cents`
+   * inteiro: uma baixa PARCIAL (aceita pela rota) aparecia como 100% paga, no
+   * total e no CSV. Quem fecha comissão precisa do número, não do selo.
+   */
+  function situacaoDaBaixa(l: LinhaComissao): {
+    rotulo: string;
+    variante: "success" | "warning" | "neutral";
+    pago: boolean;
+  } {
+    if (!l.baixado_em) return { rotulo: t("A pagar"), variante: "warning", pago: false };
+    if (l.baixado_cents >= l.comissao_cents) {
+      return { rotulo: t("Baixada"), variante: "success", pago: true };
+    }
+    return {
+      rotulo: `${t("Parcial")} · ${comoMoeda(l.baixado_cents, "BRL")}`,
+      variante: "neutral",
+      pago: false,
+    };
+  }
+
   async function darBaixa(l: LinhaComissao) {
+    const ok = await confirmar({
+      title: `${t("Dar baixa na comissão de")} ${comoMoeda(l.comissao_cents, "BRL")} (${numeroDoPedido(l.numero)})?`,
+      confirmLabel: t("Dar baixa"),
+      cancelLabel: t("Cancelar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.post("/api/v1/commissions/baixas", {
         order_id: l.order_id,
@@ -131,7 +162,7 @@ export function ComissoesClient({
   }
 
   const totalComissao = linhas.reduce((a, l) => a + l.comissao_cents, 0);
-  const totalBaixado = linhas.filter((l) => l.baixado_em).reduce((a, l) => a + l.comissao_cents, 0);
+  const totalBaixado = linhas.reduce((a, l) => a + Math.min(l.baixado_cents, l.comissao_cents), 0);
 
   function exportar() {
     const blob = new Blob(
@@ -146,7 +177,11 @@ export function ComissoesClient({
               nomeVendedor(l.vendedor_user_id),
               (l.total_cents / 100).toLocaleString(tagIdioma, { minimumFractionDigits: 2 }),
               (l.comissao_cents / 100).toLocaleString(tagIdioma, { minimumFractionDigits: 2 }),
-              l.baixado_em ? "Baixada" : "A pagar",
+              l.baixado_em
+                ? l.baixado_cents >= l.comissao_cents
+                  ? "Baixada"
+                  : `Parcial (${(l.baixado_cents / 100).toFixed(2)})`
+                : "A pagar",
             ]),
           ),
       ],
@@ -248,11 +283,10 @@ export function ComissoesClient({
               >
                 {numeroDoPedido(l.numero)}
               </Link>
-              {l.baixado_em ? (
-                <Badge variant="success">{t("Baixada")}</Badge>
-              ) : (
-                <Badge variant="warning">{t("A pagar")}</Badge>
-              )}
+              {(() => {
+                const s = situacaoDaBaixa(l);
+                return <Badge variant={s.variante}>{s.rotulo}</Badge>;
+              })()}
             </div>
             <p className="truncate text-muted-foreground">
               {l.cliente_nome} · {nomeVendedor(l.vendedor_user_id)}
@@ -316,11 +350,10 @@ export function ComissoesClient({
                       {comoMoeda(l.comissao_cents, "BRL")}
                     </TableCell>
                     <TableCell>
-                      {l.baixado_em ? (
-                        <Badge variant="success">{t("Baixada")}</Badge>
-                      ) : (
-                        <Badge variant="warning">{t("A pagar")}</Badge>
-                      )}
+                      {(() => {
+                        const s = situacaoDaBaixa(l);
+                        return <Badge variant={s.variante}>{s.rotulo}</Badge>;
+                      })()}
                     </TableCell>
                     {podeDarBaixa && (
                       <TableCell>

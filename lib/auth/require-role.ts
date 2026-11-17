@@ -79,6 +79,30 @@ export async function requireRole(min: Role, opts: RequireRoleOpts = {}): Promis
   }
 
   if (allowPlatformAdmin && user.is_platform_admin) {
+    // O atalho do platform admin PULA o rank do tenant — é o que ele existe
+    // para fazer. O que ele NÃO pode pular é a política de SESSÃO: antes, este
+    // `return` vinha antes do `mfaEmDivida`, então um platform admin com TOTP
+    // cadastrado alcançava as rotas com `allowPlatformAdmin` em `aal1` — o
+    // buraco que o gate de MFA fechou para os admins de tenant.
+    if (await mfaEmDivida()) {
+      void audit({
+        action: "authz.denied",
+        actorUserId: user.id,
+        organizationId: org.orgId,
+        resourceType: resource ?? null,
+        requestId,
+        metadata: { reason: "mfa_required", platform_admin: true },
+      });
+      return {
+        ok: false,
+        response: fail(
+          "mfa_required",
+          "Esta sessão precisa da verificação em duas etapas. Entre novamente com o código do aplicativo.",
+          403,
+          { requestId },
+        ),
+      };
+    }
     return { ok: true, user, org };
   }
 

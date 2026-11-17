@@ -49,7 +49,10 @@ type DefinicaoDeStatus = {
 
 const PADRAO = {
   card: "hover-raise w-full max-w-md p-8 text-center",
-  tituloClasse: "text-2xl font-semibold",
+  // 500 é o peso do título de página no produto (`NexusPageHeader`). O 600
+  // daqui era o único lugar com outro peso — e a variante abaixo já corrigia
+  // para 500 à mão, prova de que o padrão estava errado.
+  tituloClasse: "text-2xl font-medium",
   descricaoClasse: "mt-2 text-sm text-muted-foreground",
   acoesClasse: "mt-6 flex justify-center gap-2",
 } as const;

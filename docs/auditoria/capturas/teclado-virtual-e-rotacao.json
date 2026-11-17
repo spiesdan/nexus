@@ -1,0 +1,85 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T12:53:49.075Z",
+  "metodo": "Rotação = viewport 844x390. Teclado virtual = viewport 390x508 (altura menos ~336 px de teclado) com o primeiro campo focado; mede-se se o campo fica acima da dobra útil.",
+  "rotacao": [
+    {
+      "rota": "/app/contacts",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    },
+    {
+      "rota": "/app/pedidos",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    },
+    {
+      "rota": "/app/financeiro",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    },
+    {
+      "rota": "/app/notas",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    },
+    {
+      "rota": "/app/inbox",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    },
+    {
+      "rota": "/app/ai",
+      "overflow": 0,
+      "headerVisivel": true,
+      "alturaPagina": 390,
+      "viewport": "844x390"
+    }
+  ],
+  "teclado": [
+    {
+      "rota": "/app/contacts",
+      "tag": "INPUT",
+      "topo": 339,
+      "base": 379,
+      "alturaDoCampo": 40,
+      "viewport": 508,
+      "visivelAcimaDoTeclado": true
+    },
+    {
+      "rota": "/app/pedidos",
+      "erro": null,
+      "semCampo": true
+    },
+    {
+      "rota": "/app/financeiro",
+      "erro": null,
+      "semCampo": true
+    },
+    {
+      "rota": "/app/notas",
+      "erro": null,
+      "semCampo": true
+    },
+    {
+      "rota": "/app/inbox",
+      "erro": null,
+      "semCampo": true
+    },
+    {
+      "rota": "/app/ai",
+      "erro": null,
+      "semCampo": true
+    }
+  ]
+}

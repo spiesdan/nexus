@@ -42,7 +42,11 @@ interface Chamada {
  * e qualquer método não previsto estoura, para o teste não passar por engano
  * sobre um caminho que ele não modela.
  */
-function clientDuble(presas: Record<string, unknown>[], atualizadas?: Record<string, unknown>[]) {
+function clientDuble(
+  presas: Record<string, unknown>[],
+  atualizadas?: Record<string, unknown>[],
+  opcoes: { avisoAberto?: boolean; avisosAbertos?: string[]; fechados?: Record<string, unknown>[] } = {},
+) {
   const chamadas: Chamada[] = [];
   const client = {
     rpc(fn: string, args: Record<string, unknown>) {
@@ -53,6 +57,21 @@ function clientDuble(presas: Record<string, unknown>[], atualizadas?: Record<str
       const filtros: Record<string, unknown> = {};
       let valores: Record<string, unknown> | undefined;
       let op = "select";
+      // `agent_inbox_items` responde a coisas diferentes de `messages`: o
+      // dublê precisa distinguir, senão a busca de aviso aberto devolveria as
+      // mensagens presas e o teste passaria por engano.
+      const dados = () => {
+        if (tabela === "agent_inbox_items") {
+          if (op === "select") {
+            if (opcoes.avisosAbertos) return opcoes.avisosAbertos.map((id) => ({ id }));
+            return opcoes.avisoAberto ? [{ id: "aviso-ja-aberto" }] : [];
+          }
+          return opcoes.fechados ?? [];
+        }
+        // Em `messages`, o SELECT encontra as presas e o UPDATE devolve as que
+        // ele realmente pegou — são respostas diferentes de propósito.
+        return op === "select" ? presas : (atualizadas ?? presas);
+      };
       const cadeia: Record<string, unknown> = {
         select() {
           return cadeia;
@@ -80,13 +99,11 @@ function clientDuble(presas: Record<string, unknown>[], atualizadas?: Record<str
         },
         limit() {
           chamadas.push({ tabela, op, filtros, valores });
-          return Promise.resolve({ data: presas, error: null });
+          return Promise.resolve({ data: dados(), error: null });
         },
         then(resolve: (r: unknown) => unknown) {
           chamadas.push({ tabela, op, filtros, valores });
-          return Promise.resolve(
-            resolve({ data: atualizadas ?? presas, error: null }),
-          );
+          return Promise.resolve(resolve({ data: dados(), error: null }));
         },
       };
       return cadeia;
@@ -97,13 +114,17 @@ function clientDuble(presas: Record<string, unknown>[], atualizadas?: Record<str
 
 const AGORA = new Date("2026-08-05T12:00:00.000Z");
 
-function presa(over: Partial<Record<string, string>> = {}) {
+function presa(over: Partial<Record<string, string | null>> = {}) {
   return {
     id: "11111111-1111-4111-8111-111111111111",
     organization_id: "22222222-2222-4222-8222-222222222222",
     conversation_id: "33333333-3333-4333-8333-333333333333",
     created_at: new Date(AGORA.getTime() - 10 * 60 * 1000).toISOString(),
     sent_via: "ai",
+    // `null` por padrão: é o caso em que o transporte nunca aceitou e a
+    // mensagem realmente NÃO saiu. Os casos em que ela saiu e só o ack faltou
+    // passam `external_id` explicitamente.
+    external_id: null as string | null,
     ...over,
   };
 }
@@ -131,12 +152,23 @@ describe("recover-stuck-messages", () => {
     );
   });
 
-  it("nada preso ⇒ não escreve nada", async () => {
-    const { client, chamadas } = clientDuble([]);
+  it("nada preso ⇒ fecha os avisos abertos, e não abre outro", async () => {
+    // A condição que abriu o aviso desapareceu: fechar é o efeito disso. Sem
+    // esta rodada, uma falha de ontem fica "em aberto" para sempre — foi assim
+    // que uma instalação real acumulou 27 avisos idênticos.
+    const { client, chamadas } = clientDuble([], undefined, {
+      fechados: [{ id: "aviso-1" }, { id: "aviso-2" }],
+    });
     const r = await recoverStuckMessages(client as never, AGORA, "req-2");
 
-    expect(r).toEqual({ scanned: 0, failed: 0, organizations: 0 });
-    expect(chamadas.filter((c) => c.op !== "select")).toEqual([]);
+    expect(r).toEqual({ scanned: 0, failed: 0, organizations: 0, resolved: 2 });
+    const fecha = chamadas.find(
+      (c) => c.tabela === "agent_inbox_items" && c.op === "update",
+    );
+    expect(fecha?.valores?.status).toBe("resolved");
+    expect(fecha?.filtros["eq:kind"]).toBe("message_send_stuck");
+    expect(fecha?.filtros["eq:status"]).toBe("open");
+    expect(chamadas.filter((c) => c.op === "insert")).toEqual([]);
   });
 
   it("marca failed com claim atômico em status=sending", async () => {
@@ -166,12 +198,15 @@ describe("recover-stuck-messages", () => {
     const { client, chamadas } = clientDuble(tres);
     const r = await recoverStuckMessages(client as never, AGORA, "req-4");
 
-    const avisos = chamadas.filter((c) => c.tabela === "agent_inbox_items");
+    // O aviso é UMA escrita: a consulta de dedup não conta como aviso.
+    const avisos = chamadas.filter(
+      (c) => c.tabela === "agent_inbox_items" && c.op === "insert",
+    );
     expect(avisos).toHaveLength(1);
     expect(avisos[0]?.valores?.kind).toBe("message_send_stuck");
     expect(avisos[0]?.valores?.severity).toBe("critical");
     expect(String(avisos[0]?.valores?.title)).toContain("3");
-    expect(r).toEqual({ scanned: 3, failed: 3, organizations: 1 });
+    expect(r).toEqual({ scanned: 3, failed: 3, organizations: 1, resolved: 0 });
   });
 
   it("emite message.failed por mensagem marcada (W-12)", async () => {
@@ -201,8 +236,70 @@ describe("recover-stuck-messages", () => {
     const { client, chamadas } = clientDuble([presa()], []);
     const r = await recoverStuckMessages(client as never, AGORA, "req-5");
 
-    expect(chamadas.filter((c) => c.tabela === "agent_inbox_items")).toEqual([]);
+    // Nenhuma ESCRITA no inbox — a consulta de dedup é leitura e acontece sempre.
+    expect(
+      chamadas.filter((c) => c.tabela === "agent_inbox_items" && c.op !== "select"),
+    ).toEqual([]);
     expect(chamadas.filter((c) => c.tabela === "rpc:emit_event")).toEqual([]);
-    expect(r).toEqual({ scanned: 1, failed: 0, organizations: 0 });
+    expect(r).toEqual({ scanned: 1, failed: 0, organizations: 0, resolved: 0 });
+  });
+
+  it("com aviso já aberto, ATUALIZA em vez de abrir outro (o defeito dos 27)", async () => {
+    const { client, chamadas } = clientDuble([presa()], undefined, { avisoAberto: true });
+    await recoverStuckMessages(client as never, AGORA, "req-7");
+
+    const noInbox = chamadas.filter((c) => c.tabela === "agent_inbox_items");
+    expect(noInbox.some((c) => c.op === "insert"), "não pode inserir segundo aviso").toBe(false);
+    const atualiza = noInbox.find((c) => c.op === "update");
+    expect(atualiza?.filtros["eq:id"]).toBe("aviso-ja-aberto");
+    expect(atualiza?.valores?.title).toBeTruthy();
+  });
+
+  it("título não afirma 'não chegou' quando o transporte ACEITOU a mensagem", async () => {
+    // `external_id` preenchido = o WAHA aceitou e devolveu o id. A mensagem saiu
+    // do CRM; o que falta é o ack. Dizer "não chegou" aqui é uma afirmação que o
+    // dado não sustenta — e faz o dono reenviar uma mensagem que já chegou.
+    const { client, chamadas } = clientDuble([presa({ external_id: "3EB0ABCDEF" })]);
+    await recoverStuckMessages(client as never, AGORA, "req-8");
+
+    const aviso = chamadas.find((c) => c.tabela === "agent_inbox_items" && c.op === "insert");
+    expect(String(aviso?.valores?.title)).toContain("sem confirmação de entrega");
+    expect(String(aviso?.valores?.title)).not.toContain("não chegou");
+    expect(String(aviso?.valores?.body)).toContain("é provável que tenha chegado");
+  });
+
+  it("distingue as duas causas na mesma rodada", async () => {
+    const duas = [
+      presa({ id: "aaaaaaaa-0000-4000-8000-000000000001", external_id: null }),
+      presa({ id: "aaaaaaaa-0000-4000-8000-000000000002", external_id: "3EB0XYZ" }),
+    ];
+    const { client, chamadas } = clientDuble(duas);
+    await recoverStuckMessages(client as never, AGORA, "req-9");
+
+    const aviso = chamadas.find((c) => c.tabela === "agent_inbox_items" && c.op === "insert");
+    const corpo = String(aviso?.valores?.body);
+    expect(corpo).toContain("nunca chegou ao WhatsApp");
+    expect(corpo).toContain("aceita pelo transporte");
+  });
+
+  it("colapsa a pilha que já existe: um aviso atualizado + os duplicados fechados", async () => {
+    // O estado medido numa instalação real: 27 abertos do MESMO fato. A rodada
+    // nova mantém um (com o estado de agora) e fecha os outros como duplicatas
+    // — não porque alguém resolveu, mas porque são o mesmo aviso repetido.
+    const { client, chamadas } = clientDuble([presa()], undefined, {
+      avisosAbertos: ["aviso-1", "aviso-2", "aviso-3"],
+    });
+    const r = await recoverStuckMessages(client as never, AGORA, "req-10");
+
+    const atualiza = chamadas.find(
+      (c) => c.tabela === "agent_inbox_items" && c.op === "update" && c.filtros["eq:id"],
+    );
+    expect(atualiza?.filtros["eq:id"]).toBe("aviso-1");
+    const fecha = chamadas.find(
+      (c) => c.tabela === "agent_inbox_items" && c.op === "update" && c.filtros["in:id"],
+    );
+    expect(fecha?.valores?.status).toBe("resolved");
+    expect(fecha?.filtros["in:id"]).toEqual(["aviso-2", "aviso-3"]);
+    expect(r.resolved).toBe(2);
   });
 });

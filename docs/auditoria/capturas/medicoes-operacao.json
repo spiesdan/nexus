@@ -1,0 +1,410 @@
+{
+  "base": "http://localhost:3011",
+  "grupo": "operacao",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "atualizado_em": "2026-11-17T11:02:06.048Z",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app/estoque",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5780,
+      "erro": null,
+      "arquivo": "desktop_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 585,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4984,
+      "erro": null,
+      "arquivo": "desktop_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 600,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 3575,
+      "erro": null,
+      "arquivo": "desktop_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 37,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 1083,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 5064,
+      "erro": null,
+      "arquivo": "desktop_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 41,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 788,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 6037,
+      "erro": null,
+      "arquivo": "desktop_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 83,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 2978,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2115,
+      "erro": null,
+      "arquivo": "celular_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 315,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1954,
+      "erro": null,
+      "arquivo": "celular_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 330,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1732,
+      "erro": null,
+      "arquivo": "celular_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 3,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 748,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "celular",
+      "status": 200,
+      "ms": 1840,
+      "erro": null,
+      "arquivo": "celular_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 518,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "celular",
+      "status": 200,
+      "ms": 2621,
+      "erro": null,
+      "arquivo": "celular_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "NEXUS — atendimento e vendas por WhatsApp com agentes de IA",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 2493,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1382,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Estoque · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 5,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 287,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1180,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Compras · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 5,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 242,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1437,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 6,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 869,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1180,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 12,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 704,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1477,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 43,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 3393,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/estoque",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1343,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_estoque.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Estoque · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "textoVisivel": 300,
+      "url": "/app/estoque"
+    },
+    {
+      "rota": "/app/compras",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1168,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_compras.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Compras · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Compras"
+      ],
+      "textoVisivel": 255,
+      "url": "/app/compras"
+    },
+    {
+      "rota": "/app/expedicao",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1380,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 10,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 947,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/financeiro",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1227,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_financeiro.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 11,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 717,
+      "url": "/app/financeiro"
+    },
+    {
+      "rota": "/app/titulos",
+      "largura": "zoom200",
+      "status": 200,
+      "ms": 1441,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "zoom200_app_titulos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Contas a Receber · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 42,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "textoVisivel": 3406,
+      "url": "/app/financeiro"
+    }
+  ]
+}

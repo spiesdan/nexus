@@ -34,15 +34,26 @@ const badgeVariants = cva(
         info:
           "border-transparent bg-info-bg text-info-fg",
         mint:
-          "border-transparent bg-mint-wash text-mint",
+          // `bg-mint-wash text-mint` era #33c758 sobre #def6e4 = **1,95:1**,
+          // e `--color-mint-wash` não mudava no escuro. Medido em 16/11/2026 no
+          // selo "Entregue" da lista de pedidos.
+          //
+          // O wash passou a ser temado (verde com alfa no escuro) e o TEXTO
+          // usa `--color-success-fg`, que já é o token de texto verde por tema:
+          // 5,6:1 no claro e 7,4:1 no escuro. A paleta `mint` continua valendo
+          // para gráfico e ilustração, onde não é texto sobre fundo próprio.
+          "border-transparent bg-mint-wash text-success-fg",
         sky:
-          "border-border bg-surface text-sky",
+          "border-border bg-surface text-sky-fg",
         amber:
-          "border-border bg-surface text-amber",
+          "border-border bg-surface text-amber-fg",
         magenta:
-          "border-border bg-surface text-magenta",
+          // `text-magenta` (#d6409f) sobre `surface` dá 4,13:1 no claro e
+          // 4,43:1 no escuro — reprova AA para 12 px, o tamanho do selo.
+          // "Faturado" da lista de pedidos era o caso medido (17/11/2026).
+          "border-border bg-surface text-magenta-fg",
         ember:
-          "border-border bg-surface text-ember",
+          "border-border bg-surface text-ember-fg",
         // shadcn aliases
         secondary:
           "border-border bg-surface-elevated text-text-muted",

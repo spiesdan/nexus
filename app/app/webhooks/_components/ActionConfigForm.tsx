@@ -79,7 +79,7 @@ function CreateOrMoveLeadForm({
           onValueChange={(v) => onChange({ pipeline_id: v, stage_id: "" })}
           disabled={pipelinesLoading}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Funil">
             <SelectValue placeholder={t("Escolha o funil")} />
           </SelectTrigger>
           <SelectContent>
@@ -98,7 +98,7 @@ function CreateOrMoveLeadForm({
           onValueChange={(v) => onChange({ ...config, stage_id: v })}
           disabled={!config.pipeline_id || stagesLoading}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label="Etapa">
             <SelectValue
               placeholder={config.pipeline_id ? "Escolha a etapa" : "Escolha o funil primeiro"}
             />
@@ -151,7 +151,7 @@ function SendWhatsappForm({
           value={config.channel_session_id}
           onValueChange={(v) => onChange({ ...config, channel_session_id: v })}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Número de WhatsApp")}>
             <SelectValue placeholder={t("Escolha o número")} />
           </SelectTrigger>
           <SelectContent>
@@ -164,7 +164,9 @@ function SendWhatsappForm({
         </Select>
         {(sessions ?? []).some((s) => s.status !== "WORKING") ? (
           <p className="text-xs text-muted-foreground">
-            {t("Números desconectados aparecem desabilitados — reconecte em Conexões antes de usar.")}
+            {t(
+              "Números desconectados aparecem desabilitados — reconecte em Conexões antes de usar.",
+            )}
           </p>
         ) : null}
       </div>
@@ -194,7 +196,9 @@ function SendWhatsappForm({
           {/* NÃO cravar "7h e 22h": a janela passou a vir dos ajustes DO NÚMERO
               (Conexões), no fuso da sua organização, e quem a mudou lá veria a
               tela continuar prometendo outro horário. Rótulo visível é contrato. */}
-          {t("Respeitamos a janela de envio e o limite diário configurados para esse número em Conexões — fora da janela, a mensagem espera a próxima.")}
+          {t(
+            "Respeitamos a janela de envio e o limite diário configurados para esse número em Conexões — fora da janela, a mensagem espera a próxima.",
+          )}
         </p>
       </div>
     </div>
@@ -228,11 +232,8 @@ function SendAiMessageForm({
     <div className="space-y-3">
       <div className="space-y-1">
         <Label>Qual agente escreve</Label>
-        <Select
-          value={config.agent_id}
-          onValueChange={(v) => onChange({ ...config, agent_id: v })}
-        >
-          <SelectTrigger>
+        <Select value={config.agent_id} onValueChange={(v) => onChange({ ...config, agent_id: v })}>
+          <SelectTrigger aria-label="Qual agente escreve">
             <SelectValue placeholder={t("Escolha o agente")} />
           </SelectTrigger>
           <SelectContent>
@@ -245,7 +246,9 @@ function SendAiMessageForm({
         </Select>
         <p className="text-xs text-muted-foreground">
           {semPublicado
-            ? t("Nenhum agente está publicado. Publique um em Agentes de IA para poder usá-lo aqui.")
+            ? t(
+                "Nenhum agente está publicado. Publique um em Agentes de IA para poder usá-lo aqui.",
+              )
             : t("Ele escreve com o mesmo tom e o mesmo conhecimento que usa no atendimento.")}
         </p>
       </div>
@@ -256,7 +259,7 @@ function SendAiMessageForm({
           value={config.channel_session_id}
           onValueChange={(v) => onChange({ ...config, channel_session_id: v })}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Número de WhatsApp")}>
             <SelectValue placeholder={t("Escolha o número")} />
           </SelectTrigger>
           <SelectContent>
@@ -283,7 +286,9 @@ function SendAiMessageForm({
           }
         />
         <p className="text-xs text-muted-foreground">
-          {t("O agente já sabe que é a PRIMEIRA mensagem, logo depois de a pessoa preencher o formulário, e recebe todos os campos que ela respondeu. Aqui você diz o que fazer com eles — quanto mais concreto, melhor a mensagem.")}
+          {t(
+            "O agente já sabe que é a PRIMEIRA mensagem, logo depois de a pessoa preencher o formulário, e recebe todos os campos que ela respondeu. Aqui você diz o que fazer com eles — quanto mais concreto, melhor a mensagem.",
+          )}
         </p>
       </div>
     </div>
@@ -297,6 +302,7 @@ function AddTagForm({ config, onChange }: FormProps<{ tags: string[] }>) {
     <div className="space-y-1">
       <Label>{t("Tags (separadas por vírgula)")}</Label>
       <Input
+        aria-label={t("Tags (separadas por vírgula)")}
         value={text}
         onChange={(e) => {
           setText(e.target.value);
@@ -319,7 +325,7 @@ function AssignOwnerForm({ config, onChange }: FormProps<{ user_id: string }>) {
     <div className="space-y-1">
       <Label>Atendente</Label>
       <Select value={config.user_id} onValueChange={(v) => onChange({ user_id: v })}>
-        <SelectTrigger>
+        <SelectTrigger aria-label="Atendente">
           <SelectValue placeholder={t("Escolha o atendente")} />
         </SelectTrigger>
         <SelectContent>
@@ -348,6 +354,7 @@ function CallWebhookForm({
       <div className="space-y-1">
         <Label>{t("Endereço (URL)")}</Label>
         <Input
+          aria-label={t("Endereço (URL)")}
           type="url"
           value={config.url}
           onChange={(e) => onChange({ ...config, url: e.target.value })}
@@ -357,6 +364,7 @@ function CallWebhookForm({
       <div className="space-y-1">
         <Label>Segredo (opcional)</Label>
         <Input
+          aria-label="Segredo (opcional)"
           type="password"
           value={config.secret ?? ""}
           onChange={(e) => {
@@ -365,12 +373,18 @@ function CallWebhookForm({
             const { secret_enc: _enc, ...rest } = config;
             onChange(next ? { ...rest, secret: next } : { ...rest, secret: undefined });
           }}
-          placeholder={hasStoredSecret ? "•••••••• (definido — digite para trocar)" : "uma senha só sua"}
+          placeholder={
+            hasStoredSecret ? "•••••••• (definido — digite para trocar)" : "uma senha só sua"
+          }
         />
         <p className="text-xs text-muted-foreground">
           {hasStoredSecret
-            ? t("Já existe um segredo guardado com segurança. Digitar aqui substitui; limpar remove.")
-            : t("Se preencher, enviaremos uma assinatura para o outro sistema conferir que fomos nós.")}
+            ? t(
+                "Já existe um segredo guardado com segurança. Digitar aqui substitui; limpar remove.",
+              )
+            : t(
+                "Se preencher, enviaremos uma assinatura para o outro sistema conferir que fomos nós.",
+              )}
         </p>
       </div>
     </div>
@@ -398,7 +412,7 @@ function StartMessageFlowForm({ config, onChange }: FormProps<{ flow_pointer_id:
         onValueChange={(v) => onChange({ flow_pointer_id: v })}
         disabled={isLoading}
       >
-        <SelectTrigger>
+        <SelectTrigger aria-label={t("Fluxo de follow-up")}>
           <SelectValue placeholder={t("Escolha um fluxo publicado")} />
         </SelectTrigger>
         <SelectContent>

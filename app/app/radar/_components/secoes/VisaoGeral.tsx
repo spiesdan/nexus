@@ -22,11 +22,22 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
 import { linkWhatsAppRecuperacao } from "@/lib/comercial/inatividade";
-import { filtrarLinhas, ROTULO_NIVEL, agregarRadar, type NivelRadar, type ResumoRadar } from "@/lib/comercial/radar-score";
+import {
+  filtrarLinhas,
+  ROTULO_NIVEL,
+  agregarRadar,
+  type NivelRadar,
+  type ResumoRadar,
+} from "@/lib/comercial/radar-score";
 import { comRecorte } from "@/lib/comercial/radar-filtros-url";
 import { comoMoeda } from "@/lib/format/moeda";
 
-import { useInativosDoRadar, useLinhasDoRadar, useRadarDados, useVendedoresDoRadar } from "../../_dados";
+import {
+  useInativosDoRadar,
+  useLinhasDoRadar,
+  useRadarDados,
+  useVendedoresDoRadar,
+} from "../../_dados";
 import { FiltrosDoRadar } from "../FiltrosDoRadar";
 import { paraLinha } from "../comum";
 
@@ -49,7 +60,7 @@ export function VisaoGeralDoRadar() {
   const t = useT();
   const router = useRouter();
   const { filtros, mudar } = useRadarDados();
-  const { linhas, falhou, recarregar } = useLinhasDoRadar();
+  const { linhas, falhou, recarregar, amostraParcial } = useLinhasDoRadar();
   const vendedores = useVendedoresDoRadar();
   const { inativos } = useInativosDoRadar();
   const [metricaSaude, setMetricaSaude] = React.useState<"compras" | "clientes">("compras");
@@ -152,6 +163,13 @@ export function VisaoGeralDoRadar() {
 
   return (
     <div className="space-y-6">
+      {amostraParcial && (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t(
+            "A base passou de 25.000 pedidos: os números desta tela são da amostra carregada, não da carteira inteira.",
+          )}
+        </p>
+      )}
       <FiltrosDoRadar linhas={linhasRadar} vendedores={vendedores} onAtualizar={recarregar} />
 
       {/* KPIs — clicar em risco/oportunidades leva à lista filtrada. */}
@@ -194,7 +212,12 @@ export function VisaoGeralDoRadar() {
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {r.oportunidades.toLocaleString("pt-BR")}
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p
+              className="mt-0.5 text-xs text-muted-foreground"
+              title={t(
+                "Soma do ticket médio de cada cliente com recompra atrasada. É uma estimativa de valor por cliente, não receita garantida.",
+              )}
+            >
               {comoMoeda(r.potencialCents, "BRL")} {t("estimados")}
             </p>
           </Card>
@@ -343,7 +366,10 @@ export function VisaoGeralDoRadar() {
                       nome,
                     ]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12 }}
+                    formatter={(valor) => <span className="text-text-muted">{valor}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>

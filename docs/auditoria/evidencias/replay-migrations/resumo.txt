@@ -1,0 +1,42 @@
+REPLAY DE MIGRATIONS × BASELINE — resumo
+medido: 2026-11-16T02:20:13Z · commit 9f8e6faa
+imagem: pgvector/pgvector:pg15 (sha256:47af0b65960b)
+
+caminho A (migrations): 292 arquivos · 35 ok · 257 falhas
+caminho B (baseline):   aplica com ON_ERROR_STOP=1: sim
+
+objetos no caminho A: extensao=6 funcao=19 rls_ligado=2 tabela=5 tipo=5 
+objetos no caminho B: extensao=6 funcao=94 politica=305 rls_ligado=179 sequencia=2 tabela=183 tipo=185 trigger=104 view=2 
+só em A: 0 · só em B: 1023 · nos dois: 37
+
+objetos ausentes no caminho A, por tipo (distintos):
+  politica     305
+  tipo         180
+  tabela       178
+  rls_ligado   177
+  trigger      104
+  funcao       75
+  view         2
+  sequencia    2
+
+falhas por classe:
+  prerequisito:tabela          246
+  prerequisito:funcao          8
+  prerequisito:tipo            3
+
+objetos distintos ausentes (canônico): 71
+objetos distintos ausentes (texto cru): 81
+
+tabelas public:   A=2 · B=179
+RLS ligado public: A=2 · B=179
+funções public:   A=18 · B=92
+triggers public:  A=0 · B=104
+políticas public: A=0 · B=300
+políticas (todas as schemas) no baseline: 305
+diagnóstico RLS (baseline):
+  politica_para_public         297
+  dono                         179
+  comando_sem_politica         96
+  rls_sem_politica             5
+  politica_sem_org             4
+  politica_using_true          2

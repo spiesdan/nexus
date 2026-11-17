@@ -289,6 +289,7 @@ export function CriarCampanhaPorRegiao({
           <div className="space-y-2">
             <Label>{t("Cidades com clientes cadastrados")}</Label>
             <Input
+              aria-label={t("Cidades com clientes cadastrados")}
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
               placeholder={t("Buscar cidade")}
@@ -303,9 +304,7 @@ export function CriarCampanhaPorRegiao({
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {cidadesFiltradas.map((c) => {
-                    const marcada = selecionadas.some(
-                      (s) => chaveDaCidade(s) === chaveDaCidade(c),
-                    );
+                    const marcada = selecionadas.some((s) => chaveDaCidade(s) === chaveDaCidade(c));
                     return (
                       <button
                         key={chaveDaCidade(c)}
@@ -332,7 +331,9 @@ export function CriarCampanhaPorRegiao({
 
           <div className="rounded-md border bg-muted/40 p-3 text-sm">
             {selecionadas.length === 0 ? (
-              <p className="text-muted-foreground">{t("Escolha ao menos uma cidade para ver quem entra.")}</p>
+              <p className="text-muted-foreground">
+                {t("Escolha ao menos uma cidade para ver quem entra.")}
+              </p>
             ) : carregandoPrevia ? (
               <p className="text-muted-foreground">{t("Calculando o público…")}</p>
             ) : previa ? (
@@ -342,9 +343,9 @@ export function CriarCampanhaPorRegiao({
                   {previa.resumo}
                 </p>
                 <p className="text-muted-foreground">
-                  {previa.com_pedido} {t("com pedido")} · {previa.sem_pedido}{" "}
-                  {t("sem pedido")} · {previa.sem_telefone} {t("sem telefone")} ·{" "}
-                  {previa.em_campanha} {t("já em outra campanha")}
+                  {previa.com_pedido} {t("com pedido")} · {previa.sem_pedido} {t("sem pedido")} ·{" "}
+                  {previa.sem_telefone} {t("sem telefone")} · {previa.em_campanha}{" "}
+                  {t("já em outra campanha")}
                   {previa.completa ? "" : ` · ${t("varredura parcial (teto de leitura)")}`}
                 </p>
                 {previa.linhas.length > 0 && (
@@ -393,11 +394,7 @@ export function CriarCampanhaPorRegiao({
 
           <div className="space-y-1.5">
             <Label htmlFor="regiao-nome">{t("Nome da campanha")}</Label>
-            <Input
-              id="regiao-nome"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-            />
+            <Input id="regiao-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
           </div>
 
           <div className="space-y-2">
@@ -405,14 +402,13 @@ export function CriarCampanhaPorRegiao({
             {mensagens.map((m, i) => (
               <div key={i} className="flex items-start gap-2">
                 <Textarea
+                  aria-label={t("Mensagens (giram nesta ordem, uma por minuto)")}
                   value={m}
                   rows={2}
                   maxLength={4000}
                   placeholder={t("Escreva a mensagem")}
                   onChange={(e) =>
-                    setMensagens((atual) =>
-                      atual.map((v, j) => (j === i ? e.target.value : v)),
-                    )
+                    setMensagens((atual) => atual.map((v, j) => (j === i ? e.target.value : v)))
                   }
                 />
                 {mensagens.length > 1 && (
@@ -446,6 +442,7 @@ export function CriarCampanhaPorRegiao({
                 <Input
                   type="time"
                   className="w-32"
+                  aria-label={`${t("Início da janela")} ${i + 1}`}
                   value={j.inicio}
                   onChange={(e) =>
                     setJanelas((atual) =>
@@ -457,6 +454,7 @@ export function CriarCampanhaPorRegiao({
                 <Input
                   type="time"
                   className="w-32"
+                  aria-label={`${t("Fim da janela")} ${i + 1}`}
                   value={j.fim}
                   onChange={(e) =>
                     setJanelas((atual) =>

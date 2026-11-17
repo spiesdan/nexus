@@ -67,7 +67,8 @@ let reservaRecusada = false;
 
 class Query {
   private filtros: unknown[] = [];
-  private ordem: { col: string; asc: boolean } | null = null;
+  private ordens: Array<{ col: string; asc: boolean }> = [];
+  private faixa: [number, number] | null = null;
   private limite: number | null = null;
   private acao: "select" | "update" | "upsert" = "select";
   private payload: Linha | null = null;
@@ -123,7 +124,11 @@ class Query {
     return this;
   }
   order(col: string, opts?: { ascending?: boolean }): this {
-    this.ordem = { col, asc: opts?.ascending ?? true };
+    this.ordens.push({ col, asc: opts?.ascending ?? true });
+    return this;
+  }
+  range(inicio: number, fim: number): this {
+    this.faixa = [inicio, fim];
     return this;
   }
   limit(n: number): this {
@@ -141,12 +146,14 @@ class Query {
     }
     if (this.acao === "select") {
       let saida = linhas.filter((l) => combina(l, this.filtros));
-      if (this.ordem) {
-        const { col, asc } = this.ordem;
+      // Ordena do último critério para o primeiro (sort estável), como o
+      // PostgREST faz com `.order(a).order(b)`.
+      for (const { col, asc } of [...this.ordens].reverse()) {
         saida = [...saida].sort((a, b) =>
           (String(a[col]) < String(b[col]) ? -1 : 1) * (asc ? 1 : -1),
         );
       }
+      if (this.faixa) saida = saida.slice(this.faixa[0], this.faixa[1] + 1);
       if (this.limite !== null) saida = saida.slice(0, this.limite);
       return this.contar
         ? { data: saida, error: null, count: saida.length }
@@ -541,7 +548,7 @@ describe("processarCampanhasAgendadas", () => {
 
     expect(enviar).not.toHaveBeenCalled();
     expect(resumo.enviados).toBe(0);
-    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "intervalo" }]);
+    expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "reserva_perdida" }]);
     expect(dados.prospecting_sends).toEqual([]);
   });
 
@@ -1227,5 +1234,40 @@ describe("processarCampanhasAgendadas", () => {
     ]);
     expect(dados.prospecting_campaigns![0]).toMatchObject({ status: "pausada" });
     expect(String(dados.prospecting_campaigns![0]!.ultimo_erro)).toContain("não tem modelo");
+  });
+
+  it("(h2) ledger acima de 1.000 linhas não esconde o prospect do fim (paginação)", async () => {
+    // O caso real: 1.002 linhas em `prospecting_sends`, PostgREST corta em
+    // 1.000, e a linha que ficava de fora era justamente a do prospect que o
+    // tick reescolhia. Ele tentava reservar, a unique recusava e a campanha
+    // ficava parada no primeiro colocado — sem erro, sem pausa.
+    const ledger = Array.from({ length: 1001 }, (_, i) => ({
+      organization_id: "org-1",
+      campaign_id: "outra-campanha",
+      prospect_id: `x-${i}`,
+      enviado_em: new Date(Date.parse(DENTRO) - (2000 - i) * 1000).toISOString(),
+      message_id: "m",
+    }));
+    // A linha do p-001 é a MAIS RECENTE (a 1.002ª) — é a que o corte escondia.
+    ledger.push({
+      organization_id: "org-1",
+      campaign_id: "camp-1",
+      prospect_id: "p-001",
+      enviado_em: new Date(Date.parse(DENTRO) - 1_000).toISOString(),
+      message_id: "m",
+    });
+    const dados = base({
+      prospecting_campaigns: [campanha({ prospect_ids: ["p-001", "p-002"] })],
+      business_prospects: [prospect("p-001", "Empresa 1"), prospect("p-002", "Empresa 2")],
+      prospecting_sends: ledger,
+    });
+    const enviar = senderFalso();
+    const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
+
+    // Sem paginação, o p-001 voltaria a ser escolhido e a reserva seria
+    // perdida; com ela, o motor vê o ledger inteiro e manda para o p-002.
+    expect(enviar).toHaveBeenCalledTimes(1);
+    expect(enviar.mock.calls[0]![1].prospect.id).toBe("p-002");
+    expect(resumo.pulados).toEqual([]);
   });
 });

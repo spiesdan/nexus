@@ -35,19 +35,15 @@ interface LoseLeadDialogProps {
 
 const MAX_LEN = 500;
 
-export function LoseLeadDialog({
-  open,
-  onOpenChange,
-  leadId,
-  pipelineId,
-}: LoseLeadDialogProps) {
+export function LoseLeadDialog({ open, onOpenChange, leadId, pipelineId }: LoseLeadDialogProps) {
   const t = useT();
   const [reasonCode, setReasonCode] = useState<string>("");
   const [otherText, setOtherText] = useState("");
   const mutation = useLoseLead(pipelineId);
 
   const finalReason = reasonCode === "other" ? otherText.trim() || "other" : reasonCode;
-  const disabled = !reasonCode || finalReason.length === 0 || finalReason.length > MAX_LEN || mutation.isPending;
+  const disabled =
+    !reasonCode || finalReason.length === 0 || finalReason.length > MAX_LEN || mutation.isPending;
 
   const handleSubmit = async () => {
     if (disabled) return;
@@ -80,6 +76,7 @@ export function LoseLeadDialog({
                 className="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm hover:bg-accent"
               >
                 <input
+                  aria-label={t("Motivo")}
                   type="radio"
                   name="lost-reason"
                   value={code}

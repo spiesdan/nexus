@@ -17,6 +17,9 @@ import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO, pedidoPatchSchema } from "@/lib/sch
 import { cabeNoCredito, situacaoDeCredito } from "@/lib/comercial/credito";
 import { gerarRecebiveis } from "@/lib/comercial/financeiro";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ajustarEstoque } from "@/lib/estoque/ajustar";
+import { cancelamentoDevolveEstoque, podeTransicionar } from "@/lib/comercial/transicoes-do-pedido";
+import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -76,6 +79,58 @@ export async function PATCH(
 
   const { id } = await params;
   const supabase = await createClient();
+
+  // ─── A MÁQUINA DE ESTADOS DO PEDIDO ────────────────────────────────────
+  //
+  // Antes, qualquer status ia para qualquer status: `entregue→rascunho` e
+  // `cancelado→aprovado` passavam por PATCH de `agent`. A ordem é a do
+  // vocabulário Mercos (orçamento → aprovado → concluído), com as etapas
+  // fiscais/logísticas depois. `entregue` e `cancelado` são terminais.
+  //
+  // `rascunho→concluido` e `em_analise→concluido` ficam de propósito: o botão
+  // "Marcar como concluído" fecha o pedido direto de quem está em orçamento.
+  let statusAnterior: string | null = null;
+  if (parsed.data.status) {
+    const { data: atual } = await supabase
+      .from("commercial_orders")
+      .select("status")
+      .eq("id", id)
+      .eq("organization_id", authz.org.orgId)
+      .maybeSingle();
+    statusAnterior = (atual as { status: string } | null)?.status ?? null;
+    if (!statusAnterior) {
+      return fail("not_found", "Pedido não encontrado.", 404, { requestId });
+    }
+    if (
+      parsed.data.status !== statusAnterior &&
+      !podeTransicionar(statusAnterior, parsed.data.status)
+    ) {
+      return fail(
+        "validation_failed",
+        `Transição inválida: "${statusAnterior}" → "${parsed.data.status}".`,
+        422,
+        { requestId },
+      );
+    }
+    // Cancelar pedido com NF ativa não é operação de pedido: a nota é fato
+    // fiscal. Cancela a nota primeiro; o estoque volta depois.
+    if (parsed.data.status === "cancelado") {
+      const { count } = await supabase
+        .from("invoices")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", authz.org.orgId)
+        .eq("order_id", id)
+        .not("status", "in", "(cancelada,denegada)");
+      if ((count ?? 0) > 0) {
+        return fail(
+          "validation_failed",
+          "Pedido tem nota fiscal ativa — cancele a nota antes de cancelar o pedido.",
+          422,
+          { requestId },
+        );
+      }
+    }
+  }
 
   // Troca de cliente: o snapshot (nome/documento) acompanha o contact_id —
   // pedido impresso com nome de outro cliente seria dado corrompido.
@@ -164,13 +219,17 @@ export async function PATCH(
       // R$ vira % sobre o subtotal para comparar com o mesmo teto do POST.
       const pctDoValor = ordem.subtotal_cents > 0 ? (ordem.desconto_cents / ordem.subtotal_cents) * 100 : 0;
       const maior = Math.max(maxItem, ordem.desconto_pct ?? 0, pctDoValor);
-      if (parsed.data.status === "aprovado" && maior > teto) {
+      // `concluido` COMPROMETE a venda tanto quanto `aprovado`: é o ato de
+      // fechar o pedido (vocabulário Mercos). Deixá-lo fora da alçada seria o
+      // atalho para furar o teto de desconto — fecha o pedido em vez de aprovar.
+      const compromete = parsed.data.status === "aprovado" || parsed.data.status === "concluido";
+      if (compromete && maior > teto) {
         const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
         if (!mgr.ok) {
           parsed.data.status = "em_analise";
         }
       }
-      if (ordem.status === "em_analise" && parsed.data.status === "aprovado") {
+      if (ordem.status === "em_analise" && compromete) {
         const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
         if (!mgr.ok) {
           return fail("validation_failed", "Só gerente aprova pedido em análise.", 422, { requestId });
@@ -245,6 +304,44 @@ export async function PATCH(
     }
   }
 
+  // ─── CANCELAR DEVOLVE O ESTOQUE (decisão do dono, 17/11) ────────────────
+  //
+  // A baixa acontece ao sair do rascunho (criar-pedido.ts). Cancelar sem
+  // devolver deixava o saldo baixado por uma venda que não existe. A devolução
+  // passa pelo `ajustarEstoque` (CAS) e roda DEPOIS do update: se falhar, o
+  // pedido já está cancelado e o aviso vai na resposta — não se desfaz um
+  // cancelamento por causa de estoque.
+  const avisos: string[] = [];
+  if (
+    parsed.data.status === "cancelado" &&
+    statusAnterior &&
+    cancelamentoDevolveEstoque(statusAnterior)
+  ) {
+    const admin = createAdminClient();
+    const { data: itens } = await supabase
+      .from("commercial_order_items")
+      .select("product_id, quantidade")
+      .eq("order_id", id)
+      .eq("organization_id", authz.org.orgId);
+    for (const it of (itens ?? []) as { product_id: string | null; quantidade: number }[]) {
+      if (!it.product_id) continue;
+      const r = await ajustarEstoque(admin, {
+        organizationId: authz.org.orgId,
+        productId: it.product_id,
+        delta: Number(it.quantidade),
+      });
+      if (!r.ok) {
+        avisos.push(`Estoque de ${it.product_id} não devolvido (${r.motivo}).`);
+        logger.error("[commercial-orders] devolução de estoque falhou", {
+          organization_id: authz.org.orgId,
+          order_id: id,
+          product_id: it.product_id,
+          motivo: r.motivo,
+        });
+      }
+    }
+  }
+
   await audit({
     organizationId: authz.org.orgId,
     actorUserId: authz.user.id,
@@ -252,6 +349,11 @@ export async function PATCH(
     resourceType: "commercial_orders",
     resourceId: id,
     requestId,
+    metadata: {
+      status_antes: statusAnterior,
+      status_depois: (parsed.data.status as string | undefined) ?? statusAnterior,
+      estoque_devolvido_avisos: avisos.length,
+    },
   });
 
   // Faturar gera os recebíveis (idempotente: re-PATCH não duplica). Best
@@ -280,7 +382,7 @@ export async function PATCH(
     }
   }
 
-  return ok(data, { requestId });
+  return ok(avisos.length > 0 ? { ...(data as object), avisos } : data, { requestId });
 }
 
 export async function DELETE(
@@ -336,19 +438,12 @@ export async function DELETE(
     const admin = createAdminClient();
     for (const it of ((itens ?? []) as unknown as { product_id: string | null; quantidade: number }[])) {
       if (!it.product_id) continue;
-      const { data: prod } = await admin
-        .from("catalog_products")
-        .select("quantidade, controla_estoque")
-        .eq("id", it.product_id)
-        .eq("organization_id", authz.org.orgId)
-        .maybeSingle();
-      const p = prod as unknown as { quantidade: number; controla_estoque: boolean } | null;
-      if (!p?.controla_estoque) continue;
-      await admin
-        .from("catalog_products")
-        .update({ quantidade: p.quantidade + it.quantidade })
-        .eq("id", it.product_id)
-        .eq("organization_id", authz.org.orgId);
+      // CAS: devolve sem perder uma baixa concorrente (ver lib/estoque/ajustar).
+      await ajustarEstoque(admin, {
+        organizationId: authz.org.orgId,
+        productId: it.product_id,
+        delta: Number(it.quantidade),
+      });
     }
   }
 

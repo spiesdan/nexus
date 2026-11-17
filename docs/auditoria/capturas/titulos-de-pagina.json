@@ -1,0 +1,1580 @@
+{
+  "aviso": "`semTitulo`, `doisH1` e `h1Repetido` são SINAL estático: o mesmo arquivo pode renderizar `h1` em ramos diferentes (impressão, modal, estado de erro) e o título pode vir de um componente fora do segmento. A prova é a varredura de DOM em `h1-em-producao.json` — em 16/11/2026 ela mostrou 1 `h1` visível por tela em todas as rotas, com 2 só em `/design` (showcase).",
+  "medido_em": "2026-11-17T03:05:11.788Z",
+  "telas": 156,
+  "porHeader": 82,
+  "h1Proprios": 55,
+  "semTitulo": [
+    "/admin",
+    "/admin/inbox/:conversationId",
+    "/admin/tenants/:id/health",
+    "/app/inbox/:id",
+    "/app/leads/:id",
+    "/app/metrics",
+    "/app/radar/categorias",
+    "/app/radar/oportunidades",
+    "/app/radar/prospeccao",
+    "/app/radar/recuperacao",
+    "/app/radar/risco",
+    "/app/recuperacao",
+    "/app/settings/canal-oficial",
+    "/app/settings/templates",
+    "/app/settings/tenant/whatsapp",
+    "/app/titulos",
+    "/onboarding/connect-nuvemshop",
+    "/onboarding/connect-whatsapp",
+    "/onboarding/done",
+    "/onboarding/funil",
+    "/onboarding/invite-team",
+    "/onboarding/setup-ai",
+    "/onboarding/testar",
+    "/onboarding/welcome"
+  ],
+  "doisH1": [
+    "/app/agenda",
+    "/app/ai/routers",
+    "/app/expedicao",
+    "/app/pedidos/imprimir"
+  ],
+  "h1Repetido": [
+    "/app (2)",
+    "/app/ai/agents/:id (2)",
+    "/app/pedidos/imprimir (2)",
+    "/design (2)",
+    "/o/:token (2)",
+    "/team/accept-invite/:token (5)"
+  ],
+  "familiasDeTamanho": {
+    "2xl": 41,
+    "herdado": 12,
+    "xl": 9,
+    "sm": 1,
+    "lg": 1
+  },
+  "comBreadcrumb": 1,
+  "medidas": [
+    {
+      "rota": "/",
+      "arquivo": "app/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/403",
+      "arquivo": "app/403/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/500",
+      "arquivo": "app/500/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/503",
+      "arquivo": "app/503/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/account-suspended",
+      "arquivo": "app/account-suspended/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin",
+      "arquivo": "app/admin/(protected)/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/audit",
+      "arquivo": "app/admin/(protected)/audit/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/audit/:entryId",
+      "arquivo": "app/admin/(protected)/audit/[entryId]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/dashboard",
+      "arquivo": "app/admin/(protected)/dashboard/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/forbidden",
+      "arquivo": "app/admin/forbidden/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/google",
+      "arquivo": "app/admin/(protected)/google/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/inbox",
+      "arquivo": "app/admin/(protected)/inbox/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/inbox/:conversationId",
+      "arquivo": "app/admin/(protected)/inbox/[conversationId]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/incidents",
+      "arquivo": "app/admin/(protected)/incidents/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/incidents/:id",
+      "arquivo": "app/admin/(protected)/incidents/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/lgpd",
+      "arquivo": "app/admin/(protected)/lgpd/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/lgpd/requests/:id",
+      "arquivo": "app/admin/(protected)/lgpd/requests/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/marca",
+      "arquivo": "app/admin/(protected)/marca/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "arquivo": "app/admin/(protected)/platform-admins/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/tenants",
+      "arquivo": "app/admin/(protected)/tenants/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/tenants/:id",
+      "arquivo": "app/admin/(protected)/tenants/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/tenants/:id/health",
+      "arquivo": "app/admin/(protected)/tenants/[id]/health/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "arquivo": "app/admin/(protected)/tenants/new/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/usage",
+      "arquivo": "app/admin/(protected)/usage/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/users",
+      "arquivo": "app/admin/(protected)/users/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/admin/users/:id",
+      "arquivo": "app/admin/(protected)/users/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app",
+      "arquivo": "app/app/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 2,
+      "tamanhos": [
+        "2xl",
+        "xl"
+      ],
+      "temBreadcrumb": true
+    },
+    {
+      "rota": "/app/agenda",
+      "arquivo": "app/app/agenda/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai",
+      "arquivo": "app/app/ai/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/agents",
+      "arquivo": "app/app/ai/agents/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/agents/:id",
+      "arquivo": "app/app/ai/agents/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 2,
+      "tamanhos": [
+        "2xl",
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/agents/new",
+      "arquivo": "app/app/ai/agents/new/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/cases",
+      "arquivo": "app/app/ai/cases/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/controle",
+      "arquivo": "app/app/ai/controle/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "arquivo": "app/app/ai/credentials/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "arquivo": "app/app/ai/decisoes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/evolution",
+      "arquivo": "app/app/ai/evolution/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/followups",
+      "arquivo": "app/app/ai/followups/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/followups/:id",
+      "arquivo": "app/app/ai/followups/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "sm"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/followups/enrollments/:id",
+      "arquivo": "app/app/ai/followups/enrollments/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "arquivo": "app/app/ai/inbox/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "arquivo": "app/app/ai/knowledge/sources/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/memory",
+      "arquivo": "app/app/ai/memory/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "arquivo": "app/app/ai/proposals/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/providers",
+      "arquivo": "app/app/ai/providers/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/routers",
+      "arquivo": "app/app/ai/routers/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/routers/:id",
+      "arquivo": "app/app/ai/routers/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/runs",
+      "arquivo": "app/app/ai/runs/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/skills",
+      "arquivo": "app/app/ai/skills/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/ai/usage",
+      "arquivo": "app/app/ai/usage/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/audit",
+      "arquivo": "app/app/audit/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/busca",
+      "arquivo": "app/app/busca/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/campanhas",
+      "arquivo": "app/app/campanhas/page.tsx",
+      "porHeader": true,
+      "headerNivel2": true,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/carteira",
+      "arquivo": "app/app/carteira/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/comissoes",
+      "arquivo": "app/app/comissoes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/compras",
+      "arquivo": "app/app/compras/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/compras/:id",
+      "arquivo": "app/app/compras/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/connections",
+      "arquivo": "app/app/connections/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/contacts",
+      "arquivo": "app/app/contacts/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/contacts/:id",
+      "arquivo": "app/app/contacts/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/estoque",
+      "arquivo": "app/app/estoque/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao",
+      "arquivo": "app/app/expedicao/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao/:id",
+      "arquivo": "app/app/expedicao/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao/:id/fechamento",
+      "arquivo": "app/app/expedicao/[id]/fechamento/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao/:id/motorista",
+      "arquivo": "app/app/expedicao/[id]/motorista/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao/:id/rota",
+      "arquivo": "app/app/expedicao/[id]/rota/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/expedicao/nova",
+      "arquivo": "app/app/expedicao/nova/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/faturamento",
+      "arquivo": "app/app/faturamento/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/financeiro",
+      "arquivo": "app/app/financeiro/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal",
+      "arquivo": "app/app/fiscal/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/configuracoes",
+      "arquivo": "app/app/fiscal/configuracoes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/eventos",
+      "arquivo": "app/app/fiscal/eventos/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/fornecedores",
+      "arquivo": "app/app/fiscal/fornecedores/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/manifestacoes",
+      "arquivo": "app/app/fiscal/manifestacoes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/notas",
+      "arquivo": "app/app/fiscal/notas/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/notas/:id",
+      "arquivo": "app/app/fiscal/notas/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/pendentes",
+      "arquivo": "app/app/fiscal/pendentes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/produtos",
+      "arquivo": "app/app/fiscal/produtos/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/relatorios",
+      "arquivo": "app/app/fiscal/relatorios/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/resumos",
+      "arquivo": "app/app/fiscal/resumos/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/sincronizacoes",
+      "arquivo": "app/app/fiscal/sincronizacoes/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/fiscal/xml",
+      "arquivo": "app/app/fiscal/xml/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/frota",
+      "arquivo": "app/app/frota/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/inbox",
+      "arquivo": "app/app/inbox/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/inbox/:id",
+      "arquivo": "app/app/inbox/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/indicadores",
+      "arquivo": "app/app/indicadores/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/integrations/nuvemshop",
+      "arquivo": "app/app/integrations/nuvemshop/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/inteligencia",
+      "arquivo": "app/app/inteligencia/page.tsx",
+      "porHeader": true,
+      "headerNivel2": true,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/kanban",
+      "arquivo": "app/app/kanban/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/laboratorio",
+      "arquivo": "app/app/laboratorio/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/leads/:id",
+      "arquivo": "app/app/leads/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "arquivo": "app/app/lgpd/requests/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/lgpd/requests/:id",
+      "arquivo": "app/app/lgpd/requests/[id]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/metrics",
+      "arquivo": "app/app/metrics/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/meu-dia",
+      "arquivo": "app/app/meu-dia/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/notas",
+      "arquivo": "app/app/notas/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/pedidos",
+      "arquivo": "app/app/pedidos/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/pedidos/:id",
+      "arquivo": "app/app/pedidos/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "arquivo": "app/app/pedidos/imprimir/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 2,
+      "tamanhos": [
+        "herdado",
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "arquivo": "app/app/pedidos/novo/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/pipelines/:id",
+      "arquivo": "app/app/pipelines/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/products",
+      "arquivo": "app/app/products/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/prospeccao",
+      "arquivo": "app/app/prospeccao/page.tsx",
+      "porHeader": true,
+      "headerNivel2": true,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/prospeccao/campanhas/:id",
+      "arquivo": "app/app/prospeccao/campanhas/[id]/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "arquivo": "app/app/prospeccao/nova/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar",
+      "arquivo": "app/app/radar/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "arquivo": "app/app/radar/categorias/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar/oportunidades",
+      "arquivo": "app/app/radar/oportunidades/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar/prospeccao",
+      "arquivo": "app/app/radar/prospeccao/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "arquivo": "app/app/radar/recuperacao/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/radar/risco",
+      "arquivo": "app/app/radar/risco/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/recuperacao",
+      "arquivo": "app/app/recuperacao/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/relatorios",
+      "arquivo": "app/app/relatorios/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings",
+      "arquivo": "app/app/settings/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "arquivo": "app/app/settings/api-tokens/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "arquivo": "app/app/settings/atendimento/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "arquivo": "app/app/settings/atualizacao/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/billing",
+      "arquivo": "app/app/settings/billing/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "arquivo": "app/app/settings/canal-oficial/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/marca",
+      "arquivo": "app/app/settings/marca/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "arquivo": "app/app/settings/notifications/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/profile",
+      "arquivo": "app/app/settings/profile/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/security",
+      "arquivo": "app/app/settings/security/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/templates",
+      "arquivo": "app/app/settings/templates/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "arquivo": "app/app/settings/tenant/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "arquivo": "app/app/settings/tenant/agenda/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "arquivo": "app/app/settings/tenant/pipelines/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "arquivo": "app/app/settings/tenant/whatsapp/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/tarefas",
+      "arquivo": "app/app/tarefas/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/team",
+      "arquivo": "app/app/team/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/team/invite",
+      "arquivo": "app/app/team/invite/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/templates",
+      "arquivo": "app/app/templates/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/titulos",
+      "arquivo": "app/app/titulos/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "arquivo": "app/app/venda-automatica/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/app/webhooks",
+      "arquivo": "app/app/webhooks/page.tsx",
+      "porHeader": true,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/design",
+      "arquivo": "app/design/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 2,
+      "tamanhos": [
+        "herdado",
+        "herdado"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/legal/privacy",
+      "arquivo": "app/legal/privacy/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/legal/terms",
+      "arquivo": "app/legal/terms/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/login",
+      "arquivo": "app/(public)/login/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/login/forgot",
+      "arquivo": "app/(public)/login/forgot/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/login/mfa",
+      "arquivo": "app/(public)/login/mfa/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/login/recovery",
+      "arquivo": "app/(public)/login/recovery/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/login/reset",
+      "arquivo": "app/(public)/login/reset/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/o/:token",
+      "arquivo": "app/o/[token]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 2,
+      "tamanhos": [
+        "xl",
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding",
+      "arquivo": "app/onboarding/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "lg"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/connect-nuvemshop",
+      "arquivo": "app/onboarding/connect-nuvemshop/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/connect-whatsapp",
+      "arquivo": "app/onboarding/connect-whatsapp/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/done",
+      "arquivo": "app/onboarding/done/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/funil",
+      "arquivo": "app/onboarding/funil/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/invite-team",
+      "arquivo": "app/onboarding/invite-team/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/setup-ai",
+      "arquivo": "app/onboarding/setup-ai/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/testar",
+      "arquivo": "app/onboarding/testar/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/onboarding/welcome",
+      "arquivo": "app/onboarding/welcome/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 0,
+      "tamanhos": [],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/signup",
+      "arquivo": "app/(public)/signup/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/team/accept-invite/:token",
+      "arquivo": "app/team/accept-invite/[token]/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 5,
+      "tamanhos": [
+        "xl",
+        "xl",
+        "xl",
+        "xl",
+        "xl"
+      ],
+      "temBreadcrumb": false
+    },
+    {
+      "rota": "/vitrine-agenda",
+      "arquivo": "app/vitrine-agenda/page.tsx",
+      "porHeader": false,
+      "headerNivel2": false,
+      "h1Proprios": 1,
+      "tamanhos": [
+        "2xl"
+      ],
+      "temBreadcrumb": false
+    }
+  ]
+}

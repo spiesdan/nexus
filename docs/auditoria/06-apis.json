@@ -1,0 +1,5626 @@
+{
+  "gerado_em": "2026-11-17T16:38:51.452Z",
+  "total": 419,
+  "sem_guarda": 0,
+  "apis": [
+    {
+      "rota": "/api/internal/agents/run",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/mcp",
+      "metodos": [
+        "POST",
+        "GET",
+        "DELETE"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/audit",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/audit/[entryId]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/dashboard/kpis",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/impersonate/end",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/inbox/conversations",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/inbox/conversations/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/incidents",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/incidents/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/incidents/[id]/resolve",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/lgpd/requests",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/lgpd/requests/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/platform-admins",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/health",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/impersonate",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/reactivate",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/suspend",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/usage",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/users",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/admin/users/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/agendamentos",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/google/callback",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/google/connect",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/google/desconectar",
+      "metodos": [
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/horarios-livres",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/agenda/tipos",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "McpCreateSchema, CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/duplicate",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/pause",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/proposals/[pid]/apply",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/publish",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/runs",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "ListQuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/tool-usage",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions/[vid]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions/[vid]/test",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "RunSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/agents/assignable",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/automatico-ativo",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/budget",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/cases",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/cases/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/cases/[id]/reply",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/controle/resumo",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/credentials",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/credentials/[id]",
+      "metodos": [
+        "DELETE"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/credentials/[id]/revalidate",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/decisions/[id]/decide",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/decisions/[id]/executar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/decisions/propose",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/evolution",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "FollowupFlowSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "FollowupFlowSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/disable",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/publish",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/rollback",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "FollowupFlowSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "FollowupEnrollmentSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "GraphSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/pause",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/resume",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/skip",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/snooze",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/promises/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/followups/queue",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/guardrail-layers",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/inbox",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/inbox/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/chave",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "SourceSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "SourceSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]/reindex",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "BodySchema",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]/trechos",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/upload",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "IdSchema",
+      "efeitos": [
+        "storage"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/memory",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/memory/entries",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/memory/entries/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/memory/versions/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/operator-metrics",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/pacing",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "KnobsUpdateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/policies",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/providers",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/providers/[provider]/models",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/routers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|admin|manager)+service-role",
+      "validacao": "RouterSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|admin|manager)+service-role",
+      "validacao": "RouterSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]/members",
+      "metodos": [
+        "PUT"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "PutSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]/test",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/runs",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/skills",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/skills/[name]",
+      "metodos": [
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/skills/[name]/install",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/skills/import",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/ai/usage",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/alertas",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/alertas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/assistente/chat",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/assistente/executar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/atividades",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/attendants/availability",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/attendants/availability/[user_id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/audit",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "QuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/audit/export",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "QuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/auth/realtime-token",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "VaCreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "VaUpdateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]/painel",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]/queue",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automatic-sales/queue/[id]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "DaFilaSchema",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automation-rules",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "AutomationRuleSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automation-rules/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "AutomationRuleSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automation-rules/[id]/runs",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automation-rules/runs",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/automation-rules/runs/[runId]/resend",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "event_log",
+        "e-mail"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/categories",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/categories/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channel-sessions",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "ChannelSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]/qr",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]/reconnect",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channels/official",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channels/partner",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channels/partner/templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channels/partner/templates/media",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/channels/templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/comercial/inativos",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-goals",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/duplicar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/itens",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/mercos",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/orcamento",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/importar-ia",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": true
+    },
+    {
+      "rota": "/api/v1/commercial-orders/importar-mercos",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-orders/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commercial-policies",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commissions",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/commissions/baixas",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "ListQuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/avatar",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/crm-summary",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/proposals/[proposal_id]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/bulk-tag",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/cnpj-lookup",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/contacts/import",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversation-tags",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "ConversationTagsSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "ConversationsQuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/claim",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/close",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/draft-reply",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/mark-read",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/media",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/messages",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "MessagesQuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/no-send",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/notes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "NoteSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/notes/[noteId]",
+      "metodos": [
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/pause-ai",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/reactivate-bot",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/release",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/retention",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/snooze",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/transfer",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/usable-for-rag",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/arquivar-todas",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/counts",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/conversations/open-with-contact",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/copilot/context",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-push",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-refresh",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-sync",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/agent-dispatcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/attendant-heartbeat",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/automatic-sales",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/channel-health",
+      "metodos": [
+        "(sem export nomeado)"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/contact-avatars",
+      "metodos": [
+        "(sem export nomeado)"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/contact-phones",
+      "metodos": [
+        "(sem export nomeado)"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/contact-proposals-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/data-retention",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/event-log-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/expedition-notices",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/fiscal-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/fiscal-entradas-sync",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/followup-flow-worker",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/kb-conversations-batch",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/lgpd-sla-watcher",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/mercos-import",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/meu-dia-alertas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-fit",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-send",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/recover-stuck-messages",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/risk-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/routing-worker",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/snooze-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/storage-redaction",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/sync-model-catalog",
+      "metodos": [
+        "(sem export nomeado)"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/cron/webhook-log-retention",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/demandas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/faturamento",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/conciliacao",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/dashboard",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/fluxo",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/gerar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "FinanceiroSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/pagamentos/[id]",
+      "metodos": [
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "QuerySchema, CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis/[id]/pagamentos",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": true,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/financial-pagaveis",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-cfop-equivalentes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "EquivalenteSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-cfop-equivalentes/[id]",
+      "metodos": [
+        "PUT",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "EquivalenteSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/conferencia",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/ignorar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/importar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/itens/[itemId]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/manifestar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "EntradaSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/xml",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-eventos",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-events/[id]/retransmitir",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-fornecedores",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/consulta",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/importar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/importar-siscomex",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/[id]/retransmitir",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/lacunas",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/puladas",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-jobs",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-manifestacoes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-produtos",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-relatorios",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-settings",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "FiscalSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-settings/certificado",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal-sincronizacoes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal/cadastro-do-cnpj",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fleet",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fleet/drivers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fleet/drivers/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fleet/vehicles",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fleet/vehicles/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/health",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/home/mes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/indicadores/perguntar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/integrations/nuvemshop/callback",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/inventory/movements",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/inventory/sugestoes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/ajustes",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "DaNotaSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/carta-correcao",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "CorrecaoSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/danfe",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/reemitir",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/xml",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/importar-xmls",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/invoices/validar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lead-captures",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "CapturesQuerySchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/lose",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/move",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/next-action",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/reactivation",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/[id]/win",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/at-risk",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/bulk",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/import",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/leads/reactivations",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lgpd/anonymize",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lgpd/requests",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(admin|manager)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]/approve",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": true,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]/preview",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/marca/logo",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "guarda": "platform-admin+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log",
+        "storage"
+      ],
+      "idempotencia": false,
+      "limite": true
+    },
+    {
+      "rota": "/api/v1/mcp/tools",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/message-templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "TemplateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/message-templates/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "TemplateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/messages",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/messages/[id]/media",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/metrics/atrito",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/metrics/attendants",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/notifications/push",
+      "metodos": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/onboarding/whatsapp/qr",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/onboarding/whatsapp/session",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/agent-mapping",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/board",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/stages",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/stages/[stageId]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/pipelines/default",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/price-tables",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/price-tables/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/price-tables/[id]/items",
+      "metodos": [
+        "PUT"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/[id]/images",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/[id]/images/[imageId]",
+      "metodos": [
+        "GET",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "storage"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/afins",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/images",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/import",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/ncm-completar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/products/ncm-sugestao",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/controle",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/executar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/laboratorio",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "requireRole(manager|viewer|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/liberar-reservas",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/painel",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/publico",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/reenviar-falhas-de-pagamento",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/canais",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/midia",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/numeros",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/opcoes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/preview",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PreviewSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/recuperacao",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "DeRecuperacaoSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/recuperacao/preview",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PreviewSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PorRegiaoSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao/cidades",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao/preview",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PreviewSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/consumo",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/mensagens-por-categoria",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PorCategoriaSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/mercado",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/[id]/raio-x",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/categorias",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/disparar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/import",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "BatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/import-arquivo",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "MapsSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/searches",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/searches/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/prospecting/settings",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "PutSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/public/orcamento/[token]",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · —service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/purchase-orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/purchase-orders/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/purchase-orders/[id]/receber",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/radar-compras",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/roadmap",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/rotas",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/sales-brain",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/settings/api-tokens",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/settings/api-tokens/[id]/revoke",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/settings/routing",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "ConfigSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/conciliar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/confirmar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/entrada/confirmar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/rejeitar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/reverter",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/fechamento",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/fechamento/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders/[orderId]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders/[orderId]/proof",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "requireRole(agent|viewer|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "storage"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/romaneio",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/distribuicao",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/finalizar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/geocodificar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/iniciar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/manual",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/ordem",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/otimizar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/otimizar/veiculos",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/posicao",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "requireRole(agent|viewer|manager|admin)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/recuperacoes",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/recuperar",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/sped/arquivo",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/suppliers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/system/agent",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/system/instalacao",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/system/relogio/tick",
+      "metodos": [
+        "POST",
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/system/update",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/system/version",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "sessão+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/tarefas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(viewer|agent|manager|admin)+service-role",
+      "validacao": "CreateSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/tarefas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "PatchSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/canais",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/motorista",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/nome",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/revoke",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/role",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/setor",
+      "metodos": [
+        "PATCH"
+      ],
+      "guarda": "requireRole(admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/assignable",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/team/invite",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "requireRole(admin|manager)+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria",
+        "e-mail"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/titulos",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "fila"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/titulos/baixas",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhook-sources",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "WebhookSourceSchema",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhook-sources/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "guarda": "requireRole(manager|admin)+service-role",
+      "validacao": "WebhookSourceSchema",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhook-sources/[id]/events",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/channel/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "token na rota (HMAC/segredo decifrado)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/in/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "token na rota (HMAC/segredo decifrado)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": true
+    },
+    {
+      "rota": "/api/v1/webhooks/meta/[token]",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "guarda": "token na rota (HMAC/segredo decifrado)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/[event]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-data-request",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-redact",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria",
+        "event_log"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/store-redact",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/waha",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "pública (auth na rota) · secret/bearer+service-role",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/webhooks/waha/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "guarda": "token na rota (HMAC/segredo decifrado)",
+      "validacao": "zod inline",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/auth/confirm",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · sessão+service-role",
+      "validacao": "—",
+      "efeitos": [
+        "auditoria"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/icone-512",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "pública (auth na rota) · —service-role",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    }
+  ]
+}

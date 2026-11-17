@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Buildings, PaperPlaneTilt } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { montarUrlDosFiltros } from "@/lib/prospeccao/url-dos-filtros";
 import { EmptyFilterResults } from "@/components/empty";
 import {
   FilterActions,
@@ -274,6 +275,7 @@ export function EmpresasTab({
   const tagIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const router = useRouter();
+  const pathname = usePathname();
   const paramsUrl = useSearchParams();
   // "Ver empresas" desta busca (B1): uuid vive em busca_id, nunca no campo
   // de texto — link antigo `?busca=<uuid>` também é reconhecido.
@@ -664,23 +666,31 @@ export function EmpresasTab({
   }
 
   // URL state (§40): filtros + ordem + empresa sobrevivem a reload e link.
+  //
+  // A montagem vive em `lib/prospeccao/url-dos-filtros.ts` — pura e testada —,
+  // porque errar isso não dá erro na tela: dá navegação para o alias, remontagem
+  // e a aba voltando sozinha (F-27). Ver `tests/unit/url-dos-filtros.test.ts`.
   React.useEffect(() => {
-    const qs = new URLSearchParams();
-    if (buscaId) qs.set("busca_id", buscaId);
-    if (filtros.busca.trim()) qs.set("busca", filtros.busca.trim());
-    for (const c of filtros.categorias) qs.append("categoria", c);
-    if (filtros.cidade.trim()) qs.set("cidade", filtros.cidade.trim());
-    if (filtros.estado.trim()) qs.set("estado", filtros.estado.trim());
-    if (filtros.status) qs.set("status", filtros.status);
-    if (filtros.notaMin) qs.set("nota_min", filtros.notaMin);
-    if (filtros.comTelefone) qs.set("com_telefone", "true");
-    if (filtros.comWebsite) qs.set("com_website", "true");
-    if (filtros.comWhatsapp) qs.set("com_whatsapp", "true");
-    if (filtros.soSemCliente) qs.set("so_sem_cliente", "true");
-    if (filtros.minhaFila) qs.set("minha_fila", "true");
-    if (ordem !== "relevancia") qs.set("ordem", ordem);
-    if (selecionadoId) qs.set("empresa", selecionadoId);
-    router.replace(`/app/prospeccao${qs.toString() ? `?${qs}` : ""}`, { scroll: false });
+    const alvo = montarUrlDosFiltros(pathname, paramsUrl, {
+      buscaId,
+      busca: filtros.busca,
+      categorias: filtros.categorias,
+      cidade: filtros.cidade,
+      estado: filtros.estado,
+      status: filtros.status,
+      notaMin: filtros.notaMin,
+      comTelefone: filtros.comTelefone,
+      comWebsite: filtros.comWebsite,
+      comWhatsapp: filtros.comWhatsapp,
+      soSemCliente: filtros.soSemCliente,
+      minhaFila: filtros.minhaFila,
+      ordem,
+      selecionadoId,
+    });
+    const atual = `${pathname}${paramsUrl.toString() ? `?${paramsUrl}` : ""}`;
+    // Sem esta guarda, cada render com query em ordem diferente dispara
+    // `replace` de novo (e `replace` re-renderiza).
+    if (alvo !== atual) router.replace(alvo, { scroll: false });
   }, [
     buscaId,
     filtros.busca,
@@ -697,6 +707,8 @@ export function EmpresasTab({
     ordem,
     selecionadoId,
     router,
+    pathname,
+    paramsUrl,
   ]);
 
   type ItemLista = Prospect & { ja_e_cliente: boolean };

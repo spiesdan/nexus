@@ -54,10 +54,7 @@ const IGNORADAS = new Set(["node_modules"]);
  *
  * Lista fechada e curta de propósito — ela é a definição de "um lugar só".
  */
-const A_CAMADA_DE_DATA = new Set([
-  "lib/i18n/datas.ts",
-  "hooks/i18n/useLocaleDeData.ts",
-]);
+const A_CAMADA_DE_DATA = new Set(["lib/i18n/datas.ts", "hooks/i18n/useLocaleDeData.ts"]);
 
 /**
  * Exceções, cada uma com o motivo. SÓ ENCOLHE.
@@ -76,7 +73,8 @@ const FORA_DE_INTERFACE: Record<string, string> = {
   // Traduzir e-mail é um passe próprio: precisa decidir de onde vem o idioma
   // (da organização que convida, presumivelmente), e mexe no teste de template
   // que compara o HTML inteiro.
-  "lib/email/templates/invite.ts": "e-mail: renderizado fora do React; quem recebe convite ainda não tem conta",
+  "lib/email/templates/invite.ts":
+    "e-mail: renderizado fora do React; quem recebe convite ainda não tem conta",
   "lib/lgpd/email-delivery.ts": "e-mail de LGPD: mesma fronteira do convite",
   "lib/lgpd/sla-alarm.ts": "alarme por e-mail: mesma fronteira",
 
@@ -87,7 +85,9 @@ const FORA_DE_INTERFACE: Record<string, string> = {
   // arquivo como caso especial pelo mesmo motivo. Emitir a data dele no idioma
   // da interface faria um documento de conformidade mudar de forma conforme
   // quem apertou o botão.
-  "lib/lgpd/pdf-renderer.tsx": "documento legal brasileiro: a data acompanha a lei, não a interface",
+  "lib/lgpd/pdf-renderer.tsx":
+    "documento legal brasileiro: a data acompanha a lei, não a interface",
+
 };
 
 function arquivos(dir: string, acc: string[] = []): string[] {
@@ -121,7 +121,9 @@ function varrer(padrao: RegExp): string[] {
 function receptorEhData(alvo: ts.Expression, fonte: ts.SourceFile): boolean {
   if (ts.isNewExpression(alvo) && alvo.expression.getText(fonte) === "Date") return true;
   const texto = alvo.getText(fonte);
-  return /\bnew Date\b/.test(texto) || /(^|\.)(data|date|dia|quando|[\w]*_at|[\w]*At)$/i.test(texto);
+  return (
+    /\bnew Date\b/.test(texto) || /(^|\.)(data|date|dia|quando|[\w]*_at|[\w]*At)$/i.test(texto)
+  );
 }
 
 /**
@@ -149,12 +151,52 @@ function varrerDatasNoAst(): string[] {
           } else if (ts.isCallExpression(pai) && ts.isPropertyAccessExpression(pai.expression)) {
             const metodo = pai.expression.name.text;
             if (metodo === "toLocaleDateString" || metodo === "toLocaleTimeString") ehData = true;
-            else if (metodo === "toLocaleString") ehData = receptorEhData(pai.expression.expression, fonte);
+            else if (metodo === "toLocaleString")
+              ehData = receptorEhData(pai.expression.expression, fonte);
           }
           if (ehData) {
             const linha = fonte.getLineAndCharacterOfPosition(no.getStart()).line + 1;
             achados.push(`${rel}:${linha} → ${src.split("\n")[linha - 1]?.trim().slice(0, 90)}`);
           }
+        }
+        ts.forEachChild(no, visita);
+      };
+      visita(fonte);
+    }
+  }
+  return achados;
+}
+
+/**
+ * Data formatada SEM idioma — a lacuna que este guarda tinha.
+ *
+ * Ele cobrava `"pt-BR"` escrito à mão e deixava passar `toLocaleDateString()`
+ * SEM argumento. Medido em 16/11/2026: **10** datas assim, em
+ * `imprimir`, nos painéis do agente e na home. Sem argumento, quem decide é o
+ * NAVEGADOR — quem escolheu espanhol na interface via `12/25/2026`.
+ *
+ * É a mesma classe de defeito por outro caminho: antes o idioma era fixo em
+ * português; agora era o do sistema. Nos dois casos, não é o de quem lê.
+ */
+function varrerDatasSemIdioma(): string[] {
+  const achados: string[] = [];
+  for (const area of AREAS) {
+    for (const arq of arquivos(join(RAIZ, area))) {
+      const rel = relative(RAIZ, arq).split(sep).join("/");
+      if (A_CAMADA_DE_DATA.has(rel) || rel in FORA_DE_INTERFACE) continue;
+      const src = readFileSync(arq, "utf8");
+      if (!src.includes("toLocale")) continue;
+      const fonte = ts.createSourceFile(arq, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+      const visita = (no: ts.Node): void => {
+        if (
+          ts.isCallExpression(no) &&
+          ts.isPropertyAccessExpression(no.expression) &&
+          /^toLocale(DateString|TimeString|String)$/.test(no.expression.name.text) &&
+          (no.arguments?.length ?? 0) === 0 &&
+          receptorEhData(no.expression.expression, fonte)
+        ) {
+          const linha = fonte.getLineAndCharacterOfPosition(no.getStart()).line + 1;
+          achados.push(`${rel}:${linha} → ${src.split("\n")[linha - 1]?.trim().slice(0, 90)}`);
         }
         ts.forEachChild(no, visita);
       };
@@ -177,10 +219,13 @@ describe("a camada de data traduz de verdade", () => {
   it("a data REALMENTE muda de idioma — não é só um objeto diferente", async () => {
     const { format } = await import("date-fns");
     const dia = new Date("2026-03-05T12:00:00Z");
-    const saidas = IDIOMAS.map((i) => format(dia, "EEEE, d 'de' MMMM", { locale: localeDeData(i) }));
-    expect(new Set(saidas).size, `os idiomas renderizaram a mesma data: ${saidas.join(" | ")}`).toBe(
-      IDIOMAS.length,
+    const saidas = IDIOMAS.map((i) =>
+      format(dia, "EEEE, d 'de' MMMM", { locale: localeDeData(i) }),
     );
+    expect(
+      new Set(saidas).size,
+      `os idiomas renderizaram a mesma data: ${saidas.join(" | ")}`,
+    ).toBe(IDIOMAS.length);
     // E o português continua o que era — a camada acrescenta idioma, não muda o
     // que quem já usava enxerga.
     expect(saidas[0]).toBe("quinta-feira, 5 de março");
@@ -220,6 +265,18 @@ describe("ninguém fixa o idioma da data fora da camada", () => {
     expect(
       vazando,
       `${vazando.length} data(s) com o idioma fixo em "pt-BR". Use \`useTagDeIdioma()\`.`,
+    ).toEqual([]);
+  });
+
+  it("nenhuma DATA é formatada sem idioma (o do navegador não é o de quem lê)", () => {
+    // `toLocaleDateString()` sem argumento usa o locale do SISTEMA. O guarda
+    // anterior cobria o idioma FIXO e não cobria a AUSÊNCIA — e a ausência é
+    // mais fácil de escrever sem perceber, porque não tem import que denuncie.
+    const vazando = varrerDatasSemIdioma();
+    expect(
+      vazando,
+      `${vazando.length} data(s) sem idioma. Passe \`tagDoIdioma\` (de ` +
+        "`useTagDeIdioma()`) — sem argumento, quem escolhe é o navegador.",
     ).toEqual([]);
   });
 });

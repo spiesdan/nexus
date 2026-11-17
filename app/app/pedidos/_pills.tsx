@@ -20,9 +20,8 @@ const VARIANTE_DO_STATUS: Record<StatusDoPedido, "amber" | "warning" | "sky" | "
   cancelado: "neutral",
 };
 
-/** Rótulo da pill: rascunho aparece como "Em orçamento", como no Mercos. */
+/** Rótulo da pill — vem do vocabulário único (`ROTULO_DO_STATUS`). */
 export function rotuloDaPill(status: StatusDoPedido): string {
-  if (status === "rascunho") return "Em orçamento";
   return ROTULO_DO_STATUS[status] ?? status;
 }
 

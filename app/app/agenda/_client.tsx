@@ -67,6 +67,8 @@ export function AgendaClient({
   fusoDeApresentacao,
   googleConfigurado,
   contaConectada,
+  ultimaSincronizacao,
+  erroDeSincronizacao,
   enderecoDeRetorno,
   faltaNoGoogle,
   linkDeConfiguracaoDoGoogle,
@@ -76,6 +78,10 @@ export function AgendaClient({
   fusoDeApresentacao: string | null;
   googleConfigurado: boolean;
   contaConectada?: string | null;
+  /** Quando os eventos do Google entraram pela última vez (null = nunca). */
+  ultimaSincronizacao?: string | null;
+  /** O último erro de sincronização, se houver — mostrado na tela, não no log. */
+  erroDeSincronizacao?: string | null;
   enderecoDeRetorno?: string;
   faltaNoGoogle: string[];
   /** Preenchido só para quem administra a instalação — ver `page.tsx`. */
@@ -316,6 +322,8 @@ export function AgendaClient({
         falta={faltaNoGoogle}
         linkDeConfiguracao={linkDeConfiguracaoDoGoogle}
         contaConectada={contaConectada}
+        ultimaSincronizacao={ultimaSincronizacao}
+        erroDeSincronizacao={erroDeSincronizacao}
         enderecoDeRetorno={enderecoDeRetorno}
       />
 

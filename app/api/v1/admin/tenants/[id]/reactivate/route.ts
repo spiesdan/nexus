@@ -10,7 +10,7 @@ import { type NextRequest } from "next/server";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
-import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
+import { escopoPermiteEscrita, requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
@@ -34,6 +34,17 @@ export async function POST(
     adminCtx = await requirePlatformAdmin();
   } catch {
     return fail("forbidden", "Platform admin required", 403, { requestId });
+  }
+
+  // `support_readonly` enxerga tudo e não escreve. Antes o escopo era lido e
+  // nunca comparado: um admin de suporte podia suspender, criar e impersonar.
+  if (!escopoPermiteEscrita(adminCtx.platformAdmin.scope)) {
+    return fail(
+      "forbidden_scope",
+      "Seu acesso de plataforma é somente leitura. Peça a um administrador com escopo full.",
+      403,
+      { requestId },
+    );
   }
 
   // Validate body

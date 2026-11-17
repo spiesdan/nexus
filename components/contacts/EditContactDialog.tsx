@@ -66,6 +66,9 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
       name: contact.name ?? "",
       email: contact.email ?? "",
       phone_number: contact.phone_number ? phoneForDisplay(contact.phone_number) : "",
+      // O CPF não volta em texto (LGPD): campo começa vazio e só substitui se
+      // a pessoa digitar um novo.
+      cpf: "",
       cnpj: contact.cnpj ? formatarCnpj(contact.cnpj) : "",
       fantasia: contact.fantasia ?? "",
       ie: contact.ie ?? "",
@@ -81,6 +84,7 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
         name: contact.name ?? "",
         email: contact.email ?? "",
         phone_number: contact.phone_number ? phoneForDisplay(contact.phone_number) : "",
+        cpf: "",
         cnpj: contact.cnpj ? formatarCnpj(contact.cnpj) : "",
         fantasia: contact.fantasia ?? "",
         ie: contact.ie ?? "",
@@ -100,6 +104,12 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
       payload.cnpj = values.cnpj?.trim() ? values.cnpj.trim() : null;
       payload.fantasia = values.fantasia?.trim() ? values.fantasia.trim() : null;
       payload.ie = values.ie?.trim() ? values.ie.trim() : null;
+    } else {
+      // CPF vazio NÃO apaga o que já existe: o campo volta em branco (LGPD) e
+      // só um número digitado substitui. O CNPJ é limpo ao virar pessoa física.
+      const cpf = (values.cpf ?? "").replace(/\D/g, "");
+      if (cpf !== "") payload.cpf = cpf;
+      payload.cnpj = null;
     }
     const e = endereco;
     payload.logradouro = e.logradouro.trim() || null;
@@ -152,6 +162,10 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
                   if (d.email) form.setValue("email", d.email);
                   if (d.phone_number) form.setValue("phone_number", d.phone_number);
                   if (d.fantasia) form.setValue("fantasia", d.fantasia);
+                  // Só preenche se está vazio: a IE digitada no cadastro manda.
+                  if (d.ie && !(form.getValues("ie") ?? "").trim()) {
+                    form.setValue("ie", d.ie);
+                  }
                   setEndereco({
                     logradouro: d.logradouro ?? "",
                     numero_end: d.numero_end ?? "",
@@ -179,6 +193,23 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
             <Label htmlFor="ec-name">{tipo === "J" ? t("Razão social") : t("Nome completo")}</Label>
             <Input id="ec-name" {...form.register("name")} />
           </div>
+          {tipo === "F" && (
+            <div className="space-y-2">
+              <Label htmlFor="ec-cpf">{t("CPF")}</Label>
+              <Input
+                id="ec-cpf"
+                inputMode="numeric"
+                maxLength={14}
+                placeholder="000.000.000-00"
+                {...form.register("cpf")}
+              />
+              <p className="text-xs text-muted-foreground">
+                {contact.cpf_hash
+                  ? t("Já existe um CPF cadastrado (protegido por LGPD). Digite um novo para substituir.")
+                  : t("O CPF é guardado cifrado e aparece mascarado na ficha.")}
+              </p>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="ec-email">Email</Label>
             <Input id="ec-email" type="email" {...form.register("email")} />

@@ -11,6 +11,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { roleAtLeast } from "@/lib/auth/types";
 import { logger } from "@/lib/logger";
 import {
   carregarContatosDaEntrega,
@@ -166,6 +167,27 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     if (statusAtual === "concluida" || statusAtual === "cancelada") {
       return fail("validation_failed", "Carga encerrada não muda de status.", 422, { requestId });
     }
+    // ─── em_rota NÃO VOLTA ────────────────────────────────────────────────
+    //
+    // A carga já saiu, os clientes foram avisados e os pedidos viraram
+    // `em_rota`. Rebaixar para `montando` deixaria o banco dizendo "montando"
+    // com o caminhão na rua — e o PATCH aceitava isso de qualquer `agent`.
+    // Cancelar uma rota em andamento é decisão de gerente.
+    if (statusAtual === "em_rota" && parsed.data.status === "montando") {
+      return fail("validation_failed", "Rota em andamento não volta para 'montando'.", 422, {
+        requestId,
+      });
+    }
+    if (
+      statusAtual === "em_rota" &&
+      parsed.data.status === "cancelada" &&
+      !authz.user.is_platform_admin &&
+      !roleAtLeast(authz.org.role, "manager")
+    ) {
+      return fail("forbidden_role", "Cancelar uma rota em andamento exige gerente.", 403, {
+        requestId,
+      });
+    }
     if (parsed.data.status === "em_rota" && statusAtual === "montando") {
       // Conferência §49 (mesma regra do iniciar — ver lib/entregas/separacao).
       const naoSeparados = qtdNaoSeparados(antes.itens);
@@ -220,6 +242,11 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
     resourceType: "shipments",
     resourceId: id,
     requestId,
+    metadata: {
+      status_antes: statusAtual,
+      status_depois: (parsed.data.status as string | undefined) ?? statusAtual,
+      campos: Object.keys(parsed.data),
+    },
   });
 
   return ok(data, { requestId });

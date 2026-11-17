@@ -11,7 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { guardrailItemSchema, type GuardrailItem, type GuardrailKind } from "@/lib/ai/guardrails-schema";
+import {
+  guardrailItemSchema,
+  type GuardrailItem,
+  type GuardrailKind,
+} from "@/lib/ai/guardrails-schema";
 import { useT } from "@/hooks/i18n/useT";
 
 interface Props {
@@ -28,7 +32,10 @@ const KIND_LABELS: Record<GuardrailKind, string> = {
   contact_flag: "Contact flag",
 };
 
-function defaultForKind(kind: GuardrailKind, t: (texto: string) => string = (texto) => texto): GuardrailItem {
+function defaultForKind(
+  kind: GuardrailKind,
+  t: (texto: string) => string = (texto) => texto,
+): GuardrailItem {
   switch (kind) {
     case "regex_output_block":
       return {
@@ -91,7 +98,7 @@ export function GuardrailsEditor({ value, onChange, disabled }: Props) {
             onValueChange={(v) => setPendingKind(v as GuardrailKind)}
             disabled={disabled}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label={t("Tipo do novo guardrail")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -123,7 +130,7 @@ export function GuardrailsEditor({ value, onChange, disabled }: Props) {
                 className={`rounded-2xl border p-3 ${invalid ? "border-destructive/60" : ""}`}
               >
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <span className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
                     {t(KIND_LABELS[item.kind])}
                   </span>
                   <Button
@@ -165,6 +172,7 @@ function GuardrailFields({
     <div className="space-y-1">
       <Label className="text-xs">{t("Motivo")}</Label>
       <Input
+        aria-label={t("Motivo")}
         value={item.reason}
         onChange={(e) => onPatch({ reason: e.target.value } as Partial<GuardrailItem>)}
         disabled={disabled}
@@ -178,6 +186,7 @@ function GuardrailFields({
         <div className="space-y-1 md:col-span-2">
           <Label className="text-xs">Pattern (regex)</Label>
           <Input
+            aria-label="Pattern (regex)"
             value={item.pattern}
             onChange={(e) => onPatch({ pattern: e.target.value } as Partial<GuardrailItem>)}
             disabled={disabled}
@@ -187,6 +196,7 @@ function GuardrailFields({
         <div className="space-y-1">
           <Label className="text-xs">Flags</Label>
           <Input
+            aria-label="Flags"
             value={item.flags ?? "i"}
             onChange={(e) => onPatch({ flags: e.target.value } as Partial<GuardrailItem>)}
             disabled={disabled}
@@ -204,6 +214,7 @@ function GuardrailFields({
         <div className="space-y-1">
           <Label className="text-xs">{t("Citações mínimas")}</Label>
           <Input
+            aria-label={t("Citações mínimas")}
             type="number"
             min={1}
             max={10}
@@ -227,6 +238,7 @@ function GuardrailFields({
         <div className="space-y-1">
           <Label className="text-xs">{t("Hora início (0-23)")}</Label>
           <Input
+            aria-label={t("Hora início (0-23)")}
             type="number"
             min={0}
             max={23}
@@ -240,6 +252,7 @@ function GuardrailFields({
         <div className="space-y-1">
           <Label className="text-xs">{t("Hora fim (0-23)")}</Label>
           <Input
+            aria-label={t("Hora fim (0-23)")}
             type="number"
             min={0}
             max={23}
@@ -253,6 +266,7 @@ function GuardrailFields({
         <div className="space-y-1 md:col-span-2">
           <Label className="text-xs">Timezone</Label>
           <Input
+            aria-label="Timezone"
             value={item.timezone ?? "America/Sao_Paulo"}
             onChange={(e) => onPatch({ timezone: e.target.value } as Partial<GuardrailItem>)}
             disabled={disabled}
@@ -271,11 +285,13 @@ function GuardrailFields({
         <Select
           value={item.field}
           onValueChange={(v) =>
-            onPatch({ field: v as "force_human" | "is_blocked" | "is_vip" } as Partial<GuardrailItem>)
+            onPatch({
+              field: v as "force_human" | "is_blocked" | "is_vip",
+            } as Partial<GuardrailItem>)
           }
           disabled={disabled}
         >
-          <SelectTrigger>
+          <SelectTrigger aria-label={t("Campo")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

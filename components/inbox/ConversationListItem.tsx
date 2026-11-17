@@ -79,6 +79,19 @@ const COR_DO_COMANDO: Record<string, string> = {
   encerrada: "bg-muted-foreground/30",
 };
 
+/**
+ * O ponto diz QUEM está no comando — e cor sozinha não diz nada a quem não a
+ * distingue. O `aria-label` (e o `title`) é o que transforma o ponto em
+ * informação: antes ele era `aria-hidden` e a única pista era o matiz.
+ */
+const ROTULO_DO_COMANDO: Record<string, string> = {
+  humano: "Atendente no comando",
+  automatico: "Assistente no comando",
+  aguardando: "Aguardando atendente",
+  ninguem: "Sem responsável",
+  encerrada: "Conversa encerrada",
+};
+
 function initials(name: string | null | undefined, fallback: string): string {
   const v = (name ?? "").trim();
   if (!v) return fallback.slice(0, 2).toUpperCase();
@@ -154,6 +167,8 @@ export function ConversationListItem({
   });
   const isAi = comando.quem === "automatico";
   const dot = COR_DO_COMANDO[comando.quem] ?? COR_DO_COMANDO.ninguem;
+  const rotuloDoComando =
+    ROTULO_DO_COMANDO[comando.quem] ?? ROTULO_DO_COMANDO.ninguem ?? "Sem responsável";
 
   // O número DA EMPRESA por onde esta conversa chegou — não o do cliente. Com
   // dois canais é o que decide o tom da resposta e qual número a pessoa vê
@@ -192,7 +207,9 @@ export function ConversationListItem({
             "absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border border-background",
             dot,
           )}
-          aria-hidden
+          role="img"
+          aria-label={t(rotuloDoComando)}
+          title={t(rotuloDoComando)}
         />
       </div>
 

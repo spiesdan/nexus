@@ -77,6 +77,9 @@ const KNOWN_DEBT: { reason: string; files: string[] }[] = [
       "app/api/v1/messages/[id]/media/route.ts",
       "app/api/v1/onboarding/whatsapp/qr/route.ts",
       "app/api/v1/onboarding/whatsapp/session/route.ts",
+      // O teste da rota acima dubla o cliente do transporte para provar a ordem
+      // guarda→transporte; mesma natureza dos outros testes de rota desta lista.
+      "app/api/v1/onboarding/whatsapp/session/route.test.ts",
       "app/api/v1/webhooks/waha/[token]/route.ts",
       "app/api/v1/webhooks/waha/route.ts",
       // (#118) Lê `process.env.WAHA_API_BASE_URL`/`WAHA_API_KEY` só para

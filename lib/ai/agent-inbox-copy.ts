@@ -34,10 +34,12 @@ export const KIND_LABEL = {
   // negócio precisa saber que um atendimento saiu capado, não que um token
   // colidiu. O motivo técnico fica no corpo do aviso, para quem for investigar.
   capabilities_missing: "Um atendimento saiu sem as ferramentas que você ligou",
-  // Diz o que o CLIENTE viu, não o que o worker registrou: uma resposta que
-  // ficou "enviando" para sempre é, do lado de lá, uma mensagem que nunca
-  // chegou. O motivo técnico fica no corpo do aviso.
-  message_send_stuck: "Uma resposta ficou presa e não chegou ao cliente",
+  // Diz o que o SISTEMA SABE, não mais do que isso: uma resposta que ficou
+  // "enviando" pode ter saído (o transporte aceitou e o ack se perdeu) ou não
+  // ter saído (o envio parou antes). A versão anterior afirmava "não chegou ao
+  // cliente" para os dois casos — e mandava o dono reenviar uma mensagem que
+  // já estava no celular do cliente. O corpo do aviso separa as duas causas.
+  message_send_stuck: "Uma resposta ficou sem confirmação de envio",
   midia_nao_lida: "O agente não conseguiu ler uma foto ou áudio que o cliente enviou",
   // Diz o que o CLIENTE está esperando, não o que o sistema deixou de gravar.
   // "Promessa não cumprida" é a única frase que faz o dono do negócio agir: do

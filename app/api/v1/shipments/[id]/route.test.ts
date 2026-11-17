@@ -144,3 +144,54 @@ describe("DELETE /api/v1/shipments/[id]", () => {
     expect(chamadas.some((c) => c.tabela === "commercial_orders" && c.op === "update")).toBe(false);
   });
 });
+
+/**
+ * PATCH — a rota em andamento não regride.
+ *
+ * A carga já saiu, os clientes foram avisados e os pedidos viraram `em_rota`.
+ * Aceitar `em_rota → montando` deixava o banco dizendo "montando" com o
+ * caminhão na rua; cancelar uma rota em andamento é decisão de gerente, não do
+ * mesmo `agent` que a iniciou.
+ */
+function patch(id: string, corpo: unknown): Promise<Response> {
+  return import("./route").then(({ PATCH }) =>
+    PATCH(
+      new NextRequest(`http://localhost/api/v1/shipments/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(corpo),
+        headers: { "content-type": "application/json" },
+      }),
+      { params: Promise.resolve({ id }) },
+    ),
+  );
+}
+
+describe("PATCH /api/v1/shipments/[id] — transição de status", () => {
+  it("em_rota NÃO volta para montando", async () => {
+    vi.mocked(createClient).mockResolvedValue({ from: fake(tabelas("em_rota")) } as never);
+    const res = await patch("s1", { status: "montando" });
+    expect(res.status).toBe(422);
+  });
+
+  it("agent NÃO cancela rota em andamento", async () => {
+    vi.mocked(requireRole).mockResolvedValue({
+      ok: true,
+      user: { id: "u1" },
+      org: { orgId: ORG_ID, role: "agent" },
+    } as never);
+    vi.mocked(createClient).mockResolvedValue({ from: fake(tabelas("em_rota")) } as never);
+    const res = await patch("s1", { status: "cancelada" });
+    expect(res.status).toBe(403);
+  });
+
+  it("manager cancela rota em andamento", async () => {
+    vi.mocked(requireRole).mockResolvedValue({
+      ok: true,
+      user: { id: "u1" },
+      org: { orgId: ORG_ID, role: "manager" },
+    } as never);
+    vi.mocked(createClient).mockResolvedValue({ from: fake(tabelas("em_rota")) } as never);
+    const res = await patch("s1", { status: "cancelada" });
+    expect(res.status).toBe(200);
+  });
+});

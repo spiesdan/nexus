@@ -98,6 +98,14 @@
   --color-amber: #ffa600;
   --color-sky: #2c78fc;
   --color-magenta: #d6409f;
+  /* `--color-*` da paleta de categoria é cor de GRÁFICO e tag decorativa:
+     como texto de 12 px sobre `surface`, reprova AA no tema claro (amber
+     1,96:1; mint 2,22:1; ember 3,53:1; sky 4,04:1; magenta 4,12:1 —
+     medidos em 17/11/2026). Os `-fg` são os tons de TEXTO, mesma família. */
+  --color-amber-fg: #8a5200;
+  --color-sky-fg: #1d56b0;
+  --color-ember-fg: #b32b00;
+  --color-magenta-fg: #a3246f;
   --color-ember: #ff3e00;
 
   /* Neutrals — grayscale (11 stops, light). O 900 é o Carbon. */
@@ -319,6 +327,14 @@
   --color-amber: #ffa600;
   --color-sky: #2c78fc;
   --color-magenta: #d6409f;
+  /* `--color-*` da paleta de categoria é cor de GRÁFICO e tag decorativa:
+     como texto de 12 px sobre `surface`, reprova AA no tema claro (amber
+     1,96:1; mint 2,22:1; ember 3,53:1; sky 4,04:1; magenta 4,12:1 —
+     medidos em 17/11/2026). Os `-fg` são os tons de TEXTO, mesma família. */
+  --color-amber-fg: #8a5200;
+  --color-sky-fg: #1d56b0;
+  --color-ember-fg: #b32b00;
+  --color-magenta-fg: #a3246f;
   --color-ember: #ff3e00;
   --color-neutral-50: #fafafa;
   --color-neutral-100: #f5f5f5;
@@ -402,7 +418,19 @@
      token semântico de texto secundário. O par está travado em
      `tests/unit/tailwind-tokens.test.ts`. */
   --color-text-muted: #909090;
-  --color-text-subtle: #5e5e5e;
+  /* #5e5e5e era o valor do tema CLARO repetido aqui: sobre `--color-bg`
+     (#151515) dava **2,82:1** — medido em 16/11/2026 pelo instrumento de
+     contraste, no texto de 11 px da lista de pedidos ("Hoje", "13 pedidos ·
+     R$ 605,80") e em todo meta de linha. O irmão `--color-text-muted` já tinha
+     sido corrigido para #909090 pelo mesmo motivo (ver comentário acima); o
+     `subtle` ficou para trás porque o gate o excluía como "decoração" — e ele
+     não é: são 73 usos, muitos deles texto que se lê.
+     #8d8d8d é o menor degrau que passa AA nos dois fundos onde ele aparece
+     (4,9:1 sobre `bg`, 4,5:1 sobre `surface-elevated`). O preço é a rampa
+     comprimir: `subtle` fica a 3 unidades de `muted`. A alternativa — deixar
+     abaixo de AA — não é opção para texto. Se o desenho quiser mais separação,
+     o caminho é subir o `muted`, não descer este. */
+  --color-text-subtle: #8d8d8d;
 
   /* Borders (dark) */
   --color-border: #313131;
@@ -430,10 +458,19 @@
   --color-lavender: #918df6;
   --color-iris: #9580ff;
   --color-mint: #33c758;
-  --color-mint-wash: #def6e4;
+  /* O wash NÃO acompanhava o tema: seguia o pálido do claro (#def6e4) sobre
+     uma página #151515, e o selo `mint` ficava ilegível nos dois temas
+     (1,95:1, medido em 16/11/2026). No escuro o wash é o mesmo verde com
+     alfa sobre o fundo — lavagem sobre escuro, não sobre branco. */
+  --color-mint-wash: rgba(51, 199, 88, 0.16);
   --color-amber: #ffa600;
   --color-sky: #2c78fc;
   --color-magenta: #d6409f;
+  /* Tons de texto da paleta de categoria no escuro (≥ 6,7:1 sobre #1c1c1c). */
+  --color-amber-fg: #ffc46b;
+  --color-sky-fg: #8ab4ff;
+  --color-ember-fg: #ff9b80;
+  --color-magenta-fg: #f07ac0;
   --color-ember: #ff3e00;
 
   /* Neutrals — cinza neutro (11 stops, dark — mesma luminância da era greige) */
@@ -592,6 +629,10 @@
   --color-amber: var(--color-amber);
   --color-sky: var(--color-sky);
   --color-magenta: var(--color-magenta);
+  --color-amber-fg: var(--color-amber-fg);
+  --color-sky-fg: var(--color-sky-fg);
+  --color-ember-fg: var(--color-ember-fg);
+  --color-magenta-fg: var(--color-magenta-fg);
   --color-ember: var(--color-ember);
 
   /* Aliases shadcn (consumers ainda não migrados). Espelham 1:1 o que o
@@ -1132,4 +1173,34 @@
    ───────────────────────────────────────────────────────────────────────── */
 body {
   cursor: default;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   MOVIMENTO REDUZIDO, GLOBAL.
+
+   O `uimaxxing.css` já respeita `prefers-reduced-motion` — mas em TRÊS
+   componentes nomeados (`.pointer-cursor`, `.roll-in`, `.caret-smooth`). O resto
+   do produto anima igual com a preferência ligada: medido em 16/11/2026 pelo
+   instrumento `teclado-e-foco.mjs`, **18 de 20** elementos amostrados mantinham
+   `transition-duration` > 0 com `reducedMotion: reduce` emulado.
+
+   Para quem tem sensibilidade vestibular, transição de 150 ms não é enfeite: é
+   desconforto. A regra abaixo é a universal — reduz a duração a quase zero em
+   vez de remover a propriedade, porque `transitionend`/`animationend` ainda
+   precisa disparar (há componente que fecha por evento, e `transition: none`
+   deixaria a promessa pendurada).
+
+   `!important` aqui é intencional e é o único jeito: as classes utilitárias do
+   Tailwind (`transition`, `animate-*`) vêm com especificidade própria, e sem
+   `!important` elas venceriam por ordem.
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

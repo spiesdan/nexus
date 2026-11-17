@@ -1,0 +1,2476 @@
+{
+  "geradoEm": "2026-11-16T08:11:42.711Z",
+  "telas": [
+    {
+      "rota": "/",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/login",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/login/forgot",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/login/mfa",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/login/recovery",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/login/reset",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/signup",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/403",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/500",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/503",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/account-suspended",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin",
+      "abas": [],
+      "modais": [],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Menu de navegação",
+          "arquivo": "components/admin/AdminShell.tsx",
+          "linha": 42
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/audit",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/audit/[entryId]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/dashboard",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/google",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/inbox",
+      "abas": [
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/admin/(protected)/inbox/_components/InboxList.tsx",
+          "linha": 176
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/inbox/[conversationId]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/incidents",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/incidents/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/lgpd",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/lgpd/requests/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/marca",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/tenants",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/tenants/[id]",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "em breve",
+          "arquivo": "app/admin/(protected)/tenants/[id]/_tab-nav.tsx",
+          "linha": 39
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/tenants/[id]/health",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/usage",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/users",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/users/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/forbidden",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/MobileDock.tsx",
+          "linha": 83
+        },
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/Sidebar.tsx",
+          "linha": 124
+        },
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/Sidebar.tsx",
+          "linha": 161
+        },
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/Sidebar.tsx",
+          "linha": 187
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/agenda",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/agenda/HistoricoDaAgenda.tsx",
+          "linha": 98
+        }
+      ],
+      "modais": [],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Remarcar agendamento / Novo agendamento",
+          "arquivo": "app/app/agenda/_client.tsx",
+          "linha": 363
+        },
+        {
+          "tipo": "gaveta",
+          "rotulo": "Cancelar agendamento",
+          "arquivo": "app/app/agenda/_client.tsx",
+          "linha": 487
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/agents",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Renomear agent",
+          "arquivo": "app/app/ai/agents/_components/RenameAgentDialog.tsx",
+          "linha": 55
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/agents/[id]",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentForm.tsx",
+          "linha": 527
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Configuração",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 55
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Teste",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 56
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Capacidades",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 59
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Execuções",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 60
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Histórico",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 61
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Propostas",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentTabs.tsx",
+          "linha": 62
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Geral",
+          "arquivo": "components/ai/AgentEditor.tsx",
+          "linha": 196
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Modelo",
+          "arquivo": "components/ai/AgentEditor.tsx",
+          "linha": 197
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "RAG",
+          "arquivo": "components/ai/AgentEditor.tsx",
+          "linha": 198
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Guardrails",
+          "arquivo": "components/ai/AgentEditor.tsx",
+          "linha": 199
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Diff",
+          "arquivo": "app/app/ai/agents/[id]/_components/VersionHistory.tsx",
+          "linha": 166
+        }
+      ],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Execução",
+          "arquivo": "app/app/ai/agents/[id]/_components/RunDetailDrawer.tsx",
+          "linha": 52
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/agents/new",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentForm.tsx",
+          "linha": 527
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/cases",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Abertos",
+          "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
+          "linha": 28
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Concluídos",
+          "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
+          "linha": 29
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "Contato sem nome",
+          "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
+          "linha": 85
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/controle",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar credencial",
+          "arquivo": "app/app/ai/credentials/_components/AddCredentialDialog.tsx",
+          "linha": 141
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Aguardando decisão",
+          "arquivo": "app/app/ai/decisoes/_components/DecisoesList.tsx",
+          "linha": 118
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Já decididas",
+          "arquivo": "app/app/ai/decisoes/_components/DecisoesList.tsx",
+          "linha": 122
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/evolution",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/followups",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Fluxos",
+          "arquivo": "app/app/ai/followups/page.tsx",
+          "linha": 46
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Fila",
+          "arquivo": "app/app/ai/followups/page.tsx",
+          "linha": 47
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Novo fluxo de follow-up",
+          "arquivo": "app/app/ai/followups/_components/NewFlowDialog.tsx",
+          "linha": 67
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/followups/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Adicionar nó",
+          "arquivo": "app/app/ai/followups/[id]/_components/FlowCanvas.tsx",
+          "linha": 263
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/followups/enrollments/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adiar o próximo passo",
+          "arquivo": "app/app/ai/followups/enrollments/[id]/_components/DossieDoFollowup.tsx",
+          "linha": 350
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Por onde seguir?",
+          "arquivo": "app/app/ai/followups/enrollments/[id]/_components/DossieDoFollowup.tsx",
+          "linha": 404
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Abertos",
+          "arquivo": "app/app/ai/inbox/_components/AgentInboxList.tsx",
+          "linha": 32
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Resolvidos",
+          "arquivo": "app/app/ai/inbox/_components/AgentInboxList.tsx",
+          "linha": 35
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Ensinar algo novo ao agente",
+          "arquivo": "components/ai/NovoMaterialDialog.tsx",
+          "linha": 129
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/memory",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Versão",
+          "arquivo": "app/app/ai/memory/_client.tsx",
+          "linha": 328
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Aguardando decisão",
+          "arquivo": "app/app/ai/proposals/_components/ProposalsList.tsx",
+          "linha": 37
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Já decididas",
+          "arquivo": "app/app/ai/proposals/_components/ProposalsList.tsx",
+          "linha": 41
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/providers",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/routers",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentForm.tsx",
+          "linha": 527
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Novo roteador",
+          "arquivo": "app/app/ai/routers/_client.tsx",
+          "linha": 156
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/routers/[id]",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/ai/agents/[id]/_components/AgentForm.tsx",
+          "linha": 527
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/runs",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/skills",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/ai/usage",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Orçamento de IA",
+          "arquivo": "components/ai/BudgetCard.tsx",
+          "linha": 331
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/audit",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/busca",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/campanhas",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Campanha",
+          "arquivo": "app/app/campanhas/_client.tsx",
+          "linha": 47
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Prospecção",
+          "arquivo": "app/app/campanhas/_client.tsx",
+          "linha": 48
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 285
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 286
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 293
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 302
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 311
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 321
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Campanha por região",
+          "arquivo": "app/app/campanhas/_criar-regiao.tsx",
+          "linha": 257
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Enviar mensagem para   empresas",
+          "arquivo": "app/app/prospeccao/_disparo.tsx",
+          "linha": 398
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Importar arquivo",
+          "arquivo": "app/app/prospeccao/_importar-arquivo.tsx",
+          "linha": 95
+        }
+      ],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/ContextualDrawer.tsx",
+          "linha": 37
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/carteira",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/comissoes",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/compras",
+      "abas": [
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "Pedidos",
+          "arquivo": "app/app/compras/_client.tsx",
+          "linha": 113
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "Fornecedores",
+          "arquivo": "app/app/compras/_client.tsx",
+          "linha": 121
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Nova compra",
+          "arquivo": "app/app/compras/_client.tsx",
+          "linha": 500
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Novo fornecedor",
+          "arquivo": "app/app/compras/_client.tsx",
+          "linha": 652
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/compras/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/compras/[id]/_client.tsx",
+          "linha": 285
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/connections",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Números por QR",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 39
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "API Oficial (Meta)",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 40
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Provedor parceiro",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 42
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Conexão",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 53
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Modelos do parceiro",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 54
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Conexão",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 68
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Templates da Meta",
+          "arquivo": "components/connections/ConexoesShell.tsx",
+          "linha": 70
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/contacts",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa jurídica",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 126
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa física",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 127
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Importar clientes de planilha",
+          "arquivo": "components/contacts/ImportContactsDialog.tsx",
+          "linha": 64
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Novo cliente",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 119
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/contacts/[id]",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Visão geral",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 107
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Pedidos",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 108
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Produtos",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 111
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Financeiro",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 114
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "WhatsApp",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 115
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Histórico",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 116
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Oportunidades",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 117
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Inteligência",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 120
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "LGPD",
+          "arquivo": "app/app/contacts/[id]/_client.tsx",
+          "linha": 121
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa jurídica",
+          "arquivo": "components/contacts/EditContactDialog.tsx",
+          "linha": 137
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa física",
+          "arquivo": "components/contacts/EditContactDialog.tsx",
+          "linha": 138
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Anonimizar cliente (LGPD)",
+          "arquivo": "components/contacts/AnonymizeDialog.tsx",
+          "linha": 67
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Editar cliente",
+          "arquivo": "components/contacts/EditContactDialog.tsx",
+          "linha": 132
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/estoque",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Novo movimento",
+          "arquivo": "app/app/estoque/_client.tsx",
+          "linha": 650
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar pedido à carga",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1264
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Veículo e motorista",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1353
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 581
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar carga",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1382
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 754
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/[id]/fechamento",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar pedido à carga",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1264
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Veículo e motorista",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1353
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 581
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar carga",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1382
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 754
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/[id]/motorista",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar pedido à carga",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1264
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Veículo e motorista",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1353
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 581
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar carga",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1382
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 754
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/[id]/rota",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar pedido à carga",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1264
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Veículo e motorista",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1353
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 581
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar carga",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1382
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 754
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/nova",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/faturamento",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/financeiro",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Contas a receber",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 255
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Contas a pagar",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 256
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Cobranças",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 257
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Conciliação",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 258
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Fluxo de caixa",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 259
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Títulos",
+          "arquivo": "app/app/financeiro/_client.tsx",
+          "linha": 260
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Associar item ao catálogo",
+          "arquivo": "app/app/fiscal/_components/AssociarProduto.tsx",
+          "linha": 145
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/fiscal/_components/NavFiscal.tsx",
+          "linha": 65
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/configuracoes",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/eventos",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/fornecedores",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/manifestacoes",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/notas",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/notas/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Associar item ao catálogo",
+          "arquivo": "app/app/fiscal/_components/AssociarProduto.tsx",
+          "linha": 145
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/pendentes",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/produtos",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/relatorios",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/fiscal/relatorios/page.tsx",
+          "linha": 178
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/resumos",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/sincronizacoes",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/fiscal/xml",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/frota",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Veículos",
+          "arquivo": "app/app/frota/_client.tsx",
+          "linha": 43
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Motoristas",
+          "arquivo": "app/app/frota/_client.tsx",
+          "linha": 44
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/inbox",
+      "abas": [],
+      "modais": [],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Ficha do contato",
+          "arquivo": "components/inbox/InboxLayout.tsx",
+          "linha": 349
+        },
+        {
+          "tipo": "gaveta",
+          "rotulo": "Ficha do contato",
+          "arquivo": "components/inbox/InboxLayout.tsx",
+          "linha": 368
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/inbox/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/indicadores",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/integrations/nuvemshop",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/inteligencia",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/kanban",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Importar leads de uma planilha",
+          "arquivo": "app/app/kanban/_components/ImportarLeads.tsx",
+          "linha": 82
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/laboratorio",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/leads/[id]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/lgpd/requests/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Prévia de dados do titular",
+          "arquivo": "app/app/lgpd/requests/[id]/PreviewPanel.tsx",
+          "linha": 58
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/metrics",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/meu-dia",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/notas",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/notas/page.tsx",
+          "linha": 540
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir nota",
+          "arquivo": "app/app/notas/_components/CorrigirNota.tsx",
+          "linha": 229
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/notas/_components/GradeNotas.tsx",
+          "linha": 701
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/notas/_components/GradeNotas.tsx",
+          "linha": 747
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Associar item ao catálogo",
+          "arquivo": "app/app/notas/_components/ProdutoParaItem.tsx",
+          "linha": 64
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/pedidos",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/pedidos/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Foto do produto",
+          "arquivo": "components/fotos/LightboxDeFotos.tsx",
+          "linha": 31
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa jurídica",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 126
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Pessoa física",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 127
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Prévia do pedido",
+          "arquivo": "app/app/pedidos/novo/_editor.tsx",
+          "linha": 1020
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Adicionar produtos com IA / Confira os produtos encontrados",
+          "arquivo": "app/app/pedidos/novo/_ia.tsx",
+          "linha": 442
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Novo cliente",
+          "arquivo": "components/contacts/NewContactDialog.tsx",
+          "linha": 119
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/pipelines/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Excluir",
+          "arquivo": "components/kanban/BulkActionBar.tsx",
+          "linha": 199
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Novo Lead",
+          "arquivo": "components/kanban/NewLeadDialog.tsx",
+          "linha": 147
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/products",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Produtos",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 127
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Promoções",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 131
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Destaques",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 135
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Configurações",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 139
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Categorias",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 172
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Tabelas de preço",
+          "arquivo": "app/app/products/_catalogo.tsx",
+          "linha": 173
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "Produtos e tabelas",
+          "arquivo": "app/app/products/_client.tsx",
+          "linha": 932
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "Importar fotos",
+          "arquivo": "app/app/products/_client.tsx",
+          "linha": 952
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/products/_client.tsx",
+          "linha": 1235
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Tabelas de preço",
+          "arquivo": "app/app/products/_ficha.tsx",
+          "linha": 251
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Informações gerais / há um NCM sugerido",
+          "arquivo": "app/app/products/_ficha.tsx",
+          "linha": 252
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Variações",
+          "arquivo": "app/app/products/_ficha.tsx",
+          "linha": 261
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Peso e dimensões",
+          "arquivo": "app/app/products/_ficha.tsx",
+          "linha": 262
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Foto do produto",
+          "arquivo": "components/fotos/LightboxDeFotos.tsx",
+          "linha": 31
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/prospeccao",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 285
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 286
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 293
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 302
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 311
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/prospeccao/_client.tsx",
+          "linha": 321
+        },
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/nexus-ui/forms/NexusSteps.tsx",
+          "linha": 28
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Enviar mensagem para   empresas",
+          "arquivo": "app/app/prospeccao/_disparo.tsx",
+          "linha": 398
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Importar arquivo",
+          "arquivo": "app/app/prospeccao/_importar-arquivo.tsx",
+          "linha": 95
+        }
+      ],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/shell/ContextualDrawer.tsx",
+          "linha": 37
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/prospeccao/campanhas/[id]",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Enviar mensagem para   empresas",
+          "arquivo": "app/app/prospeccao/_disparo.tsx",
+          "linha": 398
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "abas": [
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/nexus-ui/forms/NexusSteps.tsx",
+          "linha": 28
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
+          "linha": 217
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Campanha de recuperação",
+          "arquivo": "app/app/radar/_components/CampanhaDeRecuperacao.tsx",
+          "linha": 129
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/radar/_shell.tsx",
+          "linha": 60
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
+          "linha": 217
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar/oportunidades",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar/prospeccao",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Campanha de recuperação",
+          "arquivo": "app/app/radar/_components/CampanhaDeRecuperacao.tsx",
+          "linha": 129
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/radar/risco",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/recuperacao",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/relatorios",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Criar novo token",
+          "arquivo": "app/app/settings/api-tokens/_components/ApiTokensClient.tsx",
+          "linha": 174
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Token criado",
+          "arquivo": "app/app/settings/api-tokens/_components/ApiTokensClient.tsx",
+          "linha": 239
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/billing",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/marca",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/profile",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/security",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Configure a verificação em duas etapas",
+          "arquivo": "components/auth/MfaEnrollModal.tsx",
+          "linha": 97
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Escaneie o QR code",
+          "arquivo": "components/auth/MfaEnrollModal.tsx",
+          "linha": 132
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Códigos de recuperação",
+          "arquivo": "components/auth/MfaEnrollModal.tsx",
+          "linha": 199
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/templates",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/tarefas",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/team",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Membros",
+          "arquivo": "app/app/team/page.tsx",
+          "linha": 52
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Atendimento",
+          "arquivo": "app/app/team/page.tsx",
+          "linha": 53
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Horário de",
+          "arquivo": "app/app/team/_components/AttendantsClient.tsx",
+          "linha": 103
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Números que enxerga",
+          "arquivo": "app/app/team/_components/TeamMembersClient.tsx",
+          "linha": 253
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Revogar acesso",
+          "arquivo": "app/app/team/_components/TeamMembersClient.tsx",
+          "linha": 359
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/team/invite",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/templates",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Editar template / Novo template",
+          "arquivo": "app/app/templates/_components/TemplateFormDialog.tsx",
+          "linha": 109
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/titulos",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/venda-automatica/_client.tsx",
+          "linha": 589
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/webhooks",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "Receber dados",
+          "arquivo": "app/app/webhooks/_components/WebhooksClient.tsx",
+          "linha": 40
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Leads recebidos",
+          "arquivo": "app/app/webhooks/_components/WebhooksClient.tsx",
+          "linha": 41
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Automações",
+          "arquivo": "app/app/webhooks/_components/WebhooksClient.tsx",
+          "linha": 42
+        },
+        {
+          "tipo": "aba",
+          "rotulo": "Atividade",
+          "arquivo": "app/app/webhooks/_components/WebhooksClient.tsx",
+          "linha": 43
+        }
+      ],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Nova fonte de captação",
+          "arquivo": "app/app/webhooks/_components/CreateSourceDialog.tsx",
+          "linha": 89
+        }
+      ],
+      "gavetas": [
+        {
+          "tipo": "gaveta",
+          "rotulo": "Captação",
+          "arquivo": "app/app/webhooks/_components/CapturaDetail.tsx",
+          "linha": 71
+        },
+        {
+          "tipo": "gaveta",
+          "rotulo": "Editar automação / Nova automação",
+          "arquivo": "app/app/webhooks/_components/RuleEditor.tsx",
+          "linha": 193
+        },
+        {
+          "tipo": "gaveta",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/webhooks/_components/SourceDetail.tsx",
+          "linha": 127
+        }
+      ],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/design",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/legal/privacy",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/legal/terms",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/o/[token]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/connect-nuvemshop",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/connect-whatsapp",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/done",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/funil",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/invite-team",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/setup-ai",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/testar",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/onboarding/welcome",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/team/accept-invite/[token]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/vitrine-agenda",
+      "abas": [
+        {
+          "tipo": "aba",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "components/agenda/HistoricoDaAgenda.tsx",
+          "linha": 98
+        }
+      ],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    }
+  ]
+}

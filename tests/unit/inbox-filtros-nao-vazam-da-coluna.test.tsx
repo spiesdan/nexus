@@ -53,8 +53,11 @@ describe("filtros do inbox cabem na coluna da lista", () => {
   });
 
   it("a faixa de abas quebra em vez de transbordar o cartão", () => {
+    // O filtro deixou de ser `tablist` do Radix (não há painel por aba — V-49) e
+    // virou um grupo de botões com `aria-pressed`. O que este teste guarda é o
+    // layout: a faixa precisa continuar quebrando linha em vez de transbordar.
     render(<InboxFilters value={VALUE} onChange={() => {}} />);
-    const abas = screen.getByRole("tablist");
+    const abas = screen.getByRole("group", { name: /filtro de conversas/i });
     expect(abas.className).toContain("flex-wrap");
   });
 });

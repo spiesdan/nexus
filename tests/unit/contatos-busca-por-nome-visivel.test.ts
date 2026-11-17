@@ -29,6 +29,9 @@ function supabaseEspiao() {
   const chain: any = {
     select: () => chain,
     eq: () => chain,
+    // O handler esconde mesclados/anonimizados (auditoria 5.3) — o espião
+    // precisa conhecer a cláusula para chegar ao `.or()` que este teste lê.
+    is: () => chain,
     order: () => chain,
     limit: () => chain,
     contains: () => chain,

@@ -31,6 +31,21 @@ export interface PlatformAdminContext {
   platformAdmin: PlatformAdminInfo;
 }
 
+/**
+ * `platform_admins.scope` — `full` ou `support_readonly` (CHECK do banco).
+ *
+ * O campo era lido pelo guard e NUNCA comparado em lugar nenhum: um
+ * administrador de plataforma criado como `support_readonly` podia suspender
+ * tenant, criar tenant e impersonar como se fosse `full`. O nome do escopo é a
+ * regra — e o banco já a declarava.
+ *
+ * `support_readonly` continua enxergando tudo (é o suporte que abre a ficha de
+ * um cliente para diagnosticar) e não escreve nada.
+ */
+export function escopoPermiteEscrita(scope: string): boolean {
+  return scope !== "support_readonly";
+}
+
 export async function requirePlatformAdmin(): Promise<PlatformAdminContext> {
   const supabase = await createClient();
 

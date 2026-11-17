@@ -177,9 +177,9 @@ describe("avisosDoFechamento", () => {
 
   it("diferença vira aviso com a palavra certa", () => {
     const sobra = avisosDoFechamento(contaDoCaixa([l("dinheiro", 1200)], 1000), 1, 1);
-    expect(sobra.some((a) => /Sobra de 2.00/.test(a.texto))).toBe(true);
+    expect(sobra.some((a) => /Sobra de R\$ 2,00/.test(a.texto))).toBe(true);
     const falta = avisosDoFechamento(contaDoCaixa([l("dinheiro", 800)], 1000), 1, 1);
-    expect(falta.some((a) => /Falta de 2.00/.test(a.texto))).toBe(true);
+    expect(falta.some((a) => /Falta de R\$ 2,00/.test(a.texto))).toBe(true);
   });
 
   it("nada contado com valor a cobrar é suspeito — e o aviso diz o que conferir", () => {

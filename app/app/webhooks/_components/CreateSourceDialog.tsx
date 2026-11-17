@@ -61,8 +61,22 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
     setStageId("");
   }, [pipelineId]);
 
+  /**
+   * Erro do NOME, na página — mesmo motivo do diálogo de token: o campo tinha
+   * `required`, e o navegador recusava com balão nativo, sem `aria-invalid` e
+   * sem a tipografia de erro do produto. Medido em 16/11/2026: `mensagens: []`,
+   * `ariaInvalid: 0`. O `toast.error` do funil já existia; o nome era a única
+   * recusa que não aparecia na tela.
+   */
+  const [erroNome, setErroNome] = React.useState<string | null>(null);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (name.trim().length < 1) {
+      setErroNome(t("Dê um nome à fonte — é por ele que você a reconhece depois."));
+      return;
+    }
+    setErroNome(null);
     if (!pipelineId || !stageId) {
       toast.error(t("Escolha o funil e o estágio de entrada."));
       return;
@@ -93,23 +107,33 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
             )}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} noValidate className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="src-name">{t("Nome")}</Label>
             <Input
               id="src-name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+                if (erroNome) setErroNome(null);
+              }}
+              aria-invalid={erroNome ? true : undefined}
+              aria-describedby={erroNome ? "src-name-erro" : undefined}
               placeholder={t("Landing page de Black Friday")}
               minLength={1}
               maxLength={120}
               required
             />
+            {erroNome ? (
+              <p id="src-name-erro" role="alert" className="text-xs text-error-fg">
+                {erroNome}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
             <Label>{t("Funil de entrada")}</Label>
             <Select value={pipelineId} onValueChange={setPipelineId} disabled={pipelinesLoading}>
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("Funil de entrada")}>
                 <SelectValue placeholder={t("Escolha o funil")} />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +152,7 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
               onValueChange={setStageId}
               disabled={!pipelineId || stagesLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label={t("Estágio de entrada")}>
                 <SelectValue
                   placeholder={pipelineId ? t("Escolha o estágio") : t("Escolha o funil primeiro")}
                 />
@@ -160,7 +184,7 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
               {t("Cancelar")}
             </Button>
             <Button type="submit" disabled={create.isPending}>
-              {t("Criar fonte")}
+              {create.isPending ? t("Criando…") : t("Criar fonte")}
             </Button>
           </DialogFooter>
         </form>

@@ -13,6 +13,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { criarPedidoComercial } from "@/lib/comercial/criar-pedido";
+import { descontoDaDuplicata } from "@/lib/comercial/desconto-da-duplicata";
 import { numeroDoPedido } from "@/lib/format/moeda";
 import { COLUNAS_DO_ITEM } from "@/lib/schemas/pedidos";
 import { createClient } from "@/lib/supabase/server";
@@ -36,7 +37,7 @@ export async function POST(
     .select(
       "contact_id, cliente_nome, cliente_documento, vendedor_user_id, origem, moeda, numero, " +
         "condicao_pagamento, observacoes, obs_interna, endereco_entrega, transportadora_nome, " +
-        "modalidade_frete, desconto_cents, frete_cents",
+        "modalidade_frete, desconto_cents, desconto_pct, subtotal_cents, frete_cents",
     )
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
@@ -56,6 +57,8 @@ export async function POST(
     transportadora_nome: string | null;
     modalidade_frete: "retirada" | "propria" | "terceirizada";
     desconto_cents: number;
+    desconto_pct: number | null;
+    subtotal_cents: number;
     frete_cents: number;
   } | null;
   if (!base) return fail("not_found", "Pedido não encontrado.", 404, { requestId });
@@ -150,7 +153,11 @@ export async function POST(
     // poluía os relatórios por canal. A procedência vai nas observações.
     origem: "vendedor",
     moeda: base.moeda,
-    desconto_cents: base.desconto_cents,
+    // O desconto é copiado em DUAS partes: o percentual volta como percentual
+    // e o R$ vira o fixo que sobra. Copiar os dois como estão dobraria o %; só
+    // o total perderia o % e, com o preço novo dos itens, poderia estourar o
+    // subtotal. Ver `descontoDaDuplicata`.
+    ...descontoDaDuplicata(base),
     frete_cents: base.frete_cents,
     condicao_pagamento: base.condicao_pagamento ?? undefined,
     observacoes: [`Duplicado de ${numeroDoPedido(base.numero)} (origem ${base.origem})`,

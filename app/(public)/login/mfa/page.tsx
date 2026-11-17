@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { safeNext } from "@/lib/auth/safe-next";
 import { createClient } from "@/lib/supabase/server";
 import { MfaForm } from "@/components/auth/MfaForm";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
@@ -21,7 +22,10 @@ export default async function MfaChallengePage({
 
   const { data: factorsData } = await supabase.auth.mfa.listFactors();
   const hasVerified = !!factorsData?.totp?.some((f) => f.status === "verified");
-  if (!hasVerified) redirect("/app/inbox");
+  // Sem fator verificado não há desafio a fazer — e o destino tem de respeitar
+  // o `?next=` que a pessoa estava seguindo. Antes, todo mundo caía no Inbox:
+  // quem clicou num link de pedido/relatório perdia o destino e não sabia por quê.
+  if (!hasVerified) redirect(safeNext(next, "/app"));
 
   const idioma = normalizarIdioma(
     (user.user_metadata?.locale as string | undefined) ?? null,
@@ -31,7 +35,7 @@ export default async function MfaChallengePage({
   return (
     <div className="space-y-6">
       <div className="space-y-1.5 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">{t("Verificação em duas etapas")}</h1>
+        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Verificação em duas etapas")}</h1>
         <p className="text-sm text-muted-foreground">
           {t("Digite o código de 6 dígitos do seu autenticador.")}
         </p>

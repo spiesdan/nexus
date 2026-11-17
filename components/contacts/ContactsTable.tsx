@@ -75,12 +75,17 @@ function SortableHead({
   const emphasis = "text-foreground";
 
   return (
-    <TableHead className={className}>
+    <TableHead
+      className={className}
+      // `aria-sort` é atributo de `columnheader`, não de botão: no `<button>`
+      // o axe reprova (aria-allowed-attr, crítico), e o leitor de tela ignora
+      // a ordenação. Medido em 17/11/2026 em `/app/contacts` (4 colunas).
+      aria-sort={active ? (orderDir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <button
         type="button"
         onClick={() => onSort(column)}
         className="inline-flex items-center gap-1 font-medium hover:text-foreground"
-        aria-sort={active ? (orderDir === "asc" ? "ascending" : "descending") : "none"}
       >
         {label}
         <span className="inline-flex flex-col -space-y-1" aria-hidden>
@@ -228,12 +233,22 @@ export function ContactsTable({ contacts, orderBy, orderDir, onSort, selecionado
                 />
               </TableCell>
             ) : null}
-            <TableCell className="font-medium">
-              <Link href={`/app/contacts/${c.id}`} className="hover:underline">
+            {/* `truncate` + `title`: nome composto cabe em uma linha; o de 128
+                caracteres do import de planilha também. Sem isso a linha da
+                tabela triplicava de altura — medido em 17/11/2026 com um nome
+                realista (97 px) e um patológico com emoji (177 px), contra os
+                ~44 px de uma linha normal. O nome inteiro continua no `title` e
+                na ficha do contato. */}
+            <TableCell className="max-w-[240px] font-medium">
+              <Link
+                href={`/app/contacts/${c.id}`}
+                className="block truncate hover:underline"
+                title={displayName(c)}
+              >
                 {displayName(c)}
               </Link>
             </TableCell>
-            <TableCell className="hidden text-muted-foreground md:table-cell">
+            <TableCell className="hidden max-w-[220px] truncate text-muted-foreground md:table-cell" title={c.email ?? undefined}>
               {c.email ?? "—"}
             </TableCell>
             <TableCell className="text-muted-foreground">

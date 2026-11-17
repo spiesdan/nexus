@@ -6,6 +6,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,29 +69,54 @@ export function AuditClient() {
     <div className="flex flex-col gap-4">
       <Card className="hover-raise p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+          {/* `id` + `htmlFor` não são decoração: sem eles o `<label>` é só texto
+              ao lado e o leitor de tela anuncia "campo de data" sem dizer que é
+              "De" ou "Até". Medido em 16/11 no build de produção: os dois
+              `input[type=datetime-local]` desta tela eram os ÚNICOS campos
+              visíveis do produto sem rótulo associado (V-15). */}
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Ação contém")}</label>
+            <label htmlFor="audit-acao" className="block text-xs text-muted-foreground">
+              {t("Ação contém")}
+            </label>
             <Input
+              id="audit-acao"
               value={actionInput}
               onChange={(e) => setActionInput(e.target.value)}
               placeholder="ex: lead.created"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Tipo de recurso")}</label>
+            <label htmlFor="audit-recurso" className="block text-xs text-muted-foreground">
+              {t("Tipo de recurso")}
+            </label>
             <Input
+              id="audit-recurso"
               value={resourceType}
               onChange={(e) => setResourceType(e.target.value)}
               placeholder="ex: contact"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("De")}</label>
-            <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <label htmlFor="audit-de" className="block text-xs text-muted-foreground">
+              {t("De")}
+            </label>
+            <Input
+              id="audit-de"
+              type="datetime-local"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs text-muted-foreground">{t("Até")}</label>
-            <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} />
+            <label htmlFor="audit-ate" className="block text-xs text-muted-foreground">
+              {t("Até")}
+            </label>
+            <Input
+              id="audit-ate"
+              type="datetime-local"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
           </div>
           <div className="flex items-end">
             <Button variant="outline" className="w-full" onClick={handleExport}>
@@ -124,6 +150,22 @@ export function AuditClient() {
                     ))}
                   </TableRow>
                 ))
+              ) : q.isPaused || q.isError ? (
+                // ESTADO VAZIO QUE MENTE. Offline a busca é pausada: `isLoading`
+                // fica falso e `rows` vazio, e a tela dizia "Nenhum log no
+                // período" — afirmação sobre o DADO quando o problema é a REDE.
+                // Medido em 17/11/2026 com o navegador offline (V-43).
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    {q.isPaused ? (
+                      <AvisoSemConexao />
+                    ) : (
+                      <p role="alert" className="text-sm text-error-fg">
+                        {t("Não foi possível carregar o log. Tente novamente.")}
+                      </p>
+                    )}
+                  </TableCell>
+                </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
@@ -164,17 +206,21 @@ export function AuditClient() {
         </div>
       </Card>
 
-      {q.hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => q.fetchNextPage()}
-            disabled={q.isFetchingNextPage}
-          >
-            {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
-          </Button>
-        </div>
-      )}
+      {q.hasNextPage &&
+        // Offline a busca fica PAUSADA e o botão não faria nada (V-42).
+        (q.isPaused ? (
+          <AvisoSemConexao />
+        ) : (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => q.fetchNextPage()}
+              disabled={q.isFetchingNextPage}
+            >
+              {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
+            </Button>
+          </div>
+        ))}
     </div>
   );
 }
