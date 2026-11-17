@@ -93,7 +93,16 @@ export default async function PedidosPage({
   // (`commercial_orders_org_numero_key`), então a ordem é total: não precisa
   // de desempate, e o pedido novo entra sempre no topo. O filtro de período
   // continua em `created_at` (o dia que o dono conta), mas ele não posiciona.
-  const { data } = await q.order("numero", { ascending: false }).limit(200);
+  const { data, error } = await q.order("numero", { ascending: false }).limit(200);
+  // A lista vazia sem explicação já foi medida como F-28 (relatório offline):
+  // quando a consulta falha, a tela mostrava "nenhum pedido" em vez de dizer
+  // que não conseguiu carregar. O erro vai para o log e a tela recebe o sinal.
+  if (error) {
+    logger.error("pedidos: falha ao carregar a lista", {
+      organization_id: activeOrg.orgId,
+      erro: error.message.slice(0, 300),
+    });
+  }
   const iniciaisComEmitente = await comNomeDoEmitente(
     (data ?? []) as unknown as Array<{
       created_by: string | null;
@@ -213,6 +222,7 @@ export default async function PedidosPage({
     <PedidosClient
       inicial={iniciaisComEmitente as unknown as PedidoComercial[]}
       iniciais={iniciais}
+      erroInicial={Boolean(error)}
       vendedorNome={vendedorNome}
       podeCriar={podeCriar}
       podeExcluir={podeExcluir}

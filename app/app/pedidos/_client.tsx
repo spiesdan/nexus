@@ -45,6 +45,7 @@ import {
   Plus,
   Printer,
   Receipt,
+  Warning,
 } from "@/lib/ui/icons";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
@@ -167,6 +168,31 @@ const PROXIMO_STATUS: Partial<Record<StatusDoPedido, StatusDoPedido>> = {
 
 const FINALIZADOS: StatusDoPedido[] = ["entregue", "cancelado"];
 
+/**
+ * TEM SINAL? — a pergunta que faltava na lista de Pedidos.
+ *
+ * Medido em 17/11/2026 (`offline-e-erro.mjs`, service worker ativo): contatos,
+ * inbox e financeiro abrem offline com "Algo deu errado … Tentar novamente".
+ * Pedidos abria a casca e deixava a lista vazia em silêncio — a tela de onde
+ * sai a operação do dia (F-28).
+ *
+ * `useSyncExternalStore` em vez de estado no `useEffect`: o servidor renderiza
+ * com "online" e o cliente corrige na hidratação, sem mismatch; os eventos
+ * `online`/`offline` do navegador são a fonte, e a volta da rede revalida.
+ */
+function assinarRede(aoMudar: () => void): () => void {
+  window.addEventListener("online", aoMudar);
+  window.addEventListener("offline", aoMudar);
+  return () => {
+    window.removeEventListener("online", aoMudar);
+    window.removeEventListener("offline", aoMudar);
+  };
+}
+
+function lerRede(): boolean {
+  return typeof navigator === "undefined" ? true : navigator.onLine !== false;
+}
+
 function TimelineDoPedido({ id }: { id: string }) {
   const tagIdioma = useTagDeIdioma();
   const [linhas, setLinhas] = React.useState<{ acao: string; por: string; em: string }[] | null>(
@@ -208,6 +234,7 @@ export function PedidosClient({
   vendedorNome = "",
   inicial,
   iniciais,
+  erroInicial = false,
   podeCriar,
   podeExcluir,
   podeImportar = false,
@@ -217,6 +244,8 @@ export function PedidosClient({
 }: {
   inicial: PedidoComercial[];
   iniciais: FiltrosIniciais;
+  /** A consulta do servidor falhou: a lista vazia não é "não há pedidos". */
+  erroInicial?: boolean;
   /**
    * Nome de quem o drill-down `?vendedor=<id>` está apontando.
    *
@@ -243,6 +272,14 @@ export function PedidosClient({
   const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
+  const online = React.useSyncExternalStore(assinarRede, lerRede, () => true);
+  const redeAnterior = React.useRef(online);
+  // Quando a rede volta, a lista é revalidada sozinha: o banner some e o dado
+  // que ficou velho no cache do service worker é substituído.
+  React.useEffect(() => {
+    if (online && !redeAnterior.current) router.refresh();
+    redeAnterior.current = online;
+  }, [online, router]);
   const [pedidos, setPedidos] = React.useState(inicial);
   const [importandoMercos, setImportandoMercos] = React.useState(false);
   const filtrosIniciais = React.useMemo<Filtros>(
@@ -836,6 +873,41 @@ export function PedidosClient({
           </>
         }
       />
+
+      {/* OFFLINE / ERRO DE CARGA — a lista não pode ficar muda.
+          Fora da rede, a casca do service worker abre e a lista continua na
+          tela, mas desatualizada; sem o aviso, "nenhum pedido" era uma
+          afirmação sobre o dado quando o problema era a conexão (F-28). */}
+      {!online && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-warning/40 bg-warning-bg px-3.5 py-2.5"
+        >
+          <Warning size={16} className="shrink-0 text-warning-fg" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm text-warning-fg">
+            {t(
+              "Sem conexão. A lista pode estar desatualizada; os pedidos voltam quando a rede voltar.",
+            )}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => router.refresh()}>
+            {t("Tentar novamente")}
+          </Button>
+        </div>
+      )}
+      {online && erroInicial && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-error/40 bg-error-bg px-3.5 py-2.5"
+        >
+          <Warning size={16} className="shrink-0 text-error-fg" aria-hidden />
+          <p className="min-w-0 flex-1 text-sm text-error-fg">
+            {t("Não foi possível carregar os pedidos.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => router.refresh()}>
+            {t("Tentar novamente")}
+          </Button>
+        </div>
+      )}
 
       {/* Filtros: UMA linha, e o resto atrás do botão. O painel antigo gastava
           170px de altura — busca em linha própria, rótulo acima de cada select,
