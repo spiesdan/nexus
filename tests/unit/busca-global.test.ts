@@ -7,7 +7,12 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buscarEntidades, MINIMO_DE_LETRAS, telasQueCasam } from "@/lib/busca/global";
+import {
+  buscarEntidades,
+  buscarEntidadesComFalhas,
+  MINIMO_DE_LETRAS,
+  telasQueCasam,
+} from "@/lib/busca/global";
 import type { NavDestination } from "@/lib/navigation/registry";
 
 const get = vi.fn();
@@ -81,6 +86,18 @@ describe("buscarEntidades", () => {
     });
     const secoes = await buscarEntidades("ana");
     expect(secoes.map((s) => s.id)).toEqual(["conversas", "pedidos"]);
+  });
+
+  it("diz QUAIS seções falharam — a seção ausente não vira 'nada encontrado'", async () => {
+    // Antes, a falha era silenciosa: a seção sumia e a página afirmava que o
+    // termo não existia. A busca detalhada devolve a lacuna.
+    get.mockImplementation(async (url: string) => {
+      if (url.includes("/titulos")) throw new Error("financeiro fora");
+      return respondePorCaminho(url);
+    });
+    const { secoes, falharam } = await buscarEntidadesComFalhas("ana");
+    expect(falharam).toEqual(["titulos"]);
+    expect(secoes.map((s) => s.id)).toEqual(["conversas", "clientes", "pedidos"]);
   });
 
   it("produto e título levam à lista com o termo dentro, não a um detalhe órfão", async () => {

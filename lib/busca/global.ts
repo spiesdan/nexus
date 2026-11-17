@@ -115,9 +115,30 @@ function nomeDoContato(c: { display_name: string | null; name: string | null } |
  * As seis entidades, em paralelo, com no máximo `limite` itens cada.
  * Termo com menos de 2 letras não gasta uma chamada sequer.
  */
+export interface ResultadoDaBusca {
+  secoes: SecaoDeBusca[];
+  /** Entidades cuja consulta FALHOU — a tela precisa dizer a lacuna. */
+  falharam: SecaoId[];
+}
+
 export async function buscarEntidades(termo: string, limite = 5): Promise<SecaoDeBusca[]> {
+  return (await buscarEntidadesComFalhas(termo, limite)).secoes;
+}
+
+/**
+ * A versão que também diz o que NÃO foi consultado.
+ *
+ * `Promise.allSettled` impedia uma entidade derrubar as outras — e transformava
+ * a falha em SILÊNCIO: a seção daquela entidade simplesmente não aparecia, e a
+ * página concluía "Nada encontrado". Procurar "12/2026" com o financeiro fora
+ * do ar dava "não existe" em vez de "não consegui olhar os títulos".
+ */
+export async function buscarEntidadesComFalhas(
+  termo: string,
+  limite = 5,
+): Promise<ResultadoDaBusca> {
   const t = termo.trim();
-  if (t.length < MINIMO_DE_LETRAS) return [];
+  if (t.length < MINIMO_DE_LETRAS) return { secoes: [], falharam: [] };
   const busca = encodeURIComponent(t);
 
   const [conversas, clientes, pedidos, leads, produtos, titulos] = await Promise.allSettled([
@@ -191,9 +212,15 @@ export async function buscarEntidades(termo: string, limite = 5): Promise<SecaoD
         : [],
   };
 
-  return ORDEM.filter((id) => linhas[id].length > 0).map((id) => ({
-    id,
-    rotulo: ROTULOS[id],
-    itens: linhas[id],
-  }));
+  const resultados = [conversas, clientes, pedidos, leads, produtos, titulos];
+  const falharam = ORDEM.filter((_, i) => resultados[i]?.status === "rejected");
+
+  return {
+    secoes: ORDEM.filter((id) => linhas[id].length > 0).map((id) => ({
+      id,
+      rotulo: ROTULOS[id],
+      itens: linhas[id],
+    })),
+    falharam,
+  };
 }
