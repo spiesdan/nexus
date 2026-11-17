@@ -1515,17 +1515,33 @@ As sete mistas têm motivo conhecido: arquivo/binário e CSV **não** são JSON 
 | rotas com teto explícito | **147** |
 | rotas com `rate limit` | **3** (importação por IA, upload de marca, webhook de entrada) |
 | rotas com `Idempotency-Key` | **2** (`lgpd/.../approve`, `financeiro/.../pagamentos`) |
-| **GET de lista sem nenhum teto no handler** | **82** |
+| **GET de lista sem teto no handler** | **80** |
 
 O rate limit não é "3 no produto": login, signup, recuperação e aceite de convite vivem em **Server
 Actions** (`app/actions/auth/*`), e o dispatcher de IA tem o próprio
 (`lib/ai/dispatcher/rate-limit.ts`). A conta acima é só de `route.ts`.
 
-**O achado que fica (F-30, aberto):** **82** listas devolvem tudo que houver — `admin/*`, `ai/*`,
-`agenda/*`, entre outras. Em instalação pequena não dói; em base grande, é a aba que trava e o
-payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolveria menos dado sem a
-tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
-frente, não um patch.
+**O achado que fica (F-30, aberto):** **80** listas não declaram teto **no handler**. A primeira
+contagem era 82 porque `/agenda/agendamentos` limita no helper (`lib/agenda/consulta.ts`: default 200,
+máximo 500) — o instrumento passou a reconhecer `limite`/`limit` passado a helper e o falso positivo
+saiu.
+
+**Impacto medido** (banco de E2E, `count=exact`; é fixture, não produção):
+
+| Rota | Tabela | Linhas hoje | Leitura |
+| --- | --- | --- | --- |
+| `/admin/usage` | `organizations`+`messages`+`conversations`+`llm_calls`, janela 7/30/90 d, **sem limite** | 6 / 8 / 17 / 0 | **cresce com o uso** — varre a janela e agrega em memória |
+| `/ai/followups/enrollments` | `followup_enrollments` | 10 | **cresce muito** — uma linha por contato em fluxo |
+| `/ai/followup-flows` | `followup_flow_pointers` | 19 | cresce; `select("*")` piora |
+| `/ai/agents` | `ai_agents` | 8 | cresce |
+| `/agenda/tipos` | `calendar_event_types` | 25 | cresce por organização |
+| `/ai/cases` | `agent_cases` | 2 | cresce |
+| `/ai/credentials`, `/ai/guardrail-layers`, `/admin/platform-admins` | — | 0–1 | impacto nulo/baixo hoje |
+
+Não foi alterado nesta rodada: cortar em silêncio devolveria menos dado sem a tela saber, e em
+`/admin/usage` um teto mudaria o **número** (é agregação sobre a janela, não lista). O conserto é
+paginação na rota + "carregar mais" na tela, e no caso do uso é agregação no banco (RPC), não
+`limit`.
 
 ## 9. Testes — o que existe, medido por tipo (9.1 a 9.9)
 

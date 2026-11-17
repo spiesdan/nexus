@@ -65,7 +65,14 @@ for (const { rota, arquivo } of todas) {
   // "limit" solta aparecia em comentário e em nome de variável, e contava rota
   // que devolve tudo como paginada.
   const paginacao = /\.limit\(|\.range\(|Math\.min\(/.test(fonte);
-  const teto = /Math\.min\(|MAX_[A-Z_]+|TETO_|LIMITE_|\.limit\(|\.range\(/.test(fonte);
+  // O teto pode viver no HANDLER ou ser passado a um helper da lib (ex.:
+  // `/agenda/agendamentos` passa `limite` para `lib/agenda/consulta.ts`, que
+  // aplica default 200 e máximo 500). Contar só o `.limit(` do arquivo dava
+  // falso positivo nesse caso — medido em 17/11/2026.
+  const teto =
+    /Math\.min\(|MAX_[A-Z_]+|TETO_|LIMITE_|\.limit\(|\.range\(/.test(fonte) ||
+    /\blimite\s*[:,)]|\blimit\s*[:,)]%?\s*\d/.test(fonte) ||
+    /\blimite\s*:\s*(?:Number|parseInt|\w+\.)/.test(fonte);
   const rate = /checkRateLimit|authRateLimited/.test(fonte);
   const idem = /idempotency-key|idempotency_key/i.test(fonte);
   const wrapper = /\bok\(|\bfail\(/.test(fonte);
