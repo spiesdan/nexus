@@ -11,7 +11,7 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { roleAtLeast } from "@/lib/auth/types";
 import { logger } from "@/lib/logger";
 import {
   carregarContatosDaEntrega,
@@ -182,7 +182,7 @@ export async function PATCH(req: NextRequest, { params }: Params): Promise<Respo
       statusAtual === "em_rota" &&
       parsed.data.status === "cancelada" &&
       !authz.user.is_platform_admin &&
-      ROLE_RANK[authz.org.role] < ROLE_RANK.manager
+      !roleAtLeast(authz.org.role, "manager")
     ) {
       return fail("forbidden_role", "Cancelar uma rota em andamento exige gerente.", 403, {
         requestId,

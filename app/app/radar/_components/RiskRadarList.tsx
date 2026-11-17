@@ -83,7 +83,7 @@ export function RiskRadarList() {
         <p className="text-sm font-medium text-warning-fg">
           {t("Não consegui ler as demandas em risco.")}
         </p>
-        <p className="text-xs text-warning-fg/80">
+        <p className="text-xs text-warning-fg">
           {t("Isto não quer dizer que está tudo em dia — a leitura falhou.")}
         </p>
         <Button size="sm" variant="outline" onClick={() => void refetch()}>

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ok, fail } from "@/lib/api/wrappers";
 import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
-import { ROLE_RANK, type Role } from "@/lib/auth/types";
+import { roleAtLeast } from "@/lib/auth/types";
 import { ARCHIVED_AT, queryTolerantToMissingArchived } from "@/lib/channels/archived";
 import { CHANNEL_PROVIDER_WAHA } from "@/lib/channels/capabilities";
 import {
@@ -141,7 +141,7 @@ export async function POST(req: Request) {
   // (recurso externo, com custo). A régua é a mesma das outras mutações de
   // canal; `agent` é o piso. Não se usa `requireRole` aqui para não arrastar a
   // exigência de MFA para dentro do onboarding, que acontece antes dele.
-  if (ROLE_RANK[activeOrg.role as Role] < ROLE_RANK.agent) {
+  if (!roleAtLeast(activeOrg.role, "agent")) {
     return fail("forbidden_role", "Seu perfil não conecta número.", 403, { requestId });
   }
   const waha = getWahaClient();

@@ -24,7 +24,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { roleAtLeast } from "@/lib/auth/types";
 import { aplicarPatchDeItens } from "@/lib/comercial/patch-itens";
 import { logger } from "@/lib/logger";
 import { itensPatchSchema } from "@/lib/schemas/pedidos";
@@ -101,8 +101,7 @@ export async function PATCH(
     // A mesma alçada da criação: gerente (ou admin de plataforma) pode furar
     // tabela/estoque; o vendedor, não.
     podeIgnorar:
-      authz.user.is_platform_admin === true ||
-      ROLE_RANK[authz.org.role] >= ROLE_RANK.manager,
+      authz.user.is_platform_admin === true || roleAtLeast(authz.org.role, "manager"),
   });
 
   if (!resultado.ok) {
