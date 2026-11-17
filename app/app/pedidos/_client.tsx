@@ -823,6 +823,9 @@ export function PedidosClient({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+            {/* POSIÇÃO PEDIDA PELO DONO: "Imprimir" antes de "Criar pedido".
+                O teste `pedidos-imprimir-dia.test.tsx` conta essa história —
+                não é gosto de quem mexe, é ordem pedida. */}
             {podeCriar && (
               <Button asChild className="font-semibold">
                 <Link href="/app/pedidos/novo">
