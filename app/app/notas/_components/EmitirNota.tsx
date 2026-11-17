@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import {
   extrasFiscaisSchema,
   FORMAS_DE_PAGAMENTO,
@@ -255,6 +256,7 @@ export function EmitirNota({
   textos: Textos;
 }) {
   const t = useT();
+  const confirmar = useConfirmar();
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [pedidoId, setPedidoId] = React.useState("");
@@ -526,6 +528,14 @@ export function EmitirNota({
       }
       extrasValidados = checagem.data;
     }
+    // Emitir é irreversível e consome número da SEFAZ. A confirmação mostra o
+    // destinatário e o total — o que a tela já resolveu, não um "tem certeza?".
+    const ok = await confirmar({
+      title: `${t("Emitir a NF-e de")} ${nomeEfetivo || t("cliente")} (${documentoEfetivo || t("sem documento")}) — ${comoMoeda(escolhido?.total_cents ?? 0, escolhido?.moeda ?? "BRL")}?`,
+      confirmLabel: t("Emitir NF-e"),
+      cancelLabel: t("Revisar"),
+    });
+    if (!ok) return;
     setEmitindo(true);
     setPendencias(null);
     try {
