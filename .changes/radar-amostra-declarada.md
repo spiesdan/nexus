@@ -11,4 +11,6 @@ que o Radar existe para mostrar.
 
 Agora a tela avisa quando o número é de uma amostra, e a falha de leitura tem
 mensagem própria, com a frase que separa as duas coisas e um botão para tentar de
-novo.
+novo. A lista de oportunidades também parou de mostrar o mesmo valor duas vezes
+("ticket médio" e "potencial" imprimiam o mesmo número), e o score ganhou a
+explicação dos pesos no próprio rótulo.

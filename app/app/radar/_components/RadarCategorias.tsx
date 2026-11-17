@@ -178,7 +178,6 @@ export function RadarCategorias({
         <p className="mt-1 text-xs text-muted-foreground">{motivoDe(l, t)}</p>
         <p className="mt-1 text-xs text-muted-foreground tabular-nums">
           {t("última")} {l.ultima_compra.split("-").reverse().join("/")} · {t("ticket")}{" "}
-          {comoMoeda(l.ticket_medio_cents, "BRL")} · {t("potencial")}{" "}
           {comoMoeda(l.ticket_medio_cents, "BRL")}
           {vendedor ? ` · ${t("resp.")} ${vendedor}` : ""}
         </p>

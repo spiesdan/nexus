@@ -160,7 +160,12 @@ export function OportunidadesDoRadar() {
                         {l.nome}
                       </Link>
                       <Badge variant={VARIANTE_NIVEL[l.nivel]}>{ROTULO_NIVEL[l.nivel]}</Badge>
-                      <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                      <span
+                        className="ml-auto text-xs text-muted-foreground tabular-nums"
+                        title={t(
+                          "Score 0–100: urgência (atraso contra o ciclo do cliente) 50%, ticket médio 30%, frequência de compra 20%.",
+                        )}
+                      >
                         score {l.score}
                       </span>
                     </div>
@@ -175,8 +180,7 @@ export function OportunidadesDoRadar() {
                       · +{l.atraso_dias}d
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {t("Ticket médio")} {comoMoeda(l.ticket_medio_cents, "BRL")} ·{" "}
-                      {t("potencial")} {comoMoeda(l.ticket_medio_cents, "BRL")}
+                      {t("Ticket médio")} {comoMoeda(l.ticket_medio_cents, "BRL")}
                       {onde !== "" && <> · {onde}</>}
                     </p>
                     <div className="flex flex-wrap gap-2">

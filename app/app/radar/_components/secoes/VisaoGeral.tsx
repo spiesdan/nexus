@@ -212,7 +212,12 @@ export function VisaoGeralDoRadar() {
             <p className="mt-1 text-2xl font-semibold text-text tabular-nums">
               {r.oportunidades.toLocaleString("pt-BR")}
             </p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p
+              className="mt-0.5 text-xs text-muted-foreground"
+              title={t(
+                "Soma do ticket médio de cada cliente com recompra atrasada. É uma estimativa de valor por cliente, não receita garantida.",
+              )}
+            >
               {comoMoeda(r.potencialCents, "BRL")} {t("estimados")}
             </p>
           </Card>
