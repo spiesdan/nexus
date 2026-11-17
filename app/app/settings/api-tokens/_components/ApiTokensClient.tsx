@@ -253,7 +253,7 @@ export function ApiTokensClient() {
                 {t("Cancelar")}
               </Button>
               <Button type="submit" disabled={create.isPending}>
-                {t("Criar")}
+                {create.isPending ? t("Criando…") : t("Criar")}
               </Button>
             </DialogFooter>
           </form>

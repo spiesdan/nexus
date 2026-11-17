@@ -79,7 +79,7 @@ export function RenameAgentDialog({ agent, open, onOpenChange }: Props) {
               {t("Cancelar")}
             </Button>
             <Button type="submit" disabled={isPending || name.trim().length === 0}>
-              {t("Salvar")}
+              {isPending ? t("Salvando…") : t("Salvar")}
             </Button>
           </DialogFooter>
         </form>

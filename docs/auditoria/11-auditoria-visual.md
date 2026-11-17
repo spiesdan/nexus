@@ -1063,6 +1063,66 @@ medidos** por terem `background-image` (gradiente ou foto).
 **E a V-30 continua de pé:** a paleta de categoria segue abaixo de AA — como cor de gráfico e tag
 curta, que é o uso declarado. O que mudou é que ela deixou de ser cor de TEXTO em selo de status.
 
+### V-39 · Alta · Um clique em "Criar cliente" virava três POSTs — e a deduplicação era acidente do schema
+
+O item 2.10 pergunta duas coisas: há feedback imediato? **dois envios criam dois registros?** A
+segunda não se responde lendo `disabled={isPending}` — responde-se clicando. E clicar em formulário
+que grava cria registro no banco de quem instalou, o que o instrumento não pode fazer.
+
+Instrumento novo, `scripts/auditoria/feedback-e-duplicidade.mjs`: o POST é **interceptado e
+abortado depois de 2,5 s**. Nada chega ao banco, e o que se mede é o que a pessoa veria nesse
+intervalo — botão desabilitado, rótulo, erro — mais a contagem de requisições.
+
+O resultado, no diálogo de cliente:
+
+| Medida | Antes | Depois |
+| --- | --- | --- |
+| POSTs por **um** clique | **3** (mesma `Idempotency-Key`) | **1** |
+| botão desabilitado durante o envio | sim | sim |
+| rótulo durante o envio | "Criando…" | "Criando…" |
+| erro visível quando a resposta falha | sim | sim |
+
+A causa estava em `lib/api/client.ts`: erro de rede/timeout repetia a requisição **até 3 vezes para
+qualquer método**, inclusive os que gravam. "Sem resposta" não distingue "o servidor não recebeu" de
+"o servidor gravou e a resposta se perdeu" — e repetir a segunda é criar duplicata.
+
+**O que evitava a duplicata não era desenho.** O mesmo POST três vezes com a mesma chave só gerou
+**um** contato porque o schema tem índice único em `(organização, telefone)` — conferido no banco
+depois da rodada. E `Idempotency-Key`, o mecanismo que deveria cobrir isso, é lido por **duas**
+rotas do produto (`grep -rln "idempotency-key" app/api` → `lgpd/requests/[id]/approve` e
+`financeiro/recebiveis/[id]/pagamentos`). Num recurso sem campo único — template, por exemplo — os
+três POSTs criam três registros.
+
+**Corrigido em `lib/api/client.ts`**: erro de rede em método que grava **não repete**. `429` e `503`
+continuam repetindo, porque ali o servidor disse explicitamente "não processei, tente depois" — e
+essa distinção é o conserto, não um detalhe. Leitura (GET/HEAD) continua repetindo: repetir leitura
+é seguro.
+
+**Gate em `lib/api/client.test.ts`**, com o caso medido em forma de teste: POST com falha de rede é
+chamado **uma** vez (t7); GET continua tentando três (t8); POST com `429` continua repetindo (t9).
+
+**O que fica em aberto, com nome:** a `Idempotency-Key` não é honrada pela maioria das rotas. O
+conserto do cliente remove o caminho que duplicava sem o servidor saber; implementar a dedupe
+server-side (tabela de chaves + TTL, ou `on conflict`) é decisão de arquitetura, não um ajuste de
+tela — e fica registrado como dívida em vez de "resolvido".
+
+### V-40 · Baixa · Quatro botões de envio desabilitavam sem dizer o que estavam fazendo
+
+A mesma rodada mediu o **feedback**: no diálogo de template o botão desabilitava e continuava
+escrito "Criar template" — o clique não dava resposta nenhuma além do silêncio. No de cliente, o
+mesmo gesto dizia "Criando…".
+
+Contagem estática nos **35** botões `type="submit"` do produto: **4** desabilitavam sem rótulo de
+progresso (template, renomear agente, token de API, fonte de captação). Os quatro passaram a dizer
+"Criando…"/"Salvando…".
+
+**Depois, medido no navegador:** template — `Salvando…`, botão desabilitado, **1 POST**, erro
+visível quando a resposta falha. Cliente — `Criando…`, desabilitado, 1 POST, erro visível.
+
+**Gate em `tests/unit/botao-de-envio-diz-o-que-faz.test.ts`** (686 casos): todo `<Button
+type="submit">` precisa de `disabled` **e** de um rótulo de progresso no ternário. Reintroduzi o
+rótulo antigo do template para conferir: reprova.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1144,7 +1204,7 @@ cobriu").
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado                                                                                                                                                                                                                                                                                                                                               |
 | 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
-| 2.10 | Feedback imediato e prevenção de duplicidade                        | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2.10 | Feedback imediato e prevenção de duplicidade                        | `[~]`  | **Medido no clique** (`scripts/auditoria/feedback-e-duplicidade.mjs`, POST abortado após 2,5 s — nada grava): cliente novo e template novo mostram botão desabilitado, rótulo de progresso, **1 requisição por envio** e erro visível quando a resposta falha. Antes: **3 POSTs por clique** (V-39 — o cliente repetia erro de rede em método que grava) e 4 de 35 botões de envio mudos (V-40). **Falta**: dedupe server-side da `Idempotency-Key`, hoje lida por **2** rotas |
 | 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | **Contraste medido no navegador** (8 telas, cor final de cada texto sobre o fundo real): de **22 abaixo do mínimo** para **0 de 1.030** depois de V-37/V-38 (V-27 a V-30 na rodada anterior). 27 elementos por tela ficam fora por terem `background-image` — contados, não aprovados. **Foco/teclado**: 301 paradas em 9 telas, 0 sem foco visível, "Pular para o conteúdo" é o primeiro Tab. **Movimento**: 0 de 20 animando com `prefers-reduced-motion`. **Alvos de toque**: p50 de 3 por tela abaixo de 40 px (V-06, sinal). **Falta**: leitor de tela real (NVDA/VoiceOver) e zoom 200% |
 | 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos                                                                                                                                                                                                                                                          |
@@ -1152,13 +1212,14 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **31 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **33 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
-(selo de status usando a paleta de categoria como texto);
+(selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
+rede) e V-40 (botão de envio mudo);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 

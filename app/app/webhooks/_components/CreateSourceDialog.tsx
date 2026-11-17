@@ -184,7 +184,7 @@ export function CreateSourceDialog({ open, onOpenChange, onCreated }: Props) {
               {t("Cancelar")}
             </Button>
             <Button type="submit" disabled={create.isPending}>
-              {t("Criar fonte")}
+              {create.isPending ? t("Criando…") : t("Criar fonte")}
             </Button>
           </DialogFooter>
         </form>
