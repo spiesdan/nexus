@@ -29,7 +29,12 @@ export function NexusPageHeader({
   return (
     <div className="space-y-3">
       {navigation ? <div className="text-sm text-muted-foreground">{navigation}</div> : null}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Em linha só a partir de `lg`. No tablet (834) o título ficava com
+          ~40 px de largura: os botões de ação ocupavam a linha e o bloco do
+          título encolhia até o subtítulo virar uma coluna de uma palavra por
+          linha — medido em 17/11/2026 com o `<h1>` de `/app/pedidos` a 0 px de
+          largura. Empilhado no tablet, título e ações não disputam. */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         {/* `min-w-0 flex-1`: sem isso o bloco de título e o de ações encolhiam
             JUNTOS (flex-shrink proporcional ao conteúdo). Em Pedidos o subtítulo
             virava três linhas e "Mais opções" caía para a segunda fileira, com
@@ -39,7 +44,7 @@ export function NexusPageHeader({
           <Titulo className="text-2xl font-medium tracking-tight text-text">{title}</Titulo>
           {subtitle ? <p className="text-sm text-pretty text-muted-foreground">{subtitle}</p> : null}
         </div>
-        {actions ? <div className="flex flex-wrap gap-2 sm:justify-end">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap gap-2 lg:justify-end">{actions}</div> : null}
       </div>
     </div>
   );

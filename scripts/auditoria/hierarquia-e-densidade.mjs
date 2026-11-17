@@ -45,9 +45,15 @@ const ROTAS = [
   "/admin",
 ];
 
+// Largura por argumento: hierarquia/densidade em uma dobra só não cobre o
+// celular, onde a "primeira dobra" é outra tela.
+const indiceLargura = process.argv.indexOf("--largura");
+const LARGURA = indiceLargura > 0 ? Number(process.argv[indiceLargura + 1]) : 1440;
+const ALTURA = LARGURA <= 430 ? 844 : LARGURA <= 834 ? 1112 : 900;
+
 const navegador = await chromium.launch();
 const contexto = await navegador.newContext({
-  viewport: { width: 1440, height: 900 },
+  viewport: { width: LARGURA, height: ALTURA },
   locale: "pt-BR",
   storageState: ESTADO,
 });
@@ -58,7 +64,11 @@ for (const rota of ROTAS) {
   const r = { rota };
   try {
     await pagina.goto(`${BASE}${rota}`, { waitUntil: "domcontentloaded", timeout: 45000 });
-    await pagina.waitForTimeout(2500);
+    // 4 s, não 2,5 s: em 320 a lista de Pedidos e o painel de /app ainda estavam
+    // montando, e a régua contava ZERO alvos numa tela cheia de botões. Medido
+    // em 17/11/2026 comparando com sonda independente.
+    await pagina.waitForFunction(() => !!document.querySelector("main"), null, { timeout: 20000 }).catch(() => undefined);
+    await pagina.waitForTimeout(4000);
 
     Object.assign(
       r,
@@ -141,7 +151,12 @@ for (const rota of ROTAS) {
           : null;
         const exemploDaLinhaLonga = maioresLinhas.sort((a, b) => b.ch - a.ch)[0]?.texto ?? null;
         return {
-          titulos: [...document.querySelectorAll("main h1, main h2")].filter(visivel).length,
+          // Título de PÁGINA: `h1` em qualquer lugar (no layout estreito o
+          // cabeçalho fica fora do `main`) + `h2` de SEÇÃO dentro do main. Contar
+          // todo `h2` somava os 9 cabeçalhos da barra lateral.
+          titulos:
+            [...document.querySelectorAll("h1")].filter(visivel).length +
+            [...document.querySelectorAll("main h2")].filter(visivel).length,
           primarias: primarias.length,
           primariasComTexto: primarias
             .map((b) => (b.textContent ?? "").trim().slice(0, 40))
@@ -172,10 +187,17 @@ for (const rota of ROTAS) {
 await contexto.close();
 await navegador.close();
 
-const arquivo = "docs/auditoria/capturas/hierarquia-e-densidade.json";
+const arquivo =
+  LARGURA === 1440
+    ? "docs/auditoria/capturas/hierarquia-e-densidade.json"
+    : `docs/auditoria/capturas/hierarquia-e-densidade-${LARGURA}.json`;
 writeFileSync(
   arquivo,
-  JSON.stringify({ base: BASE, medido_em: new Date().toISOString(), viewport: "1440x900", resultados }, null, 2) +
+  JSON.stringify(
+      { base: BASE, medido_em: new Date().toISOString(), viewport: `${LARGURA}x${ALTURA}`, resultados },
+      null,
+      2,
+    ) +
     "\n",
 );
 console.log(`\nartefato: ${arquivo}`);

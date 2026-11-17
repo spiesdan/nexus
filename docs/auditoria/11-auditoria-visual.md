@@ -1397,6 +1397,31 @@ Nenhuma rota ficou "não auditada": cada uma tem captura, fixture com aviso, ou 
 motivo escrito quando a prova é de outro tipo. Somando às 129 estáticas em 1440/390 e às 32 em
 tablet, o item **2.1** fecha.
 
+### V-46 · Alta · No tablet, o título de Pedidos tinha 0 px de largura e o subtítulo virava coluna de uma palavra
+
+Medindo hierarquia em 834 px (tablet), o instrumento contou **0 alvos** e **0 títulos** em
+`/app/pedidos` — e a sonda mostrou por quê: o `<h1>` existia com **largura 0**.
+
+| Medida (834 × 1112) | Antes | Depois |
+| --- | --- | --- |
+| largura do `<h1>` | **0 px** | **498 px** |
+| subtítulo | coluna de ~40 px, uma palavra por linha ("Os / pedidos / da / loja, / do / rascunho…") | uma linha |
+| ações | na mesma linha do título, esmagando-o | abaixo, quando não há espaço |
+
+A causa: o cabeçalho virava linha em `sm` (640 px) — cedo demais para uma tela com três botões de
+ação — e o bloco do título tinha `min-w-0`, que permite encolher até zero sem reclamar. O
+comentário do próprio componente dizia que `min-w-0 flex-1` existia para o título **ceder** espaço;
+ceder até desaparecer não estava previsto.
+
+**Corrigido em `components/nexus-ui/layout/NexusPageHeader.tsx`**: a linha só começa em `lg`
+(1024 px). Abaixo disso, título em cima e ações embaixo — os dois nunca disputam a mesma linha.
+Gate em `tests/unit/cabecalho-nao-esmaga-no-tablet.test.ts`: o cabeçalho não pode voltar a usar
+`sm:flex-row` nem `sm:justify-end`.
+
+**Prova visual:** `capturas/v46-tablet-pedidos-depois.png` (834 px, título inteiro e subtítulo em
+uma linha). O "antes" está medido no instrumento (0 px) — refazer a captura exigiria reverter o
+conserto.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1486,14 +1511,14 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **38 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **39 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
-rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) e V-45 (tela do roteador sem título);
+rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) V-45 (tela do roteador sem título) e V-46 (cabeçalho esmagando o título no tablet);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
