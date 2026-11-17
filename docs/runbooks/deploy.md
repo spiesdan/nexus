@@ -185,7 +185,7 @@ O deploy aplica o **`supabase/baseline.sql`** antes de subir os contêineres —
 o mesmo arquivo (idempotente) que o `install.sh` e o `update.sh` usam, pela
 conexão de schema (`SUPABASE_DB_ADMIN_URL`, com `SUPABASE_DB_URL` como piso).
 Não é `supabase db push`: a cadeia de migrations não reproduz o schema
-(ver `docs/auditoria/20-f09-estrategia.md`), e aplicá-la marcaria migrations
+(ver `docs/auditoria/12-migrations-e-rls.md`), e aplicá-la marcaria migrations
 como aplicadas num banco parcial.
 
 Depois de aplicar, o script **verifica** objetos que o app usa na primeira tela
