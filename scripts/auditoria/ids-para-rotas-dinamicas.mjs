@@ -49,6 +49,17 @@ export const MAPA = [
   { tabela: "crm_pipelines", rota: "/app/pipelines/{id}" },
   { tabela: "prospecting_campaigns", rota: "/app/prospeccao/campanhas/{id}" },
   { tabela: "organizations", rota: "/admin/tenants/{id}" },
+  { tabela: "organizations", rota: "/admin/tenants/{id}/health" },
+  // As seis rotas de `/admin/**` que ficavam fora da lista. Tabelas conferidas
+  // na rota de API de cada tela, não deduzidas do nome:
+  { tabela: "api_audit_log", rota: "/admin/audit/{id}" },
+  { tabela: "conversations", rota: "/admin/inbox/{id}" },
+  { tabela: "incidents", rota: "/admin/incidents/{id}" },
+  { tabela: "lgpd_requests", rota: "/admin/lgpd/requests/{id}" },
+  { tabela: "user_organizations", rota: "/admin/users/{id}", coluna: "user_id" },
+  // As duas do tenant que também ficavam de fora.
+  { tabela: "conversations", rota: "/app/inbox/{id}" },
+  { tabela: "crm_leads", rota: "/app/leads/{id}" },
 ];
 
 function env() {
@@ -70,8 +81,8 @@ if (!BASE || !CHAVE) {
 }
 
 /** Primeiro id de uma tabela, ou null se ela não existir/estiver vazia. */
-export async function primeiroId(tabela) {
-  const url = `${BASE}/rest/v1/${tabela}?select=id&limit=1`;
+export async function primeiroId(tabela, coluna = "id") {
+  const url = `${BASE}/rest/v1/${tabela}?select=${coluna}&limit=1`;
   const r = await fetch(url, {
     headers: { apikey: CHAVE, Authorization: `Bearer ${CHAVE}` },
   });
@@ -80,15 +91,18 @@ export async function primeiroId(tabela) {
   if (!Array.isArray(linhas) || linhas.length === 0) {
     return { id: null, motivo: `${tabela} sem nenhuma linha nesta instalação` };
   }
-  return { id: linhas[0].id, motivo: null };
+  return { id: linhas[0][coluna] ?? null, motivo: null };
 }
 
 const rotas = [];
 const semDado = [];
 const cache = new Map();
-for (const { tabela, rota } of MAPA) {
-  if (!cache.has(tabela)) cache.set(tabela, await primeiroId(tabela));
-  const { id, motivo } = cache.get(tabela);
+for (const { tabela, rota, coluna = "id" } of MAPA) {
+  // A chave do cache inclui a coluna: `user_organizations` não tem `id` de
+  // usuário na primeira coluna, e o id de membro não serve para `/admin/users`.
+  const chave = `${tabela}:${coluna}`;
+  if (!cache.has(chave)) cache.set(chave, await primeiroId(tabela, coluna));
+  const { id, motivo } = cache.get(chave);
   if (id) rotas.push(rota.replace("{id}", id));
   else semDado.push({ rota, motivo });
 }
