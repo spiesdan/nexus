@@ -702,7 +702,7 @@ Jornadas críticas (16)
 | 5.1  | Público, login, onboarding, legal                  | `[ ]`  |
 | 5.2  | Dashboard, Meu Dia, busca, tarefas, agenda         | `[ ]`  |
 | 5.3  | Contatos, leads, carteira, funis, Customer 360     | `[ ]`  |
-| 5.4  | Inbox, atendimento, campanhas                      | `[ ]`  |
+| 5.4  | Inbox, atendimento, campanhas                      | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): matriz de canais e inbox medidos; faltam prioridade/SLA/macros/presença/reenvio |
 | 5.5  | Radar, prospecção, recuperação, inteligência       | `[ ]`  |
 | 5.6  | Pedidos, catálogo, estoque, compras, expedição     | `[~]`  | [`16-modulo-5.6.md`](16-modulo-5.6.md): 22 telas, ~56 handlers, regras de desconto/crédito/preço/estoque/sincronização medidas; **A1 corrigido** (patch de itens furava alçada/tabela/estoque), A2–A16 abertos com severidade. Auditoria de módulo feita; restam os consertos P0/P1. |
 | 5.7  | Financeiro, títulos, comissões                     | `[ ]`  |
