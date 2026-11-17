@@ -662,7 +662,7 @@ Jornadas críticas (16)
 
 | #    | Item                                                                                                                    | Estado |
 | ---- | ----------------------------------------------------------------------------------------------------------------------- | ------ |
-| 3.1  | Identidade própria, consistente, revista contra produto e marca real                                                    | `[ ]`  |
+| 3.1  | Identidade própria, consistente, revista contra produto e marca real                                                    | `[~]`  |
 | 3.2  | Tokens claros aplicados (canvas, surface, subtle, text, border, primary, hover, accent, success, warning, danger, info) | `[x]`  |
 | 3.3  | Tokens escuros aplicados (idem + surface-raised)                                                                        | `[x]`  |
 | 3.4  | Aliases semânticos (estado, interação, foco, seleção, disabled, overlay, gráficos)                                      | `[~]`  |
@@ -675,9 +675,17 @@ Jornadas críticas (16)
 | 3.11 | Sombras sutis                                                                                                           | `[x]`  |
 | 3.12 | Movimento 120–220 ms + reduced motion                                                                                   | `[x]`  |
 | 3.13 | Ícones consistentes                                                                                                     | `[~]`  |
-| 3.14 | Densidade controlada                                                                                                    | `[ ]`  |
+| 3.14 | Densidade controlada                                                                                                    | `[~]`  |
 | 3.15 | Componentes globais padronizados (lista completa do prompt)                                                             | `[~]`  |
 | 3.16 | Para cada componente: variantes, estados, tokens, teclado, a11y, responsividade, exemplos                               | `[~]`  |
+
+> **Evidência (3.1 e 3.14, medida em 17/11/2026):** a marca resolve do banco
+> (`lib/branding.ts:89-91`), mas `DEFAULT_APP_NAME = "NEXUS"` segue fixo
+> (`:20`) e a catraca de marca não varre `mobile/` nem `android/` — onde o shell
+> ainda traz nome e domínio do revendedor (`capacitor.config.ts`,
+> `mobile/index.html`, `android/.../strings.xml`). Densidade: só a Aerada existe
+> (`globals.css:102-106`), com as telas de 5 gráficos em Indicadores. Relatório:
+> [`19-fase-8-seguranca-performance-a11y.md`](19-fase-8-seguranca-performance-a11y.md).
 
 ## Fase 4 — Shell e navegação
 
@@ -741,26 +749,42 @@ Jornadas críticas (16)
 | 7.4  | Documentar páginas/operações offline                                                             | `[~]`  |
 | 7.5  | Cache, validade, update, mensagens, integridade, dados privados, logout, limpeza                 | `[~]`  |
 | 7.6  | Perda/retorno de rede, fila, retry, conflitos, duplicidade, rejeição                             | `[~]`  |
-| 7.7  | Não exibir como sincronizado o que é local                                                       | `[ ]`  |
+| 7.7  | Não exibir como sincronizado o que é local                                                       | `[~]`  |
 | 7.8  | Inspecionar `mobile/`, Capacitor, Android, SQLite, fila, sync, identidade, links, endpoint       | `[~]`  |
 | 7.9  | Preservar captura offline e integridade da fila                                                  | `[~]`  |
-| 7.10 | Parametrização segura de domínio/marca                                                           | `[ ]`  |
+| 7.10 | Parametrização segura de domínio/marca                                                           | `[~]`  |
 | 7.11 | Instalação, ciclo de vida, rede, storage, update, permissões, teclado, leitor, notificações, APK | `[~]`  |
-| 7.12 | Determinar suporte a iOS antes de incluir                                                        | `[ ]`  |
+| 7.12 | Determinar suporte a iOS antes de incluir                                                        | `[~]`  |
 | 7.A1 | Matriz offline publicada e fiel                                                                  | `[ ]`  |
 | 7.A2 | Nenhum pedido desaparece em falha/rejeição                                                       | `[~]`  |
 | 7.A3 | Estados pendente/enviando/sincronizado/rejeitado distinguíveis e recuperáveis                    | `[~]`  |
 | 7.A4 | APK mantém funções; branding/servidor configuráveis e testados                                   | `[ ]`  |
 
+> **Evidência (7.7, 7.10 e 7.12, medida em 17/11/2026):** nenhum rótulo de
+> "sincronizado" foi encontrado sem confirmação do backend (pedidos, Nuvemshop,
+> expedição, offline) — falta gate contra toast otimista novo. `APP_URL` é
+> configurável, com default `http://localhost:3000` e fallback silencioso no
+> callback da Nuvemshop; o shell mobile tem domínio fixo. **iOS não existe**:
+> não há `ios/` nem `@capacitor/ios`, e o PWA iOS instala sem ícone próprio.
+> Relatório: [`19-fase-8-seguranca-performance-a11y.md`](19-fase-8-seguranca-performance-a11y.md).
+
 ## Fase 8 — Segurança, privacidade, desempenho, acessibilidade
 
 | #   | Item                                                                                                                                         | Estado |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[ ]`  |
-| 8.2 | Limites de exposição de dados e segurança administrativa                                                                                     | `[ ]`  |
-| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[ ]`  |
-| 8.4 | Otimizar só com baseline → gargalo → resultado                                                                                               | `[ ]`  |
-| 8.5 | WCAG 2.2 AA, teclado, foco, semântica, contraste, leitores, erros, toque, reduced motion                                                     | `[ ]`  |
+| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[~]`  |
+| 8.2 | Limites de exposição de dados e segurança administrativa                                                                                     | `[~]`  |
+| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[~]`  |
+| 8.4 | Otimizar só com baseline → gargalo → resultado                                                                                               | `[~]`  |
+| 8.5 | WCAG 2.2 AA, teclado, foco, semântica, contraste, leitores, erros, toque, reduced motion                                                     | `[~]`  |
+
+> **Evidência (Fase 8, medida em 17/11/2026):** `pnpm audit --prod` caiu de
+> **1 crítica / 7 altas / 20 moderadas** para **0 / 1 / 1** (a alta restante,
+> `picomatch`, não tem versão corrigida publicada). Performance medida no build:
+> Inbox **386 KB gz** (budget 250), `gpt-tokenizer` **1007 KB gz** estático nas
+> telas de agente, maplibre `-dev` **5,3 MB**, sem baseline de Core Web Vitals.
+> A11y: axe cobre 8 telas, só na main, com tags WCAG 2.0/2.1 — sem foco em
+> diálogo nem reflow. Relatório: [`19-fase-8-seguranca-performance-a11y.md`](19-fase-8-seguranca-performance-a11y.md).
 
 ## Fase 9 — Testes e qualidade
 
