@@ -116,7 +116,11 @@ export default async function ProdutosPage({
     return consulta;
   }
 
-  const { data: linhasDeIds } = await consultaDeIds();
+  const { data: linhasDeIds, error: erroIds } = await consultaDeIds();
+  // Falha de banco NÃO é "nenhum produto cadastrado": engolir o erro fazia a
+  // tela afirmar que o catálogo está vazio. O `error.tsx` do /app mostra o
+  // "Algo deu errado" com "Tentar de novo".
+  if (erroIds) throw new Error(`catalog_products: ${erroIds.message}`);
   let ids = ((linhasDeIds ?? []) as unknown as { id: string }[]).map((l) => l.id);
 
   if (semFoto) {
@@ -141,9 +145,9 @@ export default async function ProdutosPage({
   );
 
   // `in=()` vazio é inválido no PostgREST: página vazia não consulta.
-  const { data: produtos } =
+  const { data: produtos, error: erroProdutos } =
     idsDaPagina.length === 0
-      ? { data: [] }
+      ? { data: [], error: null }
       : await supabase
           .from("catalog_products")
           .select(COLUNAS_DO_PRODUTO)
@@ -151,8 +155,12 @@ export default async function ProdutosPage({
           .in("id", idsDaPagina)
           .order("ativo", { ascending: false })
           .order("nome");
+  if (erroProdutos) throw new Error(`catalog_products (página): ${erroProdutos.message}`);
 
-  const [{ data: categorias }, { data: tabelas }] = await Promise.all([
+  const [
+    { data: categorias, error: erroCategorias },
+    { data: tabelas, error: erroTabelas },
+  ] = await Promise.all([
     supabase
       .from("product_categories")
       .select(COLUNAS_DA_CATEGORIA)
@@ -167,6 +175,11 @@ export default async function ProdutosPage({
       .order("nome")
       .limit(100),
   ]);
+  if (erroCategorias || erroTabelas) {
+    throw new Error(
+      `catálogo (filtros): ${erroCategorias?.message ?? ""} ${erroTabelas?.message ?? ""}`.trim(),
+    );
+  }
 
   // As fotos entram JUNTAS com os produtos, no HTML inicial. Buscá-las depois,
   // no client, fazia a coluna aparecer vazia e só preencher segundos mais
