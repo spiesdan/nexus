@@ -1,6 +1,20 @@
 "use client";
 import * as React from "react";
-import { encode } from "gpt-tokenizer";
+
+/**
+ * O tokenizador NÃO entra no bundle inicial.
+ *
+ * `gpt-tokenizer` mede ~1 MB gzip. Importado estaticamente, ele era baixado em
+ * TODA visita a uma tela que usa o editor de agente — mesmo antes de a pessoa
+ * digitar qualquer coisa, e mesmo que ela nunca olhe o contador. O número do
+ * contador é acessório; o vocabulário inteiro do tokenizador não precisa viajar
+ * junto com a tela.
+ *
+ * O import dinâmico move o pacote para um chunk próprio, carregado só quando o
+ * efeito roda (200 ms depois da última tecla). A tela abre sem ele e o contador
+ * aparece quando o chunk chega. `import()` dentro do efeito também mantém o
+ * pacote fora do servidor: o componente é client e o cálculo é do navegador.
+ */
 
 interface Props {
   text: string;
@@ -12,14 +26,20 @@ export function TokenCounter({ text, contextWindow, className }: Props) {
   const [count, setCount] = React.useState<number | null>(null);
 
   React.useEffect(() => {
+    let cancelado = false;
     const t = setTimeout(() => {
-      try {
-        setCount(encode(text ?? "").length);
-      } catch {
-        setCount(null);
-      }
+      void import("gpt-tokenizer")
+        .then(({ encode }) => {
+          if (!cancelado) setCount(encode(text ?? "").length);
+        })
+        .catch(() => {
+          if (!cancelado) setCount(null);
+        });
     }, 200);
-    return () => clearTimeout(t);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+    };
   }, [text]);
 
   if (count === null) {
