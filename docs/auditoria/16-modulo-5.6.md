@@ -163,16 +163,16 @@ expedição/frota.
 | # | Achado | Sev. | Estado |
 | --- | --- | --- | --- |
 | A1 | Patch de itens furava alçada, tabela de preço e estoque | **P0** | **corrigido** (commit `e4d2b2e7`) |
-| A2 | Saldo de estoque e recebimento de compra: read-modify-write/3 escritas sem transação | **P0** | aberto |
-| A3 | Cancelar pedido/compra não devolve estoque | **P0** | aberto |
-| A4 | Sem máquina de estados do pedido (qualquer status→qualquer) | **P0** | aberto (regra não escrita) |
-| A5 | `duplicar` copia `desconto_cents` sem `desconto_pct` | P1 | aberto |
+| A2 | Saldo de estoque e recebimento de compra: read-modify-write/3 escritas sem transação | **P0** | **parcial**: CAS no saldo (`a546932c`); recebimento ainda sem transação única |
+| A3 | Cancelar pedido/compra não devolve estoque | **P0** | **corrigido** (`a546932c`): pedido devolve; compra estorna o recebido |
+| A4 | Sem máquina de estados do pedido (qualquer status→qualquer) | **P0** | **corrigido** (`a546932c`): `transicoes-do-pedido.ts` + botão concluir |
+| A5 | `duplicar` copia `desconto_cents` sem `desconto_pct` | P1 | **corrigido** (`55291df5`) |
 | A6 | Custo BR em `/app/compras` vira zero | P1 | **corrigido** (`b43f54f4`) |
 | A7 | Catálogo truncado em 500 no estoque/compras | P1 | aberto (F-30) |
 | A8 | Iniciar rota / marcar entregue / tirar pedido sem confirmação | P1 | **iniciar corrigido** (`b43f54f4`); entregar e tirar seguem abertos |
 | A9 | PATCH de carga permite regressão `em_rota→montando/cancelada` | P1 | **corrigido** (`b43f54f4`) |
-| A10 | `/faturamento` `.lt()` exclui o dia; limite 2.000 silencioso | P1 | aberto |
-| A11 | Catálogo engole erro de query e mostra "nenhum produto" | P1 | aberto |
+| A10 | `/faturamento` `.lt()` exclui o dia; limite 2.000 silencioso | P1 | **data corrigida** (`55291df5`); limite ainda silencioso (log) |
+| A11 | Catálogo engole erro de query e mostra "nenhum produto" | P1 | **corrigido** (`55291df5`) |
 | A12 | Tabela de preço: PUT apaga→insere sem transação | P1 | aberto |
 | A13 | Timeline não conhece `items_replaced`/`deleted`/`approved_by_client` | P2 | aberto |
 | A14 | Fornecedor sem editar/desativar; `observacoes` nunca exibidas | P2 | aberto |
