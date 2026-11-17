@@ -1018,6 +1018,51 @@ em `/app/inbox` porque a sessão de teste já passou do onboarding e a rota redi
 como "tela sem título" seria publicar o efeito da sessão, não do produto. O instrumento agora
 separa `visiveis` de `ocultos` justamente para não repetir o erro.
 
+### V-37 · Média · A terceira legenda de gráfico pintada com a cor da série
+
+O instrumento de contraste rodou de novo depois das correções da V-29 e ainda acusou um texto
+ilegível: **"Inativos antigos" a 3,53:1**, 16 px, no gráfico de carteira de `/app/indicadores`.
+
+A causa é a mesma da V-29 — o Recharts pinta o **texto** do rótulo com a cor da série quando o
+`<Legend>` não tem `formatter` —, e ela tinha sido corrigida em **duas** legendas, não na classe.
+Esta era a terceira. Corrigida com o mesmo `formatter` que devolve `text-text-muted` ao rótulo (o
+swatch continua colorido).
+
+**Gate novo em `tests/unit/texto-com-cor-de-grafico.test.ts`**: nenhum `<Legend>` do produto pode
+existir sem `formatter` (ou `content`). A regra passa a valer para o arquivo, não para a instância
+que a medição abriu.
+
+### V-38 · Alta · O selo de status usava a paleta de categoria como cor de texto
+
+Os outros **21** dos 22 textos reprovados eram o mesmo caso: o selo "Faturado" da lista de
+pedidos, 12 px, **4,13:1**. O `Badge variant="magenta"` pintava o texto com `--color-magenta` — a
+cor de gráfico.
+
+O que a medição de um selo esconde: os outros variants da mesma família estavam **piores** e não
+apareciam na tela medida.
+
+| Variant (`text-*` sobre `surface`) | Antes, tema claro | Depois (`-fg`) |
+| --- | --- | --- |
+| `amber` ("Em orçamento") | **1,96:1** | **6,39:1** (`#8a5200`) |
+| `mint` ("Entregue") | 2,22:1 | já corrigido na V-28 (`success-fg`) |
+| `ember` | **3,53:1** | **6,44:1** (`#b32b00`) |
+| `sky` ("Aprovado") | **4,04:1** | **6,98:1** (`#1d56b0`) |
+| `magenta` ("Faturado") | **4,13:1** | **6,91:1** (`#a3246f`) |
+
+**Corrigido** com tokens de TEXTO por tema — `--color-{amber,sky,ember,magenta}-fg` (no escuro:
+`#ffc46b`, `#8ab4ff`, `#ff9b80`, `#f07ac0`, todos ≥ 6,7:1 sobre `#1c1c1c`) — usados pelos quatro
+variants do `Badge`. A paleta `--color-*` intacta para gráfico, swatch e ilustração: é para isso
+que ela existe.
+
+**Resultado da varredura, nas mesmas 8 telas:** **22 → 0** textos abaixo do mínimo. O denominador
+mudou junto (**867 → 1.030** textos medidos): as telas com lista e gráfico renderizam quantidades
+diferentes a cada rodada, e o total acompanha. O número que importa é o de reprovados, e ele é
+zero — com a ressalva, escrita no próprio artefato, de que **27 elementos por tela não são
+medidos** por terem `background-image` (gradiente ou foto).
+
+**E a V-30 continua de pé:** a paleta de categoria segue abaixo de AA — como cor de gráfico e tag
+curta, que é o uso declarado. O que mudou é que ela deixou de ser cor de TEXTO em selo de status.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1100,19 +1145,20 @@ cobriu").
 | 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | `<h1>` em 100% após V-02/V-08/V-12; alvos < 40 px medidos em 258 medições (p50 = 3 por tela no celular, máx 223 em `/app/agenda` — V-06 segue sinal); **101 `<label>`** analisados, **0 sem vínculo** com o campo após a V-15 (gate novo); **contraste** medido em 1.030 textos de 8 telas: 48 abaixo do mínimo → 22 após 4 correções (V-27..V-29), V-30 declarado; **teclado/foco** em 9 telas: 301 paradas, 0 sem foco visível, "Pular para o conteúdo" é o 1º Tab; **movimento** 18/20 → 0/20 após V-26; leitor de tela e zoom não exercitados                                                                                                                                                               |
+| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | **Contraste medido no navegador** (8 telas, cor final de cada texto sobre o fundo real): de **22 abaixo do mínimo** para **0 de 1.030** depois de V-37/V-38 (V-27 a V-30 na rodada anterior). 27 elementos por tela ficam fora por terem `background-image` — contados, não aprovados. **Foco/teclado**: 301 paradas em 9 telas, 0 sem foco visível, "Pular para o conteúdo" é o primeiro Tab. **Movimento**: 0 de 20 animando com `prefers-reduced-motion`. **Alvos de toque**: p50 de 3 por tela abaixo de 40 px (V-06, sinal). **Falta**: leitor de tela real (NVDA/VoiceOver) e zoom 200% |
 | 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos                                                                                                                                                                                                                                                          |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **29 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **31 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
-V-36 (título de página com dois pesos);
+V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
+(selo de status usando a paleta de categoria como texto);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 

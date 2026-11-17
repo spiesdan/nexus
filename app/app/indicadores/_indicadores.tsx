@@ -505,7 +505,10 @@ export function IndicadoresClient({
                   ))}
                 </Pie>
                 <Tooltip />
-                <Legend />
+                {/* `formatter`: sem ele o Recharts pinta o TEXTO da legenda com
+                    a cor da série — "Inativos antigos" saía a 3,53:1 sobre o
+                    cartão (medido em 17/11/2026). O swatch segue colorido. */}
+                <Legend formatter={(valor) => <span className="text-text-muted">{valor}</span>} />
               </PieChart>
             </ResponsiveContainer>
           </div>

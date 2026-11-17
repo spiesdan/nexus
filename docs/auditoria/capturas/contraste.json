@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-16T12:19:42.400Z",
+  "geradoEm": "2026-11-17T03:53:01.995Z",
   "base": "http://localhost:3011",
   "resultados": [
     {
@@ -16,97 +16,8 @@
       "medida": {
         "medidos": 94,
         "naoMedidosPorImagem": 262,
-        "reprovados": 21,
-        "piores": [
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          },
-          {
-            "amostra": "Faturado",
-            "tag": "div",
-            "tamanho": 12,
-            "razao": 4.13,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(214,64,159,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "inline-flex items-center gap-1 rounded-full border px-3 py-0.5 text-xs font-medi"
-          }
-        ]
+        "reprovados": 0,
+        "piores": []
       }
     },
     {
@@ -150,20 +61,8 @@
       "medida": {
         "medidos": 219,
         "naoMedidosPorImagem": 27,
-        "reprovados": 1,
-        "piores": [
-          {
-            "amostra": "Inativos antigos",
-            "tag": "span",
-            "tamanho": 16,
-            "razao": 3.53,
-            "minimo": 4.5,
-            "passa": false,
-            "corTexto": "rgba(220,38,38,1)",
-            "corFundo": "rgb(28,28,28)",
-            "classe": "recharts-legend-item-text"
-          }
-        ]
+        "reprovados": 0,
+        "piores": []
       }
     },
     {
