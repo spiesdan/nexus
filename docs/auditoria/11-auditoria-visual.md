@@ -1156,6 +1156,31 @@ E o sinal da V-06 fica mais forte quanto mais estreita a tela: a mediana de alvo
 sai de **3** (390) para **7,5** (320), e `/app/pedidos` chega a **99**. Não é regressão — é a mesma
 tabela densa em menos espaço; o número mostra onde a próxima passada de toque deve olhar.
 
+### Busca, "carregar mais" e seleção em massa — o 2.7 medido com o dedo
+
+A matriz de telas prova que a tela **tem** filtro; não prova que digitar filtra. Instrumento novo,
+`scripts/auditoria/lista-busca-e-paginacao.mjs`, digita e conta linha antes/depois — com o termo
+batendo em dado que o seed deixou.
+
+| Tela | Medida | Resultado |
+| --- | --- | --- |
+| `/app/contacts` | linhas antes → com "E2E" | **25 → 19** |
+| `/app/contacts` | "Carregar mais" | **25 → 50** linhas |
+| `/app/pedidos` | pedidos na visão de cartões → com "E2E" | **49 → 11** |
+| `/app/pedidos` | visão Tabela | **47** linhas |
+| `/app/pedidos` | "selecionar todos" | **47 selecionados** |
+
+Três visões convivem em Pedidos (Cartões, Tabela, Quadro) e a seleção em massa vive na Tabela — o
+número acima é o contador real depois do clique, não o texto do componente.
+
+**O que a medição mostra e o produto não faz:** depois de filtrar, a URL continua `/app/contacts` e
+`/app/pedidos` — o filtro **não** vai para a URL nessas duas telas. Recarregar perde o recorte, e o
+link compartilhado abre sem ele. Não é regressão desta rodada e não entra como "corrigido": é
+decisão de produto (o mesmo tema do 4.5), registrada com medida.
+
+**Falta no 2.7:** ordenação por coluna (nenhuma das duas telas tem cabeçalho ordenável) e seleção em
+massa fora de Pedidos.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1234,7 +1259,7 @@ cobriu").
 | 2.4  | Hierarquia e densidade                                              | `[~]`  | Lida nas 258 capturas; sem medição de densidade                                                                                                                                                                                                                                                                                                                                                                                                |
 | 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | **Título medido no DOM das 129 rotas estáticas**: 117 de 119 `h1` visíveis a 24 px / 500, **um `h1` por tela** (V-35 e V-36 corrigidos; 2 exceções declaradas: `/design` e os títulos que são identificador). `sr-only` separado de visível no instrumento. **Breadcrumb**: 52 de 129 rotas têm; shell e barra de filtros consistentes nos 258 screenshots. **Falta**: decidir se breadcrumb é padrão de todas as telas internas ou só das profundas |
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Cliques reais exercitados pela suíte E2E** (16 jornadas, 254 testes verdes): a contagem por tarefa só existe para `jornada-venda` (**5 cliques + 5 digitações** do login ao pedido criado); nas demais o teste mede o resultado, não o esforço. **F-27 fechado**: o mapa de empresas não abria porque um efeito de URL escrevia no alias `/app/prospeccao` e remontava a tela — a aba Empresas voltava para Campanhas. **Falta**: instrumento de contagem por tarefa (quantos cliques/digitações cada jornada custa) |
-| 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado                                                                                                                                                                                                                                                                                                                                               |
+| 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | **Medido no dedo** (`lista-busca-e-paginacao.mjs`): contatos 25 → 19 linhas com "E2E" e 25 → 50 com "Carregar mais"; pedidos 49 → 11 com o termo, 47 linhas na visão Tabela e **"47 selecionados"** após selecionar todos. **Não vai para a URL**: filtro em `/app/contacts` e `/app/pedidos` não sobrevive a reload (decisão de produto, 4.5). **Falta**: ordenação por coluna e seleção em massa fora de Pedidos |
 | 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[~]`  | **Medido no clique** (`scripts/auditoria/feedback-e-duplicidade.mjs`, POST abortado após 2,5 s — nada grava): cliente novo e template novo mostram botão desabilitado, rótulo de progresso, **1 requisição por envio** e erro visível quando a resposta falha. Antes: **3 POSTs por clique** (V-39 — o cliente repetia erro de rede em método que grava) e 4 de 35 botões de envio mudos (V-40). **Falta**: dedupe server-side da `Idempotency-Key`, hoje lida por **2** rotas |
