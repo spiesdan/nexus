@@ -42,7 +42,9 @@ describe("buscarCnpj", () => {
   });
 
   it("404 vira nao_encontrado", async () => {
-    const fetch = vi.fn().mockResolvedValue({ ok: false, status: 404, json: () => Promise.resolve({}) });
+    const fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: false, status: 404, json: () => Promise.resolve({}) });
     const r = await buscarCnpj("11.222.333/0001-81", fetch as unknown as typeof window.fetch);
     expect(r).toEqual({ ok: false, erro: "nao_encontrado" });
   });
@@ -80,5 +82,94 @@ describe("buscarCnpj", () => {
       phone_number: "+5547999999999",
     });
     expect((c.source_metadata.receita as { situacao: string }).situacao).toBe("ATIVA");
+  });
+
+  it("a IE vem da segunda fonte, escolhida pela UF da empresa", async () => {
+    // A BrasilAPI não publica IE; a consulta paralela a `publica.cnpj.ws` é que
+    // traz a inscrição. Este teste prende as duas pontas: a fonte é chamada e o
+    // mapeamento entrega `ie` já na UF certa.
+    const fetch = vi.fn(async (url: string) => {
+      if (url.includes("publica.cnpj.ws")) {
+        return {
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              estabelecimento: {
+                inscricoes_estaduais: [
+                  { inscricao_estadual: "999", ativo: true, estado: { sigla: "RJ" } },
+                  { inscricao_estadual: "123456789", ativo: true, estado: { sigla: "SC" } },
+                ],
+              },
+            }),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            cnpj: "11222333000181",
+            razao_social: "Empresa Teste LTDA",
+            uf: "SC",
+          }),
+      };
+    });
+    const r = await buscarCnpj("11.222.333/0001-81", fetch as unknown as typeof window.fetch);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(fetch).toHaveBeenCalledWith(
+      "https://publica.cnpj.ws/cnpj/11222333000181",
+      expect.anything(),
+    );
+    expect(r.empresa.inscricoes_estaduais).toHaveLength(2);
+    const c = mapearParaContato(r.empresa);
+    // IE de RJ existe, mas a empresa é de SC — preencher com ela seria rejeição.
+    expect(c.ie).toBe("123456789");
+    expect(
+      (c.source_metadata.receita as { inscricoes_estaduais: unknown[] }).inscricoes_estaduais,
+    ).toHaveLength(2);
+  });
+
+  it("manda User-Agent próprio — a BrasilAPI responde 403 ao UA padrão do Node", async () => {
+    // Medido em 16/11/2026: `fetch("https://brasilapi.com.br/...")` sem headers
+    // devolvia 403 (o UA do Node é `node`), enquanto o mesmo CNPJ por `curl`
+    // devolvia 200. Sem este header, a Receita "cai" para quem usa o produto.
+    const fetch = vi.fn(async (..._args: unknown[]) => ({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ cnpj: "11222333000181", razao_social: "X", uf: "SC" }),
+    }));
+    await buscarCnpj("11.222.333/0001-81", fetch as unknown as typeof window.fetch);
+
+    const paraBrasilApi = fetch.mock.calls.find(([url]) =>
+      String(url).includes("brasilapi.com.br"),
+    );
+    expect(paraBrasilApi).toBeDefined();
+    const init = paraBrasilApi?.[1] as { headers?: Record<string, string> };
+    expect(init.headers?.["user-agent"]).toBeTruthy();
+    expect(init.headers?.["user-agent"]).not.toBe("node");
+    expect(init.headers?.accept).toBe("application/json");
+  });
+
+  it("fonte de IE fora do ar não derruba o cadastro", async () => {
+    const fetch = vi.fn(async (url: string) => {
+      if (url.includes("publica.cnpj.ws")) throw new Error("ECONNREFUSED");
+      return {
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            cnpj: "11222333000181",
+            razao_social: "Empresa Teste LTDA",
+            uf: "SC",
+          }),
+      };
+    });
+    const r = await buscarCnpj("11.222.333/0001-81", fetch as unknown as typeof window.fetch);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.empresa.inscricoes_estaduais).toEqual([]);
+    expect(mapearParaContato(r.empresa).ie).toBeNull();
   });
 });

@@ -152,6 +152,10 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
                   if (d.email) form.setValue("email", d.email);
                   if (d.phone_number) form.setValue("phone_number", d.phone_number);
                   if (d.fantasia) form.setValue("fantasia", d.fantasia);
+                  // Só preenche se está vazio: a IE digitada no cadastro manda.
+                  if (d.ie && !(form.getValues("ie") ?? "").trim()) {
+                    form.setValue("ie", d.ie);
+                  }
                   setEndereco({
                     logradouro: d.logradouro ?? "",
                     numero_end: d.numero_end ?? "",

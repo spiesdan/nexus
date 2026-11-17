@@ -151,6 +151,11 @@ export function NewContactDialog({ open, onOpenChange, onCreated }: Props) {
                   if (d.email) form.setValue("email", d.email);
                   if (d.phone_number) form.setValue("phone_number", d.phone_number);
                   if (d.fantasia) form.setValue("fantasia", d.fantasia);
+                  // A IE vem do cadastro público: é o que evita a rejeição 232
+                  // na primeira nota. Nunca pisa no que já foi digitado.
+                  if (d.ie && !(form.getValues("ie") ?? "").trim()) {
+                    form.setValue("ie", d.ie);
+                  }
                   setEndereco({
                     logradouro: d.logradouro ?? "",
                     numero_end: d.numero_end ?? "",

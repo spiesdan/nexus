@@ -510,7 +510,7 @@ Resultado medido (39 telas, sessão real de `manager`, `dono` e admin, build de 
 | modal sem nome acessível (`role=dialog` sem título) | **0**                                                                |
 | erro de console                                     | **1**, e virou a V-22                                                |
 
-**Como as 14 rotas dinâmicas entraram.** `scripts/auditoria/ids-para-rotas-dinamicas.mjs` pede um
+**Como as 14 rotas dinâmicas entraram** (28 medições, em `medicoes-dinamicas.json`). `scripts/auditoria/ids-para-rotas-dinamicas.mjs` pede um
 id real ao PostgREST para cada tabela (`commercial_orders`, `shipments`, `crm_pipelines`,
 `followup_flow_pointers`…), monta a URL e devolve o que não tem dado com o motivo. Sem isso,
 abrir `/app/pedidos/[id]` mediria a tela de "não encontrado" e o relatório chamaria isso de "tela
@@ -649,7 +649,7 @@ telas de tenant do instrumento de subtelas foram medidas em **834 × 1112**, no 
 
 | Medida (834 px)                  | Resultado                                                                                              |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| medições                         | **32**                                                                                                 |
+| medições                         | **32** (`medicoes-tablet-tenant.json`, uma linha por captura)                                          |
 | status                           | **32 × 200**, 0 erro de captura                                                                        |
 | overflow horizontal              | **0**                                                                                                  |
 | `<h1>` ausente                   | **0**                                                                                                  |
@@ -798,6 +798,77 @@ O que fiz: **declarei com número** em vez de corrigir por conta própria, e apo
 (par por tema). O `mint` já foi corrigido porque o defeito ali não era a paleta: era o **wash**
 não acompanhar o tema, e isso é bug, não gosto.
 
+### V-31 · Alta · A nota rejeitada por cadastro do destinatário era corrigida a mão, campo por campo
+
+A fila de notas para nas mesmas rejeições: **232** (IE do destinatário não informada),
+**726** (endereço incompleto), documento divergente. O diálogo de correção existia, mas exigia
+que alguém descobrisse o dado que falta e digitasse — inclusive a IE, que é pública.
+
+**O que passou a acontecer.** Ao abrir uma nota com o destinatário incompleto, o sistema consulta
+o cadastro público pelo CNPJ e monta um **plano**: o que preenche, de onde veio, e o que ele
+**não** consegue resolver. O operador revisa e aplica nos campos com um clique; salvar continua
+sendo ato separado — corrigir não é emitir.
+
+| Peça | Onde | O que faz |
+|---|---|---|
+| Fonte da IE | `lib/brasil/inscricao-estadual.ts` | `publica.cnpj.ws` (a BrasilAPI **não** publica IE — verificado em 16/11/2026); `escolherIe` devolve **só** a IE da UF do destinatário |
+| Cadastro completo | `GET /api/v1/fiscal/cadastro-do-cnpj` | razão social, endereço, CEP e IE em uma resposta; 422 nomeado quando a fonte cai |
+| Plano puro | `lib/fiscal/correcao-automatica.ts` | `planejarCorrecaoAutomatica` devolve mudanças + pendências; não grava nada |
+| Tela | `app/app/notas/_components/CorrigirNota.tsx` | painel "Correção automática", "Aplicar nos campos", "Buscar pelo CNPJ" manual |
+| Cadastro de cliente | `components/contacts/{New,Edit}ContactDialog.tsx` | a busca por CNPJ passou a preencher a IE — a próxima nota não nasce sem ela |
+
+**As três regras, e cada uma tem teste.**
+
+1. **Nunca sobrescreve o que a pessoa digitou.** Só preenche campo vazio; endereço digitado manda.
+2. **Nunca inventa dado fiscal.** IE de outra UF **nunca** é usada — isso trocaria a rejeição 232
+   por divergência de UF, que é pior porque o dado parece certo. Sem IE na UF, o campo fica vazio
+   e a pendência explica as opções (ISENTO × não contribuinte).
+3. **O que não dá para consertar aparece na lista.** CFOP depende da operação; NCM sem cadastro do
+   produto; CNPJ com dígito inválido; campo acima dos 60 caracteres do leiaute. Esconder isso
+   faria a tela dizer "corrigido" e a SEFAZ recusar de novo.
+
+**Medido:** `tests/unit/inscricao-estadual.test.ts` (13), `tests/unit/correcao-automatica.test.ts`
+(17) e `tests/unit/fiscal-cadastro-do-cnpj-route.test.ts` (7) — **37 testes**, mais 3 novos em
+`tests/unit/cnpj-contrato.test.ts` que prendem a segunda fonte, o caso "fonte de IE fora do ar
+não derruba o cadastro" e o User-Agent da V-32 (9 no arquivo). `pnpm typecheck` 0 e
+`pnpm exec eslint` 0 erros nos arquivos tocados.
+
+**Prova em produção** (16/11, `next start` contra o banco E2E): nota de prova com rejeição **232**
+e destinatário PJ sem IE e sem endereço (Petrobras, CNPJ 33.000.167/0001-01). Ao abrir, o painel
+mostra **"6 campos preenchidos · 3 pendências"**; "Aplicar nos campos" preenche a IE **81281882**
+(a ativa do RJ), `REPUBLICA DO CHILE`, `65`, `CENTRO`, `RIO DE JANEIRO`, `RJ` e `20031170`. As 3
+pendências são NCM, CFOP e unidade do item — o que a máquina não pode adivinhar. Depois do
+clique, a nota continua `erro/232` e o contato continua sem IE e sem endereço: **nada foi
+gravado**. Nenhum erro de console. Capturas: `capturas/v31-correcao-automatica.png` (plano) e
+`capturas/v31-correcao-aplicada.png` (campos preenchidos).
+
+> **Não é auto-save.** O plano só entra no estado do formulário depois do clique em "Aplicar nos
+> campos"; gravar continua exigindo "Salvar" ou "Salvar e reenviar". Automatizar a gravação de
+> dado fiscal sem revisão seria trocar rejeição por documento errado aceito.
+
+### V-32 · Alta · A BrasilAPI respondia 403 ao `fetch` do servidor — e o produto chamava isso de "Receita indisponível"
+
+Descoberto ao provar a V-31 contra o build de produção: a rota nova devolveu **422 "Cadastro
+público indisponível"** para um CNPJ que responde 200 no `curl`, no mesmo instante e da mesma
+máquina.
+
+| Cliente | Requisição ao mesmo CNPJ (16/11/2026) | Status |
+| --- | --- | --- |
+| `curl` | `GET /api/cnpj/v1/33000167000101` | **200** |
+| Node 22 `fetch`, sem headers | idem | **403** |
+| Node 22 `fetch`, `user-agent` próprio | idem | **200** |
+
+A BrasilAPI passou a recusar o **User-Agent padrão do Node** (`node`). O produto usava `fetch`
+sem header nenhum, então a busca de CNPJ do cadastro de cliente — e a consulta de IE da nota —
+falhavam com "fonte indisponível" sem a fonte ter caído. O erro não aparecia no `curl` de
+conferência justamente porque `curl` manda UA próprio.
+
+**Corrigido:** `lib/brasil/cnpj.ts` e `lib/brasil/inscricao-estadual.ts` mandam
+`accept: application/json` e `user-agent` identificando a instalação. Gate novo em
+`tests/unit/cnpj-contrato.test.ts` reprova se o header sumir ou voltar a ser o UA do Node.
+Medido depois: `buscarCnpj("33000167000101")` → `ok: true` com razão social, endereço e as
+quatro IEs publicadas (DF/MS/RJ/RS, só a do RJ ativa).
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -831,10 +902,10 @@ Números da varredura de **16/11 contra build de produção** (`pnpm build` + `p
 
 | Não coberto                                                                 | Motivo medido                                                                                                                                                                       |
 | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **26 rotas dinâmicas** (`[id]`, `[token]`, `[conversationId]`, `[entryId]`) | precisam de um id real no banco; abrir sem id mede a tela de "não encontrado" e viraria "tela vazia" no relatório. O instrumento as **pula com motivo escrito** no JSON (`puladas`) |
+| **10 das 26 rotas dinâmicas** (`[id]`, `[token]`, `[conversationId]`, `[entryId]`) | abrir sem id mede a tela de "não encontrado" e viraria "tela vazia" no relatório. O instrumento pede id real ao banco para **16** delas: **14 medidas** em desktop e celular (28 medições, `medicoes-dinamicas.json`) e **2 sem dado** (`ai_routers`, `lgpd_requests`). As **10 restantes** não estavam na lista: **6 de `/admin/**`** (audit, inbox, incidents, lgpd, users, tenants/health), **2 com token gerado** (`/o/[token]`, `/team/accept-invite/[token]`) e `/app/inbox/[id]` + `/app/leads/[id]` |
 | `/onboarding/*` (9 rotas)                                                   | a conta do seed já completou o onboarding: todas redirecionam para `/app/inbox`. Auditar onboarding exige uma conta recém-criada, que a suíte E2E não mantém                        |
 | `/login/mfa`                                                                | a sessão do seed já está autenticada: redireciona para `/app/inbox`                                                                                                                 |
-| **tablet 834 px**                                                           | medido em 5 telas numa rodada anterior; a varredura completa rodou em 1440 e 390                                                                                                    |
+| **tablet 834 px**                                                           | **medido depois**, em 32 telas de tenant (§ "Tablet 834 px") — a lacuna que resta é que essas 32 não são as 129: a varredura completa rodou em 1440 e 390                              |
 
 ### Redirecionamentos medidos — 26 de 129 (e nenhum é link quebrado)
 
@@ -870,25 +941,27 @@ cobriu").
 
 | #    | Item                                                                | Estado | Medido                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ---- | ------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[~]`  | **129 rotas estáticas** abertas em navegador contra build de produção, em 1440 e 390 (= 258 medições), de 155 telas distintas. 26 dinâmicas puladas com motivo; tablet 834 em 5 telas                                                                                                                                                                                                                                                          |
+| 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[~]`  | **129 rotas estáticas** abertas em navegador contra build de produção, em 1440 e 390 (= 258 medições), de 155 telas distintas. 26 dinâmicas puladas com motivo; **tablet 834 medido em 32 telas** (`medicoes-tablet-tenant.json`); 28 medições de 14 rotas dinâmicas com id real (`medicoes-dinamicas.json`)                                                                                                                                                                                                                                                          |
 | 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
 | 2.4  | Hierarquia e densidade                                              | `[~]`  | Lida nas 258 capturas; sem medição de densidade                                                                                                                                                                                                                                                                                                                                                                                                |
 | 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | Shell e barra de filtros consistentes; títulos por rota                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[ ]`  | Depende das jornadas J1–J16                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado                                                                                                                                                                                                                                                                                                                                               |
-| 2.8  | Formulários                                                         | `[ ]`  | Não executado                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | `<h1>` em 100% após V-02/V-08/V-12; alvos < 40 px medidos em 258 medições (p50 = 3 por tela no celular, máx 223 em `/app/agenda` — V-06 segue sinal); **101 `<label>`** analisados, **0 sem vínculo** com o campo após a V-15 (gate novo); contraste, foco e teclado não medidos                                                                                                                                                               |
-| 2.12 | Casos extremos                                                      | `[ ]`  | —                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | `<h1>` em 100% após V-02/V-08/V-12; alvos < 40 px medidos em 258 medições (p50 = 3 por tela no celular, máx 223 em `/app/agenda` — V-06 segue sinal); **101 `<label>`** analisados, **0 sem vínculo** com o campo após a V-15 (gate novo); **contraste** medido em 1.030 textos de 8 telas: 48 abaixo do mínimo → 22 após 4 correções (V-27..V-29), V-30 declarado; **teclado/foco** em 9 telas: 301 paradas, 0 sem foco visível, "Pular para o conteúdo" é o 1º Tab; **movimento** 18/20 → 0/20 após V-26; leitor de tela e zoom não exercitados                                                                                                                                                               |
+| 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos                                                                                                                                                                                                                                                          |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **15 achados corrigidos** com medida antes/depois (V-01, V-02, V-07,
-V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18, V-19, mais V-17 agrupando três telas);
+**Fase 2: em andamento.** **25 achados corrigidos** com medida antes/depois — as 20 seções
+marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
+V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
+V-31 (correção automática da nota) e V-32 (403 do cliente HTTP na BrasilAPI);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
