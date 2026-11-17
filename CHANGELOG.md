@@ -8,6 +8,159 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.54.0] — 2026-11-17
+
+### Adicionado
+
+- **Emitir nota fiscal com o destinatário conferido campo por campo** A emissão usava o cadastro do cliente sem mostrar o que iria para a SEFAZ. Quando
+  o CPF estava só no cadastro do Mercos e não na ficha, a nota saía sem documento —
+  e o erro só aparecia na rejeição.
+
+  Agora a tela de emissão tem dois passos:
+
+  - **Destinatário editável** — nome, CPF/CNPJ, inscrição estadual e endereço
+    podem ser ajustados na hora da emissão, sem alterar o cadastro do cliente.
+  - **Conferir a nota campo por campo** — a prévia mostra exatamente o que será
+    transmitido antes de consumir número da SEFAZ, e a confirmação final nomeia o
+    destinatário, o documento e o total.
+
+  O último erro da SEFAZ também passou a aparecer na porta do módulo fiscal: antes
+  ele era lido do banco e nunca renderizado, e a tela dizia "tudo certo" com a
+  última sincronização recusada.
+
+- **Cancelar pedido devolve o estoque, e o pedido tem estados claros** Cancelar um pedido não devolvia o que tinha saído do estoque, e uma compra
+  cancelada continuava contando como recebida. O saldo do produto ficava errado
+  sem que ninguém tivesse mexido nele.
+
+  Agora:
+
+  - **Cancelar pedido devolve o estoque** dos itens, com registro de quem cancelou.
+  - **Cancelar compra estorna automaticamente** o que tinha sido recebido.
+  - O pedido tem uma máquina de estados visível, com o botão
+    **Marcar como concluído** (orçamento → aprovado → concluído) em vez de status
+    soltos.
+  - O ajuste de saldo usa uma operação atômica: duas pessoas mexendo no mesmo
+    produto ao mesmo tempo não perdem movimento.
+  - Duplicar um pedido não dobra mais o desconto.
+
+  Os números de estoque e de compras passam a fechar com o que aconteceu.
+
+### Corrigido
+
+- **A Agenda mostra quando a sincronização com o Google falhou** A conexão com o Google Agenda guarda o horário da última sincronização e o
+  último erro — e a tela não mostrava nenhum dos dois. A pessoa via "Agenda
+  conectada" enquanto os eventos paravam de entrar, sem ter como saber que havia
+  uma falha nem quando os dados estavam atualizados pela última vez.
+
+  Agora o cartão da conexão mostra a data e a hora da última sincronização, avisa
+  quando ela falhou e diz, para uma conexão recém-feita, que ainda não sincronizou.
+
+- **A busca não diz mais "nada encontrado" antes de procurar** A página de busca mostrava "Nada encontrado" antes de a consulta responder:
+  quem digitava o nome de um cliente que existe via a tela afirmar que ele não
+  existia. E quando uma das entidades falhava (o financeiro, por exemplo), a seção
+  sumia calada — o resultado parecia completo, mas não era.
+
+  Agora a tela mostra "Buscando…" enquanto consulta, só declara vazio depois da
+  resposta, e quando uma entidade não pôde ser consultada **diz qual** e avisa que
+  o resultado está incompleto.
+
+- **A campanha não para mais no milésimo envio** O motor de campanha lia o registro de envios numa única consulta. A partir do
+  milésimo contato que já tinha recebido, a leitura deixava de enxergar o registro
+  inteiro e a campanha passava a considerar todo mundo inelegível — em silêncio,
+  com a tela mostrando a audiência cheia e ninguém recebendo.
+
+  Agora a leitura é paginada (1.000 por página, teto de 50 mil) e, quando o
+  registro não pode ser lido, o envio para em vez de arriscar mensagem repetida.
+  Quem já recebeu não recebe de novo; a fila continua de onde parou.
+
+- **A central de avisos deixa de empilhar o mesmo aviso** Cada verificação criava um aviso novo, mesmo quando o problema era o mesmo: a
+  central chegou a mostrar 27 cartões idênticos sobre uma única sessão de WhatsApp,
+  e nenhum deles fechava sozinho depois que a conexão voltava.
+
+  Agora existe **um aviso por organização e por assunto**: o segundo atualiza o
+  primeiro em vez de duplicá-lo, e o aviso fecha sozinho quando a condição deixa de
+  existir. O texto também parou de afirmar "a mensagem não chegou" quando o que
+  falta é apenas a confirmação de leitura — são coisas diferentes, e o aviso diz
+  qual das duas aconteceu. O clique leva à conversa certa.
+
+- **Cadastro repetido é recusado com explicação, e a ficha mostra só a sua organização** Cadastrar um telefone, e-mail ou CPF que já existia respondia "erro interno". A
+  pessoa tentava de novo e criava confusão — quando o sistema sabia exatamente qual
+  era o problema.
+
+  Agora:
+
+  - A duplicata responde **conflito**, dizendo que já existe um contato com aquele
+    telefone, e-mail ou CPF nesta organização.
+  - A lista esconde contatos mesclados (que são a mesma pessoa) e anonimizados por
+    LGPD, em vez de oferecer uma ficha que não existe mais.
+  - O tempo no estágio do negócio passou a contar da **entrada no estágio**, e não
+    da última atividade: um negócio parado há três dias com uma nota escrita hoje
+    não aparece mais como "entrou agora".
+  - A ficha do contato, o resumo de CRM e a linha do tempo filtram a
+    **organização ativa**. Antes, quem participava de duas organizações via, numa
+    delas, o histórico da outra.
+  - A aba de pessoa física ganhou o campo CPF na edição.
+
+- **Entregar e tirar pedido da carga pedem confirmação** Três ações da expedição mudavam o que o motorista leva e o estado do pedido com
+  um único clique, sem volta: iniciar a rota, marcar como entregue e tirar um
+  pedido da carga. O clique errado não tinha desfazer.
+
+  Agora as três pedem confirmação, dizendo o que vai acontecer. A entrega também
+  não regride mais sozinha: um pedido em rota não volta para "montando" por causa
+  de uma atualização de posição, e cancelar uma carga exige permissão de gestor.
+
+- **O mês da comissão é o mês do seu fuso, e baixa parcial aparece como parcial** A comissão do mês era calculada com as bordas em UTC. No horário de Brasília
+  isso significava que o pedido feito entre 21h e 23h59 do último dia do mês caía
+  na comissão do mês seguinte — e o da véspera entrava no mês anterior. O
+  fechamento do vendedor errava um dia inteiro de pedidos, todo mês.
+
+  Agora o período é calculado no fuso da organização. Junto:
+
+  - Uma **baixa parcial** de comissão aparece como parcial, com o valor pago. Antes
+    o selo dizia "baixada" e o total somava a comissão inteira.
+  - O fim do período das vendas é inclusivo, então "recebido" e "vendas" no painel
+    comparam exatamente a mesma janela.
+  - Os cartões de recebido e vendas seguem o filtro de data da tela; antes o
+    "recebido (período)" era o total histórico ao lado de um filtro visível.
+  - Dar baixa em comissão pede confirmação com valor e pedido.
+
+- **O onboarding só marca conexão quando o backend confirma** Dois botões do assistente de primeiros passos davam o passo por cumprido sem
+  verificar nada: "Já conectei" na Nuvemshop gravava a data de conexão com a loja
+  desconectada, e "Conectei em outro lugar" no WhatsApp marcava o número sem
+  sessão pareada. O assistente avançava, o catálogo e as mensagens não vinham, e a
+  causa não aparecia em lugar nenhum.
+
+  Agora o servidor confirma: a Nuvemshop precisa da integração registrada pelo
+  retorno do OAuth, e o WhatsApp precisa da sessão conectada no transporte. Sem
+  isso, a tela explica o que falta em vez de seguir.
+
+- **O Radar diz quando os números são de uma amostra, e falha não vira "tudo em dia"** O Radar de compras lê até 25 mil pedidos. Acima disso a leitura parava no teto sem
+  avisar, e os cartões de clientes monitorados, risco e potencial descreviam a
+  amostra como se fosse a carteira inteira. Quando a consulta de risco falhava, a
+  tela caía no estado vazio e anunciava "nenhuma demanda em risco" — o oposto do
+  que o Radar existe para mostrar.
+
+  Agora a tela avisa quando o número é de uma amostra, e a falha de leitura tem
+  mensagem própria, com a frase que separa as duas coisas e um botão para tentar de
+  novo. A lista de oportunidades também parou de mostrar o mesmo valor duas vezes
+  ("ticket médio" e "potencial" imprimiam o mesmo número), e o score ganhou a
+  explicação dos pesos no próprio rótulo.
+
+- **Administrador de plataforma não pula a verificação em duas etapas, e o botão Sair funciona** Dois problemas de acesso:
+
+  - Um administrador de plataforma com verificação em duas etapas cadastrada
+    conseguia usar as rotas administrativas numa sessão que só tinha a senha. O
+    atalho de permissão retornava antes da checagem do segundo fator. Agora ele
+    pula apenas a hierarquia da organização — que é o que o atalho existe para
+    fazer — e cobra o código como qualquer outro administrador.
+  - O botão **Sair** (na cabine do entregador e no aceite de convite) apontava para
+    um endereço que não existia, e respondia "não encontrado". Agora encerra a
+    sessão, limpa a organização ativa e volta para o login.
+
+  Também: administradores de plataforma com acesso **somente leitura** passam a ser
+  somente leitura de verdade (antes podiam suspender, criar e impersonar), e um
+  tenant suspenso não pode ser impersonado sem ser reativado com motivo.
+
 ## [1.53.0] — 2026-11-15
 
 ### Adicionado
@@ -7179,7 +7332,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.53.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.54.0...HEAD
+[1.54.0]: https://github.com/spiesdan/nexus/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/spiesdan/nexus/compare/v1.52.6...v1.53.0
 [1.52.6]: https://github.com/spiesdan/nexus/compare/v1.52.5...v1.52.6
 [1.52.5]: https://github.com/spiesdan/nexus/compare/v1.52.4...v1.52.5
