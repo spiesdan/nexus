@@ -1493,6 +1493,40 @@ chegam a 433–533 ms de TBT em CPU 4×, acima do limite de 200 ms, e a causa pr
 gráficos + hidratação) precisa de **repetição suficiente para separar sinal de ruído** — perfil com
 trace do Chrome, não três execuções.
 
+## 6. APIs — superfície medida (6.2 e 6.5)
+
+### Contrato de resposta (6.2)
+
+| Medida | Resultado |
+| --- | --- |
+| rotas que respondem por `ok()`/`fail()` | **403 de 417** |
+| rotas que montam `Response`/`NextResponse` na mão | **8** |
+| … sendo só `Response` na mão | **1** (`/api/mcp` — protocolo próprio) |
+| … misturando wrapper com resposta manual | **7**: export CSV (`/audit/export`), avatar, mídia de mensagem, imagens de produto, importação de leads/produtos, `admin/platform-admins` |
+
+As sete mistas têm motivo conhecido: arquivo/binário e CSV **não** são JSON — quando a resposta não
+é JSON, `ok()` não se aplica. Fora delas, o contrato é um só.
+
+### Limites, paginação e proteções (6.5)
+
+| Medida | Resultado |
+| --- | --- |
+| rotas com `.limit(`/`.range(`/`Math.min(` | **127** |
+| rotas com teto explícito | **147** |
+| rotas com `rate limit` | **3** (importação por IA, upload de marca, webhook de entrada) |
+| rotas com `Idempotency-Key` | **2** (`lgpd/.../approve`, `financeiro/.../pagamentos`) |
+| **GET de lista sem nenhum teto no handler** | **82** |
+
+O rate limit não é "3 no produto": login, signup, recuperação e aceite de convite vivem em **Server
+Actions** (`app/actions/auth/*`), e o dispatcher de IA tem o próprio
+(`lib/ai/dispatcher/rate-limit.ts`). A conta acima é só de `route.ts`.
+
+**O achado que fica (F-30, aberto):** **82** listas devolvem tudo que houver — `admin/*`, `ai/*`,
+`agenda/*`, entre outras. Em instalação pequena não dói; em base grande, é a aba que trava e o
+payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolveria menos dado sem a
+tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
+frente, não um patch.
+
 ## 6. APIs — 417 rotas, 35 sem chamador interno, zero órfã
 
 A varredura visual não responde a pergunta do 6.4 ("endpoints duplicados, sem uso ou legados").
