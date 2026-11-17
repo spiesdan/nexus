@@ -1975,3 +1975,11 @@ TÍTULO: 2 respostas ficaram sem confirmação de envio
 Os dois `failed` mantêm o `external_id` intacto — é o que permite ao operador distinguir
 "não saiu" de "saiu sem confirmação" antes de decidir reenviar. `tests/unit/recover-stuck-messages.test.ts`
 passou de 7 para 11 casos (dedup, colapso da pilha, texto honesto, fechamento automático).
+
+![Central de avisos depois do conserto: um aviso, texto honesto e link para a conversa](docs/auditoria/capturas/central-de-avisos-colapsada.png)
+
+A legenda do tipo também mudou: era `"Uma resposta ficou presa e não chegou ao cliente"` em
+`lib/ai/agent-inbox-copy.ts` (era essa a frase que o dono via, abaixo do título) e passou a
+`"Uma resposta ficou sem confirmação de envio"`. O título do item diz quantas e de que lado
+veio a dúvida; o corpo separa as duas causas; e o botão "Abrir conversa" leva à conversa
+(`/app/inbox?id=<conversa>`), que antes não existia.
