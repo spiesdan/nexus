@@ -1333,6 +1333,34 @@ Limite "bom" do Core Web Vitals é 200 ms; o pior caso medido é metade disso. O
 vira lacuna declarada. E INP de campo (CrUX) usa o p98 das interações reais de muitos usuários; este
 número é **laboratório com roteiro**, e o artefato diz isso.
 
+### Esforço da tarefa — cliques e teclas contados no navegador (2.6)
+
+O item pede cliques/digitação nas tarefas frequentes. A suíte E2E conta **uma** jornada
+(`jornada-venda`: 5 cliques e 5 digitações do login ao pedido). Faltavam as tarefas de leitura, que
+são a maioria do dia.
+
+Instrumento novo, `scripts/auditoria/esforco-da-tarefa.mjs`: um listener injetado antes do primeiro
+script conta **`pointerdown` e `keydown` reais** (Tab e Shift ficam de fora — é navegação, não
+digitação) enquanto o roteiro executa a tarefa. Nada grava.
+
+| Tarefa | Cliques | Teclas | Chegou |
+| --- | --- | --- | --- |
+| Achar um cliente pelo nome e abrir a ficha | **2** | **7** | sim ("Escalação E2E") |
+| Abrir o pedido do topo da lista | **1** | 0 | sim (`PED-0062`) |
+| Ver os recebíveis vencidos | **1** | 0 | sim (1 linha) |
+
+Duas ações de mouse e sete teclas para achar um cliente é o custo do **nome inteiro digitado**
+("Escalação") — a busca não é instantânea por tecla e o roteiro espera o resultado. Abrir um registro
+já listado custa **1 clique** nas duas telas.
+
+**A régua errou duas vezes, as duas registradas:** (1) `fill()` não dispara teclado e a primeira
+medição disse "**0 teclas** para achar um cliente" — o instrumento estava mentindo; passou a usar
+digitação real; (2) o primeiro link do `main` em Pedidos é **"Criar pedido"** (`/app/pedidos/novo`),
+então a régua abriu o formulário e chamou de "não chegou"; passou a exigir href de pedido com UUID.
+
+**Lacuna declarada:** o Inbox ficou fora — as linhas da lista são `div` de lista virtualizada, sem
+seletor estável, e medir o clique na aba "Todas" não responde "quanto custa abrir uma conversa".
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1410,7 +1438,7 @@ cobriu").
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
 | 2.4  | Hierarquia e densidade                                                | `[~]`  | **12 telas medidas na dobra** (1440×900): **1 ação primária** em cada uma das 7 telas de operação (pedidos, contatos, kanban, financeiro, notas, expedição, prospecção) — nenhuma com duas competindo; 0 nos hubs de leitura. **Densidade**: 7 alvos (kanban) a **50** (contatos). **Leitura**: máxima de **45 caracteres por linha** nos 3 parágrafos longos. `/admin` redireciona com sessão de organização — fora da medida. **Falta**: densidade em 320 e no tablet |
 | 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | **Título medido no DOM das 129 rotas estáticas**: 117 de 119 `h1` visíveis a 24 px / 500, **um `h1` por tela** (V-35 e V-36 corrigidos; 2 exceções declaradas: `/design` e os títulos que são identificador). `sr-only` separado de visível no instrumento. **Breadcrumb**: 52 de 129 rotas têm; shell e barra de filtros consistentes nos 258 screenshots. **Falta**: decidir se breadcrumb é padrão de todas as telas internas ou só das profundas |
-| 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Cliques reais exercitados pela suíte E2E** (16 jornadas, 254 testes verdes): a contagem por tarefa só existe para `jornada-venda` (**5 cliques + 5 digitações** do login ao pedido criado); nas demais o teste mede o resultado, não o esforço. **F-27 fechado**: o mapa de empresas não abria porque um efeito de URL escrevia no alias `/app/prospeccao` e remontava a tela — a aba Empresas voltava para Campanhas. **Falta**: instrumento de contagem por tarefa (quantos cliques/digitações cada jornada custa) |
+| 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Medido no navegador** (`esforco-da-tarefa.mjs`, eventos reais): achar cliente e abrir a ficha = **2 cliques + 7 teclas**; abrir o pedido do topo = **1 clique**; ver vencidos = **1 clique**. `jornada-venda` (E2E) = 5 cliques + 5 digitações do login ao pedido criado. **Falta**: Inbox (lista virtualizada sem seletor estável) e as demais jornadas |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | **Medido no dedo** (`lista-busca-e-paginacao.mjs`): contatos 25 → 19 linhas com "E2E" e 25 → 50 com "Carregar mais"; pedidos 49 → 11 com o termo, 47 linhas na visão Tabela e **"47 selecionados"** após selecionar todos. **Não vai para a URL**: filtro em `/app/contacts` e `/app/pedidos` não sobrevive a reload (decisão de produto, 4.5). **Falta**: ordenação por coluna e seleção em massa fora de Pedidos |
 | 2.8  | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[~]`  | **Recusa**: 3 formulários submetidos vazios em produção — os 3 recusam, explicam na página e não gravam (`escrita-e-validacao.mjs`). **Caminho válido**: 2 specs E2E executadas hoje contra o build de produção, verdes em 12,2 s — `contato-salva-email` (e-mail digitado fica salvo) e `jornada-venda` (login → pedido criado). **Inventário**: 34 arquivos com botão de envio, 32 com menção em alguma spec; **2 sem cobertura de caminho válido**: renomear agente e criar token de API |
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | **Offline medido em 5 telas** (`offline-e-erro.mjs`): com SW ativo o app abre; contatos/inbox/financeiro mostram "Algo deu errado … Tentar novamente"; ação pausada avisa "Sem conexão" (V-42) e o Audit Log deixou de dizer "Nenhum log" quando a busca só estava pausada (V-43). **Pedidos offline segue mudo** — F-28. Loading/vazio/erro/sucesso por V-07/V-09/V-12/V-25; permissão negada em 10 rotas. **Falta**: offline de escrita (fila/outbox) — frente 7 |
