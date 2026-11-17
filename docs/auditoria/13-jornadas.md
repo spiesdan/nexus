@@ -676,3 +676,40 @@ O que **falta**:
 
 Nenhum dos três é defeito de tela; é a operação do produto que se vende como instalado. Fecha com
 um ensaio de restauração + inclusão do storage no `backup.sh` + retenção configurável.
+
+### 3.10 F-23 (**diagnosticado**) — a suíte grava 181 screenshots em toda rodada verde e o diff fica sujo
+
+Medido em 17/11/2026, com experimento controlado (`contato-salva-email.spec.ts`, duas execuções,
+ambas verdes):
+
+| | sha256 | bytes |
+| --- | --- | --- |
+| arquivo commitado | `90069af` | 85.344 |
+| run 1 | `95b6ffa` | 84.080 |
+| run 2 | `88eb97e` | 83.673 |
+
+**Três SHAs distintos para três execuções idênticas.** O conteúdo não é determinístico (fonte,
+relógio, avatar), então cada rodada reescreve o arquivo e o `git status` fica sujo — que é o
+sintoma do F-23.
+
+**Mecanismo (medido):** **181** chamadas de `page.screenshot({ path: "evidence/…" })` em **54 das 100
+specs**, escritas no caminho VERDE. Não há `toHaveScreenshot`, não há `-snapshot.png` versionado, e
+**nenhuma** chamada é condicionada a falha. O `screenshot: "only-on-failure"` do
+`playwright.config.ts` rege só o screenshot automático do runner, não estes `path` explícitos. Hoje:
+**614 arquivos, 66 MB** em `evidence/`.
+
+**Opções avaliadas:**
+
+| Opção | Custo | Veredito |
+| --- | --- | --- |
+| fora do git | baixo | **não**: `evidence/` é convenção versionada citada em handoffs; remover apaga histórico |
+| `skip-worktree` | baixo | **não**: é local ao clone, mente para o `git status` e quebra no `pull` |
+| nome com data/run | baixo | **não**: aditivo — 66 MB hoje, centenas de PNGs por noite de CI |
+| **baseline + gravar só em falha** | médio | **sim**: run verde não toca o arquivo (diff limpo, histórico intacto); falha grava em `e2e-artifacts/` (já ignorado) |
+
+Fallback de custo mínimo: manter `evidence/` no git e trocar só o **alvo** das chamadas para
+`e2e-artifacts/` — meia-solução, sem apagar nada.
+
+O conserto não foi aplicado nesta rodada: são 181 chamadas em 54 arquivos e a escolha entre
+"baseline comparado" e "só redirecionar" muda o que o time espera de `evidence/`. Fica diagnosticado,
+com o custo medido, para decisão.
