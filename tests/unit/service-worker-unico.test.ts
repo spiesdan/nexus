@@ -23,6 +23,7 @@ const RAIZ = process.cwd();
 const PUBLIC = join(RAIZ, "public");
 const SW = readFileSync(join(PUBLIC, "sw.js"), "utf8");
 const REGISTRO = readFileSync(join(RAIZ, "lib", "notifications", "service_worker.ts"), "utf8");
+const URL_DO_SW = readFileSync(join(RAIZ, "lib", "service-worker", "url.ts"), "utf8");
 
 describe("service worker", () => {
   it("existe UM só em public/ — dois no mesmo escopo se substituem", () => {
@@ -36,11 +37,20 @@ describe("service worker", () => {
     }
   });
 
-  it("o registro aponta para /sw.js", () => {
-    expect(REGISTRO).toContain('register("/sw.js"');
-    // O comentário do módulo cita o arquivo antigo de propósito (explica o
-    // defeito); o que não pode citá-lo é o CÓDIGO.
+  it("o registro usa a URL versionada, nunca o caminho cru", () => {
+    // `/sw.js?v=<versão>` é o que faz o navegador ver um worker NOVO a cada
+    // atualização. Registrar `/sw.js` puro faria o arquivo byte-idêntico nunca
+    // reinstalar — e o cache `v1` nunca morrer.
+    expect(REGISTRO).toContain("urlDoServiceWorker");
+    expect(URL_DO_SW).toContain("/sw.js?v=");
     const codigo = REGISTRO.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
     expect(codigo).not.toContain("notify-sw");
+  });
+
+  it("o cache é nomeado pela versão e só as versões antigas morrem", () => {
+    expect(SW).toContain('searchParams.get("v")');
+    expect(SW).toContain("nexus-app-");
+    // O `activate` não pode apagar cache de outra coisa no mesmo escopo.
+    expect(SW).toContain("startsWith(PREFIXO)");
   });
 });

@@ -70,3 +70,26 @@ pode citar o arquivo antigo; o código, não).
   telas já visitadas, e o fallback é um HTML genérico, não uma página offline;
 - `mobile/src/shell.ts` navega para `https://crm.billhigiene.tech` **hardcoded**
   (`server.url` ausente no Capacitor).
+
+## O cache `nexus-app-v1` fixo — corrigido em 17/11/2026
+
+O `public/sw.js` guardava tudo em `CACHE = "nexus-app-v1"`, um literal. O arquivo
+é copiado verbatim para a imagem (não é compilado), então a cada `update.sh` ele
+chegava **byte-idêntico**: o navegador não reinstalava, o `activate` não rodava e o
+`v1` nunca morria. Consequência: chunks antigos acumulavam sem teto e quem não abria
+online depois do deploy continuava vendo a versão anterior offline.
+
+**Conserto:** a URL de registro passou a levar a versão do build —
+`/sw.js?v=<versão>` (`lib/service-worker/url.ts`, alimentado por
+`/api/v1/system/version`, cacheado no `sessionStorage`). O `sw.js` lê o próprio
+`location.search` e batiza o cache (`nexus-app-<versão>`); um build novo muda a URL,
+o navegador instala o worker novo e o `activate` apaga **só** as versões antigas
+(`nexus-app-*`) — nunca caches de outra coisa no mesmo escopo. O logout apaga todas
+as versões, não só a atual: uma versão anterior guarda o HTML de quem saiu.
+
+`ensureNotifyServiceWorker()` passou a **reusar** o registro existente
+(`getRegistration("/")`) em vez de registrar `/sw.js` puro — registrar sem a query
+forçaria a volta para a URL sem versão.
+
+Gate em `tests/unit/service-worker-unico.test.ts` (4 casos): um worker só, URL
+versionada, cache nomeado pela versão e `activate` restrito ao prefixo.

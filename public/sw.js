@@ -20,7 +20,9 @@
  * para `/login` ou `/api/auth/signout` apaga o cache inteiro — o próximo login
  * no mesmo aparelho não enxerga a tela de quem saiu.
  */
-const CACHE = "nexus-app-v1";
+const VERSAO = new URL(self.location.href).searchParams.get("v") || "v1";
+const CACHE = `nexus-app-${VERSAO}`;
+const PREFIXO = "nexus-app-";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -30,7 +32,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((chaves) => Promise.all(chaves.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((chaves) =>
+        Promise.all(
+          chaves
+            .filter((k) => k.startsWith(PREFIXO) && k !== CACHE)
+            .map((k) => caches.delete(k)),
+        ),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -52,10 +60,19 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Sessão e logout nunca saem do cache — e apagam o que houver.
+  // Sessão e logout nunca saem do cache — e apagam o que houver. Apaga TODAS
+  // as versões (`nexus-app-*`): uma versão anterior guarda o HTML de quem
+  // saiu, e deixá-la no aparelho recriaria o vazamento que a purga existe
+  // para impedir.
   if (url.pathname === "/login" || url.pathname.startsWith("/api/auth/")) {
     event.respondWith(
-      caches.delete(CACHE).catch(() => false).then(() => fetch(request)),
+      caches
+        .keys()
+        .then((chaves) =>
+          Promise.all(chaves.filter((k) => k.startsWith(PREFIXO)).map((k) => caches.delete(k))),
+        )
+        .catch(() => false)
+        .then(() => fetch(request)),
     );
     return;
   }
