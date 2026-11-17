@@ -458,16 +458,7 @@ Após concluir o inventário e auditoria, apresente um plano priorizado, sem esp
 
 Para cada item, registre impacto, evidência, dependências, risco, arquivos/módulos envolvidos, estratégia, validação e critério de conclusão. Faça commits lógicos somente se o fluxo do usuário pedir ou o ambiente exigir; preserve mudanças preexistentes.
 
-#
-
-> **Evidência (Fase 10):** o plano priorizado está em
-> [`20-plano-priorizado.md`](20-plano-priorizado.md) — **5 P0, 12 P1, 10 P2 e 10
-> P3**, cada um com impacto, evidência, dependências, risco, arquivos,
-> estratégia, validação e critério de conclusão. A execução entra por P0
-> (cross-tenant, migrations silenciosas, trilha da IA) — a falha **crítica** de
-> dependência já foi fechada na 1.54.1.
-
-## Definition of Done global
+### Definition of Done global
 
 O projeto só pode ser declarado concluído quando:
 
@@ -724,7 +715,7 @@ Jornadas críticas (16)
 | 5.6  | Pedidos, catálogo, estoque, compras, expedição     | `[~]`  | [`16-modulo-5.6.md`](16-modulo-5.6.md): 22 telas, ~56 handlers, regras de desconto/crédito/preço/estoque/sincronização medidas; **A1 corrigido** (patch de itens furava alçada/tabela/estoque), A2–A16 abertos com severidade. Auditoria de módulo feita; restam os consertos P0/P1. |
 | 5.7  | Financeiro, títulos, comissões                     | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): mês no fuso da org, baixa parcial honesta, período inclusivo e KPIs no filtro |
 | 5.8  | Fiscal                                             | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): regras e 8 achados; erro da SEFAZ e confirmação de emissão corrigidos |
-| 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): capacidades medidas; run trace, audit:run e eval são as lacunas |
+| 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): capacidades medidas. **Injeção indireta (P0-5, 17/11/2026):** bloco residente declara que conteúdo de ferramenta/fonte é DADO, não ordem, em todo turno; gate `injecao-indireta.test.ts` (6 casos) congela as 12 tools (read-only × efeito com motivo escrito). [`24-injecao-indireta.md`](24-injecao-indireta.md). **Lacunas**: run trace na tela (API pronta no PR #460), `audit:run`, eval e teste adversário com modelo real |
 | 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): guards medidos; MFA do platform admin corrigido; tokens/equipe abertos |
 | 5.11 | Administração global                               | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): impersonação/suspensão auditadas; scope e tenant suspenso abertos |
 
@@ -987,6 +978,7 @@ Resolvers identificados: `/`, `/admin`, `/app/financeiro`, `/app/inbox/:id`, `/a
 | `docs/auditoria/capturas/subtelas-{tenant,dono,admin}.json`             | As 50 abas e 11 modais medidos em 39 telas.                                                                                                                                                              |
 | `scripts/auditoria/cod-rotulo-acessivel.mjs`                            | `aria-label` a partir do rótulo visível; `planejar()` é a régua do gate. Idempotente.                                                                                                                    |
 | `tests/unit/rotulo-visivel-vira-nome-acessivel.test.ts`                 | Gate da V-20: exige `planejar()` vazia e prova que 93 `<Label>` foram lidos.                                                                                                                             |
+| `docs/auditoria/24-injecao-indireta.md`                                | P0-5: o risco de injeção indireta, o bloco residente no system, o gate determinístico das 12 tools e o que não foi feito (teste adversário com modelo, sanitização de conteúdo). |
 
 ## 3.7 Canal de atualizações (Discord)
 
