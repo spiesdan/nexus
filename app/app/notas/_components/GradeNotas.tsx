@@ -516,7 +516,7 @@ export function GradeNotas({
           <EmptyState
             icon={Receipt}
             headline="Nenhuma nota ainda"
-            subcopy="As notas nascem dos pedidos que já foram faturados ou expedidos."
+            subcopy="As notas nascem dos pedidos que já foram aprovados, concluídos, faturados ou expedidos."
           />
         ) : visiveis.length === 0 ? (
           <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />

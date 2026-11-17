@@ -271,7 +271,8 @@ describe("agrupamento de pedidos (0294)", () => {
 });
 
 describe("status do pedido que vira nota", () => {
-  it("concluído, faturado, expedido e entregue são faturáveis", () => {
+  it("aprovado, concluído, faturado, expedido e entregue são faturáveis", () => {
+    expect(statusFaturavel("aprovado")).toBe(true);
     expect(statusFaturavel("concluido")).toBe(true);
     expect(statusFaturavel("faturado")).toBe(true);
     expect(statusFaturavel("expedido")).toBe(true);
@@ -279,7 +280,7 @@ describe("status do pedido que vira nota", () => {
   });
 
   it("intenção e desfecho não viram nota", () => {
-    for (const status of ["rascunho", "em_analise", "aprovado", "cancelado"]) {
+    for (const status of ["rascunho", "em_analise", "cancelado"]) {
       expect(statusFaturavel(status), status).toBe(false);
     }
   });
@@ -306,12 +307,18 @@ describe("emitirNota", () => {
     await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
   });
 
-  it("recusa pedido aprovado e nomeia o que vale", async () => {
+  it("emite para pedido aprovado — o compromisso comercial antes da venda fechar", async () => {
     const { banco, promessa } = emitir("aprovado");
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+    expect(banco.escritas.some((e) => e.startsWith("invoices.insert"))).toBe(true);
+  });
+
+  it("recusa pedido em análise e nomeia o que vale", async () => {
+    const { banco, promessa } = emitir("em_analise");
     const erro = await promessa.catch((e: unknown) => e);
     expect(erro).toBeInstanceOf(ApiError);
     expect((erro as ApiError).status).toBe(422);
-    expect((erro as ApiError).message).toContain("concluído, faturado, expedido ou entregue");
+    expect((erro as ApiError).message).toContain("aprovado, concluído, faturado, expedido ou entregue");
     // A recusa acontece ANTES de qualquer escrita: nenhuma nota nasce condenada.
     expect(banco.escritas).toEqual([]);
   });
