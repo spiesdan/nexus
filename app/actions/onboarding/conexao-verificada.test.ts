@@ -6,11 +6,11 @@
  *
  *  - Nuvemshop "Já conectei" → `connected_at` carimbado direto. A loja seguia
  *    desconectada, e o catálogo/pedidos simplesmente não vinham.
- *  - WhatsApp "Conectei em outro lugar" → `status: "configured"` sem o WAHA
+ *  - WhatsApp "Conectei em outro lugar" → `status: "configured"` sem o transporte
  *    confirmar sessão nenhuma. O agente começaria a atender num número que
  *    nunca foi pareado.
  *
- * A regra agora é: o SERVIDOR pergunta ao transporte (WAHA) e à linha escrita
+ * A regra agora é: o SERVIDOR pergunta ao transporte e à linha escrita
  * pelo callback do OAuth (`tenant_integrations`). O clique é intenção, não
  * prova. Estes testes cobrem os dois desfechos de cada porta.
  */
@@ -22,7 +22,7 @@ const patchOnboardingState = vi.fn(async () => undefined);
 const redirecionar = vi.fn(() => {
   throw new Error("NEXT_REDIRECT");
 });
-const sessaoWaha = vi.fn();
+const lerSessaoDoCanal = vi.fn();
 const integracao = vi.fn();
 
 vi.mock("next/navigation", () => ({ redirect: () => redirecionar() }));
@@ -51,8 +51,8 @@ vi.mock("@/lib/supabase/server", () => ({
     },
   }),
 }));
-vi.mock("@/lib/waha/client", () => ({
-  getWahaClient: () => ({ getSessionQr: async () => sessaoWaha() }),
+vi.mock("@/lib/channels/sessao-do-canal", () => ({
+  lerSessaoDoCanal: (...args: unknown[]) => lerSessaoDoCanal(...(args as [])),
 }));
 
 beforeEach(() => {
@@ -61,7 +61,7 @@ beforeEach(() => {
 
 describe("markWhatsappConfigured", () => {
   it("sessão que não está WORKING NÃO conclui o passo", async () => {
-    sessaoWaha.mockReturnValue({ status: "SCAN_QR_CODE" });
+    lerSessaoDoCanal.mockResolvedValue({ sessao: { id: "s1", status: "SCAN_QR_CODE" }, schemaOutdated: false });
 
     const r = await markWhatsappConfigured("org_123", "configured");
 
@@ -71,7 +71,7 @@ describe("markWhatsappConfigured", () => {
   });
 
   it("sessão WORKING grava o status REAL vindo do transporte", async () => {
-    sessaoWaha.mockReturnValue({ status: "WORKING" });
+    lerSessaoDoCanal.mockResolvedValue({ sessao: { id: "s1", status: "WORKING" }, schemaOutdated: false });
 
     await expect(markWhatsappConfigured("org_123", "configured")).rejects.toThrow("NEXT_REDIRECT");
 
@@ -80,10 +80,8 @@ describe("markWhatsappConfigured", () => {
     });
   });
 
-  it("falha ao perguntar ao WAHA não conecta por otimismo", async () => {
-    sessaoWaha.mockImplementation(() => {
-      throw new Error("timeout");
-    });
+  it("falha ao ler o estado da sessão não conecta por otimismo", async () => {
+    lerSessaoDoCanal.mockRejectedValue(new Error("timeout"));
 
     const r = await markWhatsappConfigured("org_123", "configured");
     expect(r).toMatchObject({ ok: false });

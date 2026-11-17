@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { audit } from "@/lib/audit";
+import { lerSessaoDoCanal } from "@/lib/channels/sessao-do-canal";
 import { createClient } from "@/lib/supabase/server";
-import { getWahaClient } from "@/lib/waha/client";
 import { requireOnboardingCtx, patchOnboardingState, OnboardingError } from "./_shared";
 
 /** O passo NÃO foi concluído — e a tela precisa dizer por quê. */
@@ -32,19 +32,22 @@ export async function markWhatsappConfigured(
 
   // "Conectei em outro lugar" GRAVAVA `status: "configured"` sem perguntar a
   // ninguém — o passo era dado por cumprido e o agente começava a atender num
-  // número que nunca foi pareado. Quem responde se a sessão existe é o
-  // transporte, não o clique: o status vem do WAHA agora.
-  const waha = getWahaClient();
-  if (!waha) {
-    return { ok: false, error: "WhatsApp não está configurado neste servidor." };
-  }
-  let statusReal: string;
+  // número que nunca foi pareado. Quem responde é a linha da sessão, que o
+  // polling da tela mantém atualizada a partir do transporte — e não o clique.
+  const supabase = await createClient();
+  let sessao;
   try {
-    const sessao = await waha.getSessionQr(sessionName);
-    statusReal = sessao.status;
+    ({ sessao } = await lerSessaoDoCanal(supabase, ctx.orgId, sessionName));
   } catch {
     return { ok: false, error: "Não consegui confirmar a conexão com o WhatsApp." };
   }
+  if (!sessao) {
+    return {
+      ok: false,
+      error: "Não encontrei uma sessão de WhatsApp para esta organização. Leia o QR Code para criar a conexão.",
+    };
+  }
+  const statusReal = sessao.status;
   if (statusReal !== "WORKING") {
     return {
       ok: false,

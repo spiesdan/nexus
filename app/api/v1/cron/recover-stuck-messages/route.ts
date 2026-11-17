@@ -70,7 +70,7 @@ interface StuckMessage {
    * `null` = o transporte NUNCA aceitou a mensagem: o envio morreu antes de
    * receber o id externo, e o ack não tem como casar com esta linha.
    *
-   * Preenchido = o WAHA aceitou e devolveu o id; a mensagem SAIU do CRM e o que
+   * Preenchido = o transporte aceitou e devolveu o id; a mensagem SAIU do CRM e o que
    * falta é a confirmação do WhatsApp. Os dois casos não são a mesma coisa e o
    * aviso não pode dizer a mesma frase para ambos.
    */
@@ -223,7 +223,7 @@ export async function recoverStuckMessages(
     // `sending` tem dois mundos dentro:
     //
     //   external_id null → o transporte nunca aceitou; a mensagem NÃO saiu;
-    //   external_id preenchido → o WAHA aceitou e devolveu id; a mensagem saiu
+    //   external_id preenchido → o transporte aceitou e devolveu id; a mensagem saiu
     //   do CRM e o que falta é o ack do WhatsApp.
     //
     // Dizer "não chegou ao cliente" nos dois casos era uma afirmação que o

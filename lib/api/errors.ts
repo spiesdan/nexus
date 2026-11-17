@@ -25,6 +25,13 @@ export const ApiErrorCodes = {
   // 403 — authz
   forbidden: "forbidden",
   forbidden_role: "forbidden_role",
+  /**
+   * O administrador de plataforma existe, tem MFA, e o escopo dele é
+   * `support_readonly` — enxerga tudo e não escreve (`platform_admins.scope`).
+   * Separado de `forbidden_role` porque a saída é outra: não é pedir um papel
+   * maior no tenant, é pedir a um admin de plataforma com escopo `full`.
+   */
+  forbidden_scope: "forbidden_scope",
   forbidden_tenant: "forbidden_tenant",
   lgpd_anonymization_irreversible: "lgpd_anonymization_irreversible",
 
