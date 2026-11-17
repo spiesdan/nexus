@@ -980,6 +980,7 @@ não é reconstruído de memória — seria inventar):
 | 17/11/2026 | Hierarquia medida: 1 ação principal por tela, 50 alvos onde a lista é o trabalho | `auditoria` | `enviado (arquivo, auditoria)` |
 | 17/11/2026 | As 26 rotas dinâmicas com prova — e uma tela sem título                  | `auditoria` | `enviado (arquivo, auditoria)` |
 | 17/11/2026 | No tablet, o título de Pedidos tinha 0 px de largura                     | `auditoria` | `enviado (arquivo, auditoria)` |
+| 17/11/2026 | Os dois formulários sem prova: renomear agente e criar token             | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
