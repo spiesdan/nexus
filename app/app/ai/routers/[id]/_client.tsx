@@ -254,6 +254,11 @@ export function RouterEditorClient({
         )}
       </div>
 
+      {/* O TÍTULO DA TELA. Medido em 17/11/2026: esta rota não tinha `h1` —
+          só `<h3>` de seção e o link "Roteadores" de volta. Quem navega por
+          cabeçalhos não sabia em que roteador estava (V-45). */}
+      <h1 className="text-2xl font-medium tracking-tight text-text">{router.name}</h1>
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="space-y-4">
           <Card className="hover-raise space-y-3 p-4">

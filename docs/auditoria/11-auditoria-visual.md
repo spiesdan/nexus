@@ -1361,6 +1361,42 @@ então a régua abriu o formulário e chamou de "não chegou"; passou a exigir h
 **Lacuna declarada:** o Inbox ficou fora — as linhas da lista são `div` de lista virtualizada, sem
 seletor estável, e medir o clique na aba "Todas" não responde "quanto custa abrir uma conversa".
 
+### V-45 · Média · A tela do roteador de intenção não tinha título nenhum
+
+As quatro rotas dinâmicas que a instalação não conseguia medir (tabelas vazias) foram medidas com
+**fixture mínima** — criada pelo instrumento `scripts/auditoria/rotas-com-fixture.mjs`, medida e
+**apagada**, com `sobrou=nada` no artefato. É fixture, e o JSON diz isso.
+
+| Rota (com fixture) | status | overflow | `<h1>` |
+| --- | --- | --- | --- |
+| `/app/ai/routers/{id}` | 200 | 0 | **vazio — não havia título** |
+| `/app/lgpd/requests/{id}` | 200 | 0 | `#c40a2cfb` |
+| `/admin/lgpd/requests/{id}` | 200 | 0 | `#c40a2cfb` |
+| `/admin/incidents/{id}` | 200 | 0 | `fixture_auditoria` |
+
+O roteador de intenção era a única das quatro sem `h1`: só `<h3>` de seção e o link "Roteadores" de
+volta. Quem navega por cabeçalhos não sabia em qual roteador estava — a tela não tinha nome.
+
+**Corrigido em `app/app/ai/routers/[id]/_client.tsx`**: `<h1>` com o nome do roteador, no peso e
+tamanho canônicos (24 px / 500), acima dos cartões.
+
+**E o token do link público foi redigido.** Medir `/o/[token]` exigiu assinar um link real (HMAC do
+pedido). Medida feita — 200, 0 overflow, 0 erro de console — e o artefato guarda `/o/{token}`, não o
+token: credencial não entra em commit. As capturas com o token no nome foram apagadas.
+
+### 2.1 fechado — as 26 rotas dinâmicas, cada uma com o seu tipo de prova
+
+| Prova | Rotas |
+| --- | --- |
+| captura em desktop e celular | **20** (40 medições, todas 200, 0 overflow) |
+| captura com link assinado (token redigido) | **1** (`/o/[token]`) |
+| fixture criada, medida e apagada | **4** (`ai_routers`, `lgpd_requests` ×2, `incidents`) |
+| E2E executado (`invite-lifecycle`, 12 testes verdes) | **1** (`/team/accept-invite/[token]`) |
+
+Nenhuma rota ficou "não auditada": cada uma tem captura, fixture com aviso, ou teste executado — e o
+motivo escrito quando a prova é de outro tipo. Somando às 129 estáticas em 1440/390 e às 32 em
+tablet, o item **2.1** fecha.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1433,7 +1469,7 @@ cobriu").
 
 | #    | Item                                                                | Estado | Medido                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ---- | ------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[~]`  | **129 rotas estáticas** contra build de produção em 1440 e 390 (258 medições), **32 telas em tablet 834** e **20 rotas dinâmicas com id real** em desktop e celular (40 medições, todas 200, 0 overflow, 0 erro de console). **4 dinâmicas sem dado** com motivo (`ai_routers`, `lgpd_requests` ×2, `incidents`); **2 de token** exigem criar o token. **Falta**: as 2 rotas de token |
+| 2.1  | Avaliar em execução e no código; desktop/tablet/celular             | `[x]`  | **129 rotas estáticas** em 1440/390 (258 medições) · **32 telas** em tablet 834 · **26 rotas dinâmicas, todas com prova**: 20 medidas em desktop e celular (40 medições, 200/0 overflow), 1 com link assinado (`/o/[token]`, token redigido), 4 com fixture criada e apagada (`sobrou=nada`) e 1 por E2E (`invite-lifecycle`, 12 verdes). **6 larguras** medidas (320, 360, 390, 430, 834, 1440). **Falta nada**: lacuna futura vira achado, não omissão |
 | 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
 | 2.4  | Hierarquia e densidade                                                | `[~]`  | **12 telas medidas na dobra** (1440×900): **1 ação primária** em cada uma das 7 telas de operação (pedidos, contatos, kanban, financeiro, notas, expedição, prospecção) — nenhuma com duas competindo; 0 nos hubs de leitura. **Densidade**: 7 alvos (kanban) a **50** (contatos). **Leitura**: máxima de **45 caracteres por linha** nos 3 parágrafos longos. `/admin` redireciona com sessão de organização — fora da medida. **Falta**: densidade em 320 e no tablet |
@@ -1450,14 +1486,14 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **37 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **38 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
-rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) e V-44 (nome longo quadruplicando a linha);
+rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) e V-45 (tela do roteador sem título);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 

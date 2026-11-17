@@ -3,7 +3,7 @@
   "grupo": "dinamicas",
   "perfil": "manager",
   "url_depois_do_login": "http://localhost:3011/app/inbox",
-  "atualizado_em": "2026-11-17T05:27:05.799Z",
+  "atualizado_em": "2026-11-17T11:13:18.665Z",
   "puladas": [],
   "resultados": [
     {
@@ -841,6 +841,50 @@
       ],
       "textoVisivel": 3125,
       "url": "/app/pipelines/714dbeb6-8873-4771-9b72-6c5240109f34"
+    },
+    {
+      "rota": "/o/{token}",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1082,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_o_v1_eyJvIjoiYjU0MjYzOGItYzI0ZC00MzdmLThmNDktMTVkYzI0NGNhMDQyIiwiZyI6IjY4ZmUwMTZhLTczMTItNGVlMC04NDE3LTJkZDA3YTBhZDY1OSIsImUiOjE3OTc1MDU5OTR9_xuMsevopii40kghiYfAIUzMM1kyHoaSdLrYUvvHknzg.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Orçamento · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 1,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Orçamento #91104"
+      ],
+      "textoVisivel": 206,
+      "url": "/o/{token}",
+      "nota": "token assinado redigido no artefato (credencial de link público)"
+    },
+    {
+      "rota": "/o/{token}",
+      "largura": "celular",
+      "status": 200,
+      "ms": 839,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "celular_o_v1_eyJvIjoiYjU0MjYzOGItYzI0ZC00MzdmLThmNDktMTVkYzI0NGNhMDQyIiwiZyI6IjY4ZmUwMTZhLTczMTItNGVlMC04NDE3LTJkZDA3YTBhZDY1OSIsImUiOjE3OTc1MDU5OTR9_xuMsevopii40kghiYfAIUzMM1kyHoaSdLrYUvvHknzg.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Orçamento · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 0,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Orçamento #91104"
+      ],
+      "textoVisivel": 206,
+      "url": "/o/{token}",
+      "nota": "token assinado redigido no artefato (credencial de link público)"
     }
   ]
 }
