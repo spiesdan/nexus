@@ -458,7 +458,16 @@ Após concluir o inventário e auditoria, apresente um plano priorizado, sem esp
 
 Para cada item, registre impacto, evidência, dependências, risco, arquivos/módulos envolvidos, estratégia, validação e critério de conclusão. Faça commits lógicos somente se o fluxo do usuário pedir ou o ambiente exigir; preserve mudanças preexistentes.
 
-### Definition of Done global
+#
+
+> **Evidência (Fase 10):** o plano priorizado está em
+> [`20-plano-priorizado.md`](20-plano-priorizado.md) — **5 P0, 12 P1, 10 P2 e 10
+> P3**, cada um com impacto, evidência, dependências, risco, arquivos,
+> estratégia, validação e critério de conclusão. A execução entra por P0
+> (cross-tenant, migrations silenciosas, trilha da IA) — a falha **crítica** de
+> dependência já foi fechada na 1.54.1.
+
+## Definition of Done global
 
 O projeto só pode ser declarado concluído quando:
 
@@ -804,13 +813,23 @@ Jornadas críticas (16)
 
 | #    | Item                                                                                          | Estado |
 | ---- | --------------------------------------------------------------------------------------------- | ------ |
-| 10.1 | Plano priorizado após inventário/auditoria                                                    | `[ ]`  |
-| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy           | `[ ]`  |
-| 10.3 | P1 — CRM, vendas, inbox, pedidos, mobile; erros sem recuperação; a11y grave                   | `[ ]`  |
-| 10.4 | P2 — consistência visual, densidade, tabelas, navegação, relatórios, automações               | `[ ]`  |
-| 10.5 | P3 — capacidades ausentes confirmadas e conveniência                                          | `[ ]`  |
-| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[ ]`  |
-| 10.7 | Commits lógicos só quando o fluxo pedir; preservar mudanças preexistentes                     | `[x]`  | ≈50 commits na branch `docs/auditoria-aaa`, todos pushados; arquivos do usuário preservados. |
+| 10.1 | Plano priorizado após inventário/auditoria                                                    | `[x]`  |
+| 10.2 | P0 — segurança, perda/corrupção, isolamento, operações críticas, bloqueio de deploy           | `[~]`  |
+| 10.3 | P1 — CRM, vendas, inbox, pedidos, mobile; erros sem recuperação; a11y grave                   | `[~]`  |
+| 10.4 | P2 — consistência visual, densidade, tabelas, navegação, relatórios, automações               | `[~]`  |
+| 10.5 | P3 — capacidades ausentes confirmadas e conveniência                                          | `[~]`  |
+| 10.6 | Por item: impacto, evidência, dependências, risco, arquivos, estratégia, validação, conclusão | `[x]`  |
+| 10.7 | Commits lógicos só quando o fluxo pedir; preservar mudanças preexistentes                     | `[x]`  |
+
+> **Evidência (Fase 10):** o plano priorizado está em
+> [`20-plano-priorizado.md`](20-plano-priorizado.md) — **5 P0, 12 P1, 10 P2 e 10
+> P3**, cada um com impacto, evidência, dependências, risco, arquivos,
+> estratégia, validação e critério de conclusão. A execução entra por P0
+> (cross-tenant, migrations silenciosas, trilha da IA) — a falha **crítica** de
+> dependência já foi fechada na 1.54.1. `10.7`: ≈50 commits na branch
+> `docs/auditoria-aaa`, todos pushados; os arquivos locais do usuário
+> (`.repara-mercos*.mjs`, `.probe-cliente*.mjs`, `docs/PROMPT-V5-*.md`) foram
+> preservados fora do git.
 
 ## Definition of Done global (12)
 
