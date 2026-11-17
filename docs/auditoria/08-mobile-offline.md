@@ -46,3 +46,27 @@
 
 O `appName` acima é o nome que aparece **debaixo do ícone no aparelho**. Se ele carrega marca de cliente/revendedor, isso alcança o usuário final — e o gate `tests/unit/branding.test.ts` não vê, porque varre `app|components|lib|workers|hooks` e só o nome legado do produto.
 
+
+## Dois service workers no mesmo escopo — medido em 17/11/2026
+
+O app registrava **dois** workers em `scope: "/"`: `/sw.js` (cache offline) e
+`/notify-sw.js` (bandeja + Web Push). Um escopo só admite **um** worker: ao
+ativar notificações, o segundo **substituía** o primeiro e o cache offline
+morria em silêncio — a tela não avisa, o app apenas deixa de abrir sem rede.
+
+**Corrigido:** os tratadores de `push`, `notificationclick` e `message`
+(`show-os-notify`) passaram para o próprio `sw.js`; `ensureNotifyServiceWorker()`
+registra `/sw.js`; `public/notify-sw.js` foi removido. Gate novo em
+`tests/unit/service-worker-unico.test.ts`: só um `*sw.js` em `public/`, o worker
+único trata cache **e** bandeja, e o registro aponta para `/sw.js` (o comentário
+pode citar o arquivo antigo; o código, não).
+
+**O que continua em aberto (fase 7):**
+
+- `mobile-offline.spec.ts` (5 casos) só roda no job `apk-debug`, que **não é**
+  um dos cinco checks obrigatórios — o offline não tem gate no PR;
+- `sw.js` e `lib/offline/catalogo.ts` **não têm teste** (a outbox tem 14 casos);
+- sem precache e com `CACHE = "nexus-app-v1"` fixo: o offline só existe para
+  telas já visitadas, e o fallback é um HTML genérico, não uma página offline;
+- `mobile/src/shell.ts` navega para `https://crm.billhigiene.tech` **hardcoded**
+  (`server.url` ausente no Capacitor).

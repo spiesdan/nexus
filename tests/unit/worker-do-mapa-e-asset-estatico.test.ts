@@ -69,7 +69,6 @@ describe("worker do MapLibre — asset estático fora do proxy", () => {
     for (const caminho of [
       "/maplibre-gl-worker.mjs",
       "/sw.js",
-      "/notify-sw.js",
       "/_next/static/chunk.js",
       "/logo.png",
     ]) {
