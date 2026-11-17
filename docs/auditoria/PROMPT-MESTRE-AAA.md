@@ -699,13 +699,13 @@ Jornadas críticas (16)
 
 | #    | Módulo                                             | Estado |
 | ---- | -------------------------------------------------- | ------ |
-| 5.1  | Público, login, onboarding, legal                  | `[ ]`  |
-| 5.2  | Dashboard, Meu Dia, busca, tarefas, agenda         | `[ ]`  |
-| 5.3  | Contatos, leads, carteira, funis, Customer 360     | `[ ]`  |
+| 5.1  | Público, login, onboarding, legal                  | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): 17 rotas e fluxos medidos; signout corrigido; Nuvemshop/WhatsApp deixam de declarar conexão sem backend |
+| 5.2  | Dashboard, Meu Dia, busca, tarefas, agenda         | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): telas medidas; busca corrigida (falso vazio + falha silenciosa); saúde do Google e semana em 390 abertos |
+| 5.3  | Contatos, leads, carteira, funis, Customer 360     | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): duplicata 409, lista sem mesclados, tempo de etapa por `stage_changed_at`, vazamento entre orgs corrigido |
 | 5.4  | Inbox, atendimento, campanhas                      | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): matriz de canais e inbox medidos; faltam prioridade/SLA/macros/presença/reenvio |
-| 5.5  | Radar, prospecção, recuperação, inteligência       | `[ ]`  |
+| 5.5  | Radar, prospecção, recuperação, inteligência       | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): score e fontes medidos; TEMP removido e amostra de 25k declarada; explicação do score aberta |
 | 5.6  | Pedidos, catálogo, estoque, compras, expedição     | `[~]`  | [`16-modulo-5.6.md`](16-modulo-5.6.md): 22 telas, ~56 handlers, regras de desconto/crédito/preço/estoque/sincronização medidas; **A1 corrigido** (patch de itens furava alçada/tabela/estoque), A2–A16 abertos com severidade. Auditoria de módulo feita; restam os consertos P0/P1. |
-| 5.7  | Financeiro, títulos, comissões                     | `[ ]`  |
+| 5.7  | Financeiro, títulos, comissões                     | `[~]`  | [`18-modulos-5.1-5.7.md`](18-modulos-5.1-5.7.md): mês no fuso da org, baixa parcial honesta, período inclusivo e KPIs no filtro |
 | 5.8  | Fiscal                                             | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): regras e 8 achados; erro da SEFAZ e confirmação de emissão corrigidos |
 | 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): capacidades medidas; run trace, audit:run e eval são as lacunas |
 | 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): guards medidos; MFA do platform admin corrigido; tokens/equipe abertos |
