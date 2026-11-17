@@ -970,6 +970,7 @@ não é reconstruído de memória — seria inventar):
 | 17/11/2026 | Título de página com um h1 só — e o esqueleto deixou de pular       | `auditoria` | `enviado (arquivo, auditoria)` |
 | 17/11/2026 | O mapa de empresas voltou — e o contraste chegou a zero reprovados   | `auditoria` | `enviado (arquivo, auditoria)` |
 | 17/11/2026 | Um clique criava três clientes — e um botão mudo não dizia que salvava| `auditoria` | `enviado (arquivo, auditoria)` |
+| 17/11/2026 | Offline: o app abria, mas duas telas não diziam o que acontecia       | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
