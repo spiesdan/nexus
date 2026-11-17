@@ -1464,6 +1464,35 @@ botão de envio com `disabled` e rótulo de progresso (35 de 35) e contraste AA 
 rótulo, contraste). Não se padroniza o que a tela **é** (showcase, identificador, densidade de
 navegação da casca).
 
+### Gráficos: custo medido, atribuição NÃO provada — sinal aberto (F-29)
+
+O último pedaço do 2.15 era o custo de **renderizar gráfico**. Instrumento novo,
+`scripts/auditoria/graficos-custo.mjs`, mede na mesma condição do resto do trace (celular 390,
+CPU 4×): quantos gráficos a tela tem, quantas tarefas longas e quanto tempo bloqueado.
+
+| Tela | Gráficos | TBT — 3 rodadas |
+| --- | --- | --- |
+| `/app/indicadores` | 5 | 438 · **533** · **280** ms |
+| `/app` | 4 | 433 · 363 · 321 ms |
+| `/app/radar` | 4 | 221 · 172 · 215 ms |
+| `/app/financeiro` | 0 | 166 · 134 · 124 ms |
+| `/app/settings` | 0 | 15 · 30 · 1 ms |
+
+**O que isso prova e o que não prova.** As telas com mais gráfico gastam mais thread principal que
+uma tela de formulário — mas a **variação entre rodadas** (280 a 533 ms na mesma tela, com o mesmo
+build) é maior que a diferença entre telas. Atribuir o TBT ao desenho do gráfico seria escolher o
+número que conta a história.
+
+**A tentativa de conserto foi medida e revertida.** Desliguei a animação das 14 séries do Recharts
+(`isAnimationActive={false}`) e remmedi: os números não melhoraram de forma consistente (533/280 ms
+na mesma tela, contra 438 antes). Como o efeito não é demonstrável com este instrumento, o código
+voltou ao que era — mudança sem prova de ganho não fica no produto só porque "parece melhor".
+
+**O que fica:** o instrumento (reproduzível) e o sinal **F-29, aberto**: telas com 4–5 gráficos
+chegam a 433–533 ms de TBT em CPU 4×, acima do limite de 200 ms, e a causa provável (montagem dos
+gráficos + hidratação) precisa de **repetição suficiente para separar sinal de ruído** — perfil com
+trace do Chrome, não três execuções.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
