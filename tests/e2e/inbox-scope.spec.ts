@@ -32,16 +32,21 @@ test.describe("G4-02 — inbox com escopo", () => {
   test("agent em modo own*: vê Minhas e Fila, NÃO vê Todas", async ({ page }) => {
     await login(page, creds.users.agent!.email);
     await page.goto("/app/inbox");
-    await expect(page.getByRole("tab", { name: /Minhas/ })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /Fila/ })).toBeVisible();
-    await expect(page.getByRole("tab", { name: /Todas/ })).toHaveCount(0);
+    // Os recortes do Inbox são BOTÕES com `aria-pressed` (grupo "Filtro de
+    // conversas"), não `role=tab`: sem painel por aba, o `aria-controls` do
+    // Radix era ARIA inválido e o axe reprovava (crítico) — ver InboxFilters.
+    const filtros = page.getByRole("group", { name: /Filtro de conversas/ });
+    await expect(filtros.getByRole("button", { name: /Minhas/ })).toBeVisible();
+    await expect(filtros.getByRole("button", { name: /Fila/ })).toBeVisible();
+    await expect(filtros.getByRole("button", { name: /Todas/ })).toHaveCount(0);
     await page.screenshot({ path: path.join(EVIDENCE, "G4-02-inbox-scope-agent.png"), fullPage: true });
   });
 
   test("manager: vê a visão Todas", async ({ page }) => {
     await login(page, creds.users.manager!.email);
     await page.goto("/app/inbox");
-    await expect(page.getByRole("tab", { name: /Todas/ })).toBeVisible();
+    const filtros = page.getByRole("group", { name: /Filtro de conversas/ });
+    await expect(filtros.getByRole("button", { name: /Todas/ })).toBeVisible();
     await page.screenshot({ path: path.join(EVIDENCE, "G4-02-inbox-scope-manager.png"), fullPage: true });
   });
 

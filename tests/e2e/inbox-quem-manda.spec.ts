@@ -278,7 +278,7 @@ test.describe("Inbox — quem manda nesta conversa", () => {
 
     // E o BADGE da aba a conta — badge que não bate com a lista manda o atendente
     // procurar um trabalho que a aba não mostra (ou o contrário, que é este caso).
-    const abaFila = page.getByRole("tab", { name: /Fila/i }).first();
+    const abaFila = page.getByRole("group", { name: /Filtro de conversas/ }).getByRole("button", { name: /Fila/i }).first();
     await expect(abaFila).toContainText(/[1-9]/, { timeout: 30_000 });
 
     // Abrindo, a tela diz que ninguém está no comando — nem pessoa, nem automático.
