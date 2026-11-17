@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CHANNEL_CAPABILITIES, type ChannelProvider } from "@/lib/channels";
+import { logger } from "@/lib/logger";
 
 import type { ParametrosDoEnvio } from "./envio";
 import { processarCampanhasAgendadas } from "./agendado";
@@ -544,12 +545,20 @@ describe("processarCampanhasAgendadas", () => {
     reservaRecusada = true;
     const dados = base({ prospecting_campaigns: [campanha()] });
     const enviar = senderFalso();
+    const warn = vi.spyOn(logger, "warn").mockImplementation(() => {});
     const resumo = await processarCampanhasAgendadas(criarAdmin(dados), DENTRO, enviar);
 
     expect(enviar).not.toHaveBeenCalled();
     expect(resumo.enviados).toBe(0);
     expect(resumo.pulados).toEqual([{ campanha: "camp-1", motivo: "reserva_perdida" }]);
     expect(dados.prospecting_sends).toEqual([]);
+    // A corrida fica no log com QUEM e PARA QUEM — o resumo do tick diria só
+    // "1 pulada" e ninguém acharia o prospect.
+    expect(warn).toHaveBeenCalledWith(
+      "[prospeccao.agendado] reserva perdida para outro tick",
+      expect.objectContaining({ campaignId: "camp-1", prospectId: "p-001" }),
+    );
+    warn.mockRestore();
   });
 
   it("(i) envio que falha deixa a reserva e a campanha segue para o próximo", async () => {

@@ -740,8 +740,14 @@ export async function processarCampanhasAgendadas(
         // Outro tick reservou este prospect entre a leitura e o insert — OU a
         // linha já existia e a leitura não a viu (o corte de 1.000 do
         // PostgREST, antes da paginação). "Intervalo" era mentira: o ritmo
-        // não tinha nada a ver.
+        // não tinha nada a ver. O log diz QUEM e PARA QUEM: sem ele a corrida
+        // some no resumo do tick, que só conta "1 pulada".
         resumo.pulados.push({ campanha: campanha.id, motivo: "reserva_perdida" });
+        logger.warn("[prospeccao.agendado] reserva perdida para outro tick", {
+          organizationId: campanha.organization_id,
+          campaignId: campanha.id,
+          prospectId: escolhido.id,
+        });
         continue;
       }
 
