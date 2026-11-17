@@ -114,8 +114,9 @@ incluso) e 250 ms de espera. **Nas 258 medições a rede assentou** — o caso d
 rodada registrou em `/admin/platform-admins` era o 404 do runbook (V-13) mantendo requisição
 viva; corrigido o link, caiu para 2,8 s no pior caso.
 
-O que continua aberto: **trace do navegador** (LCP/CLS/TBT) e medição de gráficos. O item 2.15
-fica `[~]`, não `[x]`, por isso.
+O trace do navegador, que era a dívida desta seção, foi feito depois: LCP, CLS e TBT em 12 telas
+× 2 condições (`scripts/auditoria/desempenho.mjs`) — e foi ele que achou a V-34. O item 2.15 segue
+`[~]` pelo que ainda falta (INP e custo de render dos gráficos), não pelo trace.
 
 ### V-06 · Baixa · alvos de toque abaixo de 40 px — sinal, não veredito
 
@@ -891,6 +892,132 @@ outra largura entra como outra chave. Leitura de arquivo ausente, vazio ou corro
 final. Gate em `tests/unit/medicoes-do-instrumento.test.ts` (**6 testes**): o primeiro caso é
 exatamente o defeito medido — 5 rotas + 1 avulsa tem de resultar em 6, nunca em 1.
 
+### V-34 · Média · O esqueleto do KPI não era o grid do KPI: 286 px de pulo e CLS 0,128
+
+O primeiro trace de navegador da auditoria (`scripts/auditoria/desempenho.mjs`, 12 telas × 2
+condições) apontou **uma** tela acima do limite de Core Web Vitals: `/app/financeiro`, com **CLS
+0,130** no celular (CPU 4×, rede de 1,6 Mbps). Não era ruído — reproduziu em todas as rodadas.
+
+**O que deslocava.** A sonda de deslocamento (mesmo contexto, mesmas condições) mostrou o painel
+inteiro mover 286 px: `428 → 714` no topo da lista de abas. A causa estava antes do número chegar:
+
+| Medida (390 px) | Esqueleto de carregamento | Cartão real (`NexusKpiGrid`) |
+| --- | --- | --- |
+| grid | `grid-cols-2 gap-3` + `Skeleton h-24` = **204 px** | `grid-cols-1 sm:grid-cols-2 xl:grid-cols-4`, `p-5` = **490 px** |
+| cartões | 4 × 96 px, 2 colunas | **99, 99, 123, 123** (1 coluna; os dois últimos têm comparação) |
+
+Dois grids diferentes e duas caixas diferentes: o esqueleto prometia 2 colunas e o produto
+entregava 1, com cartão 27 % mais alto. Em 1440 px o erro era menor (96 → 123 px de cartão) mas
+existia.
+
+**Corrigido em `components/nexus-ui/kpi/nexus-kpi.tsx`**: nasceu o `NexusKpiSkeleton`, e ele não
+tem layout próprio — usa o `NexusKpiGrid` de verdade e compartilha **uma definição** de cada peça
+com o cartão que mostra número:
+
+- `QUADRO_DO_KPI` — a caixa (`rounded-card border bg-card p-5`);
+- `TEXTO_DO_ROTULO`, `TEXTO_DO_VALOR`, `TEXTO_DO_RODAPE` — as três linhas.
+
+A primeira tentativa cravou altura em pixel (`h-5`/`h-8`) e errou **3 px por cartão** (102 contra
+99): retângulo de altura fixa não adivinha `line-height`. A versão final desenha as **mesmas
+classes** com o texto transparente — a altura da linha vem da fonte, não de um palpite. O
+`comRodape` reproduz a linha de comparação só nos cartões que a têm.
+
+O segundo esqueleto de KPI da mesma tela (aba *Contas a pagar*) tinha o mesmo defeito, em outro
+formato: um `Skeleton h-24` onde o carregado é um grid de 4 KPIs. Também corrigido.
+
+**Antes e depois, medidos:**
+
+| Medida | Antes | Depois |
+| --- | --- | --- |
+| altura do esqueleto × cartão (390 px) | 204 × 490 px | **490 × 490 px — 0 px** |
+| altura do esqueleto × cartão (1440 px) | 96 × 123 px | **123 × 123 px — 0 px** |
+| CLS de `/app/financeiro` (390, CPU 4×) | **0,129** | **0,000** (3 rodadas) |
+| maior CLS das 12 telas (celular) | 0,130 (`/app/financeiro`) | **0,037** (`/app/inbox`) |
+| maior CLS das 12 telas (desktop) | 0,026 | 0,026 |
+
+Artefatos: `capturas/desempenho-producao-antes-v34.json` (24 medições, antes) e
+`capturas/desempenho-producao.json` (24 medições, depois). A coluna "antes" de CLS é do
+instrumento; os 0,129 do diagnóstico vêm da sonda que aquece as 10 telas anteriores no mesmo
+contexto — é ela que reproduz a condição do instrumento, e foi ela que apontou o elemento que
+deslocava.
+
+**Gate em `tests/unit/kpi-skeleton-espelha-o-grid.test.ts`** (708 casos): quadro e linhas têm uma
+definição só, usada pelos dois componentes; o esqueleto não pode cravar `h-*`; e **nenhum arquivo
+com `NexusKpiGrid` pode montar esqueleto de KPI à mão** — reintroduzi o bloco medido para conferir:
+o teste reprova com o nome do arquivo.
+
+**O que ficou de fora, de propósito:** o `/app/radar` tem grid de esqueleto `grid-cols-2 gap-3
+lg:grid-cols-4`, mas ali os cartões reais são `Card p-3` (não são `NexusKpi`), e o grid do
+esqueleto **já é igual** ao do conteúdo. Trocar por `NexusKpiGrid` criaria desalinhamento novo em
+nome de simetria.
+
+### V-35 · Média · A subtela de prospecção tinha o segundo `h1` da mesma página
+
+`/app/prospeccao` é o endereço antigo: ele redireciona para
+`/app/campanhas?subtela=prospeccao`. Medido no DOM das 130 rotas estáticas
+(`capturas/h1-em-producao.json`), a rota entregava **dois títulos de nível 1** na mesma árvore —
+"Campanha" (cabeçalho da página) e "Prospecção" (cabeçalho da subtela):
+
+| Medida (produção, 1440) | Antes | Depois |
+| --- | --- | --- |
+| `<h1>` na rota | **2** — "Campanha" + "Prospecção" | **1** — "Campanha" |
+| peso/tamanho | 24 px / 500 nos dois | 24 px / 500 |
+
+Dois `h1` não é detalhe de marcação: a navegação por cabeçalhos do leitor de tela anuncia duas
+páginas onde existe uma, e quem chega pelo "ir para o conteúdo principal" não sabe qual é o
+assunto da tela.
+
+**Corrigido em `app/app/prospeccao/_client.tsx`**: a subtela passa `headingLevel={2}` ao
+`NexusPageHeader` — o componente já tinha essa prop exatamente para cabeçalho EMBUTIDO (o visual
+não muda; muda o nível). A tela só é renderizada dentro de `/app/campanhas`, então o nível 2 é o
+certo em todos os usos.
+
+**Gate em `tests/unit/titulo-de-pagina-uma-familia.test.ts`**: todo arquivo que importa a
+`_client` de outra rota não pode deixar essa tela desenhar `h1` — a subtela precisa declarar
+`headingLevel={2}`. Reintroduzi o defeito para conferir: reprova apontando
+`app/app/prospeccao/_client.tsx`.
+
+`/design` continua com dois `h1` **de propósito**: é o showcase do design system, que existe para
+mostrar títulos — não é tela de produto e está fora do gate por decisão, não por esquecimento.
+
+### V-36 · Baixa · O título de página tinha dois pesos: 500 no canônico, 600 em 11 telas
+
+O `h1` é 24 px em todas as telas de produto, mas o **peso** divergia. Medido no DOM:
+
+| Peso do `<h1>` | Antes | Depois |
+| --- | --- | --- |
+| 24 px / **500** (o do `NexusPageHeader`) | 107 rotas | **117 rotas** |
+| 24 px / **600** | **11 rotas** — `/`, `/app`, `/login/{forgot,mfa,recovery,reset}`, `/signup`, `/403`, `/503`, `/account-suspended`, `/vitrine-agenda` | **0** |
+
+A divergência aparecia dentro da MESMA família: `/login` a 500 e `/login/forgot` a 600, com o
+mesmo cartão e o mesmo tamanho. E dentro do mesmo componente: `StatusPage` tinha `font-semibold`
+como padrão e uma variante (`acesso-negado-admin`) que corrigia para `font-medium` à mão — ou
+seja, o padrão já estava errado pelo próprio código.
+
+**Corrigido** em `app/app/_home.tsx`, nas 5 páginas de autenticação + `/signup`,
+`app/vitrine-agenda/_client.tsx` e `components/nexus-ui/feedback/StatusPage.tsx` (padrão 500; a
+variante mantém a cor explícita). Nada de tamanho mudou: só o peso, que agora é um só.
+
+**Gate** no mesmo arquivo de teste: `<h1>` com `text-2xl` não pode declarar `font-semibold` nem
+`font-bold`. Duas exceções **declaradas com motivo** no teste, porque ali o título é um
+identificador e não um nome: `app/app/lgpd/requests/[id]/_client.tsx` (`#A1B2C3`, em mono) e
+`app/o/[token]/page.tsx` ("Orçamento #123", página pública do cliente). É o item 2.16 do prompt:
+onde a composição é intencional, padronizar mecanicamente seria o defeito.
+
+**Estático × DOM, e por que os dois aparecem.** O instrumento estático de origem do título
+(`titulos-de-pagina.ts`) lista 4 telas com "dois `h1`" e 24 "sem título" — e **nenhuma** das duas
+coisas vale como achado: o mesmo arquivo desenha `h1` em ramos que não aparecem juntos (impressão,
+modal, estado de erro) e título pode vir de componente fora do segmento. Foi o DOM que decidiu: um
+`h1` visível por tela em 129 rotas, dois só em `/design`. O JSON do instrumento carrega esse aviso
+no próprio artefato, para ninguém citar a lista estática como prova.
+
+**O que a medição NÃO autoriza dizer.** A varredura também aponta 11 rotas sem `h1` **visível** —
+e nenhuma delas é defeito: `/app/inbox` e `/admin/inbox` usam `sr-only` de propósito (o título
+visível é o da conversa; está escrito no próprio componente), e as 9 `/onboarding/*` foram medidas
+em `/app/inbox` porque a sessão de teste já passou do onboarding e a rota redireciona. Marcar isso
+como "tela sem título" seria publicar o efeito da sessão, não do produto. O instrumento agora
+separa `visiveis` de `ocultos` justamente para não repetir o erro.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -967,7 +1094,7 @@ cobriu").
 | 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
 | 2.4  | Hierarquia e densidade                                              | `[~]`  | Lida nas 258 capturas; sem medição de densidade                                                                                                                                                                                                                                                                                                                                                                                                |
-| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | Shell e barra de filtros consistentes; títulos por rota                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | **Título medido no DOM das 129 rotas estáticas**: 117 de 119 `h1` visíveis a 24 px / 500, **um `h1` por tela** (V-35 e V-36 corrigidos; 2 exceções declaradas: `/design` e os títulos que são identificador). `sr-only` separado de visível no instrumento. **Breadcrumb**: 52 de 129 rotas têm; shell e barra de filtros consistentes nos 258 screenshots. **Falta**: decidir se breadcrumb é padrão de todas as telas internas ou só das profundas |
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[ ]`  | Depende das jornadas J1–J16                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | Presença confirmada na matriz (69 telas com filtro, 51 com tabela); comportamento não exercitado                                                                                                                                                                                                                                                                                                                                               |
 | 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
@@ -977,14 +1104,15 @@ cobriu").
 | 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 258 medições** (e o único caso de 25 px foi introduzido e removido na própria V-12); colisão com a barra inferior = 0 (V-03 descartado); modais e drawers não abertos                                                                                                                                                                                                                                                          |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
-| 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. Sem trace de navegador (LCP/CLS/TBT); gráficos não avaliados                                                                                                                                                                                                                                    |
+| 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **26 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **29 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
-(o instrumento que apagava o próprio artefato);
+(o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
+V-36 (título de página com dois pesos);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
