@@ -24,7 +24,8 @@
  * `--area` restringe `--faltantes` a admin | tenant | publica. Precisa combinar
  * com `--perfil`: `/admin/**` é superfície do `dono`; medir com `manager`
  * devolve `/403` e o número vira "tela quebrada" em vez de "guarda funcionando".
- * `--larguras` aceita `desktop,tablet,celular` (padrão: desktop,celular).
+ * `--larguras` aceita `desktop,tablet,celular,estreito,compacto,grande`
+ * (padrão: desktop,celular).
  */
 import { chromium } from "@playwright/test";
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -41,6 +42,12 @@ const LARGURAS = [
   { nome: "desktop", width: 1440, height: 900 },
   { nome: "tablet", width: 834, height: 1112 },
   { nome: "celular", width: 390, height: 844 },
+  // Extremos do item 2.13: o iPhone SE de primeira geração (320), o Android
+  // compacto (360) e o telefone grande (430). 390 é o meio, não o pior caso —
+  // e é no pior caso que o overflow aparece.
+  { nome: "estreito", width: 320, height: 720 },
+  { nome: "compacto", width: 360, height: 780 },
+  { nome: "grande", width: 430, height: 932 },
 ];
 
 const GRUPOS = {
@@ -53,7 +60,11 @@ const GRUPOS = {
     "/app/indicadores",
   ],
   operacao: ["/app/estoque", "/app/compras", "/app/expedicao", "/app/financeiro", "/app/titulos"],
-  admin: ["/app/settings", "/app/team", "/app/lgpd", "/app/ai", "/admin"],
+  // `/app/lgpd` NÃO é rota: o menu aponta para `/app/lgpd/requests`
+  // (`lib/navigation/registry.ts`). O grupo pedia a inexistente e a varredura
+  // registrava "404" como se o produto tivesse página quebrada (medido em
+  // 17/11/2026 na largura 320).
+  admin: ["/app/settings", "/app/team", "/app/lgpd/requests", "/app/ai", "/admin"],
 };
 
 /** TOTP padrão (RFC 6238), 6 dígitos, SHA-1, janela de 30 s. */

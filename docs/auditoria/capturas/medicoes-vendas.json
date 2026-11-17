@@ -1,7 +1,10 @@
 {
-  "base": "http://localhost:3001",
+  "base": "http://localhost:3011",
   "grupo": "vendas",
-  "url_depois_do_login": "http://localhost:3001/app/inbox",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3011/app/inbox",
+  "atualizado_em": "2026-11-17T04:33:35.385Z",
+  "puladas": [],
   "resultados": [
     {
       "rota": "/app/pedidos",
@@ -191,6 +194,111 @@
         "Indicadores"
       ],
       "textoVisivel": 4446,
+      "url": "/app/indicadores"
+    },
+    {
+      "rota": "/app/pedidos",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1635,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_pedidos.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Pedidos · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 99,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "textoVisivel": 3644,
+      "url": "/app/pedidos"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1621,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_prospeccao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Campanha · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 9,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Campanha"
+      ],
+      "textoVisivel": 703,
+      "url": "/app/campanhas"
+    },
+    {
+      "rota": "/app/relatorios",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1295,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_relatorios.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Relatórios · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 4,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "textoVisivel": 3127,
+      "url": "/app/relatorios"
+    },
+    {
+      "rota": "/app/comissoes",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1447,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_comissoes.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Comissões · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 39,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "textoVisivel": 3440,
+      "url": "/app/comissoes"
+    },
+    {
+      "rota": "/app/indicadores",
+      "largura": "estreito",
+      "status": 200,
+      "ms": 1838,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "estreito_app_indicadores.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Indicadores · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "textoVisivel": 4747,
       "url": "/app/indicadores"
     }
   ]
