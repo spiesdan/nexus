@@ -1750,6 +1750,35 @@ uma das duas). E as 16 asserções de `tests/unit/inbox-filters-scope.test.tsx` 
 violação `serious`/`critical`. Registrado em `SPECS_PARTE_2` e em `TRANSVERSAIS` (acessibilidade
 atravessa as telas) — sem isso o gate de cobertura do E2E reprova a spec nova, e reprovou mesmo.
 
+### V-51 · Mudança de produto pedida pelo dono · O pedido nasce "Em orçamento" e pode ser **concluído**
+
+Pedido do dono (17/11/2026): *"nos pedidos criação, primeiro ele fica em orçamento, depois opção
+marcar concluído no pedido, igual o Mercos faz."*
+
+**O que já existia:** o pedido nasce `rascunho`, e a **lista** já o chamava de "Em orçamento"
+(`rotuloDaPill`). O que faltava era o resto:
+
+| Antes | Depois |
+| --- | --- |
+| `ROTULO_DO_STATUS.rascunho` = **"Rascunho"** (ficha, filtros) e a lista com caso especial "Em orçamento" — duas palavras para o mesmo estado | **"Em orçamento"** no vocabulário único; o caso especial da pill saiu |
+| status `concluido` existia no schema, no CHECK e na Expedição, mas **nenhuma tela chegava nele** | botão **"Marcar como concluído"** na ficha, em orçamento / em análise / aprovado |
+| sair do orçamento só por "Aprovar" (que exige teto de desconto e gerente) | **concluir passa pelas mesmas travas** — é compromisso de venda, não atalho |
+
+**Medido em produção local (build + `next start`):**
+
+| Passo | Resultado |
+| --- | --- |
+| ficha de pedido em orçamento | pill **"Em orçamento"**, botão **"Marcar como concluído"** presente |
+| clique | `PATCH /api/v1/commercial-orders/{id}` → **200**; banco `concluido`; pill **"Concluído"** |
+| lista de pedidos | mostra **"Em orçamento"** (o rótulo unificado) |
+| **agent** tentando concluir pedido **em análise** | **422** "Só gerente aprova pedido em análise."; status **não muda** |
+
+O último caso é o que importa: concluir não pode ser o caminho para furar a alçada. O `PATCH` passou
+a tratar `concluido` como `aprovado` no gate de desconto (acima do teto → escala para `em_analise`) e
+na exigência de gerente.
+
+O pedido usado na prova foi devolvido ao estado original (`rascunho`) depois da medição.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

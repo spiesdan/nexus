@@ -164,13 +164,17 @@ export async function PATCH(
       // R$ vira % sobre o subtotal para comparar com o mesmo teto do POST.
       const pctDoValor = ordem.subtotal_cents > 0 ? (ordem.desconto_cents / ordem.subtotal_cents) * 100 : 0;
       const maior = Math.max(maxItem, ordem.desconto_pct ?? 0, pctDoValor);
-      if (parsed.data.status === "aprovado" && maior > teto) {
+      // `concluido` COMPROMETE a venda tanto quanto `aprovado`: é o ato de
+      // fechar o pedido (vocabulário Mercos). Deixá-lo fora da alçada seria o
+      // atalho para furar o teto de desconto — fecha o pedido em vez de aprovar.
+      const compromete = parsed.data.status === "aprovado" || parsed.data.status === "concluido";
+      if (compromete && maior > teto) {
         const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
         if (!mgr.ok) {
           parsed.data.status = "em_analise";
         }
       }
-      if (ordem.status === "em_analise" && parsed.data.status === "aprovado") {
+      if (ordem.status === "em_analise" && compromete) {
         const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
         if (!mgr.ok) {
           return fail("validation_failed", "Só gerente aprova pedido em análise.", 422, { requestId });

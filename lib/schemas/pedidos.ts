@@ -63,7 +63,10 @@ export function badgeDaOrigem(origem: string): { rotulo: string; classe: string 
 
 /** Rótulo do status para a tela. */
 export const ROTULO_DO_STATUS: Record<StatusDoPedido, string> = {
-  rascunho: "Rascunho",
+  // Vocabulário do Mercos (pedido do dono, 17/11/2026): o pedido nasce em
+  // **orçamento** e só depois é aprovado/concluído. O rótulo era "Rascunho"
+  // aqui e "Em orçamento" na lista — duas palavras para o mesmo estado.
+  rascunho: "Em orçamento",
   em_analise: "Em análise",
   aprovado: "Aprovado",
   faturado: "Faturado",

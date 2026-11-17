@@ -59,6 +59,9 @@ const PROXIMO_STATUS: Partial<Record<StatusDoPedido, StatusDoPedido>> = {
   expedido: "entregue",
 };
 
+/** Onde "Marcar como concluído" aparece: o pedido ainda está em negociação. */
+const PODE_CONCLUIR: StatusDoPedido[] = ["rascunho", "em_analise", "aprovado"];
+
 const ROTULO_ACAO_AVANCAR: Partial<Record<StatusDoPedido, string>> = {
   rascunho: "Aprovar pedido",
   em_analise: "Aprovar pedido",
@@ -539,6 +542,29 @@ export function DetalheDoPedido({
     }
   }
 
+  /**
+   * CONCLUIR O PEDIDO — o ato que fecha a venda no vocabulário do Mercos.
+   *
+   * O caminho "natural" (`aprovado → faturado → expedido → entregue`) pressupõe
+   * nota e depósito. Nem toda venda passa por ali: quem vendeu e recebeu fecha o
+   * pedido como **Concluído** e segue. O status já existia no vocabulário e no
+   * CHECK do banco, mas nenhuma tela chegava nele — o pedido encalhava em
+   * "Aprovado" sem próxima ação.
+   *
+   * As travas são as mesmas da aprovação (teto de desconto e alçada de gerente):
+   * concluir também compromete a venda, e passar por cima da alçada seria um
+   * atalho.
+   */
+  async function concluir() {
+    try {
+      await apiClient.patch(`/api/v1/commercial-orders/${pedido.id}`, { status: "concluido" });
+      toast.success(t("Pedido concluído."));
+      await recarregar();
+    } catch (e) {
+      showApiError(e);
+    }
+  }
+
   async function avancar() {
     const proximo = PROXIMO_STATUS[pedido.status as StatusDoPedido];
     if (!proximo) return;
@@ -712,6 +738,11 @@ export function DetalheDoPedido({
             {podeEditar && proximo && (
               <Button size="sm" onClick={() => void avancar()}>
                 {t(ROTULO_ACAO_AVANCAR[pedido.status as StatusDoPedido] ?? "Avançar")}
+              </Button>
+            )}
+            {podeEditar && PODE_CONCLUIR.includes(pedido.status as StatusDoPedido) && (
+              <Button size="sm" variant="outline" onClick={() => void concluir()}>
+                {t("Marcar como concluído")}
               </Button>
             )}
             <Button size="sm" variant="outline" asChild>
