@@ -272,6 +272,7 @@ services:
       MERCOS_EMPRESA: ${MERCOS_EMPRESA:-338282}
       MERCOS_POLL_MS: ${MERCOS_POLL_MS:-5000}
       MERCOS_SCRAPE_TIMEOUT_MS: ${MERCOS_SCRAPE_TIMEOUT_MS:-1800000}
+      MERCOS_LOGIN_TIMEOUT_MS: ${MERCOS_LOGIN_TIMEOUT_MS:-90000}
       # Recuperação pontual: força a coleta a partir de um número antigo.
       # Vazio no fluxo normal (usa o maior pedido já importado).
       MERCOS_A_PARTIR_DE: ${MERCOS_A_PARTIR_DE:-}
