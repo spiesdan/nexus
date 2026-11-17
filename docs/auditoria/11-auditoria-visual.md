@@ -1440,6 +1440,30 @@ tem três níveis (área → módulo → detalhe); a do admin usa voltar + abas 
 (Tenants → tenant → aba) e a trilha repetiria o que o botão de voltar já diz.** Uniformizar as duas
 seria o item 2.16 ao contrário: padronizar o que é diferente de propósito.
 
+### Composição intencional — o que foi padronizado, e o que foi deixado em paz (2.16)
+
+Padronizar é fácil; o difícil é não apagar o que é diferente de propósito. Este item existe para
+isso, e a resposta é uma **lista de exceções declaradas**, cada uma com o motivo e com o lugar onde
+a regra vale:
+
+| Exceção | Por que NÃO se padroniza | Onde está declarada |
+| --- | --- | --- |
+| `/design` com **dois `h1`** (18 px e 22 px) | é o showcase do design system: existe para mostrar títulos | V-35 |
+| Título que **é um identificador**: `#A1B2C3` em mono e "Orçamento #123" | o nome da tela é o número; forçar 24 px/500 apagaria o sinal | gate de título (allowlist com motivo) |
+| Admin **sem trilha**, com voltar + abas | hierarquia rasa (Tenants → tenant → aba); a trilha repetiria o botão | 2.5 |
+| Paleta `--color-*` (magenta, amber, sky…) **como cor de gráfico** | é cor de série, não de texto; a V-30 mediu e declarou o preço | V-30 |
+| `/app/inbox` e `/admin/inbox` com **`h1` `sr-only`** | o título visual é o da conversa; o `h1` existe para a árvore de acessibilidade | V-43 |
+| Esqueleto do **radar** com grid próprio | os cartões de lá não são `NexusKpi` (`Card p-3`); o grid do esqueleto já é igual ao do conteúdo | V-34 |
+| **Duas cascas, duas larguras de TopBar** | admin e tenant têm densidades diferentes de navegação | 2.5 |
+
+E o que **foi** padronizado, com medida: título de página (117 de 119 a 24 px/500), um `h1` por tela,
+uma ação primária por tela de operação, rótulo de campo ligado ao controle (101 rótulos, 0 soltos),
+botão de envio com `disabled` e rótulo de progresso (35 de 35) e contraste AA (22 → 0).
+
+**O critério, escrito:** padroniza-se o que a pessoa **compara entre telas** (título, ação primária,
+rótulo, contraste). Não se padroniza o que a tela **é** (showcase, identificador, densidade de
+navegação da casca).
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1527,7 +1551,7 @@ cobriu").
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 6 larguras**: 320 × 20 rotas, 360 × 5, 430 × 5, 390 × 129, 834 × 32, 1440 × 129 — nenhuma rola na horizontal, 320 inclusive (V-41 corrigiu o 404 que era da régua). **Alvos < 40 px**: p50 3 em 390, **7,5 em 320** (máx 99 em `/app/pedidos`) — V-06 segue sinal. **Falta**: teclado virtual sobre campo focado e rotação |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
-| 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
+| 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | **7 exceções declaradas com motivo** (showcase `/design`, título-identificador, admin sem trilha, paleta de categoria em gráfico, `h1` `sr-only` do Inbox, esqueleto do radar, duas cascas). **Padronizado com medida**: título 24 px/500 (117 de 119), um `h1` por tela, 1 ação primária por tela, 101 rótulos ligados (0 soltos), 35 de 35 botões de envio com progresso, contraste 22 → 0 |
 
 **Fase 2: em andamento.** **39 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
