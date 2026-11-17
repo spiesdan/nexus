@@ -179,7 +179,7 @@ export default async function AgendaPage() {
   // não sumia depois de conectar. Segunda conexão era um clique no mesmo botão.
   const promessaConexao = supabase
     .from("calendar_connections")
-    .select("account_email, status")
+    .select("account_email, status, last_sync_at, last_sync_error")
     .eq("organization_id", activeOrg.orgId)
     .eq("user_id", user.id)
     // ⚠️ A CONSTANTE, e não o literal. Isto era `.eq("provider", "google")` — um
@@ -213,6 +213,14 @@ export default async function AgendaPage() {
       fusoDeApresentacao={fusoDeApresentacao}
       googleConfigurado={googleConfigurado}
       contaConectada={conexao?.account_email ?? null}
+      // A saúde do sync existia no banco e NUNCA chegava à tela: a pessoa via
+      // "Agenda conectada" enquanto os eventos paravam de entrar, sem saber.
+      ultimaSincronizacao={
+        (conexao as { last_sync_at?: string | null } | null)?.last_sync_at ?? null
+      }
+      erroDeSincronizacao={
+        (conexao as { last_sync_error?: string | null } | null)?.last_sync_error ?? null
+      }
       enderecoDeRetorno={enderecoDeRetorno()}
       faltaNoGoogle={faltaNoGoogle}
       // SÓ para quem administra a INSTALAÇÃO. A tela do app OAuth vive em

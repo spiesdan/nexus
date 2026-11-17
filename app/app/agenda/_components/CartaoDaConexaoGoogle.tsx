@@ -1,5 +1,6 @@
 "use client";
 
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,8 @@ export function CartaoDaConexaoGoogle({
   configurado,
   falta,
   contaConectada,
+  ultimaSincronizacao,
+  erroDeSincronizacao,
   enderecoDeRetorno,
   linkDeConfiguracao,
 }: {
@@ -42,10 +45,13 @@ export function CartaoDaConexaoGoogle({
   /** O que falta, PELO NOME — para a tela dizer em vez de só esconder o botão. */
   falta: string[];
   contaConectada?: string | null;
+  ultimaSincronizacao?: string | null;
+  erroDeSincronizacao?: string | null;
   /** O endereço EXATO que o Google exige registrado. Ver o bloco no JSX. */
   enderecoDeRetorno?: string;
 }) {
   const t = useT();
+  const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const [desconectando, setDesconectando] = React.useState(false);
 
@@ -128,13 +134,36 @@ export function CartaoDaConexaoGoogle({
     return (
       <div
         data-testid="google-conectado"
-        className="flex items-center gap-2 rounded-lg border border-border bg-surface p-3"
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-surface p-3"
       >
         <GoogleLogo size={16} weight="bold" className="shrink-0 text-text-muted" aria-hidden />
-        <p className="min-w-0 flex-1 truncate text-sm">
-          <span className="text-text-muted">{t("Agenda conectada:")} </span>
-          <span className="font-medium">{contaConectada}</span>
-        </p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm">
+            <span className="text-text-muted">{t("Agenda conectada:")} </span>
+            <span className="font-medium">{contaConectada}</span>
+          </p>
+          {/* A saúde do sync existia em `calendar_connections` e nunca era lida
+              pela tela: eventos paravam de entrar e o cartão continuava dizendo
+              "conectada". Aqui a falha aparece com o motivo, e o horário da
+              última sincronização dá a régua para saber se está velho. */}
+          {erroDeSincronizacao ? (
+            <p className="mt-0.5 text-xs text-warning-fg">
+              {t("A última sincronização falhou:")} {erroDeSincronizacao}
+            </p>
+          ) : ultimaSincronizacao ? (
+            <p className="mt-0.5 text-xs text-text-muted">
+              {t("Última sincronização:")}{" "}
+              {new Date(ultimaSincronizacao).toLocaleString(tagIdioma, {
+                dateStyle: "short",
+                timeStyle: "short",
+              })}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-xs text-text-muted">
+              {t("Ainda não sincronizou — os eventos do Google aparecem aqui na primeira sincronização.")}
+            </p>
+          )}
+        </div>
         <Button
           variant="outline"
           size="sm"
