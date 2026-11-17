@@ -75,6 +75,7 @@ export function buildCardInput(
     | "currency"
     | "tags"
     | "last_activity_at"
+    | "stage_changed_at"
     | "created_at"
     | "owner_kind"
     | "owner_user_id"
@@ -95,11 +96,11 @@ export function buildCardInput(
     now?: Date;
   },
 ): CardInput {
-  const reference = lead.last_activity_at ?? lead.created_at;
+  // A coluna existe e é carimbada pelo trigger `trg_stamp_stage_changed_at`
+  // desde a Wave 3 — e o card a ignorava, medindo o estágio pela última
+  // atividade. `created_at` fica como piso para linhas anteriores ao backfill.
+  const reference = lead.stage_changed_at ?? lead.created_at;
   const now = opts.now ?? new Date();
-  // ponytail: "tempo no estágio" é medido pela última ATIVIDADE, não pela
-  // entrada no estágio — crm_leads não tem stage_entered_at. Vira exato quando
-  // a Wave 3 registrar a mudança de estágio como atividade.
   const hoursInStage = reference
     ? Math.max(0, (now.getTime() - new Date(reference).getTime()) / 3_600_000)
     : null;
@@ -154,10 +155,11 @@ export interface CardState {
   /**
    * O rodapé mostra o número de horas/dias, ou só o nome do estágio.
    *
-   * UM relógio por card: hoje "sem resposta há 6 dias" e "6d em Proposta
-   * enviada" saem os dois de `last_activity_at`, então mostrar os dois é o
-   * mesmo número duas vezes — ruído com cara de informação. Quando o slot já
-   * conta o tempo, o rodapé fica só com o lugar ("em Proposta enviada").
+   * UM relógio por card: quando o slot já conta o tempo (esfriando, "sem
+   * resposta há 6 dias"), o rodapé fica só com o lugar ("em Proposta
+   * enviada"). O rodapé mede entrada NO ESTÁGIO (`stage_changed_at`) e o slot
+   * mede a última atividade — são relógios diferentes, e mostrar os dois ao
+   * mesmo tempo ainda é ruído sobre a mesma pergunta: este card está parado?
    */
   showStageAge: boolean;
 }

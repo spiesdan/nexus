@@ -90,6 +90,16 @@ export interface Lead {
   } | null;
   assigned_at: string | null;
   last_activity_at: string | null;
+  /**
+   * Quando o lead ENTROU no estágio atual — carimbado por trigger
+   * (`trg_stamp_stage_changed_at`, baseline.sql:8365-8381).
+   *
+   * O card media "tempo no estágio" por `last_activity_at`, e a coluna certa
+   * existia desde a Wave 3 sem ninguém lê-la: um lead parado em Proposta mas
+   * com uma nota ontem aparecia como "1d em Proposta", e um lead que mudou de
+   * estágio agora mas conversou semana passada aparecia como "7d".
+   */
+  stage_changed_at: string | null;
   expected_close_date: string | null;
   closed_at: string | null;
   source: string;

@@ -53,10 +53,13 @@ export function CarteiraClient({
   linhas,
   resumo,
   total,
+  amostraParcial = false,
 }: {
   linhas: LinhaCarteira[];
   resumo: SituacaoDaCarteira;
   total: number;
+  /** A base passou do teto de 10.000: os números são da amostra, não do todo. */
+  amostraParcial?: boolean;
 }) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
@@ -124,6 +127,14 @@ export function CarteiraClient({
           ) : undefined
         }
       />
+
+      {amostraParcial && (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t(
+            "A carteira passou de 10.000 contatos: os totais abaixo são da amostra carregada, não da base inteira.",
+          )}
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((c) => (

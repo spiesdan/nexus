@@ -62,6 +62,13 @@ export const ApiErrorCodes = {
 
   // 409 — conflito
   idempotency_conflict: "idempotency_conflict",
+  /**
+   * Contato já existe nesta organização (índice único parcial de telefone,
+   * e-mail ou CPF). Era `500 internal_error`: a tela dizia "erro interno" para
+   * um caso que o usuário resolve escolhendo outro telefone — ou abrindo a
+   * ficha que já existe.
+   */
+  contato_duplicado: "contato_duplicado",
   state_conflict: "state_conflict",
   invalid_state: "invalid_state", // resposta a um agent_case que saiu de awaiting_human (spec 15 §7)
   tenant_already_exists: "tenant_already_exists",

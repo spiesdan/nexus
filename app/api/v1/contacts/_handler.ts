@@ -95,6 +95,12 @@ export async function listContactsHandler(
     .from("contacts")
     .select(SELECT_COLS)
     .eq("organization_id", ctx.organization_id)
+    // Mesclado é a MESMA pessoa: a linha sobrevive como ponteiro para a
+    // canônica. Anonimizado é dado que a LGPD mandou apagar. Nenhum dos dois é
+    // um contato que se atende — e os dois apareciam na lista, duplicando a
+    // pessoa e oferecendo uma ficha que não existe mais.
+    .is("is_merged_into", null)
+    .eq("is_anonymized", false)
     .order(sortCol, { ascending: asc, nullsFirst: false })
     .order("id", { ascending: asc })
     .limit(q.limit + 1);
@@ -387,6 +393,19 @@ export async function createContactHandler(
     .single();
 
   if (insErr) {
+    // 23505 = os índices únicos parciais da org (telefone, e-mail, CPF) já
+    // têm esta pessoa. Antes virava 500 `internal_error`: a tela mostrava
+    // "erro interno" para um caso que o usuário resolve — e o mesmo contato
+    // era criado de novo na tentativa seguinte, porque nada dizia o motivo.
+    if (insErr.code === "23505") {
+      throw new ApiError(
+        409,
+        "contato_duplicado",
+        undefined,
+        ctx.requestId,
+        "Já existe um contato com este telefone, e-mail ou CPF nesta organização.",
+      );
+    }
     throw new ApiError(500, "internal_error", undefined, ctx.requestId, insErr.message);
   }
 

@@ -91,7 +91,9 @@ describe("lista de contatos — ordenação e cursor", () => {
         limit: 25,
       },
     );
-    expect(cap.isFilters[0]?.col).toBe("last_activity_at");
+    // O primeiro `.is()` da consulta agora é o recorte da lista (mesclados de
+    // fora); o cursor é o que interessa aqui.
+    expect(cap.isFilters.map((f) => f.col)).toContain("last_activity_at");
     expect(cap.ltGt[0]).toMatchObject({
       col: "id",
       op: "gt",
