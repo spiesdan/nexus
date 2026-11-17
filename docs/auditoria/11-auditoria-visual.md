@@ -1527,6 +1527,36 @@ payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolver
 tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
 frente, não um patch.
 
+## 6. Operação do self-host — instalar, atualizar, salvar, restaurar (6.9)
+
+O produto é vendido como código instalado na VPS do cliente, então a operação é parte da entrega.
+Medido no kit (`hostgator-setup-kit/`) e no gate `pnpm test:shell`:
+
+| Peça | O que faz | Prova |
+| --- | --- | --- |
+| `install.sh` | instala do zero (compose, banco, baseline, app) | `test:db` aplica o baseline; `e2e` roda contra banco com ele |
+| `update.sh` | **7 etapas**: procura versão → **backup antes de tocar no banco** → baixa código → atualiza banco → baixa imagem nova e reinicia → confere app no ar → confere automações | `scripts/test-update-com-dados.sh` prova update sobre dados |
+| `backup.sh` | `pg_dump` pela conexão de **schema** (não a do app), com **piso de 4 KiB** para recusar dump vazio, + volume `waha-data` | `test:shell`: "backup: banco em container → pg_dump de dentro" e "recusa dump vazio" |
+| `restore.sh` | exige digitar `RESTAURAR`, restaura pelo `psql_run` (mesmo motivo do dump) | `test:shell`: `psql_run` dentro do container |
+| `healthcheck.sh` / `diagnostico.sh` | consulta `/api/v1/health` **de dentro da rede** (a rota não é pública sem TLS) e lista containers | rota existe e cobre subsistemas |
+| `agent.sh` | atualização pela tela, cron a cada 5 min | `test:shell` cobre o agendamento |
+
+**Gate de hoje:** `pnpm test:shell` **verde** — validadores do kit passaram, incluindo
+"backup recusa dump vazio" e "a suíte não escreve no crontab da máquina" (a suíte agenda em sandbox;
+o crontab real ficou intacto — 13 linhas medidas no sandbox).
+
+**O que falta, medido e nomeado:**
+- **restauração não foi exercitada de ponta a ponta nesta auditoria** — o script existe, exige
+  confirmação e usa a conexão certa, mas "restaurar num banco limpo e comparar" não rodou. É ensaio
+  de restauração, não leitura de código;
+- o backup cobre **banco + sessões de WhatsApp**; arquivos de upload (avatars, imagens de produto,
+  mídia de conversa) não entram no `backup.sh`. Recuperar essas fotos hoje é backup manual do
+  storage — e quem não sabe disso descobre no restore;
+- **não há rotação de backup**: `backup.sh` grava `db-<timestamp>.sql.gz` e nada apaga o antigo; num
+  cron diário, o disco cresce sem teto.
+
+Os três ficam como **F-32 (aberto)**: ensaio de restauração, backup de uploads e rotação.
+
 ## 6. Dados — tabelas, relações, exclusão e retenção (6.8)
 
 Documento **gerado do schema**, não escrito à mão: `docs/auditoria/15-tabelas-e-relacoes.md`,

@@ -656,3 +656,23 @@ consistente nas mesmas três rodadas. O código voltou ao estado anterior.
 **O que fecha este achado:** trace do Chrome (Performance panel) com CPU 4× e 10+ repetições,
 separando montagem do gráfico, hidratação e busca de dados. É trabalho da frente de desempenho
 (item 8.3/8.4), não de três execuções de uma sonda.
+
+### 3.9 F-32 (**aberto**) — backup sem uploads, sem rotação e sem ensaio de restauração
+
+Medido em 17/11/2026 no `hostgator-setup-kit/`. O que **existe e funciona** (e tem gate em
+`pnpm test:shell`, verde): `backup.sh` faz `pg_dump` pela conexão de schema, recusa dump vazio com
+piso de 4 KiB, e inclui o volume `waha-data`; `restore.sh` exige digitar `RESTAURAR` e usa
+`psql_run`; `update.sh` faz backup antes de tocar no banco.
+
+O que **falta**:
+
+1. **uploads não entram no backup.** Avatares, imagens de produto e mídia de conversa vivem no
+   storage; o `backup.sh` cobre banco + sessões de WhatsApp. Restaurar num servidor novo devolve o
+   texto e perde as fotos — e o operador não tem como saber antes de precisar;
+2. **não há rotação.** Cada rodada grava `db-<timestamp>.sql.gz` e nada apaga o anterior; num cron
+   diário o disco cresce até encher;
+3. **a restauração não foi exercitada** nesta auditoria: script correto não é prova de restore
+   funcionando. Falta restaurar num banco limpo e comparar contagens.
+
+Nenhum dos três é defeito de tela; é a operação do produto que se vende como instalado. Fecha com
+um ensaio de restauração + inclusão do storage no `backup.sh` + retenção configurável.
