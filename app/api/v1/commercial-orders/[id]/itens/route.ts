@@ -104,6 +104,15 @@ export async function PATCH(
     if (resultado.motivo === "nao_encontrado") {
       return fail("not_found", "Pedido não encontrado.", 404, { requestId });
     }
+    // Falha de GRAVAÇÃO não é erro de quem chamou. Antes, `{ok:false}` sem motivo
+    // caía no 422 "Um dos itens não pertence a este pedido" — e o usuário via
+    // "erro ao remover" quando o banco havia recusado a escrita (medido em
+    // 17/11/2026: `duplicate key ... commercial_order_items_pkey`).
+    if (resultado.motivo === "falha_ao_gravar" || resultado.motivo === undefined) {
+      return fail("internal_error", "Não foi possível atualizar os itens. Tente novamente.", 500, {
+        requestId,
+      });
+    }
     if (resultado.motivo === "produto_desconhecido") {
       // A posição chega 0-based; a tela e a mensagem falam em 1-based, e a
       // diferença já produziu "item 0" numa tela de usuário.

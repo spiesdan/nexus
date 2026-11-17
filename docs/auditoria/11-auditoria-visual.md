@@ -1667,6 +1667,43 @@ consome existir** — dívida de integração, não resto.
 a consulta precisa ver: caminho, por que apareceu e onde está declarado
 (`capturas/apis-sem-chamador.json`).
 
+### V-50 · Alta · Remover produto do pedido devolvia 422 — e o 422 escondia um erro de banco
+
+Reportado pelo dono ao editar um pedido: "erro ao remover produtos do pedido". A chamada era
+`PATCH /api/v1/commercial-orders/{id}/itens` com `remover: ["8e954d66-…"]` e a resposta, **422** com
+`"Um dos itens não pertence a este pedido."`
+
+**O item pertencia ao pedido.** Conferido no banco: `order_id` igual ao do pedido, `posicao` 0. O que
+o log do servidor mostrou foi outra coisa:
+
+```
+patch de itens: falha ao ajustar
+erro: duplicate key value violates unique constraint "commercial_order_items_pkey"
+```
+
+A causa: `admin.from("commercial_order_items").update([{...}, {...}])` — **array**. O PostgREST trata
+o corpo de um `PATCH` como **um objeto**; com array, o servidor cai no caminho de inserção e bate na
+chave primária. Remover um item de uma lista de 2 obriga a regravar as posições das duas linhas,
+então o caminho era sempre exercitado com 2+ itens.
+
+**E o 422 mentia.** No serviço, `{ok:false}` sem motivo (falha de gravação) caía no mesmo ramo de
+"item não pertence", porque a rota só distinguia `nao_encontrado` e `produto_desconhecido`. O
+usuário recebia "erro de quem chamou" quando o banco havia recusado a escrita.
+
+**O dublê dos testes aceitava array** — o comentário no próprio teste dizia "o Supabase aceita objeto
+OU array no `update`". Era falso, e por isso 16 testes passavam com o produto quebrado.
+
+**Corrigido** em `lib/comercial/patch-itens.ts`: uma linha por vez (`update({...}).eq("id").eq("order_id")`),
+com motivo `falha_ao_gravar`; e em `app/api/v1/commercial-orders/[id]/itens/route.ts`: falha de
+gravação agora é **500** com "Não foi possível atualizar os itens. Tente novamente."
+
+**Prova:** a mesma remoção, no mesmo pedido, devolveu **200**; o banco ficou com 1 item, `posicao`
+reindexada para 0, `subtotal_cents` e `total_cents` recalculados para **89.900** (eram 139.900).
+
+**Gate:** `tests/unit/patch-itens-servico.test.ts` ganhou o caso de regressão (remover 1 de 2 itens)
+e o dublê passou a **recusar array** em `update`, reproduzindo o comportamento do PostgREST — o teste
+agora falha se alguém voltar a mandar lista.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1756,14 +1793,15 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | **7 exceções declaradas com motivo** (showcase `/design`, título-identificador, admin sem trilha, paleta de categoria em gráfico, `h1` `sr-only` do Inbox, esqueleto do radar, duas cascas). **Padronizado com medida**: título 24 px/500 (117 de 119), um `h1` por tela, 1 ação primária por tela, 101 rótulos ligados (0 soltos), 35 de 35 botões de envio com progresso, contraste 22 → 0 |
 
-**Fase 2: em andamento.** **39 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **40 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
-rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) V-45 (tela do roteador sem título) e V-46 (cabeçalho esmagando o título no tablet);
+rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) V-45 (tela do roteador sem título), V-46 (cabeçalho esmagando o título no tablet) e
+V-50 (remover item do pedido devolvia 422);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 

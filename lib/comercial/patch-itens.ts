@@ -34,7 +34,7 @@ import { subtotalDoItem, type ItensPatch } from "@/lib/schemas/pedidos";
 
 export interface ResultadoDoPatch {
   ok: boolean;
-  motivo?: "nao_encontrado" | "item_desconhecido" | "produto_desconhecido";
+  motivo?: "nao_encontrado" | "item_desconhecido" | "produto_desconhecido" | "falha_ao_gravar";
   /** Índice (base 0) do item adicionado cujo `product_id` não existe. */
   posicao?: number;
   adicionados?: number;
@@ -227,22 +227,28 @@ export async function aplicarPatchDeItens(
   if (ajustados > 0 || remover.size > 0) {
     const idsNovos = new Set<string>(novos.map((n) => n.id));
     const aGravar = linhas.filter((l) => idsConhecidos.has(l.id) || idsNovos.has(l.id));
-    const { error: erroAjuste } = await admin
-      .from("commercial_order_items")
-      .update(
-        aGravar.map((l) => ({
-          id: l.id,
+    // UMA LINHA POR VEZ. `update(array)` NÃO existe no PostgREST: o corpo de um
+    // PATCH é um objeto, e mandar array faz o servidor tratar as linhas como
+    // inserção — o erro que o usuário viu ao remover item do pedido foi
+    // `duplicate key value violates unique constraint "commercial_order_items_pkey"`
+    // (medido em 17/11/2026). O dublê dos testes aceitava array, então o teste
+    // passava e o produto não.
+    for (const l of aGravar) {
+      const { error: erroAjuste } = await admin
+        .from("commercial_order_items")
+        .update({
           quantidade: l.quantidade,
           preco_unit_cents: l.preco_unit_cents,
           desconto_pct: l.desconto_pct,
           subtotal_cents: l.subtotal_cents,
           posicao: l.posicao,
-        })),
-      )
-      .eq("order_id", pedidoId);
-    if (erroAjuste) {
-      logger.error("patch de itens: falha ao ajustar", { pedidoId, erro: erroAjuste.message, requestId });
-      return { ok: false };
+        })
+        .eq("id", l.id)
+        .eq("order_id", pedidoId);
+      if (erroAjuste) {
+        logger.error("patch de itens: falha ao ajustar", { pedidoId, id: l.id, erro: erroAjuste.message, requestId });
+        return { ok: false, motivo: "falha_ao_gravar" };
+      }
     }
   }
 

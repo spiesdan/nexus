@@ -86,11 +86,17 @@ function banco(tabelas: Tabelas): never {
         // do teste acontece, e é o mesmo instante em que o serviço real
         // commitaria.
         update: (muda: Linha | Linha[]) => {
-          // O Supabase aceita objeto OU array no `update`, e o serviço usa os
-          // dois: array para os itens (um por linha) e objeto para o total do
-          // pedido (colunas de uma linha só). Normalizar aqui evita a
-          // divergência silenciosa de "o duplo é que não sabia".
-          mudas.push(...(Array.isArray(muda) ? muda : [muda]));
+          // `update(array)` NÃO existe no PostgREST: o corpo de um PATCH é um
+          // objeto, e array vira inserção (`duplicate key ... _pkey`). Este
+          // dublê aceitava array e por isso o teste passava enquanto o produto
+          // devolvia 422 ao remover item do pedido (medido em 17/11/2026).
+          // Agora ele REPROVA o que o banco reprova.
+          if (Array.isArray(muda)) {
+            throw new Error(
+              "update() recebeu array: o PostgREST trata o corpo de PATCH como objeto único",
+            );
+          }
+          mudas.push(muda);
           return q;
         },
         // `delete` também é ADIADO, pelo mesmo motivo: `.delete().eq().in()`
@@ -246,6 +252,25 @@ describe("aplicarPatchDeItens", () => {
     expect(r.removidos).toBe(1);
     expect(r.total_cents).toBe(2000);
     expect(t.commercial_order_items.some((i) => i.id === "i2")).toBe(false);
+  });
+
+  it("REGRESSÃO 17/11: remover item de um pedido com 2 itens GRAVA sem estourar a pkey", async () => {
+    // O defeito que o usuário viu: "erro ao remover produtos do pedido", com
+    // 422. A causa era `update(array)` — o PostgREST trata o corpo de PATCH como
+    // um objeto único e, com array, chamava a inserção: `duplicate key value
+    // violates unique constraint "commercial_order_items_pkey"`. O dublê antigo
+    // aceitava array, então o teste passava e o produto não.
+    //
+    // Com 2 itens na lista, remover 1 obriga a regravar posições. Se alguém
+    // voltar a mandar array, este teste ESTOURA aqui (o dublê agora recusa).
+    const t = cenario();
+    const r = await aplicarPatchDeItens(banco(t), {
+      ...base,
+      patch: { adicionar: [], remover: ["i1"], ajustar: [] },
+    });
+    expect(r.ok).toBe(true);
+    expect(r.removidos).toBe(1);
+    expect(t.commercial_order_items.filter((i) => i.order_id === PEDIDO)).toHaveLength(1);
   });
 
   it("remover reindexa posicao sem buraco", async () => {
