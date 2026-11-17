@@ -964,6 +964,7 @@ não é reconstruído de memória — seria inventar):
 | 16/11/2026 | Contraste medido: 48 textos abaixo do mínimo, 22 após 4 correções | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | A nota rejeitada agora se corrige sozinha pelo cadastro do CNPJ    | `auditoria` | `enviado (arquivo, auditoria)` |
 | 17/11/2026 | Título de página com um h1 só — e o esqueleto deixou de pular       | `auditoria` | `enviado (arquivo, auditoria)` |
+| 17/11/2026 | O mapa de empresas voltou — e o contraste chegou a zero reprovados   | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
