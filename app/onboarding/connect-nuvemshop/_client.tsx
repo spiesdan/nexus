@@ -53,7 +53,14 @@ export function ConnectNuvemshopClient() {
           type="button"
           variant="outline"
           disabled={pending}
-          onClick={() => startTransition(() => void markNuvemshopConfigured())}
+          onClick={() =>
+            startTransition(async () => {
+              // O botão não confirma nada sozinho: o servidor checa a linha de
+              // `tenant_integrations` escrita pelo callback do OAuth.
+              const res = await markNuvemshopConfigured();
+              if (res && !res.ok) toast.error(res.error);
+            })
+          }
         >
           {t("Já conectei")}
         </Button>
