@@ -1,12 +1,13 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
-import { Plus, UploadSimple, Warning } from "@/lib/ui/icons";
+import { Plus, UploadSimple } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusTableSkeleton } from "@/components/nexus-ui/feedback/NexusSkeleton";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import {
   FilterBar,
   FilterChips,
@@ -221,15 +222,7 @@ export function ContactsListClient() {
               // Medido em 17/11/2026 com o navegador offline: 0 requisições, 0
               // toasts, 0 mudança de estado.
               (q.isPaused ? (
-                <p
-                  role="status"
-                  className="flex items-center gap-1.5 text-sm text-warning-fg"
-                >
-                  <Warning size={14} aria-hidden />
-                  {t(
-                    "Sem conexão. O que já carregou continua na tela; os próximos clientes vêm quando a rede voltar.",
-                  )}
-                </p>
+                <AvisoSemConexao />
               ) : (
                 <Button
                   variant="outline"

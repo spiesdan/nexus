@@ -29,7 +29,9 @@ import { chromium } from "@playwright/test";
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3011";
 const ESTADO = process.env.AUDIT_ESTADO ?? "/tmp/aaa-state.json";
 
-const ROTAS = ["/app/pedidos", "/app/contacts", "/app/inbox", "/app/financeiro"];
+const ROTAS = process.env.AUDIT_ROTAS
+  ? process.env.AUDIT_ROTAS.split(",")
+  : ["/app/pedidos", "/app/contacts", "/app/inbox", "/app/financeiro"];
 
 const navegador = await chromium.launch();
 const resultados = [];

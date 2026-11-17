@@ -6,6 +6,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -149,6 +150,22 @@ export function AuditClient() {
                     ))}
                   </TableRow>
                 ))
+              ) : q.isPaused || q.isError ? (
+                // ESTADO VAZIO QUE MENTE. Offline a busca é pausada: `isLoading`
+                // fica falso e `rows` vazio, e a tela dizia "Nenhum log no
+                // período" — afirmação sobre o DADO quando o problema é a REDE.
+                // Medido em 17/11/2026 com o navegador offline (V-43).
+                <TableRow>
+                  <TableCell colSpan={6}>
+                    {q.isPaused ? (
+                      <AvisoSemConexao />
+                    ) : (
+                      <p role="alert" className="text-sm text-error-fg">
+                        {t("Não foi possível carregar o log. Tente novamente.")}
+                      </p>
+                    )}
+                  </TableCell>
+                </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-sm text-muted-foreground">
@@ -189,17 +206,21 @@ export function AuditClient() {
         </div>
       </Card>
 
-      {q.hasNextPage && (
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={() => q.fetchNextPage()}
-            disabled={q.isFetchingNextPage}
-          >
-            {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
-          </Button>
-        </div>
-      )}
+      {q.hasNextPage &&
+        // Offline a busca fica PAUSADA e o botão não faria nada (V-42).
+        (q.isPaused ? (
+          <AvisoSemConexao />
+        ) : (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={() => q.fetchNextPage()}
+              disabled={q.isFetchingNextPage}
+            >
+              {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
+            </Button>
+          </div>
+        ))}
     </div>
   );
 }

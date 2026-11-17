@@ -1,6 +1,6 @@
 {
   "base": "http://localhost:3011",
-  "medido_em": "2026-11-17T04:54:26.838Z",
+  "medido_em": "2026-11-17T05:20:06.607Z",
   "metodo": "Tela carregada; navegador em modo offline; reload. Registra-se o que aparece — nada é julgado aqui.",
   "resultados": [
     {
@@ -31,7 +31,7 @@
         "controlando": true
       },
       "textoAntes": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as o",
-      "toastDeErro": "Sem conexão. O que já carregou continua na tela; os próximos clientes vêm quando a rede voltar.",
+      "toastDeErro": "Sem conexão. O que já carregou continua na tela; o resto vem quando a rede voltar.",
       "textoAposAcaoOffline": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as origens Manual WhatsApp Nuvemshop Importa",
       "textoDepois": "Clientes Customer 360 — busque, filtre e gerencie clientes. Importar CSV Novo cliente Buscar Tag Todas Origem Todas as origens Manual WhatsApp Nuvemshop Importado (CSV) Por página 25 50 100 Algo deu errado Erro ao carregar clientes. Tentar novamente",
       "paginaTemMain": true,
@@ -78,6 +78,25 @@
       "temBotaoTentar": true,
       "textoDeErro": "Algo deu erradoNão foi possível carregar estes dados. Tente novamente.Tentar novamente",
       "tituloDaPagina": "Financeiro"
+    },
+    {
+      "rota": "/app/audit",
+      "serviceWorker": {
+        "suportado": true,
+        "registro": true,
+        "ativo": "activated",
+        "controlando": true
+      },
+      "textoAntes": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QU",
+      "toastDeErro": "Sem conexão. O que já carregou continua na tela; o resto vem quando a rede voltar.",
+      "textoAposAcaoOffline": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QUANDO ATOR AÇÃO RECURSO REQUEST ID METADA",
+      "textoDepois": "Audit Log Histórico append-only de mutações na organização. Manager+. Ação contém Tipo de recurso De Até Exportar CSV QUANDO ATOR AÇÃO RECURSO REQUEST ID METADATA Não foi possível carregar o log. Tente novamente.",
+      "paginaTemMain": true,
+      "titulo": "Audit Log · NEXUS",
+      "temAlerta": true,
+      "temBotaoTentar": false,
+      "textoDeErro": "Não foi possível carregar o log. Tente novamente.",
+      "tituloDaPagina": "Audit Log"
     }
   ]
 }
