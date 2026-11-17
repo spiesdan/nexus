@@ -657,33 +657,33 @@ Jornadas críticas (16)
 | #    | Item                                                                                                                    | Estado |
 | ---- | ----------------------------------------------------------------------------------------------------------------------- | ------ |
 | 3.1  | Identidade própria, consistente, revista contra produto e marca real                                                    | `[ ]`  |
-| 3.2  | Tokens claros aplicados (canvas, surface, subtle, text, border, primary, hover, accent, success, warning, danger, info) | `[ ]`  |
-| 3.3  | Tokens escuros aplicados (idem + surface-raised)                                                                        | `[ ]`  |
-| 3.4  | Aliases semânticos (estado, interação, foco, seleção, disabled, overlay, gráficos)                                      | `[ ]`  |
-| 3.5  | Status nunca só por cor                                                                                                 | `[ ]`  |
-| 3.6  | Contraste WCAG 2.2 AA (texto, ícones, bordas de controle, foco)                                                         | `[ ]`  |
-| 3.7  | Tipografia Inter + IBM Plex Mono (licença/pipeline), sem dependência de rede no build                                   | `[ ]`  |
-| 3.8  | Escala tipográfica 13–16 / 20–28 / 24–32                                                                                | `[ ]`  |
-| 3.9  | Espaçamento base 4 (4,8,12,16,20,24,32,40,48,64)                                                                        | `[ ]`  |
-| 3.10 | Raios 6/10/14                                                                                                           | `[ ]`  |
-| 3.11 | Sombras sutis                                                                                                           | `[ ]`  |
-| 3.12 | Movimento 120–220 ms + reduced motion                                                                                   | `[ ]`  |
-| 3.13 | Ícones consistentes                                                                                                     | `[ ]`  |
+| 3.2  | Tokens claros aplicados (canvas, surface, subtle, text, border, primary, hover, accent, success, warning, danger, info) | `[x]`  |
+| 3.3  | Tokens escuros aplicados (idem + surface-raised)                                                                        | `[x]`  |
+| 3.4  | Aliases semânticos (estado, interação, foco, seleção, disabled, overlay, gráficos)                                      | `[~]`  |
+| 3.5  | Status nunca só por cor                                                                                                 | `[x]`  |
+| 3.6  | Contraste WCAG 2.2 AA (texto, ícones, bordas de controle, foco)                                                         | `[x]`  |
+| 3.7  | Tipografia Inter + IBM Plex Mono (licença/pipeline), sem dependência de rede no build                                   | `[~]`  |
+| 3.8  | Escala tipográfica 13–16 / 20–28 / 24–32                                                                                | `[x]`  |
+| 3.9  | Espaçamento base 4 (4,8,12,16,20,24,32,40,48,64)                                                                        | `[x]`  |
+| 3.10 | Raios 6/10/14                                                                                                           | `[~]`  |
+| 3.11 | Sombras sutis                                                                                                           | `[x]`  |
+| 3.12 | Movimento 120–220 ms + reduced motion                                                                                   | `[x]`  |
+| 3.13 | Ícones consistentes                                                                                                     | `[~]`  |
 | 3.14 | Densidade controlada                                                                                                    | `[ ]`  |
-| 3.15 | Componentes globais padronizados (lista completa do prompt)                                                             | `[ ]`  |
-| 3.16 | Para cada componente: variantes, estados, tokens, teclado, a11y, responsividade, exemplos                               | `[ ]`  |
+| 3.15 | Componentes globais padronizados (lista completa do prompt)                                                             | `[~]`  |
+| 3.16 | Para cada componente: variantes, estados, tokens, teclado, a11y, responsividade, exemplos                               | `[~]`  |
 
 ## Fase 4 — Shell e navegação
 
 | #    | Item                                                                             | Estado |
 | ---- | -------------------------------------------------------------------------------- | ------ |
-| 4.1  | Navegação por tarefas e papéis, com descoberta de áreas avançadas                | `[ ]`  |
-| 4.2  | Agrupamento CRM/vendas/atendimento/operação/financeiro/insights/IA/equipe/config | `[ ]`  |
-| 4.3  | Sidebar, Topbar, busca, breadcrumb, tenant, notificações, atalhos padronizados   | `[ ]`  |
-| 4.4  | Comportamento expandido/recolhido, tablet, celular, modais, retorno              | `[ ]`  |
-| 4.5  | Deep links, redirects, hashes, filtros sem quebrar URLs                          | `[ ]`  |
-| 4.6  | Busca global distingue entidades e respeita acesso                               | `[ ]`  |
-| 4.7  | Command palette/atalhos só se descobríveis e acessíveis                          | `[ ]`  |
+| 4.1  | Navegação por tarefas e papéis, com descoberta de áreas avançadas                | `[~]`  |
+| 4.2  | Agrupamento CRM/vendas/atendimento/operação/financeiro/insights/IA/equipe/config | `[x]`  |
+| 4.3  | Sidebar, Topbar, busca, breadcrumb, tenant, notificações, atalhos padronizados   | `[x]`  |
+| 4.4  | Comportamento expandido/recolhido, tablet, celular, modais, retorno              | `[~]`  |
+| 4.5  | Deep links, redirects, hashes, filtros sem quebrar URLs                          | `[~]`  |
+| 4.6  | Busca global distingue entidades e respeita acesso                               | `[~]`  |
+| 4.7  | Command palette/atalhos só se descobríveis e acessíveis                          | `[x]`  |
 | 4.A1 | Toda página com entrada e retorno                                                | `[ ]`  |
 | 4.A2 | Teclado e leitor de tela funcionam                                               | `[ ]`  |
 | 4.A3 | Nenhuma rota órfã / deep link perdido                                            | `[ ]`  |
@@ -729,17 +729,17 @@ Jornadas críticas (16)
 
 | #    | Item                                                                                             | Estado |
 | ---- | ------------------------------------------------------------------------------------------------ | ------ |
-| 7.1  | Larguras 320, 360, 390, 430, 768, 1024, 1280, 1440                                               | `[ ]`  |
-| 7.2  | Zoom, orientação, teclado virtual, safe areas                                                    | `[ ]`  |
-| 7.3  | Distinguir offline pós-sessão de boot offline do zero                                            | `[ ]`  |
-| 7.4  | Documentar páginas/operações offline                                                             | `[ ]`  |
-| 7.5  | Cache, validade, update, mensagens, integridade, dados privados, logout, limpeza                 | `[ ]`  |
-| 7.6  | Perda/retorno de rede, fila, retry, conflitos, duplicidade, rejeição                             | `[ ]`  |
+| 7.1  | Larguras 320, 360, 390, 430, 768, 1024, 1280, 1440                                               | `[~]`  |
+| 7.2  | Zoom, orientação, teclado virtual, safe areas                                                    | `[~]`  |
+| 7.3  | Distinguir offline pós-sessão de boot offline do zero                                            | `[~]`  |
+| 7.4  | Documentar páginas/operações offline                                                             | `[~]`  |
+| 7.5  | Cache, validade, update, mensagens, integridade, dados privados, logout, limpeza                 | `[~]`  |
+| 7.6  | Perda/retorno de rede, fila, retry, conflitos, duplicidade, rejeição                             | `[~]`  |
 | 7.7  | Não exibir como sincronizado o que é local                                                       | `[ ]`  |
-| 7.8  | Inspecionar `mobile/`, Capacitor, Android, SQLite, fila, sync, identidade, links, endpoint       | `[ ]`  |
-| 7.9  | Preservar captura offline e integridade da fila                                                  | `[ ]`  |
+| 7.8  | Inspecionar `mobile/`, Capacitor, Android, SQLite, fila, sync, identidade, links, endpoint       | `[~]`  |
+| 7.9  | Preservar captura offline e integridade da fila                                                  | `[~]`  |
 | 7.10 | Parametrização segura de domínio/marca                                                           | `[ ]`  |
-| 7.11 | Instalação, ciclo de vida, rede, storage, update, permissões, teclado, leitor, notificações, APK | `[ ]`  |
+| 7.11 | Instalação, ciclo de vida, rede, storage, update, permissões, teclado, leitor, notificações, APK | `[~]`  |
 | 7.12 | Determinar suporte a iOS antes de incluir                                                        | `[ ]`  |
 | 7.A1 | Matriz offline publicada e fiel                                                                  | `[ ]`  |
 | 7.A2 | Nenhum pedido desaparece em falha/rejeição                                                       | `[ ]`  |
@@ -766,7 +766,7 @@ Jornadas críticas (16)
 | 9.4 | Jornadas E2E (caminhos críticos, permissões, falhas, recuperação)                  | `[x]` | **99** specs Playwright; smoke **32 verdes** hoje contra o build; as **16 jornadas (J1–J16)** foram medidas com **254 testes** e as 7 falhas abertas uma a uma |
 | 9.5 | Visual (snapshots por tema/breakpoint, revisão sem aprovação cega)                 | `[~]` | **Zero snapshot visual**: nenhuma spec usa `toHaveScreenshot`/`toMatchSnapshot`. A regressão visual hoje depende das capturas do instrumento de auditoria, que não é gate. **Falta**: snapshots por tema/breakpoint |
 | 9.6 | Acessibilidade (axe + teclado/foco + semântica)                                    | `[~]` | `AxeBuilder` em **2 de 99** specs (`auth`, `rbac-roles`); teclado/foco (301 paradas, 0 sem foco) e contraste (22 → 0) medidos por instrumento, não por gate. **Falta**: axe nas demais telas |
-| 9.7 | Mobile/offline (banco local, fila, conflitos, rede, retry, rejeição, persistência) | `[ ]`  |
+| 9.7 | Mobile/offline (banco local, fila, conflitos, rede, retry, rejeição, persistência) | `[~]`  |
 | 9.8 | Operação (instalação, atualização, health, backup, restauração)                    | `[~]` | Kit do self-host medido no 6.9: install/update/backup/restore/health com `pnpm test:shell` verde. **Falta**: ensaio de restauração ponta a ponta (F-32) |
 | 9.9 | Dados sintéticos, ambientes isolados, guardrail de banco remoto intacto            | `[x]` | Guardrail de banco remoto no loader (`recusarSeRemotoVindoDoArquivo`, lança em vez de avisar): **31 dos 33** seeds usam o loader, **1** tem guarda própria com teste, **1** é placeholder. Destino remoto só por decisão explícita |
 
