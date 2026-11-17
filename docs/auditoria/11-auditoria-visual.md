@@ -1515,8 +1515,10 @@ rotas. Medido nas 49 rotas mutantes que não têm RBAC no próprio `route.ts`:
 1. `/api/internal/agents/run` — roda agente de IA (**LLM pago**) atrás de segredo estático
    (`INTERNAL_SECRET`, comparação em tempo constante, fail-closed). Não é público: sem header, 401.
    Mas **não há teto por chamada** — segredo vazado = custo ilimitado;
-2. `/api/v1/onboarding/whatsapp/session` — só `loadAuthUser()` (cookie), sem `requireRole`: qualquer
-   membro cria sessão/QR no WAHA. Abuso exige conta válida; o custo é recurso externo.
+2. `/api/v1/onboarding/whatsapp/session` — só `loadAuthUser()` (cookie), sem papel: qualquer membro
+   criava sessão/QR no WAHA. **Corrigido**: piso `agent` (403 para `viewer`), sem arrastar a exigência
+   de MFA para dentro do onboarding; gate em `route.test.ts` (3 casos, com o dublê do WAHA provando
+   que a recusa acontece ANTES de tocar no serviço externo).
 
 O link público do orçamento, que é o caso mais sensível, é **assinado** (`verificarOrcamento` com HMAC
 e expiração). A conclusão medida: não existe rota "pública + sem assinatura + escrita no banco + cara".
