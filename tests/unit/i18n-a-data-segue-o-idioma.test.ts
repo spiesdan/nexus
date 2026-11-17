@@ -88,15 +88,6 @@ const FORA_DE_INTERFACE: Record<string, string> = {
   "lib/lgpd/pdf-renderer.tsx":
     "documento legal brasileiro: a data acompanha a lei, não a interface",
 
-  // ── Assunção do AUTOR, não medida — e registrada como tal ──
-  //
-  // O comentário do próprio arquivo diz que o rodapé "segue o locale da máquina
-  // de quem emite". Isso não é o mesmo que seguir quem LÊ: o PDF vai para
-  // alguém, e quem emite pode ser o servidor. Fica aqui para o guarda não
-  // reprovar sem decisão — mas a decisão certa é receber o idioma da
-  // organização, e isso muda a assinatura de `renderPuladasPdf`.
-  "lib/fiscal/puladas-pdf.tsx":
-    "assunção do autor (locale da máquina); o certo é o idioma da organização — pendente",
 };
 
 function arquivos(dir: string, acc: string[] = []): string[] {
