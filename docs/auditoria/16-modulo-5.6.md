@@ -167,10 +167,10 @@ expedição/frota.
 | A3 | Cancelar pedido/compra não devolve estoque | **P0** | aberto |
 | A4 | Sem máquina de estados do pedido (qualquer status→qualquer) | **P0** | aberto (regra não escrita) |
 | A5 | `duplicar` copia `desconto_cents` sem `desconto_pct` | P1 | aberto |
-| A6 | Custo BR em `/app/compras` vira zero | P1 | aberto |
+| A6 | Custo BR em `/app/compras` vira zero | P1 | **corrigido** (`b43f54f4`) |
 | A7 | Catálogo truncado em 500 no estoque/compras | P1 | aberto (F-30) |
-| A8 | Iniciar rota / marcar entregue / tirar pedido sem confirmação | P1 | aberto |
-| A9 | PATCH de carga permite regressão `em_rota→montando/cancelada` | P1 | aberto |
+| A8 | Iniciar rota / marcar entregue / tirar pedido sem confirmação | P1 | **iniciar corrigido** (`b43f54f4`); entregar e tirar seguem abertos |
+| A9 | PATCH de carga permite regressão `em_rota→montando/cancelada` | P1 | **corrigido** (`b43f54f4`) |
 | A10 | `/faturamento` `.lt()` exclui o dia; limite 2.000 silencioso | P1 | aberto |
 | A11 | Catálogo engole erro de query e mostra "nenhum produto" | P1 | aberto |
 | A12 | Tabela de preço: PUT apaga→insere sem transação | P1 | aberto |
@@ -188,6 +188,11 @@ expedição/frota.
 4. **Erro de leitura** do financeiro/fiscal do pedido deixou de virar "sem financeiro"/"sem
    nota".
 5. **Sobra/falta do fechamento** em `R$ 2,00` (A16).
+6. **Iniciar rota** pede confirmação nos dois lugares (ficha e cabine) — a ação
+   notifica todos os clientes e não tem volta pelo botão (A8, parcial).
+7. **PATCH da carga** não regride `em_rota→montando` (422) e cancelar rota em
+   andamento exige `manager` (403); o audit grava antes/depois (A9).
+8. **Custo da compra** em formato BR deixou de virar zero: `centavosDeBr` (A6).
 
 ## 8. O que fica aberto, e por quê
 
@@ -204,7 +209,7 @@ expedição/frota.
 ```console
 $ pnpm exec tsc --noEmit -p tsconfig.typecheck.json     # exit 0
 $ pnpm exec vitest run tests/unit/patch-itens-servico.test.ts   # 24 ✓
-$ pnpm test:unit                                         # 988 arquivos / 16.928 testes ✓ (+1 expected fail)
+$ pnpm test:unit                                         # 988 arquivos / 16.931 testes ✓ (+1 expected fail)
 ```
 
 **Não medido:** render real em 390/1440 de cada tela, comportamento com OSRM/Nominatim lentos,
