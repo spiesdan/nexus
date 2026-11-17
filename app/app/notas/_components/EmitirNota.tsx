@@ -63,6 +63,16 @@ export type ItemDaVendaAvulsa = {
   product_id?: string | null;
 };
 
+/** O item como a prévia da nota lê (GET /commercial-orders/[id]). */
+type ItemDaNota = {
+  id: string;
+  produto_codigo: string;
+  produto_nome: string;
+  quantidade: number;
+  preco_unit_cents: number;
+  subtotal_cents: number;
+};
+
 /** Tudo vira string no formulário; a conversão acontece na montagem dos extras. */
 export type ExtrasDoFormulario = {
   modalidade: string;
@@ -79,6 +89,9 @@ export type ExtrasDoFormulario = {
   diasEntre: string;
   informacoesComplementares: string;
   informacoesFisco: string;
+  destinatarioNome: string;
+  destinatarioDocumento: string;
+  destinatarioIe: string;
   entregaLogradouro: string;
   entregaNumero: string;
   entregaComplemento: string;
@@ -109,6 +122,9 @@ export const EXTRAS_VAZIOS: ExtrasDoFormulario = {
   diasEntre: "30",
   informacoesComplementares: "",
   informacoesFisco: "",
+  destinatarioNome: "",
+  destinatarioDocumento: "",
+  destinatarioIe: "",
   entregaLogradouro: "",
   entregaNumero: "",
   entregaComplemento: "",
@@ -183,6 +199,20 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
     extras.adicionais = adicionais;
   }
 
+  // Destinatário EDITÁVEL: o cadastro pode estar sem CPF/CNPJ (ou com nome
+  // antigo). O que for digitado aqui vale para esta nota e fica gravado nela;
+  // o que ficar vazio cai no cadastro.
+  const nomeDest = v.destinatarioNome.trim();
+  const documentoDest = v.destinatarioDocumento.replace(/\D/g, "");
+  const ieDest = v.destinatarioIe.trim();
+  if (nomeDest !== "" || documentoDest !== "" || ieDest !== "") {
+    extras.destinatario = {
+      ...(nomeDest !== "" && { nome: nomeDest }),
+      ...(documentoDest !== "" && { documento: documentoDest }),
+      ...(ieDest !== "" && { ie: ieDest }),
+    } as ExtrasFiscais["destinatario"];
+  }
+
   const endereco = {
     logradouro: v.entregaLogradouro.trim(),
     numero: v.entregaNumero.trim(),
@@ -242,6 +272,8 @@ export function EmitirNota({
     { campo: string; mensagem: string; onde: string }[] | null
   >(null);
   const [extras, setExtras] = React.useState<ExtrasDoFormulario>(EXTRAS_VAZIOS);
+  /** Itens do pedido para a prévia "campo por campo" (buscados ao escolher). */
+  const [itensDaNota, setItensDaNota] = React.useState<ItemDaNota[] | null>(null);
   /**
    * Modo de emissão: NF-e de PEDIDO (concluído/faturado/expedido/entregue) ou NF-e de
    * VENDA AVULSA — venda sem pedido (balcão). Na avulsa o fato entra em
@@ -296,6 +328,55 @@ export function EmitirNota({
   }, []);
 
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
+
+  React.useEffect(() => {
+    if (!pedidoId) {
+      setItensDaNota(null);
+      return;
+    }
+    let vivo = true;
+    void apiClient
+      .get<{ data: { itens: ItemDaNota[] } }>(`/api/v1/commercial-orders/${pedidoId}`)
+      .then((r) => {
+        if (vivo) setItensDaNota(r.data.itens ?? []);
+      })
+      .catch(() => {
+        if (vivo) setItensDaNota([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [pedidoId]);
+
+  // O que a nota vai levar, com o formulário vencendo o cadastro. É a MESMA
+  // regra que o servidor aplica em `montarExtras` + `montarDestinatario`.
+  const entregaResolvida = escolhido?.destinatario?.entrega ?? null;
+  const nomeEfetivo =
+    extras.destinatarioNome.trim() ||
+    escolhido?.destinatario?.nome ||
+    escolhido?.cliente_nome ||
+    "";
+  const documentoEfetivo =
+    extras.destinatarioDocumento.replace(/\D/g, "") ||
+    escolhido?.destinatario?.documento ||
+    escolhido?.cliente_documento ||
+    "";
+  const ieEfetiva = extras.destinatarioIe.trim() || escolhido?.destinatario?.ie || "";
+  const enderecoEfetivo = [
+    extras.entregaLogradouro.trim() || entregaResolvida?.logradouro,
+    extras.entregaNumero.trim() || entregaResolvida?.numero,
+    extras.entregaBairro.trim() || entregaResolvida?.bairro,
+    [
+      extras.entregaMunicipio.trim() || entregaResolvida?.municipio,
+      extras.entregaUf.trim() || entregaResolvida?.uf,
+    ]
+      .filter(Boolean)
+      .join("/"),
+    extras.entregaCep.replace(/\D/g, "") || entregaResolvida?.cep,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   const selecionados = pedidoId ? [pedidoId, ...agrupados] : [];
   const pedidosDaNota = faturados.filter((p) => selecionados.includes(p.id));
   const totalDaNota = pedidosDaNota.reduce((soma, p) => soma + p.total_cents, 0);
@@ -328,6 +409,9 @@ export function EmitirNota({
       // Trocar de pedido troca o texto, como troca o endereço: manter o do
       // anterior seria pôr a ordem de compra de um cliente na nota de outro.
       informacoesComplementares: (pedido?.informacoes_fiscais ?? pedido?.observacoes ?? "").trim(),
+      destinatarioNome: pedido?.destinatario?.nome ?? pedido?.cliente_nome ?? "",
+      destinatarioDocumento: pedido?.destinatario?.documento ?? pedido?.cliente_documento ?? "",
+      destinatarioIe: pedido?.destinatario?.ie ?? "",
       entregaLogradouro: entrega?.logradouro ?? "",
       entregaNumero: entrega?.numero ?? "",
       entregaComplemento: entrega?.complemento ?? "",
@@ -620,6 +704,73 @@ export function EmitirNota({
               </div>
             )}
 
+            {escolhido && (
+              <details className="max-w-xl rounded-lg border border-border bg-muted/30 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-text">
+                  {t("Conferir a nota campo por campo")}
+                </summary>
+                <div className="mt-3 space-y-4 text-sm">
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Destinatário")}
+                    </h3>
+                    <dl className="mt-1 grid grid-cols-[130px_1fr] gap-x-3 gap-y-1">
+                      <dt className="text-muted-foreground">{t("Nome")}</dt>
+                      <dd>{nomeEfetivo || t("falta")}</dd>
+                      <dt className="text-muted-foreground">{t("CPF/CNPJ")}</dt>
+                      <dd className="tabular-nums">{documentoEfetivo || t("falta")}</dd>
+                      <dt className="text-muted-foreground">{t("IE")}</dt>
+                      <dd>{ieEfetiva || t("não contribuinte")}</dd>
+                      <dt className="text-muted-foreground">{t("Endereço")}</dt>
+                      <dd>{enderecoEfetivo || t("falta")}</dd>
+                    </dl>
+                  </section>
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Itens")}
+                    </h3>
+                    {itensDaNota === null ? (
+                      <p className="mt-1 text-muted-foreground">{t("Carregando…")}</p>
+                    ) : itensDaNota.length === 0 ? (
+                      <p className="mt-1 text-muted-foreground">{t("Sem itens.")}</p>
+                    ) : (
+                      <ul className="mt-1 space-y-1">
+                        {itensDaNota.map((i) => (
+                          <li
+                            key={i.id}
+                            className="flex flex-wrap justify-between gap-2 border-b border-border/60 pb-1 last:border-0"
+                          >
+                            <span>
+                              {i.produto_codigo} · {i.produto_nome}
+                            </span>
+                            <span className="tabular-nums text-muted-foreground">
+                              {i.quantidade} × {comoMoeda(i.preco_unit_cents, escolhido.moeda)} ={" "}
+                              {comoMoeda(i.subtotal_cents, escolhido.moeda)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                  <section>
+                    <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      {t("Totais")}
+                    </h3>
+                    <dl className="mt-1 grid grid-cols-[130px_1fr] gap-x-3 gap-y-1 tabular-nums">
+                      <dt className="text-muted-foreground">{t("Subtotal")}</dt>
+                      <dd>{comoMoeda(escolhido.subtotal_cents, escolhido.moeda)}</dd>
+                      <dt className="text-muted-foreground">{t("Desconto")}</dt>
+                      <dd>{comoMoeda(escolhido.desconto_cents, escolhido.moeda)}</dd>
+                      <dt className="text-muted-foreground">{t("Frete")}</dt>
+                      <dd>{comoMoeda(escolhido.frete_cents, escolhido.moeda)}</dd>
+                      <dt className="font-medium">{t("Total")}</dt>
+                      <dd className="font-medium">{comoMoeda(escolhido.total_cents, escolhido.moeda)}</dd>
+                    </dl>
+                  </section>
+                </div>
+              </details>
+            )}
+
             <details className="max-w-xl rounded-lg border border-border bg-muted/30 p-3">
               <summary className="cursor-pointer text-sm font-medium text-text">
                 {t("Dados adicionais da emissão (opcional)")}
@@ -628,6 +779,48 @@ export function EmitirNota({
                 <p className="text-xs text-muted-foreground">
                   {t("Ficam gravados nesta nota: reemitir não pede de novo.")}
                 </p>
+
+                <section className="space-y-2">
+                  <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                    {t("Destinatário")}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {t(
+                      "É o que sai na nota. O cadastro preenche; o que você digitar aqui vence para esta emissão.",
+                    )}
+                  </p>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label htmlFor="dest-nome">{t("Nome / razão social")}</Label>
+                      <Input
+                        id="dest-nome"
+                        maxLength={60}
+                        value={extras.destinatarioNome}
+                        onChange={alterar("destinatarioNome")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="dest-doc">{t("CPF ou CNPJ")}</Label>
+                      <Input
+                        id="dest-doc"
+                        inputMode="numeric"
+                        maxLength={14}
+                        value={extras.destinatarioDocumento}
+                        onChange={alterar("destinatarioDocumento")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="dest-ie">{t("Inscrição estadual")}</Label>
+                      <Input
+                        id="dest-ie"
+                        maxLength={20}
+                        placeholder={t("ISENTO ou vazio")}
+                        value={extras.destinatarioIe}
+                        onChange={alterar("destinatarioIe")}
+                      />
+                    </div>
+                  </div>
+                </section>
 
                 <section className="space-y-2">
                   <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">

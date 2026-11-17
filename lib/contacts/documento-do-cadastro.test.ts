@@ -34,6 +34,15 @@ describe("documentoDoCadastro", () => {
     });
   });
 
+  it("lê o documento numérico que o importador antigo gravou", () => {
+    // JSON com 11 dígitos cabe em number com segurança; o importador antigo
+    // gravou assim e o resolvedor só aceitava string.
+    expect(
+      documentoDoCadastro({ cnpj: null, source_metadata: { mercos: { documento: 42040906991 } } })
+        ?.digitos,
+    ).toBe("42040906991");
+  });
+
   it("a coluna vence o metadado: correção feita à mão não é sobrescrita", () => {
     expect(
       documentoDoCadastro({

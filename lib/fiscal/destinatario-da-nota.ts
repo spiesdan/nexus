@@ -238,6 +238,31 @@ export function montarDestinatario(
  * 4 pedidos nesta instalação nessa situação, e todos têm o documento no próprio
  * snapshot — a nota sai com ele; o endereço é o que falta, e a tela diz isso.
  */
+/**
+ * O CPF que o operador digitou na ficha, decifrado na hora.
+ *
+ * `contacts.cpf_encrypted` é o campo da tela de contato; o resolvedor fiscal
+ * lia só `cnpj` e `mercos.documento`, então um cliente com CPF no CRM pedia
+ * CPF na NF-e. Best-effort: sem a RPC/chave, devolve null e a emissão segue
+ * pedindo o dado — não derruba a nota por causa de um fallback.
+ */
+async function cpfDecifrado(
+  supabase: SupabaseClient,
+  contactId: string,
+  organizationId: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc("decrypt_cpf", {
+      p_contact_id: contactId,
+      p_organization_id: organizationId,
+    });
+    if (error || typeof data !== "string") return null;
+    return documentoFiscal(data);
+  } catch {
+    return null;
+  }
+}
+
 export async function carregarDestinatario(
   supabase: SupabaseClient,
   organizationId: string,
@@ -268,6 +293,13 @@ export async function carregarDestinatario(
         .maybeSingle();
       contato = (data as unknown as ContatoFiscal) ?? null;
     }
+  }
+
+  // Fallback do CPF da ficha: se nem o cadastro (cnpj/mercos) nem o snapshot
+  // do pedido têm documento, tenta o campo cifrado que o operador digitou.
+  if (contato && !documentoDoCadastro(contato) && !documentoFiscal(pedido.cliente_documento)) {
+    const cpf = await cpfDecifrado(supabase, contato.id, organizationId);
+    if (cpf) pedido = { ...pedido, cliente_documento: cpf };
   }
 
   return montarDestinatario(pedido, contato, ajuste);

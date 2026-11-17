@@ -247,3 +247,71 @@ describe("carregarDestinatario", () => {
     expect(d.faltando.length).toBeGreaterThan(0);
   });
 });
+
+/**
+ * O CPF que o operador digitou na FICHA.
+ *
+ * O resolvedor fiscal lia `cnpj` e `source_metadata.mercos.documento`; se o
+ * documento foi digitado no CRM (campo cifrado), a NF-e pedia CPF a quem tem
+ * CPF. O fallback decifra na hora e só quando não há documento no cadastro.
+ */
+function clienteComCpf(contato: unknown, cpf: string | null): SupabaseClient {
+  return {
+    from(tabela: string) {
+      if (tabela !== "contacts") throw new Error(`tabela inesperada: ${tabela}`);
+      const q: Record<string, unknown> = {
+        select: () => q,
+        eq: () => q,
+        maybeSingle: () => Promise.resolve({ data: contato, error: null }),
+      };
+      return q;
+    },
+    rpc: () => Promise.resolve({ data: cpf, error: null }),
+  } as unknown as SupabaseClient;
+}
+
+describe("carregarDestinatario — CPF cifrado da ficha", () => {
+  it("usa o CPF da ficha quando o cadastro não tem documento", async () => {
+    const contato = { ...WANDERLEI, cnpj: null };
+    const d = await carregarDestinatario(clienteComCpf(contato, "42040906991"), "org-1", {
+      cliente_nome: "AMERICO YOSHIO NAGANO",
+      contact_id: contato.id,
+    });
+    expect(d.documento).toBe("42040906991");
+    expect(d.faltando).not.toContain("CPF/CNPJ");
+  });
+
+  it("sem CPF em lugar nenhum, o campo continua faltando — não inventa", async () => {
+    const contato = { ...WANDERLEI, cnpj: null };
+    const d = await carregarDestinatario(clienteComCpf(contato, null), "org-1", {
+      cliente_nome: "AMERICO YOSHIO NAGANO",
+      contact_id: contato.id,
+    });
+    expect(d.documento).toBeNull();
+    expect(d.faltando).toContain("CPF/CNPJ");
+  });
+
+  it("cadastro com CNPJ não chama a RPC — a coluna vence", async () => {
+    let chamou = false;
+    const cliente = {
+      from(tabela: string) {
+        const q: Record<string, unknown> = {
+          select: () => q,
+          eq: () => q,
+          maybeSingle: () => Promise.resolve({ data: WANDERLEI, error: null }),
+        };
+        return q;
+      },
+      rpc: () => {
+        chamou = true;
+        return Promise.resolve({ data: "42040906991", error: null });
+      },
+    } as unknown as SupabaseClient;
+    const d = await carregarDestinatario(cliente, "org-1", {
+      cliente_nome: WANDERLEI.name,
+      contact_id: WANDERLEI.id,
+    });
+    expect(d.documento).toBe("12345678000195");
+    expect(chamou).toBe(false);
+  });
+});

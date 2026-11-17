@@ -2146,3 +2146,31 @@ ritmo. Nada era inserido, o mesmo prospect continuava em primeiro: laço infinit
 remove da audiência só quem já tem `message_id` (comprovante). `--seco` mostra o que faria.
 Reserva sem comprovante não é envio e **não** é removida. Provado no banco E2E: audiência
 2 → 1, o prospect com comprovante saiu e o próximo ficou.
+
+## Nota fiscal — o destinatário incompleto (17/11/2026)
+
+Relato do dono: pedido **PED-19669** com "O cadastro do cliente precisa de ajuste: CPF/CNPJ" ao
+emitir, e "no Mercos tem!".
+
+**O que foi medido:**
+1. o resolvedor fiscal lia `contacts.cnpj` e `source_metadata.mercos.documento`, mas **não** o
+   CPF que o operador digitou na ficha (`contacts.cpf_encrypted`) — um cliente com CPF no CRM
+   pedia CPF na NF-e;
+2. o importador do Mercos **só grava o documento quando cria o contato**. Se o cliente já
+   existia (WhatsApp/manual), o documento que está no Mercos não chega ao CRM — que é o caso do
+   pedido acima.
+
+**Corrigido:**
+- `documentoDoCadastro` aceita o documento **numérico** que o importador antigo gravou;
+- `carregarDestinatario` decifra `cpf_encrypted` (RPC `decrypt_cpf`) quando o cadastro e o
+  snapshot não têm documento;
+- a tela **Emitir NF-e** ganhou uma seção **Destinatário** editável (nome, CPF/CNPJ, IE) e a
+  prévia **"Conferir a nota campo por campo"** (destinatário, itens e totais); o que for digitado
+  vence o cadastro e fica gravado na nota (`extras.destinatario`);
+- `scripts/contatos/definir-documento.ts --contato <telefone|id> --documento <CPF/CNPJ>` grava o
+  documento no contato (CNPJ em `cnpj`; CPF em `cpf_hash` + `cpf_encrypted` +
+  `source_metadata.mercos.documento`), para a nota seguinte já achar sozinha.
+
+**O que não foi feito:** atualizar o contato existente dentro do importador do Mercos — mudança
+de função SQL (migration + baseline + MANIFEST); fica para o próximo bloco. O script e a tela
+resolvem o caso imediato.
