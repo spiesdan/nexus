@@ -452,6 +452,15 @@ export function ModoMotorista({
   }
 
   async function transicao(acao: "iniciar" | "finalizar") {
+    // Iniciar a rota é irreversível pelo botão e NOTIFICA os clientes.
+    if (acao === "iniciar") {
+      const ok = await confirmar({
+        title: t("Iniciar a rota? Os clientes serão avisados e a carga sai de 'montando'."),
+        confirmLabel: t("Iniciar rota"),
+        cancelLabel: t("Cancelar"),
+      });
+      if (!ok) return;
+    }
     try {
       await apiClient.post(`/api/v1/shipments/${cargaId}/rota/${acao}`, {});
       toast.success(acao === "iniciar" ? t("Rota iniciada.") : t("Rota finalizada."));

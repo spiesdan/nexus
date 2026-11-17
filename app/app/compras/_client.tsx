@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/table";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
+import { centavosDeBr } from "@/lib/format/moeda";
 import {
   ehStatusCompra,
   rotuloStatusCompra,
@@ -468,10 +469,7 @@ function DialogNovaCompra({
           .map((i) => ({
             product_id: i.product_id,
             quantidade: Math.max(1, Math.trunc(Number(i.quantidade.replace(",", ".")) || 0)),
-            custo_unit_cents: Math.max(
-              0,
-              Math.round(Number(i.custo_reais.replace(",", ".")) * 100) || 0,
-            ),
+            custo_unit_cents: Math.max(0, centavosDeBr(i.custo_reais) ?? 0),
           })),
       };
       if (corpo.itens.length === 0) throw new Error("Adicione ao menos um item.");
@@ -556,7 +554,11 @@ function DialogNovaCompra({
                     onChange={(e) => trocarItem(i, { custo_reais: e.target.value })}
                     onBlur={() => {
                       if (!item.custo_reais && produto?.custo_cents != null) {
-                        trocarItem(i, { custo_reais: (produto.custo_cents / 100).toFixed(2) });
+                        trocarItem(i, {
+                          custo_reais: (produto.custo_cents / 100).toLocaleString("pt-BR", {
+                            minimumFractionDigits: 2,
+                          }),
+                        });
                       }
                     }}
                   />

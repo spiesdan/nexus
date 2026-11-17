@@ -228,6 +228,17 @@ export function CargaClient({
   async function mudarStatus(status: string) {
     // Sair/concluir passam pela rota (carimba início/fim); o resto, direto.
     const rota = status === "em_rota" ? "iniciar" : status === "concluida" ? "finalizar" : null;
+    // Iniciar a rota é irreversível pelo botão e NOTIFICA todos os clientes.
+    // A confirmação existe para o clique errado não virar mensagem no celular
+    // de quem está esperando.
+    if (status === "em_rota") {
+      const ok = await confirmar({
+        title: t("Iniciar a rota? Os clientes serão avisados e a carga sai de 'montando'."),
+        confirmLabel: t("Iniciar rota"),
+        cancelLabel: t("Cancelar"),
+      });
+      if (!ok) return;
+    }
     try {
       if (rota) await apiClient.post(`/api/v1/shipments/${cargaId}/rota/${rota}`, {});
       else await apiClient.patch(`/api/v1/shipments/${cargaId}`, { status });
