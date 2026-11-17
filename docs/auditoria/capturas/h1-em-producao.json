@@ -1,0 +1,2218 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T03:03:22.315Z",
+  "resultados": [
+    {
+      "rota": "/",
+      "status": 200,
+      "erro": null,
+      "url": "/app",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Boa noite, E2E."
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Dashboard · NEXUS"
+    },
+    {
+      "rota": "/403",
+      "status": 200,
+      "erro": null,
+      "url": "/403",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "403 — Sem permissão"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Acesso negado · NEXUS"
+    },
+    {
+      "rota": "/500",
+      "status": 500,
+      "erro": null,
+      "url": "/500",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "500 — Erro interno"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Erro interno · NEXUS"
+    },
+    {
+      "rota": "/503",
+      "status": 200,
+      "erro": null,
+      "url": "/503",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "503 — Em manutenção"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Em manutenção · NEXUS"
+    },
+    {
+      "rota": "/account-suspended",
+      "status": 200,
+      "erro": null,
+      "url": "/account-suspended",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Conta suspensa"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conta suspensa · NEXUS"
+    },
+    {
+      "rota": "/admin",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/dashboard",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Dashboard"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Dashboard — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/audit",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/audit",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Audit Log"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Audit Log — Admin"
+    },
+    {
+      "rota": "/admin/dashboard",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/dashboard",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Dashboard"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Dashboard — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/forbidden",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/forbidden",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Acesso negado"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Acesso negado — Admin Plataforma · NEXUS"
+    },
+    {
+      "rota": "/admin/google",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/google",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Google Agenda desta instalação"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Google Agenda da instalação"
+    },
+    {
+      "rota": "/admin/inbox",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox da plataforma"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conversa (suporte) · NEXUS"
+    },
+    {
+      "rota": "/admin/incidents",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/incidents",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Incidentes"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Incidentes — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/lgpd",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/lgpd",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "LGPD — Cross-tenant"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "LGPD — Admin"
+    },
+    {
+      "rota": "/admin/marca",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/marca",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Marca"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Marca da instalação"
+    },
+    {
+      "rota": "/admin/platform-admins",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/platform-admins",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Platform Admins"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Platform Admins — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/tenants",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/tenants",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Tenants"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Tenants — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/tenants/new",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/tenants/new",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Novo Tenant"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Novo Tenant — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/usage",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/usage",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Uso & Custo"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Uso & Custo — Admin Plataforma"
+    },
+    {
+      "rota": "/admin/users",
+      "status": 200,
+      "erro": null,
+      "url": "/admin/users",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Usuários"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Usuários — Admin Plataforma"
+    },
+    {
+      "rota": "/app",
+      "status": 200,
+      "erro": null,
+      "url": "/app",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Boa noite, E2E."
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Dashboard · NEXUS"
+    },
+    {
+      "rota": "/app/agenda",
+      "status": 200,
+      "erro": null,
+      "url": "/app/agenda",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Agenda"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Agenda · NEXUS"
+    },
+    {
+      "rota": "/app/ai",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Agente de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Agente de IA · NEXUS"
+    },
+    {
+      "rota": "/app/ai/agents",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/agents",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Agents de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Agentes · NEXUS"
+    },
+    {
+      "rota": "/app/ai/agents/new",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/agents/new",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Novo agente"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Novo agente · NEXUS"
+    },
+    {
+      "rota": "/app/ai/cases",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/cases",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Casos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Casos · NEXUS"
+    },
+    {
+      "rota": "/app/ai/controle",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/controle",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Controle de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Controle de IA · NEXUS"
+    },
+    {
+      "rota": "/app/ai/credentials",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/credentials",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Chaves de acesso à IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Credenciais · NEXUS"
+    },
+    {
+      "rota": "/app/ai/decisoes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/decisoes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Decisões da IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Decisões · NEXUS"
+    },
+    {
+      "rota": "/app/ai/evolution",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/evolution",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Evolução da IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Evolução da IA · NEXUS"
+    },
+    {
+      "rota": "/app/ai/followups",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/followups",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Follow-ups"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Follow-ups · NEXUS"
+    },
+    {
+      "rota": "/app/ai/inbox",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/inbox",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Central de avisos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Alertas · NEXUS"
+    },
+    {
+      "rota": "/app/ai/knowledge/sources",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/knowledge/sources",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "O que o agente sabe"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Conhecimento · NEXUS"
+    },
+    {
+      "rota": "/app/ai/memory",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/memory",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Memória da IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Memória · NEXUS"
+    },
+    {
+      "rota": "/app/ai/proposals",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/proposals",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Propostas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Propostas · NEXUS"
+    },
+    {
+      "rota": "/app/ai/providers",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/providers",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Provedores de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Provedores · NEXUS"
+    },
+    {
+      "rota": "/app/ai/routers",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/routers",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Roteadores"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Roteadores · NEXUS"
+    },
+    {
+      "rota": "/app/ai/runs",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/runs",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Execuções de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Execuções · NEXUS"
+    },
+    {
+      "rota": "/app/ai/skills",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/skills",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Skills da IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Skills · NEXUS"
+    },
+    {
+      "rota": "/app/ai/usage",
+      "status": 200,
+      "erro": null,
+      "url": "/app/ai/usage",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Uso de IA"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Uso e orçamento · NEXUS"
+    },
+    {
+      "rota": "/app/audit",
+      "status": 200,
+      "erro": null,
+      "url": "/app/audit",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Audit Log"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Audit Log · NEXUS"
+    },
+    {
+      "rota": "/app/busca",
+      "status": 200,
+      "erro": null,
+      "url": "/app/busca",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Busca"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Busca · NEXUS"
+    },
+    {
+      "rota": "/app/campanhas",
+      "status": 200,
+      "erro": null,
+      "url": "/app/campanhas",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Campanha"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Campanha · NEXUS"
+    },
+    {
+      "rota": "/app/carteira",
+      "status": 200,
+      "erro": null,
+      "url": "/app/carteira",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Carteira"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Carteira · NEXUS"
+    },
+    {
+      "rota": "/app/comissoes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/comissoes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Comissões"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Comissões · NEXUS"
+    },
+    {
+      "rota": "/app/compras",
+      "status": 200,
+      "erro": null,
+      "url": "/app/compras",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Compras"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Compras · NEXUS"
+    },
+    {
+      "rota": "/app/connections",
+      "status": 200,
+      "erro": null,
+      "url": "/app/connections",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Conexões"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conexões · NEXUS"
+    },
+    {
+      "rota": "/app/contacts",
+      "status": 200,
+      "erro": null,
+      "url": "/app/contacts",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Clientes"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Clientes · NEXUS"
+    },
+    {
+      "rota": "/app/estoque",
+      "status": 200,
+      "erro": null,
+      "url": "/app/estoque",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Estoque"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Estoque · NEXUS"
+    },
+    {
+      "rota": "/app/expedicao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/expedicao",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Expedição"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Expedição · NEXUS"
+    },
+    {
+      "rota": "/app/expedicao/nova",
+      "status": 200,
+      "erro": null,
+      "url": "/app/expedicao/nova",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Nova carga"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Nova carga · NEXUS"
+    },
+    {
+      "rota": "/app/faturamento",
+      "status": 200,
+      "erro": null,
+      "url": "/app/faturamento",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Faturamento"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Faturamento · NEXUS"
+    },
+    {
+      "rota": "/app/financeiro",
+      "status": 200,
+      "erro": null,
+      "url": "/app/financeiro",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Financeiro"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Contas a Receber · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "NF-e recebidas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "NF-e recebidas · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/configuracoes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/configuracoes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Configurações fiscais"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Configurações fiscais · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/eventos",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/eventos",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Cancelamentos e eventos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Cancelamentos e eventos · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/fornecedores",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/fornecedores",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Fornecedores das notas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Fornecedores das notas · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/manifestacoes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/manifestacoes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Manifestação do destinatário"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Manifestação do destinatário · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/notas",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/notas",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Todas as notas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Todas as notas de entrada · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/pendentes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/pendentes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Pendentes de conferência"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Pendentes de conferência · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/produtos",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/produtos",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Produtos das notas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Produtos das notas · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/relatorios",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/relatorios",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Relatórios de entradas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Relatórios de entradas · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/resumos",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/resumos",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Resumos de notas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Resumos de notas · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/sincronizacoes",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/sincronizacoes",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Histórico de sincronização"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Histórico de sincronização · NEXUS"
+    },
+    {
+      "rota": "/app/fiscal/xml",
+      "status": 200,
+      "erro": null,
+      "url": "/app/fiscal/xml",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "XML recebidos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "XML recebidos · NEXUS"
+    },
+    {
+      "rota": "/app/frota",
+      "status": 200,
+      "erro": null,
+      "url": "/app/frota",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Frota"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Frota · NEXUS"
+    },
+    {
+      "rota": "/app/inbox",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/app/indicadores",
+      "status": 200,
+      "erro": null,
+      "url": "/app/indicadores",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Indicadores"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Indicadores · NEXUS"
+    },
+    {
+      "rota": "/app/integrations/nuvemshop",
+      "status": 200,
+      "erro": null,
+      "url": "/app/integrations/nuvemshop",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Nuvemshop"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Nuvemshop · NEXUS"
+    },
+    {
+      "rota": "/app/inteligencia",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inteligencia",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Inteligência"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inteligência · NEXUS"
+    },
+    {
+      "rota": "/app/kanban",
+      "status": 200,
+      "erro": null,
+      "url": "/app/kanban",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Funis"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Funis · NEXUS"
+    },
+    {
+      "rota": "/app/laboratorio",
+      "status": 200,
+      "erro": null,
+      "url": "/app/laboratorio",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Laboratório do agente"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Laboratório · NEXUS"
+    },
+    {
+      "rota": "/app/lgpd/requests",
+      "status": 200,
+      "erro": null,
+      "url": "/app/lgpd/requests",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Solicitações LGPD"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "LGPD · NEXUS"
+    },
+    {
+      "rota": "/app/metrics",
+      "status": 200,
+      "erro": null,
+      "url": "/app/indicadores",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Indicadores"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Indicadores · NEXUS"
+    },
+    {
+      "rota": "/app/meu-dia",
+      "status": 200,
+      "erro": null,
+      "url": "/app/meu-dia",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Meu Dia"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Meu Dia · NEXUS"
+    },
+    {
+      "rota": "/app/notas",
+      "status": 200,
+      "erro": null,
+      "url": "/app/notas",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Notas fiscais"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Notas fiscais · NEXUS"
+    },
+    {
+      "rota": "/app/pedidos",
+      "status": 200,
+      "erro": null,
+      "url": "/app/pedidos",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Pedidos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Pedidos · NEXUS"
+    },
+    {
+      "rota": "/app/pedidos/imprimir",
+      "status": 200,
+      "erro": null,
+      "url": "/app/pedidos/imprimir",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Imprimir pedidos"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Imprimir pedidos · NEXUS"
+    },
+    {
+      "rota": "/app/pedidos/novo",
+      "status": 200,
+      "erro": null,
+      "url": "/app/pedidos/novo",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Novo pedido"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Novo pedido · NEXUS"
+    },
+    {
+      "rota": "/app/products",
+      "status": 200,
+      "erro": null,
+      "url": "/app/products",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Catálogo"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Produtos · NEXUS"
+    },
+    {
+      "rota": "/app/prospeccao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/campanhas",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Campanha"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Campanha · NEXUS"
+    },
+    {
+      "rota": "/app/prospeccao/nova",
+      "status": 200,
+      "erro": null,
+      "url": "/app/prospeccao/nova",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Nova campanha"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Nova campanha · NEXUS"
+    },
+    {
+      "rota": "/app/radar",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Radar · NEXUS"
+    },
+    {
+      "rota": "/app/radar/categorias",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/categorias",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Radar por categoria · NEXUS"
+    },
+    {
+      "rota": "/app/radar/oportunidades",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/oportunidades",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Oportunidades · NEXUS"
+    },
+    {
+      "rota": "/app/radar/prospeccao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/prospeccao",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Prospecção · NEXUS"
+    },
+    {
+      "rota": "/app/radar/recuperacao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/recuperacao",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Recuperação · NEXUS"
+    },
+    {
+      "rota": "/app/radar/risco",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/risco",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Em risco · NEXUS"
+    },
+    {
+      "rota": "/app/recuperacao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/radar/recuperacao",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Radar Comercial"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Recuperação · NEXUS"
+    },
+    {
+      "rota": "/app/relatorios",
+      "status": 200,
+      "erro": null,
+      "url": "/app/relatorios",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Relatórios"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Relatórios · NEXUS"
+    },
+    {
+      "rota": "/app/settings",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Configurações"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Configurações · NEXUS"
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/api-tokens",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "API Tokens"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "API Tokens · NEXUS"
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/atendimento",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Distribuição de atendimento"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Distribuição de atendimento · NEXUS"
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/atualizacao",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Versão 1.1.0 disponível"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Atualização do sistema"
+    },
+    {
+      "rota": "/app/settings/billing",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/billing",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Billing"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Billing · NEXUS"
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "status": 200,
+      "erro": null,
+      "url": "/app/connections",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Conexões"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conexões · NEXUS"
+    },
+    {
+      "rota": "/app/settings/marca",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/marca",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Marca"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Marca"
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/notifications",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Notificações"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Notificações · NEXUS"
+    },
+    {
+      "rota": "/app/settings/profile",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/profile",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Perfil"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Perfil · NEXUS"
+    },
+    {
+      "rota": "/app/settings/security",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/security",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Segurança"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Segurança · NEXUS"
+    },
+    {
+      "rota": "/app/settings/templates",
+      "status": 200,
+      "erro": null,
+      "url": "/app/connections",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Conexões"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conexões · NEXUS"
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/tenant",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Organização"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Organização · NEXUS"
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/tenant/agenda",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Tipos de agendamento"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Tipos de agendamento · NEXUS"
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "status": 200,
+      "erro": null,
+      "url": "/app/settings/tenant/pipelines",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Etapas do funil"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Etapas do funil · NEXUS"
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "status": 200,
+      "erro": null,
+      "url": "/app/connections",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Conexões"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Conexões · NEXUS"
+    },
+    {
+      "rota": "/app/tarefas",
+      "status": 200,
+      "erro": null,
+      "url": "/app/tarefas",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Tarefas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Tarefas · NEXUS"
+    },
+    {
+      "rota": "/app/team",
+      "status": 200,
+      "erro": null,
+      "url": "/app/team",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Equipe"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Equipe · NEXUS"
+    },
+    {
+      "rota": "/app/team/invite",
+      "status": 200,
+      "erro": null,
+      "url": "/app/team/invite",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Convidar membros"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": true,
+      "tituloDaAba": "Convidar pessoa · NEXUS"
+    },
+    {
+      "rota": "/app/templates",
+      "status": 200,
+      "erro": null,
+      "url": "/app/templates",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Respostas rápidas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Respostas rápidas · NEXUS"
+    },
+    {
+      "rota": "/app/titulos",
+      "status": 200,
+      "erro": null,
+      "url": "/app/financeiro",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Financeiro"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Contas a Receber · NEXUS"
+    },
+    {
+      "rota": "/app/venda-automatica",
+      "status": 200,
+      "erro": null,
+      "url": "/app/venda-automatica",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Venda Automática"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Venda Automática · NEXUS"
+    },
+    {
+      "rota": "/app/webhooks",
+      "status": 200,
+      "erro": null,
+      "url": "/app/webhooks",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Webhooks"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Webhooks · NEXUS"
+    },
+    {
+      "rota": "/design",
+      "status": 200,
+      "erro": null,
+      "url": "/design",
+      "h1": 2,
+      "visiveis": 2,
+      "ocultos": 0,
+      "textos": [
+        "Nexus",
+        "Showcase de Design System — Nexus"
+      ],
+      "tamanhos": [
+        "18px/600",
+        "22px/600"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Design Showcase — Nexus · NEXUS"
+    },
+    {
+      "rota": "/legal/privacy",
+      "status": 200,
+      "erro": null,
+      "url": "/legal/privacy",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Política de Privacidade"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Política de Privacidade · NEXUS"
+    },
+    {
+      "rota": "/legal/terms",
+      "status": 200,
+      "erro": null,
+      "url": "/legal/terms",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Termos de Uso"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Termos de Uso · NEXUS"
+    },
+    {
+      "rota": "/login",
+      "status": 200,
+      "erro": null,
+      "url": "/login",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Entrar"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Entrar · NEXUS"
+    },
+    {
+      "rota": "/login/forgot",
+      "status": 200,
+      "erro": null,
+      "url": "/login/forgot",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Recuperar senha"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Recuperar senha · NEXUS"
+    },
+    {
+      "rota": "/login/mfa",
+      "status": 200,
+      "erro": null,
+      "url": "/login/mfa",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Verificação em duas etapas"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Verificação em duas etapas · NEXUS"
+    },
+    {
+      "rota": "/login/recovery",
+      "status": 200,
+      "erro": null,
+      "url": "/login/recovery",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Recuperar acesso"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Recuperar acesso · NEXUS"
+    },
+    {
+      "rota": "/login/reset",
+      "status": 200,
+      "erro": null,
+      "url": "/login/reset",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Definir nova senha"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Nova senha · NEXUS"
+    },
+    {
+      "rota": "/onboarding",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/connect-nuvemshop",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/connect-whatsapp",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/done",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/funil",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/invite-team",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/setup-ai",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/testar",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/onboarding/welcome",
+      "status": 200,
+      "erro": null,
+      "url": "/app/inbox",
+      "h1": 1,
+      "visiveis": 0,
+      "ocultos": 1,
+      "textos": [
+        "Inbox"
+      ],
+      "tamanhos": [
+        "16px/400 oculto"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Inbox · NEXUS"
+    },
+    {
+      "rota": "/signup",
+      "status": 200,
+      "erro": null,
+      "url": "/signup",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Criar conta"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Criar conta · NEXUS"
+    },
+    {
+      "rota": "/vitrine-agenda",
+      "status": 200,
+      "erro": null,
+      "url": "/vitrine-agenda",
+      "h1": 1,
+      "visiveis": 1,
+      "ocultos": 0,
+      "textos": [
+        "Kit visual da Agenda"
+      ],
+      "tamanhos": [
+        "24px/500"
+      ],
+      "breadcrumb": false,
+      "tituloDaAba": "Kit visual da Agenda · NEXUS"
+    }
+  ]
+}

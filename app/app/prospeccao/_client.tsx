@@ -275,7 +275,12 @@ export function ProspeccaoClient({
 
   return (
     <div className="min-h-full space-y-4 p-4 sm:p-6">
+      {/* `headingLevel={2}`: esta tela é SUBTELA de `/app/campanhas`, que já
+          desenha o `h1` da página. Sem isso a rota tinha dois títulos de nível 1
+          — medido em produção em 16/11/2026 (`h1-em-producao.json`): "Campanha"
+          e "Prospecção" na mesma árvore de acessibilidade. */}
       <NexusPageHeader
+        headingLevel={2}
         title={textos.titulo}
         subtitle={textos.subtitulo}
         actions={
