@@ -1497,6 +1497,315 @@ Ressalvas registradas: a tarefa de montagem **não** escala com o número de gr�
 desalinhado (81 % idle), então **não** foi usado para atribuir função — a atribuição a parse/avaliação
 é inferida do payload e do commit, não provada por amostragem.
 
+## 6. APIs — superfície medida (6.2 e 6.5)
+
+### Contrato de resposta (6.2)
+
+| Medida | Resultado |
+| --- | --- |
+| rotas que respondem por `ok()`/`fail()` | **403 de 417** |
+| rotas que montam `Response`/`NextResponse` na mão | **8** |
+| … sendo só `Response` na mão | **1** (`/api/mcp` — protocolo próprio) |
+| … misturando wrapper com resposta manual | **7**: export CSV (`/audit/export`), avatar, mídia de mensagem, imagens de produto, importação de leads/produtos, `admin/platform-admins` |
+
+As sete mistas têm motivo conhecido: arquivo/binário e CSV **não** são JSON — quando a resposta não
+é JSON, `ok()` não se aplica. Fora delas, o contrato é um só.
+
+### Limites, paginação e proteções (6.5)
+
+| Medida | Resultado |
+| --- | --- |
+| rotas com `.limit(`/`.range(`/`Math.min(` | **127** |
+| rotas com teto explícito | **147** |
+| rotas com `rate limit` | **3** (importação por IA, upload de marca, webhook de entrada) |
+| rotas com `Idempotency-Key` | **2** (`lgpd/.../approve`, `financeiro/.../pagamentos`) |
+| **GET de lista sem teto no handler** | **80** |
+
+O rate limit não é "3 no produto": login, signup, recuperação e aceite de convite vivem em **Server
+Actions** (`app/actions/auth/*`), e o dispatcher de IA tem o próprio
+(`lib/ai/dispatcher/rate-limit.ts`). A conta acima é só de `route.ts`.
+
+**O achado que fica (F-30, aberto):** **80** listas não declaram teto **no handler**. A primeira
+contagem era 82 porque `/agenda/agendamentos` limita no helper (`lib/agenda/consulta.ts`: default 200,
+máximo 500) — o instrumento passou a reconhecer `limite`/`limit` passado a helper e o falso positivo
+saiu.
+
+**Impacto medido** (banco de E2E, `count=exact`; é fixture, não produção):
+
+| Rota | Tabela | Linhas hoje | Leitura |
+| --- | --- | --- | --- |
+| `/admin/usage` | `organizations`+`messages`+`conversations`+`llm_calls`, janela 7/30/90 d, **sem limite** | 6 / 8 / 17 / 0 | **cresce com o uso** — varre a janela e agrega em memória |
+| `/ai/followups/enrollments` | `followup_enrollments` | 10 | **cresce muito** — uma linha por contato em fluxo |
+| `/ai/followup-flows` | `followup_flow_pointers` | 19 | cresce; `select("*")` piora |
+| `/ai/agents` | `ai_agents` | 8 | cresce |
+| `/agenda/tipos` | `calendar_event_types` | 25 | cresce por organização |
+| `/ai/cases` | `agent_cases` | 2 | cresce |
+| `/ai/credentials`, `/ai/guardrail-layers`, `/admin/platform-admins` | — | 0–1 | impacto nulo/baixo hoje |
+
+Não foi alterado nesta rodada: cortar em silêncio devolveria menos dado sem a tela saber, e em
+`/admin/usage` um teto mudaria o **número** (é agregação sobre a janela, não lista). O conserto é
+paginação na rota + "carregar mais" na tela, e no caso do uso é agregação no banco (RPC), não
+`limit`.
+
+## 9. Testes — o que existe, medido por tipo (9.1 a 9.9)
+
+| Tipo | Arquivos | Evidência de execução |
+| --- | --- | --- |
+| Unitário | **650** em `tests/unit` + **253** em `lib/` + 7 em `components/` (1.144 `*.test.*` no total) | `pnpm test:unit`: **983 arquivos / 14.857 testes** verdes hoje |
+| API (handler) | **46** `route.test.ts` junto ao código + **6** em `tests/api` | dentro do `test:unit` |
+| Banco/invariantes | **159** em `tests/invariants` | `pnpm test:db`: **1.492 testes** verdes, install+update do baseline |
+| E2E | **99** specs | smoke: **32 verdes** hoje; 16 jornadas (J1–J16) já medidas com **254 testes** |
+| Shell/kit | **5** | `pnpm test:shell` verde hoje |
+
+**Dados sintéticos e guardrail de banco remoto (9.9):** o loader central
+(`scripts/lib/env-de-teste.ts`) **recusa** cair em arquivo que aponte para destino remoto — e lança,
+não avisa (foi assim que 1.483 linhas de teste foram parar na produção em 07/10). Medido: **31 dos
+33** scripts de seed usam o loader; **1** (`semear-cargas-de-teste`) tem guarda própria
+(`ehAmbienteLocal`, com teste); **1** é placeholder sem código. Destino remoto, hoje, só por decisão
+explícita de ambiente.
+
+**O que falta, com nome:**
+- **9.5 — zero snapshot visual.** Nenhuma spec usa `toHaveScreenshot`/`toMatchSnapshot`; a regressão
+  visual depende das 60+ capturas do instrumento de auditoria, que não é gate. É a lacuna maior desta
+  frente;
+- **9.6 — acessibilidade automatizada em 2 specs** (`auth`, `rbac-roles` usam `AxeBuilder`); as outras
+  97 não passam axe. Teclado/foco e contraste foram medidos por instrumento, não por gate;
+- **9.7 — mobile/offline** depende da frente 7 (fila local, conflitos): hoje há service worker e
+  sincronizador, sem teste de conflito.
+
+## 6. Operação do self-host — instalar, atualizar, salvar, restaurar (6.9)
+
+O produto é vendido como código instalado na VPS do cliente, então a operação é parte da entrega.
+Medido no kit (`hostgator-setup-kit/`) e no gate `pnpm test:shell`:
+
+| Peça | O que faz | Prova |
+| --- | --- | --- |
+| `install.sh` | instala do zero (compose, banco, baseline, app) | `test:db` aplica o baseline; `e2e` roda contra banco com ele |
+| `update.sh` | **7 etapas**: procura versão → **backup antes de tocar no banco** → baixa código → atualiza banco → baixa imagem nova e reinicia → confere app no ar → confere automações | `scripts/test-update-com-dados.sh` prova update sobre dados |
+| `backup.sh` | `pg_dump` pela conexão de **schema** (não a do app), com **piso de 4 KiB** para recusar dump vazio, + volume `waha-data` | `test:shell`: "backup: banco em container → pg_dump de dentro" e "recusa dump vazio" |
+| `restore.sh` | exige digitar `RESTAURAR`, restaura pelo `psql_run` (mesmo motivo do dump) | `test:shell`: `psql_run` dentro do container |
+| `healthcheck.sh` / `diagnostico.sh` | consulta `/api/v1/health` **de dentro da rede** (a rota não é pública sem TLS) e lista containers | rota existe e cobre subsistemas |
+| `agent.sh` | atualização pela tela, cron a cada 5 min | `test:shell` cobre o agendamento |
+
+**Gate de hoje:** `pnpm test:shell` **verde** — validadores do kit passaram, incluindo
+"backup recusa dump vazio" e "a suíte não escreve no crontab da máquina" (a suíte agenda em sandbox;
+o crontab real ficou intacto — 13 linhas medidas no sandbox).
+
+**O que falta, medido e nomeado:**
+- **restauração não foi exercitada de ponta a ponta nesta auditoria** — o script existe, exige
+  confirmação e usa a conexão certa, mas "restaurar num banco limpo e comparar" não rodou. É ensaio
+  de restauração, não leitura de código;
+- o backup cobre **banco + sessões de WhatsApp**; arquivos de upload (avatars, imagens de produto,
+  mídia de conversa) não entram no `backup.sh`. Recuperar essas fotos hoje é backup manual do
+  storage — e quem não sabe disso descobre no restore;
+- **não há rotação de backup**: `backup.sh` grava `db-<timestamp>.sql.gz` e nada apaga o antigo; num
+  cron diário, o disco cresce sem teto.
+
+Os três ficam como **F-32 (aberto)**: ensaio de restauração, backup de uploads e rotação.
+
+## 6. Dados — tabelas, relações, exclusão e retenção (6.8)
+
+Documento **gerado do schema**, não escrito à mão: `docs/auditoria/15-tabelas-e-relacoes.md`,
+produzido por `scripts/auditoria/dados-documentados-e-retencao.mjs`. O que envelhece é prosa, não o
+`baseline.sql`.
+
+| Medida | Valor |
+| --- | --- |
+| Tabelas | **180** |
+| Com `COMMENT ON TABLE` | **76** (42%) |
+| Com `organization_id` (de um tenant) | **170** |
+| Globais (plataforma) | **10** |
+| Com `deleted_at` (soft delete) | **0** |
+| Chaves estrangeiras | **315** — `cascade` 215, `set null` 88, `restrict` 3 |
+| Crons que apagam | **3** (`data-retention`, `webhook-log-retention`, reconciliação da agenda) |
+
+**Exclusão:** não existe soft delete. Apagar é hard delete, e a maior parte das FKs é
+`on delete cascade` (215) — o vínculo morre junto, que é o certo para filho de pedido. O que a LGPD
+manda preservar **não** é apagado: `POST /api/v1/lgpd/anonymize` nulifica PII em cascata e marca
+`is_anonymized`/`anonymized_at`.
+
+**Retenção:** seis janelas declaradas em `lib/retencao/politica.ts`, com piso que o knob não fura —
+fila 90 d (piso 7), auditoria **1825 d = os 5 anos da regra L-10** (piso 90), espelho de agenda 90 d
+(piso 7), captação 365 d (piso 30), log de webhook corpo 7 d / linha 90 d. A poda roda por RPC
+(`fn_podar_fila_de_jobs`, `fn_expurgar_auditoria_vencida`, `fn_expurgar_espelho_da_agenda`,
+`fn_expurgar_nonces_de_oauth`), e cada rodada deixa rastro em `retention.sweep_run`.
+
+**O que continua em falta, com nome:** **104 tabelas sem `COMMENT ON TABLE`**. A referência gerada
+cobre nome, colunas, dono, FKs e documentação; o comentário no banco é o que aparece para quem abre o
+banco sem o repositório — e são 104. Fazer isso é **migration** (apêndice idempotente no baseline +
+MANIFEST), não edição de doc.
+
+## 6. APIs — catálogo com payload e efeito de dados (6.1)
+
+O inventário já trazia métodos, guarda, nome do schema e efeitos declarados. Faltavam as duas
+colunas que o item pede: **quais campos o corpo aceita** e **quais tabelas o handler escreve**.
+Instrumento novo, `scripts/auditoria/catalogo-de-apis.mjs`:
+
+| Medida | Resultado |
+| --- | --- |
+| handlers | **417** |
+| com chaves de payload inline (`z.object`) | **108** |
+| mutações que **leem corpo** sem schema identificável | **24** |
+| … das quais **multipart** (imagem/XML/CSV/certificado) | **11** — validadas por MIME, tamanho e parser |
+| … das quais **webhook** | **9** — HMAC + leitura manual do payload de terceiro |
+| … das quais **JSON com validação manual** | **4** — `typeof`/`Array.isArray`/whitelist de ação |
+| **corpo JSON sem NENHUMA validação** | **0** |
+| mutações que escrevem tabela declarada no próprio arquivo | **102** |
+| mutações sem escrita declarada (delegam a `lib/`) | 102 |
+
+**Nenhum corpo JSON entra sem validação** — os 24 casos sem schema são 11 multipart, 9 webhooks e 4
+com checagem manual visível no arquivo. E a escrita de dados por handler agora está no catálogo:
+`contacts` (12 handlers), `catalog_products` (9), `shipment_orders` e `shipment_destinations` (8 e
+7), `webhook_events_log` (7), `commercial_orders`/`conversations`/`prospecting_campaigns` (6 cada).
+
+**O limite do instrumento, declarado:** ele lê o handler, não o módulo chamado. Mutações que delegam
+a `lib/` aparecem sem tabela — 102 delas —, e o número não deve ser lido como "não escreve".
+
+## 6. APIs — 417 rotas, 35 sem chamador interno, zero órfã
+
+A varredura visual não responde a pergunta do 6.4 ("endpoints duplicados, sem uso ou legados").
+Instrumento novo, `scripts/auditoria/apis-sem-chamador.mjs`: para cada `route.ts`, monta o caminho e
+procura o prefixo em todo o código que **não é rota** (`app/` telas e componentes, `components/`,
+`hooks/`, `lib/`, `workers/`, `scripts/`).
+
+| Medida | Resultado |
+| --- | --- |
+| rotas de API | **417** |
+| sem menção fora de `app/api/` | **35** |
+| … de integração (`internal`, `mcp`, `cron`, webhook) | **22** — chamador é de fora, por desenho |
+| … internas ao produto, sem chamador | **13** |
+| duplicadas (mesmo `normalizado` → mais de uma rota) | **0** |
+| com "legacy/deprecated/old/v2" no nome | **0** |
+
+**As 13 internas sem chamador não são lixo:** todas as 13 aparecem em spec (`docs/specs/` e
+`docs/prd/`). São `fiscal-*` (6), `commercial-goals`, `commercial-policies`,
+`conversations/arquivar-todas`, `ai/decisions/propose`, `products/images`,
+`fiscal-ibpt/importar-siscomex` e `system/agent`. Ou seja: **API declarada antes de a tela que a
+consome existir** — dívida de integração, não resto.
+
+**Nada foi removido.** O prompt manda não remover sem consulta, e a lista acima é exatamente o que
+a consulta precisa ver: caminho, por que apareceu e onde está declarado
+(`capturas/apis-sem-chamador.json`).
+
+### V-50 · Alta · Remover produto do pedido devolvia 422 — e o 422 escondia um erro de banco
+
+Reportado pelo dono ao editar um pedido: "erro ao remover produtos do pedido". A chamada era
+`PATCH /api/v1/commercial-orders/{id}/itens` com `remover: ["8e954d66-…"]` e a resposta, **422** com
+`"Um dos itens não pertence a este pedido."`
+
+**O item pertencia ao pedido.** Conferido no banco: `order_id` igual ao do pedido, `posicao` 0. O que
+o log do servidor mostrou foi outra coisa:
+
+```
+patch de itens: falha ao ajustar
+erro: duplicate key value violates unique constraint "commercial_order_items_pkey"
+```
+
+A causa: `admin.from("commercial_order_items").update([{...}, {...}])` — **array**. O PostgREST trata
+o corpo de um `PATCH` como **um objeto**; com array, o servidor cai no caminho de inserção e bate na
+chave primária. Remover um item de uma lista de 2 obriga a regravar as posições das duas linhas,
+então o caminho era sempre exercitado com 2+ itens.
+
+**E o 422 mentia.** No serviço, `{ok:false}` sem motivo (falha de gravação) caía no mesmo ramo de
+"item não pertence", porque a rota só distinguia `nao_encontrado` e `produto_desconhecido`. O
+usuário recebia "erro de quem chamou" quando o banco havia recusado a escrita.
+
+**O dublê dos testes aceitava array** — o comentário no próprio teste dizia "o Supabase aceita objeto
+OU array no `update`". Era falso, e por isso 16 testes passavam com o produto quebrado.
+
+**Corrigido** em `lib/comercial/patch-itens.ts`: uma linha por vez (`update({...}).eq("id").eq("order_id")`),
+com motivo `falha_ao_gravar`; e em `app/api/v1/commercial-orders/[id]/itens/route.ts`: falha de
+gravação agora é **500** com "Não foi possível atualizar os itens. Tente novamente."
+
+**Prova:** a mesma remoção, no mesmo pedido, devolveu **200**; o banco ficou com 1 item, `posicao`
+reindexada para 0, `subtotal_cents` e `total_cents` recalculados para **89.900** (eram 139.900).
+
+**Gate:** `tests/unit/patch-itens-servico.test.ts` ganhou o caso de regressão (remover 1 de 2 itens)
+e o dublê passou a **recusar array** em `update`, reproduzindo o comportamento do PostgREST — o teste
+agora falha se alguém voltar a mandar lista.
+
+### V-48 · Alta · `aria-sort` estava no botão, não na coluna — 4 colunas invisíveis para leitor de tela
+
+Primeira rodada do **axe** nas telas de operação (instrumento novo, `scripts/auditoria/axe-nas-telas.mjs`,
+regras `wcag2a` + `wcag2aa`): `/app/contacts` reprovou com `aria-allowed-attr` **crítico** em **4
+nós**. A causa: o atributo `aria-sort` morava no `<button>` do cabeçalho, e ele só é válido em
+`columnheader` (`<th>`). Para o leitor de tela, a ordenação da tabela simplesmente não existia.
+
+**Corrigido em `components/contacts/ContactsTable.tsx`**: `aria-sort` foi para o `<TableHead>`, onde
+o papel é `columnheader`; o botão continua sendo o controle.
+
+### V-49 · Alta · O filtro do Inbox usava abas sem painel — valor ARIA inválido
+
+O mesmo axe reprovou `/app/inbox` com `aria-valid-attr-value` **crítico**: cada gatilho saía com
+`aria-controls="radix-…-content-unassigned"` — o Radix só assina o id do painel quando existe um
+`TabsContent` correspondente, e ali as cinco opções (Fila/Minhas/Todas/Fechadas/Automático)
+**filtram a mesma lista**: nunca houve painel por aba. O produto usava `role="tab"` para um
+segmentado de filtro.
+
+**Corrigido em `components/inbox/InboxFilters.tsx`**: virou `role="group"` com botões e
+`aria-pressed` — o padrão de "escolher um recorte". O visual foi preservado trocando
+`data-[state=active]` por `aria-pressed:` nas mesmas classes.
+
+**Prova:** o axe rodou de novo nas **8 telas**: `0` violações em todas (antes: 1 crítica em cada
+uma das duas). E as 16 asserções de `tests/unit/inbox-filters-scope.test.tsx` passaram a consultar
+`role="button"` — o teste cobrava `role="tab"` do componente que estava errado.
+
+**Gate novo:** `tests/e2e/axe-telas-principais.spec.ts` roda axe nas 8 telas e reprova qualquer
+violação `serious`/`critical`. Registrado em `SPECS_PARTE_2` e em `TRANSVERSAIS` (acessibilidade
+atravessa as telas) — sem isso o gate de cobertura do E2E reprova a spec nova, e reprovou mesmo.
+
+### V-51 · Mudança de produto pedida pelo dono · O pedido nasce "Em orçamento" e pode ser **concluído**
+
+Pedido do dono (17/11/2026): *"nos pedidos criação, primeiro ele fica em orçamento, depois opção
+marcar concluído no pedido, igual o Mercos faz."*
+
+**O que já existia:** o pedido nasce `rascunho`, e a **lista** já o chamava de "Em orçamento"
+(`rotuloDaPill`). O que faltava era o resto:
+
+| Antes | Depois |
+| --- | --- |
+| `ROTULO_DO_STATUS.rascunho` = **"Rascunho"** (ficha, filtros) e a lista com caso especial "Em orçamento" — duas palavras para o mesmo estado | **"Em orçamento"** no vocabulário único; o caso especial da pill saiu |
+| status `concluido` existia no schema, no CHECK e na Expedição, mas **nenhuma tela chegava nele** | botão **"Marcar como concluído"** na ficha, em orçamento / em análise / aprovado |
+| sair do orçamento só por "Aprovar" (que exige teto de desconto e gerente) | **concluir passa pelas mesmas travas** — é compromisso de venda, não atalho |
+
+**Medido em produção local (build + `next start`):**
+
+| Passo | Resultado |
+| --- | --- |
+| ficha de pedido em orçamento | pill **"Em orçamento"**, botão **"Marcar como concluído"** presente |
+| clique | `PATCH /api/v1/commercial-orders/{id}` → **200**; banco `concluido`; pill **"Concluído"** |
+| lista de pedidos | mostra **"Em orçamento"** (o rótulo unificado) |
+| **agent** tentando concluir pedido **em análise** | **422** "Só gerente aprova pedido em análise."; status **não muda** |
+
+O último caso é o que importa: concluir não pode ser o caminho para furar a alçada. O `PATCH` passou
+a tratar `concluido` como `aprovado` no gate de desconto (acima do teto → escala para `em_analise`) e
+na exigência de gerente.
+
+O pedido usado na prova foi devolvido ao estado original (`rascunho`) depois da medição.
+
+## 3. Identidade visual — tokens medidos no CSS (fase 3)
+
+Instrumento novo, `scripts/auditoria/tokens-do-tema.mjs`, lê `app/globals.css` e compara com os
+números que o prompt fixa (3.2 a 3.12).
+
+| Item do prompt | Exigência | Medido | Situação |
+| --- | --- | --- | --- |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | **127 tokens** em `:root`, **127** em `[data-theme="light"]`, **127** em `[data-theme="dark"]` | **igual** |
+| 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
+| 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
+| 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
+| 3.10 raios **6/10/14** | 6, 10, 14 | `--radius-*`: **4, 8, 12, 16, 9999** (+ `none`) — e `DESIGN.md` declara cards 16, inputs/imagens 8, tabelas 24, botões/tags pill | **divergência declarada** |
+| 3.11 sombras sutis | poucas, curtas | **5 níveis** (`xs`…`xl`), todos com alfa ≤ 0,16 | **ok** |
+| 3.12 movimento 120–220 ms + reduced motion | faixa e preferência | `fast` 120 ms, `base` 200 ms, `slow` **320 ms**; `prefers-reduced-motion` **respeitado** (V-26) | **ok, com `slow` acima** |
+
+**A divergência que fica escrita:** os raios do produto são **4/8/12/16/24/pill**, não 6/10/14. Não é
+descuido — está declarado no `DESIGN.md` (a identidade do produto), e trocar os tokens mudaria todo
+canto de todo componente de uma vez. O prompt pede 6/10/14; o produto declara outra escala. **A
+decisão é do dono, não da auditoria** — e fica registrada como divergência, não como "corrigido".
+
+`--duration-slow` a 320 ms também passa dos 220 ms do item 3.12 — usado em transição de painel
+grande, não em microinteração. Mesma natureza: medido e declarado.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):

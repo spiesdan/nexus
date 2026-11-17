@@ -694,7 +694,7 @@ relógio, avatar), então cada rodada reescreve o arquivo e o `git status` fica 
 sintoma do F-23.
 
 **Mecanismo (medido):** **181** chamadas de `page.screenshot({ path: "evidence/…" })` em **54 das 100
-specs**, escritas no caminho VERDE. Não há `toHaveScreenshot`, não há `-snapshot.png` versionado, e
+specs**, escritas no caminho VERDE. Não há `toHaveScreenshot`, não há baseline de imagem versionado, e
 **nenhuma** chamada é condicionada a falha. O `screenshot: "only-on-failure"` do
 `playwright.config.ts` rege só o screenshot automático do runner, não estes `path` explícitos. Hoje:
 **614 arquivos, 66 MB** em `evidence/`.
