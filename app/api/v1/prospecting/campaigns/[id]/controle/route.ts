@@ -29,6 +29,7 @@ import { type NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { lerEmPaginas } from "@/lib/db/paginas";
 import { porFatias } from "@/lib/db/por-fatias";
 import { logger } from "@/lib/logger";
 import { indiceDeClientes } from "@/lib/prospeccao/ja-cadastrada";
@@ -313,11 +314,20 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   const ehContatos = campanha.publico === "contatos";
   const lista = (ehContatos ? campanha.contato_ids : campanha.prospect_ids) ?? [];
 
-  const { data: enviosData, error: enviosErro } = await admin
-    .from("prospecting_sends")
-    .select("prospect_id, message_id, mensagem_indice, enviado_em")
-    .eq("organization_id", orgId)
-    .eq("campaign_id", id);
+  // O ledger da campanha é paginado: uma campanha grande passa de 1000 envios
+  // e o PostgREST devolveria só a primeira página — o controle mostraria envios
+  // "faltando" e conclusão errada. Ordem `enviado_em, id` = chave estável.
+  const { linhas: enviosLidos, erro: enviosErro } = await lerEmPaginas<EnvioLinha>(
+    (de, ate) =>
+      admin
+        .from("prospecting_sends")
+        .select("prospect_id, message_id, mensagem_indice, enviado_em")
+        .eq("organization_id", orgId)
+        .eq("campaign_id", id)
+        .order("enviado_em", { ascending: true })
+        .order("id", { ascending: true })
+        .range(de, ate),
+  );
 
   if (enviosErro) {
     logger.error("[prospecting.campaign.controle] falha ao ler o ledger de envios", {
@@ -329,7 +339,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     return fail("internal_error", "Erro ao ler os envios da campanha.", 500, { requestId });
   }
 
-  const envios = (enviosData ?? []) as unknown as EnvioLinha[];
+  const envios = enviosLidos as unknown as EnvioLinha[];
   const envioPorProspect = new Map(envios.map((e) => [e.prospect_id, e]));
   const mensagens = await (async () => {
     try {
