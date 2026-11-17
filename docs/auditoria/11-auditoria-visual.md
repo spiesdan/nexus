@@ -1527,6 +1527,38 @@ payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolver
 tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
 frente, não um patch.
 
+## 6. Dados — tabelas, relações, exclusão e retenção (6.8)
+
+Documento **gerado do schema**, não escrito à mão: `docs/auditoria/15-tabelas-e-relacoes.md`,
+produzido por `scripts/auditoria/dados-documentados-e-retencao.mjs`. O que envelhece é prosa, não o
+`baseline.sql`.
+
+| Medida | Valor |
+| --- | --- |
+| Tabelas | **180** |
+| Com `COMMENT ON TABLE` | **76** (42%) |
+| Com `organization_id` (de um tenant) | **170** |
+| Globais (plataforma) | **10** |
+| Com `deleted_at` (soft delete) | **0** |
+| Chaves estrangeiras | **315** — `cascade` 215, `set null` 88, `restrict` 3 |
+| Crons que apagam | **3** (`data-retention`, `webhook-log-retention`, reconciliação da agenda) |
+
+**Exclusão:** não existe soft delete. Apagar é hard delete, e a maior parte das FKs é
+`on delete cascade` (215) — o vínculo morre junto, que é o certo para filho de pedido. O que a LGPD
+manda preservar **não** é apagado: `POST /api/v1/lgpd/anonymize` nulifica PII em cascata e marca
+`is_anonymized`/`anonymized_at`.
+
+**Retenção:** seis janelas declaradas em `lib/retencao/politica.ts`, com piso que o knob não fura —
+fila 90 d (piso 7), auditoria **1825 d = os 5 anos da regra L-10** (piso 90), espelho de agenda 90 d
+(piso 7), captação 365 d (piso 30), log de webhook corpo 7 d / linha 90 d. A poda roda por RPC
+(`fn_podar_fila_de_jobs`, `fn_expurgar_auditoria_vencida`, `fn_expurgar_espelho_da_agenda`,
+`fn_expurgar_nonces_de_oauth`), e cada rodada deixa rastro em `retention.sweep_run`.
+
+**O que continua em falta, com nome:** **104 tabelas sem `COMMENT ON TABLE`**. A referência gerada
+cobre nome, colunas, dono, FKs e documentação; o comentário no banco é o que aparece para quem abre o
+banco sem o repositório — e são 104. Fazer isso é **migration** (apêndice idempotente no baseline +
+MANIFEST), não edição de doc.
+
 ## 6. APIs — catálogo com payload e efeito de dados (6.1)
 
 O inventário já trazia métodos, guarda, nome do schema e efeitos declarados. Faltavam as duas
