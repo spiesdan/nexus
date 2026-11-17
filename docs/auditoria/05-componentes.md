@@ -1,9 +1,9 @@
 # Inventário de componentes
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `components/**`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
+> Fonte: `components/**`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
 
-**242 arquivos** em `components/`.
+**243 arquivos** em `components/`.
 
 ## Por diretório
 
@@ -11,7 +11,7 @@
 |---|---|
 | `components/inbox` | 39 |
 | `components/admin` | 31 |
-| `components/nexus-ui` | 25 |
+| `components/nexus-ui` | 26 |
 | `components/assistente` | 22 |
 | `components/kanban` | 20 |
 | `components/ui` | 19 |
@@ -40,7 +40,7 @@
 | form/filtro | 15 |
 | tabela/lista | 14 |
 | navegação | 12 |
-| feedback | 10 |
+| feedback | 11 |
 | gráfico/métrica | 6 |
 | teste | 6 |
 

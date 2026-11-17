@@ -1,7 +1,7 @@
 # Mobile e offline
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `capacitor.config.ts, mobile/, public/sw.js, lib/entregas/outbox.ts`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
+> Fonte: `capacitor.config.ts, mobile/, public/sw.js, lib/entregas/outbox.ts`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
 
 | Peça | Estado medido |
 |---|---|

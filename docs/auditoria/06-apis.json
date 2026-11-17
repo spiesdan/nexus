@@ -1,6 +1,6 @@
 {
-  "gerado_em": "2026-11-16T02:43:25.376Z",
-  "total": 418,
+  "gerado_em": "2026-11-17T14:02:06.142Z",
+  "total": 419,
   "sem_guarda": 0,
   "apis": [
     {
@@ -3284,6 +3284,19 @@
         "GET"
       ],
       "guarda": "requireRole(viewer|manager|admin)",
+      "validacao": "—",
+      "efeitos": [
+        "—"
+      ],
+      "idempotencia": false,
+      "limite": false
+    },
+    {
+      "rota": "/api/v1/fiscal/cadastro-do-cnpj",
+      "metodos": [
+        "GET"
+      ],
+      "guarda": "requireRole(agent|manager|admin)",
       "validacao": "—",
       "efeitos": [
         "—"

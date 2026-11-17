@@ -1,15 +1,15 @@
 # Inventário de APIs
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `app/**/route.ts`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
+> Fonte: `app/**/route.ts`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
 
-**418 handlers**. Medido no arquivo: métodos exportados, guarda, validação, efeitos declarados.
+**419 handlers**. Medido no arquivo: métodos exportados, guarda, validação, efeitos declarados.
 
-São **416** em `app/api/**` mais **2** fora (`/auth/confirm`, `/icone-512`). Dizer só um dos dois números faz o total parecer divergente — são medidas de coisas diferentes.
+São **417** em `app/api/**` mais **2** fora (`/auth/confirm`, `/icone-512`). Dizer só um dos dois números faz o total parecer divergente — são medidas de coisas diferentes.
 
 | Medida | Valor |
 |---|---|
-| Handlers | 418 |
+| Handlers | 419 |
 | Sem nenhuma guarda identificável | 0 |
 | Com `Idempotency-Key` | 2 |
 | Com rate limit | 3 |
@@ -53,7 +53,7 @@ legítima (webhook com HMAC, healthcheck) ou **buraco**. Cada linha precisa de o
 | Rota | Métodos |
 |---|---|
 
-## Todos os handlers (418)
+## Todos os handlers (419)
 
 | Rota | Métodos | Guarda | Validação | Efeitos | Idem. | Limite |
 |---|---|---|---|---|---|---|
@@ -302,6 +302,7 @@ legítima (webhook com HMAC, healthcheck) ou **buraco**. Cada linha precisa de o
 | `/api/v1/fiscal-settings` | GET, PUT | requireRole(viewer|manager|admin)+service-role | FiscalSchema | auditoria | — | — |
 | `/api/v1/fiscal-settings/certificado` | POST | requireRole(manager|admin)+service-role | — | auditoria | — | — |
 | `/api/v1/fiscal-sincronizacoes` | GET | requireRole(viewer|manager|admin) | — | — | — | — |
+| `/api/v1/fiscal/cadastro-do-cnpj` | GET | requireRole(agent|manager|admin) | — | — | — | — |
 | `/api/v1/fleet` | GET | requireRole(viewer|manager|admin) | — | — | — | — |
 | `/api/v1/fleet/drivers` | GET, POST | requireRole(viewer|manager|admin)+service-role | CreateSchema | auditoria | — | — |
 | `/api/v1/fleet/drivers/[id]` | PATCH, DELETE | requireRole(manager|admin)+service-role | PatchSchema | auditoria | — | — |

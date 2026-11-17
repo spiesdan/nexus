@@ -58,8 +58,8 @@ o que o spec realmente abre.
 
 <!-- TABELA:FIM -->
 
-As 99 specs do disco fecham: **68** estão em jornadas (algumas em duas, de propósito — o mesmo
-teste prova a atribuição em J3/J6 e o gatilho de etapa em J4/J9), **31** são contratos
+As 100 specs do disco fecham: **83** estão em jornadas (algumas em duas, de propósito — o mesmo
+teste prova a atribuição em J3/J6 e o gatilho de etapa em J4/J9), **17** são contratos
 transversais e estão nomeadas em `TRANSVERSAIS` no gerador com o motivo de cada uma, e **0**
 ficaram sem classificação. Esse número é impresso pelo gerador e cobrado pelo gate
 `tests/unit/jornadas-fecham.test.ts`: spec no disco sem jornada e sem motivo escrito não passa.
@@ -214,7 +214,7 @@ exercitadas.
 ### J6 · Receber, atribuir, responder, encaminhar e encerrar conversa no inbox
 
 **Superfície (medida).** Receber, atribuir, transferir, pausar IA, adiar, fechar e arquivar —
-18 rotas sob `/api/v1/conversations/**`, entre elas `[id]/claim`, `[id]/transfer`,
+21 rotas sob `/api/v1/conversations/**`, entre elas `[id]/claim`, `[id]/transfer`,
 `[id]/close`, `[id]/snooze`, `[id]/pause-ai`, `[id]/reactivate-bot`, `arquivar-todas`.
 
 **Specs.** `inbox-scope` (3), `inbox-quem-manda` (2), `inbox-abas-espelham-o-comando` (1),
@@ -227,7 +227,7 @@ mensagem. As abas espelham o comando do automático.
 
 **O que fica descoberto.** **Encerrar** ("Fechar esta conversa?", com confirmação) e
 **arquivar** têm botão em `components/inbox/ConversationHeader.tsx` e nenhum spec que clique
-neles; nenhum dos 99 specs procura por `encerrar`/`arquivar` no inbox. "Encaminhar" é exercitado
+neles; nenhum dos 100 specs procura por `encerrar`/`arquivar` no inbox. "Encaminhar" é exercitado
 como _transferir_ (`[id]/transfer`), que é a mesma rota. Os dois testes de resposta citando
 estão `skip` — o motivo está escrito no arquivo e precisa ser lido antes de tratar como
 cobertura.

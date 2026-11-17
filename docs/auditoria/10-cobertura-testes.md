@@ -1,15 +1,15 @@
 # Cobertura de testes por rota
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `tests/, app/, lib/, components/, hooks/, workers/`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
+> Fonte: `tests/, app/, lib/, components/, hooks/, workers/`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
 
 | Medida | Valor |
 |---|---|
-| Arquivos de teste encontrados | 1124 |
+| Arquivos de teste encontrados | 1142 |
 | Telas | 156 |
 | Telas com teste próprio na pasta | 15 |
-| Telas citadas em algum teste | 56 |
-| Telas **sem nenhum sinal de teste** | 97 |
+| Telas citadas em algum teste | 62 |
+| Telas **sem nenhum sinal de teste** | 91 |
 
 ## Método — e o limite dele
 
@@ -17,7 +17,7 @@
 exercitada; prova que alguém a mencionou (às vezes só num comentário). É o teto do que
 dá para medir sem executar. A Fase 2 confirma por execução.
 
-## Telas sem nenhum sinal de teste (97)
+## Telas sem nenhum sinal de teste (91)
 
 - `/(public)/login/forgot`
 - `/(public)/login/mfa`
@@ -59,7 +59,6 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 - `/app/ai/routers`
 - `/app/ai/skills`
 - `/app/ai/usage`
-- `/app/campanhas`
 - `/app/carteira`
 - `/app/comissoes`
 - `/app/compras/[id]`
@@ -75,17 +74,13 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 - `/app/fiscal/fornecedores`
 - `/app/fiscal/manifestacoes`
 - `/app/fiscal/notas/[id]`
-- `/app/fiscal/notas`
-- `/app/fiscal`
 - `/app/fiscal/pendentes`
 - `/app/fiscal/produtos`
 - `/app/fiscal/relatorios`
 - `/app/fiscal/resumos`
 - `/app/fiscal/sincronizacoes`
 - `/app/fiscal/xml`
-- `/app/frota`
 - `/app/inbox/[id]`
-- `/app/indicadores`
 - `/app/integrations/nuvemshop`
 - `/app/laboratorio`
 - `/app/leads/[id]`
@@ -93,7 +88,6 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 - `/app/lgpd/requests`
 - `/app/metrics`
 - `/app/meu-dia`
-- `/app/notas`
 - `/app/prospeccao/campanhas/[id]`
 - `/app/recuperacao`
 - `/app/relatorios`
@@ -177,7 +171,7 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 | `/app/ai/usage` | — | — |
 | `/app/audit` | — | ✓ |
 | `/app/busca` | — | ✓ |
-| `/app/campanhas` | — | — |
+| `/app/campanhas` | — | ✓ |
 | `/app/carteira` | — | — |
 | `/app/comissoes` | — | — |
 | `/app/compras/[id]` | — | — |
@@ -199,18 +193,18 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 | `/app/fiscal/fornecedores` | — | — |
 | `/app/fiscal/manifestacoes` | — | — |
 | `/app/fiscal/notas/[id]` | — | — |
-| `/app/fiscal/notas` | — | — |
-| `/app/fiscal` | — | — |
+| `/app/fiscal/notas` | — | ✓ |
+| `/app/fiscal` | — | ✓ |
 | `/app/fiscal/pendentes` | — | — |
 | `/app/fiscal/produtos` | — | — |
 | `/app/fiscal/relatorios` | — | — |
 | `/app/fiscal/resumos` | — | — |
 | `/app/fiscal/sincronizacoes` | — | — |
 | `/app/fiscal/xml` | — | — |
-| `/app/frota` | — | — |
+| `/app/frota` | — | ✓ |
 | `/app/inbox/[id]` | — | — |
 | `/app/inbox` | — | ✓ |
-| `/app/indicadores` | — | — |
+| `/app/indicadores` | — | ✓ |
 | `/app/integrations/nuvemshop` | — | — |
 | `/app/inteligencia` | — | ✓ |
 | `/app/kanban` | 1 | ✓ |
@@ -220,7 +214,7 @@ dá para medir sem executar. A Fase 2 confirma por execução.
 | `/app/lgpd/requests` | — | — |
 | `/app/metrics` | — | — |
 | `/app/meu-dia` | — | — |
-| `/app/notas` | — | — |
+| `/app/notas` | — | ✓ |
 | `/app` | 13 | ✓ |
 | `/app/pedidos/[id]` | 1 | — |
 | `/app/pedidos/imprimir` | — | ✓ |

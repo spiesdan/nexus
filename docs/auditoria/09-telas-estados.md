@@ -1,7 +1,7 @@
 # Telas × estados — sinais medidos
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `app/**/page.tsx + segmento de rota`. Gerado em 2026-11-16T02:43:25.376Z. Não editar à mão.
+> Fonte: `app/**/page.tsx + segmento de rota`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
 
 **156 telas.** Uma marca ✓ significa **sinal no código**, não comportamento verificado.
 A verificação de cada estado acontece na Fase 2, com evidência de execução.
@@ -60,7 +60,7 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/ai/evolution` | 18 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | — | — | ✓ | — | herdado | herdado |
 | `/app/ai/followups/[id]` | 61 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | — | — | herdado | herdado |
 | `/app/ai/followups/enrollments/[id]` | 19 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | — | — | herdado | herdado |
-| `/app/ai/followups` | 28 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/ai/followups` | 29 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/ai/inbox` | 15 | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | — | — | — | — | — | herdado | herdado |
 | `/app/ai/knowledge/sources` | 15 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | — | — | ✓ | herdado | herdado |
 | `/app/ai/memory` | 21 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | — | — | herdado | herdado |
@@ -72,16 +72,16 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/ai/runs` | 10 | — | ✓ | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | herdado | herdado |
 | `/app/ai/skills` | 17 | — | — | ✓ | ✓ | — | — | — | — | — | — | — | — | herdado | herdado |
 | `/app/ai/usage` | 17 | ✓ | — | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | — | herdado | herdado |
-| `/app/audit` | 14 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | próprio | herdado |
+| `/app/audit` | 15 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | próprio | herdado |
 | `/app/busca` | 11 | — | ✓ | ✓ | ✓ | — | — | — | — | ✓ | — | — | — | herdado | herdado |
-| `/app/campanhas` | 61 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/campanhas` | 62 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/carteira` | 20 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/comissoes` | 24 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/compras/[id]` | 19 | ✓ | ✓ | ✓ | ✓ | — | — | — | ✓ | — | ✓ | — | — | herdado | herdado |
 | `/app/compras` | 21 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/connections` | 5 | — | — | ✓ | ✓ | — | — | ✓ | — | — | — | — | — | herdado | herdado |
 | `/app/contacts/[id]` | 49 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | herdado | herdado |
-| `/app/contacts` | 23 | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | próprio | herdado |
+| `/app/contacts` | 24 | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | próprio | herdado |
 | `/app/estoque` | 21 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/expedicao/[id]/fechamento` | 42 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | ✓ | herdado | herdado |
 | `/app/expedicao/[id]/motorista` | 42 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | ✓ | herdado | herdado |
@@ -97,10 +97,10 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/fiscal/manifestacoes` | 8 | — | — | ✓ | — | — | — | — | — | — | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/notas/[id]` | 20 | — | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/notas` | 19 | — | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
-| `/app/fiscal` | 30 | — | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/fiscal` | 30 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/pendentes` | 15 | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/produtos` | 7 | — | ✓ | — | — | — | — | — | — | — | ✓ | — | — | herdado | herdado |
-| `/app/fiscal/relatorios` | 11 | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/fiscal/relatorios` | 11 | ✓ | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/resumos` | 15 | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/sincronizacoes` | 14 | — | ✓ | ✓ | ✓ | — | — | — | — | — | ✓ | — | — | herdado | herdado |
 | `/app/fiscal/xml` | 15 | — | ✓ | ✓ | — | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
@@ -117,17 +117,17 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/lgpd/requests` | 15 | ✓ | — | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/metrics` *(resolver)* | 15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | herdado | herdado |
 | `/app/meu-dia` | 19 | ✓ | ✓ | ✓ | ✓ | — | — | — | — | ✓ | — | — | ✓ | herdado | herdado |
-| `/app/notas` | 46 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/notas` | 47 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app` | 64 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | próprio | próprio |
 | `/app/pedidos/[id]` | 32 | — | — | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | — | herdado | herdado |
-| `/app/pedidos/imprimir` | 12 | — | ✓ | ✓ | ✓ | — | — | — | — | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/pedidos/imprimir` | 14 | — | ✓ | ✓ | ✓ | — | — | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/pedidos/novo` | 41 | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | herdado | herdado |
 | `/app/pedidos` | 39 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/pipelines/[id]` | 16 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | — | — | ✓ | herdado | herdado |
 | `/app/products` | 32 | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/prospeccao/campanhas/[id]` | 27 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | próprio | herdado |
 | `/app/prospeccao/nova` | 32 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | — | — | — | herdado | herdado |
-| `/app/prospeccao` *(resolver)* | 60 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | herdado | herdado |
+| `/app/prospeccao` *(resolver)* | 61 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | herdado | herdado |
 | `/app/radar/categorias` | 25 | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | — | — | — | herdado | herdado |
 | `/app/radar/oportunidades` | 23 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | — | — | — | herdado | herdado |
 | `/app/radar` | 62 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | herdado | herdado |
@@ -171,7 +171,7 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/onboarding/setup-ai` | 21 | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | herdado |
 | `/onboarding/testar` | 11 | — | — | ✓ | ✓ | — | ✓ | — | — | — | — | — | — | — | herdado |
 | `/onboarding/welcome` | 16 | — | ✓ | ✓ | ✓ | — | ✓ | — | — | — | — | — | — | — | herdado |
-| `/app` *(resolver)* | 477 (teto) | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | — | próprio |
+| `/app` *(resolver)* | 478 (teto) | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | — | próprio |
 | `/team/accept-invite/[token]` | 7 | — | — | ✓ | — | — | ✓ | — | — | — | — | — | — | — | herdado |
 | `/vitrine-agenda` | 15 | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | ✓ | — | — | — | — | herdado |
 
