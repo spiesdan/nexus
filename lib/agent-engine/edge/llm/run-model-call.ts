@@ -38,6 +38,7 @@ import {
 import { costCents } from './pricing';
 import { createDefaultRegistry, type ProviderRegistry } from './providers';
 import { buildStablePrefix } from './stable-prefix';
+import { mensagensDoTurno, systemDoTurno, trilhaDoTurno } from './trilha';
 
 // Call sites FORA da camada importam os tipos daqui — nunca de 'ai' direto
 // (o seam é a única porta). `tool` idem: é como o agente define ToolSet sem
@@ -474,12 +475,23 @@ export async function runModelCall(db: pg.Pool, cfg: LlmEdgeConfig, input: RunMo
   };
   const cost = costCents(model, usage);
 
+  // A trilha: o que o modelo VIU e o que ele DEVOLVEU. Sem isto, a linha de
+  // telemetria explicava o custo de um turno cujo texto ninguém podia ler.
+  const trilha = trilhaDoTurno({
+    system: prefix.system,
+    messages: input.messages,
+    saida: result.text,
+    steps: result.steps as never,
+  });
+
   const { rows } = await db.query<{ id: string }>(
     `insert into llm_calls
        (organization_id, contact_id, job_id, variant_id, purpose, provider, model,
         input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_cents, latency_ms,
-        status, origem_da_escolha, agent_id)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'ok', $14, $15)
+        status, origem_da_escolha, agent_id,
+        prompt_system, prompt_messages, output_text, tool_calls, sources)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 'ok', $14, $15,
+             $16, $17::jsonb, $18, $19::jsonb, $20::jsonb)
      returning id`,
     [
       input.tenantId,
@@ -497,6 +509,11 @@ export async function runModelCall(db: pg.Pool, cfg: LlmEdgeConfig, input: RunMo
       latencyMs,
       decisao.origem,
       input.agentId ?? null,
+      trilha.prompt_system,
+      trilha.prompt_messages,
+      trilha.output_text,
+      trilha.tool_calls,
+      trilha.sources,
     ],
   );
 
@@ -651,12 +668,17 @@ async function registrarFalha(
   },
 ): Promise<void> {
   const { error_code, error_message, http_status } = normalizarErro(d.erro);
+  // Em erro, a ENTRADA é justamente o que se precisa inspecionar (prompt
+  // grande demais, histórico corrompido, ferramenta com payload inválido).
+  // A saída não existe — e `output_text` fica NULL, não "".
   await db.query(
     `insert into llm_calls
        (organization_id, contact_id, job_id, variant_id, purpose, provider, model,
         input_tokens, output_tokens, cache_read_tokens, cache_write_tokens, cost_cents, latency_ms,
-        status, error_code, error_message, http_status, origem_da_escolha, agent_id)
-     values ($1, $2, $3, $4, $5, $6, $7, 0, 0, 0, 0, null, $8, 'erro', $9, $10, $11, $12, $13)`,
+        status, error_code, error_message, http_status, origem_da_escolha, agent_id,
+        prompt_system, prompt_messages)
+     values ($1, $2, $3, $4, $5, $6, $7, 0, 0, 0, 0, null, $8, 'erro', $9, $10, $11, $12, $13,
+             $14, $15::jsonb)`,
     [
       d.input.tenantId,
       d.input.leadId ?? null,
@@ -671,6 +693,8 @@ async function registrarFalha(
       http_status,
       d.origem,
       d.input.agentId ?? null,
+      systemDoTurno(d.input.system),
+      mensagensDoTurno(d.input.messages),
     ],
   );
 }

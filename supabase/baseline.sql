@@ -29323,3 +29323,32 @@ comment on column public.shipment_destinations.entrada_id is
 comment on column public.shipment_destinations.entrada_confirmada_em is
   'Quando o motorista confirmou na porta que o ponto é a entrada. NULL = ainda não confirmado.';
 
+
+-- ============================================================================
+-- 0312 — trilha do run de IA: entrada, contexto, saída e ferramentas.
+-- Ver supabase/migrations/20261119120000_0312_trilha_do_run_de_ia.sql.
+--
+-- `llm_calls` guardava custo e erro, nunca o conteúdo. Sem isto, "por que o
+-- agente respondeu isso?" não tinha resposta em lugar nenhum. As colunas são
+-- nullable: linha anterior à 0312 não tem trilha, e não se inventa uma.
+-- ============================================================================
+alter table public.llm_calls add column if not exists prompt_system text;
+alter table public.llm_calls add column if not exists prompt_messages jsonb;
+alter table public.llm_calls add column if not exists output_text text;
+alter table public.llm_calls add column if not exists tool_calls jsonb;
+alter table public.llm_calls add column if not exists sources jsonb;
+
+comment on column public.llm_calls.prompt_system is
+  'System prompt EFETIVO do turno, com o prefixo estável da org (playbook + tools) já aplicado. NULL = linha anterior à 0312 ou chamada sem system.';
+
+comment on column public.llm_calls.prompt_messages is
+  'Mensagens enviadas ao modelo no turno (histórico + entrada do cliente), como array JSON. É o CONTEXTO que o modelo viu, não só o que o usuário digitou. NULL = linha anterior à 0312.';
+
+comment on column public.llm_calls.output_text is
+  'Texto final que o modelo produziu no turno. NULL em erro/abort: nesse caso o registro é error_code/error_message.';
+
+comment on column public.llm_calls.sources is
+  'Fontes citadas pelo provedor no turno (result.sources), quando ele devolve citações. Complementa tool_calls: a busca de conhecimento aparece lá, com o trecho que voltou.';
+
+comment on column public.llm_calls.tool_calls is
+  'Ferramentas chamadas no turno: [{tool, input, output}] com output recortado. É a trilha das FONTES consultadas. NULL = turno sem ferramenta ou linha anterior à 0312.';

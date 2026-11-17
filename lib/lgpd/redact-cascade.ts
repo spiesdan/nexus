@@ -113,6 +113,32 @@ export async function cascadeRedactContact(args: CascadeArgs): Promise<CascadeRe
     throw new Error(`[lgpd-redact-cascade] rpc failed: ${error.message}`);
   }
 
+  // TRILHA DA IA — o texto da conversa foi COPIADO para o prompt do turno
+  // (0312). A RPC anonimiza messages/contacts, mas `llm_calls` é outra tabela e
+  // ficaria com o texto original legível: a pessoa "anonimizada" continuaria
+  // ali, palavra por palavra, no prompt e na saída. Mesmo raciocínio do avatar
+  // — o que é cópia tem de ser apagado junto com o original.
+  //
+  // Best-effort declarado: a cascata principal já aconteceu no banco; falhar
+  // AQUI não desfaz a anonimização e não pode fingir que ela não ocorreu. O
+  // erro vai para o log de quem chamou (não há logger neste módulo), e a
+  // próxima execução da cascata re-tenta com `already_anonymized` — a proteção
+  // de unicidade da solicitação LGPD continua valendo.
+  const { error: trilhaErro } = await admin
+    .from("llm_calls")
+    .update({
+      prompt_system: null,
+      prompt_messages: null,
+      output_text: null,
+      tool_calls: null,
+      sources: null,
+    })
+    .eq("organization_id", args.organizationId)
+    .eq("contact_id", args.contactId);
+  if (trilhaErro) {
+    throw new Error(`[lgpd-redact-cascade] trilha de IA não zerada: ${trilhaErro.message}`);
+  }
+
   const result = (data ?? {}) as RpcResult;
   return {
     alreadyAnonymized: result.already_anonymized === true,
