@@ -518,15 +518,27 @@ psql_em() {
 # Cinco backups consecutivos de 08/10 medidos com 20 bytes: `zcat` não devolve
 # uma linha. Era exatamente a "falha silenciosa de backup" que o cabeçalho do
 # próprio `backup.sh` diz ser a pior das falhas — acontecendo.
+# ⚠️ `--no-owner`, e NÃO `--no-privileges` (F-32, medido em 17/11/2026).
+#
+# O ensaio de restauração (`scripts/auditoria/ensaio-de-restore.sh`) restaurou um
+# dump feito com `--no-privileges` num banco limpo e o role `authenticated`
+# recebeu **permission denied for table messages**: o dump não carrega GRANT
+# nenhum, e as concessões do baseline (authenticated/anon/service_role + o
+# DEFAULT ACL) não voltam. O banco "restaura com sucesso" e o app fica sem
+# acesso — a pior hora possível para descobrir.
+#
+# `--no-owner` continua: o dono dos objetos passa a ser quem restaura, que é o
+# certo quando a instalação é recriada. Privilégio não é dono: sem ele, o dump
+# deixa de ser um backup do banco em funcionamento.
 pg_dump_run() {
   local url host
   url="$(url_do_schema)"
   host="$(printf '%s' "$url" | sed -E 's#^[a-zA-Z][a-zA-Z0-9+.-]*://.*@##; s#[:/?].*$##')"
   if [ -n "$host" ] && docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$host"; then
-    docker exec -i "$host" pg_dump "$url" --no-owner --no-privileges "$@"
+    docker exec -i "$host" pg_dump "$url" --no-owner "$@"
     return
   fi
-  docker run --rm -i postgres:17-alpine pg_dump "$url" --no-owner --no-privileges "$@"
+  docker run --rm -i postgres:17-alpine pg_dump "$url" --no-owner "$@"
 }
 
 # Fotos de produto novas são gravadas em DISCO, dentro do app, e o diretório
