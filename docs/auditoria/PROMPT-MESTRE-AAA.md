@@ -458,16 +458,7 @@ Após concluir o inventário e auditoria, apresente um plano priorizado, sem esp
 
 Para cada item, registre impacto, evidência, dependências, risco, arquivos/módulos envolvidos, estratégia, validação e critério de conclusão. Faça commits lógicos somente se o fluxo do usuário pedir ou o ambiente exigir; preserve mudanças preexistentes.
 
-#
-
-> **Evidência (Fase 10):** o plano priorizado está em
-> [`20-plano-priorizado.md`](20-plano-priorizado.md) — **5 P0, 12 P1, 10 P2 e 10
-> P3**, cada um com impacto, evidência, dependências, risco, arquivos,
-> estratégia, validação e critério de conclusão. A execução entra por P0
-> (cross-tenant, migrations silenciosas, trilha da IA) — a falha **crítica** de
-> dependência já foi fechada na 1.54.1.
-
-## Definition of Done global
+### Definition of Done global
 
 O projeto só pode ser declarado concluído quando:
 
@@ -781,7 +772,7 @@ Jornadas críticas (16)
 
 | #   | Item                                                                                                                                         | Estado |
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[~]`  |
+| 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[~]`  | **SSRF medido em 17/11/2026**: `call_webhook` (guard textual + resolução de IP + `redirect: manual`), raio‑x do prospect (`motivoDeBloqueio` resolve o host e julga o IP a cada salto) e **avatar de contato corrigido** — o cron baixava a URL devolvida pelo canal sem guard; agora valida esquema/host, resolve o IP e não segue redirect (`cron-contact-avatars-corrida.test.ts`, 3 casos). Também medidos nesta rodada: 0 cabeçalho CORS e 0 `OPTIONS`; cookie `sameSite: strict` + httpOnly nas 3 camadas; 8 rotas de upload com teto e farejo de bytes. **Falta**: CSRF ao vivo em navegador e inventário de CSP/`X-Frame-Options`/`Referrer-Policy` |
 | 8.2 | Limites de exposição de dados e segurança administrativa                                                                                     | `[~]`  |
 | 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[~]`  |
 | 8.4 | Otimizar só com baseline → gargalo → resultado                                                                                               | `[~]`  |

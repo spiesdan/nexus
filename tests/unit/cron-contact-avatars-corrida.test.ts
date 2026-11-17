@@ -23,6 +23,18 @@ const updatesContacts: { patch: Record<string, unknown>; filtros: Record<string,
 const upsertsFila: Record<string, unknown>[] = [];
 const uploads: string[] = [];
 
+let urlRecusada = false;
+vi.mock("@/lib/automation/outbound-url", () => ({
+  assertSafeOutboundUrl: () => {
+    if (urlRecusada) throw new Error("destino externo inseguro");
+  },
+}));
+vi.mock("@/lib/automation/outbound-ip", () => ({
+  assertDestinoResolvidoSeguro: async () => {
+    if (urlRecusada) throw new Error("destino externo inseguro");
+  },
+}));
+
 vi.mock("@/lib/env", () => ({
   env: { INTERNAL_CRON_SECRET: "segredo-de-teste", INTERNAL_SECRET: "segredo-de-teste" },
 }));
@@ -109,6 +121,7 @@ beforeEach(() => {
   upsertsFila.length = 0;
   uploads.length = 0;
   linhasAfetadas = [{ id: CONTATO }];
+  urlRecusada = false;
   vi.stubGlobal(
     "fetch",
     vi.fn(async () => new Response(new Uint8Array([1, 2, 3]), { status: 200 })),
@@ -125,6 +138,22 @@ function chamar(): Promise<Response> {
 }
 
 describe("cron de fotos de perfil vs. anonimização", () => {
+  it("URL de foto recusada pelo guard de saída não é buscada nem gravada (SSRF)", async () => {
+    // A URL vem do canal. Se o guard recusa (esquema/host/IP interno), o cron
+    // não pode buscar: metadata da nuvem ou serviço do compose não entram num
+    // bucket do tenant.
+    urlRecusada = true;
+    const resposta = await chamar();
+    expect(resposta.status).toBe(200);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+    expect(uploads).toHaveLength(0);
+    // O que importa: nenhum ponteiro foi gravado para o contato.
+    const gravouCaminho = updatesContacts.some(
+      (u) => u.patch.avatar_storage_path === CAMINHO,
+    );
+    expect(gravouCaminho).toBe(false);
+  });
+
   it("a gravação da foto exige is_anonymized=false — não basta ter filtrado no SELECT", async () => {
     await chamar();
 
