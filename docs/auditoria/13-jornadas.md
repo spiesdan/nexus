@@ -632,3 +632,27 @@ checklist. Fica registrado com a medida, para não virar "não testado" daqui a 
 
 **O que já foi corrigido neste tema:** ação pausada offline (o "Carregar mais" que não fazia nada)
 — V-42, em `11-auditoria-visual.md`.
+
+### 3.8 F-29 (**aberto**) — telas de gráfico passam de 200 ms de TBT e a causa não está provada
+
+Medido em 17/11/2026 com `scripts/auditoria/graficos-custo.mjs`, celular 390 com CPU 4×, três
+rodadas por tela:
+
+| Tela | Gráficos | TBT (3 rodadas) |
+| --- | --- | --- |
+| `/app/indicadores` | 5 | 438 · 533 · 280 ms |
+| `/app` | 4 | 433 · 363 · 321 ms |
+| `/app/radar` | 4 | 221 · 172 · 215 ms |
+| `/app/financeiro` | 0 | 166 · 134 · 124 ms |
+| `/app/settings` | 0 | 15 · 30 · 1 ms |
+
+A separação entre "tem gráfico" e "não tem" aparece, mas a **variação dentro da mesma tela** (280 a
+533 ms) é maior que a distância entre telas. Atribuir o bloqueio ao desenho do gráfico seria escolher
+o número que conta a história.
+
+Tentativa registrada e revertida: desligar a animação das 14 séries do Recharts não produziu ganho
+consistente nas mesmas três rodadas. O código voltou ao estado anterior.
+
+**O que fecha este achado:** trace do Chrome (Performance panel) com CPU 4× e 10+ repetições,
+separando montagem do gráfico, hidratação e busca de dados. É trabalho da frente de desempenho
+(item 8.3/8.4), não de três execuções de uma sonda.
