@@ -9,6 +9,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { lerEmPaginas } from "@/lib/db/paginas";
 import { logger } from "@/lib/logger";
 import { funisDaDescoberta } from "@/lib/prospeccao/funil-lote";
 import {
@@ -99,11 +100,25 @@ export async function GET(req: NextRequest): Promise<Response> {
   const envioPorCampanha = new Map<string, ResumoDeEnvio>();
   const ids = linhas.map((l) => l.id);
   if (ids.length > 0) {
-    const { data: envios, error: erroEnvios } = await supabase
-      .from("prospecting_sends")
-      .select("campaign_id, prospect_id, message_id, enviado_em")
-      .eq("organization_id", authz.org.orgId)
-      .in("campaign_id", ids);
+    // Paginado: com campanhas grandes o ledger passa de 1000 linhas, e a
+    // primeira página sozinha faria os cards subcontarem envios. Ordem
+    // `enviado_em, id` = chave estável de paginação.
+    const { linhas: enviosLidos, erro: erroEnvios } = await lerEmPaginas<{
+      campaign_id: string;
+      prospect_id: string;
+      message_id: string | null;
+      enviado_em: string;
+    }>((de, ate) =>
+      supabase
+        .from("prospecting_sends")
+        .select("campaign_id, prospect_id, message_id, enviado_em")
+        .eq("organization_id", authz.org.orgId)
+        .in("campaign_id", ids)
+        .order("enviado_em", { ascending: true })
+        .order("id", { ascending: true })
+        .range(de, ate),
+    );
+    const envios = enviosLidos;
 
     if (erroEnvios) {
       logger.warn("[prospecting.campaigns] resumo de envio indisponível", {
