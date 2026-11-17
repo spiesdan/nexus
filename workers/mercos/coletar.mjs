@@ -54,6 +54,18 @@ const ESPERA_MS = Number(arg("espera", "4000"));
 const RECUO_INICIAL = 30_000;
 const RECUO_MAXIMO = 600_000;
 
+/**
+ * Quanto esperar a TELA DE LOGIN do Mercos.
+ *
+ * O padrão do Playwright é 30s. Medido em 17/11/2026: dois "Atualizar do
+ * Mercos" seguidos morreram em `page.fill` com "Timeout 30000ms exceeded —
+ * waiting for input[type=email]" e nenhum pedido foi lido. A página abre (200,
+ * título "Login - Mercos"), mas às vezes o formulário demora a renderizar; o
+ * retry minutos depois passou sem mudar nada. 90s cobre a lentidão sem comer o
+ * orçamento do scrape (MERCOS_SCRAPE_TIMEOUT_MS padrão = 30 min).
+ */
+const LOGIN_TIMEOUT_MS = Number(process.env.MERCOS_LOGIN_TIMEOUT_MS || "90000");
+
 const email = process.env.MERCOS_EMAIL;
 const senha = process.env.MERCOS_SENHA;
 if (!email || !senha) {
@@ -115,13 +127,25 @@ const contexto = await navegador.newContext({
 const pagina = await contexto.newPage();
 
 async function entrar() {
-  await pagina.goto(`${BASE}/pedidos/`, { waitUntil: "domcontentloaded" });
+  await pagina.goto(`${BASE}/pedidos/`, {
+    waitUntil: "domcontentloaded",
+    timeout: LOGIN_TIMEOUT_MS,
+  });
   if (!pagina.url().includes("/login")) return;
 
-  await pagina.goto("https://app.mercos.com/login/", { waitUntil: "domcontentloaded" });
-  await pagina.fill('input[type="email"], input[name="email"]', email);
-  await pagina.fill('input[type="password"], input[name="password"]', senha);
-  await pagina.click('button:has-text("ENTRAR"), input[type="submit"]');
+  await pagina.goto("https://app.mercos.com/login/", {
+    waitUntil: "domcontentloaded",
+    timeout: LOGIN_TIMEOUT_MS,
+  });
+  await pagina.fill('input[type="email"], input[name="email"]', email, {
+    timeout: LOGIN_TIMEOUT_MS,
+  });
+  await pagina.fill('input[type="password"], input[name="password"]', senha, {
+    timeout: LOGIN_TIMEOUT_MS,
+  });
+  await pagina.click('button:has-text("ENTRAR"), input[type="submit"]', {
+    timeout: LOGIN_TIMEOUT_MS,
+  });
 
   // Espera ou o painel, ou o prompt de código. O URL fica em /login nos dois
   // casos por alguns instantes; o texto é o discriminante.
