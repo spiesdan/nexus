@@ -243,7 +243,7 @@ export function montarExtras(v: ExtrasDoFormulario): ExtrasFiscais | undefined {
 
 /**
  * Aba "Emitir" — uma tarefa por tela, como nos emissores dedicados: escolhe
- * o pedido faturável (concluído, faturado, expedido ou entregue), vê o resumo (cliente +
+ * o pedido faturável (aprovado, concluído, faturado, expedido ou entregue), vê o resumo (cliente +
  * valor), valida e emite. O resultado cai na grade (aba Notas) via refresh.
  */
 export function EmitirNota({
@@ -277,7 +277,7 @@ export function EmitirNota({
   /** Itens do pedido para a prévia "campo por campo" (buscados ao escolher). */
   const [itensDaNota, setItensDaNota] = React.useState<ItemDaNota[] | null>(null);
   /**
-   * Modo de emissão: NF-e de PEDIDO (concluído/faturado/expedido/entregue) ou NF-e de
+   * Modo de emissão: NF-e de PEDIDO (aprovado/concluído/faturado/expedido/entregue) ou NF-e de
    * VENDA AVULSA — venda sem pedido (balcão). Na avulsa o fato entra em
    * `extras.avulsa`; o operador conta a venda, a nota não nasce de pedido.
    */
@@ -512,7 +512,7 @@ export function EmitirNota({
       return;
     }
     if (!pedidoId) {
-      toast.error(t("Escolha o pedido concluído, faturado ou expedido."));
+      toast.error(t("Escolha o pedido aprovado, concluído, faturado ou expedido."));
       return;
     }
     // Os extras são conferidos aqui e não na rota: quem aciona o botão precisa

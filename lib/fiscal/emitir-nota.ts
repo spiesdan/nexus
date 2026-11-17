@@ -211,7 +211,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
 
   const ids = [...new Set((orderIds?.length ? orderIds : orderId ? [orderId] : []).filter(Boolean))];
   if (ids.length === 0) {
-    throw new ApiError(422, "validation_failed", { requestId }, requestId, "Escolha o pedido concluído, faturado ou expedido.");
+    throw new ApiError(422, "validation_failed", { requestId }, requestId, "Escolha o pedido aprovado, concluído, faturado ou expedido.");
   }
 
   const { data: pedidos, error: erroPedidos } = await supabase
@@ -248,7 +248,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
         "validation_failed",
         { requestId },
         requestId,
-        `O pedido ${p.numero} está "${p.status}" — só pedido concluído, faturado, expedido ou entregue vira nota.`,
+        `O pedido ${p.numero} está "${p.status}" — só pedido aprovado, concluído, faturado, expedido ou entregue vira nota.`,
       );
     }
   }
