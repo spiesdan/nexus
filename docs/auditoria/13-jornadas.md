@@ -610,3 +610,25 @@ estado estava certo. Quem navegava era um efeito de URL que ninguém suspeitava 
 só sincronizar filtros. Navegação escondida dentro de efeito é a classe de defeito que só aparece
 quando se mede o DOM em vez de ler o componente.
 
+### 3.7 F-28 (**aberto**) — Pedidos offline não diz que a lista falhou
+
+Medido em 17/11/2026 com `scripts/auditoria/offline-e-erro.mjs`, com o service worker ativo e o
+navegador em modo offline:
+
+| Tela | Reload offline | O que a pessoa vê |
+| --- | --- | --- |
+| `/app/contacts` | app abre | "Algo deu errado · Erro ao carregar clientes · **Tentar novamente**" |
+| `/app/inbox` | app abre | "Algo deu errado · Erro ao carregar conversas · **Tentar novamente**" |
+| `/app/financeiro` | app abre | "Algo deu errado · Não foi possível carregar estes dados · **Tentar novamente**" |
+| `/app/pedidos` | app abre | **nada** — sem alerta, sem "tentar novamente", lista vazia |
+
+O app **não** quebra offline: o service worker serve a casca e três das quatro telas dizem o que
+aconteceu, com ação de recuperação. Pedidos fica em silêncio — e é a tela de onde sai a operação
+do dia.
+
+Não é conserto deste bloco: o caminho de dados de Pedidos é servidor (`page.tsx`) + SW, e o
+tratamento de "sem rede" pertence à frente 7 (PWA/offline), que ainda tem 12 itens em aberto no
+checklist. Fica registrado com a medida, para não virar "não testado" daqui a duas rodadas.
+
+**O que já foi corrigido neste tema:** ação pausada offline (o "Carregar mais" que não fazia nada)
+— V-42, em `11-auditoria-visual.md`.

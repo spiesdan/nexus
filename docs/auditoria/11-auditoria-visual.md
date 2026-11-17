@@ -1181,6 +1181,42 @@ decisão de produto (o mesmo tema do 4.5), registrada com medida.
 **Falta no 2.7:** ordenação por coluna (nenhuma das duas telas tem cabeçalho ordenável) e seleção em
 massa fora de Pedidos.
 
+### V-42 · Média · Offline, "Carregar mais" não fazia nada — nem requisição, nem aviso
+
+O estado que o item 2.9 pede e que ninguém tinha medido é o **offline**. Instrumento novo,
+`scripts/auditoria/offline-e-erro.mjs`: a tela carrega, o navegador vai para offline
+(`context.setOffline(true)`) e o instrumento provoca uma busca de dados — primeiro uma **ação** com
+a tela já carregada, depois um **reload**.
+
+| Medida (offline, com a tela carregada) | Antes | Depois |
+| --- | --- | --- |
+| clique em "Carregar mais" (contatos) | 25 linhas → **25**, nenhuma requisição, nenhum aviso, botão inalterado **por 20 s** | mensagem "Sem conexão. O que já carregou continua na tela…" |
+| reload offline (contatos, inbox, financeiro) | — | **app abre** (service worker ativo) com "Algo deu errado … Tentar novamente" |
+| reload offline (pedidos) | — | app abre, **sem alerta** — registrado como **F-28** em aberto |
+
+O clique silencioso tinha causa específica: o TanStack Query, no modo `online` (o padrão), **pausa**
+a busca quando não há rede — não dispara requisição, não erra, não avisa. `isFetchingNextPage`
+continua falso, então o botão não desabilita e não muda de rótulo. Para quem está no galpão, o app
+simplesmente não responde.
+
+**Corrigido em `app/app/contacts/_client.tsx`**: quando a query está pausada (`q.isPaused`), o botão
+dá lugar a uma linha de status — "Sem conexão. O que já carregou continua na tela; os próximos
+clientes vêm quando a rede voltar." O recorte atual continua visível, que é o comportamento certo
+para quem perdeu o sinal no meio da lista.
+
+**A régua errou duas vezes antes de acertar** — as duas foram medidas e as duas ficaram no registro:
+1. a primeira versão recarregava offline **antes** de o service worker controlar a página e
+   registrava "Sem internet" (a página do navegador) como se o produto não tivesse tela. O app tem
+   SW ativo (`sw.js`, `clients.claim`): recarregar uma vez com rede e só então cortar a conexão
+   mostra o app inteiro;
+2. a segunda capturava o primeiro `h1`/`h2` como "texto de erro" e anotava "Visão geral" — o título
+   da tela. Agora lê `[role="alert"]` primeiro.
+
+`/app/pedidos` continua sem dizer nada no reload offline: a lista fica vazia e não há alerta, enquanto
+contatos, inbox e financeiro mostram "Algo deu errado" com "Tentar novamente". Fica como **F-28,
+aberto e medido** — o caminho de dados de Pedidos é servidor + SW, e o conserto é da frente 7
+(PWA/offline), não deste item.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1261,7 +1297,7 @@ cobriu").
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Cliques reais exercitados pela suíte E2E** (16 jornadas, 254 testes verdes): a contagem por tarefa só existe para `jornada-venda` (**5 cliques + 5 digitações** do login ao pedido criado); nas demais o teste mede o resultado, não o esforço. **F-27 fechado**: o mapa de empresas não abria porque um efeito de URL escrevia no alias `/app/prospeccao` e remontava a tela — a aba Empresas voltava para Campanhas. **Falta**: instrumento de contagem por tarefa (quantos cliques/digitações cada jornada custa) |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | **Medido no dedo** (`lista-busca-e-paginacao.mjs`): contatos 25 → 19 linhas com "E2E" e 25 → 50 com "Carregar mais"; pedidos 49 → 11 com o termo, 47 linhas na visão Tabela e **"47 selecionados"** após selecionar todos. **Não vai para a URL**: filtro em `/app/contacts` e `/app/pedidos` não sobrevive a reload (decisão de produto, 4.5). **Falta**: ordenação por coluna e seleção em massa fora de Pedidos |
 | 2.8  | Formulários                                                         | `[x]`  | **3 formulários submetidos vazios** em produção: os 3 recusam, explicam na página, citam o campo e não gravam (`escrita-e-validacao.mjs`); gate `formulario-que-recusa-explica.test.ts`. Correção de nota rejeitada ganhou o plano de preenchimento (V-31)                                                                                                                                                                                     |
-| 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | Onde cada estado existe: 143/143 telas com ≥1 sinal (V-07). Em execução: vazio, permissão negada (**10 rotas → `/403`**, todas de `manager` pedindo tela de `admin`: `ai/agents/new`, `connections`, `settings/api-tokens`, `settings/billing`, `settings/canal-oficial`, `settings/marca`, `settings/templates`, `settings/tenant`, `settings/tenant/whatsapp`, `team/invite`) e erro (`/500`) **observados**. loading, sucesso e offline não |
+| 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | **Offline medido no navegador** (`offline-e-erro.mjs`): com o service worker ativo, o app ABRE offline e contatos/inbox/financeiro mostram "Algo deu errado … Tentar novamente"; ação pausada ("Carregar mais") agora avisa "Sem conexão" (V-42). **Pedidos offline não avisa** — F-28, aberto. Loading/vazio/erro/sucesso cobertos por V-07/V-09/V-12/V-25; permissão negada em 10 rotas. **Falta**: offline de escrita (fila/outbox) — frente 7 |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[~]`  | **Medido no clique** (`scripts/auditoria/feedback-e-duplicidade.mjs`, POST abortado após 2,5 s — nada grava): cliente novo e template novo mostram botão desabilitado, rótulo de progresso, **1 requisição por envio** e erro visível quando a resposta falha. Antes: **3 POSTs por clique** (V-39 — o cliente repetia erro de rede em método que grava) e 4 de 35 botões de envio mudos (V-40). **Falta**: dedupe server-side da `Idempotency-Key`, hoje lida por **2** rotas |
 | 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | **Contraste medido no navegador** (8 telas, cor final de cada texto sobre o fundo real): de **22 abaixo do mínimo** para **0 de 1.030** depois de V-37/V-38 (V-27 a V-30 na rodada anterior). 27 elementos por tela ficam fora por terem `background-image` — contados, não aprovados. **Foco/teclado**: 301 paradas em 9 telas, 0 sem foco visível, "Pular para o conteúdo" é o primeiro Tab. **Movimento**: 0 de 20 animando com `prefers-reduced-motion`. **Alvos de toque**: p50 de 3 por tela abaixo de 40 px (V-06, sinal). **Falta**: leitor de tela real (NVDA/VoiceOver) e zoom 200% |
 | 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
@@ -1270,14 +1306,14 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **34 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **35 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
-rede), V-40 (botão de envio mudo) e V-41 (a varredura media rota inexistente);
+rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) e V-42 (ação pausada offline sem aviso);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
