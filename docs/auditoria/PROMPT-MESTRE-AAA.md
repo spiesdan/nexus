@@ -706,10 +706,10 @@ Jornadas críticas (16)
 | 5.5  | Radar, prospecção, recuperação, inteligência       | `[ ]`  |
 | 5.6  | Pedidos, catálogo, estoque, compras, expedição     | `[~]`  | [`16-modulo-5.6.md`](16-modulo-5.6.md): 22 telas, ~56 handlers, regras de desconto/crédito/preço/estoque/sincronização medidas; **A1 corrigido** (patch de itens furava alçada/tabela/estoque), A2–A16 abertos com severidade. Auditoria de módulo feita; restam os consertos P0/P1. |
 | 5.7  | Financeiro, títulos, comissões                     | `[ ]`  |
-| 5.8  | Fiscal                                             | `[ ]`  |
-| 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[ ]`  |
-| 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[ ]`  |
-| 5.11 | Administração global                               | `[ ]`  |
+| 5.8  | Fiscal                                             | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): regras e 8 achados; erro da SEFAZ e confirmação de emissão corrigidos |
+| 5.9  | IA, agentes, conhecimento, follow-ups, automações  | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): capacidades medidas; run trace, audit:run e eval são as lacunas |
+| 5.10 | Equipe, configurações, integração, auditoria, LGPD | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): guards medidos; MFA do platform admin corrigido; tokens/equipe abertos |
+| 5.11 | Administração global                               | `[~]`  | [`17-modulos-5.4-5.11.md`](17-modulos-5.4-5.11.md): impersonação/suspensão auditadas; scope e tenant suspenso abertos |
 
 ## Fase 6 — Backend, APIs, banco, regras comerciais
 
