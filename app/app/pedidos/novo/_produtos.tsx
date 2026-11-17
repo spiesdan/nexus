@@ -111,8 +111,7 @@ export function ProductSearch({
       />
       {filtrados.length > 0 && (
         <ul className="rounded-lg border bg-background shadow-sm">
-          {filtrados.map((p, i) => {
-            const ef = efetivo(p);
+          {filtrados.map((p, i) => {            const ef = efetivo(p);
             const ultimo = ultimosPrecos.get(p.id);
             return (
               <li key={p.id}>
@@ -149,6 +148,12 @@ export function ProductSearch({
             );
           })}
         </ul>
+      )}
+      {/* Busca sem resultado não é catálogo vazio: sem esta linha, o operador
+          não distingue "não existe produto com esse termo" de "a lista ainda
+          não carregou" — e digita de novo achando que errou. */}
+      {filtrados.length === 0 && busca.trim() !== "" && (
+        <p className="px-1 text-xs text-muted-foreground">{t("Nenhum produto encontrado.")}</p>
       )}
     </div>
   );

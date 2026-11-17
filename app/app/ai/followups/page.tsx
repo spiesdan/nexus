@@ -41,14 +41,19 @@ export default async function FollowupFlowsPage() {
         title="Follow-ups"
         subtitle={t("Fluxos automáticos de reengajamento — silêncio, etapa, webhook ou resposta do contato, sem intervenção em cada mensagem.")}
       />
-      <Tabs defaultValue="fluxos" className="flex flex-1 flex-col">
+      <Tabs defaultValue={canWrite ? "fluxos" : "fila"} className="flex flex-1 flex-col">
         <TabsList>
-          <TabsTrigger value="fluxos">Fluxos</TabsTrigger>
+          {/* Editar fluxo é manager+; a Fila é leitura de qualquer member. Para
+              quem não pode gerir, a aba "Fluxos" só oferecia um caminho que
+              terminava em 403 no detalhe — a aba some em vez de mentir. */}
+          {canWrite ? <TabsTrigger value="fluxos">Fluxos</TabsTrigger> : null}
           <TabsTrigger value="fila">Fila</TabsTrigger>
         </TabsList>
-        <TabsContent value="fluxos">
-          <FlowsList initialData={flows} canWrite={canWrite} />
-        </TabsContent>
+        {canWrite ? (
+          <TabsContent value="fluxos">
+            <FlowsList initialData={flows} canWrite={canWrite} />
+          </TabsContent>
+        ) : null}
         <TabsContent value="fila">
           <QueueTab canWrite={canWrite} />
         </TabsContent>

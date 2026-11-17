@@ -77,6 +77,17 @@ export function JaEstaPronto({
               }
             />
             <span className={it.pronto ? "" : "text-muted-foreground"}>{it.texto}</span>
+            {/* Verde × âmbar era a única diferença entre "pronto" e "falta".
+                A palavra ao lado é o que sobrevive a daltonismo e a impressão
+                em preto e branco. */}
+            <span
+              className={
+                "ml-auto shrink-0 text-xs " +
+                (it.pronto ? "text-success-fg" : "text-warning-fg")
+              }
+            >
+              {it.pronto ? t("pronto") : t("falta")}
+            </span>
           </li>
         ))}
       </ul>

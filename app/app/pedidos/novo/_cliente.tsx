@@ -197,6 +197,14 @@ export function CustomerSelector({
             ))}
           </ul>
         )}
+        {/* Nenhum contato com esse nome não é erro: o campo aceita nome
+            avulso. Mas o operador precisa SABER que nada foi encontrado, em
+            vez de supor que a busca falhou. */}
+        {filtrados.length === 0 && busca.trim() !== "" && (
+          <p className="px-1 text-xs text-muted-foreground">
+            {t("Nenhum contato encontrado — o nome digitado será usado como cliente avulso.")}
+          </p>
+        )}
         <p className="text-xs text-muted-foreground">{textos.clienteAvulso}</p>
         {buscando && (
           <p className="text-xs text-muted-foreground">{t("Buscando…")}</p>

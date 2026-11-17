@@ -130,6 +130,15 @@ export function SlaTimeline({ received_at, due_at, request_type }: SlaTimelinePr
                 : "text-muted-foreground";
 
           const isLast = idx === milestones.length - 1;
+          // O ponto era a ÚNICA marca de "concluído / em andamento / pendente"
+          // — `aria-hidden` e cor. Quem não distingue o matiz perdia o estado;
+          // agora ele também está escrito, ao lado da data.
+          const rotuloStatus =
+            m.status === "completed"
+              ? t("concluído")
+              : m.status === "current"
+                ? t("em andamento")
+                : t("pendente");
 
           return (
             <li key={m.targetDay} className="flex gap-3">
@@ -147,7 +156,7 @@ export function SlaTimeline({ received_at, due_at, request_type }: SlaTimelinePr
                   D+{m.targetDay} — {t(m.label)}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {format(m.date, "dd 'de' MMM yyyy", { locale: localeDaData })}
+                  {format(m.date, "dd 'de' MMM yyyy", { locale: localeDaData })} · {rotuloStatus}
                 </p>
               </div>
             </li>

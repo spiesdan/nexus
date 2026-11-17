@@ -161,6 +161,11 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
     | null
   >(null);
   const [gerando, setGerando] = React.useState(false);
+  // Falha de leitura NÃO é "sem financeiro": o catch antigo fazia
+  // `setLinhas([])` e a tela dizia "Sem financeiro gerado para este pedido"
+  // depois de um erro de rede — o operador gerava de novo um financeiro que
+  // já existia. O estado de erro é próprio e tem saída (tentar de novo).
+  const [erroLeitura, setErroLeitura] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -168,8 +173,9 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
         `/api/v1/financeiro/recebiveis?pedido_id=${pedidoId}&limit=100`,
       );
       setLinhas(corpo.data ?? []);
+      setErroLeitura(false);
     } catch {
-      setLinhas([]);
+      setErroLeitura(true);
     }
     // O `status` viaja nas dependências de propósito: o "Faturar pedido" gera
     // os recebíveis DENTRO do PATCH, e sem este refetch o card continuava
@@ -200,6 +206,15 @@ function FinanceiroDoPedido({ pedidoId, status }: { pedidoId: string; status: st
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FINANCEIRO")}</p>
       {linhas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
+      ) : erroLeitura ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-error-fg">
+            {t("Não foi possível carregar o financeiro deste pedido.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void recarregar()}>
+            {t("Tentar de novo")}
+          </Button>
+        </div>
       ) : linhas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-muted-foreground">
@@ -251,6 +266,10 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
     | null
   >(null);
   const [emitindo, setEmitindo] = React.useState(false);
+  // Mesmo defeito do financeiro: falha de rede virava "Pedido sem nota
+  // fiscal", e o operador emitia uma segunda NF-e sem saber que a primeira
+  // existia. Erro é erro; vazio é vazio.
+  const [erroLeitura, setErroLeitura] = React.useState(false);
 
   const recarregar = React.useCallback(async () => {
     try {
@@ -258,8 +277,9 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
         `/api/v1/invoices?order_id=${pedidoId}`,
       );
       setNotas(corpo.data ?? []);
+      setErroLeitura(false);
     } catch {
-      setNotas([]);
+      setErroLeitura(true);
     }
   }, [pedidoId]);
 
@@ -286,6 +306,15 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FISCAL")}</p>
       {notas === null ? (
         <p className="text-xs text-muted-foreground">…</p>
+      ) : erroLeitura ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-error-fg">
+            {t("Não foi possível carregar as notas deste pedido.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void recarregar()}>
+            {t("Tentar de novo")}
+          </Button>
+        </div>
       ) : notas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-muted-foreground">{t("Pedido sem nota fiscal.")}</p>

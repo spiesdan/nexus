@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { certificadoPresenteNoServidor } from "@/lib/fiscal/certificado";
@@ -31,6 +32,10 @@ function emBackoff(proximaTentativa: string | null): boolean {
  */
 export default async function ConfiguracoesFiscaisPage() {
   const { org, podeGerir, user } = await contextoFiscal();
+  // O menu já pede `manager` para esta tela; a página não redirecionava. Sem o
+  // gate, um `agent` digitava a URL e via CNPJ, certificado A1 e o ritmo de
+  // sincronização — configuração, não operação.
+  if (!podeGerir) redirect("/app");
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
 

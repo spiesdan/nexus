@@ -1983,3 +1983,51 @@ A legenda do tipo também mudou: era `"Uma resposta ficou presa e não chegou ao
 `"Uma resposta ficou sem confirmação de envio"`. O título do item diz quantas e de que lado
 veio a dúvida; o corpo separa as duas causas; e o botão "Abrir conversa" leva à conversa
 (`/app/inbox?id=<conversa>`), que antes não existia.
+
+## Navegação por papel e telas com erro disfarçado de vazio (fases 4 e 5)
+
+### Menu × servidor: quatro telas restritas no menu, abertas por URL
+
+Medido em 17/11/2026: **74 destinos** no registry (47 `viewer`, 19 `manager`, 7 `admin`; e
+`ai_operator` **não ganha nenhum destino** sobre `agent`). Quatro telas restritas no menu
+**não tinham gate no servidor**: `/app/ai/followups`, `/app/fiscal/configuracoes`,
+`/app/relatorios` e `/app/integrations/nuvemshop`.
+
+**Corrigido:** as três primeiras ganharam `redirect("/app")` para quem está abaixo do papel do
+menu. Em Follow-ups a correção foi outra: a **Fila** é leitura de qualquer membro (decisão
+escrita na própria página), então a aba **Fluxos** — que terminava em 403 no detalhe — passou a
+aparecer só para `manager+`.
+
+**Ressalva que o medidor corrigiu:** a página da Nuvemshop **não vazava credencial** — o `select`
+deixa de fora `oauth_access_token_encrypted`, `oauth_refresh_token_encrypted`,
+`webhook_secret_encrypted` e `webhook_path_token`, e as Server Actions já exigiam `admin`. O gate
+é **consistência menu × página**, não contenção de vazamento. A auditoria anterior dizia "viewer
+vê `tenant_integrations`" sem essa distinção; o texto agora diz o que é verdade.
+
+### Pedidos: falha de rede aparecia como "sem financeiro" e "sem nota fiscal"
+
+Em `app/app/pedidos/[id]/_detalhe.tsx`, o `catch` dos dois cards fazia `setLinhas([])` e
+`setNotas([])`: uma falha de leitura virava o **estado vazio**, e o operador gerava um financeiro
+que já existia ou emitia uma segunda NF-e. Agora cada card tem estado de erro próprio, com
+**"Tentar de novo"** — erro não se disfarça de vazio.
+
+Também: a busca de produto e de cliente no `/app/pedidos/novo` não dizia nada quando não achava
+nada; agora diz "Nenhum produto encontrado" e "Nenhum contato encontrado — o nome digitado será
+usado como cliente avulso".
+
+**Achado que NÃO virou conserto:** um agente apontou a ordem dos botões (Imprimir antes de Criar
+pedido) como violação do cabeçalho. Existe um teste que registra **pedido explícito do dono** —
+`tests/unit/pedidos-imprimir-dia.test.tsx`, "se alguém reordenar de volta, este teste conta a
+história". A ordem foi mantida. Réggua errada não vira achado.
+
+### Status nunca só por cor: 3 casos corrigidos de 13 medidos
+
+| Onde | Antes | Agora |
+| --- | --- | --- |
+| `components/inbox/ConversationListItem.tsx` | bolinha `aria-hidden`, só matiz | `role="img"` + `aria-label`/`title` ("Atendente no comando", "Aguardando atendente"…) |
+| `app/app/lgpd/requests/[id]/SlaTimeline.tsx` | marco só por cor e `aria-hidden` | texto "concluído / em andamento / pendente" ao lado da data |
+| `app/onboarding/_components/JaEstaPronto.tsx` | verde × âmbar | "pronto" / "falta" ao lado de cada item |
+
+Os **12 tokens de estado** (`success/warning/error/info` × base/`-bg`/`-fg`) existem nos três
+blocos de tema e na ponte `@theme inline`; nenhum teste vigiava a presença — agora este parágrafo
+vigia a afirmação.
