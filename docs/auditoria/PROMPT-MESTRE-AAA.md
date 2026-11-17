@@ -957,6 +957,7 @@ não é reconstruído de memória — seria inventar):
 | 16/11/2026 | 11 datas seguiam o idioma do navegador, não o de quem lê                   | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | O produto ignorava a preferência por menos movimento                       | `auditoria` | `enviado (arquivo, auditoria)` |
 | 16/11/2026 | Contraste medido: 48 textos abaixo do mínimo, 22 após 4 correções | `auditoria` | `enviado (arquivo, auditoria)` |
+| 16/11/2026 | A nota rejeitada agora se corrige sozinha pelo cadastro do CNPJ    | `auditoria` | `enviado (arquivo, auditoria)` |
 
 ## 3.6 Verificação de integridade do prompt (feita, não prometida)
 
