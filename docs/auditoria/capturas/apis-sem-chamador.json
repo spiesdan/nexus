@@ -1,0 +1,225 @@
+{
+  "medido_em": "2026-11-17T12:54:48.389Z",
+  "total": 417,
+  "semChamador": 35,
+  "semChamadorInterno": 13,
+  "candidatos": [
+    {
+      "rota": "/api/v1/ai/decisions/propose",
+      "prefixo": "/api/v1/ai/decisions/propose",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/commercial-goals",
+      "prefixo": "/api/v1/commercial-goals",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/commercial-policies",
+      "prefixo": "/api/v1/commercial-policies",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/conversations/arquivar-todas",
+      "prefixo": "/api/v1/conversations/arquivar-todas",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-eventos",
+      "prefixo": "/api/v1/fiscal-eventos",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-fornecedores",
+      "prefixo": "/api/v1/fiscal-fornecedores",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/importar-siscomex",
+      "prefixo": "/api/v1/fiscal-ibpt/importar-siscomex",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-manifestacoes",
+      "prefixo": "/api/v1/fiscal-manifestacoes",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-produtos",
+      "prefixo": "/api/v1/fiscal-produtos",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-relatorios",
+      "prefixo": "/api/v1/fiscal-relatorios",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/fiscal-sincronizacoes",
+      "prefixo": "/api/v1/fiscal-sincronizacoes",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/products/images",
+      "prefixo": "/api/v1/products/images",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    },
+    {
+      "rota": "/api/v1/system/agent",
+      "prefixo": "/api/v1/system/agent",
+      "externa": false,
+      "motivo": "sem menção fora de app/api"
+    }
+  ],
+  "externas": [
+    {
+      "rota": "/api/v1/cron/agenda-google-push",
+      "prefixo": "/api/v1/cron/agenda-google-push",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-refresh",
+      "prefixo": "/api/v1/cron/agenda-google-refresh",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-sync",
+      "prefixo": "/api/v1/cron/agenda-google-sync",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/channel-health",
+      "prefixo": "/api/v1/cron/channel-health",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/contact-phones",
+      "prefixo": "/api/v1/cron/contact-phones",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/contact-proposals-watcher",
+      "prefixo": "/api/v1/cron/contact-proposals-watcher",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/data-retention",
+      "prefixo": "/api/v1/cron/data-retention",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/fiscal-entradas-sync",
+      "prefixo": "/api/v1/cron/fiscal-entradas-sync",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/kb-conversations-batch",
+      "prefixo": "/api/v1/cron/kb-conversations-batch",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/mercos-import",
+      "prefixo": "/api/v1/cron/mercos-import",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/meu-dia-alertas",
+      "prefixo": "/api/v1/cron/meu-dia-alertas",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-fit",
+      "prefixo": "/api/v1/cron/prospecting-fit",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/risk-watcher",
+      "prefixo": "/api/v1/cron/risk-watcher",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/routing-worker",
+      "prefixo": "/api/v1/cron/routing-worker",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/snooze-watcher",
+      "prefixo": "/api/v1/cron/snooze-watcher",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/sync-model-catalog",
+      "prefixo": "/api/v1/cron/sync-model-catalog",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/cron/webhook-log-retention",
+      "prefixo": "/api/v1/cron/webhook-log-retention",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/webhooks/channel/[token]",
+      "prefixo": "/api/v1/webhooks/channel",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/[event]",
+      "prefixo": "/api/v1/webhooks/nuvemshop",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-data-request",
+      "prefixo": "/api/v1/webhooks/nuvemshop/customer-data-request",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-redact",
+      "prefixo": "/api/v1/webhooks/nuvemshop/customer-redact",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/store-redact",
+      "prefixo": "/api/v1/webhooks/nuvemshop/store-redact",
+      "externa": true,
+      "motivo": "rota de integração/cron — chamador é de fora"
+    }
+  ],
+  "porTipoDeGuarda": {
+    "RBAC": 342,
+    "outro": 41,
+    "secret": 34
+  }
+}

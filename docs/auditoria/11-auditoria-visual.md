@@ -1493,6 +1493,32 @@ chegam a 433–533 ms de TBT em CPU 4×, acima do limite de 200 ms, e a causa pr
 gráficos + hidratação) precisa de **repetição suficiente para separar sinal de ruído** — perfil com
 trace do Chrome, não três execuções.
 
+## 6. APIs — 417 rotas, 35 sem chamador interno, zero órfã
+
+A varredura visual não responde a pergunta do 6.4 ("endpoints duplicados, sem uso ou legados").
+Instrumento novo, `scripts/auditoria/apis-sem-chamador.mjs`: para cada `route.ts`, monta o caminho e
+procura o prefixo em todo o código que **não é rota** (`app/` telas e componentes, `components/`,
+`hooks/`, `lib/`, `workers/`, `scripts/`).
+
+| Medida | Resultado |
+| --- | --- |
+| rotas de API | **417** |
+| sem menção fora de `app/api/` | **35** |
+| … de integração (`internal`, `mcp`, `cron`, webhook) | **22** — chamador é de fora, por desenho |
+| … internas ao produto, sem chamador | **13** |
+| duplicadas (mesmo `normalizado` → mais de uma rota) | **0** |
+| com "legacy/deprecated/old/v2" no nome | **0** |
+
+**As 13 internas sem chamador não são lixo:** todas as 13 aparecem em spec (`docs/specs/` e
+`docs/prd/`). São `fiscal-*` (6), `commercial-goals`, `commercial-policies`,
+`conversations/arquivar-todas`, `ai/decisions/propose`, `products/images`,
+`fiscal-ibpt/importar-siscomex` e `system/agent`. Ou seja: **API declarada antes de a tela que a
+consome existir** — dívida de integração, não resto.
+
+**Nada foi removido.** O prompt manda não remover sem consulta, e a lista acima é exatamente o que
+a consulta precisa ver: caminho, por que apareceu e onde está declarado
+(`capturas/apis-sem-chamador.json`).
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
