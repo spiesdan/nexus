@@ -1313,6 +1313,26 @@ quem corta é o `<a class="truncate">` dentro dele. Passou a medir a folha que c
 **Limpeza:** `limpo=true` no artefato — os dois contatos de teste foram apagados e conferidos no
 banco antes de o instrumento terminar.
 
+### INP — a latência da interação, que nenhum tempo de carregamento mede (2.15)
+
+O trace media LCP, CLS e TBT. TBT é thread principal **sem** interação; INP é o outro lado:
+quanto a tela demora a responder a um clique ou tecla. Instrumento novo,
+`scripts/auditoria/inp.mjs`, com interações roteirizadas (tecla no primeiro campo, clique na
+primeira aba, clique em filtro) em 6 telas × 2 condições.
+
+| Condição | INP (pior interação, por `interactionId`) | Interações acima de 200 ms |
+| --- | --- | --- |
+| desktop 1440 | **64 ms** (`/app/pedidos`, `/app/financeiro`, `/app/inbox`) | **0** |
+| celular 390, CPU 4× | **96 ms** (`/app/pedidos`) | **0** |
+
+Limite "bom" do Core Web Vitals é 200 ms; o pior caso medido é metade disso. O evento mais lento foi
+`pointerdown` e `keydown` — nenhum `click` passou de 96 ms.
+
+**O que não foi medido, e por quê:** `/app/kanban` e `/app/ai` ficaram com **0 interações** — o roteiro
+(primeiro campo, primeira aba, filtro) não encontra nenhum dos três na dobra. Não vira "INP ótimo":
+vira lacuna declarada. E INP de campo (CrUX) usa o p98 das interações reais de muitos usuários; este
+número é **laboratório com roteiro**, e o artefato diz isso.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1399,7 +1419,7 @@ cobriu").
 | 2.12 | Casos extremos                                                      | `[~]`  | **Nome longo medido com dado real** (`casos-extremos.mjs`, cria e apaga no banco de E2E): linha da lista ia a **97 px** (nome de 49 caracteres) e **177 px** (128 caracteres com emoji), contra **53 px** depois do `truncate` + `title` (V-44); overflow 0 em 1440 e 320. Extremos fiscais cobertos por teste (IE ausente/outra UF, CNPJ inválido). **Falta**: valor extremo em tabela de pedido e tabela com 1.000+ linhas |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 6 larguras**: 320 × 20 rotas, 360 × 5, 430 × 5, 390 × 129, 834 × 32, 1440 × 129 — nenhuma rola na horizontal, 320 inclusive (V-41 corrigiu o 404 que era da régua). **Alvos < 40 px**: p50 3 em 390, **7,5 em 320** (máx 99 em `/app/pedidos`) — V-06 segue sinal. **Falta**: teclado virtual sobre campo focado e rotação |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
-| 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
+| 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
 **Fase 2: em andamento.** **37 achados corrigidos** com medida antes/depois — as 20 seções
