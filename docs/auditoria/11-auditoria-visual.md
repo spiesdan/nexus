@@ -2116,3 +2116,33 @@ Instrumento: `scripts/auditoria/shell-e-navegacao.mjs`, contra o build de produ�
 `Breadcrumb` (devolve `null` com menos de duas migalhas) — não é defeito; o teste só
 deixou de chamar de "sem trilha" o que nunca teve o que mostrar. O que **não** foi medido:
 leitor de tela real e a ordem de foco da paleta com resultados dinâmicos.
+
+## Campanha travada por leitura truncada do ledger (17/11/2026)
+
+Relato do dono: campanha **ativa**, sem pausa, sem erro, sem envio há mais de uma hora. A
+tela mostrava 26 confirmadas e o motor devolvia `intervalo` a cada tick.
+
+**O que os números diziam:** 33 aceitas pelo transporte, 26 com `ack ≥ 1`, 7 sem confirmação
+— o "26" não era a 26ª mensagem, era o recorte de confirmadas. O último envio foi às 16:04
+UTC.
+
+**A causa, medida:** a organização tinha **1.002** linhas em `prospecting_sends`. O motor lia o
+ledger **sem paginação** (`.select()` em `agendado.ts`), e o PostgREST corta em **1.000**. As
+duas linhas de fora eram exatamente uma de cada campanha ativa. O motor achava que aquele
+prospect ainda estava pendente, tentava reservar, a unique `(organization_id, prospect_id)`
+recusava, e o código tratava "reserva perdida" como **`intervalo`** — um motivo que não era
+ritmo. Nada era inserido, o mesmo prospect continuava em primeiro: laço infinito.
+
+**Conserto:**
+1. **paginação** do ledger em páginas de 1.000, com ordem estável (`enviado_em`, `prospect_id`);
+   acima de 50.000 linhas a campanha é pulada com `ledger_indisponivel`, em vez de truncar em
+   silêncio;
+2. motivo próprio **`reserva_perdida`** — a tela não chama mais de "intervalo" o que não é
+   ritmo;
+3. teste de regressão com **1.002 linhas** onde a linha do prospect está na 1.002ª posição: o
+   motor tem de enxergá-la e mandar para o próximo, não reescolher o primeiro.
+
+**Destravar antes do deploy:** `scripts/prospeccao/destravar-campanha.ts --campanha <prefixo>`
+remove da audiência só quem já tem `message_id` (comprovante). `--seco` mostra o que faria.
+Reserva sem comprovante não é envio e **não** é removida. Provado no banco E2E: audiência
+2 → 1, o prospect com comprovante saiu e o próximo ficou.

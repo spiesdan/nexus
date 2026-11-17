@@ -117,6 +117,19 @@ export type MotivoDoPulo =
   | "sem_mensagem"
   | "sem_prospect_elegivel"
   | "falha_envio"
+  /**
+   * A reserva no ledger voltou vazia: o prospect já tinha linha. Com a leitura
+   * paginada isto é uma corrida real entre ticks; sem ela era a linha que o
+   * PostgREST cortava em 1.000 e o tick reescolhia para sempre. O motivo
+   * próprio impede a tela de chamar de "intervalo" o que não é ritmo.
+   */
+  | "reserva_perdida"
+  /**
+   * O ledger passou do teto de leitura e a paginação não conseguiu fechar.
+   * Melhor pular a campanha com o motivo visível do que escolher prospect às
+   * cegas e travar no primeiro colocado.
+   */
+  | "ledger_indisponivel"
   | "erro";
 
 export interface ResumoAgendado {
@@ -211,6 +224,44 @@ const COLUNAS =
   "id, organization_id, nome, publico, prospect_ids, contato_ids, categorias, mensagens, " +
   "mensagem_tipo, template_name, template_language, template_contract_hash, template_values, " +
   "templates_por_categoria, session_id, espaco_ms, limite_diario, data_inicio, data_fim, janelas, ultimo_envio_at";
+
+/** O PostgREST corta em 1.000 linhas. O motor lia o ledger sem paginar: com
+ *  1.002 linhas, as duas que ficavam de fora eram exatamente as que travavam
+ *  as campanhas — o tick achava que o prospect ainda estava pendente, tentava
+ *  reservar de novo, a unique recusava e ele repetia para sempre.
+ *
+ *  Pagina de 1.000 em 1.000. O teto de 50 mil é guarda de memória: acima
+ *  disso a consulta precisa filtrar pela audiência, e o motivo fica visível
+ *  (`ledger_indisponivel`) em vez de truncar em silêncio. */
+const PAGINA_DO_LEDGER = 1_000;
+const TETO_DO_LEDGER = 50_000;
+
+async function lerLedgerDeEnvios(
+  admin: SupabaseClient,
+  organizationId: string,
+): Promise<Array<{ prospect_id: string; campaign_id: string; enviado_em: string; message_id: string | null }>> {
+  const todas: Array<{
+    prospect_id: string;
+    campaign_id: string;
+    enviado_em: string;
+    message_id: string | null;
+  }> = [];
+  for (let inicio = 0; inicio < TETO_DO_LEDGER; inicio += PAGINA_DO_LEDGER) {
+    const { data, error } = await admin
+      .from("prospecting_sends")
+      .select("prospect_id, campaign_id, enviado_em, message_id")
+      .eq("organization_id", organizationId)
+      // Ordem estável: `range` sem ordenação pode repetir ou pular linha.
+      .order("enviado_em", { ascending: true })
+      .order("prospect_id", { ascending: true })
+      .range(inicio, inicio + PAGINA_DO_LEDGER - 1);
+    if (error) throw new Error(`ledger: ${error.message}`);
+    const pagina = (data ?? []) as typeof todas;
+    todas.push(...pagina);
+    if (pagina.length < PAGINA_DO_LEDGER) return todas;
+  }
+  throw new Error(`ledger acima de ${TETO_DO_LEDGER} linhas`);
+}
 
 export async function processarCampanhasAgendadas(
   admin: SupabaseClient,
@@ -405,16 +456,18 @@ export async function processarCampanhasAgendadas(
       // prospect enviado por OUTRA campanha também sai desta lista. Sem isso,
       // a segunda campanha escolheria a empresa de novo e a unique global
       // faria o tick reservar nada — a campanha ficaria presa no mesmo ponto.
-      const { data: linhasEnviadas } = await admin
-        .from("prospecting_sends")
-        .select("prospect_id, campaign_id, enviado_em, message_id")
-        .eq("organization_id", campanha.organization_id);
-      const todasEnviadas = (linhasEnviadas ?? []) as unknown as Array<{
-        prospect_id: string;
-        campaign_id: string;
-        enviado_em: string;
-        message_id: string | null;
-      }>;
+      let todasEnviadas: Awaited<ReturnType<typeof lerLedgerDeEnvios>>;
+      try {
+        todasEnviadas = await lerLedgerDeEnvios(admin, campanha.organization_id);
+      } catch (e) {
+        logger.error("[prospeccao.agendado] ledger de envios indisponível", {
+          organizationId: campanha.organization_id,
+          campaignId: campanha.id,
+          causa: e instanceof Error ? e.message : String(e),
+        });
+        resumo.pulados.push({ campanha: campanha.id, motivo: "ledger_indisponivel" });
+        continue;
+      }
       const enviadas = todasEnviadas.filter((l) => l.campaign_id === campanha.id);
       const jaEnviados = new Set(todasEnviadas.map((l) => l.prospect_id));
       const restantes = listaFechada.filter((id) => !jaEnviados.has(id));
@@ -684,8 +737,11 @@ export async function processarCampanhasAgendadas(
         continue;
       }
       if (!reserva || reserva.length === 0) {
-        // Outro tick reservou este prospect entre a leitura e o insert.
-        resumo.pulados.push({ campanha: campanha.id, motivo: "intervalo" });
+        // Outro tick reservou este prospect entre a leitura e o insert — OU a
+        // linha já existia e a leitura não a viu (o corte de 1.000 do
+        // PostgREST, antes da paginação). "Intervalo" era mentira: o ritmo
+        // não tinha nada a ver.
+        resumo.pulados.push({ campanha: campanha.id, motivo: "reserva_perdida" });
         continue;
       }
 
