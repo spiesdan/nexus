@@ -1,0 +1,60 @@
+{
+  "medido_em": "2026-11-17T14:43:21.161Z",
+  "resumo": {
+    "tokensPorTema": {
+      "claro": 127,
+      "light": 127,
+      "dark": 127
+    },
+    "fontes": [
+      {
+        "nome": "sans",
+        "pilha": "var(--font-inter), ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif"
+      },
+      {
+        "nome": "mono",
+        "pilha": "var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+      }
+    ],
+    "tipografiaPropria": true,
+    "gradeBase4": true,
+    "escalaDeEspaco": [
+      0,
+      4,
+      8,
+      12,
+      16,
+      20,
+      24,
+      32,
+      40,
+      48,
+      64,
+      80,
+      96,
+      128
+    ],
+    "raios": [
+      "--radius-none=0px",
+      "--radius-sm=4px",
+      "--radius-md=8px",
+      "--radius-lg=12px",
+      "--radius-xl=16px",
+      "--radius-full=9999px"
+    ],
+    "sombras": [
+      "--shadow-xs=rgba(24, 25, 37, 0.05) 0px 1px 2px 0px, ",
+      "--shadow-sm=rgba(24, 25, 37, 0.06) 0px 1px 2px 0px, ",
+      "--shadow-md=rgba(24, 25, 37, 0.07) 0px 2px 4px -1px,",
+      "--shadow-lg=rgba(24, 25, 37, 0.08) 0px 4px 8px -2px,",
+      "--shadow-xl=rgba(24, 25, 37, 0.1) 0px 8px 16px -4px,"
+    ],
+    "duracoes": [
+      "--duration-fast=120ms",
+      "--duration-base=200ms",
+      "--duration-slow=320ms"
+    ],
+    "reducedMotion": true,
+    "escalasDeFonteNoCss": []
+  }
+}

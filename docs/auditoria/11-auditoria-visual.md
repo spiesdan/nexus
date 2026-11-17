@@ -1779,6 +1779,29 @@ na exigência de gerente.
 
 O pedido usado na prova foi devolvido ao estado original (`rascunho`) depois da medição.
 
+## 3. Identidade visual — tokens medidos no CSS (fase 3)
+
+Instrumento novo, `scripts/auditoria/tokens-do-tema.mjs`, lê `app/globals.css` e compara com os
+números que o prompt fixa (3.2 a 3.12).
+
+| Item do prompt | Exigência | Medido | Situação |
+| --- | --- | --- | --- |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | **127 tokens** em `:root`, **127** em `[data-theme="light"]`, **127** em `[data-theme="dark"]` | **igual** |
+| 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
+| 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
+| 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
+| 3.10 raios **6/10/14** | 6, 10, 14 | `--radius-*`: **4, 8, 12, 16, 9999** (+ `none`) — e `DESIGN.md` declara cards 16, inputs/imagens 8, tabelas 24, botões/tags pill | **divergência declarada** |
+| 3.11 sombras sutis | poucas, curtas | **5 níveis** (`xs`…`xl`), todos com alfa ≤ 0,16 | **ok** |
+| 3.12 movimento 120–220 ms + reduced motion | faixa e preferência | `fast` 120 ms, `base` 200 ms, `slow` **320 ms**; `prefers-reduced-motion` **respeitado** (V-26) | **ok, com `slow` acima** |
+
+**A divergência que fica escrita:** os raios do produto são **4/8/12/16/24/pill**, não 6/10/14. Não é
+descuido — está declarado no `DESIGN.md` (a identidade do produto), e trocar os tokens mudaria todo
+canto de todo componente de uma vez. O prompt pede 6/10/14; o produto declara outra escala. **A
+decisão é do dono, não da auditoria** — e fica registrada como divergência, não como "corrigido".
+
+`--duration-slow` a 320 ms também passa dos 220 ms do item 3.12 — usado em transição de painel
+grande, não em microinteração. Mesma natureza: medido e declarado.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
