@@ -1285,6 +1285,34 @@ detecção passou a ser por **cor computada** (fundo opaco que se destaca do fun
 "linha longa" medida pela **largura da caixa** dava 138 caracteres numa frase de 40 — caixa larga não
 é linha longa; agora um `Range` conta as linhas renderizadas e divide o texto por elas.
 
+### V-44 · Média · Nome longo dobrava a linha da lista; nome de import de planilha quadruplicava
+
+O item 2.12 pede casos extremos. O seed limpo não tem nenhum, então o instrumento
+(`scripts/auditoria/casos-extremos.mjs`) **cria** dois contatos no banco de E2E, mede e **apaga** —
+inclusive em erro. Dois extremos, de propósito: um realista (49 caracteres, nome composto de gente)
+e um patológico (128 caracteres com emoji, o que um import de planilha traz).
+
+| Medida (lista de contatos) | Antes | Depois |
+| --- | --- | --- |
+| altura da linha — nome realista | **97 px** | **53 px** |
+| altura da linha — nome patológico | **177 px** | **53 px** |
+| nome truncado com reticências | **não** (quebrava em 3–6 linhas) | **sim**, com o nome inteiro no `title` e na ficha |
+| overflow horizontal (1440 e 320) | 0 | 0 |
+
+Uma linha normal mede ~44 px. Ou seja: **um** contato com nome composto ocupava o espaço de dois, e
+um vindo de import ocupava o de quatro — na tela que a operação mais abre. Nada estava "quebrado";
+estava caro de ler.
+
+**Corrigido em `components/contacts/ContactsTable.tsx`**: a célula do nome ganhou `max-w-[240px]` no
+`<Link>` com `truncate` e `title`, e o e-mail (que também estourava) ganhou `max-w-[220px] truncate`.
+O `title` é o que impede o corte de virar perda de informação.
+
+**A régua errou uma vez:** a primeira medição dizia "não truncado" porque olhava o `<td>` —
+quem corta é o `<a class="truncate">` dentro dele. Passou a medir a folha que contém o texto.
+
+**Limpeza:** `limpo=true` no artefato — os dois contatos de teste foram apagados e conferidos no
+banco antes de o instrumento terminar.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1368,20 +1396,20 @@ cobriu").
 | 2.9  | Estados (loading, vazio, erro, sucesso, offline, permissão negada)  | `[~]`  | **Offline medido em 5 telas** (`offline-e-erro.mjs`): com SW ativo o app abre; contatos/inbox/financeiro mostram "Algo deu errado … Tentar novamente"; ação pausada avisa "Sem conexão" (V-42) e o Audit Log deixou de dizer "Nenhum log" quando a busca só estava pausada (V-43). **Pedidos offline segue mudo** — F-28. Loading/vazio/erro/sucesso por V-07/V-09/V-12/V-25; permissão negada em 10 rotas. **Falta**: offline de escrita (fila/outbox) — frente 7 |
 | 2.10 | Feedback imediato e prevenção de duplicidade                        | `[~]`  | **Medido no clique** (`scripts/auditoria/feedback-e-duplicidade.mjs`, POST abortado após 2,5 s — nada grava): cliente novo e template novo mostram botão desabilitado, rótulo de progresso, **1 requisição por envio** e erro visível quando a resposta falha. Antes: **3 POSTs por clique** (V-39 — o cliente repetia erro de rede em método que grava) e 4 de 35 botões de envio mudos (V-40). **Falta**: dedupe server-side da `Idempotency-Key`, hoje lida por **2** rotas |
 | 2.11 | A11y: contraste, foco, teclado, leitor, toque, zoom, reduced motion | `[~]`  | **Contraste medido no navegador** (8 telas, cor final de cada texto sobre o fundo real): de **22 abaixo do mínimo** para **0 de 1.030** depois de V-37/V-38 (V-27 a V-30 na rodada anterior). 27 elementos por tela ficam fora por terem `background-image` — contados, não aprovados. **Foco/teclado**: 301 paradas em 9 telas, 0 sem foco visível, "Pular para o conteúdo" é o primeiro Tab. **Movimento**: 0 de 20 animando com `prefers-reduced-motion`. **Alvos de toque**: p50 de 3 por tela abaixo de 40 px (V-06, sinal). **Falta**: leitor de tela real (NVDA/VoiceOver) e zoom 200% |
-| 2.12 | Casos extremos                                                      | `[~]`  | Extremos fiscais cobertos por teste: IE ausente e IE de outra UF, CNPJ com dígito inválido, documento fora de 11/14, campo acima dos 60 do leiaute, fonte pública fora do ar (V-31). Extremos de volume/encoding não exercitados                                                                                                                                                                                                              |
+| 2.12 | Casos extremos                                                      | `[~]`  | **Nome longo medido com dado real** (`casos-extremos.mjs`, cria e apaga no banco de E2E): linha da lista ia a **97 px** (nome de 49 caracteres) e **177 px** (128 caracteres com emoji), contra **53 px** depois do `truncate` + `title` (V-44); overflow 0 em 1440 e 320. Extremos fiscais cobertos por teste (IE ausente/outra UF, CNPJ inválido). **Falta**: valor extremo em tabela de pedido e tabela com 1.000+ linhas |
 | 2.13 | Largura/overflow, sticky, modais, drawers em telas estreitas        | `[~]`  | **Overflow 0 em 6 larguras**: 320 × 20 rotas, 360 × 5, 430 × 5, 390 × 129, 834 × 32, 1440 × 129 — nenhuma rola na horizontal, 320 inclusive (V-41 corrigiu o 404 que era da régua). **Alvos < 40 px**: p50 3 em 390, **7,5 em 320** (máx 99 em `/app/pedidos`) — V-06 segue sinal. **Falta**: teclado virtual sobre campo focado e rotação |
 | 2.14 | Idioma, moeda, datas, timezone, convenções BR                       | `[~]`  | pt-BR e R$ corretos; formato de data depende do navegador (V-04, decidir)                                                                                                                                                                                                                                                                                                                                                                      |
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace do navegador** (`scripts/auditoria/desempenho.mjs`, 12 telas × 2 condições, 24 medições): desktop LCP máx **924 ms** (`/app/agenda`), CLS máx **0,026** (`/app/inbox`), TBT 0–17 ms; celular (CPU 4×, 1,6 Mbps/150 ms) LCP máx **1.428 ms**, CLS máx **0,037** (`/app/inbox`), TBT máx **181 ms** (`/app/pedidos`, sinal — repete entre rodadas, não provado como defeito). O CLS de `/app/financeiro`, que era **0,130**, é **0,000** depois da V-34. Artefatos: `capturas/desempenho-producao.json` e `...-antes-v34.json`. **Falta**: INP (exige interação real, é o que a suíte E2E exercita) e custo de render dos gráficos por canvas                                                                                                                                                                                                                                    |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | O título vem de UMA fonte e cada tela mantém sua composição                                                                                                                                                                                                                                                                                                                                                                                    |
 
-**Fase 2: em andamento.** **36 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **37 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
 (o instrumento que apagava o próprio artefato), V-34 (esqueleto de KPI com grid divergente), V-35 (segundo `h1` na subtela de prospecção) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
-rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) e V-43 (estado vazio mentindo offline);
+rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) e V-44 (nome longo quadruplicando a linha);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
