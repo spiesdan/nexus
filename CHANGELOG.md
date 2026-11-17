@@ -8,6 +8,64 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.55.0] — 2026-11-17
+
+### Adicionado
+
+- **Pedido aprovado também pode gerar NF-e** A emissão só aceitava pedido concluído, faturado, expedido ou entregue. Agora o
+  pedido **aprovado** também entra na fila: quem aprova o orçamento pode emitir a
+  nota sem antes marcar o pedido como faturado (o que diria, mentindo, que a nota
+  já existia no ERP).
+
+  A regra é uma só — `STATUS_FATURAVEL` — e vale para a lista de "Emitir nota", a
+  pré-validação da emissão e o assistente. `rascunho` e `em_analise` continuam
+  sendo intenção, não fato fiscal.
+
+### Corrigido
+
+- **Uma falha crítica em dependência foi fechada, junto de seis altas** A auditoria de dependências encontrou uma vulnerabilidade **crítica** no SDK de
+  monitoramento: com a rota de túnel ativa, uma versão do `@sentry/nextjs` permitia
+  contornar o middleware — e é o middleware que aplica a checagem de sessão na
+  borda. A versão foi atualizada para a corrigida.
+
+  Junto dela subiram as correções de severidade alta e média que já tinham versão
+  publicada: `zod`, `undici`, `body-parser`, `hono`, `fast-uri`, `seroval`, `qs`,
+  `minimatch`, `glob` e `@hono/node-server`. O Next.js também foi atualizado para a
+  última correção da mesma série 16.4.
+
+  Continua em aberto uma severidade alta em `picomatch` (não há versão corrigida
+  publicada) e uma média em `uuid` que vem da CLI do Capacitor, usada em build.
+  Nenhuma das duas está no caminho de execução do servidor.
+
+  Para conferir na sua instalação: `pnpm audit --prod`.
+
+- **Atualizar do Mercos não morre mais esperando a tela de login** A coleta do Mercos às vezes desistia antes de a tela de login terminar de
+  renderizar: o Playwright espera 30s por padrão, o formulário não aparecia nesse
+  prazo, e o "Atualizar do Mercos" falhava sem ler pedido nenhum. Agora a espera
+  da tela de login é de 90s (ajustável em `MERCOS_LOGIN_TIMEOUT_MS`) e o resto da
+  coleta continua igual.
+
+- **Nota já autorizada não é transmitida de novo** A mesma nota podia ser enviada duas vezes e gerar dois documentos fiscais
+  válidos para uma venda só. Medido nesta instalação: o pedido 19631 recebeu as
+  NF-e 4641 e 4642, autorizadas com quatro minutos de diferença; a segunda
+  sobrescreveu número, chave e XML da linha, e a 4641 sumiu da tela mesmo
+  existindo na SEFAZ.
+
+  Agora o dreno relê a nota imediatamente antes de transmitir e encerra o job se
+  ela já saiu de `em_emissao` ou já tem chave de acesso. E, se a SEFAZ autorizar
+  uma segunda nota para a mesma linha, a primeira autorização é mantida: a
+  segunda vira um evento visível com as duas chaves e os dois protocolos, para
+  cancelamento no fisco — nunca uma substituição silenciosa.
+
+- **Controle da campanha conta todos os envios, mesmo acima de 1000** O painel de controle da campanha e os cartões da lista liam o registro de
+  envios numa única consulta. O PostgREST corta a resposta em 1000 linhas — e
+  acima disso o controle mostrava empresas "faltando" que já tinham recebido, e
+  o cartão subcontava enviadas e faltantes.
+
+  Agora as duas leituras são paginadas, com a mesma ordem estável do motor
+  (`enviado_em, id`): o controle e a lista contam o que aconteceu de verdade.
+  O motor já lia o ledger inteiro; o que faltava era a tela.
+
 ## [1.54.0] — 2026-11-17
 
 ### Adicionado
@@ -7332,7 +7390,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.54.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.55.0...HEAD
+[1.55.0]: https://github.com/spiesdan/nexus/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/spiesdan/nexus/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/spiesdan/nexus/compare/v1.52.6...v1.53.0
 [1.52.6]: https://github.com/spiesdan/nexus/compare/v1.52.5...v1.52.6
