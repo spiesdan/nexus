@@ -1,0 +1,20 @@
+{
+  "base": "http://localhost:3011",
+  "medido_em": "2026-11-17T12:12:25.701Z",
+  "agentOriginal": "Agente E2E 5605",
+  "tokenCriado": true,
+  "agentRenomeado": true,
+  "renomear": {
+    "rotuloDurante": "Salvar",
+    "nomeNoBanco": "Agent auditoria AAA",
+    "h1": "Agents de IA",
+    "funcionou": true
+  },
+  "token": {
+    "rotuloDoBotao": "Criar",
+    "dialogoDepois": "Token criado Copie e guarde agora — não conseguiremos exibir novamente. dsk_{token redigido} Copiar para clipboard Salve este token agora — ele não será mostrado novamente. Fechar Close",
+    "criadoNoBanco": 1,
+    "valorUnicoVisivel": true
+  },
+  "limpo": true
+}
