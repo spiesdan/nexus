@@ -713,3 +713,32 @@ Fallback de custo mínimo: manter `evidence/` no git e trocar só o **alvo** das
 O conserto não foi aplicado nesta rodada: são 181 chamadas em 54 arquivos e a escolha entre
 "baseline comparado" e "só redirecionar" muda o que o time espera de `evidence/`. Fica diagnosticado,
 com o custo medido, para decisão.
+
+### 3.11 Cobertura E2E por tela — 156 telas, 125 literais, 15 dinâmicas, 16 sem menção
+
+Medido em 17/11/2026 cruzando `find app -name page.tsx` (156 rotas, grupos e slots
+normalizados) com o que cada uma das 100 specs realmente abre (`page.goto`,
+`toHaveURL`, `waitForURL` e as listas de rotas visitadas em laço).
+
+| Categoria | Telas |
+| --- | --- |
+| rota literal visitada por alguma spec | **125** |
+| só por padrão dinâmico (`:id`) ou lista em laço | **15** |
+| **nenhuma menção** | **16** |
+
+As 16 sem menção: `/admin/audit/:entryId`, `/admin/inbox/:conversationId`,
+`/admin/incidents/:id`, `/admin/lgpd/requests/:id`, `/admin/tenants/:id/health`,
+`/admin/users/:id`, `/app/ai/routers/:id`, **`/app/campanhas`**,
+`/app/expedicao/:id/fechamento`, `/app/frota`, `/app/laboratorio`, `/app/leads/:id`,
+`/app/lgpd/requests/:id`, `/app/prospeccao/nova`, `/app/venda-automatica`, `/o/:token`.
+
+**A mais incômoda era `/app/campanhas`**: é o destino de `/app/prospeccao` e concentra o
+trabalho do dia (campanha + prospecção). A spec do mapa cobre a ABA Empresas; a tela, não.
+Criada `campanhas-tela.spec.ts` (verde em 7,1 s): abre pela URL própria, acha o `h1`
+"Campanha", alterna as duas subtelas, confere que a URL acompanha (`?subtela=prospeccao`) e
+que a escolha **permanece** 2 s depois — o teste que o F-27 pedia no nível da tela.
+
+**Limites da medição, declarados:** rota montada por variável (`page.goto(BASE + ...)`) não
+é vista; `toHaveURL(new RegExp(...))` escapa da extração; e tela alcançada só por clique com
+`toHaveURL` genérico pode cair em "sem menção" (candidatas: `/admin/users/:id` e
+`/admin/incidents/:id`).
