@@ -130,3 +130,48 @@ describe("sem IP identificável — o balde global que era um DoS", () => {
     expect(veredito).toEqual([false, false, true]);
   });
 });
+
+/**
+ * P1 — MFA e código de recuperação também têm teto.
+ *
+ * O `verifyMfa` já tinha um contador em COOKIE. Ele protege contra erro de
+ * digitação, não contra ataque: quem apaga o cookie recomeça do zero, e 6
+ * dígitos são 10^6 tentativas. O código de recuperação (8 caracteres) não
+ * tinha teto nenhum. Aqui se prova que o balde POR IDENTIFICADOR barra mesmo
+ * quando o IP muda a cada tentativa — o caso distribuído.
+ */
+describe("authRateLimited — identificador (MFA e recuperação)", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it("AUTH_LIMITS tem teto por identificador para mfa e recovery_code", async () => {
+    const { AUTH_LIMITS } = await import("./rate-limit");
+    expect(AUTH_LIMITS.mfa.id).toBeGreaterThan(0);
+    expect(AUTH_LIMITS.mfa.windowSec).toBeGreaterThan(0);
+    expect(AUTH_LIMITS.recovery_code.id).toBeGreaterThan(0);
+    expect(AUTH_LIMITS.recovery_code.windowSec).toBeGreaterThan(0);
+  });
+
+  it("barra o código de recuperação por e-mail mesmo trocando de IP", async () => {
+    const { authRateLimited, AUTH_LIMITS } = await import("./rate-limit");
+    const veredito: boolean[] = [];
+    for (let i = 0; i < 6; i++) {
+      comIp(`203.0.113.${100 + i}`); // IP diferente a cada tentativa
+      veredito.push(
+        await authRateLimited("recovery_code", "vitima@exemplo.test", AUTH_LIMITS.recovery_code),
+      );
+    }
+    expect(veredito).toEqual([false, false, false, false, false, true]);
+  });
+
+  it("o balde de MFA é por usuário: dois usuários não se atrapalham", async () => {
+    const { authRateLimited, AUTH_LIMITS } = await import("./rate-limit");
+    comIp("203.0.113.200");
+    for (let i = 0; i < 10; i++) {
+      await authRateLimited("mfa", "usuario-a", AUTH_LIMITS.mfa);
+    }
+    comIp("203.0.113.201");
+    expect(await authRateLimited("mfa", "usuario-b", AUTH_LIMITS.mfa)).toBe(false);
+  });
+});

@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { AUTH_LIMITS, authRateLimited } from "@/lib/auth/rate-limit";
 import { safeNext } from "@/lib/auth/safe-next";
 
 import { createClient } from "@/lib/supabase/server";
@@ -42,6 +43,14 @@ export async function verifyMfa(code: string, next?: string): Promise<VerifyMfaR
   const { data: factorsData } = await supabase.auth.mfa.listFactors();
   const totp = factorsData?.totp?.find((f) => f.status === "verified");
   if (!totp) redirect("/app/inbox");
+
+  // Teto POR USUÁRIO (independente do navegador). O contador de cookie abaixo
+  // é burlável — quem apaga o cookie recomeça do zero —, e 6 dígitos são 10^6
+  // tentativas. Este balde é keyed no id do usuário (hasheado) e sobrevive ao
+  // cookie; os dois juntos cobrem o erro de digitação e a varredura.
+  if (await authRateLimited("mfa", user.id, AUTH_LIMITS.mfa)) {
+    return { ok: false, error: "mfa_locked", retry_in_seconds: AUTH_LIMITS.mfa.windowSec };
+  }
 
   // Lockout check (cookie counter).
   const store = await cookies();
