@@ -1939,3 +1939,39 @@ As **16 jornadas** (J1–J16) foram mapeadas, medidas e executadas: **254 testes
 orçamento de teste) e 1 achado novo (F-27, o mapa de empresas) — **fechado em 17/11** com a causa
 provada: um efeito de URL escrevia no alias `/app/prospeccao`, navegava e remontava a tela, e a aba
 Empresas voltava para Campanhas. Relatório: [`13-jornadas.md`](13-jornadas.md).
+
+## Central de avisos — a pilha de 27 avisos idênticos, medida e desfeita
+
+Medido em 17/11/2026 a partir do relato do dono (**27 avisos críticos em aberto**, todos
+"Uma resposta não chegou ao cliente"). O `git grep` achou a origem em um único lugar:
+`app/api/v1/cron/recover-stuck-messages/route.ts`.
+
+**De onde vem:** toda mensagem outbound nasce `queued`; quando o WAHA aceita, vira `sending`
+com `external_id`; só o webhook `message.ack` a promove a `sent`/`delivered`/`read`. Se o ack
+não chega em 5 min (regra W-12), o cron marca `failed` e abre um aviso.
+
+**Três defeitos, todos provados no código e reproduzidos no banco:**
+
+| Defeito | Prova |
+| --- | --- |
+| **um aviso por rodada**, sem dedup | o cron inseria a cada tick; a condição não sumia e a Central acumulava |
+| **nada fechava o aviso** quando a causa desaparecia | nenhuma consulta a `agent_inbox_items` com `status='open'` para resolver |
+| **"não chegou ao cliente" era afirmação sem lastro** | `sending` cobre dois mundos: `external_id` nulo (nunca saiu) e preenchido (saiu, faltou o ack) |
+
+**Conserto:** o cron passou a manter **um aviso por organização** — atualiza o aberto, fecha
+os duplicados que já existirem e resolve sozinho quando a rodada não encontra nada preso. O
+texto separa as duas causas e diz que, no caso do `external_id` preenchido, é provável que a
+mensagem tenha chegado. O aviso ganhou link para a conversa (`/app/inbox?id=`).
+
+**Prova de ponta a ponta no banco E2E** (3 avisos abertos + 1 mensagem sem id + 1 com id):
+
+```
+ANTES:  avisos = 3  abertos = 3
+RODADA: {"scanned":2,"failed":2,"organizations":1,"resolved":2}
+DEPOIS: total = 3  abertos = 1
+TÍTULO: 2 respostas ficaram sem confirmação de envio
+```
+
+Os dois `failed` mantêm o `external_id` intacto — é o que permite ao operador distinguir
+"não saiu" de "saiu sem confirmação" antes de decidir reenviar. `tests/unit/recover-stuck-messages.test.ts`
+passou de 7 para 11 casos (dedup, colapso da pilha, texto honesto, fechamento automático).
