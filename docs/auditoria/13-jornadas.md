@@ -610,7 +610,7 @@ estado estava certo. Quem navegava era um efeito de URL que ninguém suspeitava 
 só sincronizar filtros. Navegação escondida dentro de efeito é a classe de defeito que só aparece
 quando se mede o DOM em vez de ler o componente.
 
-### 3.7 F-28 (**aberto**) — Pedidos offline não diz que a lista falhou
+### 3.7 F-28 (**corrigido em 17/11/2026**) — Pedidos offline não dizia que a lista falhou
 
 Medido em 17/11/2026 com `scripts/auditoria/offline-e-erro.mjs`, com o service worker ativo e o
 navegador em modo offline:
@@ -632,6 +632,13 @@ checklist. Fica registrado com a medida, para não virar "não testado" daqui a 
 
 **O que já foi corrigido neste tema:** ação pausada offline (o "Carregar mais" que não fazia nada)
 — V-42, em `11-auditoria-visual.md`.
+
+**Correção (17/11/2026):** `app/app/pedidos/_client.tsx` assina `online`/`offline` e mostra um
+`role="alert"` com "Sem conexão. A lista pode estar desatualizada…" + "Tentar novamente"; a volta da
+rede dispara `router.refresh()`. A falha da consulta do servidor também deixou de virar lista vazia
+(o erro é logado e a tela diz "Não foi possível carregar os pedidos."). Gate:
+`tests/unit/pedidos-offline.test.tsx`. A reme­dição com `offline-e-erro.mjs` fica para a próxima
+rodada do instrumento; a prova deste conserto é o teste de componente.
 
 ### 3.8 F-29 (**diagnosticado**) — o TBT das telas de gráfico é JavaScript, não desenho
 

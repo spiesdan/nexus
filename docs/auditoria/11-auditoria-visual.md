@@ -1192,7 +1192,7 @@ a tela já carregada, depois um **reload**.
 | --- | --- | --- |
 | clique em "Carregar mais" (contatos) | 25 linhas → **25**, nenhuma requisição, nenhum aviso, botão inalterado **por 20 s** | mensagem "Sem conexão. O que já carregou continua na tela…" |
 | reload offline (contatos, inbox, financeiro) | — | **app abre** (service worker ativo) com "Algo deu errado … Tentar novamente" |
-| reload offline (pedidos) | — | app abre, **sem alerta** — registrado como **F-28** em aberto |
+| reload offline (pedidos) | app abre, **sem alerta**, lista vazia — F-28 | **app abre** com "Sem conexão. A lista pode estar desatualizada…" e "Tentar novamente"; a volta da rede revalida sozinha (F-28 corrigido em 17/11/2026) |
 
 O clique silencioso tinha causa específica: o TanStack Query, no modo `online` (o padrão), **pausa**
 a busca quando não há rede — não dispara requisição, não erra, não avisa. `isFetchingNextPage`
@@ -1212,10 +1212,13 @@ para quem perdeu o sinal no meio da lista.
 2. a segunda capturava o primeiro `h1`/`h2` como "texto de erro" e anotava "Visão geral" — o título
    da tela. Agora lê `[role="alert"]` primeiro.
 
-`/app/pedidos` continua sem dizer nada no reload offline: a lista fica vazia e não há alerta, enquanto
-contatos, inbox e financeiro mostram "Algo deu errado" com "Tentar novamente". Fica como **F-28,
-aberto e medido** — o caminho de dados de Pedidos é servidor + SW, e o conserto é da frente 7
-(PWA/offline), não deste item.
+`/app/pedidos` também ficou muda no reload offline (lista vazia, sem alerta) — **F-28**, registrado
+na ocasião. Corrigido em 17/11/2026: a tela assina `online`/`offline` com `useSyncExternalStore` e
+mostra `role="alert"` com "Sem conexão. A lista pode estar desatualizada…" + "Tentar novamente";
+quando a rede volta, o alerta some e `router.refresh()` revalida a lista. A falha da consulta no
+servidor também deixou de virar lista vazia: o erro é logado e a tela diz "Não foi possível carregar
+os pedidos." (gate `tests/unit/pedidos-offline.test.tsx`). A medida em navegador do instrumento
+`offline-e-erro.mjs` fica para a próxima rodada; a prova deste conserto é o teste de componente.
 
 ### V-43 · Alta · Offline, o Audit Log dizia "Nenhum log no período" — afirmação sobre o dado quando o problema era a rede
 
@@ -1243,6 +1246,23 @@ passa a significar só o que diz.
 **A regra que fica, e vale para qualquer lista:** estado vazio é afirmação sobre o DADO. Ele só pode
 aparecer quando a busca terminou com sucesso. Busca pausada (offline) e busca com erro têm os seus
 próprios ramos.
+
+### V-44 · Média · Offline, Pedidos não dizia que a lista falhou (F-28)
+
+O reload offline de `/app/pedidos` abria a casca do service worker e deixava a lista vazia — sem
+alerta, sem ação, indistinguível de "não há pedidos". Contatos, inbox e financeiro já diziam o que
+aconteceu; Pedidos é a tela de onde sai a operação do dia.
+
+**Corrigido em `app/app/pedidos/_client.tsx`**: a tela lê `navigator.onLine` por
+`useSyncExternalStore` (servidor renderiza "online", sem mismatch de hidratação) e, fora da rede,
+mostra `role="alert"` com "Sem conexão. A lista pode estar desatualizada; os pedidos voltam quando a
+rede voltar." e "Tentar novamente". A transição offline→online dispara `router.refresh()`. O erro da
+consulta do servidor também passou a chegar à tela (`erroInicial`): "Não foi possível carregar os
+pedidos.", em vez de uma lista vazia afirmando ausência de dado.
+
+Gate: `tests/unit/pedidos-offline.test.tsx` (2 casos: alerta offline + volta da rede revalida; erro
+de carga não vira lista vazia). A regra do V-43 vale aqui também: **estado vazio é afirmação sobre o
+dado**; falta de rede e erro de leitura têm ramos próprios.
 
 ### Hierarquia e densidade — 12 telas medidas na primeira dobra (2.4)
 
