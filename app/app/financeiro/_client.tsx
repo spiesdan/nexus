@@ -9,7 +9,11 @@ import { EmptyFilterResults } from "@/components/empty";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
-import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
+import {
+  NexusKpi,
+  NexusKpiGrid,
+  NexusKpiSkeleton,
+} from "@/components/nexus-ui/kpi/nexus-kpi";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
@@ -224,11 +228,14 @@ export function FinanceiroClient({
       />
 
       {kpis === null ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
+        // O esqueleto segue o grid e o cartão de verdade (ver NexusKpiSkeleton):
+        // os dois últimos KPIs têm a linha de comparação no rodapé.
+        <NexusKpiGrid>
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton comRodape />
+          <NexusKpiSkeleton comRodape />
+        </NexusKpiGrid>
       ) : (
         <NexusKpiGrid>
           <NexusKpi label={t("A receber")} value={comoMoeda(kpis.a_receber_cents ?? 0, "BRL")} />
@@ -619,7 +626,12 @@ function AbaPagar() {
   if (pagaveis === null) {
     return (
       <div className="space-y-2" aria-live="polite">
-        <Skeleton className="h-24 w-full" />
+        <NexusKpiGrid>
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+          <NexusKpiSkeleton />
+        </NexusKpiGrid>
         <Skeleton className="h-10 w-full" />
       </div>
     );

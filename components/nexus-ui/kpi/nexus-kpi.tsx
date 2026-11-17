@@ -23,6 +23,31 @@ import { cn } from "@/lib/utils";
 export type NexusKpiTrend = "up" | "down" | "flat";
 export type NexusKpiTone = "default" | "accent" | "warning" | "danger";
 
+/**
+ * O QUADRO DO CARTÃO — a caixa que o valor e o esqueleto têm de compartilhar.
+ *
+ * O esqueleto de carregamento era feito à mão em cada tela, com `Skeleton h-24`
+ * dentro de `grid-cols-2`: 204 px no celular contra os **490 px** do
+ * `NexusKpiGrid` de verdade (medido em 16/11/2026 em `/app/financeiro`). A tela
+ * pulava 286 px quando o número chegava — CLS 0,128, acima do limite de 0,1.
+ * Reservar espaço com a mesma caixa e as mesmas três linhas de texto é o que
+ * faz o número entrar onde o buraco já estava.
+ */
+const QUADRO_DO_KPI = "rounded-card border border-border bg-card p-5";
+
+/**
+ * AS TRÊS LINHAS DO CARTÃO — as mesmas no valor e no esqueleto.
+ *
+ * Altura de linha vem da fonte e do `line-height` herdado; cravar `h-5`/`h-8`
+ * no esqueleto deu 3 px de erro por cartão (medido: 102 px contra 99 px), e o
+ * erro cresce se a fonte ou o `line-height` mudar. Compartilhar a classe é o que
+ * faz a caixa bater por construção — inclusive no dia em que alguém mexer no
+ * tamanho do texto.
+ */
+const TEXTO_DO_ROTULO = "text-[11px] font-semibold uppercase tracking-[0.12em]";
+const TEXTO_DO_VALOR = "mt-2 text-2xl font-semibold tabular-nums tracking-tight";
+const TEXTO_DO_RODAPE = "mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs";
+
 export function NexusKpi({
   label,
   value,
@@ -55,18 +80,18 @@ export function NexusKpi({
   return (
     <div
       className={cn(
-        "hover-raise rounded-card border border-border bg-card p-5",
+        "hover-raise",
+        QUADRO_DO_KPI,
         tone === "warning" && "border-warning/40 bg-warning-bg",
       )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            {label}
-          </p>
+          <p className={cn(TEXTO_DO_ROTULO, "text-muted-foreground")}>{label}</p>
           <p
             className={cn(
-              "mt-2 text-2xl font-semibold tabular-nums tracking-tight text-foreground",
+              TEXTO_DO_VALOR,
+              "text-foreground",
               tone === "accent" && "text-amber-600",
               tone === "danger" && "text-red-600",
             )}
@@ -92,7 +117,7 @@ export function NexusKpi({
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{hint}</p>
       ) : null}
       {temLinhaDeBaixo ? (
-        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+        <div className={TEXTO_DO_RODAPE}>
           {variation ? (
             <span
               className={cn(
@@ -129,6 +154,55 @@ export function NexusKpiGrid({
       )}
     >
       {children}
+    </div>
+  );
+}
+
+/**
+ * O CARTÃO DE KPI ENQUANTO O NÚMERO NÃO CHEGOU.
+ *
+ * Não é enfeite: é reserva de espaço. O esqueleto antigo (`Skeleton h-24` num
+ * `grid-cols-2`) media 204 px no celular e o cartão real 490 px — a tela pulava
+ * 286 px e o CLS de `/app/financeiro` ia a **0,128**, acima do limite de 0,1 do
+ * Core Web Vitals (medido em 16/11/2026, CPU 4× e rede de 1,6 Mbps).
+ *
+ * Duas decisões, e as duas são sobre não voltar a divergir:
+ *
+ *   1. o grid é o `NexusKpiGrid` de verdade — mesma largura de coluna, mesmo
+ *      ponto de quebra. `grid-cols-2 / lg:grid-cols-4` do esqueleto não é o
+ *      grid do produto (`grid-cols-1 / sm:grid-cols-2 / xl:grid-cols-4`);
+ *   2. a caixa e as linhas vêm das MESMAS classes do cartão com número
+ *      (`QUADRO_DO_KPI`, `TEXTO_DO_ROTULO`, `TEXTO_DO_VALOR`,
+ *      `TEXTO_DO_RODAPE`). O texto é transparente: a altura da linha é a de
+ *      uma fonte de verdade, não de um retângulo que tenta adivinhá-la.
+ *
+ * Gate em `tests/unit/kpi-skeleton-espelha-o-grid.test.ts`.
+ */
+export function NexusKpiSkeleton({
+  /** O cartão real tem a linha de comparação/variação no rodapé. */
+  comRodape = false,
+  className,
+}: {
+  comRodape?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={cn(QUADRO_DO_KPI, "animate-pulse", className)} aria-hidden>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className={cn(TEXTO_DO_ROTULO, "text-muted-foreground")}>
+            <span className="rounded-md bg-primary/10 text-transparent">Rótulo</span>
+          </p>
+          <p className={cn(TEXTO_DO_VALOR, "text-foreground")}>
+            <span className="rounded-md bg-primary/10 text-transparent">R$ 0,00</span>
+          </p>
+          {comRodape ? (
+            <div className={TEXTO_DO_RODAPE}>
+              <span className="rounded-md bg-primary/10 text-transparent">comparação</span>
+            </div>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

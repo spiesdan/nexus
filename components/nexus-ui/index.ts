@@ -24,7 +24,11 @@ export { NexusSteps } from "@/components/nexus-ui/forms/NexusSteps";
 export { NexusQuantityStepper } from "@/components/nexus-ui/forms/NexusQuantityStepper";
 export { NexusDataTable, type NexusDataState } from "@/components/nexus-ui/data/NexusDataTable";
 export { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
-export { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
+export {
+  NexusKpi,
+  NexusKpiGrid,
+  NexusKpiSkeleton,
+} from "@/components/nexus-ui/kpi/nexus-kpi";
 export { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
 export {
   NexusAiBriefing,
