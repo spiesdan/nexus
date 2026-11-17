@@ -60,7 +60,7 @@ export function VisaoGeralDoRadar() {
   const t = useT();
   const router = useRouter();
   const { filtros, mudar } = useRadarDados();
-  const { linhas, falhou, recarregar } = useLinhasDoRadar();
+  const { linhas, falhou, recarregar, amostraParcial } = useLinhasDoRadar();
   const vendedores = useVendedoresDoRadar();
   const { inativos } = useInativosDoRadar();
   const [metricaSaude, setMetricaSaude] = React.useState<"compras" | "clientes">("compras");
@@ -163,6 +163,13 @@ export function VisaoGeralDoRadar() {
 
   return (
     <div className="space-y-6">
+      {amostraParcial && (
+        <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
+          {t(
+            "A base passou de 25.000 pedidos: os números desta tela são da amostra carregada, não da carteira inteira.",
+          )}
+        </p>
+      )}
       <FiltrosDoRadar linhas={linhasRadar} vendedores={vendedores} onAtualizar={recarregar} />
 
       {/* KPIs — clicar em risco/oportunidades leva à lista filtrada. */}

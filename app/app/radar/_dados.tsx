@@ -111,15 +111,20 @@ export function useLinhasDoRadar() {
     queryKey: ["radar-compras", "todas"],
     queryFn: () =>
       apiClient
-        .get<{ data: LinhaRadarLista[] }>("/api/v1/radar-compras?situacao=todas&limit=5000", {
-          timeoutMs: TIMEOUT_RADAR_MS,
-        })
-        .then((corpo) => corpo.data ?? []),
+        .get<{ data: LinhaRadarLista[]; meta?: { amostra_parcial?: boolean } }>(
+          "/api/v1/radar-compras?situacao=todas&limit=5000",
+          { timeoutMs: TIMEOUT_RADAR_MS },
+        )
+        .then((corpo) => corpo),
     staleTime: 60_000,
   });
 
   return {
-    linhas: q.data ?? null,
+    linhas: q.data?.data ?? null,
+    // A base foi cortada no teto da rota (25.000 pedidos): os KPIs descrevem a
+    // amostra. Quem carrega isto tem de DIZER isso, em vez de somar o que veio
+    // e chamar de carteira.
+    amostraParcial: q.data?.meta?.amostra_parcial === true,
     falhou: q.isError,
     recarregar: () => void q.refetch(),
   };
