@@ -479,7 +479,7 @@ Cada falha abaixo foi aberta, lida e classificada — nenhuma foi tratada como "
 | `filterbar-unica-nas-listas:29` e `:75` | barra de filtros de compras/estoque/carteira | `strict mode violation: getByLabel('Buscar') resolved to 2 elements` — o botão de busca do **shell** e o campo de filtro da página tinham o **mesmo nome acessível** | **produto — corrigido**                        |
 | `notas-fiscais-modulo:75`               | a porta do sidebar de Notas Fiscais          | esperava `/app/fiscal`; o registro aponta `/app/notas` desde `5eee8923`                                                                                              | **spec obsoleta — corrigida**                  |
 | `inbox-responder-citando:101` e `:127`  | responder citando mensagem                   | `Test timeout of 30000ms exceeded` no laço de 8 conversas × 4 s = **32 s**, que não cabe no prazo de 30 s                                                            | **teste — corrigido**                          |
-| `prospeccao-mapa:40`                    | mapa de empresas com marcadores              | `.leaflet-container` não existe. **Aberto (F-27).**                                                                                                                  | **não corrigido — vermelho há 2 noites no CI** |
+| `prospeccao-mapa:40`                    | mapa de empresas com marcadores              | `.leaflet-container` não existia porque a aba **Empresas** voltava para Campanhas: o filtro da tela escrevia a URL no alias `/app/prospeccao` e a navegação remontava a tela. **Fechado (F-27)** — 3 execuções verdes em 17/11 | **produto — corrigido**                        |
 
 `degradacao-silenciosa:117` aparece como ✘ no log e **não** é falha: o spec declara
 `test.fail(...)`, a catraca que exige que a tela avise quando a entrega do tempo real morre. A
@@ -561,13 +561,13 @@ quebrou".
 **O achado que fica:** a feature de responder citando não é exercitada em CI nenhum. O skip
 condicional é legítimo, mas hoje ele é o único estado que o CI conhece.
 
-### 3.6 F-27 (aberto) — o mapa de empresas e a aba que não fica selecionada
+### 3.6 F-27 (**fechado**) — o mapa de empresas e a aba que não ficava selecionada
 
-`prospeccao-mapa` está vermelho **em duas noites seguidas do noturno da main**
-(`43704519708` em 15/11, `43582831396` em 14/11), na mesma linha, com o mesmo erro. Não é
-ambiente desta máquina.
+`prospeccao-mapa` estava vermelho **em duas noites seguidas do noturno da main**
+(`43704519708` em 15/11, `43582831396` em 14/11), na mesma linha, com o mesmo erro. Não era
+ambiente: reproduziu nesta máquina.
 
-O snapshot de acessibilidade no momento da falha mostra o estado real:
+O snapshot de acessibilidade no momento da falha mostrava o estado real:
 
 ```yaml
 - tab "Campanha"
@@ -576,11 +576,37 @@ O snapshot de acessibilidade no momento da falha mostra o estado real:
   - tab "Empresas"
 ```
 
-E o código só renderiza o mapa com lista não vazia (`_empresas.tsx`:
-`visao === "mapa" && listaFiltrada.length > 0 ? <Mapa/> : …`). Duas hipóteses medidas, nenhuma
-provada: (a) o clique na aba "Empresas" não persiste — nem com o deep-link `?aba=empresas`, que
-seleciona e depois volta a "Campanhas"; (b) a lista filtrada chega vazia e o mapa é substituído
-pelo vazio. **Distinguir exige abrir a tela com dados e instrumentar o estado** — não é o que
-esta rodada fez, e por isso o achado fica aberto, com a evidência, em vez de "corrigido" por
-suposição. A tentativa de conserto foi **revertida** de propósito: spec alterada que continua
-vermelha só esconde o vermelho.
+**A causa, provada.** A hipótese (a) da rodada anterior — "o clique na aba não persiste" — estava
+certa, mas a causa não era o estado da aba. Era a **URL**: o efeito que sincroniza os filtros das
+Empresas (`app/app/prospeccao/_empresas.tsx`) montava a query do zero e escrevia caminho fixo,
+`router.replace("/app/prospeccao?...")` — e `/app/prospeccao` é **alias** que redireciona para
+`/app/campanhas?subtela=prospeccao`. Como o efeito dispara na montagem da aba, o próprio ato de
+abrir "Empresas" navegava para o alias, o servidor redirecionava, a árvore **remontava** e a aba
+voltava para "Campanhas" — levando junto o `?aba=empresas` do deep-link.
+
+Medido no navegador com marca no DOM: o `tablist` interno recebia a marca e, **menos de 500 ms
+depois do clique**, o nó com a marca já não existia — remontagem, não re-render. Sem remontagem
+(click no botão "Pesquisas", que só troca de aba), a marca sobrevivia.
+
+**O conserto, em duas partes que se sustentam:**
+
+1. a query dos filtros passou a ser montada por uma função **pura** —
+   `lib/prospeccao/url-dos-filtros.ts` —, sobre o `pathname` real (`usePathname()`) e preservando
+   as chaves que são de outro dono (`subtela`, `aba`, o que vier). Ela também é **idempotente**, e
+   a tela só chama `router.replace` quando a URL alvo difere da atual — sem isso o efeito vira
+   laço de navegação;
+2. a aba passou a ser escrita na URL (`?aba=empresas`) ao ser trocada. Era o que o comentário do
+   código prometia ("abas controladas: estado + URL") e não acontecia: o estado sozinho não
+   sobrevive a remontagem, e o link compartilhado abria na aba errada.
+
+**Prova:** `prospeccao-mapa` **3 execuções verdes** contra o build de produção local (5,4 s / 5,5 s
+/ 6,9 s): aba Empresas fica selecionada, `.leaflet-container` existe, marcadores aparecem, clique
+sincroniza a lista e o detalhe abre. Gate em `tests/unit/url-dos-filtros.test.ts` (6 casos): a URL
+final não pode sair da rota, tem de preservar `subtela`/`aba`, tirar a chave quando o filtro é
+limpo e ser idempotente.
+
+**A lição que fica:** "abrir a tela com dados e instrumentar o estado" era o que faltava — e o
+estado estava certo. Quem navegava era um efeito de URL que ninguém suspeitava porque *parecia*
+só sincronizar filtros. Navegação escondida dentro de efeito é a classe de defeito que só aparece
+quando se mede o DOM em vez de ler o componente.
+
