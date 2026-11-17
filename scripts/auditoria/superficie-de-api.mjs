@@ -11,7 +11,9 @@
  *   - **idempotência**: lê `Idempotency-Key`;
  *   - **contrato**: devolve por `ok()`/`fail()` (o wrapper canônico) ou monta
  *     `NextResponse`/`Response` na mão;
- *   - **service-role**: usa `createAdminClient` / `SUPABASE_SERVICE_ROLE`.
+ *   - **service-role**: usa `createAdminClient` / `SUPABASE_SERVICE_ROLE`;
+ *   - **contagem no banco**: usa `count: "exact", head: true` — conta sem
+ *     trafegar linha (o oposto de baixar a tabela para somar em memória).
  *
  * Contagem não é julgamento: um `DELETE /recurso/[id]` não precisa de paginação,
  * e uma rota de cron não precisa de rate limit. O relatório cruza os números com
@@ -47,6 +49,7 @@ function semComentarios(texto) {
 const todas = rotas(join(RAIZ, "app", "api"));
 const porRota = [];
 const totais = {
+  comContagemHead: 0,
   rotas: todas.length,
   comPaginacao: 0,
   comTeto: 0,
@@ -78,6 +81,9 @@ for (const { rota, arquivo } of todas) {
   const wrapper = /\bok\(|\bfail\(/.test(fonte);
   const manual = /new Response\(|NextResponse\.json\(/.test(fonte);
   const service = /createAdminClient|SUPABASE_SERVICE_ROLE/.test(fonte);
+  // Contagem sem trafegar linha: `count` explícito + `head: true` na mesma
+  // chamada. É o que substitui "select da janela inteira para somar".
+  const contagemHead = /head\s*:\s*true/.test(fonte) && /count\s*:\s*["']exact["']/.test(fonte);
 
   totais.comPaginacao += paginacao ? 1 : 0;
   totais.comTeto += teto ? 1 : 0;
@@ -86,8 +92,9 @@ for (const { rota, arquivo } of todas) {
   totais.comWrapperCanonico += wrapper ? 1 : 0;
   totais.comResponseNaMao += manual ? 1 : 0;
   totais.comServiceRole += service ? 1 : 0;
+  totais.comContagemHead += contagemHead ? 1 : 0;
 
-  porRota.push({ rota, get, muta, paginacao, teto, rate, idem, wrapper, manual, service });
+  porRota.push({ rota, get, muta, paginacao, teto, rate, idem, wrapper, manual, service, contagemHead });
 }
 
 /**
@@ -123,6 +130,7 @@ console.log(`  com idempotência:    ${totais.comIdempotencia}`);
 console.log(`  wrapper canônico:    ${totais.comWrapperCanonico}`);
 console.log(`  Response na mão:     ${totais.comResponseNaMao}`);
 console.log(`  service-role:        ${totais.comServiceRole}`);
+console.log(`  contagem no banco:   ${totais.comContagemHead}`);
 console.log(`\nGET de LISTA sem teto explícito: ${getSemTeto.length} (detalhes/callbacks fora da conta: ${detalheSemTetoDescartado})`);
 for (const r of getSemTeto.slice(0, 20)) console.log("  " + r);
 console.log(`\nartefato: ${SAIDA}`);
