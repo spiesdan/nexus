@@ -1,0 +1,48 @@
+Ensaio de restauração — nexus
+quando:   2026-11-17T22:50:23Z
+imagem:   pgvector/pgvector:pg15
+baseline: sha256 9a0afaec56ffef8f69a9ee110bc8d2ca186cb729e9800c1b48c6bdd2e5a3ca11
+
+── 1. Container descartável ─────────────────────────────────────
+ok — PostgreSQL 15.19 (Debian 15.19-1.pgdg12+
+
+── 2. Instalação (preâmbulo + baseline) ─────────────────────────────────────
+tabelas em public: 179 · com RLS: 179
+
+── 3. Semeadura (dados que precisam SOBREVIVER) ─────────────────────────────────────
+  organizations: 2
+  contacts: 2
+  conversations: 2
+  messages: 2
+  commercial_orders: 2
+  financial_receivables: 2
+
+── 4. BACKUP (mesmo caminho do kit: pg_dump pela conexão de schema) ─────────────────────────────────────
+dump: 157753 bytes · sha256 ea4ec1566bb9eb82851a604807309690e4e1f0c287c787f470e5e6f343764d0d
+
+── 5. APAGAR a origem (perda simulada) ─────────────────────────────────────
+banco de origem existe? não
+
+── 6. RESTAURAR num banco limpo ─────────────────────────────────────
+restore: exit 0
+
+── 7. Conferir: linhas, RLS e isolamento ─────────────────────────────────────
+  organizations: 2
+  contacts: 2
+  conversations: 2
+  messages: 2
+  commercial_orders: 2
+  financial_receivables: 2
+  tabelas: 179 · com RLS: 179
+  authenticated pode ler contacts? t
+  isolamento pós-restore: A lê 0 linha(s) de B; A lê 1 da própria
+
+── 8. Veredito ─────────────────────────────────────
+PASSOU — backup, perda e restauração preservaram linhas, RLS e isolamento.
+
+LACUNAS CONHECIDAS (não medidas por este ensaio):
+  · uploads/storage (avatares, fotos de produto, mídia de conversa) NÃO entram no backup.sh
+  · rotação: o backup.sh mantém 14 por tipo; storage não tem política
+  · health da aplicação (/api/v1/health) exige o app no ar — aqui é saúde do BANCO
+
+evidência: docs/auditoria/evidencias/restore/ensaio-20261117-195023.txt
