@@ -169,7 +169,7 @@ expedição/frota.
 | A5 | `duplicar` copia `desconto_cents` sem `desconto_pct` | P1 | **corrigido** (`55291df5`) |
 | A6 | Custo BR em `/app/compras` vira zero | P1 | **corrigido** (`b43f54f4`) |
 | A7 | Catálogo truncado em 500 no estoque/compras | P1 | aberto (F-30) |
-| A8 | Iniciar rota / marcar entregue / tirar pedido sem confirmação | P1 | **iniciar corrigido** (`b43f54f4`); entregar e tirar seguem abertos |
+| A8 | Iniciar rota / marcar entregue / tirar pedido sem confirmação | P1 | **corrigido**: iniciar (`b43f54f4`), entregar e tirar da carga pedem confirmação |
 | A9 | PATCH de carga permite regressão `em_rota→montando/cancelada` | P1 | **corrigido** (`b43f54f4`) |
 | A10 | `/faturamento` `.lt()` exclui o dia; limite 2.000 silencioso | P1 | **data corrigida** (`55291df5`); limite ainda silencioso (log) |
 | A11 | Catálogo engole erro de query e mostra "nenhum produto" | P1 | **corrigido** (`55291df5`) |
@@ -193,6 +193,8 @@ expedição/frota.
 7. **PATCH da carga** não regride `em_rota→montando` (422) e cancelar rota em
    andamento exige `manager` (403); o audit grava antes/depois (A9).
 8. **Custo da compra** em formato BR deixou de virar zero: `centavosDeBr` (A6).
+9. **Marcar entregue** e **tirar pedido da carga** pedem confirmação — a entrega é
+   terminal e a retirada muda o que o motorista leva (A8 completo).
 
 ## 8. O que fica aberto, e por quê
 
