@@ -1527,6 +1527,32 @@ payload que cresce. Não foi alterado nesta rodada: cortar em silêncio devolver
 tela saber. **O conserto é paginação de verdade na rota + "carregar mais" na tela** — 82 telas, uma
 frente, não um patch.
 
+## 6. APIs — catálogo com payload e efeito de dados (6.1)
+
+O inventário já trazia métodos, guarda, nome do schema e efeitos declarados. Faltavam as duas
+colunas que o item pede: **quais campos o corpo aceita** e **quais tabelas o handler escreve**.
+Instrumento novo, `scripts/auditoria/catalogo-de-apis.mjs`:
+
+| Medida | Resultado |
+| --- | --- |
+| handlers | **417** |
+| com chaves de payload inline (`z.object`) | **108** |
+| mutações que **leem corpo** sem schema identificável | **24** |
+| … das quais **multipart** (imagem/XML/CSV/certificado) | **11** — validadas por MIME, tamanho e parser |
+| … das quais **webhook** | **9** — HMAC + leitura manual do payload de terceiro |
+| … das quais **JSON com validação manual** | **4** — `typeof`/`Array.isArray`/whitelist de ação |
+| **corpo JSON sem NENHUMA validação** | **0** |
+| mutações que escrevem tabela declarada no próprio arquivo | **102** |
+| mutações sem escrita declarada (delegam a `lib/`) | 102 |
+
+**Nenhum corpo JSON entra sem validação** — os 24 casos sem schema são 11 multipart, 9 webhooks e 4
+com checagem manual visível no arquivo. E a escrita de dados por handler agora está no catálogo:
+`contacts` (12 handlers), `catalog_products` (9), `shipment_orders` e `shipment_destinations` (8 e
+7), `webhook_events_log` (7), `commercial_orders`/`conversations`/`prospecting_campaigns` (6 cada).
+
+**O limite do instrumento, declarado:** ele lê o handler, não o módulo chamado. Mutações que delegam
+a `lib/` aparecem sem tabela — 102 delas —, e o número não deve ser lido como "não escreve".
+
 ## 6. APIs — 417 rotas, 35 sem chamador interno, zero órfã
 
 A varredura visual não responde a pergunta do 6.4 ("endpoints duplicados, sem uso ou legados").

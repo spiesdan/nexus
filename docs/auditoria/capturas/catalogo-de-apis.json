@@ -1,0 +1,6837 @@
+{
+  "medido_em": "2026-11-17T13:16:54.998Z",
+  "total": 417,
+  "comPayloadInline": 108,
+  "mutacoesSemValidacao": [
+    "/api/v1/ai/skills/import",
+    "/api/v1/channels/partner/templates/media",
+    "/api/v1/commercial-orders/[id]/orcamento",
+    "/api/v1/commercial-orders/importar-ia",
+    "/api/v1/commercial-orders/importar-mercos",
+    "/api/v1/conversations/[id]/media",
+    "/api/v1/conversations/arquivar-todas",
+    "/api/v1/fiscal-settings/certificado",
+    "/api/v1/invoices/importar-xmls",
+    "/api/v1/leads/import",
+    "/api/v1/products/[id]/images",
+    "/api/v1/products/import",
+    "/api/v1/prospecting/campaigns/midia",
+    "/api/v1/public/orcamento/[token]",
+    "/api/v1/shipments/[id]/orders/[orderId]/proof",
+    "/api/v1/webhooks/channel/[token]",
+    "/api/v1/webhooks/in/[token]",
+    "/api/v1/webhooks/meta/[token]",
+    "/api/v1/webhooks/nuvemshop/[event]",
+    "/api/v1/webhooks/nuvemshop/customer-data-request",
+    "/api/v1/webhooks/nuvemshop/customer-redact",
+    "/api/v1/webhooks/nuvemshop/store-redact",
+    "/api/v1/webhooks/waha/[token]",
+    "/api/v1/webhooks/waha"
+  ],
+  "mutacoesSemCorpo": 108,
+  "mutacoesSemEscritaDeclarada": [
+    "/api/internal/agents/run",
+    "/api/mcp",
+    "/api/v1/admin/impersonate/end",
+    "/api/v1/admin/platform-admins",
+    "/api/v1/agenda/agendamentos",
+    "/api/v1/ai/agents/[id]/duplicate",
+    "/api/v1/ai/agents/[id]/proposals/[pid]/apply",
+    "/api/v1/ai/cases/[id]/reply",
+    "/api/v1/ai/credentials",
+    "/api/v1/ai/decisions/[id]/decide",
+    "/api/v1/ai/decisions/[id]/executar",
+    "/api/v1/ai/decisions/propose",
+    "/api/v1/ai/followup-flows/[id]/publish",
+    "/api/v1/ai/followups/enrollments/[id]/pause",
+    "/api/v1/ai/followups/enrollments/[id]/resume",
+    "/api/v1/ai/followups/enrollments/[id]/skip",
+    "/api/v1/ai/followups/enrollments/[id]/snooze",
+    "/api/v1/ai/followups/enrollments",
+    "/api/v1/ai/followups/promises/[id]/cancel",
+    "/api/v1/ai/memory",
+    "/api/v1/ai/routers/[id]/test",
+    "/api/v1/ai/skills/[name]/install",
+    "/api/v1/ai/skills/import",
+    "/api/v1/assistente/chat",
+    "/api/v1/assistente/executar",
+    "/api/v1/channels/partner",
+    "/api/v1/channels/partner/templates/media",
+    "/api/v1/channels/templates",
+    "/api/v1/commercial-orders/[id]/duplicar",
+    "/api/v1/commercial-orders/[id]/itens",
+    "/api/v1/commercial-orders/[id]/mercos",
+    "/api/v1/commercial-orders/[id]/orcamento",
+    "/api/v1/commercial-orders/importar-mercos",
+    "/api/v1/commercial-orders",
+    "/api/v1/contacts/[id]",
+    "/api/v1/contacts/bulk-tag",
+    "/api/v1/contacts",
+    "/api/v1/conversations/[id]/claim",
+    "/api/v1/conversations/[id]/draft-reply",
+    "/api/v1/conversations/[id]/mark-read",
+    "/api/v1/conversations/[id]/media",
+    "/api/v1/conversations/[id]/reactivate-bot",
+    "/api/v1/conversations/[id]/release",
+    "/api/v1/conversations/[id]",
+    "/api/v1/conversations/[id]/transfer",
+    "/api/v1/conversations/open-with-contact",
+    "/api/v1/cron/agent-dispatcher",
+    "/api/v1/cron/automatic-sales",
+    "/api/v1/cron/contact-proposals-watcher",
+    "/api/v1/cron/data-retention",
+    "/api/v1/cron/event-log-drain",
+    "/api/v1/cron/expedition-notices",
+    "/api/v1/cron/fiscal-drain",
+    "/api/v1/cron/fiscal-entradas-sync",
+    "/api/v1/cron/mercos-import",
+    "/api/v1/cron/meu-dia-alertas",
+    "/api/v1/cron/prospecting-drain",
+    "/api/v1/cron/prospecting-fit",
+    "/api/v1/cron/prospecting-send",
+    "/api/v1/cron/risk-watcher",
+    "/api/v1/cron/routing-worker",
+    "/api/v1/financeiro/gerar",
+    "/api/v1/financeiro/recebiveis/[id]/pagamentos",
+    "/api/v1/fiscal-entradas",
+    "/api/v1/fiscal-events/[id]/retransmitir",
+    "/api/v1/fiscal-inutilizacoes/[id]/retransmitir",
+    "/api/v1/fiscal-inutilizacoes/lacunas",
+    "/api/v1/indicadores/perguntar",
+    "/api/v1/invoices/[id]/ajustes",
+    "/api/v1/invoices/importar-xmls",
+    "/api/v1/invoices",
+    "/api/v1/invoices/validar",
+    "/api/v1/leads/[id]/lose",
+    "/api/v1/leads/[id]",
+    "/api/v1/leads/[id]/win",
+    "/api/v1/leads",
+    "/api/v1/messages",
+    "/api/v1/notifications/push",
+    "/api/v1/pipelines/[id]/stages/[stageId]",
+    "/api/v1/pipelines/[id]/stages",
+    "/api/v1/products/images",
+    "/api/v1/prospecting/campaigns/midia",
+    "/api/v1/prospecting/campaigns/preview",
+    "/api/v1/prospecting/campaigns/recuperacao/preview",
+    "/api/v1/prospecting/campaigns/regiao/preview",
+    "/api/v1/prospecting/prospects/import-arquivo",
+    "/api/v1/public/orcamento/[token]",
+    "/api/v1/shipments/[id]/conciliar",
+    "/api/v1/shipments/[id]/rota/finalizar",
+    "/api/v1/shipments/[id]/rota/iniciar",
+    "/api/v1/shipments/[id]/rota/otimizar",
+    "/api/v1/shipments/[id]/rota/otimizar/veiculos",
+    "/api/v1/system/relogio/tick",
+    "/api/v1/team/[user_id]/canais",
+    "/api/v1/team/[user_id]/motorista",
+    "/api/v1/team/[user_id]/nome",
+    "/api/v1/team/[user_id]/role",
+    "/api/v1/team/[user_id]",
+    "/api/v1/team/[user_id]/setor",
+    "/api/v1/team/invite",
+    "/api/v1/webhook-sources",
+    "/api/v1/webhooks/channel/[token]"
+  ],
+  "tabelasMaisEscritas": [
+    [
+      "contacts",
+      12
+    ],
+    [
+      "catalog_products",
+      9
+    ],
+    [
+      "shipment_orders",
+      8
+    ],
+    [
+      "channel_sessions",
+      7
+    ],
+    [
+      "shipment_destinations",
+      7
+    ],
+    [
+      "webhook_events_log",
+      7
+    ],
+    [
+      "commercial_orders",
+      6
+    ],
+    [
+      "conversations",
+      6
+    ],
+    [
+      "prospecting_campaigns",
+      6
+    ],
+    [
+      "event_log",
+      5
+    ],
+    [
+      "organizations",
+      5
+    ],
+    [
+      "agent_inbox_items",
+      5
+    ],
+    [
+      "followup_flow_pointers",
+      5
+    ],
+    [
+      "business_prospects",
+      5
+    ],
+    [
+      "ai_agent_versions",
+      4
+    ],
+    [
+      "ai_knowledge_sources",
+      4
+    ],
+    [
+      "fiscal_entradas",
+      4
+    ],
+    [
+      "crm_leads",
+      4
+    ],
+    [
+      "shipment_destination_recoveries",
+      4
+    ],
+    [
+      "shipments",
+      4
+    ]
+  ],
+  "catalogo": [
+    {
+      "rota": "/api/internal/agents/run",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "run_id",
+        "sample_message",
+        "sample_contact",
+        "name",
+        "phone"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/mcp",
+      "metodos": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/audit/[entryId]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "entryId"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/audit",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "tenant_ids",
+        "actor_user_id",
+        "actions",
+        "from"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/dashboard/kpis",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations",
+        "conversations",
+        "channel_sessions",
+        "lgpd_requests",
+        "ai_budgets"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/impersonate/end",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/inbox/conversations/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations",
+        "organizations",
+        "contacts",
+        "messages"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/inbox/conversations",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "q",
+        "status",
+        "tenant_id",
+        "cursor",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/incidents/[id]/resolve",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "resolution_note"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "incidents",
+        "event_log"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/incidents/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "incidents",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/incidents",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status",
+        "severity",
+        "tenant_id",
+        "cursor",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "incidents"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/lgpd/requests/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests",
+        "organizations",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/lgpd/requests",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status",
+        "request_type",
+        "risk_level",
+        "tenant_id",
+        "cursor",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/platform-admins",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "platform_admins"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/health",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "channel_sessions",
+        "tenant_integrations",
+        "ai_budgets",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/impersonate",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "event_log"
+      ],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/reactivate",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "reason"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "organizations",
+        "event_log"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations",
+        "user_organizations",
+        "conversations",
+        "messages",
+        "crm_leads",
+        "orders",
+        "lgpd_requests",
+        "llm_calls",
+        "channel_sessions",
+        "tenant_integrations"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/tenants/[id]/suspend",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "reason"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "organizations",
+        "event_log"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/tenants",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "q",
+        "status",
+        "cursor",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "organizations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/admin/usage",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "range",
+        "tenant_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations",
+        "messages",
+        "conversations",
+        "llm_calls"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/users/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/admin/users",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "tenant_id",
+        "role",
+        "q",
+        "cursor",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/agenda/agendamentos",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "contact_id",
+        "lead_id",
+        "owner_user_id",
+        "dia",
+        "de"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "calendar_external_events"
+      ]
+    },
+    {
+      "rota": "/api/v1/agenda/google/callback",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "calendar_oauth_nonces",
+        "calendar_connections",
+        "calendar_connection_calendars"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/agenda/google/connect",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/agenda/google/desconectar",
+      "metodos": [
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": true,
+      "payload": [
+        "user_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "calendar_external_events",
+        "calendar_connection_calendars",
+        "calendar_connections"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/agenda/horarios-livres",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "event_type_id",
+        "owner_user_id",
+        "de"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/agenda/tipos",
+      "metodos": [
+        "GET",
+        "POST",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "calendar_event_types"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/duplicate",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/pause",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "ai_agent_versions",
+        "ai_agents"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/proposals/[pid]/apply",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_agents",
+        "flywheel_distiller_proposals"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/publish",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "event_log"
+      ],
+      "tabelasLidas": [
+        "ai_agent_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_agents"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/runs",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "llm_calls"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/tool-usage",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "days"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_agents",
+        "ai_agent_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions/[vid]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_agent_versions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions/[vid]/test",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_agent_runs"
+      ],
+      "tabelasLidas": [
+        "ai_agent_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/[id]/versions",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_agent_versions"
+      ],
+      "tabelasLidas": [
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents/assignable",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_agents",
+        "ai_agent_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/agents",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_agents",
+        "ai_agent_versions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/automatico-ativo",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/budget",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "monthly_limit_cents",
+        "alarm_threshold_pct",
+        "enforcement_mode",
+        "confirmar_imediato"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_budgets",
+        "agent_inbox_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/cases/[id]/reply",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "action",
+        "body"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/cases/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/cases",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/controle/resumo",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations",
+        "llm_calls",
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/credentials/[id]/revalidate",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "ai_provider_credentials"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/credentials/[id]",
+      "metodos": [
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "ai_provider_credentials"
+      ],
+      "tabelasLidas": [
+        "ai_agent_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/credentials",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "provider",
+        "label",
+        "api_key"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_provider_credentials_safe"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/decisions/[id]/decide",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "decision"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/decisions/[id]/executar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log",
+        "ai_execution_policies"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/decisions/propose",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "nivel",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/evolution",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "from",
+        "to"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/disable",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "followup_flow_pointers"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/publish",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "followup_flow_pointers",
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]/rollback",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "followup_flow_pointers"
+      ],
+      "tabelasLidas": [
+        "followup_flow_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "followup_flow_pointers",
+        "followup_enrollments",
+        "followup_flow_versions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followup-flows",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "followup_flow_pointers"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "followup_enrollments",
+        "followup_enrollment_events"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/pause",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/resume",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "followup_enrollments",
+        "followup_enrollment_events"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/skip",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "edge_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments/[id]/snooze",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "next_eval_at"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/enrollments",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "followup_enrollments"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/followups/promises/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/followups/queue",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts",
+        "followup_enrollments",
+        "cron_jobs"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/guardrail-layers",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "layer",
+        "enabled"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "org_guardrail_layers"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/inbox/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "status"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "agent_inbox_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/inbox",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "agent_inbox_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/chave",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_provider_credentials_safe"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]/reindex",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "force"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_knowledge_sources"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "question",
+        "answer",
+        "tags",
+        "locale"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_knowledge_sources",
+        "ai_faq_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/[id]/trechos",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_knowledge_sources",
+        "ai_chunks"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "question",
+        "answer",
+        "tags",
+        "locale"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_knowledge_sources",
+        "ai_faq_items"
+      ],
+      "tabelasLidas": [
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/knowledge/sources/upload",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_knowledge_sources"
+      ],
+      "tabelasLidas": [
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/memory/entries/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "status"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "org_memory_entries"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/memory/entries",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "title",
+        "body"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "org_memory_entries"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/memory",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "content"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "org_memory_pointers",
+        "org_memory_versions",
+        "org_memory_entries"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/memory/versions/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "org_memory_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/operator-metrics",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "event_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/pacing",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "channel_knobs",
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/policies",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "nivel_maximo",
+        "executar_followup",
+        "default_flow_pointer_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "followup_flow_pointers",
+        "ai_execution_policies"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/providers/[provider]/models",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_models"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/providers",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "purpose",
+        "provider",
+        "message"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_purpose_bindings"
+      ],
+      "tabelasLidas": [
+        "ai_provider_credentials",
+        "ai_models",
+        "organizations",
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]/members",
+      "metodos": [
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "agent_id",
+        "intent_name",
+        "intent_description",
+        "examples"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_router_members"
+      ],
+      "tabelasLidas": [
+        "ai_routers"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name",
+        "is_active",
+        "fallback_agent_id",
+        "config"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_routers"
+      ],
+      "tabelasLidas": [
+        "ai_router_members"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/routers/[id]/test",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "message"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_routers",
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/routers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name",
+        "channel_session_id",
+        "fallback_agent_id",
+        "config"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "ai_routers"
+      ],
+      "tabelasLidas": [
+        "ai_router_members",
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/runs",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "purpose",
+        "status",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "llm_calls"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/skills/[name]/install",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "skill_pointers"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/skills/[name]",
+      "metodos": [
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "skill_pointers"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/skills/import",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/ai/skills",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "skill_pointers",
+        "skill_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/ai/usage",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "agent_id",
+        "invocation_kind",
+        "from",
+        "to"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "llm_calls",
+        "messages",
+        "event_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/alertas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "status",
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "operational_alerts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/alertas",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "origem",
+        "prioridade",
+        "limite"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "operational_alerts"
+      ]
+    },
+    {
+      "rota": "/api/v1/assistente/chat",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "papel",
+        "texto"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/assistente/executar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "acao",
+        "payload"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/atividades",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_activities"
+      ],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/attendants/availability/[user_id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "attendant_availability"
+      ],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/attendants/availability",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "attendant_availability"
+      ]
+    },
+    {
+      "rota": "/api/v1/audit/export",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/audit",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/auth/realtime-token",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]/painel",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "automatic_sales_campaigns",
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]/queue",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "automatic_sales_queue"
+      ]
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "automatic_sales_campaigns"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automatic-sales/campaigns",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "automatic_sales_campaigns"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automatic-sales/queue/[id]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "automatic_sales_queue",
+        "business_prospects",
+        "contacts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automation-rules/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "automation_rules"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automation-rules/[id]/runs",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "automation_rule_runs"
+      ]
+    },
+    {
+      "rota": "/api/v1/automation-rules",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "automation_rules"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/automation-rules/runs/[runId]/resend",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "automation_rule_runs"
+      ],
+      "tabelasLidas": [
+        "automation_rules",
+        "event_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/automation-rules/runs",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "automation_rule_runs"
+      ]
+    },
+    {
+      "rota": "/api/v1/categories/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "product_categories"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/categories",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "product_categories"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]/qr",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]/reconnect",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "force"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channel-sessions/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "finalidade"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channel-sessions",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/channels/official",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "phone_number_id",
+        "waba_id",
+        "token"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channels/partner",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "account_id",
+        "api_key"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channels/partner/templates/media",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/channels/partner/templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "acao",
+        "name",
+        "language",
+        "category",
+        "components"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "meta_templates"
+      ],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/channels/templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "meta_templates"
+      ]
+    },
+    {
+      "rota": "/api/v1/comercial/inativos",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/commercial-goals",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "ano_mes",
+        "valor_cents",
+        "vendedor_user_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_goals"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/duplicar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_order_items",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/itens",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/mercos",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/orcamento",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "contacts",
+        "channel_sessions",
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_orders",
+        "contacts",
+        "shipment_orders",
+        "catalog_products"
+      ],
+      "tabelasLidas": [
+        "commercial_order_items",
+        "commercial_policies",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/importar-ia",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "llm_calls"
+      ],
+      "tabelasLidas": [
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-orders/importar-mercos",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/commercial-orders/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/commercial-orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/commercial-policies",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_policies"
+      ]
+    },
+    {
+      "rota": "/api/v1/commissions/baixas",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "order_id",
+        "valor_cents",
+        "observacao"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_commission_baixas"
+      ],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/commissions",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_order_items",
+        "commercial_commission_baixas",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/avatar",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/crm-summary",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_leads",
+        "orders",
+        "crm_lead_activities",
+        "demandas"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/proposals/[proposal_id]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "decision",
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "contact_field_proposals"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contact_field_proposals"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/contacts/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts",
+        "crm_leads",
+        "crm_lead_activities"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/bulk-tag",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "ids",
+        "tags",
+        "modo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/cnpj-lookup",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/contacts/import",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "contacts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/contacts",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversation-tags",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/claim",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/close",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "conversations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/draft-reply",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/mark-read",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/media",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/messages",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/no-send",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "contacts"
+      ],
+      "tabelasLidas": [
+        "conversations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/notes/[noteId]",
+      "metodos": [
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "conversation_notes"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/notes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "conversation_notes"
+      ],
+      "tabelasLidas": [
+        "conversations",
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/pause-ai",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "conversations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/reactivate-bot",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/release",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/retention",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "conversations",
+        "before_send_traces",
+        "channel_knobs"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/snooze",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "conversations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/transfer",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/conversations/[id]/usable-for-rag",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "enabled"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "conversations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/arquivar-todas",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "conversations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/counts",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations/open-with-contact",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/conversations",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/copilot/context",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contacts",
+        "commercial_orders",
+        "commercial_policies",
+        "invoices",
+        "fiscal_jobs"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-push",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "calendar_appointments"
+      ],
+      "tabelasLidas": [
+        "calendar_connections"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-refresh",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "calendar_connections"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/agenda-google-sync",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "calendar_connection_calendars",
+        "calendar_external_events"
+      ],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/agent-dispatcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/attendant-heartbeat",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "attendant_availability"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/automatic-sales",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/channel-health",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/contact-avatars",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "contacts",
+        "storage_redaction_queue"
+      ],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/contact-phones",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "contacts"
+      ],
+      "tabelasLidas": [
+        "conversations"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/contact-proposals-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "contact_field_proposals"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/data-retention",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/event-log-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/expedition-notices",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/fiscal-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_jobs"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/fiscal-entradas-sync",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_settings",
+        "fiscal_entrada_cursor"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/followup-flow-worker",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "job_queue"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/kb-conversations-batch",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "ai_agents"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/lgpd-sla-watcher",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/mercos-import",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/meu-dia-alertas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations",
+        "commercial_orders",
+        "invoices",
+        "fiscal_settings",
+        "shipments",
+        "shipment_orders",
+        "financial_receivables",
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-drain",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-fit",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "business_prospects"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/prospecting-send",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/recover-stuck-messages",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "messages",
+        "agent_inbox_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/risk-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/cron/routing-worker",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/snooze-watcher",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "conversations",
+        "agent_inbox_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/storage-redaction",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/sync-model-catalog",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "ai_models"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/cron/webhook-log-retention",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/demandas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "proximo_passo",
+        "proximo_passo_em"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "demandas"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/faturamento",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/conciliacao",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "financial_receivables",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/dashboard",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "financial_receivables",
+        "financial_payments",
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/fluxo",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "financial_receivables",
+        "financial_payments",
+        "financial_pagaveis"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/gerar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/pagamentos/[id]",
+      "metodos": [
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis/[id]/pagamentos",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "financial_receivables",
+        "financial_payments",
+        "contacts",
+        "commercial_orders",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/financeiro/recebiveis",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "financial_receivables"
+      ],
+      "tabelasLidas": [
+        "contacts",
+        "commercial_orders",
+        "financial_payments"
+      ]
+    },
+    {
+      "rota": "/api/v1/financial-pagaveis",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "financial_pagaveis"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal/cadastro-do-cnpj",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-cfop-equivalentes/[id]",
+      "metodos": [
+        "PUT",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_cfop_equivalentes"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-cfop-equivalentes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_cfop_equivalentes"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/conferencia",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "decisao",
+        "observacoes"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_entradas"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/ignorar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "fiscal_entradas"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/importar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "fiscal_document_items",
+        "catalog_products",
+        "fiscal_entradas",
+        "financial_pagaveis"
+      ],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/itens/[itemId]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "produto_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "catalog_products",
+        "fiscal_document_items"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/manifestar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_manifestations",
+        "fiscal_entradas"
+      ],
+      "tabelasLidas": [
+        "fiscal_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_entradas",
+        "fiscal_document_items",
+        "fiscal_document_events",
+        "fiscal_manifestations",
+        "financial_pagaveis",
+        "suppliers"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas/[id]/xml",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_entradas"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-entradas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_entradas"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-eventos",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_document_events"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-events/[id]/retransmitir",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_events",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-fornecedores",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "suppliers"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/consulta",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "tipo",
+        "ncm",
+        "ex",
+        "uf",
+        "valor",
+        "origem"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/importar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "csv",
+        "tipo",
+        "uf"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_ibpt"
+      ],
+      "tabelasLidas": [
+        "fiscal_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-ibpt/importar-siscomex",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "json",
+        "uf"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_ibpt"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/[id]/retransmitir",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_inutilizacoes"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/lacunas",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes/puladas",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations",
+        "invoices",
+        "fiscal_inutilizacoes"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-inutilizacoes",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_settings",
+        "fiscal_inutilizacoes"
+      ],
+      "tabelasLidas": [
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-jobs",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_jobs",
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-manifestacoes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_manifestations"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-produtos",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_document_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-relatorios",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_entradas",
+        "fiscal_document_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/fiscal-settings/certificado",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "fiscal_settings",
+        "fiscal_certificates"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-settings",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_settings"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fiscal-sincronizacoes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_sync_logs"
+      ]
+    },
+    {
+      "rota": "/api/v1/fleet/drivers/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fleet_drivers"
+      ],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/fleet/drivers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fleet_drivers"
+      ],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/fleet",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fleet_vehicles",
+        "fleet_drivers"
+      ]
+    },
+    {
+      "rota": "/api/v1/fleet/vehicles/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fleet_vehicles"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/fleet/vehicles",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fleet_vehicles"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/health",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/home/mes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "mes"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/indicadores/perguntar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "pergunta",
+        "ano_mes"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/integrations/nuvemshop/callback",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "tenant_integrations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/inventory/movements",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "product_id",
+        "tipo",
+        "quantidade",
+        "observacao"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "inventory_movements",
+        "catalog_products"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/inventory/sugestoes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "catalog_products",
+        "commercial_orders",
+        "commercial_order_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/ajustes",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/cancel",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_jobs",
+        "invoices",
+        "fiscal_events"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/carta-correcao",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "fiscal_events"
+      ],
+      "tabelasLidas": [
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/danfe",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "invoices",
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/reemitir",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "fiscal_jobs",
+        "invoices"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/invoices/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_order_items",
+        "fiscal_settings",
+        "invoices",
+        "fiscal_events",
+        "fiscal_jobs"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/[id]/xml",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/importar-xmls",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/invoices",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "invoices"
+      ]
+    },
+    {
+      "rota": "/api/v1/invoices/validar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "order_id",
+        "extras"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_order_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/lead-captures",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "webhook_lead_captures"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/[id]/lose",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/leads/[id]/move",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "crm_leads"
+      ],
+      "tabelasLidas": [
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/[id]/next-action",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "decision",
+        "approved_seq"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "lead_state"
+      ],
+      "tabelasLidas": [
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/[id]/reactivation",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "decision",
+        "proposal_id"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "crm_lead_reactivations",
+        "cron_jobs"
+      ],
+      "tabelasLidas": [
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/leads/[id]/timeline",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_leads",
+        "crm_lead_activities"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/[id]/win",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/leads/at-risk",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "limit",
+        "min_hours"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/leads/bulk",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "crm_leads"
+      ],
+      "tabelasLidas": [
+        "user_organizations",
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/import",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "contacts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/leads/proposals",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lead_state",
+        "crm_leads",
+        "crm_lead_activities"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads/reactivations",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_lead_reactivations"
+      ]
+    },
+    {
+      "rota": "/api/v1/leads",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/lgpd/anonymize",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "contacts",
+        "crm_leads",
+        "crm_lead_activities"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]/approve",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "approved_reason"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "lgpd_requests",
+        "idempotency_keys"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]/preview",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests"
+      ]
+    },
+    {
+      "rota": "/api/v1/lgpd/requests/[id]",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests",
+        "api_audit_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/lgpd/requests",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "status",
+        "type",
+        "sla_bucket",
+        "page",
+        "limit"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "lgpd_requests"
+      ]
+    },
+    {
+      "rota": "/api/v1/marca/logo",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "platform_branding"
+      ],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/mcp/tools",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/message-templates/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "message_templates"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/message-templates",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "message_templates"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/messages/[id]/media",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "messages",
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/messages",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/metrics/atrito",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "from"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "organizations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/metrics/attendants",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "from"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/notifications/push",
+      "metodos": [
+        "GET",
+        "PUT",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "endpoint",
+        "keys",
+        "p256dh",
+        "auth"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/onboarding/whatsapp/qr",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/onboarding/whatsapp/session",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "channel_sessions"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/agent-mapping",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "mapeamento",
+        "new",
+        "contacted",
+        "qualifying",
+        "qualified",
+        "negotiating",
+        "won",
+        "lost"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "crm_stages"
+      ],
+      "tabelasLidas": [
+        "crm_pipelines"
+      ]
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/board",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "agent_inbox_items"
+      ],
+      "tabelasLidas": [
+        "ai_agents",
+        "ai_agent_versions",
+        "crm_lead_scores",
+        "conversations",
+        "lead_state",
+        "crm_leads",
+        "crm_pipelines",
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name",
+        "description",
+        "is_default",
+        "depois_de"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "crm_pipelines"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/stages/[stageId]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name",
+        "is_won",
+        "is_lost",
+        "depois_de"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/pipelines/[id]/stages",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/pipelines/default",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "crm_pipelines",
+        "crm_stages"
+      ]
+    },
+    {
+      "rota": "/api/v1/pipelines",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "name",
+        "description"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "crm_pipelines",
+        "crm_stages"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/price-tables/[id]/items",
+      "metodos": [
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "itens"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "price_table_items"
+      ],
+      "tabelasLidas": [
+        "price_tables",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/price-tables/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "price_tables"
+      ],
+      "tabelasLidas": [
+        "price_table_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/price-tables",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "price_tables"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products/[id]/images/[imageId]",
+      "metodos": [
+        "GET",
+        "DELETE"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "product_images"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products/[id]/images",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "product_images"
+      ],
+      "tabelasLidas": [
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/products/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "catalog_products"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products/afins",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_order_items",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/products/images",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "ids"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "product_images"
+      ]
+    },
+    {
+      "rota": "/api/v1/products/import",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "catalog_products"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products/ncm-completar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "catalog_products"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products/ncm-sugestao",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [
+        "nome"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/products",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "catalog_products"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/controle",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "business_prospects",
+        "contacts",
+        "messages",
+        "prospecting_campaigns",
+        "prospecting_sends"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/executar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "prospecting_searches",
+        "prospecting_campaigns"
+      ],
+      "tabelasLidas": [
+        "prospecting_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/laboratorio",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "lab_avaliacoes"
+      ],
+      "tabelasLidas": [
+        "automatic_sales_campaigns",
+        "organizations",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/liberar-reservas",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "prospecting_sends"
+      ],
+      "tabelasLidas": [
+        "prospecting_campaigns"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/painel",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "prospecting_campaigns",
+        "prospecting_searches",
+        "prospect_search_results",
+        "business_prospects",
+        "crm_leads",
+        "commercial_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/publico",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "prospecting_campaigns"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]/reenviar-falhas-de-pagamento",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "prospecting_sends"
+      ],
+      "tabelasLidas": [
+        "prospecting_campaigns",
+        "messages"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "prospecting_campaigns"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/canais",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/midia",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/numeros",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/opcoes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "business_prospects"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/preview",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/recuperacao/preview",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/recuperacao",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_campaigns"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao/cidades",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao/preview",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns/regiao",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_campaigns"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/campaigns",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_campaigns"
+      ],
+      "tabelasLidas": [
+        "prospecting_sends",
+        "messages"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/consumo",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "prospecting_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/mensagens-por-categoria",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_message_presets"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/mercado",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "business_prospects",
+        "commercial_orders",
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/[id]/raio-x",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "business_prospects"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "business_prospects",
+        "commercial_tasks"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/categorias",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "prospecting_searches",
+        "prospect_search_results",
+        "business_prospects"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/disparar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "prospecting_campaigns",
+        "prospecting_sends"
+      ],
+      "tabelasLidas": [
+        "channel_sessions",
+        "business_prospects",
+        "contacts",
+        "conversations",
+        "messages",
+        "organizations",
+        "pacing_ledger"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/import",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "business_prospects",
+        "contacts",
+        "crm_leads"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects/import-arquivo",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/prospects",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "prospecting_searches",
+        "prospect_search_results",
+        "business_prospects",
+        "contacts",
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/searches/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "acao"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_searches"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/prospecting/searches",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_searches"
+      ],
+      "tabelasLidas": [
+        "prospecting_settings"
+      ]
+    },
+    {
+      "rota": "/api/v1/prospecting/settings",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "prospecting_settings"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/public/orcamento/[token]",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/purchase-orders/[id]/receber",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "itens",
+        "item_id",
+        "quantidade"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "inventory_movements",
+        "catalog_products",
+        "purchase_order_items",
+        "purchase_orders"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/purchase-orders/[id]",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "status"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "purchase_orders"
+      ],
+      "tabelasLidas": [
+        "purchase_order_items"
+      ]
+    },
+    {
+      "rota": "/api/v1/purchase-orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "product_id",
+        "quantidade",
+        "custo_unit_cents"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "purchase_orders",
+        "purchase_order_items"
+      ],
+      "tabelasLidas": [
+        "suppliers",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/radar-compras",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/roadmap",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_goals"
+      ]
+    },
+    {
+      "rota": "/api/v1/rotas",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/sales-brain",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/settings/api-tokens/[id]/revoke",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "api_tokens"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/settings/api-tokens",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "api_tokens"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/settings/routing",
+      "metodos": [
+        "GET",
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "organizations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/conciliar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "pedido_id",
+        "pago",
+        "valor_recebido_cents",
+        "pago_em",
+        "meio_pagamento",
+        "observacao"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "shipments",
+        "shipment_orders",
+        "commercial_orders",
+        "financial_receivables",
+        "financial_payments"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/confirmar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "endereco",
+        "latitude",
+        "longitude",
+        "metodo",
+        "provedor",
+        "confianca",
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_destinations",
+        "shipment_destination_recoveries"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/entrada/confirmar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "latitude",
+        "longitude"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "endereco_entradas",
+        "shipment_destinations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/rejeitar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_destinations",
+        "shipment_destination_recoveries"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/reverter",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "motivo"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_destinations",
+        "shipment_destination_recoveries"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/fechamento/pdf",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/fechamento",
+      "metodos": [
+        "GET",
+        "PUT"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "chave",
+        "valor_cents"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_closings",
+        "shipment_orders"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders/[orderId]/proof",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "shipment_proofs"
+      ],
+      "tabelasLidas": [
+        "shipment_orders"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders/[orderId]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "status",
+        "separado",
+        "reconferido",
+        "motivo",
+        "latitude",
+        "longitude",
+        "ocorrido_em"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_orders",
+        "commercial_orders"
+      ],
+      "tabelasLidas": [
+        "shipments"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/orders",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "order_ids"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_orders",
+        "commercial_orders"
+      ],
+      "tabelasLidas": [
+        "shipments"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/romaneio",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "shipments",
+        "organizations",
+        "shipment_orders",
+        "commercial_orders",
+        "commercial_order_items",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/distribuicao",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "veiculo_id",
+        "motorista_id",
+        "paradas",
+        "distancia_m",
+        "duracao_s",
+        "chegadas_s",
+        "geometria"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipments",
+        "shipment_route_versions",
+        "shipment_orders"
+      ],
+      "tabelasLidas": [
+        "fleet_vehicles",
+        "fleet_drivers"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/finalizar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/geocodificar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "destination_ids",
+        "contact_ids"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_destinations",
+        "contacts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/iniciar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/manual",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "destination_id",
+        "contact_id",
+        "latitude",
+        "longitude",
+        "referencia"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "endereco_entradas",
+        "shipment_destinations",
+        "contacts"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/ordem",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "ordem",
+        "distancia_m",
+        "duracao_s",
+        "geometria",
+        "provedor",
+        "ruas",
+        "modo",
+        "origem_endereco",
+        "origem_lat",
+        "origem_lng",
+        "retornar_origem",
+        "tempo_parada_min"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_orders",
+        "shipments"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/otimizar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "origem"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "shipment_destinations"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/otimizar/veiculos",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "endereco"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fleet_vehicles",
+        "fleet_drivers"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/posicao",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "latitude",
+        "longitude",
+        "precisao_m"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_positions"
+      ],
+      "tabelasLidas": [
+        "shipments"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/recuperacoes",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "shipment_destinations",
+        "shipment_destination_recoveries"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota/recuperar",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "ignorar_pendentes"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipment_destination_recoveries",
+        "shipment_destinations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/shipments/[id]/rota",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "shipment_positions",
+        "shipment_route_versions"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments/[id]",
+      "metodos": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipments",
+        "shipment_orders",
+        "commercial_orders"
+      ],
+      "tabelasLidas": [
+        "shipment_proofs",
+        "financial_receivables"
+      ]
+    },
+    {
+      "rota": "/api/v1/shipments",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "shipments",
+        "shipment_orders",
+        "commercial_orders"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/sped/arquivo",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "fiscal_settings",
+        "fiscal_cfop_equivalentes",
+        "invoices",
+        "fiscal_entradas",
+        "commercial_orders",
+        "commercial_order_items",
+        "catalog_products"
+      ]
+    },
+    {
+      "rota": "/api/v1/suppliers",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [
+        "nome",
+        "cnpj",
+        "email",
+        "telefone",
+        "observacoes"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "suppliers"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/system/agent",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "kind",
+        "current_version",
+        "current_sha",
+        "off_release",
+        "latest_version",
+        "compare_failed",
+        "has_known_release",
+        "changelog"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "system_version",
+        "system_update_runs"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/system/instalacao",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/system/relogio/tick",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/system/update",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "system_update_runs"
+      ],
+      "tabelasLidas": [
+        "system_version"
+      ]
+    },
+    {
+      "rota": "/api/v1/system/version",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "system_version",
+        "system_update_runs"
+      ]
+    },
+    {
+      "rota": "/api/v1/tarefas/[id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_tasks",
+        "business_prospects"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/tarefas",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_tasks"
+      ],
+      "tabelasLidas": [
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/canais",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/motorista",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/nome",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/revoke",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "user_organizations"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/role",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/[user_id]/setor",
+      "metodos": [
+        "PATCH"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/team/assignable",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/team/invite",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/team",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "user_organizations"
+      ]
+    },
+    {
+      "rota": "/api/v1/titulos/baixas",
+      "metodos": [
+        "POST",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [
+        "order_id",
+        "parcela_n",
+        "valor_cents",
+        "observacao"
+      ],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "commercial_orders",
+        "commercial_titulo_baixas"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/titulos",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "commercial_orders",
+        "commercial_titulo_baixas"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhook-sources/[id]/events",
+      "metodos": [
+        "GET"
+      ],
+      "muta": false,
+      "leCorpo": false,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "webhook_sources",
+        "webhook_events_log"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhook-sources/[id]",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [
+        "webhook_sources"
+      ],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/webhook-sources",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": true,
+      "tabelasEscritas": [],
+      "tabelasLidas": []
+    },
+    {
+      "rota": "/api/v1/webhooks/channel/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/in/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log",
+        "contacts",
+        "webhook_sources"
+      ],
+      "tabelasLidas": [
+        "crm_leads"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/meta/[token]",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "meta_templates",
+        "messages"
+      ],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/[event]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "tenant_integrations"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-data-request",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "tenant_integrations"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/customer-redact",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "tenant_integrations"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/nuvemshop/store-redact",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "tenant_integrations",
+        "contacts"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/waha/[token]",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    },
+    {
+      "rota": "/api/v1/webhooks/waha",
+      "metodos": [
+        "POST"
+      ],
+      "muta": true,
+      "leCorpo": true,
+      "payload": [],
+      "validaPayload": false,
+      "tabelasEscritas": [
+        "webhook_events_log"
+      ],
+      "tabelasLidas": [
+        "channel_sessions"
+      ]
+    }
+  ]
+}
