@@ -2,7 +2,6 @@
 import { useT } from "@/hooks/i18n/useT";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -181,7 +180,21 @@ export function InboxFilters({ value, onChange }: Props) {
         aria-label={t("Buscar conversas")}
       />
 
-      <Tabs value={value.tab} onValueChange={(v) => onChange({ ...value, tab: v as InboxTab })}>
+      {/*
+        FILTRO, NÃO ABA. Estas cinco opções filtram a MESMA lista — não existe
+        painel por aba. O `Tabs` do Radix exige painel: sem `TabsContent`, cada
+        gatilho sai com `aria-controls="…-content-unassigned"`, que o axe reprova
+        como valor ARIA inválido (crítico) e o leitor de tela ignora. Medido em
+        17/11/2026 em `/app/inbox`.
+        O padrão certo para "escolher um recorte" é botão com `aria-pressed`
+        dentro de um grupo rotulado — o visual é o mesmo (as classes de estado
+        trocam `data-[state=active]` por `aria-pressed`).
+      */}
+      <div
+        role="group"
+        aria-label={t("Filtro de conversas")}
+        className="flex h-auto w-full max-w-full flex-wrap gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5"
+      >
         {/* `.tabs` da referência é `display:flex;gap:4px` — e o flex aqui não é
             detalhe de estilo, é o que impede os rótulos de colidir. A versão em
             `grid` + `minmax(0,1fr)` dava colunas iguais MENORES que o texto
@@ -194,14 +207,16 @@ export function InboxFilters({ value, onChange }: Props) {
             em nenhuma das duas faixas. `flex-wrap` quebra em duas linhas e
             mantém TODOS os rótulos e contadores visíveis; sem ele a última aba
             transbordava o cartão e o "417" do Automático era cortado. */}
-        <TabsList className="flex h-auto w-full max-w-full flex-wrap gap-1 rounded-[9px] border-b-0 bg-muted/60 p-0.5">
+        <>
           {tabs.map((tab) => {
             const meta = INBOX_TABS.find((t) => t.value === tab)!;
             const count = countFor[tab];
             return (
-              <TabsTrigger
+              <button
                 key={tab}
-                value={tab}
+                type="button"
+                aria-pressed={value.tab === tab}
+                onClick={() => onChange({ ...value, tab })}
                 // `.tabs button` da referência: `flex:1` (divide sobrando, sem
                 // ficar menor que o rótulo), raio 7, e o segmented control no
                 // ativo — `--surface-2` + filete inset de `--line`. O
@@ -211,7 +226,7 @@ export function InboxFilters({ value, onChange }: Props) {
                 // tem quatro em 330px): o aperto é o suficiente para caber o
                 // máximo de abas por linha, e o `flex-wrap` acima resolve o
                 // resto quebrando a faixa.
-                className="flex-1 gap-0.5 rounded-[7px] px-0.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground data-[state=active]:border-transparent data-[state=active]:bg-muted data-[state=active]:shadow-[inset_0_0_0_1px_var(--color-border)]"
+                className="inline-flex flex-1 items-center justify-center gap-0.5 rounded-[7px] px-0.5 py-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground aria-pressed:bg-muted aria-pressed:text-foreground aria-pressed:shadow-[inset_0_0_0_1px_var(--color-border)]"
               >
                 {t(meta.label)}
                 {/* Contador na cor da marca em negrito — é o número que a aba
@@ -220,11 +235,11 @@ export function InboxFilters({ value, onChange }: Props) {
                 {typeof count === "number" && count > 0 && (
                   <span className="text-[10px] font-bold text-accent tabular-nums">{count}</span>
                 )}
-              </TabsTrigger>
+              </button>
             );
           })}
-        </TabsList>
-      </Tabs>
+        </>
+      </div>
 
       {showChannelSwitch && (
         <Select

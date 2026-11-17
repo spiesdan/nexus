@@ -49,6 +49,7 @@ export const TRANSVERSAIS: Record<string, string> = {
   "qa-selo-no-funil-usado": "selo de qualidade do funil em uso",
   "rbac-roles": "régua de papel (owner/manager/agent) que atravessa tudo",
   smoke: "fumaça do produto",
+  "axe-telas-principais": "acessibilidade (axe) nas 8 telas de operação — vale para todas",
   "meu-dia-alertas": "alertas do Meu Dia (transversal ao painel)",
   "inbox-tempo-real": "realtime do inbox — FORA_DO_CI (conta Google de teste)",
   "vps-fresh-onboarding": "instalação fresca — FORA_DO_CI (WAHA/Redis/Resend/Nuvemshop)",

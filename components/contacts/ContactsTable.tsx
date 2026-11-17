@@ -75,12 +75,17 @@ function SortableHead({
   const emphasis = "text-foreground";
 
   return (
-    <TableHead className={className}>
+    <TableHead
+      className={className}
+      // `aria-sort` é atributo de `columnheader`, não de botão: no `<button>`
+      // o axe reprova (aria-allowed-attr, crítico), e o leitor de tela ignora
+      // a ordenação. Medido em 17/11/2026 em `/app/contacts` (4 colunas).
+      aria-sort={active ? (orderDir === "asc" ? "ascending" : "descending") : "none"}
+    >
       <button
         type="button"
         onClick={() => onSort(column)}
         className="inline-flex items-center gap-1 font-medium hover:text-foreground"
-        aria-sort={active ? (orderDir === "asc" ? "ascending" : "descending") : "none"}
       >
         {label}
         <span className="inline-flex flex-col -space-y-1" aria-hidden>

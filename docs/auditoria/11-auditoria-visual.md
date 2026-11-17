@@ -1704,6 +1704,36 @@ reindexada para 0, `subtotal_cents` e `total_cents` recalculados para **89.900**
 e o dublê passou a **recusar array** em `update`, reproduzindo o comportamento do PostgREST — o teste
 agora falha se alguém voltar a mandar lista.
 
+### V-48 · Alta · `aria-sort` estava no botão, não na coluna — 4 colunas invisíveis para leitor de tela
+
+Primeira rodada do **axe** nas telas de operação (instrumento novo, `scripts/auditoria/axe-nas-telas.mjs`,
+regras `wcag2a` + `wcag2aa`): `/app/contacts` reprovou com `aria-allowed-attr` **crítico** em **4
+nós**. A causa: o atributo `aria-sort` morava no `<button>` do cabeçalho, e ele só é válido em
+`columnheader` (`<th>`). Para o leitor de tela, a ordenação da tabela simplesmente não existia.
+
+**Corrigido em `components/contacts/ContactsTable.tsx`**: `aria-sort` foi para o `<TableHead>`, onde
+o papel é `columnheader`; o botão continua sendo o controle.
+
+### V-49 · Alta · O filtro do Inbox usava abas sem painel — valor ARIA inválido
+
+O mesmo axe reprovou `/app/inbox` com `aria-valid-attr-value` **crítico**: cada gatilho saía com
+`aria-controls="radix-…-content-unassigned"` — o Radix só assina o id do painel quando existe um
+`TabsContent` correspondente, e ali as cinco opções (Fila/Minhas/Todas/Fechadas/Automático)
+**filtram a mesma lista**: nunca houve painel por aba. O produto usava `role="tab"` para um
+segmentado de filtro.
+
+**Corrigido em `components/inbox/InboxFilters.tsx`**: virou `role="group"` com botões e
+`aria-pressed` — o padrão de "escolher um recorte". O visual foi preservado trocando
+`data-[state=active]` por `aria-pressed:` nas mesmas classes.
+
+**Prova:** o axe rodou de novo nas **8 telas**: `0` violações em todas (antes: 1 crítica em cada
+uma das duas). E as 16 asserções de `tests/unit/inbox-filters-scope.test.tsx` passaram a consultar
+`role="button"` — o teste cobrava `role="tab"` do componente que estava errado.
+
+**Gate novo:** `tests/e2e/axe-telas-principais.spec.ts` roda axe nas 8 telas e reprova qualquer
+violação `serious`/`critical`. Registrado em `SPECS_PARTE_2` e em `TRANSVERSAIS` (acessibilidade
+atravessa as telas) — sem isso o gate de cobertura do E2E reprova a spec nova, e reprovou mesmo.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1793,7 +1823,7 @@ cobriu").
 | 2.15 | Desempenho percebido e gráficos                                     | `[~]`  | **Medido em produção** (V-05 fechado): desktop p50 1.495 ms / p90 1.990 ms / máx 2.838 ms; celular p50 1.172 ms / p90 1.536 ms / máx 1.920 ms. **Trace** (`desempenho.mjs`, 12 telas × 2): desktop LCP máx 924 ms, CLS máx 0,026, TBT 0–17 ms; celular LCP máx 1.428 ms, CLS máx **0,037** (`/app/inbox`), TBT máx 181 ms (`/app/pedidos`, sinal). **INP** (`inp.mjs`, 6 telas × 2): pior **96 ms** (celular CPU 4×), **0 interações acima de 200 ms**; 0 interações medidas em kanban/ai (roteiro não acha campo/aba/filtro). CLS de `/app/financeiro` era **0,130** e é **0,000** (V-34). **Falta**: custo de render dos gráficos por canvas |
 | 2.16 | Não padronizar mecanicamente onde a composição é intencional        | `[x]`  | **7 exceções declaradas com motivo** (showcase `/design`, título-identificador, admin sem trilha, paleta de categoria em gráfico, `h1` `sr-only` do Inbox, esqueleto do radar, duas cascas). **Padronizado com medida**: título 24 px/500 (117 de 119), um `h1` por tela, 1 ação primária por tela, 101 rótulos ligados (0 soltos), 35 de 35 botões de envio com progresso, contraste 22 → 0 |
 
-**Fase 2: em andamento.** **40 achados corrigidos** com medida antes/depois — as 20 seções
+**Fase 2: em andamento.** **42 achados corrigidos** com medida antes/depois — as 20 seções
 marcadas `CORRIGIDO` (V-01, V-02, V-07, V-08, V-09, V-10, V-12, V-13, V-15, V-16, V-17, V-18,
 V-19, V-20, V-21, V-22, V-23, V-24, V-25, V-26), V-27, V-28 e V-29 (tabela de contraste) e
 V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e V-33
@@ -1801,7 +1831,8 @@ V-31 (correção automática da nota), V-32 (403 do cliente HTTP na BrasilAPI) e
 V-36 (título de página com dois pesos), V-37 (legenda pintada com a cor da série) e V-38
 (selo de status usando a paleta de categoria como texto), V-39 (POST repetido em erro de
 rede), V-40 (botão de envio mudo) V-41 (a varredura media rota inexistente) V-42 (ação pausada offline sem aviso) V-43 (estado vazio mentindo offline) V-44 (nome longo quadruplicando a linha) V-45 (tela do roteador sem título), V-46 (cabeçalho esmagando o título no tablet) e
-V-50 (remover item do pedido devolvia 422);
+V-48 (`aria-sort` no botão), V-49 (filtro do Inbox com aba sem painel), V-50
+(remover item do pedido devolvia 422);
 V-03 e V-11 descartados com prova; V-05 **fechado** (produção medida); V-06 é sinal a confirmar
 por clique; V-14 é observação. V-04 aguarda **decisão de produto**.
 
