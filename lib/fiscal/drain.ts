@@ -60,6 +60,36 @@ async function evento(
   });
 }
 
+/**
+ * A linha ainda pode ir para a SEFAZ?
+ *
+ * `chave_acesso` é a prova de que a nota JÁ foi autorizada: a partir daí o
+ * documento existe no fisco e nenhuma tentativa pode transmiti-lo de novo.
+ * `status` sozinho não bastava — o caso de 16/11/2026 (NF-e 4641 e 4642 para
+ * a mesma venda, pedido 19631) nasceu de um segundo job que encontrou a nota
+ * em `em_emissao`.
+ */
+export function notaPodeSerTransmitida(
+  nota: { status: string; chave_acesso?: string | null } | null | undefined,
+): boolean {
+  return !!nota && nota.status === "em_emissao" && !nota.chave_acesso;
+}
+
+/**
+ * A autorização que voltou da SEFAZ pode substituir a que já está na linha?
+ *
+ * Só quando a linha ainda não tem chave ou quando é a MESMA chave (replay de
+ * uma resposta que o app já gravou). Chave diferente = segunda nota para o
+ * mesmo documento: a primeira é a história fiscal e não se reescreve.
+ */
+export function autorizacaoPodeSubstituir(
+  atual: { chave_acesso: string | null } | null | undefined,
+  novaChave: string | null | undefined,
+): boolean {
+  if (!novaChave) return true;
+  return !atual?.chave_acesso || atual.chave_acesso === novaChave;
+}
+
 export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promise<ResultadoJob> {
   // Claim: só quem tira de `pendente` trabalha.
   const { data: claimed } = await admin
@@ -74,7 +104,9 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
   const { data: notaDb } = await admin
     .from("invoices")
-    .select("id, organization_id, order_id, serie, status, provedor, numero, created_at, extras_fiscais")
+    .select(
+      "id, organization_id, order_id, serie, status, provedor, numero, chave_acesso, created_at, extras_fiscais",
+    )
     .eq("id", job.invoice_id)
     .maybeSingle();
   const nota = notaDb as unknown as {
@@ -85,16 +117,26 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
     status: string;
     provedor: string;
     numero: number | null;
+    chave_acesso: string | null;
     created_at: string;
     extras_fiscais: ExtrasFiscais | null;
   } | null;
-  // Nota saiu de em_emissao no meio do caminho (cancelada pelo usuário):
-  // encerra o job sem tocar em nada — história fiscal não se reescreve.
-  if (!nota || nota.status !== "em_emissao") {
+  // Nota saiu de em_emissao no meio do caminho (cancelada pelo usuário) ou já
+  // tem chave (autorizada): encerra o job sem tocar em nada — história fiscal
+  // não se reescreve, e nota autorizada não se transmite de novo.
+  if (!nota || !notaPodeSerTransmitida(nota)) {
     await admin
       .from("fiscal_jobs")
       .update({ status: "concluido", updated_at: new Date().toISOString() })
       .eq("id", job.id);
+    if (nota?.chave_acesso) {
+      logger.warn("fiscal: job ignorado — a nota já estava autorizada", {
+        invoice_id: nota.id,
+        organization_id: nota.organization_id,
+        job_id: job.id,
+        chave_acesso: nota.chave_acesso,
+      });
+    }
     return { saidas: "ignorado", motivo: "nota fora de emissão" };
   }
 
@@ -306,6 +348,37 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   let resultado: ResultadoDeEmissao;
   let numeroDaNota: number | null = null;
   if (escolha === "spednfe") {
+    // ─── A ÚLTIMA LEITURA ANTES DE TRANSMITIR ─────────────────────────────
+    //
+    // Entre a leitura do começo do job e o envio passam-se segundos montando
+    // destinatário e itens. Uma autorização gravada nesse meio-tempo (outro
+    // job da mesma nota) tem de abortar ESTE envio: transmitir de novo produz
+    // um segundo documento fiscal para a mesma venda — foi o que gerou as
+    // NF-e 4641 e 4642 do pedido 19631 em 16/11/2026.
+    const { data: frescaDb } = await admin
+      .from("invoices")
+      .select("status, chave_acesso")
+      .eq("id", nota.id)
+      .maybeSingle();
+    const fresca = frescaDb as unknown as { status: string; chave_acesso: string | null } | null;
+    if (!notaPodeSerTransmitida(fresca)) {
+      await admin
+        .from("fiscal_jobs")
+        .update({
+          status: "concluido",
+          ultimo_erro: "nota saiu de emissão antes da transmissão",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.id);
+      logger.warn("fiscal: transmissão abortada — nota já saiu de emissão", {
+        invoice_id: nota.id,
+        organization_id: nota.organization_id,
+        job_id: job.id,
+        chave_acesso: fresca?.chave_acesso ?? null,
+      });
+      return { saidas: "ignorado", motivo: "nota saiu de emissão antes da transmissão" };
+    }
+
     await evento(admin, nota.organization_id, nota.id, "enviada", { status: "em_emissao" });
     const ctx = await carregarContextoSped(nota.organization_id);
     if (!ctx) {
@@ -484,6 +557,54 @@ async function finalizar(
   mensagem: string | null,
   resultado: ResultadoDeEmissao | null,
 ): Promise<void> {
+  // ─── AUTORIZAÇÃO GRAVADA NÃO É SUBSTITUÍDA POR OUTRA ────────────────────
+  //
+  // Se a linha já tem uma chave e a SEFAZ voltou com OUTRA, houve uma segunda
+  // autorização para o mesmo documento. Sobrescrever esconderia a primeira —
+  // foi assim que a NF-e 4641 sumiu da tela em 16/11/2026, trocada pela 4642.
+  // A primeira fica; a segunda vira evento visível e exige cancelamento no
+  // fisco (o log guarda chave e protocolo dos dois documentos).
+  if (status === "autorizada" && resultado?.chave_acesso) {
+    const { data: atualDb } = await admin
+      .from("invoices")
+      .select("numero, chave_acesso")
+      .eq("id", nota.id)
+      .maybeSingle();
+    const atual = atualDb as unknown as { numero: number | null; chave_acesso: string | null } | null;
+    if (!autorizacaoPodeSubstituir(atual, resultado.chave_acesso)) {
+      logger.error("fiscal: SEFAZ autorizou uma SEGUNDA nota para a mesma linha — primeira mantida", {
+        invoice_id: nota.id,
+        organization_id: nota.organization_id,
+        numero_na_linha: atual?.numero ?? null,
+        chave_na_linha: atual?.chave_acesso ?? null,
+        numero_da_segunda: resultado.numero ?? null,
+        chave_da_segunda: resultado.chave_acesso,
+        protocolo_da_segunda: resultado.protocolo ?? null,
+      });
+      await evento(admin, nota.organization_id, nota.id, "erro", {
+        status: "duplicidade_nao_gravada",
+        protocolo: resultado.protocolo ?? null,
+        mensagem:
+          `A SEFAZ autorizou uma SEGUNDA nota para este documento: ` +
+          `número ${resultado.numero ?? "?"}, chave ${resultado.chave_acesso}` +
+          (resultado.protocolo ? `, protocolo ${resultado.protocolo}` : "") +
+          `. A primeira (número ${atual?.numero ?? "?"}, chave ${atual?.chave_acesso}) foi mantida. ` +
+          "CANCELE UMA DAS DUAS NA SEFAZ — transmitir de novo não resolve.",
+        xml: null,
+      });
+      await admin
+        .from("fiscal_jobs")
+        .update({
+          status: "concluido",
+          tentativas: job.tentativas + 1,
+          ultimo_erro: "duplicidade: a nota já tinha autorização gravada",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.id);
+      return;
+    }
+  }
+
   const { error: erroDoRegistro } = await admin
     .from("invoices")
     .update({
