@@ -1422,6 +1422,24 @@ Gate em `tests/unit/cabecalho-nao-esmaga-no-tablet.test.ts`: o cabeçalho não p
 uma linha). O "antes" está medido no instrumento (0 px) — refazer a captura exigiria reverter o
 conserto.
 
+### Breadcrumb: duas cascas, dois padrões de orientação — declarado, não uniformizado
+
+O item 2.5 cobra consistência. Medido no DOM das 129 rotas estáticas:
+
+| Casca | Rotas | Trilha (breadcrumb) | Como orienta em tela profunda |
+| --- | --- | --- | --- |
+| tenant (`/app/**`) | 115 | **sim** — 51 das 51 rotas profundas reais | trilha no TopBar (`components/shell/Breadcrumb.tsx`), derivada do registro de navegação |
+| plataforma (`/admin/**`) | 14 | **não** | **voltar + abas** na tela de detalhe (`/admin/tenants/[id]` tem "Tenants" + TabNav; idem `audit/[entryId]`, `incidents/[id]`, `users/[id]`, `lgpd/requests/[id]`) |
+
+Quatro rotas profundas pareciam sem trilha — `/app/settings/canal-oficial`, `/app/settings/templates`,
+`/app/settings/tenant/whatsapp` e `/app/recuperacao` — e **nenhuma é tela**: as quatro são aliases que
+redirecionam, e a medida caiu no destino. Depois de descontá-las, o tenant fica em **51/51**.
+
+A decisão, escrita para não virar "esqueceram": **a casca do tenant usa trilha porque a hierarquia
+tem três níveis (área → módulo → detalhe); a do admin usa voltar + abas porque a hierarquia é rasa
+(Tenants → tenant → aba) e a trilha repetiria o que o botão de voltar já diz.** Uniformizar as duas
+seria o item 2.16 ao contrário: padronizar o que é diferente de propósito.
+
 ## 3. O que está bom — e foi medido, não elogiado
 
 Números da varredura de **16/11 contra build de produção** (`pnpm build` + `pnpm exec next start`):
@@ -1498,7 +1516,7 @@ cobriu").
 | 2.2  | Se impedido, registrar bloqueio sem alegar inspeção visual          | `[x]`  | Nada foi alegado sem execução; o que não foi coberto está listado com o motivo (§3)                                                                                                                                                                                                                                                                                                                                                            |
 | 2.3  | Propósito e próximo passo evidentes                                 | `[x]`  | Título de aba próprio em todas as rotas (V-01) e `<h1>` em todas as medições depois de V-02, V-08 e V-12 — inclui o vazio de `/app/pedidos/imprimir`, que passou a ter próximo passo                                                                                                                                                                                                                                                           |
 | 2.4  | Hierarquia e densidade                                                | `[x]`  | **12 telas em 3 larguras** (1440, 834, 320): **1 ação primária** em cada uma das 7 telas de operação em 1440 e 834; a 320, financeiro e notas têm a primária abaixo da dobra (declarado). **Densidade**: 7 alvos (kanban) a **64** (contatos em 834). **Leitura**: máximo 53 caracteres por linha. A medição **achou e corrigiu** o cabeçalho esmagando o título no tablet (V-46: `<h1>` com 0 px → 498 px) |
-| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[~]`  | **Título medido no DOM das 129 rotas estáticas**: 117 de 119 `h1` visíveis a 24 px / 500, **um `h1` por tela** (V-35 e V-36 corrigidos; 2 exceções declaradas: `/design` e os títulos que são identificador). `sr-only` separado de visível no instrumento. **Breadcrumb**: 52 de 129 rotas têm; shell e barra de filtros consistentes nos 258 screenshots. **Falta**: decidir se breadcrumb é padrão de todas as telas internas ou só das profundas |
+| 2.5  | Consistência de headers, breadcrumb, ações, filtros, navegação      | `[x]`  | **Título**: 117 de 119 `h1` visíveis a 24 px / 500, **um por tela** (V-35/V-36) — 2 exceções declaradas (showcase `/design` e título-identificador). **Breadcrumb**: 51 das 51 rotas profundas REAIS do tenant têm trilha no TopBar; as 4 que apareciam sem são **aliases** medidos no destino. **Admin**: o shell de plataforma (14 rotas) não tem trilha por decisão — as 4 telas de detalhe profundo usam **voltar + abas** (conferido em `/admin/tenants/[id]`, `audit/[entryId]`, `incidents/[id]`, `users/[id]`, `lgpd/requests/[id]`). **Ações**: 1 primária por tela de operação (2.4). **Regra declarada**: tenant = trilha; admin = voltar + abas (hierarquia rasa) |
 | 2.6  | Cliques/digitação em tarefas frequentes                             | `[~]`  | **Medido no navegador** (`esforco-da-tarefa.mjs`, eventos reais): achar cliente e abrir a ficha = **2 cliques + 7 teclas**; abrir o pedido do topo = **1 clique**; ver vencidos = **1 clique**. `jornada-venda` (E2E) = 5 cliques + 5 digitações do login ao pedido criado. **Falta**: Inbox (lista virtualizada sem seletor estável) e as demais jornadas |
 | 2.7  | Busca, ordenação, filtros, paginação, seleção em massa              | `[~]`  | **Medido no dedo** (`lista-busca-e-paginacao.mjs`): contatos 25 → 19 linhas com "E2E" e 25 → 50 com "Carregar mais"; pedidos 49 → 11 com o termo, 47 linhas na visão Tabela e **"47 selecionados"** após selecionar todos. **Não vai para a URL**: filtro em `/app/contacts` e `/app/pedidos` não sobrevive a reload (decisão de produto, 4.5). **Falta**: ordenação por coluna e seleção em massa fora de Pedidos |
 | 2.8  | Formulários (rótulos, validação, erros, preservação, salvar, cancelar, confirmar) | `[~]`  | **Recusa**: 3 formulários submetidos vazios em produção — os 3 recusam, explicam na página e não gravam (`escrita-e-validacao.mjs`). **Caminho válido**: 2 specs E2E executadas hoje contra o build de produção, verdes em 12,2 s — `contato-salva-email` (e-mail digitado fica salvo) e `jornada-venda` (login → pedido criado). **Inventário**: 34 arquivos com botão de envio, 32 com menção em alguma spec; **2 sem cobertura de caminho válido**: renomear agente e criar token de API |
