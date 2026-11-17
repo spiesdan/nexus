@@ -1565,13 +1565,21 @@ As sete mistas têm motivo conhecido: arquivo/binário e CSV **não** são JSON 
 | rotas com teto explícito | **147** |
 | rotas com `rate limit` | **3** (importação por IA, upload de marca, webhook de entrada) |
 | rotas com `Idempotency-Key` | **2** (`lgpd/.../approve`, `financeiro/.../pagamentos`) |
-| **GET de lista sem teto no handler** | **80** |
+| **GET de lista sem teto no handler** | **80** (medido em 16/11; **79** após o F-30 em 17/11) |
 
 O rate limit não é "3 no produto": login, signup, recuperação e aceite de convite vivem em **Server
 Actions** (`app/actions/auth/*`), e o dispatcher de IA tem o próprio
 (`lib/ai/dispatcher/rate-limit.ts`). A conta acima é só de `route.ts`.
 
-**O achado que fica (F-30, aberto):** **80** listas não declaram teto **no handler**. A primeira
+> **Atualização de 17/11/2026 (F-30):** `/ai/followups/enrollments` passou a paginar com
+> `limit` (default 200, teto 500) + `offset` e a devolver `meta.has_more`/`meta.next_offset` —
+> o instrumento (`superficie-de-api.mjs`) caiu de **80 para 79** GETs sem teto. Em
+> `/admin/usage`, as contagens por organização passaram a usar `count: "exact", head: true`
+> (zero linha trafegada para contar) e `llm_calls` passou a ser lida **uma vez** para total e
+> série. O instrumento ganhou a métrica **contagem no banco: 19 rotas**. A série diária de
+> mensagens continua lendo linhas porque é gráfico, não contagem — teto declarado no código.
+
+**O achado que fica (F-30, `[~]`):** **79** listas ainda não declaram teto **no handler**. A primeira
 contagem era 82 porque `/agenda/agendamentos` limita no helper (`lib/agenda/consulta.ts`: default 200,
 máximo 500) — o instrumento passou a reconhecer `limite`/`limit` passado a helper e o falso positivo
 saiu.

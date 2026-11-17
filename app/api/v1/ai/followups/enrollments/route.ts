@@ -15,6 +15,15 @@ import { ENROLLMENT_LIST_COLUMNS, enrollFollowupFlow } from "@/lib/followup/enro
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Teto e página. O PostgREST corta em 1000 linhas por resposta — sem `.range`
+ * explícito, uma organização com mais de 1000 contatos em fluxo recebia a
+ * primeira página em silêncio e a tela não tinha como saber. Aqui a rota diz o
+ * que entregou: `meta.has_more` e `meta.next_offset`.
+ */
+const LIMITE_PADRAO = 200;
+const LIMITE_MAXIMO = 500;
+
 const ENROLLMENT_STATUSES = [
   "active",
   "waiting_reply",
@@ -36,17 +45,43 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("invalid_request", "status inválido.", 400, { requestId });
   }
 
+  // Paginação explícita. Default 200, teto 500; `offset` para seek simples.
+  // Um `limit` inválido não é motivo para 400 — a tela degrada para o padrão,
+  // mas NUNCA corta em silêncio: a resposta diz `has_more` e `next_offset`.
+  const limiteBruto = Number(req.nextUrl.searchParams.get("limit") ?? "");
+  const offsetBruto = Number(req.nextUrl.searchParams.get("offset") ?? "");
+  const limit = Number.isFinite(limiteBruto) && limiteBruto > 0
+    ? Math.min(Math.floor(limiteBruto), LIMITE_MAXIMO)
+    : LIMITE_PADRAO;
+  const offset = Number.isFinite(offsetBruto) && offsetBruto > 0 ? Math.floor(offsetBruto) : 0;
+
   const supabase = await createClient();
   let query = supabase
     .from("followup_enrollments")
     .select(ENROLLMENT_LIST_COLUMNS)
     .eq("organization_id", activeOrg.orgId)
-    .order("updated_at", { ascending: false });
+    // Ordem total: `updated_at` sozinho empata em lote e a página seguinte
+    // repetiria/pularia linha. `id` desempata.
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false });
   if (status !== null) query = query.eq("status", status);
 
-  const { data, error } = await query;
+  // `limit + 1` é a sonda de truncamento: sobrou linha além da página?
+  const { data, error } = await query.range(offset, offset + limit);
   if (error) return fail("internal_error", error.message, 500, { requestId });
-  return ok(data ?? [], { requestId });
+
+  const linhas = data ?? [];
+  const hasMore = linhas.length > limit;
+  const pagina = hasMore ? linhas.slice(0, limit) : linhas;
+  return ok(pagina, {
+    requestId,
+    meta: {
+      limit,
+      offset,
+      has_more: hasMore,
+      next_offset: hasMore ? offset + limit : null,
+    },
+  });
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

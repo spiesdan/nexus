@@ -1,14 +1,15 @@
 {
-  "medido_em": "2026-11-17T13:54:56.226Z",
+  "medido_em": "2026-11-17T22:28:56.278Z",
   "totais": {
-    "rotas": 417,
-    "comPaginacao": 127,
-    "comTeto": 151,
+    "comContagemHead": 19,
+    "rotas": 418,
+    "comPaginacao": 129,
+    "comTeto": 152,
     "comRateLimit": 3,
     "comIdempotencia": 2,
     "comWrapperCanonico": 403,
     "comResponseNaMao": 8,
-    "comServiceRole": 209
+    "comServiceRole": 210
   },
   "getSemTeto": [
     "/api/mcp",
@@ -22,7 +23,6 @@
     "/api/v1/ai/cases",
     "/api/v1/ai/credentials",
     "/api/v1/ai/followup-flows",
-    "/api/v1/ai/followups/enrollments",
     "/api/v1/ai/guardrail-layers",
     "/api/v1/ai/knowledge/chave",
     "/api/v1/ai/knowledge/sources",
@@ -95,6 +95,19 @@
   "detalheSemTetoDescartado": 46,
   "porRota": [
     {
+      "rota": "/api/auth/signout",
+      "get": false,
+      "muta": true,
+      "paginacao": false,
+      "teto": false,
+      "rate": false,
+      "idem": false,
+      "wrapper": false,
+      "manual": false,
+      "service": false,
+      "contagemHead": false
+    },
+    {
       "rota": "/api/internal/agents/run",
       "get": false,
       "muta": true,
@@ -104,7 +117,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/mcp",
@@ -116,7 +130,8 @@
       "idem": false,
       "wrapper": false,
       "manual": true,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/audit/[entryId]",
@@ -128,7 +143,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/audit",
@@ -140,7 +156,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/dashboard/kpis",
@@ -152,7 +169,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/admin/impersonate/end",
@@ -164,7 +182,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/inbox/conversations/[id]",
@@ -176,7 +195,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/inbox/conversations",
@@ -188,7 +208,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/incidents/[id]/resolve",
@@ -200,7 +221,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/incidents/[id]",
@@ -212,7 +234,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/incidents",
@@ -224,7 +247,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/lgpd/requests/[id]",
@@ -236,7 +260,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/lgpd/requests",
@@ -248,7 +273,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/platform-admins",
@@ -260,7 +286,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/tenants/[id]/health",
@@ -272,7 +299,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/tenants/[id]/impersonate",
@@ -284,7 +312,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/tenants/[id]/reactivate",
@@ -296,7 +325,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/tenants/[id]",
@@ -308,7 +338,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/admin/tenants/[id]/suspend",
@@ -320,7 +351,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/tenants",
@@ -332,7 +364,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/usage",
@@ -344,7 +377,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/admin/users/[id]",
@@ -356,7 +390,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/admin/users",
@@ -368,7 +403,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/agendamentos",
@@ -380,7 +416,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/google/callback",
@@ -392,7 +429,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/google/connect",
@@ -404,7 +442,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/google/desconectar",
@@ -416,7 +455,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/horarios-livres",
@@ -428,7 +468,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/agenda/tipos",
@@ -440,7 +481,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/duplicate",
@@ -452,7 +494,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/pause",
@@ -464,7 +507,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/proposals/[pid]/apply",
@@ -476,7 +520,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/proposals",
@@ -488,7 +533,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/publish",
@@ -500,7 +546,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]",
@@ -512,7 +559,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/runs",
@@ -524,7 +572,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/tool-usage",
@@ -536,7 +585,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/versions/[vid]",
@@ -548,7 +598,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/versions/[vid]/test",
@@ -560,7 +611,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/[id]/versions",
@@ -572,7 +624,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents/assignable",
@@ -584,7 +637,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/agents",
@@ -596,7 +650,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/automatico-ativo",
@@ -608,7 +663,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/budget",
@@ -620,7 +676,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/cases/[id]/reply",
@@ -632,7 +689,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/cases/[id]",
@@ -644,7 +702,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/cases",
@@ -656,7 +715,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/controle/resumo",
@@ -668,7 +728,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/ai/credentials/[id]/revalidate",
@@ -680,7 +741,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/credentials/[id]",
@@ -692,7 +754,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/credentials",
@@ -704,7 +767,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/decisions/[id]/decide",
@@ -716,7 +780,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/decisions/[id]/executar",
@@ -728,7 +793,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/decisions/propose",
@@ -740,7 +806,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/ai/evolution",
@@ -752,7 +819,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/ai/followup-flows/[id]/disable",
@@ -764,7 +832,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followup-flows/[id]/publish",
@@ -776,7 +845,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followup-flows/[id]/rollback",
@@ -788,7 +858,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followup-flows/[id]",
@@ -800,7 +871,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followup-flows",
@@ -812,7 +884,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]/cancel",
@@ -824,7 +897,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]/pause",
@@ -836,7 +910,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]/resume",
@@ -848,7 +923,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]",
@@ -860,7 +936,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]/skip",
@@ -872,7 +949,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments/[id]/snooze",
@@ -884,19 +962,21 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/enrollments",
       "get": true,
       "muta": true,
-      "paginacao": false,
-      "teto": false,
+      "paginacao": true,
+      "teto": true,
       "rate": false,
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/promises/[id]/cancel",
@@ -908,7 +988,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/followups/queue",
@@ -920,7 +1001,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/guardrail-layers",
@@ -932,7 +1014,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/inbox/[id]",
@@ -944,7 +1027,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/inbox",
@@ -956,7 +1040,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/ai/knowledge/chave",
@@ -968,7 +1053,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/knowledge/sources/[id]/reindex",
@@ -980,7 +1066,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/knowledge/sources/[id]",
@@ -992,7 +1079,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/knowledge/sources/[id]/trechos",
@@ -1004,7 +1092,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/knowledge/sources",
@@ -1016,7 +1105,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/knowledge/sources/upload",
@@ -1028,7 +1118,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/memory/entries/[id]",
@@ -1040,7 +1131,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/memory/entries",
@@ -1052,7 +1144,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/memory",
@@ -1064,7 +1157,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/memory/versions/[id]",
@@ -1076,7 +1170,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/operator-metrics",
@@ -1088,7 +1183,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/ai/pacing",
@@ -1100,7 +1196,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/policies",
@@ -1112,7 +1209,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/providers/[provider]/models",
@@ -1124,7 +1222,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/providers",
@@ -1136,7 +1235,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/routers/[id]/members",
@@ -1148,7 +1248,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/routers/[id]",
@@ -1160,7 +1261,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/routers/[id]/test",
@@ -1172,7 +1274,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/routers",
@@ -1184,7 +1287,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/runs",
@@ -1196,7 +1300,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/skills/[name]/install",
@@ -1208,7 +1313,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/skills/[name]",
@@ -1220,7 +1326,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/skills/import",
@@ -1232,7 +1339,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/skills",
@@ -1244,7 +1352,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/ai/usage",
@@ -1256,7 +1365,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/alertas/[id]",
@@ -1268,7 +1378,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/alertas",
@@ -1280,7 +1391,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/assistente/chat",
@@ -1292,7 +1404,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/assistente/executar",
@@ -1304,7 +1417,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/atividades",
@@ -1316,7 +1430,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/attendants/availability/[user_id]",
@@ -1328,7 +1443,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/attendants/availability",
@@ -1340,7 +1456,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/audit/export",
@@ -1352,7 +1469,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/audit",
@@ -1364,7 +1482,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/auth/realtime-token",
@@ -1376,7 +1495,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automatic-sales/campaigns/[id]/painel",
@@ -1388,7 +1508,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automatic-sales/campaigns/[id]/queue",
@@ -1400,7 +1521,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automatic-sales/campaigns/[id]",
@@ -1412,7 +1534,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automatic-sales/campaigns",
@@ -1424,7 +1547,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automatic-sales/queue/[id]",
@@ -1436,7 +1560,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automation-rules/[id]",
@@ -1448,7 +1573,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automation-rules/[id]/runs",
@@ -1460,7 +1586,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automation-rules",
@@ -1472,7 +1599,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automation-rules/runs/[runId]/resend",
@@ -1484,7 +1612,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/automation-rules/runs",
@@ -1496,7 +1625,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/categories/[id]",
@@ -1508,7 +1638,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/categories",
@@ -1520,7 +1651,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channel-sessions/[id]/qr",
@@ -1532,7 +1664,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channel-sessions/[id]/reconnect",
@@ -1544,7 +1677,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channel-sessions/[id]",
@@ -1556,7 +1690,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/channel-sessions",
@@ -1568,7 +1703,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channels/official",
@@ -1580,7 +1716,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channels/partner",
@@ -1592,7 +1729,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channels/partner/templates/media",
@@ -1604,7 +1742,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channels/partner/templates",
@@ -1616,7 +1755,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/channels/templates",
@@ -1628,7 +1768,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/comercial/inativos",
@@ -1640,7 +1781,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-goals",
@@ -1652,7 +1794,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/duplicar",
@@ -1664,7 +1807,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/itens",
@@ -1676,7 +1820,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/mercos",
@@ -1688,7 +1833,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/orcamento",
@@ -1700,7 +1846,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/pdf",
@@ -1712,7 +1859,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/[id]",
@@ -1724,7 +1872,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/commercial-orders/[id]/timeline",
@@ -1736,7 +1885,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/importar-ia",
@@ -1748,7 +1898,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/importar-mercos",
@@ -1760,7 +1911,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders/pdf",
@@ -1772,7 +1924,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-orders",
@@ -1784,7 +1937,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commercial-policies",
@@ -1796,7 +1950,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commissions/baixas",
@@ -1808,7 +1963,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/commissions",
@@ -1820,7 +1976,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]/avatar",
@@ -1832,7 +1989,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]/crm-summary",
@@ -1844,7 +2002,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]/proposals/[proposal_id]",
@@ -1856,7 +2015,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]/proposals",
@@ -1868,7 +2028,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]",
@@ -1880,7 +2041,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/[id]/timeline",
@@ -1892,7 +2054,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/bulk-tag",
@@ -1904,7 +2067,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/cnpj-lookup",
@@ -1916,7 +2080,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts/import",
@@ -1928,7 +2093,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/contacts",
@@ -1940,7 +2106,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversation-tags",
@@ -1952,7 +2119,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/claim",
@@ -1964,7 +2132,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/close",
@@ -1976,7 +2145,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/draft-reply",
@@ -1988,7 +2158,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/mark-read",
@@ -2000,7 +2171,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/media",
@@ -2012,7 +2184,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/messages",
@@ -2024,7 +2197,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/no-send",
@@ -2036,7 +2210,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/notes/[noteId]",
@@ -2048,7 +2223,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/notes",
@@ -2060,7 +2236,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/pause-ai",
@@ -2072,7 +2249,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/reactivate-bot",
@@ -2084,7 +2262,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/release",
@@ -2096,7 +2275,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/retention",
@@ -2108,7 +2288,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]",
@@ -2120,7 +2301,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/snooze",
@@ -2132,7 +2314,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/transfer",
@@ -2144,7 +2327,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/[id]/usable-for-rag",
@@ -2156,7 +2340,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/arquivar-todas",
@@ -2168,7 +2353,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/counts",
@@ -2180,7 +2366,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations/open-with-contact",
@@ -2192,7 +2379,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/conversations",
@@ -2204,7 +2392,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/copilot/context",
@@ -2216,7 +2405,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/cron/agenda-google-push",
@@ -2228,7 +2418,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/agenda-google-refresh",
@@ -2240,7 +2431,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/agenda-google-sync",
@@ -2252,7 +2444,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/agent-dispatcher",
@@ -2264,7 +2457,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/attendant-heartbeat",
@@ -2276,7 +2470,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/automatic-sales",
@@ -2288,7 +2483,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/channel-health",
@@ -2300,7 +2496,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/contact-avatars",
@@ -2312,7 +2509,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/contact-phones",
@@ -2324,7 +2522,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/contact-proposals-watcher",
@@ -2336,7 +2535,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/data-retention",
@@ -2348,7 +2548,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/event-log-drain",
@@ -2360,7 +2561,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/expedition-notices",
@@ -2372,7 +2574,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/fiscal-drain",
@@ -2384,7 +2587,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/fiscal-entradas-sync",
@@ -2396,7 +2600,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/followup-flow-worker",
@@ -2408,7 +2613,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/kb-conversations-batch",
@@ -2420,7 +2626,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/lgpd-sla-watcher",
@@ -2432,7 +2639,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/mercos-import",
@@ -2444,7 +2652,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/meu-dia-alertas",
@@ -2456,7 +2665,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/prospecting-drain",
@@ -2468,7 +2678,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/prospecting-fit",
@@ -2480,7 +2691,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/prospecting-send",
@@ -2492,7 +2704,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/recover-stuck-messages",
@@ -2504,7 +2717,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/risk-watcher",
@@ -2516,7 +2730,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/routing-worker",
@@ -2528,7 +2743,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/snooze-watcher",
@@ -2540,7 +2756,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/storage-redaction",
@@ -2552,7 +2769,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/sync-model-catalog",
@@ -2564,7 +2782,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/cron/webhook-log-retention",
@@ -2576,7 +2795,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/demandas/[id]",
@@ -2588,7 +2808,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/faturamento",
@@ -2600,7 +2821,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/conciliacao",
@@ -2612,7 +2834,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/dashboard",
@@ -2624,7 +2847,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/fluxo",
@@ -2636,7 +2860,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/gerar",
@@ -2648,7 +2873,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/pagamentos/[id]",
@@ -2660,7 +2886,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/recebiveis/[id]/pagamentos",
@@ -2672,7 +2899,8 @@
       "idem": true,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/recebiveis/[id]",
@@ -2684,7 +2912,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financeiro/recebiveis",
@@ -2696,7 +2925,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/financial-pagaveis",
@@ -2708,7 +2938,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal/cadastro-do-cnpj",
@@ -2720,7 +2951,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-cfop-equivalentes/[id]",
@@ -2732,7 +2964,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-cfop-equivalentes",
@@ -2744,7 +2977,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/conferencia",
@@ -2756,7 +2990,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/ignorar",
@@ -2768,7 +3003,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/importar",
@@ -2780,7 +3016,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/itens/[itemId]",
@@ -2792,7 +3029,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/manifestar",
@@ -2804,7 +3042,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]",
@@ -2816,7 +3055,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas/[id]/xml",
@@ -2828,7 +3068,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-entradas",
@@ -2840,7 +3081,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-eventos",
@@ -2852,7 +3094,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-events/[id]/retransmitir",
@@ -2864,7 +3107,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-fornecedores",
@@ -2876,7 +3120,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-ibpt/consulta",
@@ -2888,7 +3133,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-ibpt/importar",
@@ -2900,7 +3146,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-ibpt/importar-siscomex",
@@ -2912,7 +3159,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-inutilizacoes/[id]/retransmitir",
@@ -2924,7 +3172,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-inutilizacoes/lacunas",
@@ -2936,7 +3185,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-inutilizacoes/puladas",
@@ -2948,7 +3198,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-inutilizacoes",
@@ -2960,7 +3211,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-jobs",
@@ -2972,7 +3224,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-manifestacoes",
@@ -2984,7 +3237,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-produtos",
@@ -2996,7 +3250,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-relatorios",
@@ -3008,7 +3263,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-settings/certificado",
@@ -3020,7 +3276,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-settings",
@@ -3032,7 +3289,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fiscal-sincronizacoes",
@@ -3044,7 +3302,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fleet/drivers/[id]",
@@ -3056,7 +3315,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fleet/drivers",
@@ -3068,7 +3328,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fleet",
@@ -3080,7 +3341,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fleet/vehicles/[id]",
@@ -3092,7 +3354,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/fleet/vehicles",
@@ -3104,7 +3367,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/health",
@@ -3116,7 +3380,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/home/mes",
@@ -3128,7 +3393,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/indicadores/perguntar",
@@ -3140,7 +3406,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/integrations/nuvemshop/callback",
@@ -3152,7 +3419,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/inventory/movements",
@@ -3164,7 +3432,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/inventory/sugestoes",
@@ -3176,7 +3445,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]/ajustes",
@@ -3188,7 +3458,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]/cancel",
@@ -3200,7 +3471,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]/carta-correcao",
@@ -3212,7 +3484,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/invoices/[id]/danfe",
@@ -3224,7 +3497,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]/reemitir",
@@ -3236,7 +3510,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]",
@@ -3248,7 +3523,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/[id]/xml",
@@ -3260,7 +3536,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/importar-xmls",
@@ -3272,7 +3549,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices",
@@ -3284,7 +3562,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/invoices/validar",
@@ -3296,7 +3575,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lead-captures",
@@ -3308,7 +3588,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/lose",
@@ -3320,7 +3601,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/move",
@@ -3332,7 +3614,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/next-action",
@@ -3344,7 +3627,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/reactivation",
@@ -3356,7 +3640,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]",
@@ -3368,7 +3653,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/timeline",
@@ -3380,7 +3666,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/[id]/win",
@@ -3392,7 +3679,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/at-risk",
@@ -3404,7 +3692,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/bulk",
@@ -3416,7 +3705,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/import",
@@ -3428,7 +3718,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/proposals",
@@ -3440,7 +3731,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads/reactivations",
@@ -3452,7 +3744,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/leads",
@@ -3464,7 +3757,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lgpd/anonymize",
@@ -3476,7 +3770,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lgpd/requests/[id]/approve",
@@ -3488,7 +3783,8 @@
       "idem": true,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lgpd/requests/[id]/preview",
@@ -3500,7 +3796,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lgpd/requests/[id]",
@@ -3512,7 +3809,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/lgpd/requests",
@@ -3524,7 +3822,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/marca/logo",
@@ -3536,7 +3835,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/mcp/tools",
@@ -3548,7 +3848,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/message-templates/[id]",
@@ -3560,7 +3861,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/message-templates",
@@ -3572,7 +3874,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/messages/[id]/media",
@@ -3584,7 +3887,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/messages",
@@ -3596,7 +3900,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/metrics/atrito",
@@ -3608,7 +3913,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/metrics/attendants",
@@ -3620,7 +3926,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/notifications/push",
@@ -3632,7 +3939,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/onboarding/whatsapp/qr",
@@ -3644,7 +3952,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/onboarding/whatsapp/session",
@@ -3656,7 +3965,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/[id]/agent-mapping",
@@ -3668,7 +3978,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/[id]/board",
@@ -3680,7 +3991,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/[id]",
@@ -3692,7 +4004,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/[id]/stages/[stageId]",
@@ -3704,7 +4017,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/[id]/stages",
@@ -3716,7 +4030,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines/default",
@@ -3728,7 +4043,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/pipelines",
@@ -3740,7 +4056,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/price-tables/[id]/items",
@@ -3752,7 +4069,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/price-tables/[id]",
@@ -3764,7 +4082,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/price-tables",
@@ -3776,7 +4095,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/[id]/images/[imageId]",
@@ -3788,7 +4108,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/[id]/images",
@@ -3800,7 +4121,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/products/[id]",
@@ -3812,7 +4134,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/afins",
@@ -3824,7 +4147,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/images",
@@ -3836,7 +4160,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/import",
@@ -3848,7 +4173,8 @@
       "idem": false,
       "wrapper": true,
       "manual": true,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/ncm-completar",
@@ -3860,7 +4186,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products/ncm-sugestao",
@@ -3872,7 +4199,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/products",
@@ -3884,19 +4212,21 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/controle",
       "get": true,
       "muta": false,
-      "paginacao": false,
+      "paginacao": true,
       "teto": true,
       "rate": false,
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/executar",
@@ -3908,7 +4238,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/laboratorio",
@@ -3920,7 +4251,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/liberar-reservas",
@@ -3932,7 +4264,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/painel",
@@ -3944,7 +4277,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/publico",
@@ -3956,7 +4290,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]/reenviar-falhas-de-pagamento",
@@ -3968,7 +4303,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/[id]",
@@ -3980,7 +4316,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/canais",
@@ -3992,7 +4329,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/midia",
@@ -4004,7 +4342,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/numeros",
@@ -4016,7 +4355,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/opcoes",
@@ -4028,7 +4368,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/preview",
@@ -4040,7 +4381,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/recuperacao/preview",
@@ -4052,7 +4394,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/recuperacao",
@@ -4064,7 +4407,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/regiao/cidades",
@@ -4076,7 +4420,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/regiao/preview",
@@ -4088,7 +4433,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns/regiao",
@@ -4100,7 +4446,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/campaigns",
@@ -4112,7 +4459,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/consumo",
@@ -4124,7 +4472,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/mensagens-por-categoria",
@@ -4136,7 +4485,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/mercado",
@@ -4148,7 +4498,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/[id]/raio-x",
@@ -4160,7 +4511,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/[id]",
@@ -4172,7 +4524,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/categorias",
@@ -4184,7 +4537,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/disparar",
@@ -4196,7 +4550,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/import",
@@ -4208,7 +4563,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects/import-arquivo",
@@ -4220,7 +4576,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/prospects",
@@ -4232,7 +4589,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/prospecting/searches/[id]",
@@ -4244,7 +4602,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/searches",
@@ -4256,7 +4615,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/prospecting/settings",
@@ -4268,7 +4628,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/public/orcamento/[token]",
@@ -4280,7 +4641,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/purchase-orders/[id]/receber",
@@ -4292,7 +4654,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/purchase-orders/[id]",
@@ -4304,7 +4667,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/purchase-orders",
@@ -4316,7 +4680,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/radar-compras",
@@ -4328,7 +4693,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/roadmap",
@@ -4340,7 +4706,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/rotas",
@@ -4352,7 +4719,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/sales-brain",
@@ -4364,7 +4732,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/settings/api-tokens/[id]/revoke",
@@ -4376,7 +4745,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/settings/api-tokens",
@@ -4388,7 +4758,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/settings/routing",
@@ -4400,7 +4771,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/conciliar",
@@ -4412,7 +4784,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/confirmar",
@@ -4424,7 +4797,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/entrada/confirmar",
@@ -4436,7 +4810,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/rejeitar",
@@ -4448,7 +4823,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/destinos/[destinationId]/reverter",
@@ -4460,7 +4836,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/fechamento/pdf",
@@ -4472,7 +4849,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/fechamento",
@@ -4484,7 +4862,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/orders/[orderId]/proof",
@@ -4496,7 +4875,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/orders/[orderId]",
@@ -4508,7 +4888,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/orders",
@@ -4520,7 +4901,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/romaneio",
@@ -4532,7 +4914,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/distribuicao",
@@ -4544,7 +4927,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/finalizar",
@@ -4556,7 +4940,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/geocodificar",
@@ -4568,7 +4953,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/iniciar",
@@ -4580,7 +4966,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/manual",
@@ -4592,7 +4979,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/ordem",
@@ -4604,7 +4992,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/otimizar",
@@ -4616,7 +5005,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/otimizar/veiculos",
@@ -4628,7 +5018,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/posicao",
@@ -4640,7 +5031,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/recuperacoes",
@@ -4652,7 +5044,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota/recuperar",
@@ -4664,7 +5057,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]/rota",
@@ -4676,7 +5070,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments/[id]",
@@ -4688,7 +5083,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/shipments",
@@ -4700,7 +5096,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/sped/arquivo",
@@ -4712,7 +5109,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/suppliers",
@@ -4724,7 +5122,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/system/agent",
@@ -4736,7 +5135,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/system/instalacao",
@@ -4748,7 +5148,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/system/relogio/tick",
@@ -4760,7 +5161,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/system/update",
@@ -4772,7 +5174,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/system/version",
@@ -4784,7 +5187,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/tarefas/[id]",
@@ -4796,7 +5200,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/tarefas",
@@ -4808,7 +5213,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]/canais",
@@ -4820,7 +5226,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]/motorista",
@@ -4832,7 +5239,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]/nome",
@@ -4844,7 +5252,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]/revoke",
@@ -4856,7 +5265,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/team/[user_id]/role",
@@ -4868,7 +5278,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]",
@@ -4880,7 +5291,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/[user_id]/setor",
@@ -4892,7 +5304,8 @@
       "idem": false,
       "wrapper": false,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/assignable",
@@ -4904,7 +5317,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team/invite",
@@ -4916,7 +5330,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/team",
@@ -4928,7 +5343,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/titulos/baixas",
@@ -4940,7 +5356,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/titulos",
@@ -4952,7 +5369,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhook-sources/[id]/events",
@@ -4964,7 +5382,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": false
+      "service": false,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhook-sources/[id]",
@@ -4976,7 +5395,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhook-sources",
@@ -4988,7 +5408,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/channel/[token]",
@@ -5000,7 +5421,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/in/[token]",
@@ -5012,7 +5434,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/meta/[token]",
@@ -5024,7 +5447,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/nuvemshop/[event]",
@@ -5036,7 +5460,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/nuvemshop/customer-data-request",
@@ -5048,7 +5473,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/nuvemshop/customer-redact",
@@ -5060,7 +5486,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/nuvemshop/store-redact",
@@ -5072,7 +5499,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": true
     },
     {
       "rota": "/api/v1/webhooks/waha/[token]",
@@ -5084,7 +5512,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     },
     {
       "rota": "/api/v1/webhooks/waha",
@@ -5096,7 +5525,8 @@
       "idem": false,
       "wrapper": true,
       "manual": false,
-      "service": true
+      "service": true,
+      "contagemHead": false
     }
   ]
 }

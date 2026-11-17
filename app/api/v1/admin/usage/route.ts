@@ -117,36 +117,40 @@ export async function GET(req: NextRequest) {
   startDate.setDate(startDate.getDate() - days);
   const startIso = startDate.toISOString();
 
-  // ---- messages count per org ----
+  // ---- contagens por org: `count` no banco, zero linha trafegada ----
+  //
+  // Antes: `select("organization_id")` da janela inteira e contagem em memória.
+  // Com 90 dias de mensagens isso é baixar a tabela para somar um número. Agora
+  // é `count: "exact", head: true` por organização — poucas orgs numa tela de
+  // plataforma, e o banco devolve só o inteiro.
   const messagesCountMap = new Map<string, number>();
-  if (orgIds.length > 0) {
-    const { data: msgRows, error: msgErr } = await admin
-      .from("messages")
-      .select("organization_id")
-      .in("organization_id", orgIds)
-      .gte("created_at", startIso);
-    if (!msgErr && msgRows) {
-      for (const row of msgRows) {
-        const oid = row.organization_id as string;
-        messagesCountMap.set(oid, (messagesCountMap.get(oid) ?? 0) + 1);
-      }
-    }
-  }
-
-  // ---- conversations count per org ----
   const convsCountMap = new Map<string, number>();
+  const aiInvCountMap = new Map<string, number>();
   if (orgIds.length > 0) {
-    const { data: convRows, error: convErr } = await admin
-      .from("conversations")
-      .select("organization_id")
-      .in("organization_id", orgIds)
-      .gte("created_at", startIso);
-    if (!convErr && convRows) {
-      for (const row of convRows) {
-        const oid = row.organization_id as string;
-        convsCountMap.set(oid, (convsCountMap.get(oid) ?? 0) + 1);
-      }
-    }
+    await Promise.all(
+      orgIds.map(async (orgId: string) => {
+        const [msg, conv, ia] = await Promise.all([
+          admin
+            .from("messages")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .gte("created_at", startIso),
+          admin
+            .from("conversations")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .gte("created_at", startIso),
+          admin
+            .from("llm_calls")
+            .select("id", { count: "exact", head: true })
+            .eq("organization_id", orgId)
+            .gte("created_at", startIso),
+        ]);
+        if (!msg.error && msg.count !== null) messagesCountMap.set(orgId, msg.count);
+        if (!conv.error && conv.count !== null) convsCountMap.set(orgId, conv.count);
+        if (!ia.error && ia.count !== null) aiInvCountMap.set(orgId, ia.count);
+      }),
+    );
   }
 
   // ---- consumo de IA por org: `llm_calls`, a tabela única (migration 0130) ----
@@ -157,30 +161,32 @@ export async function GET(req: NextRequest) {
   // da janela, mostraria ZERO consumo para todo tenant com o dinheiro saindo —
   // exatamente o sintoma que a 0130 existe para matar, reintroduzido na tela do
   // outro lado. `tests/unit/telemetria-tem-um-leitor-so.test.ts` guarda isto.
-  const aiInvCountMap = new Map<string, number>();
+  //
+  // TETO DECLARADO: tokens e custo são SOMA, e o PostgREST não faz `group by`.
+  // Sem RPC de agregação, estas linhas são lidas uma vez para servir as duas
+  // saídas (total por org e série diária) — antes eram duas leituras da mesma
+  // janela. O custo cresce com o número de chamadas de IA no período; a saída é
+  // uma RPC `sum(...) group by organization_id, dia`, que exige migration.
   const aiTokensMap = new Map<string, number>();
   const aiCostMap = new Map<string, number>();
-
+  const aiCostDayMap = new Map<string, number>();
+  const aiTokensDayMap = new Map<string, number>();
   if (orgIds.length > 0) {
+    const filterOrgIds = tenant_id ? [tenant_id] : orgIds;
     const { data: aiRows, error: aiErr } = await admin
       .from("llm_calls")
-      .select("organization_id, input_tokens, output_tokens, cost_cents")
-      .in("organization_id", orgIds)
+      .select("organization_id, input_tokens, output_tokens, cost_cents, created_at")
+      .in("organization_id", filterOrgIds)
       .gte("created_at", startIso);
     if (!aiErr && aiRows) {
       for (const row of aiRows) {
         const oid = row.organization_id as string;
-        aiInvCountMap.set(oid, (aiInvCountMap.get(oid) ?? 0) + 1);
-        aiTokensMap.set(
-          oid,
-          (aiTokensMap.get(oid) ?? 0) +
-            ((row.input_tokens as number) ?? 0) +
-            ((row.output_tokens as number) ?? 0),
-        );
-        aiCostMap.set(
-          oid,
-          (aiCostMap.get(oid) ?? 0) + ((row.cost_cents as number) ?? 0),
-        );
+        const tokens = ((row.input_tokens as number) ?? 0) + ((row.output_tokens as number) ?? 0);
+        aiTokensMap.set(oid, (aiTokensMap.get(oid) ?? 0) + tokens);
+        aiCostMap.set(oid, (aiCostMap.get(oid) ?? 0) + ((row.cost_cents as number) ?? 0));
+        const day = (row.created_at as string).slice(0, 10);
+        aiCostDayMap.set(day, (aiCostDayMap.get(day) ?? 0) + ((row.cost_cents as number) ?? 0));
+        aiTokensDayMap.set(day, (aiTokensDayMap.get(day) ?? 0) + tokens);
       }
     }
   }
@@ -235,33 +241,8 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ai cost + tokens per day
-  const aiCostDayMap = new Map<string, number>();
-  const aiTokensDayMap = new Map<string, number>();
-  if (orgIds.length > 0) {
-    const filterOrgIds = tenant_id ? [tenant_id] : orgIds;
-    // `llm_calls`, pelo mesmo motivo do bloco acima (migration 0130).
-    const { data: aiDays, error: aiDayErr } = await admin
-      .from("llm_calls")
-      .select("created_at, input_tokens, output_tokens, cost_cents")
-      .in("organization_id", filterOrgIds)
-      .gte("created_at", startIso);
-    if (!aiDayErr && aiDays) {
-      for (const row of aiDays) {
-        const day = (row.created_at as string).slice(0, 10);
-        aiCostDayMap.set(
-          day,
-          (aiCostDayMap.get(day) ?? 0) + ((row.cost_cents as number) ?? 0),
-        );
-        aiTokensDayMap.set(
-          day,
-          (aiTokensDayMap.get(day) ?? 0) +
-            ((row.input_tokens as number) ?? 0) +
-            ((row.output_tokens as number) ?? 0),
-        );
-      }
-    }
-  }
+  // ai cost + tokens per day: já calculados na leitura única de `llm_calls`
+  // acima — não há segunda passada pela mesma janela.
 
   const series: UsageSeries = {
     messages: dateLabels.map((date) => ({

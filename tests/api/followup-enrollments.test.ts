@@ -65,8 +65,10 @@ function makeDb(
 
   function builder(table: string) {
     const filters: Array<[string, unknown]> = [];
-    let orderCol: string | null = null;
-    let orderAsc = true;
+    // Ordem múltipla: a rota ordena por `updated_at` E por `id` (desempate),
+    // e um fake que guardasse só a última coluna mediria outra consulta.
+    const orders: Array<[string, boolean]> = [];
+    let faixa: [number, number] | null = null;
     let mode: "select" | "insert" = "select";
     let payload: Row | undefined;
 
@@ -84,16 +86,19 @@ function makeDb(
       const tableRows = tables[table]!;
       if (mode === "select") {
         let list = tableRows.filter(matches);
-        if (orderCol) {
-          const col = orderCol;
+        if (orders.length > 0) {
           list = [...list].sort((a, b) => {
-            const av = String(a[col]);
-            const bv = String(b[col]);
-            if (av === bv) return 0;
-            const cmp = av > bv ? 1 : -1;
-            return orderAsc ? cmp : -cmp;
+            for (const [col, asc] of orders) {
+              const av = String(a[col]);
+              const bv = String(b[col]);
+              if (av === bv) continue;
+              const cmp = av > bv ? 1 : -1;
+              return asc ? cmp : -cmp;
+            }
+            return 0;
           });
         }
+        if (faixa) list = list.slice(faixa[0], faixa[1] + 1);
         return { data: list, error: null };
       }
       // insert
@@ -135,8 +140,11 @@ function makeDb(
         return b;
       },
       order(col: string, opts?: { ascending?: boolean }) {
-        orderCol = col;
-        orderAsc = opts?.ascending ?? true;
+        orders.push([col, opts?.ascending ?? true]);
+        return b;
+      },
+      range(from: number, to: number) {
+        faixa = [from, to];
         return b;
       },
       async maybeSingle() {
@@ -387,5 +395,72 @@ describe("GET /api/v1/ai/followups/enrollments", () => {
     const body = (await res.json()) as { data: Row[] };
     expect(body.data).toHaveLength(1);
     expect(body.data[0]!.id).toBe("b");
+  });
+
+  // ── F-30: a lista não pode cortar em silêncio ──────────────────────────────
+  it("devolve no máximo o limite e sinaliza has_more/next_offset", async () => {
+    // 201 linhas: com o default de 200, a resposta diz que sobrou uma.
+    const rows = Array.from({ length: 201 }, (_, i) => ({
+      id: `id-${String(i).padStart(3, "0")}`,
+      organization_id: ORG_ID,
+      pointer_id: POINTER_ID,
+      contact_id: CONTACT_ID,
+      status: "active",
+      updated_at: "2026-01-01",
+    }));
+    const db = makeDb([], [], [], rows);
+    session("viewer", db);
+    const { GET } = await import("@/app/api/v1/ai/followups/enrollments/route");
+    const res = await GET(req("GET"));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: Row[];
+      meta: { limit: number; offset: number; has_more: boolean; next_offset: number | null };
+    };
+    expect(body.data).toHaveLength(200);
+    expect(body.meta).toMatchObject({ limit: 200, offset: 0, has_more: true, next_offset: 200 });
+  });
+
+  it("respeita ?limit e ?offset e não passa do teto de 500", async () => {
+    const rows = Array.from({ length: 30 }, (_, i) => ({
+      id: `id-${String(i).padStart(3, "0")}`,
+      organization_id: ORG_ID,
+      pointer_id: POINTER_ID,
+      contact_id: CONTACT_ID,
+      status: "active",
+      updated_at: "2026-01-01",
+    }));
+    const db = makeDb([], [], [], rows);
+    session("viewer", db);
+    const { GET } = await import("@/app/api/v1/ai/followups/enrollments/route");
+
+    const primeira = (await (await GET(req("GET", undefined, "?limit=10&offset=0"))).json()) as {
+      data: Row[];
+      meta: { limit: number; offset: number; has_more: boolean; next_offset: number | null };
+    };
+    expect(primeira.data).toHaveLength(10);
+    expect(primeira.meta).toMatchObject({ limit: 10, offset: 0, has_more: true, next_offset: 10 });
+
+    const segunda = (await (await GET(req("GET", undefined, "?limit=10&offset=20"))).json()) as {
+      data: Row[];
+      meta: { has_more: boolean; next_offset: number | null };
+    };
+    expect(segunda.data).toHaveLength(10);
+    expect(segunda.meta).toMatchObject({ has_more: false, next_offset: null });
+
+    const teto = (await (await GET(req("GET", undefined, "?limit=9999"))).json()) as {
+      meta: { limit: number };
+    };
+    expect(teto.meta.limit).toBe(500);
+  });
+
+  it("?limit inválido cai no default — e continua dizendo o que entregou", async () => {
+    const db = makeDb([], [], [], []);
+    session("viewer", db);
+    const { GET } = await import("@/app/api/v1/ai/followups/enrollments/route");
+    const res = await GET(req("GET", undefined, "?limit=abc"));
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { data: Row[]; meta: { limit: number; has_more: boolean } };
+    expect(body.meta).toMatchObject({ limit: 200, has_more: false });
   });
 });
