@@ -21,6 +21,7 @@ import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { ok, fail } from "@/lib/api/wrappers";
+import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
 import type { TimelineItem } from "@/lib/types/contacts";
 import {
@@ -41,13 +42,15 @@ export async function GET(
   const { id: contactId } = await ctx.params;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (authErr || !user) {
+  const user = await loadAuthUser();
+  if (!user) {
     return fail("unauthenticated", "Auth required.", 401, { requestId });
   }
+  // A org ATIVA é o recorte: o mesmo usuário pode ser membro de duas orgs e o
+  // RLS deixa ver as duas. Sem este filtro, a ficha aberta numa org mostrava
+  // atividade da outra — vazamento entre tenants do mesmo usuário.
+  const org = await resolveActiveOrg(user);
+  if (!org) return fail("forbidden_tenant", "Sem organização ativa.", 403, { requestId });
 
   const url = new URL(req.url);
   const types = url.searchParams.getAll("type").filter(Boolean);
@@ -68,6 +71,7 @@ export async function GET(
     .from("contacts")
     .select("id")
     .eq("id", contactId)
+    .eq("organization_id", org.orgId)
     .maybeSingle();
   if (cErr) return fail("internal_error", cErr.message, 500, { requestId });
   if (!contactRow) return fail("not_found", "Contato não encontrado.", 404, { requestId });
@@ -76,7 +80,8 @@ export async function GET(
   const { data: leadRows, error: lErr } = await supabase
     .from("crm_leads")
     .select("id")
-    .eq("contact_id", contactId);
+    .eq("contact_id", contactId)
+    .eq("organization_id", org.orgId);
   if (lErr) return fail("internal_error", lErr.message, 500, { requestId });
 
   const leadIds = (leadRows ?? []).map((r) => (r as { id: string }).id);
@@ -89,6 +94,7 @@ export async function GET(
     let q = supabase
       .from("crm_lead_activities")
       .select(TIMELINE_COLS)
+      .eq("organization_id", org.orgId)
       .order("performed_at", { ascending: false })
       .order("id", { ascending: false })
       .limit(FETCH);

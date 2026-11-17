@@ -30,6 +30,7 @@
     "e2e:env": "bash scripts/gerar-env-e2e.sh",
     "test:journeys": "playwright test -c tests/journeys/playwright.config.ts",
     "test:unit": "vitest run",
+    "audit:run": "tsx --env-file=.env --env-file=.env.local scripts/auditoria/audit-run.ts",
     "test:db": "bash scripts/test-db.sh",
     "test:shell": "bash tests/shell/update-guard.test.sh && bash tests/shell/dono-do-projeto.test.sh && bash tests/shell/scheduler-entrypoint.test.sh && bash tests/shell/deploy-build-local.test.sh && bash tests/shell/instalar-chromium.test.sh && bash hostgator-setup-kit/test-validators.sh",
     "test:invariants": "bash scripts/test-db.sh",

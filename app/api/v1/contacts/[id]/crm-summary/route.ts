@@ -31,6 +31,7 @@ import { type NextRequest } from "next/server";
 
 import { ok, fail } from "@/lib/api/wrappers";
 import { camposDoFunil, settingsDoEmbed } from "@/lib/leads/campos-do-funil";
+import { loadAuthUser, resolveActiveOrg } from "@/lib/auth/server";
 import { createClient } from "@/lib/supabase/server";
 import { nomesDosAtendentes } from "@/lib/users/nome-do-atendente";
 
@@ -73,25 +74,37 @@ export async function GET(
   const { id: contactId } = await ctx.params;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (authErr || !user) {
+  const user = await loadAuthUser();
+  if (!user) {
     return fail("unauthenticated", "Auth required.", 401, { requestId });
   }
+  // A org ATIVA é o recorte. O RLS deixa o membro de duas orgs ver as duas;
+  // sem este filtro, a ficha aberta na org A mostrava leads/pedidos da org B.
+  const org = await resolveActiveOrg(user);
+  if (!org) return fail("forbidden_tenant", "Sem organização ativa.", 403, { requestId });
+  // E o contato tem de ser DESTA org: sem isto, um id de outra org devolveria
+  // um resumo vazio (mentira) em vez de 404.
+  const { data: contato } = await supabase
+    .from("contacts")
+    .select("id")
+    .eq("id", contactId)
+    .eq("organization_id", org.orgId)
+    .maybeSingle();
+  if (!contato) return fail("not_found", "Contato não encontrado.", 404, { requestId });
 
   const [leads, orders, activities, demandas] = await Promise.all([
     supabase
       .from("crm_leads")
       .select(LEAD_COLS)
       .eq("contact_id", contactId)
+      .eq("organization_id", org.orgId)
       .order("updated_at", { ascending: false })
       .limit(3),
     supabase
       .from("orders")
       .select(ORDER_COLS)
       .eq("contact_id", contactId)
+      .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false })
       .limit(3),
     // 12 e não 5. A janela de 5 foi dimensionada quando a timeline não recebia
@@ -103,6 +116,7 @@ export async function GET(
       .from("crm_lead_activities")
       .select(ACTIVITY_COLS)
       .eq("contact_id", contactId)
+      .eq("organization_id", org.orgId)
       .order("performed_at", { ascending: false })
       .limit(12),
     // Só as ABERTAS: demanda encerrada é histórico e já vive na timeline. Da
@@ -113,6 +127,7 @@ export async function GET(
       .from("demandas")
       .select(DEMANDA_COLS)
       .eq("contact_id", contactId)
+      .eq("organization_id", org.orgId)
       .is("fechada_em", null)
       .order("aberta_em", { ascending: true })
       .limit(5),
