@@ -1,13 +1,13 @@
 # Integrações e infraestrutura
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `lib/, app/, workers/, .env.example, docker-compose.prod.yml`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
+> Fonte: `lib/, app/, workers/, .env.example, docker-compose.prod.yml`. Gerado em 2026-11-17T16:38:51.452Z. Não editar à mão.
 
 ## Integrações — quem é chamado de fora
 
 | Integração | Arquivos que a citam |
 |---|---|
-| WAHA (WhatsApp) | 90 |
+| WAHA (WhatsApp) | 91 |
 | Meta / WhatsApp Cloud | 43 |
 | Nuvemshop / Tiendanube | 59 |
 | Google (Agenda/OAuth) | 46 |
@@ -15,7 +15,7 @@
 | Redis / Upstash (fila e rate limit) | 14 |
 | E-mail (Resend) | 31 |
 | Sentry | 20 |
-| Mercos | 68 |
+| Mercos | 69 |
 | Mapa (MapLibre / Nominatim / OSM) | 23 |
 
 ## Workers (`workers/`)

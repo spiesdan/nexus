@@ -1,7 +1,7 @@
 # Telas × estados — sinais medidos
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `app/**/page.tsx + segmento de rota`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
+> Fonte: `app/**/page.tsx + segmento de rota`. Gerado em 2026-11-17T16:38:51.452Z. Não editar à mão.
 
 **156 telas.** Uma marca ✓ significa **sinal no código**, não comportamento verificado.
 A verificação de cada estado acontece na Fase 2, com evidência de execução.
@@ -118,11 +118,11 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/metrics` *(resolver)* | 15 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | herdado | herdado |
 | `/app/meu-dia` | 19 | ✓ | ✓ | ✓ | ✓ | — | — | — | — | ✓ | — | — | ✓ | herdado | herdado |
 | `/app/notas` | 47 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
-| `/app` | 64 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | próprio | próprio |
-| `/app/pedidos/[id]` | 32 | — | — | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | — | herdado | herdado |
+| `/app` | 65 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | ✓ | ✓ | próprio | próprio |
+| `/app/pedidos/[id]` | 32 | — | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | — | herdado | herdado |
 | `/app/pedidos/imprimir` | 14 | — | ✓ | ✓ | ✓ | — | — | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/pedidos/novo` | 41 | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | — | herdado | herdado |
-| `/app/pedidos` | 39 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/pedidos` | 42 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | ✓ | ✓ | — | — | próprio | próprio |
 | `/app/pipelines/[id]` | 16 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | ✓ | — | — | ✓ | herdado | herdado |
 | `/app/products` | 32 | — | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/prospeccao/campanhas/[id]` | 27 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ | — | — | próprio | herdado |
@@ -135,7 +135,7 @@ Inclui `/design`, o showcase interno do design system — é tela, tem `page.tsx
 | `/app/radar/recuperacao` | 34 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — | ✓ | ✓ | — | — | — | herdado | herdado |
 | `/app/radar/risco` | 14 | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | — | herdado | herdado |
 | `/app/recuperacao` *(resolver)* | 1 | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | n/a | herdado | herdado |
-| `/app/relatorios` | 13 | — | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
+| `/app/relatorios` | 14 | — | ✓ | ✓ | ✓ | — | ✓ | — | — | ✓ | ✓ | — | — | herdado | herdado |
 | `/app/settings/api-tokens` | 16 | ✓ | ✓ | ✓ | ✓ | — | ✓ | — | ✓ | — | ✓ | — | — | herdado | herdado |
 | `/app/settings/atendimento` | 15 | — | ✓ | ✓ | ✓ | — | ✓ | — | — | — | — | — | — | herdado | herdado |
 | `/app/settings/atualizacao` | 12 | — | ✓ | ✓ | ✓ | — | — | — | — | — | — | — | — | herdado | herdado |

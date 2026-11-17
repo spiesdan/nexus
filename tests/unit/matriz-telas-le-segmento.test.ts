@@ -66,10 +66,14 @@ describe("segmento de rota — a tela é mais que o page.tsx", () => {
 
 describe("loading/error — próprio não é herdado", () => {
   it("uma tela profunda herda o error.tsx global, e isso não é 'dela'", () => {
-    expect(origemDoEstado(RAIZ, "app/app/pedidos", "error.tsx")).toBe("herdado");
+    // `/app/pedidos` ganhou `loading.tsx` e `error.tsx` próprios em 17/11/2026
+    // (o primeiro paint bloqueava e a falha subia sem contexto). O exemplo do
+    // instrumento passou para uma tela que continua herdando: o que este caso
+    // mede é a DIFERENÇA entre próprio e herdado, não a tela específica.
+    expect(origemDoEstado(RAIZ, "app/app/financeiro", "error.tsx")).toBe("herdado");
     // Também herdado: existe `app/app/loading.tsx`. O que não pode é o gate
     // chamar de "desta tela" um arquivo de segmento acima.
-    expect(origemDoEstado(RAIZ, "app/app/pedidos", "loading.tsx")).toBe("herdado");
+    expect(origemDoEstado(RAIZ, "app/app/financeiro", "loading.tsx")).toBe("herdado");
   });
 
   it("segmento sem ancestral do arquivo devolve `—` (loading não é global)", () => {

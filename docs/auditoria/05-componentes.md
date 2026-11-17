@@ -1,7 +1,7 @@
 # Inventário de componentes
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `components/**`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
+> Fonte: `components/**`. Gerado em 2026-11-17T16:38:51.452Z. Não editar à mão.
 
 **243 arquivos** em `components/`.
 

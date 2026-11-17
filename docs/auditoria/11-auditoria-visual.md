@@ -2031,3 +2031,88 @@ história". A ordem foi mantida. Réggua errada não vira achado.
 Os **12 tokens de estado** (`success/warning/error/info` × base/`-bg`/`-fg`) existem nos três
 blocos de tema e na ponte `@theme inline`; nenhum teste vigiava a presença — agora este parágrafo
 vigia a afirmação.
+
+## Offline e PWA — o que foi corrigido (movido de `08`, que é gerado)
+
+### Dois service workers no mesmo escopo — medido em 17/11/2026
+
+O app registrava **dois** workers em `scope: "/"`: `/sw.js` (cache offline) e
+`/notify-sw.js` (bandeja + Web Push). Um escopo só admite **um** worker: ao
+ativar notificações, o segundo **substituía** o primeiro e o cache offline
+morria em silêncio — a tela não avisa, o app apenas deixa de abrir sem rede.
+
+**Corrigido:** os tratadores de `push`, `notificationclick` e `message`
+(`show-os-notify`) passaram para o próprio `sw.js`; `ensureNotifyServiceWorker()`
+registra `/sw.js`; `public/notify-sw.js` foi removido. Gate novo em
+`tests/unit/service-worker-unico.test.ts`: só um `*sw.js` em `public/`, o worker
+único trata cache **e** bandeja, e o registro aponta para `/sw.js` (o comentário
+pode citar o arquivo antigo; o código, não).
+
+**O que continua em aberto (fase 7):**
+
+- `mobile-offline.spec.ts` (5 casos) só roda no job `apk-debug`, que **não é**
+  um dos cinco checks obrigatórios — o offline não tem gate no PR;
+- `sw.js` e `lib/offline/catalogo.ts` **não têm teste** (a outbox tem 14 casos);
+- **sem precache**: o offline só existe para telas já visitadas, e o fallback é um HTML
+  genérico, não uma página offline (a versão do cache agora segue o build — ver abaixo);
+- `mobile/src/shell.ts` navega para `https://crm.billhigiene.tech` **hardcoded**
+  (`server.url` ausente no Capacitor).
+
+### O cache `nexus-app-v1` fixo — corrigido em 17/11/2026
+
+O `public/sw.js` guardava tudo em `CACHE = "nexus-app-v1"`, um literal. O arquivo
+é copiado verbatim para a imagem (não é compilado), então a cada `update.sh` ele
+chegava **byte-idêntico**: o navegador não reinstalava, o `activate` não rodava e o
+`v1` nunca morria. Consequência: chunks antigos acumulavam sem teto e quem não abria
+online depois do deploy continuava vendo a versão anterior offline.
+
+**Conserto:** a URL de registro passou a levar a versão do build —
+`/sw.js?v=<versão>` (`lib/service-worker/url.ts`, alimentado por
+`/api/v1/system/version`, cacheado no `sessionStorage`). O `sw.js` lê o próprio
+`location.search` e batiza o cache (`nexus-app-<versão>`); um build novo muda a URL,
+o navegador instala o worker novo e o `activate` apaga **só** as versões antigas
+(`nexus-app-*`) — nunca caches de outra coisa no mesmo escopo. O logout apaga todas
+as versões, não só a atual: uma versão anterior guarda o HTML de quem saiu.
+
+`ensureNotifyServiceWorker()` passou a **reusar** o registro existente
+(`getRegistration("/")`) em vez de registrar `/sw.js` puro — registrar sem a query
+forçaria a volta para a URL sem versão.
+
+Gate em `tests/unit/service-worker-unico.test.ts` (4 casos): um worker só, URL
+versionada, cache nomeado pela versão e `activate` restrito ao prefixo.
+
+
+## PRD × telas — medido (movido de `10`, que é gerado)
+
+### PRD × telas — medido em 17/11/2026 (fase 5)
+
+Cruzamento por nome de módulo (sem NLP): 7 PRDs, **156** `page.tsx`, 76 destinos de navegação.
+
+| Categoria | Módulos |
+| --- | --- |
+| prometido no PRD **e** com rota | **25 de 28 (89%)** |
+| prometido, **sem rota** | **3**: merge de contatos (PRD 02 §3.4), mobile `/chat` (04 §3.10), `/dashboard/atendimento` literal (04 §3.13 — o conteúdo existe em `/app` e `/indicadores`) |
+| com rota e **sem menção em PRD** | **24** (8 são sub-abas de `/app/ai`): estoque, compras, expedição, frota, financeiro, faturamento, fiscal, títulos, comissões, carteira, prospecção, radar, recuperação, tarefas, meu dia, relatórios, metrics, indicadores, laboratório, inteligência, venda automática, notas, agenda, rotas de IA |
+
+**Leitura:** os PRDs descrevem o MVP e-commerce de julho/2026; metade do produto de hoje (ERP fiscal,
+estoque, logística) **não tem PRD**. A cobertura promessa→tela é alta (89%); a tela→promessa é 51%.
+Atualizar PRD é dívida de documentação, não de produto — e as 3 promessas sem rota precisam de decisão
+(entregar ou retirar da promessa).
+
+
+## Casca e navegação — medidas (4.3 e 4.7)
+
+Instrumento: `scripts/auditoria/shell-e-navegacao.mjs`, contra o build de produção local,
+1440×900 e 390×844 (`docs/auditoria/capturas/shell-e-navegacao.json`).
+
+| Item | Medido |
+| --- | --- |
+| sidebar, topbar, busca, avisos, menu do usuário | **presentes nas 7 telas** |
+| trilha (breadcrumb) | **ausente com 1–2 segmentos** (`/app`, `/app/pedidos`, `/app/contacts`, `/app/financeiro`, `/app/settings`); **presente** com 3 (`/app/ai/knowledge/sources`, `/app/settings/tenant/agenda`) |
+| paleta (⌘K) | abre, foco cai no campo ("Buscar telas, clientes, conversas…"), **Esc fecha** |
+| celular (390) | botão "Abrir navegação" presente, **gaveta abre e fecha** |
+
+**Leitura:** a trilha sumir em telas de 1–2 segmentos é o comportamento do próprio
+`Breadcrumb` (devolve `null` com menos de duas migalhas) — não é defeito; o teste só
+deixou de chamar de "sem trilha" o que nunca teve o que mostrar. O que **não** foi medido:
+leitor de tela real e a ordem de foco da paleta com resultados dinâmicos.

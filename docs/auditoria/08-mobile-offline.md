@@ -1,7 +1,7 @@
 # Mobile e offline
 
 > **Gerado por comando**: `pnpm exec tsx scripts/auditoria/inventario-completo.ts`.
-> Fonte: `capacitor.config.ts, mobile/, public/sw.js, lib/entregas/outbox.ts`. Gerado em 2026-11-17T14:02:06.142Z. Não editar à mão.
+> Fonte: `capacitor.config.ts, mobile/, public/sw.js, lib/entregas/outbox.ts`. Gerado em 2026-11-17T16:38:51.452Z. Não editar à mão.
 
 | Peça | Estado medido |
 |---|---|
@@ -10,8 +10,8 @@
 | `appName` declarado no shell | — |
 | `appId` | — |
 | `mobile/` empacotado | index.html, novo-pedido.html, public, src, vite.config.ts, www |
-| Service worker (`public/sw.js`) | 110 linhas |
-| Service worker de notificação | presente |
+| Service worker (`public/sw.js`) | 187 linhas |
+| Service worker de notificação | ausente |
 | Fila offline (`lib/entregas/outbox.ts`) | presente |
 | SQLite nativo usado em | 1 arquivo(s) |
 
@@ -40,56 +40,17 @@
  * para `/login` ou `/api/auth/signout` apaga o cache inteiro — o próximo login
  * no mesmo aparelho não enxerga a tela de quem saiu.
  */
+/*
+ * ─── BANDEJA E WEB PUSH ─────────────────────────────────────────────────────
+ *
+ * Estes tratadores moravam em `/notify-sw.js`, registrado com `scope: "/"` — e
+ * um escopo só tem UM service worker: ativar notificações SUBSTITUÍA este
+ * arquivo e o cache offline morria em silêncio (medido em 17/11/2026). Passam a
+ * viver aqui, no mesmo worker, para o escopo ter um dono só.
+ */
 ```
 
 ## Achado de marca no shell nativo
 
 O `appName` acima é o nome que aparece **debaixo do ícone no aparelho**. Se ele carrega marca de cliente/revendedor, isso alcança o usuário final — e o gate `tests/unit/branding.test.ts` não vê, porque varre `app|components|lib|workers|hooks` e só o nome legado do produto.
 
-
-## Dois service workers no mesmo escopo — medido em 17/11/2026
-
-O app registrava **dois** workers em `scope: "/"`: `/sw.js` (cache offline) e
-`/notify-sw.js` (bandeja + Web Push). Um escopo só admite **um** worker: ao
-ativar notificações, o segundo **substituía** o primeiro e o cache offline
-morria em silêncio — a tela não avisa, o app apenas deixa de abrir sem rede.
-
-**Corrigido:** os tratadores de `push`, `notificationclick` e `message`
-(`show-os-notify`) passaram para o próprio `sw.js`; `ensureNotifyServiceWorker()`
-registra `/sw.js`; `public/notify-sw.js` foi removido. Gate novo em
-`tests/unit/service-worker-unico.test.ts`: só um `*sw.js` em `public/`, o worker
-único trata cache **e** bandeja, e o registro aponta para `/sw.js` (o comentário
-pode citar o arquivo antigo; o código, não).
-
-**O que continua em aberto (fase 7):**
-
-- `mobile-offline.spec.ts` (5 casos) só roda no job `apk-debug`, que **não é**
-  um dos cinco checks obrigatórios — o offline não tem gate no PR;
-- `sw.js` e `lib/offline/catalogo.ts` **não têm teste** (a outbox tem 14 casos);
-- sem precache e com `CACHE = "nexus-app-v1"` fixo: o offline só existe para
-  telas já visitadas, e o fallback é um HTML genérico, não uma página offline;
-- `mobile/src/shell.ts` navega para `https://crm.billhigiene.tech` **hardcoded**
-  (`server.url` ausente no Capacitor).
-
-## O cache `nexus-app-v1` fixo — corrigido em 17/11/2026
-
-O `public/sw.js` guardava tudo em `CACHE = "nexus-app-v1"`, um literal. O arquivo
-é copiado verbatim para a imagem (não é compilado), então a cada `update.sh` ele
-chegava **byte-idêntico**: o navegador não reinstalava, o `activate` não rodava e o
-`v1` nunca morria. Consequência: chunks antigos acumulavam sem teto e quem não abria
-online depois do deploy continuava vendo a versão anterior offline.
-
-**Conserto:** a URL de registro passou a levar a versão do build —
-`/sw.js?v=<versão>` (`lib/service-worker/url.ts`, alimentado por
-`/api/v1/system/version`, cacheado no `sessionStorage`). O `sw.js` lê o próprio
-`location.search` e batiza o cache (`nexus-app-<versão>`); um build novo muda a URL,
-o navegador instala o worker novo e o `activate` apaga **só** as versões antigas
-(`nexus-app-*`) — nunca caches de outra coisa no mesmo escopo. O logout apaga todas
-as versões, não só a atual: uma versão anterior guarda o HTML de quem saiu.
-
-`ensureNotifyServiceWorker()` passou a **reusar** o registro existente
-(`getRegistration("/")`) em vez de registrar `/sw.js` puro — registrar sem a query
-forçaria a volta para a URL sem versão.
-
-Gate em `tests/unit/service-worker-unico.test.ts` (4 casos): um worker só, URL
-versionada, cache nomeado pela versão e `activate` restrito ao prefixo.
