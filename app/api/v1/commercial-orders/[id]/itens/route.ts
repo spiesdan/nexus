@@ -22,9 +22,9 @@ import { randomUUID } from "node:crypto";
 
 import { type NextRequest } from "next/server";
 
-import { ApiError } from "@/lib/api/types";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { ROLE_RANK } from "@/lib/auth/types";
 import { aplicarPatchDeItens } from "@/lib/comercial/patch-itens";
 import { logger } from "@/lib/logger";
 import { itensPatchSchema } from "@/lib/schemas/pedidos";
@@ -98,6 +98,11 @@ export async function PATCH(
     patch: parsed.data,
     userId: authz.user.id,
     requestId,
+    // A mesma alçada da criação: gerente (ou admin de plataforma) pode furar
+    // tabela/estoque; o vendedor, não.
+    podeIgnorar:
+      authz.user.is_platform_admin === true ||
+      ROLE_RANK[authz.org.role] >= ROLE_RANK.manager,
   });
 
   if (!resultado.ok) {
@@ -124,6 +129,21 @@ export async function PATCH(
         { requestId, details: { itens: [`item ${item}: produto não encontrado`] } },
       );
     }
+    // As regras comerciais da criação, agora aplicadas à edição: preço de
+    // tabela, estoque e alçada de desconto. A mensagem é a mesma que a criação
+    // devolveria — a tela mostra o motivo, não um "erro ao salvar".
+    if (
+      resultado.motivo === "preco_fora_da_tabela" ||
+      resultado.motivo === "estoque_insuficiente" ||
+      resultado.motivo === "desconto_maior_que_subtotal" ||
+      resultado.motivo === "desconto_acima_da_alcada"
+    ) {
+      const detalhe = resultado.detalhe ?? "A alteração viola uma regra comercial.";
+      return fail("validation_failed", detalhe, 422, {
+        requestId,
+        details: { itens: [detalhe] },
+      });
+    }
     // `remover`/`ajustar` com id que não é deste pedido é erro de quem
     // chamou. Devolver 200 aqui faria a tela dizer "2 itens removidos" tendo
     // removido 1 — ou 0.
@@ -142,6 +162,11 @@ export async function PATCH(
       "O pedido está marcado como exige NF. Se a nota já foi emitida, precisa ser cancelada e refeita com os itens novos.",
     );
   }
+  if (resultado.aprovacao_necessaria) {
+    avisos.push(
+      "O desconto passou do teto do vendedor: o pedido voltou para análise e precisa da aprovação de um gerente.",
+    );
+  }
 
   logger.info("itens do pedido alterados", {
     pedidoId: id,
@@ -156,7 +181,8 @@ export async function PATCH(
       ajustados: resultado.ajustados ?? 0,
       subtotal_cents: resultado.subtotal_cents,
       total_cents: resultado.total_cents,
-      status: pedido.status,
+      status: resultado.status ?? pedido.status,
+      aprovacao_necessaria: resultado.aprovacao_necessaria ?? false,
       avisos,
     },
     { requestId },

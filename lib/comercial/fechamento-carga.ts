@@ -52,6 +52,8 @@
  */
 
 /** Os pares de chave, rótulo e sinal. A ordem é a do PDF, e a tela usa esta. */
+import { comoMoeda } from "@/lib/format/moeda";
+
 export const LINHAS_DO_CAIXA = [
   { chave: "dinheiro", rotulo: "Dinheiro em espécie contado", entrada: true },
   { chave: "pix", rotulo: "Comprovantes de PIX", entrada: true },
@@ -164,8 +166,8 @@ export function avisosDoFechamento(
       nivel: "atencao",
       texto:
         conta.diferenca_cents > 0
-          ? `Sobra de ${(conta.diferenca_cents / 100).toFixed(2)} sobre o esperado.`
-          : `Falta de ${(Math.abs(conta.diferenca_cents) / 100).toFixed(2)} sobre o esperado.`,
+          ? `Sobra de ${comoMoeda(conta.diferenca_cents, "BRL")} sobre o esperado.`
+          : `Falta de ${comoMoeda(Math.abs(conta.diferenca_cents), "BRL")} sobre o esperado.`,
     });
   }
 
