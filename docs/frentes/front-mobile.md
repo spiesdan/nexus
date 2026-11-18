@@ -240,3 +240,41 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
   aparelho".
 - Marca do shell por configuração de build (`CAPACITOR_APP_NAME` / `VITE_SYSTEM_URL`),
   com default neutro e entrada no `.env.example` — só depois da decisão do item 4.
+
+## 8. Relatório do agente (§2.3 do prompt mestre)
+
+1. **Objetivo e escopo.** Auditar e corrigir o que é verificável em mobile, Capacitor e
+   offline; confirmar o que existe e o que é planejado; não declarar aparelho validado sem
+   executar nele. Fora do escopo: fiscal, financeiro, tokens/design global, schema de
+   servidor.
+2. **Arquivos alterados.** `app/app/layout.tsx`, `app/app/_components/SincronizadorOffline.tsx`,
+   `app/manifest.ts`, `lib/offline/{db,outbox,sync,catalogo}.ts`, `mobile/src/{shell,novo-pedido}.ts`,
+   `mobile/src/estilo.css`, `android/app/src/main/AndroidManifest.xml`,
+   `android/app/src/main/res/xml/data_extraction_rules.xml`, `.github/workflows/apk.yml`,
+   `tests/e2e/mobile-offline.spec.ts`, `tests/unit/{layout-componentes-montados,sincronizador-offline,manifest-pwa,android-manifest-privacidade,offline-outbox-sync,offline-catalogo}`,
+   esta doc. Removidos do índice: `mobile/www/**` (build).
+3. **Regras preservadas.** Nenhuma regra de negócio mudou: o servidor continua sendo a
+   autoridade de crédito, estoque, preço e aprovação; o dreno continua FIFO; 422 continua
+   terminal até decisão humana; 401/403 continua parando tudo; a chave de sincronização
+   continua sendo o UUID da fila. **Decisões pendentes:** (a) caminho arquitetural A/B/C do
+   §4; (b) origem da marca/URL do shell (§6.4); (c) notificação nativa e deep link (inexistentes).
+4. **Testes.** Comandos e resultados no §5. Typecheck da fatia tocada: `tsc -p` com os
+   arquivos desta frente → exit 0. A suíte unitária completa e o `tsc` do repo excederam o
+   limite desta sessão sob carga de três worktrees (load average > 12); os arquivos
+   tocados passam isolados. **O gate final é o CI (`verify`)** e não foi substituído por
+   prosa.
+5. **Evidências.** Commits nesta branch, com o "antes" medido em cada mensagem
+   (`grep -c "<SincronizadorOffline"` = 0; `eslint` warning; `allowBackup="true"`;
+   `btn-enviar` sem handler). Os testes novos falham se as correções forem revertidas.
+6. **Riscos.** O bloqueio do §4 é de produto: sem decisão, pedido offline não sobe no APK.
+   A faixa nova é `sticky top-0` como as demais faixas do shell; sobreposição rara
+   documentada (§6.7). A migração de coluna usa `PRAGMA` — se o plugin negar `PRAGMA`,
+   a abertura do banco falha alto (não silencioso), o que é o comportamento desejado.
+7. **Worktree/branch.** `/private/var/folders/.../aaa-front-mobile`, branch `front/mobile`,
+   base `4aa59c83` + merge de `nexus/main` (`ef08450c`). Sem deploy.
+8. **Integração.** O único arquivo compartilhado tocado é `app/app/layout.tsx` (uma linha de
+   render + comentário) — conflito possível com Agente D/E se mexerem na mesma região.
+   `app/manifest.ts` e `android/**` são arquivos de mobile. `mobile/www` saiu do índice:
+   quem tinha build local não perde nada; clone novo roda `pnpm mobile:build`.
+9. **Produção.** Nenhum acesso, escrita, deploy ou operação real (fiscal, financeira,
+   WhatsApp). Tudo local, em worktree.
