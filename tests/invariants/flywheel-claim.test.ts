@@ -109,10 +109,38 @@ describe("flywheel — claim por turno", () => {
 
     const b: PoolClient = await pool.connect();
     try {
-      expect(await reservarTurno(b, JOB_NOVO)).toBe(true);
+      // `release(true)` destrói o socket do lado do CLIENTE; quem solta o lock é
+      // o SERVIDOR, quando percebe a sessão morta — e isso não é instantâneo.
+      // Medido no CI em 18/11/2026: a leitura imediata devolvia `false` e o teste
+      // reprovava "expected false to be true" sem nenhum defeito no produto
+      // (o lock era liberado milissegundos depois). Assertar no mesmo tick media
+      // a rede, não a regra. Aqui se espera o fato acontecer, com teto de 5 s.
+      const tentativas = await esperarLockLivre(b, JOB_NOVO);
+      expect(
+        tentativas,
+        "o lock devia estar livre depois que o servidor encerra a sessão morta",
+      ).toBeGreaterThan(0);
       await liberarTurno(b, JOB_NOVO);
     } finally {
       b.release();
     }
   });
 });
+
+/**
+ * Tenta reservar até conseguir, devolvendo em que tentativa passou (0 = não
+ * conseguiu dentro do teto). O lock devolvido ao servidor é o SINAL observável;
+ * o relógio é só o teto do instrumento.
+ */
+async function esperarLockLivre(
+  client: PoolClient,
+  jobId: string,
+  limiteMs = 5000,
+): Promise<number> {
+  const inicio = Date.now();
+  for (let tentativa = 1; Date.now() - inicio < limiteMs; tentativa++) {
+    if (await reservarTurno(client, jobId)) return tentativa;
+    await new Promise((resolver) => setTimeout(resolver, 25));
+  }
+  return 0;
+}

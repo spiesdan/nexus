@@ -71,7 +71,7 @@ export async function GET(
         .eq("organization_id", authz.org.orgId)
         .eq("occurrence_id", id)
         .order("created_at", { ascending: true })
-        .limit(200),
+        .order("id").limit(200),
     ]);
 
   if (erroOcorrencia || erroEventos) {

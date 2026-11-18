@@ -39,7 +39,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .select(COLUNAS)
     .eq("organization_id", authz.org.orgId)
     .order("nome", { ascending: true })
-    .limit(500);
+    .order("id").limit(500);
   if (ativos === "1") q = q.eq("ativo", true);
   if (busca) q = q.ilike("nome", `%${busca.replace(/[%_]/g, "")}%`);
   const { data, error } = await q;

@@ -269,7 +269,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .eq("organization_id", authz.org.orgId)
     .eq("campanha_id", id)
     .order("rodada_em", { ascending: false })
-    .limit(60);
+    .order("id", { ascending: false }).limit(60);
   if (error) {
     return fail("internal_error", "Erro ao ler o histórico.", 500, { requestId });
   }

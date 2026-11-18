@@ -62,7 +62,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       ? q.eq("numero", Number(busca))
       : q.ilike("cliente_nome", `%${busca}%`);
   }
-  const { data, error } = await q.limit(2000);
+  const { data, error } = await q.order("id", { ascending: false }).limit(2000);
   if (error) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
 
   const titulos: Titulo[] = [];

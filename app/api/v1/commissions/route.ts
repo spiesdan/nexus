@@ -62,7 +62,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .gte("created_at", inicio)
     .lt("created_at", fim)
     .order("created_at", { ascending: false })
-    .limit(2000);
+    .order("id", { ascending: false }).limit(2000);
   if (vendedor) q = q.eq("vendedor_user_id", vendedor);
   const { data: pedidos, error: erroPedidos } = await q;
   if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });

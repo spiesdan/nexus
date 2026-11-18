@@ -89,6 +89,12 @@ async function rodar(req: NextRequest): Promise<Response> {
   const { data: orgaos, error: erroOrgs } = await admin
     .from("organizations")
     .select("id")
+    // Ordem estável + teto DECLARADO: sem `order`, o lote de 200 organizações
+    // muda entre execuções e, numa instalação com mais de 200, o resto nunca
+    // recebe alerta — silenciosamente. O teto continua (é cron por rodada); o
+    // que deixa de ser silencioso é o critério de quem entra. Paginar o lote é
+    // a evolução natural, anotada em docs/auditoria/p1-06-listas.md.
+    .order("id")
     .limit(200);
   if (erroOrgs) {
     logger.error("[meu-dia-alertas] Organizations failed", {

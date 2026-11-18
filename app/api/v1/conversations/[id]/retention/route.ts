@@ -62,7 +62,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx): Promise<Response> {
     .not("vetoed_gate", "is", null)
     .gte("created_at", since)
     .order("created_at", { ascending: false })
-    .limit(5);
+    .order("id", { ascending: false }).limit(5);
   if (traceErr) {
     return fail("internal_error", "Failed to load retention traces.", 500, { requestId });
   }

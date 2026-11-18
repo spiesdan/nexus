@@ -39,7 +39,12 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .select("id, lead_id, expires_at")
     .eq("organization_id", guard.org.orgId)
     .eq("status", "pending")
-    .order("expires_at", { ascending: true });
+    .order("expires_at", { ascending: true })
+    .order("id")
+    // Teto declarado: a fila de reativações pendentes é operacional, não
+    // histórica; 200 cobre o dia de qualquer operação e o resto fica para a
+    // paginação da tela (P1-06, Agente E).
+    .limit(200);
   if (error) return fail("internal_error", error.message, 500, { requestId });
 
   const items: ReactivationLive[] = (

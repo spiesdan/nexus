@@ -1,0 +1,99 @@
+appId: tech.billhigiene.crm
+---
+# JORNADA OFFLINE COMPLETA — um fluxo, uma sessão, estado controlado.
+# Pré-condição: banco local semeado (2 produtos, 1 cliente) e fila vazia.
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 15000
+- assertVisible:
+    id: "btn-novo"
+
+# ── 1. captura com o catálogo no bolso ────────────────────────────────────
+- tapOn:
+    id: "btn-novo"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible:
+    id: "busca-cliente"
+- tapOn:
+    id: "busca-cliente"
+- inputText: "Mercadinho"
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "01-cliente-encontrado"
+- tapOn:
+    id: "clientes"
+    index: 0
+- tapOn:
+    id: "busca-produto"
+- inputText: "Sabonete"
+- waitForAnimationToEnd:
+    timeout: 6000
+- takeScreenshot: "02-produto-encontrado"
+- tapOn:
+    id: "produtos"
+    index: 0
+- takeScreenshot: "03-item-adicionado"
+- assertVisible:
+    id: "total"
+- tapOn:
+    id: "btn-salvar"
+- waitForAnimationToEnd:
+    timeout: 10000
+- takeScreenshot: "04-salvo-volta-para-home"
+- assertVisible:
+    text: ".*\\(1\\).*"
+
+# ── 2. o app morre e a fila continua ──────────────────────────────────────
+- stopApp
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 15000
+- assertVisible:
+    text: ".*\\(1\\).*"
+- assertVisible: "OFF-0001"
+- takeScreenshot: "05-fila-sobrevive-ao-reinicio"
+
+# ── 3. toque duplo não duplica pedido ─────────────────────────────────────
+- tapOn:
+    id: "btn-novo"
+- waitForAnimationToEnd:
+    timeout: 10000
+- tapOn:
+    id: "busca-cliente"
+- inputText: "Mercadinho"
+- waitForAnimationToEnd:
+    timeout: 6000
+- tapOn:
+    id: "clientes"
+    index: 0
+- tapOn:
+    id: "busca-produto"
+- inputText: "Shampoo"
+- waitForAnimationToEnd:
+    timeout: 6000
+- tapOn:
+    id: "produtos"
+    index: 0
+- doubleTapOn:
+    id: "btn-salvar"
+- waitForAnimationToEnd:
+    timeout: 10000
+- assertVisible:
+    text: ".*\\(2\\).*"
+- assertNotVisible:
+    text: ".*\\(3\\).*"
+- takeScreenshot: "06-duplo-toque-nao-duplica"
+
+# ── 4. enviar sem sinal não perde nem inventa sucesso ─────────────────────
+- tapOn:
+    id: "btn-enviar"
+- waitForAnimationToEnd:
+    timeout: 15000
+- assertVisible:
+    text: ".*\\(2\\).*"
+- assertVisible:
+    id: "aviso"
+- takeScreenshot: "07-enviar-sem-sinal"

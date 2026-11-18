@@ -62,7 +62,7 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
       .eq("organization_id", authz.org.orgId)
       .in("status", [...STATUS_EMBARCAVEIS])
       .order("created_at", { ascending: false })
-      .limit(200),
+      .order("id", { ascending: false }).limit(200),
     supabase
       .from("shipment_orders")
       .select("order_id")

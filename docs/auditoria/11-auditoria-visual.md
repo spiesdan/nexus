@@ -1848,7 +1848,7 @@ números que o prompt fixa (3.2 a 3.12).
 
 | Item do prompt | Exigência | Medido | Situação |
 | --- | --- | --- | --- |
-| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **127** · `[data-theme="light"]` **79** · `[data-theme="dark"]` **90**. Não são conjuntos iguais e não devem ser: o escuro sobrescreve 90 chaves, e o espelho claro redeclara exatamente essas 90 **menos as 11 da rampa accent** (79) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **129** · `[data-theme="light"]` **81** · `[data-theme="dark"]` **92** (18/11: +2 com `--color-border-control`). Não são conjuntos iguais e não devem ser: o escuro sobrescreve 92 chaves, e o espelho claro redeclara exatamente essas 92 **menos as 11 da rampa accent** (81) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
 | 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
 | 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
 | 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
@@ -2323,7 +2323,7 @@ dívida está declarada aqui em vez de silenciada.
 se distinga do fundo passa a reprovar — 18/26 pares viraram 22/32, e o número que sobe é papel
 novo entrando na conta.
 
-### V-55 · Média · A borda do campo de formulário tem 1,21:1 — **DECISÃO PENDENTE**
+### V-55 · Média · A borda do campo de formulário tem 1,21:1 — **CORRIGIDO (decisão do dono, 18/11)**
 
 WCAG 2.2 **1.4.11 (contraste de conteúdo não textual, AA)** pede **3:1** para a informação
 visual que identifica um componente de interface. Medido nos três primitivos
@@ -2339,11 +2339,26 @@ Ou seja: um campo em repouso é identificado por uma hairline de 1,2:1. `border-
 não chega lá. Para passar, a borda do CONTROLE precisa de um tom próprio — em torno de `#8a8a8a`
 no claro (3,22:1 sobre o fundo do campo) e `#7a7a7a` no escuro.
 
-**Por que não foi corrigido nesta rodada:** o `DESIGN.md` declara a identidade como "hairline
-borders, subtle surface tinting, minimal elevation" (referência Visitors). Trocar a borda de
-todo campo de 1,2:1 para 3:1 não é ajuste de token escondido — é mudança visível em **todo**
-formulário do produto, e a escolha entre identidade e 1.4.11 é do dono. A correção está pronta e
-é pequena (token `--color-border-control` por tema + a classe nos três primitivos), se aprovada.
+**O dono decidiu (18/11/2026): corrigir, mantendo 1px.** "1,21:1 não é hairline sutil, é borda
+invisível" — e o hairline do `DESIGN.md` é a ESPESSURA, não a invisibilidade. A correção separa
+dois papéis que estavam no mesmo token:
+
+| Token | Claro | Escuro | Papel |
+| --- | --- | --- | --- |
+| `--color-border` | `#e7e9ee` (1,21:1) | `#313131` (1,31:1) | **divisória** entre blocos — não identifica controle, não precisa passar 1.4.11 |
+| `--color-border-control` **(novo)** | `#848c98` — **3,39** / 3,17 / 3,25 | `#747a82` — **3,93** / 4,22 / 3,49 | **borda de campo**, o que a 1.4.11 cobra |
+
+A hierarquia dos estados continua crescendo, como o dono pediu: repouso ~3,4 → hover
+`accent-600` (3,63 claro / 4,69 escuro) → foco `accent-ink` (**5,56 / 7,63**) + anel de 2px.
+
+Aplicado em um lugar só para os ~20 campos que usam o primitivo (`Input`, `Textarea`, `Select`
+via o alias `--input`, que passou a apontar para o token novo) e nos 7 campos escritos à mão
+(agenda, cadastro de horários, busca global). O valor é **literal**, não vem da rampa: a função
+dele é ser legível, e a marca do revendedor não deve poder torná-lo invisível.
+
+Gate: `tests/unit/borda-de-campo-passa-3-para-1.test.ts` — mede o token nos dois temas, exige que
+foco > hover > repouso e **vigia a divisória para continuar abaixo de 3:1** (se alguém "consertar"
+a divisória também, a hierarquia visual do produto muda sem ninguém pedir).
 
 **O que já está certo:** o indicador de foco do campo usa accent-600 e passa o piso de 3:1 nos
 dois temas; o estado de erro usa `border-error`; e os alvos de toque dos botões têm 44 px abaixo
@@ -2412,3 +2427,59 @@ anel tem de morar na caixa que a pessoa vê).
 foco por fundo, que é o padrão do Radix e passa o piso de 3:1 (`bg-accent-soft` com texto
 `accent-ink`); e `AppShell` suprime o anel no contêiner de rolagem, que não é foco de controle.
 O método é a varredura, não a lista: `grep -rn "outline-hidden\|outline-none" app components`.
+
+### V-59 · Baixa · O botão de fechar o aviso era anunciado em inglês — **CORRIGIDO**
+
+O `<Toaster/>` do `app/layout.tsx` ligava `closeButton` sem passar o rótulo. O `sonner` 2.0.8
+declara `closeButtonAriaLabel = 'Close toast'` como padrão
+(`node_modules/sonner/dist/index.js:502`), e o produto só tem `pt-BR`
+(`lib/i18n/idiomas.ts`).
+
+| Onde se ouvia | O que se ouvia |
+| --- | --- |
+| todo aviso (toast) com botão de fechar | "Close toast" |
+
+Corrigido com um wrapper de cliente (`components/feedback/ToasterDoProduto.tsx`) que usa o
+tradutor do produto e passa o rótulo por `toastOptions`.
+
+**A armadilha medida, e por que ela fica escrita:** a primeira correção passou
+`closeButtonAriaLabel` direto no `<Toaster>` — o tipo aceita, e o DOM continuou com
+`aria-label="Close toast"`. O pacote desestrutura o prop com o default (linha 502) mas só o
+repassa adiante via `toastOptions` (linha 1233): o prop de topo é aceito e **ignorado**. O teste
+(`tests/unit/toast-fala-portugues.test.tsx`) dispara um aviso de verdade e exige
+`getByRole("button", { name: "Fechar aviso" })` — foi ele que pegou a primeira tentativa.
+
+**Não medido:** o `richColors` do aviso usa a paleta da biblioteca, não os tokens do produto (o
+aviso é o único feedback que pinta fora do design system). Trocar isso é mudança visível de
+superfície e fica para uma fatia com captura — com a operação atual (sem build), não se prova
+pixel.
+
+### V-60 · Média · O aviso pintava com a paleta da biblioteca — **CORRIGIDO**
+
+`richColors` fazia o `sonner` escolher as cores de sucesso/alerta/erro/informação. Era o único
+feedback do produto fora do design system: sem tema, sem régua de contraste, sem marca — e o
+contraste do texto sobre aquelas cores nunca foi medido por ninguém.
+
+Decisão do dono: remover. Os quatro tipos passam a usar `--color-success|warning|error|info` com
+o `-fg` correspondente, e o texto é medido sobre o fundo **composto** (o `-bg` é translúcido:
+`rgba(…, 0.12)` no claro, `0.18` no escuro):
+
+| Tipo | Claro | Escuro |
+| --- | --- | --- |
+| sucesso | **5,66:1** | **6,13:1** |
+| aviso | **5,25:1** | **6,21:1** |
+| erro | **6,50:1** | **5,32:1** |
+| informação | **6,11:1** | **6,42:1** |
+
+As classes moram em `components/feedback/cores-do-aviso.ts`, junto do mapa de pares que o gate
+mede — duas listas (componente e teste) seriam duas verdades, e a que envelhece é sempre a que não
+está em produção. O `!` (important) é deliberado: o `sonner` injeta `background: var(--normal-bg)`
+em `[data-sonner-toast]`, mesma especificidade de um utilitário nosso, e a ordem de injeção não é
+contrato.
+
+Gate: `tests/unit/aviso-com-nossos-tokens.test.ts` — compõe o fundo antes de medir, exige ≥4,5:1
+nos dois temas e **recusa o `richColors` de volta** (senão a biblioteca pintaria por cima das
+nossas classes e o gate de contraste continuaria verde enquanto o produto voltava ao errado).
+
+**Não medido em pixel:** sem build nesta rodada, a prova é a cor final composta por token — que é
+exatamente o par que importa para contraste de texto.

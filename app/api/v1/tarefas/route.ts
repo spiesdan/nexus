@@ -41,7 +41,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .eq("organization_id", authz.org.orgId)
     .order("agendada_para", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(500);
+    .order("id", { ascending: false }).limit(500);
   if (status) q = q.eq("status", status);
   if (responsavel === "minhas") {
     q = q.or(`responsavel_user_id.eq.${authz.user.id},responsavel_user_id.is.null`);

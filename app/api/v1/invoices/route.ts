@@ -50,7 +50,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     q = q.eq("order_id", orderId);
   }
 
-  const { data, error } = await q.order("created_at", { ascending: false }).limit(200);
+  const { data, error } = await q.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(200);
   if (error) return fail("internal_error", "Erro ao listar as notas.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }

@@ -91,7 +91,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .order("id", { ascending: false }).limit(100);
 
   if (error) {
     logger.error("[prospecting.searches] falha ao listar as buscas", {

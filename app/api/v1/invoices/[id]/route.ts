@@ -182,14 +182,14 @@ export async function GET(
       .eq("organization_id", authz.org.orgId)
       .eq("invoice_id", id)
       .order("created_at", { ascending: true })
-      .limit(100),
+      .order("id").limit(100),
     supabase
       .from("fiscal_jobs")
       .select("id, status, tentativas, max_tentativas, proxima_tentativa, ultimo_erro")
       .eq("organization_id", authz.org.orgId)
       .eq("invoice_id", id)
       .order("created_at", { ascending: false })
-      .limit(5),
+      .order("id", { ascending: false }).limit(5),
     impostoAproximadoDaNota(supabase, authz.org.orgId, (nota as unknown as { order_id: string | null }).order_id),
   ]);
 
