@@ -38,7 +38,7 @@ describe("erro de rede vira frase de gente", () => {
   it("navegador offline converte QUALQUER erro no aviso de conexão", () => {
     fingirRede(false);
     // Mesmo um ApiError de servidor: sem rede, o problema é a rede.
-    expect(mensagemDeErro(new ApiError(500, "internal_error"), "x")).toBe(SEM_CONEXAO);
+    expect(mensagemDeErro(new ApiError(500, "internal_error", undefined, "req-1", "falha do servidor"), "x")).toBe(SEM_CONEXAO);
   });
 });
 
