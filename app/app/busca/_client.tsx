@@ -134,7 +134,7 @@ export function BuscaClient({ q }: { q: string }) {
         subtitle={t("Telas, conversas, clientes, pedidos, leads, produtos e títulos num lugar só.")}
       />
 
-      <div className="flex items-center gap-3 rounded-card border px-4">
+      <div className="flex items-center gap-3 rounded-card border px-4 transition-shadow focus-within:border-accent-600 focus-within:ring-2 focus-within:ring-accent-soft">
         <MagnifyingGlass size={16} aria-hidden className="shrink-0 text-muted-foreground" />
         <input
           autoFocus
@@ -155,8 +155,7 @@ export function BuscaClient({ q }: { q: string }) {
 
       {!carregando && falharam.length > 0 ? (
         <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm text-warning-fg">
-          {t("Não consegui buscar em:")}{" "}
-          {falharam.map((f) => ROTULO_FALHA[f] ?? f).join(", ")}.{" "}
+          {t("Não consegui buscar em:")} {falharam.map((f) => ROTULO_FALHA[f] ?? f).join(", ")}.{" "}
           {t("O resultado acima está incompleto — tente de novo.")}
         </p>
       ) : null}
@@ -176,7 +175,7 @@ export function BuscaClient({ q }: { q: string }) {
       <div className="flex flex-col gap-4">
         {blocos.map((bloco) => (
           <section key={bloco.rotulo} aria-label={bloco.rotulo}>
-            <p className="pb-1 text-[11px] uppercase tracking-wider text-muted-foreground">
+            <p className="pb-1 text-[11px] tracking-wider text-muted-foreground uppercase">
               {bloco.rotulo}
             </p>
             <ul>

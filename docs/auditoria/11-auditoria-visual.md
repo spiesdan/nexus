@@ -2391,3 +2391,24 @@ novo anunciado, queda silenciosa, nome acessível do sino preservado).
 derrubou o runtime seis vezes na rodada anterior (build de produção interrompido duas vezes, dev
 server uma) e a nova regra de operação proíbe build/suíte por rotina. A prova aqui é de componente
 — render + árvore de acessibilidade —, e os dois testes falham se a correção for revertida.
+
+### V-58 · Média · Seis campos sinalizavam foco com uma borda 1,21 → 1,40 — **CORRIGIDO**
+
+Varredura de todo `outline-hidden`/`outline-none` em `app/` e `components/` (21 ocorrências).
+A maioria é legítima: item de menu usa `focus:bg-accent` como indicador, e o contêiner de rolagem
+da casca suprime o anel de propósito. Três casos não eram:
+
+| Onde | Antes | Efeito |
+| --- | --- | --- |
+| `app/app/agenda/_client.tsx` (motivo da remarcação) e 5 campos de `settings/tenant/agenda` | `focus:border-border-strong` | a borda vai de **1,21:1** para **1,40:1** — existe, não se vê |
+| `app/app/busca/_client.tsx` (busca global) | `outline-hidden` no `<input>`, sem nada no contêiner | campo focado sem indicador nenhum |
+| `components/shell/CommandPalette.tsx` | idem | idem |
+
+Corrigido com o foco canônico do produto (borda accent + `ring-2 ring-accent-soft`) nos seis
+campos, e `focus-within` nos dois contêineres de busca (o input é transparente dentro deles — o
+anel tem de morar na caixa que a pessoa vê).
+
+**O que fica de fora, com motivo:** itens de menu (`dropdown-menu`, `select`, `popover`) sinalizam
+foco por fundo, que é o padrão do Radix e passa o piso de 3:1 (`bg-accent-soft` com texto
+`accent-ink`); e `AppShell` suprime o anel no contêiner de rolagem, que não é foco de controle.
+O método é a varredura, não a lista: `grep -rn "outline-hidden\|outline-none" app components`.

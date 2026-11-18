@@ -165,7 +165,9 @@ export function AgendaClient({
   // nenhum, que é exatamente o que uma instalação fresca produz (a rota devolve
   // 422 porque ninguém está em `attendant_availability`).
   const { data: horarios, isError: horariosFalharam } = useHorariosLivres(
-    marcando && tipo ? { event_type_id: tipo.id, de: janelaDeBusca.de, ate: janelaDeBusca.ate } : null,
+    marcando && tipo
+      ? { event_type_id: tipo.id, de: janelaDeBusca.de, ate: janelaDeBusca.ate }
+      : null,
   );
 
   const horariosPorDia = React.useMemo(() => {
@@ -201,7 +203,9 @@ export function AgendaClient({
           ? startOfWeek(ancora, { weekStartsOn: 0 })
           : startOfDay(ancora);
     const fim =
-      visao === "mes" ? addDays(endOfMonth(ancora), 1) : addDays(inicio, visao === "semana" ? 7 : 1);
+      visao === "mes"
+        ? addDays(endOfMonth(ancora), 1)
+        : addDays(inicio, visao === "semana" ? 7 : 1);
     return { de: inicio.toISOString(), ate: fim.toISOString() };
   }, [visao, ancora]);
 
@@ -386,7 +390,7 @@ export function AgendaClient({
                   "rounded-sm px-2.5 py-1 text-xs transition-colors duration-fast ease-out",
                   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600",
                   visao === v.id
-                    ? "bg-accent font-semibold text-accent-fg"
+                    ? "text-accent-fg bg-accent font-semibold"
                     : "text-text-muted hover:bg-surface-elevated hover:text-text",
                 )}
               >
@@ -451,7 +455,9 @@ export function AgendaClient({
           className="flex w-full flex-col overflow-y-auto sm:max-w-3xl lg:max-w-[1040px] lg:overflow-hidden"
         >
           <SheetHeader>
-            <SheetTitle>{remarcandoId ? t("Remarcar agendamento") : t("Novo agendamento")}</SheetTitle>
+            <SheetTitle>
+              {remarcandoId ? t("Remarcar agendamento") : t("Novo agendamento")}
+            </SheetTitle>
           </SheetHeader>
           {tiposIniciais.length > 1 && (
             <div className="mt-4" data-testid="tipos-de-agendamento">
@@ -472,7 +478,7 @@ export function AgendaClient({
                     )}
                   >
                     {opcao.nome}
-                    <span className="ml-1 opacity-70 tabular-nums">{opcao.duracaoMin}min</span>
+                    <span className="ml-1 tabular-nums opacity-70">{opcao.duracaoMin}min</span>
                   </button>
                 ))}
               </div>
@@ -589,7 +595,10 @@ export function AgendaClient({
                 return `${t(alvo.titulo)}${quem}, ${format(new Date(alvo.comeca), t("d 'de' MMMM 'às' HH:mm"), { locale: localeDaData })}.`;
               })()}
             </p>
-            <label className="block text-xs font-medium text-text-muted" htmlFor="motivo-do-cancelamento">
+            <label
+              className="block text-xs font-medium text-text-muted"
+              htmlFor="motivo-do-cancelamento"
+            >
               {t("Por que está cancelando?")}
             </label>
             <textarea
@@ -598,7 +607,7 @@ export function AgendaClient({
               value={motivo}
               onChange={(e) => setMotivo(e.target.value)}
               rows={3}
-              className="w-full rounded-lg border border-border bg-surface p-2 text-sm outline-hidden focus:border-border-strong"
+              className="w-full rounded-lg border border-border bg-surface p-2 text-sm outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
               placeholder={t("O paciente pediu para remarcar por telefone")}
             />
             <div className="flex justify-end gap-2">
@@ -708,7 +717,6 @@ export function AgendaClient({
         // só o main rola) em vez de grade morta.
         className="min-h-[480px] flex-1"
       />
-
     </div>
   );
 }
