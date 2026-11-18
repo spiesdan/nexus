@@ -13,7 +13,7 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida | `0b0ebe5e` (base `nexus/main` = `9ddc9005`, tag `v1.55.0`) | `git log --oneline -1` |
+| Commit de partida | `f3ea10d6` (base `nexus/main`, tag `v1.55.0` + #478 + #453 + #464) | `git log --oneline -1` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags nexus` |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
@@ -58,13 +58,14 @@ coordenador integra e roda os gates no código integrado.
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
 | **P0-01** | F-09-B: `baseline.sql` canônico; `db push`/`migration up` bloqueados em scripts, CI, deploy e doc | `[~]` | Decisão em `20-f09-estrategia.md`; gate `#451` em `main`; `db:migrate`/`db:reset` usam baseline | A / Coordenador | — | Nenhum script/CI/deploy invoca a cadeia; docs de operação dizem o caminho; gate reprova reintrodução; `pnpm test:db` instala e atualiza em Postgres descartável |
-| **P0-02** | F-17: provar isolamento comportamental nas **34** tabelas restantes | `[~]` | 39 fechadas no PR #453; `DEBITO_CONHECIDO` com 34 | A | Merge #453; Docker | Cada tabela tem controle positivo (org A vê a própria linha) e negativo (org B vê 0), com `set role authenticated` |
+| **P0-02** | F-17: provar isolamento comportamental nas **34** tabelas restantes | `[~]` | 39 fechadas no #453 (`e29ecf51`); 34 fechadas no PR #482 (`cbfe15f2`), que deixa `DEBITO_CONHECIDO = []` | A / Coordenador | Merge #482; Docker | Cada tabela tem controle positivo (org A vê a própria linha) e negativo (org B vê 0), com `set role authenticated` |
 | **P0-03** | Service role: autorização e filtro de tenant no ponto de uso, não só menção textual | `[~]` | Gate estático em `tests/unit/handlers-service-role-filtram-organizacao.test.ts`; 52 handlers sem menção, 14 exceções | A / B | — | Revisão dos 52; exceções com motivo, dono e teste; nenhum handler de tenant na allowlist; prova de rota com dois tenants nos casos de dinheiro/PII |
 | **P0-04** | Idempotência financeira sob concorrência: teto de recebimento não pode ser furado por dois pagamentos simultâneos com chaves diferentes | `[~]` | `registrarPagamento` lê a soma antes do insert; unique só cobre a mesma `idempotency_key` (`financial_payments` baseline:19679–19699). Correção em `fix/aaa-p0-financeiro`: trigger 0314 + teste de concorrência | Coordenador (C) | Migration + baseline + MANIFEST | Dois POSTs concorrentes com chaves distintas não somam mais que o saldo; teste reproduz a corrida; retry com a mesma chave devolve o mesmo pagamento |
 | **P0-05** | Emissão fiscal: impedir duas notas vivas para o mesmo pedido sob clique duplo/retry concorrente | `[ ]` | `lib/fiscal/emitir-nota.ts:276-293` — checagem "um pedido, uma nota viva" antes do insert, sem constraint; `invoices` não tem unique por pedido | Coordenador (C) | Migration + baseline + MANIFEST; decisão preservando reemissão após cancelamento | Banco recusa a segunda nota viva; nota cancelada permite nova emissão; teste concorrente e de cancelamento |
 | **P0-06** | Deploy aplica schema e falha alto; restore ensaiado | `[x]` | `1d10ff7c` (deploy aplica e verifica schema, sem `\|\| true`); `#462` (F-32 restore, perda de GRANTs); `tests/shell/deploy-aplica-schema.test.sh` | A | — | `pnpm test:shell` verde; ensaio de update e restore documentado em `25-ensaio-de-restauracao.md` |
 | **P0-07** | Sentinel v1 somente leitura, sem escrita fiscal/financeira e sem cross-tenant | `[~]` | Frente `front/sentinel` em execução; requisitos na §10 do prompt mestre | G | — | Detectores determinísticos com casos positivos/negativos; reexecução não duplica ocorrência; RLS e kill switch; zero ação de escrita |
-| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[ ]` | Achado F5 (`docs/auditoria/17-modulos-5.4-5.11.md`): nenhuma rota fiscal usa `Idempotency-Key` | Coordenador (C) | P0-05 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
+| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[ ]` | Achado F5 (`docs/auditoria/17-modulos-5.4-5.11.md`): nenhuma rota fiscal usa `Idempotency-Key` | Coordenador (C) | P0-05; decisão D-03 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
+| **P0-09** | Recebimento de compra não pode somar estoque duas vezes sob concorrência | `[ ]` | `app/api/v1/purchase-orders/[id]/receber/route.ts:99-140`: lê `recebido_qtd`, ajusta estoque (CAS) e grava `recebido_qtd` sem CAS — dois POSTs simultâneos ajustam o estoque duas vezes e o segundo sobrescreve a quantidade | Coordenador (C) | — | CAS em `recebido_qtd` antes do ajuste de estoque; perdedor não movimenta; teste concorrente com dois POSTs e soma final igual ao pedido |
 
 ## 4. Fila — P1 (jornadas críticas, integração, offline, a11y, desempenho)
 
@@ -139,6 +140,10 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 
 | Data | Marco | Commit/PR | Evidência |
 |---|---|---|---|
-| 18/11/2026 | Baseline e reconciliação | `0b0ebe5e` | este documento |
+| 18/11/2026 | Baseline e reconciliação | `608d1e2d` | este documento |
+| 18/11/2026 | Prompt mestre novo na main; programa rebaseado | #478 → `126f4bb3` | CI 5/5 verde |
 | 18/11/2026 | F-09 com catraca integrada | #451 → `7385b9ad` | `gh pr view 451`; CI 5/5 verde |
-| 18/11/2026 | F-17: 39 tabelas provadas (rebase) | #453 → `c215d014` | CI do PR; `DEBITO_CONHECIDO` 73→34 |
+| 18/11/2026 | F-17: 39 tabelas provadas (rebase) | #453 → `c6d6ff75` | CI do PR; `DEBITO_CONHECIDO` 73→34 |
+| 18/11/2026 | P0-04: teto do recebível sob concorrência | #480 | `pnpm test:db` 160 arquivos/1497 testes |
+| 18/11/2026 | F-17 fecha a dívida (34 restantes) | #482 | arquivo novo: 67 testes; completude: 152 testes com débito vazio |
+| 18/11/2026 | P0-05: uma nota viva por pedido | branch `fix/aaa-p0-nota-viva` | `pnpm test:db` em execução |
