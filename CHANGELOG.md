@@ -8,6 +8,182 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.55.0] — 2026-11-18
+
+### Adicionado
+
+- **Pedido aprovado também pode gerar NF-e** A emissão só aceitava pedido concluído, faturado, expedido ou entregue. Agora o
+  pedido **aprovado** também entra na fila: quem aprova o orçamento pode emitir a
+  nota sem antes marcar o pedido como faturado (o que diria, mentindo, que a nota
+  já existia no ERP).
+
+  A regra é uma só — `STATUS_FATURAVEL` — e vale para a lista de "Emitir nota", a
+  pré-validação da emissão e o assistente. `rascunho` e `em_analise` continuam
+  sendo intenção, não fato fiscal.
+
+- **Cada execução da IA passa a ter trilha auditável, sem guardar a conversa** O registro de cada chamada de IA dizia quanto custou e se falhou — nunca o que o
+  modelo leu nem o que respondeu. Quando o agente respondia errado, "por que ele
+  disse isso?" não tinha resposta.
+
+  Cada turno passa a guardar a estrutura do que aconteceu: hash do prompt de
+  sistema usado, quantas mensagens de contexto e de que papéis, hash e tamanho da
+  resposta, quais ferramentas foram chamadas e o tamanho do que voltou, e os
+  domínios das fontes citadas.
+
+  O texto da conversa **não** é copiado para a telemetria: ele continua só em
+  mensagens, e o hash é o que correlaciona o turno à conversa. Quem pede remoção
+  de dados tem os vínculos apagados junto com o contato.
+
+### Alterado
+
+- **Nota autorizada marca o pedido aprovado como faturado** Quando a NF-e de um pedido **aprovado** é autorizada pela SEFAZ, o pedido passa
+  sozinho para **faturado** — o mesmo estado do botão "Faturar pedido", agora sem
+  o clique manual e só depois de a nota existir de verdade.
+
+  A mudança é condicional: só o `aprovado` avança. `concluido`, `expedido` e
+  `entregue` já estão à frente e não regridem. Nota rejeitada ou ainda não
+  autorizada não mexe no pedido, e uma nota agrupada fatura todos os pedidos
+  aprovados que ela cobre.
+
+### Corrigido
+
+- **Botões do gráfico de vendas têm alvo de toque de 24 pixels** Os controles de período do gráfico de vendas (1D/7D/30D), a navegação de mês e
+  as legendas clicáveis tinham 15 a 20 pixels de altura. Para quem usa o dedo, ou
+  tem tremor, errar o alvo é fácil — e a norma de acessibilidade pede pelo menos
+  24 por 24, com espaço entre vizinhos.
+
+  Os botões passaram a ter a altura e a largura mínimas e o espaçamento foi
+  devolvido (a margem negativa comia a distância entre eles). Nada mudou de
+  comportamento: só o alvo ficou maior.
+
+- **Foto de perfil não busca destino interno** O cron que mantém a foto dos contatos baixava a URL devolvida pelo canal sem
+  conferir para onde ela aponta. Uma URL apontando para o endereço de metadata da
+  nuvem ou para um serviço interno da instalação faria o servidor buscar de
+  dentro da rede e guardar a resposta num bucket que a empresa lê.
+
+  A busca agora passa pela mesma barreira das chamadas de saída: esquema e host
+  validados, nome resolvido e julgado contra faixas internas, e redirecionamento
+  não é seguido. Destino recusado não é baixado nem gravado.
+
+- **Uma falha crítica em dependência foi fechada, junto de seis altas** A auditoria de dependências encontrou uma vulnerabilidade **crítica** no SDK de
+  monitoramento: com a rota de túnel ativa, uma versão do `@sentry/nextjs` permitia
+  contornar o middleware — e é o middleware que aplica a checagem de sessão na
+  borda. A versão foi atualizada para a corrigida.
+
+  Junto dela subiram as correções de severidade alta e média que já tinham versão
+  publicada: `zod`, `undici`, `body-parser`, `hono`, `fast-uri`, `seroval`, `qs`,
+  `minimatch`, `glob` e `@hono/node-server`. O Next.js também foi atualizado para a
+  última correção da mesma série 16.4.
+
+  Continua em aberto uma severidade alta em `picomatch` (não há versão corrigida
+  publicada) e uma média em `uuid` que vem da CLI do Capacitor, usada em build.
+  Nenhuma das duas está no caminho de execução do servidor.
+
+  Para conferir na sua instalação: `pnpm audit --prod`.
+
+- **Deploy aplica o schema antes de subir a imagem nova** O deploy trocava a imagem e subia os contêineres sem tocar no banco — o passo
+  de schema tinha sido esvaziado com razões corretas (a imagem de runtime não
+  tem `pnpm`, e a cadeia de migrations não reproduz o schema), mas o efeito era
+  uma imagem nova contra um banco sem a coluna ou a tabela nova. O primeiro erro
+  aparecia como 500 numa tela, sem apontar para o schema.
+
+  Agora o deploy aplica o `supabase/baseline.sql` — o mesmo arquivo idempotente
+  do `install.sh` e do `update.sh`, pela conexão do dono do banco — e **verifica**
+  objetos que o app usa na primeira tela antes de subir qualquer contêiner. Se o
+  banco responder um erro que não seja o ruído esperado de re-aplicação, ou se
+  faltar objeto, o deploy para antes do `up -d`.
+
+- **Matrículas de follow-up deixam de ser cortadas em silêncio** A lista de matrículas de follow-up devolvia tudo o que o banco entregasse numa
+  resposta só. Acima de mil contatos em fluxo, o servidor cortava a página e a
+  tela não tinha como saber: as matrículas que faltavam simplesmente não
+  apareciam.
+
+  Agora a rota pagina de verdade — 200 por vez, até 500 — e diz o que entregou:
+  `has_more` e `next_offset` vêm na resposta. A ordem é total (atualização mais
+  recente e, no empate, o identificador), então nenhuma linha se repete ou se
+  perde entre páginas.
+
+  O painel de uso da plataforma também deixou de baixar a janela de mensagens e
+  conversas só para contar: a contagem agora é feita no banco.
+
+- **Conteúdo de ferramenta deixa de ser confundido com instrução** Um texto vindo de uma fonte — trecho de conhecimento, nota de CRM, retorno de
+  ferramenta ou formulário público — podia ser lido pelo agente como uma ordem:
+  mandar ignorar as regras, revelar o prompt ou enviar mensagem em nome da
+  empresa. O caminho da abordagem inicial já separava os campos do formulário com
+  delimitador não adivinhável, mas nos outros turnos dado e instrução eram
+  indistinguíveis.
+
+  Todo turno passa a carregar a regra explícita: conteúdo de ferramenta e de
+  fonte é dado, nunca ordem. Se ele pedir para mudar de papel, revelar o prompt,
+  pedir dado sensível ou disparar envio, o agente não obedece — continua a tarefa
+  pedida e, se preciso, transfere para uma pessoa.
+
+- **Mapa não publica mais os arquivos de desenvolvimento do MapLibre** O build do mapa copiava para o artefato publicado duas versões do MapLibre —
+  a de produção e a de desenvolvimento — porque a biblioteca escolhe o nome do
+  worker em tempo de execução e o empacotador não consegue provar qual vence.
+  Eram 3,5 MB de arquivos que nenhuma tela pede.
+
+  O build passa a remover esses arquivos depois de gerar o pacote. O mapa
+  continua usando a versão de produção e o worker servido pelo próprio produto.
+
+- **Atualizar do Mercos não morre mais esperando a tela de login** A coleta do Mercos às vezes desistia antes de a tela de login terminar de
+  renderizar: o Playwright espera 30s por padrão, o formulário não aparecia nesse
+  prazo, e o "Atualizar do Mercos" falhava sem ler pedido nenhum. Agora a espera
+  da tela de login é de 90s (ajustável em `MERCOS_LOGIN_TIMEOUT_MS`) e o resto da
+  coleta continua igual.
+
+- **Nota já autorizada não é transmitida de novo** A mesma nota podia ser enviada duas vezes e gerar dois documentos fiscais
+  válidos para uma venda só. Medido nesta instalação: o pedido 19631 recebeu as
+  NF-e 4641 e 4642, autorizadas com quatro minutos de diferença; a segunda
+  sobrescreveu número, chave e XML da linha, e a 4641 sumiu da tela mesmo
+  existindo na SEFAZ.
+
+  Agora o dreno relê a nota imediatamente antes de transmitir e encerra o job se
+  ela já saiu de `em_emissao` ou já tem chave de acesso. E, se a SEFAZ autorizar
+  uma segunda nota para a mesma linha, a primeira autorização é mantida: a
+  segunda vira um evento visível com as duas chaves e os dois protocolos, para
+  cancelamento no fisco — nunca uma substituição silenciosa.
+
+- **Pedidos avisa quando está offline em vez de mostrar lista vazia** Fora da rede, a lista de Pedidos abria a casca do aplicativo e ficava vazia e
+  muda — indistinguível de "não há pedidos". Contatos, inbox e financeiro já
+  diziam o que aconteceu.
+
+  Agora Pedidos mostra "Sem conexão. A lista pode estar desatualizada…" com
+  **Tentar novamente**, e revalida sozinha quando a rede volta. Se a consulta do
+  servidor falhar, a tela diz "Não foi possível carregar os pedidos." em vez de
+  afirmar que o dado não existe.
+
+- **Controle da campanha conta todos os envios, mesmo acima de 1000** O painel de controle da campanha e os cartões da lista liam o registro de
+  envios numa única consulta. O PostgREST corta a resposta em 1000 linhas — e
+  acima disso o controle mostrava empresas "faltando" que já tinham recebido, e
+  o cartão subcontava enviadas e faltantes.
+
+  Agora as duas leituras são paginadas, com a mesma ordem estável do motor
+  (`enviado_em, id`): o controle e a lista contam o que aconteceu de verdade.
+  O motor já lia o ledger inteiro; o que faltava era a tela.
+
+- **O agendamento diz qual empresa perdeu a reserva** Quando duas execuções do agendamento disputavam a mesma empresa, a campanha
+  era pulada sem dizer por quê: o resumo só contava "uma pulada" e o operador não
+  tinha como achar a empresa nem entender que outra execução já a tinha
+  reservado. Agora o log do agendamento nomeia a campanha e a empresa na hora da
+  disputa, uma vez por ocorrência.
+
+- **Backup e restauração passam a devolver o acesso do app** O ensaio de restauração restaurou um backup num banco limpo, as linhas voltaram
+  e o role da aplicação recebeu "permission denied": o dump era feito sem os
+  privilégios, então o banco restaurado não tinha as permissões que o app usa.
+
+  O backup agora carrega os privilégios junto com os dados. E, ao restaurar um
+  backup antigo (que não os tem), o próprio restore reaplica o schema idempotente
+  para recriá-los — se ainda assim o app ficar sem acesso, ele para com a causa
+  escrita, em vez de subir um sistema que responde erro em toda tela.
+
+- **Editor de agente não baixa mais o tokenizador inteiro para mostrar uma contagem** O contador de tokens do editor de agente carregava o vocabulário completo do
+  tokenizador junto com a tela — cerca de 1 MB comprimido, baixado em toda visita,
+  antes de a pessoa digitar qualquer coisa e mesmo que ela nunca olhasse o número.
+
+  O pacote passou a ser carregado sob demanda, quando a contagem é feita. A tela
+  abre sem ele e o número aparece quando o pedaço chega.
+
 ## [1.54.0] — 2026-11-17
 
 ### Adicionado
@@ -7332,7 +7508,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.54.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.55.0...HEAD
+[1.55.0]: https://github.com/spiesdan/nexus/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/spiesdan/nexus/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/spiesdan/nexus/compare/v1.52.6...v1.53.0
 [1.52.6]: https://github.com/spiesdan/nexus/compare/v1.52.5...v1.52.6
