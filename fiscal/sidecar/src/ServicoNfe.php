@@ -507,6 +507,21 @@ class ServicoNfe
         if ($erroExtras !== null) {
             return $erroExtras;
         }
+        // `finalidade` é o único campo de extras que muda o DOCUMENTO (tpNF,
+        // finNFe, CFOP e pagamento), não só um bloco. O schema TS só aceita
+        // 1/4; repetir aqui impede que um payload fora do app (ou uma versão
+        // antiga do lado Node) vire uma nota com semântica de venda/devolução
+        // ambígua.
+        $finalidade = $this->extras['finalidade'] ?? null;
+        if ($finalidade !== null && (string)$finalidade !== '1' && (string)$finalidade !== '4') {
+            return 'extras.finalidade deve ser 1 (venda) ou 4 (devolução).';
+        }
+        if ($this->isDevolucao()) {
+            $ref = preg_replace('/\D/', '', (string)($this->extras['ref_nfe'] ?? ''));
+            if (strlen((string)$ref) !== 44) {
+                return 'extras.ref_nfe é obrigatório na devolução (chave da NF-e original, 44 dígitos).';
+            }
+        }
         // A NF-e modelo 55 exige o endereço do destinatário (rejeição 726).
         // O bloco `entrega` é o único do contrato que traz os campos do TLocal
         // (inclusive cMun/IBGE); exigir aqui evita criar a nota e só descobrir
@@ -677,6 +692,7 @@ class ServicoNfe
         $frete = ((float)($p['frete_cents'] ?? 0)) / 100;
         $vProd = $this->somaDosProdutos();
         $vNF = round($vProd + $frete, 2);
+        $devolucao = $this->isDevolucao();
 
         $make->taginfNFe((object)['versao' => '4.00']);
         // idDest é FUNÇÃO do destino, não escolha de quem chama: 1 = operação
@@ -691,20 +707,26 @@ class ServicoNfe
             // rejeita repetido e sequencial) e o checkNFeKey() monta a chave e
             // corrige o cDV. time() truncado em 8 dígitos podia ser um deles.
             'cNF' => null,
-            'natOp' => (string)($c['natureza'] ?? 'VENDA'),
+            'natOp' => $devolucao
+                ? (string)($this->extras['natureza'] ?? 'DEVOLUÇÃO DE VENDA')
+                : (string)($c['natureza'] ?? 'VENDA'),
             'mod' => '55',
             'serie' => (string)$serie,
             'nNF' => (string)($p['numero_nota'] ?? 1),
             // Nulo: o Make datat no fuso da UF, não no do servidor.
             'dhEmi' => null,
-            'tpNF' => '1',
+            // tpNF 0 = entrada. Devolução de venda é entrada de mercadoria:
+            // o emitente recebe de volta o que vendeu (finNFe 4, abaixo).
+            'tpNF' => $devolucao ? '0' : '1',
             'idDest' => $idDest,
             'cMunFG' => (string)($c['codigo_municipio'] ?? ''),
             'tpImp' => '1',
             'tpEmis' => '1',
             'cDV' => null,
             'tpAmb' => (string)$tpAmb,
-            'finNFe' => '1',
+            // finNFe 4 = devolução. A nota devolvida não existe sozinha: ela
+            // referencia a chave da venda original em <NFref> (logo abaixo).
+            'finNFe' => $devolucao ? '4' : '1',
             // indFinal 0 = não consumidor final; 1 = consumidor final.
             //
             // A regra anterior olhava só o tamanho do documento (CPF = 1,
@@ -730,6 +752,14 @@ class ServicoNfe
             // Neutra, descritiva do software e com folga: 18.
             'verProc' => 'fiscal-sidecar/1.0',
         ]);
+        if ($devolucao) {
+            // NF-e de devolução referencia a venda original (grupo BA01).
+            // Sem o <NFref> a SEFAZ recusa a finalidade 4 — devolução sem
+            // nota referenciada é uma entrada solta, não uma devolução.
+            $make->tagrefNFe((object)[
+                'refNFe' => preg_replace('/\D/', '', (string)$this->extras['ref_nfe']),
+            ]);
+        }
         $make->tagemit((object)[
             'xNome' => $this->limitar((string)$c['razao'], 60),
             'CNPJ' => preg_replace('/\D/', '', (string)$c['cnpj']),
@@ -765,7 +795,7 @@ class ServicoNfe
                 'cEAN' => 'SEM GTIN',
                 'xProd' => $this->limitar((string)$item['descricao'], 120),
                 'NCM' => preg_replace('/\D/', '', (string)($item['ncm'] ?? '00000000')),
-                'CFOP' => $this->cfopParaDestino((string)($item['cfop'] ?? $c['cfop'] ?? '5102')),
+                'CFOP' => $this->cfopDaOperacao((string)($item['cfop'] ?? $c['cfop'] ?? '5102')),
                 'uCom' => (string)($item['unidade'] ?? 'UN'),
                 'qCom' => $this->moeda($qtd, 4),
                 'vUnCom' => $this->moeda($unitLiquido),
@@ -832,7 +862,12 @@ class ServicoNfe
         $this->montarTransporte($make);
         $this->montarPagamento($make, $vNF);
         $this->montarAdicionais($make);
-        $this->montarEntrega($make);
+        // O grupo <entrega> (G01) NÃO é emitido: ele existe para local de
+        // entrega DIFERENTE do destinatário, e este contrato tem um endereço
+        // só — `extras.entrega` alimenta <dest>/<enderDest>. Emiti-lo repetia
+        // o mesmo endereço e quebrava cliente sem IE cadastrada: a SEFAZ cobra
+        // a IE do local de entrega (**176**) e não há o que informar (nota
+        // 4640, RP AUTO MECANICA, medido em 16/11/2026).
         $this->montarRespTecnico($make);
     }
 
@@ -884,8 +919,8 @@ class ServicoNfe
         // destinatário vem do mesmo bloco que a tela chama de "entrega": é o
         // único lugar do contrato que já carrega os campos do TLocal, inclusive
         // o cMun (IBGE) que o cadastro de contatos não guarda. Sem ele a
-        // validação recusa antes de abrir o certificado; com ele, o mesmo
-        // endereço alimenta <dest>/<enderDest> e <entrega>.
+        // validação recusa antes de abrir o certificado; com ele, o endereço
+        // alimenta <dest>/<enderDest> — e só ele (não há grupo <entrega>).
         $e = $this->extras['entrega'] ?? null;
         if (is_array($e) && $e !== []) {
             $cep = preg_replace('/\D/', '', (string)($e['cep'] ?? ''));
@@ -989,6 +1024,13 @@ class ServicoNfe
         if (!in_array($forma, self::FORMAS_DE_PAGAMENTO, true)) {
             $forma = '99';
         }
+        // Devolução não tem pagamento: o dinheiro volta, não entra. tPag 90 é
+        // o código do leiaute para "sem pagamento", e a SEFAZ recusa a
+        // finalidade 4 com forma de pagamento de venda.
+        if ($this->isDevolucao()) {
+            $forma = '90';
+            $parcelas = 1;
+        }
         $descricao = trim((string)($cob['descricao'] ?? ''));
         // indPag 0 = à vista (1 parcela), 1 = a prazo. Só existe em detPag.
         $indPag = $parcelas > 1 ? '1' : '0';
@@ -997,10 +1039,17 @@ class ServicoNfe
         $make->tagdetPag((object)[
             'indPag' => $indPag,
             'tPag' => $forma,
-            'xPag' => $descricao !== ''
-                ? mb_substr($descricao, 0, 60)
-                : ($forma === '99' ? 'Não informada' : null),
-            'vPag' => $this->moeda($vNF),
+            // xPag SÓ existe para tPag = 99 (outros). Em qualquer outra forma
+            // a SEFAZ recusa com **442 — "Descrição do pagamento não
+            // permitida"**: medido em 16/11/2026 na nota 4639, que trazia
+            // `forma_pagamento: 16` e a descrição "boleto vencimento …".
+            'xPag' => $forma === '99'
+                ? ($descricao !== '' ? mb_substr($descricao, 0, 60) : 'Não informada')
+                : null,
+            // tPag 90 (sem pagamento) não admite valor: a SEFAZ recusa com
+            // **904** se o vPag vier com o total da nota. Zero é o que o
+            // leiaute espera aqui (o campo é obrigatório, então não some).
+            'vPag' => $this->moeda($this->isDevolucao() ? 0 : $vNF),
         ]);
 
         if ($parcelas > 1) {
@@ -1101,40 +1150,6 @@ class ServicoNfe
         ]);
     }
 
-    /**
-     * <entrega> — endereço de entrega diferente do destinatário.
-     *
-     * O tagentrega() escreve CNPJ quando não há CPF, e o CNPJ é obrigatório
-     * naquele ramo: sem documento do pedido ele derruba a montagem, por isso
-     * validar() já recusou antes.
-     */
-    private function montarEntrega(Make $make): void
-    {
-        $e = $this->extras['entrega'] ?? [];
-        if (!is_array($e) || $e === []) {
-            return;
-        }
-        $doc = preg_replace('/\D/', '', (string)($this->pedido['documento'] ?? ''));
-        if (strlen($doc) !== 11 && strlen($doc) !== 14) {
-            return;
-        }
-        $nome = trim((string)($this->pedido['nome'] ?? ''));
-        $cep = preg_replace('/\D/', '', (string)($e['cep'] ?? ''));
-        $make->tagentrega((object)[
-            'CPF' => strlen($doc) === 11 ? $doc : null,
-            'CNPJ' => strlen($doc) === 14 ? $doc : null,
-            'xNome' => $nome !== '' ? $this->limitar($nome, 60) : null,
-            'xLgr' => $this->limitar((string)($e['logradouro'] ?? ''), 60),
-            'nro' => (string)($e['numero'] ?? ''),
-            'xCpl' => ($x = $this->limitar((string)($e['complemento'] ?? ''), 60)) !== '' ? $x : null,
-            'xBairro' => $this->limitar((string)($e['bairro'] ?? ''), 60),
-            'cMun' => (string)($e['codigo_municipio'] ?? ''),
-            'xMun' => $this->limitar((string)($e['municipio'] ?? ''), 60),
-            'UF' => strtoupper((string)($e['uf'] ?? '')),
-            'CEP' => strlen($cep) === 8 ? $cep : null,
-        ]);
-    }
-
     /** Dinheiro no leiaute da NF-e: ponto como separador, N casas. */
     private function moeda(float $v, int $casas = 2): string
     {
@@ -1186,6 +1201,32 @@ class ServicoNfe
      * "corrigidos" por conta própria. CFOP com formato inesperado passa
      * intacto — validar formato não é papel desta função.
      */
+    /**
+     * CFOP da operação — saída na venda, ENTRADA na devolução.
+     *
+     * O cadastro guarda o CFOP de venda (5102/6102). A devolução de venda é o
+     * grupo `20x` da entrada, não o `10x`: 5102 → **1202**, 6102 → **2202**
+     * (1102 é compra para comercialização — a SEFAZ recusa como devolução com
+     * **327**, medido em 16/11/2026). A conta é: escopo de entrada (1/2/3) +
+     * "2" + os dois últimos dígitos da venda. Assim 5101 → 1201 e 5405 → 1205
+     * caem no lugar sem uma tabela paralela.
+     */
+    private function cfopDaOperacao(string $cfop): string
+    {
+        $saida = $this->cfopParaDestino($cfop);
+        if (!$this->isDevolucao() || strlen($saida) !== 4) {
+            return $saida;
+        }
+        $escopo = ['5' => '1', '6' => '2', '7' => '3'][$saida[0]] ?? null;
+        return $escopo === null ? $saida : $escopo . '2' . substr($saida, 2);
+    }
+
+    /** A finalidade vem no extras: 4 = devolução, ausente = venda (1). */
+    private function isDevolucao(): bool
+    {
+        return (string)($this->extras['finalidade'] ?? '') === '4';
+    }
+
     private function cfopParaDestino(string $cfop): string
     {
         $digitos = preg_replace('/\D/', '', $cfop);

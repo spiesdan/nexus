@@ -73,12 +73,24 @@ describe("emissor NF-e do sidecar", () => {
 
   it("o destinatário leva enderDest a partir de extras.entrega (rejeição 726)", () => {
     // A SEFAZ recusa a NF-e sem <enderDest>. O bloco `entrega` é o único do
-    // contrato que carrega cMun/IBGE; o mesmo endereço alimenta <dest> e
-    // <entrega>, em vez de inventar um cadastro de endereço que não existe.
+    // contrato que carrega cMun/IBGE, e este contrato tem UM endereço: ele
+    // alimenta <dest>/<enderDest> e só.
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
     expect(src).toMatch(/tagenderDest\s*\(/);
     expect(src).toMatch(/'xLgr'\s*=>\s*\$this->limitar\(\(string\)\(\$e\['logradouro'\]/);
     expect(src).toMatch(/'cMun'\s*=>\s*\(string\)\(\$e\['codigo_municipio'\]/);
+  });
+
+  it("o grupo <entrega> não é emitido — endereço repetido cobrava IE (176)", () => {
+    // Medido em 16/11/2026, na nota 4640 (RP AUTO MECANICA, sem IE): o
+    // sidecar emitia <entrega> com o MESMO endereço de <dest>/<enderDest>.
+    // O grupo G01 existe para local de entrega DIFERENTE do destinatário, e a
+    // SEFAZ cobra a IE daquele local ("176 — IE do local de Entrega não
+    // informada") — dado que ninguém tinha para informar. Duas notas saíram
+    // erradas por isso antes de a causa aparecer.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).not.toMatch(/tagentrega\s*\(/);
+    expect(src).not.toMatch(/private function montarEntrega\(/);
   });
 
   it("todo texto que o XSD limita passa pelo corte (xNome de 62 travou a 4578)", () => {
@@ -128,8 +140,46 @@ describe("emissor NF-e do sidecar", () => {
     // operação interna. O código da operação (102) é do cadastro; só o dígito
     // que diz "dentro/fora do estado" muda.
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
-    expect(src).toMatch(/'CFOP'\s*=>\s*\$this->cfopParaDestino\(/);
+    expect(src).toMatch(/'CFOP'\s*=>\s*\$this->cfopDaOperacao\(/);
+    expect(src).toMatch(/private function cfopDaOperacao\(string \$cfop\): string/);
     expect(src).toMatch(/private function cfopParaDestino\(string \$cfop\): string/);
+  });
+
+  it("devolução usa o grupo 20x da entrada, não o 10x da compra (327)", () => {
+    // Medido em 16/11/2026, na devolução da 4634: com CFOP 1102 — que é
+    // COMPRA para comercialização — a SEFAZ devolveu
+    // "327 — CFOP inválido para NF-e com finalidade de devolução".
+    // Devolução de venda é o grupo `20x` da entrada: escopo (1/2/3) + "2" +
+    // os dois últimos dígitos do CFOP de venda (5102 → 1202, 6102 → 2202).
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/return \$escopo === null \? \$saida : \$escopo \. '2' \. substr\(\$saida, 2\);/);
+    expect(src).toMatch(/'5' => '1', '6' => '2', '7' => '3'/);
+  });
+
+  it("a devolução vira finNFe 4, tpNF 0 e referencia a chave original", () => {
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/private function isDevolucao\(\): bool/);
+    expect(src).toMatch(/'finNFe' => \$devolucao \? '4' : '1'/);
+    expect(src).toMatch(/'tpNF' => \$devolucao \? '0' : '1'/);
+    expect(src).toMatch(/tagrefNFe\(/);
+    // Sem a chave a nota não é devolução, é uma entrada solta: recusa antes.
+    expect(src).toContain("extras.ref_nfe é obrigatório na devolução");
+  });
+
+  it("devolução não tem pagamento: tPag 90 e vPag zero (904)", () => {
+    // Medido em 16/11/2026: com tPag=90 e vPag cheio, a SEFAZ devolveu
+    // "904 — Informado indevidamente campo valor de pagamento". O campo é
+    // obrigatório no leiaute, então vai com zero — não some.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/\$forma = '90';/);
+    expect(src).toMatch(/'vPag' => \$this->moeda\(\$this->isDevolucao\(\) \? 0 : \$vNF\)/);
+  });
+
+  it("xPag só vai com tPag 99 (442 — descrição do pagamento não permitida)", () => {
+    // Medido em 16/11/2026, na 4639: forma de pagamento 16 (depósito) com
+    // <xPag> junto → "442 — Descrição do pagamento não permitida".
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toMatch(/'xPag' => \$forma === '99'\s*\?/);
   });
 
   it("indFinal: não contribuinte (indIEDest 9) é consumidor final — SEFAZ 696", () => {
@@ -210,6 +260,15 @@ describe("emissor NF-e do sidecar", () => {
     const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
     expect(src).toContain("$ret['cstat'] === '102'");
     expect(src).not.toContain("'1002'");
+  });
+
+  it("finalidade fora de 1/4 é recusada antes do certificado", () => {
+    // `finalidade` muda tpNF, finNFe, CFOP e pagamento — não é bloco opcional.
+    // O schema TS só aceita 1/4; o sidecar repete a régua para payload fora
+    // do app (ou lado Node antigo) não virar uma nota ambígua.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toContain("extras.finalidade deve ser 1 (venda) ou 4 (devolução).");
+    expect(src).toMatch(/\(string\)\$finalidade !== '1' && \(string\)\$finalidade !== '4'/);
   });
 
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {

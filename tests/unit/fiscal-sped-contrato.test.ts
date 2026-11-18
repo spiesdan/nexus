@@ -222,6 +222,17 @@ describe("extrasFiscaisSchema", () => {
     if (r.success) expect(r.data).toEqual(EXTRAS);
   });
 
+  it("devolução exige a chave da nota original", () => {
+    const chave = "42261135233142000183550010000046341282750794";
+    expect(extrasFiscaisSchema.safeParse({ finalidade: 4, ref_nfe: chave }).success).toBe(true);
+    expect(extrasFiscaisSchema.safeParse({ finalidade: 4 }).success).toBe(false);
+    expect(extrasFiscaisSchema.safeParse({ finalidade: 4, ref_nfe: "123" }).success).toBe(false);
+  });
+
+  it("finalidade fora de 1/4 é recusada", () => {
+    expect(extrasFiscaisSchema.safeParse({ finalidade: 2 }).success).toBe(false);
+  });
+
   it("modalidade de frete default é 9 (sem transportador)", () => {
     const r = extrasFiscaisSchema.safeParse({ transporte: {} });
     expect(r.success).toBe(true);
