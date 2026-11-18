@@ -35,7 +35,8 @@ function registrar(org: string, run: string, fp: string): string {
           '${org}', '${run}', '${fp}', '${REGRA}', 'operacao',
           'catalog_products', 'seed-1', 'Produto com saldo negativo',
           'O saldo ficou abaixo de zero.', 'Saída sem entrada.', 'alta',
-          '/app/estoque', '{"quantidade":-1,"codigo":"SKU-1"}'::jsonb
+          '/app/estoque', '{"quantidade":-1,"codigo":"SKU-1"}'::jsonb,
+          '{"resumo":"Contar e ajustar","passos":["Conte fisicamente"],"campos_pendentes":["contagem"],"risco":"medio","reversibilidade":"reversivel","exige_aprovacao":true,"fonte":["catalog_products"],"limitacao":null,"confianca":"alta"}'::jsonb
         );
     `),
   );
@@ -79,6 +80,9 @@ describe("Sentinel — idempotência, recorrência e retenção", () => {
     expect(
       Number(sql(`select vezes_vista from public.sentinel_occurrences where id = '${id1}';`)),
     ).toBe(2);
+    expect(
+      sql(`select recomendacao->>'risco' from public.sentinel_occurrences where id = '${id1}';`),
+    ).toBe("medio");
     expect(
       sql(`select tipo from public.sentinel_occurrence_events where occurrence_id = '${id1}' order by created_at, tipo;`),
     ).toBe("detectada\nreafirmada");

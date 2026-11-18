@@ -10,8 +10,9 @@
  * O runner aplica o teto de carga DEPOIS daqui, para que o corte seja por
  * severidade e não pela ordem em que as tabelas foram lidas.
  */
-import { fingerprint, PESO_SEVERIDADE, type Achado, type Snapshot } from "./tipos";
+import { fingerprint, PESO_SEVERIDADE, type Achado, type Recomendacao, type Snapshot } from "./tipos";
 import { REGRAS } from "./regras";
+import { RECOMENDACOES } from "./recomendacoes";
 
 export interface FalhaDeRegra {
   regra: string;
@@ -30,6 +31,8 @@ export interface OpcoesDeteccao {
   desativados?: readonly string[];
   /** Injeção para teste; default = registry. */
   regras?: typeof REGRAS;
+  /** Injeção para teste; default = RECOMENDACOES. */
+  recomendacoes?: Record<string, (achado: Achado) => Recomendacao>;
 }
 
 const CAMPOS_TEXTO = ["regra", "entidadeTipo", "entidadeId", "titulo", "resumo", "causaProvavel"] as const;
@@ -45,12 +48,31 @@ function achadoValido(a: Achado, idEsperado: string): string | null {
   return null;
 }
 
+/** O plano do Nível 1 precisa ser utilizável pela tela, não só existir. */
+function recomendacaoValida(a: Achado): string | null {
+  const r = a.recomendacao;
+  if (!r) return "regra sem plano de correção (RECOMENDACOES)";
+  if (typeof r.resumo !== "string" || r.resumo.trim().length < 8) return "plano sem resumo";
+  if (!Array.isArray(r.passos) || r.passos.length === 0) return "plano sem passos";
+  if (!Array.isArray(r.campos_pendentes)) return "plano sem campos_pendentes";
+  if (!["baixo", "medio", "alto"].includes(r.risco)) return "plano com risco inválido";
+  if (!["reversivel", "parcial", "irreversivel"].includes(r.reversibilidade)) {
+    return "plano com reversibilidade inválida";
+  }
+  if (!["alta", "media", "baixa"].includes(r.confianca)) return "plano com confiança inválida";
+  if (!Array.isArray(r.fonte) || r.fonte.length === 0) return "plano sem fonte";
+  if (typeof r.exige_aprovacao !== "boolean") return "plano sem exige_aprovacao";
+  if (r.limitacao !== null && typeof r.limitacao !== "string") return "plano com limitação inválida";
+  return null;
+}
+
 export function executarDetectores(
   snapshot: Snapshot,
   opcoes: OpcoesDeteccao = {},
 ): ResultadoDeteccao {
   const desativados = new Set(opcoes.desativados ?? []);
   const regras = opcoes.regras ?? REGRAS;
+  const recomendacoes = opcoes.recomendacoes ?? RECOMENDACOES;
   const porFingerprint = new Map<string, Achado>();
   const regrasAvaliadas: string[] = [];
   const falhas: FalhaDeRegra[] = [];
@@ -66,9 +88,21 @@ export function executarDetectores(
       }
 
       let invalido: string | null = null;
+      const comPlano: Achado[] = [];
       for (const achado of achados) {
         invalido = achadoValido(achado, regra.id);
         if (invalido) break;
+        const recomendacao = recomendacoes[regra.id]?.(achado);
+        if (!recomendacao) {
+          invalido = "regra sem plano de correção no mapa RECOMENDACOES";
+          break;
+        }
+        const planoInvalido = recomendacaoValida({ ...achado, recomendacao });
+        if (planoInvalido) {
+          invalido = planoInvalido;
+          break;
+        }
+        comPlano.push({ ...achado, recomendacao });
       }
       if (invalido) {
         falhas.push({ regra: regra.id, motivo: invalido });
@@ -78,7 +112,7 @@ export function executarDetectores(
       // Só conta como avaliada quando produziu resultado válido: uma regra
       // que estourou no meio não pode fechar ocorrências por ausência.
       regrasAvaliadas.push(regra.id);
-      for (const achado of achados) {
+      for (const achado of comPlano) {
         const chave = fingerprint(achado);
         const existente = porFingerprint.get(chave);
         if (!existente || PESO_SEVERIDADE[achado.severidade] > PESO_SEVERIDADE[existente.severidade]) {

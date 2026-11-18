@@ -30,7 +30,7 @@ export default async function SentinelPage() {
       .from("sentinel_occurrences")
       .select(
         "id, regra, categoria, entidade_tipo, entidade_id, titulo, resumo, causa_provavel, " +
-          "severidade, estado, evidencia, href, primeira_vista_em, ultima_vista_em, " +
+          "severidade, estado, evidencia, recomendacao, href, primeira_vista_em, ultima_vista_em, " +
           "vezes_vista, recorrencias, responsavel_user_id, ignorada_motivo, " +
           "motivo_encerramento, encerrada_em, created_at, updated_at",
       )

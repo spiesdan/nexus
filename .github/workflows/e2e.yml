@@ -236,6 +236,7 @@ jobs:
         icone-da-marca.spec.ts
         password-recovery.spec.ts signup-journey.spec.ts
         rbac-roles.spec.ts inbox-scope.spec.ts reset-password-mfa.spec.ts
+        sentinel-painel.spec.ts
         degradacao-silenciosa.spec.ts vps-webhook-outbound-ssrf.spec.ts
         kanban-owner-filter.spec.ts queue-assign.spec.ts
         conversa-vira-lead.spec.ts contato-salva-email.spec.ts

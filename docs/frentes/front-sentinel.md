@@ -1,8 +1,8 @@
-# Frente `front/sentinel` — Nexus Sentinel v1
+# Frente `front/sentinel` — Nexus Sentinel v1.1
 
-> Worktree: `/private/var/folders/.../aaa-front-sentinel` · branch `front/sentinel`
-> Baseline: `nexus/main` @ `9ddc9005` (release 1.55.0)
-> Escopo desta entrega: **v1 somente leitura** — detectar, classificar e abrir ocorrência. Nenhuma correção autônoma.
+> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel`
+> Baseline desta fatia: `nexus/main` @ `014ccef3` (merge feito no worktree; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Escopo: **v1 + v1.1 somente leitura** — detectar, classificar, abrir ocorrência e propor um plano revisável. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
 
@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (27)
+## 2. Regras implementadas (29)
 
 ### Fiscal (12)
 
@@ -40,11 +40,12 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.job_retry_excessivo` | 3+ tentativas na mesma nota | media |
 | `fiscal.sincronizacao_falhou` | sync fiscal com erro/bloqueio nas últimas 24 h (agrupada por dia) | media/alta |
 
-### Operação, financeiro e campanha (15)
+### Operação, financeiro e campanha (17)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
 | `operacao.estoque_negativo` | saldo < 0 com controle de estoque | alta |
+| `operacao.estoque_divergente` | saldo ≠ razão desde 0242; **hipótese** de baixa confiança | baixa |
 | `operacao.pedido_total_incoerente` | total ≠ subtotal − desconto + frete | alta |
 | `operacao.pedido_preso` | rascunho/em análise sem toque há > 7 dias | media |
 | `operacao.pedido_sem_cliente` | pedido avançado sem `contact_id` | media |
@@ -59,6 +60,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `campanha.cidade_invalida` | campanha ativa com cidade vazia/UF fora de 2 letras | media/alta |
 | `campanha.cidade_repetida` | mesma cidade repetida no recorte ativo | baixa |
 | `operacao.cliente_duplicado_email` | mesmo e-mail normalizado em 2+ clientes ativos | media |
+| `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
 
 **Falsos positivos evitados de propósito:**
 
@@ -66,10 +68,14 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   recorte geográfico), não erro — a regra não dispara;
 - contato tem índice único por telefone; a duplicidade real que sobra é por
   e-mail, e é essa que a view agregada detecta;
-- divergência de estoque **não** foi implementada: sem saldo de abertura no
-  razão, `SUM(movimentos) ≠ quantidade` acusaria todos os produtos anteriores à
-  migration 0242. Estoque negativo é determinístico; divergência exigiria uma
-  linha de base que o schema não tem.
+- divergência de estoque **é detectada como hipótese**: `inventory_movements`
+  não tem saldo de abertura, então a regra só olha produtos criados a partir da
+  0242, exige um piso de diferença e nasce com confiança baixa. O plano manda
+  contar fisicamente antes de ajustar; a limitação vai na evidência;
+- lead duplicado usa a identidade que o produto já normaliza — `contact_id`,
+  `phone_number` E.164 e `email_normalized` — com confiança alta para o mesmo
+  contato e média para telefone/e-mail entre contatos. Lead sem contato fica de
+  fora: não há identidade para comparar.
 
 ## 3. Ocorrência, agrupamento e idempotência
 
@@ -81,6 +87,10 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   cria cópia.
 - Quando o evento volta depois de fechado, nasce uma ocorrência `recorrente`,
   com `recorrencias` = quantas fechadas da mesma fingerprint já existiam.
+- O plano do Nível 1 é persistido em `recomendacao` junto da ocorrência. A
+  reexecução atualiza o plano enquanto a linha está aberta; quando ela fecha, o
+  plano daquele desfecho deixa de ser reescrito. O evento guarda a execução e a
+  regra, não uma cópia do plano anterior.
 - Rodada **truncada** (teto de coleta, teto de ocorrências ou falha de regra)
   **não** encerra ocorrências por ausência: lista incompleta não é prova.
 - O encerramento automático grava evento `auto_encerrada` com motivo
@@ -96,7 +106,10 @@ terminal ─> nova/recorrente (reabrir, gestor)
 ```
 
 - **Nível 0 — observar** (implementado): detectar, classificar, abrir ocorrência.
-- **Nível 1 — recomendar** (v1.1, não implementado): plano de correção revisável.
+- **Nível 1 — recomendar** (implementado na v1.1): cada ocorrência carrega um
+  plano revisável com passos, campos pendentes, risco da ação, reversibilidade,
+  fonte, limitação e confiança. O plano é persistido junto da ocorrência e
+  exibido no detalhe; **nada é executado**.
 - **Nível 2 — corrigir após aprovação** (v1.2, não implementado).
 - **Nível 3 — automação restrita** (não implementado; e emissão/pagamento/envio
   externo nunca serão nível 3).
@@ -132,7 +145,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
   transição e chama `fn_sentinel_aplicar_mudanca` com service role: a máquina de
   estados não é contornável com a anon key.
 - Coleta usa service role e filtra `organization_id` explicitamente em **todas**
-  as 13 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
+  as 15 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
   body.
 - Evidência não carrega conversa, documento, telefone ou e-mail completo. Erro
   de terceiro passa por `higienizar()` (e-mail → `[email]`, sequência de dígitos
@@ -148,14 +161,16 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | Path | O que |
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
-| `supabase/baseline.sql` (apêndice 0316) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linha da 0316 |
-| `lib/sentinel/tipos.ts` | contrato do snapshot/achado |
+| `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
+| `supabase/baseline.sql` (apêndices 0316/0321) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321 |
+| `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
-| `lib/sentinel/regras-operacao.ts` | 15 detectores de operação/financeiro/campanha |
+| `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
-| `lib/sentinel/coleta.ts` | 13 consultas com teto e filtro de org |
+| `lib/sentinel/coleta.ts` | 15 consultas com teto e filtro de org |
+| `lib/sentinel/recomendacoes.ts` | plano revisável por regra (Nível 1) |
 | `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
 | `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
@@ -163,49 +178,97 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `app/api/v1/sentinel/{occurrences,scan,settings}` | API |
 | `app/api/v1/cron/sentinel/route.ts` | cron (15 min) |
 | `app/app/sentinel/` | painel |
-| `docs/architecture/sentinel.architecture.json` | mapa (21 peças, 24 arestas) |
+| `docs/architecture/sentinel.architecture.json` | mapa (22 peças, 26 arestas) |
 | `tests/invariants/rls-isolation.test.ts` | seed + TABLES das 4 tabelas |
-| `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, estados, config |
+| `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção e cross-tenant |
+| `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis (roda no CI `critical`/`full`) |
+| `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
+| `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
 
+Nesta sessão (v1.1, após o merge com `nexus/main`), rodando **dirigido** — não a
+suíte completa:
+
 ```bash
-pnpm vitest run lib/sentinel      # 45 testes (positivo/negativo por regra)
-pnpm test:db                      # install+update do baseline, RLS, invariantes
+pnpm exec vitest run lib/sentinel
+#   7 arquivos, 55 testes verdes
+
+pnpm exec vitest run tests/unit/sentinel-painel-revisavel.test.tsx
+#   1 arquivo, 7 testes verdes (lista, filtro, busca, detalhe+plano, histórico,
+#   kill switch, ocorrência antiga sem plano, viewer/agent/gestor)
+
+pnpm exec vitest run tests/unit/e2e-suices-aderentes.test.ts tests/unit/e2e-cobertura-completa.test.ts
+#   2 arquivos, 10 testes verdes (o spec do painel entra em critical/full)
+
+pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
+  tests/e2e/sentinel-painel.spec.ts tests/unit/sentinel-painel-revisavel.test.tsx \
+  tests/invariants/sentinel-idempotencia.test.ts
+#   sem saída (zero erros)
+
 pnpm typecheck
-pnpm lint
-pnpm test:unit
+#   zerado
 ```
 
-Resultados desta sessão ficam no relatório do PR. **Nada foi implantado** — sem
-deploy, sem escrita em produção/VPS, sem operação fiscal/financeira real.
+**O E2E do painel NÃO foi executado nesta máquina, e o motivo é de ambiente, não
+de código:** o daemon do Docker está desligado (`Cannot connect to the Docker
+daemon`) e este worktree novo não tem `.env.e2e`/Supabase local — sem banco não
+há login nem seed. O spec `tests/e2e/sentinel-painel.spec.ts` continua versionado
+e vai rodar no job `e2e` (suítes `critical` e `full`) quando houver Docker. A
+prova de comportamento desta sessão é o teste de componente acima, que exercita
+a mesma tela com fixture determinística. `pnpm test:db` também depende de Docker
+e igualmente não rodou aqui; a migration 0321 e o apêndice do baseline foram
+revisados, mas a prova de banco é a do CI (`invariants`).
 
-## 9. Limitações declaradas (v1)
+**Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
+fiscal/financeira real.
 
-1. **Divergência de estoque** não é detectada (falta saldo de abertura no
-   razão); estoque negativo é.
-2. **Duplicidade de lead** não é detectada; contato duplicado por e-mail é
-   (telefone já tem índice único). Lead duplicado exige uma chave de negócio
-   que o schema não declara.
-3. **Campos sugeridos a partir de fonte confiável** (item fiscal do prompt)
-   pertencem ao v1.1 (recomendação). O v1 não sugere valor fiscal.
-4. **Não há correção automática nem aprovação de plano** — estados `aprovada`
-   existem para o v1.2, mas nenhuma ação é executada.
-5. O cron processa **3 organizações por tick**; instalação com muitas orgs
+## 9. Limitações declaradas (v1.1)
+
+1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
+   saldo de abertura e a comparação só vale para produtos criados a partir da
+   0242. Confirmação exige contagem física.
+2. A view `sentinel_estoque_razao` usa **inner join** com
+   `inventory_movements`: produto controlado criado após a 0242 que nunca teve
+   movimentação **não entra** na comparação, mesmo com saldo cacheado. É
+   omissão conhecida (poderia ser `left join`), mantida nesta versão porque a
+   prova de banco exigiria Docker; o caminho de evolução é o item 5 de §10.
+3. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
+   contato não tem identidade normalizada — ficar de fora é decisão, não
+   omissão.
+4. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
+   v1.1 recomenda passos, não inventa valor fiscal.
+5. **Não há correção automática.** O plano é persistido e revisável; os estados
+   `aprovada`/`corrigida` registram a decisão humana, mas nada é executado pela
+   máquina.
+6. O cron processa **3 organizações por tick**; instalação com muitas orgs
    drena ao longo dos ticks (15 min cada).
-6. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
+7. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
    fica de fora de propósito.
-7. O painel entrega 500 ocorrências por render; a API pagina até 200 por
+8. O painel entrega 500 ocorrências por render; a API pagina até 200 por
    chamada. Acima disso, filtros são a forma de recorte.
+9. O plano é uma recomendação textual/determinística; não há simulação de
+   impacto nem execução assistida na v1.1.
+10. **Prova de banco e E2E pendentes nesta máquina** (Docker desligado, sem
+    `.env.e2e`): o merge não é declarado "verde em tudo" até `invariants` e
+    `e2e` rodarem no CI.
+11. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+    `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
+    normal, então a regra herdada da v1 não dispara na base atual. A regra de
+    estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
+    regra morta ou afrouxar a constraint é decisão de produto, não desta frente.
 
 ## 10. Próximas fatias seguras
 
-1. v1.1 — plano de correção revisável, sem executar (texto + campos + risco).
+1. v1.2 — correção aprovada e reversível, sempre com antes/depois e aprovação
+   de gestor; nunca em nota, saldo, pagamento ou envio externo.
 2. Explicação por IA **opcional** sobre a evidência já sanitizada, com fallback
    imediato para o texto determinístico.
 3. Exposição no Meu Dia: uma ocorrência `acao_necessaria` vira item da rotina
    (hoje a porta é o ⌘K, porque a dobra do sidebar é medida).
-4. Detector de divergência de estoque **quando** houver saldo de abertura
-   (`inventory_movements` com tipo `abertura` ou snapshot mensal).
-5. Teste visual/E2E do painel em ambiente fresco (a doutrina de QA visual não
-   foi executada nesta sessão; é dívida declarada).
+4. Saldo de abertura explícito no razão (`abertura`/snapshot mensal) para elevar
+   a confiança da divergência de estoque.
+5. Trocar o `inner join` de `sentinel_estoque_razao` por `left join` (produto
+   sem movimentação também é divergência) **com** a prova de `test:db` que
+   valide as duas linhas e o `null` de `ultimo_movimento`.
+6. Ampliar o E2E visual para outras resoluções/dispositivos.

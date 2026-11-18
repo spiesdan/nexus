@@ -1,4 +1,4 @@
-import type { Categoria, EstadoOcorrencia, Severidade } from "@/lib/sentinel/tipos";
+import type { Categoria, EstadoOcorrencia, Recomendacao, Severidade } from "@/lib/sentinel/tipos";
 
 export type EvidenciaSentinel = Record<string, unknown>;
 
@@ -14,6 +14,7 @@ export interface OcorrenciaSentinel {
   severidade: Severidade;
   estado: EstadoOcorrencia;
   evidencia: EvidenciaSentinel;
+  recomendacao: Recomendacao | Record<string, never> | null;
   href: string | null;
   primeira_vista_em: string;
   ultima_vista_em: string;

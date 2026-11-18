@@ -26,7 +26,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
 
 const COLUNAS =
   "id, fingerprint, regra, categoria, entidade_tipo, entidade_id, titulo, resumo, " +
-  "causa_provavel, severidade, estado, evidencia, href, primeira_vista_em, " +
+  "causa_provavel, severidade, estado, evidencia, recomendacao, href, primeira_vista_em, " +
   "ultima_vista_em, vezes_vista, recorrencias, responsavel_user_id, ignorada_motivo, " +
   "motivo_encerramento, encerrada_em, created_at, updated_at";
 

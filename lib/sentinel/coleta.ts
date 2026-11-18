@@ -17,9 +17,11 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  EstoqueRazao,
   ImportacaoMercos,
   JobDaFila,
   JobFiscal,
+  LeadAberto,
   NotaFiscal,
   NotaPedido,
   Pedido,
@@ -37,7 +39,9 @@ const TETO_PEDIDOS = 500;
 const TETO_JOBS_FISCAIS = 500;
 const TETO_SYNC_FISCAL = 100;
 const TETO_PRODUTOS = 200;
+const TETO_ESTOQUE_RAZAO = 500;
 const TETO_RECEBIVEIS = 1_000;
+const TETO_LEADS = 2_000;
 const TETO_FILA = 500;
 const TETO_WEBHOOKS = 500;
 const TETO_MERCOS = 100;
@@ -91,7 +95,9 @@ export async function coletarSnapshot(
     jobsFiscais,
     sincronizacoesFiscais,
     produtos,
+    estoqueRazao,
     recebiveis,
+    leadsAbertos,
     fila,
     webhooks,
     importacoesMercos,
@@ -172,6 +178,20 @@ export async function coletarSnapshot(
         .limit(TETO_PRODUTOS + 1),
       TETO_PRODUTOS,
     ),
+    coletar<EstoqueRazao>(
+      "estoque_razao",
+      admin
+        .from("sentinel_estoque_razao")
+        .select(
+          "product_id, codigo, nome, quantidade, saldo_razao, diferenca, movimentos, criado_em, ultimo_movimento",
+        )
+        .eq("organization_id", organizationId)
+        .gte("criado_em", "2026-09-25T00:00:00.000Z")
+        .neq("diferenca", 0)
+        .order("diferenca", { ascending: false })
+        .limit(TETO_ESTOQUE_RAZAO + 1),
+      TETO_ESTOQUE_RAZAO,
+    ),
     coletar<Recebivel>(
       "recebiveis",
       admin
@@ -184,6 +204,20 @@ export async function coletarSnapshot(
         .order("vencimento", { ascending: true })
         .limit(TETO_RECEBIVEIS + 1),
       TETO_RECEBIVEIS,
+    ),
+    coletar<LeadAberto>(
+      "leads_abertos",
+      admin
+        .from("crm_leads")
+        .select(
+          "id, pipeline_id, contact_id, created_at, contacts(phone_number, email_normalized)",
+        )
+        .eq("organization_id", organizationId)
+        .eq("status", "open")
+        .not("contact_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(TETO_LEADS + 1),
+      TETO_LEADS,
     ),
     coletar<JobDaFila>(
       "fila",
@@ -262,7 +296,9 @@ export async function coletarSnapshot(
     jobsFiscais,
     sincronizacoesFiscais,
     produtos,
+    estoqueRazao,
     recebiveis,
+    leadsAbertos,
     fila,
     webhooks,
     importacoesMercos,
@@ -281,7 +317,9 @@ export async function coletarSnapshot(
       jobsFiscais: jobsFiscais.dados,
       sincronizacoesFiscais: sincronizacoesFiscais.dados,
       produtos: produtos.dados,
+      estoqueRazao: estoqueRazao.dados,
       recebiveis: recebiveis.dados,
+      leadsAbertos: leadsAbertos.dados,
       fila: fila.dados,
       webhooks: webhooks.dados,
       importacoesMercos: importacoesMercos.dados,

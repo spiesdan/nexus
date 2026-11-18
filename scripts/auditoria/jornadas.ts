@@ -52,6 +52,7 @@ export const TRANSVERSAIS: Record<string, string> = {
   "axe-telas-principais": "acessibilidade (axe) nas 8 telas de operação — vale para todas",
   "campanhas-tela": "contrato de subtela (Campanha/Prospecção) e persistência da escolha — F-27",
   "meu-dia-alertas": "alertas do Meu Dia (transversal ao painel)",
+  "sentinel-painel": "saúde do produto — ocorrências, plano revisável e kill switch atravessam todas as jornadas",
   "inbox-tempo-real": "realtime do inbox — FORA_DO_CI (conta Google de teste)",
   "vps-fresh-onboarding": "instalação fresca — FORA_DO_CI (WAHA/Redis/Resend/Nuvemshop)",
   "mobile-offline": "shell offline — workflow próprio (apk.yml)",

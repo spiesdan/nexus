@@ -324,6 +324,7 @@ async function registrar(
     p_severidade: achado.severidade,
     p_href: achado.href,
     p_evidencia: achado.evidencia,
+    p_recomendacao: achado.recomendacao ?? null,
   });
 
   if (error) return { ok: false, motivo: error.message.slice(0, 200) };

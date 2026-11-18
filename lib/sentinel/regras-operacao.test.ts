@@ -4,10 +4,12 @@ import {
   campanhasComCidadeInvalida,
   campanhasComCidadeRepetida,
   clientesDuplicadosPorEmail,
+  estoqueDivergente,
   estoqueNegativo,
   importacaoMercosFalhou,
   importacaoMercosTravada,
   jobsDaFilaTravados,
+  leadsDuplicados,
   pedidosAvancadosSemCliente,
   pedidosComNfSemDocumento,
   pedidosComTotalIncoerente,
@@ -21,10 +23,12 @@ import {
   campanhaProspeccao,
   campanhaVenda,
   duplicado,
+  estoqueRazao,
   ha,
   DIA,
   HORA,
   jobFila,
+  leadAberto,
   mercos,
   MIN,
   pedido,
@@ -44,6 +48,115 @@ describe("detectores de operação — caso positivo e negativo", () => {
         snapshot({ produtos: [produto({ quantidade: -1, controla_estoque: false })] }),
       ),
     ).toHaveLength(0);
+  });
+
+  it("estoque divergente: diferença acima do piso dispara com confiança baixa; pequena não", () => {
+    const grande = estoqueDivergente(
+      snapshot({
+        estoqueRazao: [
+          estoqueRazao({ quantidade: 100, saldo_razao: 40, diferenca: 60 }),
+        ],
+      }),
+    );
+    expect(grande).toHaveLength(1);
+    const estoque = primeiro(grande);
+    expect(estoque.severidade).toBe("baixa");
+    expect(estoque.evidencia.confianca).toBe("baixa");
+    expect(String(estoque.evidencia.limitacao)).toContain("saldo de abertura");
+
+    expect(
+      estoqueDivergente(
+        snapshot({
+          estoqueRazao: [estoqueRazao({ quantidade: 100, saldo_razao: 95, diferenca: 5 })],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("lead duplicado: mesmo contato no mesmo funil dispara; funis diferentes não", () => {
+    const mesmoContato = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          leadAberto({ id: "l1", contact_id: "contato-1" }),
+          leadAberto({ id: "l2", contact_id: "contato-1" }),
+        ],
+      }),
+    );
+    expect(mesmoContato).toHaveLength(1);
+    const contato = primeiro(mesmoContato);
+    expect(contato.evidencia.identidade).toBe("contato");
+    expect(contato.evidencia.confianca).toBe("alta");
+
+    expect(
+      leadsDuplicados(
+        snapshot({
+          leadsAbertos: [
+            leadAberto({ id: "l1", pipeline_id: "p1", contact_id: "c1" }),
+            leadAberto({ id: "l2", pipeline_id: "p2", contact_id: "c1" }),
+          ],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("lead duplicado por telefone/e-mail: contatos diferentes, evidência mascarada", () => {
+    const porTelefone = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          leadAberto({
+            id: "l1",
+            contact_id: "c1",
+            contatos: { phone_number: "+5511999998888", email_normalized: null },
+          }),
+          leadAberto({
+            id: "l2",
+            contact_id: "c2",
+            contatos: { phone_number: "+55 11 99999-8888", email_normalized: null },
+          }),
+        ],
+      }),
+    );
+    expect(porTelefone).toHaveLength(1);
+    const telefone = primeiro(porTelefone);
+    expect(telefone.evidencia.identidade).toBe("telefone");
+    expect(telefone.evidencia.confianca).toBe("media");
+    expect(String(telefone.evidencia.telefone_mascarado)).toContain("8888");
+    expect(JSON.stringify(telefone.evidencia)).not.toContain("5511999998888");
+
+    const porEmail = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          leadAberto({
+            id: "l1",
+            contact_id: "c1",
+            contatos: { phone_number: null, email_normalized: "ana@loja.test" },
+          }),
+          leadAberto({
+            id: "l2",
+            contact_id: "c2",
+            contatos: { phone_number: null, email_normalized: "ANA@loja.test" },
+          }),
+        ],
+      }),
+    );
+    expect(porEmail).toHaveLength(1);
+    const email = primeiro(porEmail);
+    expect(email.evidencia.identidade).toBe("email");
+    expect(JSON.stringify(email.evidencia)).not.toContain("ana@loja.test");
+  });
+
+  it("lead duplicado não conta duas vezes quando contato e e-mail dão a mesma assinatura", () => {
+    const achados = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          leadAberto({ id: "l1", contact_id: "c1" }),
+          leadAberto({ id: "l2", contact_id: "c2" }),
+        ],
+      }),
+    );
+    // Mesmo telefone/e-mail nos dois contatos, mas contacts diferentes: a
+    // assinatura de IDs é a mesma, então só a melhor confiança sobrevive.
+    expect(achados).toHaveLength(1);
   });
 
   it("total incoerente: total diferente da conta dispara; igual não", () => {

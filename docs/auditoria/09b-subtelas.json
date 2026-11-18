@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-18T04:16:06.210Z",
+  "geradoEm": "2026-11-18T05:38:14.229Z",
   "telas": [
     {
       "rota": "/",
@@ -2046,21 +2046,27 @@
       "modais": [
         {
           "tipo": "modal",
-          "rotulo": "(rótulo dinâmico)",
+          "rotulo": "Abrindo ocorrência",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 522
+          "linha": 509
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 638
+          "linha": 523
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/sentinel/_client.tsx",
+          "linha": 639
         },
         {
           "tipo": "modal",
           "rotulo": "Configurações do Sentinel",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 679
+          "linha": 680
         }
       ],
       "gavetas": [],
