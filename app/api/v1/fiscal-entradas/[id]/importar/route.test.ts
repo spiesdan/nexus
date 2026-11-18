@@ -99,11 +99,25 @@ function montar(over: {
   associacao?: { produto_id: string | null };
   produtoPorId?: Record<string, unknown> | null;
   produtoPorCodigo?: Record<string, unknown> | null;
+  reivindicacaoPerdida?: boolean;
 }) {
-  const catalogo = over.produtoPorId ?? null;
+  // O mesmo produto pode ser encontrado por id (ajuste de estoque, que relê
+  // pelo id) ou por código (casamento da importação). O teste 2 só declara o
+  // segundo — sem o fallback, o ajuste por id não acharia o produto.
+  const catalogo = over.produtoPorId ?? over.produtoPorCodigo ?? null;
   vi.mocked(createClient).mockResolvedValue({
     from: fake({
-      fiscal_entradas: (ctx) => (ctx.op === "select" ? { data: over.entrada ?? entrada() } : { data: null }),
+      fiscal_entradas: (ctx) => {
+        if (ctx.op === "select") return { data: over.entrada ?? entrada() };
+        // O UPDATE da reivindicação (filtro `is(flag, null)`) devolve a linha
+        // quando o lado ainda estava livre; sem isso, seria 0 linhas.
+        const reivindicando = ctx.filtros.some(
+          ([campo, coluna, valor]) =>
+            campo === "is" && (coluna === "estoque_processado_em" || coluna === "financeiro_processado_em") && valor === null,
+        );
+        if (reivindicando && !over.reivindicacaoPerdida) return { data: [{ id: ENTRADA_ID }] };
+        return { data: null };
+      },
       fiscal_document_items: (ctx) =>
         ctx.op === "select"
           ? {
@@ -118,6 +132,9 @@ function montar(over: {
           : { data: null },
       catalog_products: (ctx) => {
         if (ctx.op === "insert") return { data: { id: "prod-novo" } };
+        // O UPDATE do ajustarEstoque precisa devolver a linha atualizada
+        // (`data.length > 0` é o que o CAS lê como sucesso).
+        if (ctx.op === "update") return { data: [{ quantidade: 1 }] };
         const porId = ctx.filtros.some(([campo, coluna]) => campo === "eq" && coluna === "id")
           ? catalogo
           : null;
@@ -187,5 +204,35 @@ describe("importar — associação manual", () => {
     );
     expect(atualizacoes).toHaveLength(1);
     expect(atualizacoes[0]!.args[0]).toMatchObject({ quantidade: 7 });
+  });
+
+  it("reivindica o lado antes de tocar no estoque (CAS é a primeira escrita)", async () => {
+    montar({
+      associacao: { produto_id: "prod-certo" },
+      produtoPorId: { id: "prod-certo", quantidade: 10, controla_estoque: true },
+    });
+
+    const res = await importar();
+    expect(res.status).toBe(201);
+
+    const primeiraEscrita = chamadas.find(
+      (c) => c.op === "update" || c.op === "insert",
+    );
+    expect(primeiraEscrita?.tabela).toBe("fiscal_entradas");
+  });
+
+  it("quem perde a reivindicação não movimenta estoque e recebe 409", async () => {
+    montar({
+      associacao: { produto_id: "prod-certo" },
+      produtoPorId: { id: "prod-certo", quantidade: 10, controla_estoque: true },
+      reivindicacaoPerdida: true,
+    });
+
+    const res = await importar();
+    expect(res.status).toBe(409);
+    const atualizacoes = chamadas.filter(
+      (c) => c.tabela === "catalog_products" && c.op === "update",
+    );
+    expect(atualizacoes).toHaveLength(0);
   });
 });
