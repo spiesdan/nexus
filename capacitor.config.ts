@@ -17,7 +17,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
  */
 const config: CapacitorConfig = {
   appId: "tech.billhigiene.crm",
-  appName: "Bill Higiene",
+  appName: "Pedidos offline",
   webDir: "mobile/www",
   backgroundColor: "#0f172a",
   android: {
