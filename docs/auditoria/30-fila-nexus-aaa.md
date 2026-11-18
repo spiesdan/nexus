@@ -450,3 +450,46 @@ ocorrência parada em `aprovada` cuja aprovação é mais velha que essa janela 
 
 Casos positivos e negativos dos dois detectores com fixture de ocorrência +
 job; reexecução sem duplicata; RLS/tenant (a ocorrência de A não aparece em B).
+
+## 16. Fila nova — detector `cadastro.endereco_com_lixo` (P2, 18/11/2026)
+
+> **Dono:** **G** depois da observabilidade das correções (§15); se sobrar, D/F.
+> **Não interrompe o G agora.** Observação pura: cai no Sentinel v1, sem escrita.
+
+### O que motivou
+
+O `"NULL"` literal no endereço apareceu em **84 linhas** de `contacts`. O dono
+investigou o escritor e **não achou caminho vivo** que produza isso: o import de
+CSV não toca endereço, o `importar-mercos` não escreve endereço de contato, e
+`EditContactDialog`/`EnderecoFields` fazem `trim() || null`. Conclusão registrada:
+aquelas linhas eram **históricas** (export antigo de WP/Mercos).
+
+A proteção de leitura (#554) e a limpeza resolvem o **passado**. O que falta é o
+**futuro**: nada garante que um import novo não traga o literal de volta, e o
+sintoma só aparece quando a SEFAZ rejeita uma nota.
+
+### Regra
+
+Varrer `contacts.logradouro`, `complemento`, `bairro` e `cidade` por:
+
+- `\mNULL\M` (palavra, qualquer caixa);
+- `\mundefined\M`;
+- `\mNaN\M`;
+- texto não vazio que é só espaços.
+
+Abrir **uma ocorrência por organização** (agrupada), severidade **média**,
+contagem no `titulo`/evidência e **evidência com ids de contato** (para o dono
+limpar sem precisar procurar). Campo `null` legítimo **não** é ocorrência; string
+vazia também não — só o literal e o "só espaços".
+
+### Fora de escopo
+
+- Corrigir dado (é observação; limpeza é decisão do dono).
+- Bloquear import (o detector avisa; o gate de import é outra fatia).
+- Varredura de outros campos por enquanto.
+
+### Testes
+
+Positivo para cada token e para "só espaços"; negativo para `null`, `""` e
+endereço legítimo; reexecução não duplica (chave aberta por organização+regra);
+cross-tenant zero.
