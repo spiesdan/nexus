@@ -113,3 +113,45 @@ $ adb shell dumpsys backup | grep -A2 tech.billhigiene.crm
 - A ponte entre shell e sistema continua sendo o bloqueio da **opção B**
   (ver `docs/frentes/front-mobile.md` §4/§9): o shell drena com credencial de
   dispositivo, não com a sessão do navegador.
+
+## 5. O que o leitor de tela recebe (árvore de acessibilidade do aparelho)
+
+Não é opinião sobre o HTML: é o dump da árvore que o Android entrega ao
+TalkBack, com o app aberto no emulador.
+
+```console
+$ adb shell uiautomator dump /sdcard/ui.xml
+$ adb shell cat /sdcard/ui.xml   # texts não vazios, na ordem da tela
+Bill Higiene
+● sem internet — tudo fica salvo aqui
+Fila de envio (2)
+Pedidos para enviar
+OFF-0001
+— Mercadinho do Zé
+R$ 4,50 · aguardando sinal
+Descartar
+OFF-0002
+— Mercadinho do Zé
+R$ 18,90 · aguardando sinal
+Descartar
+Catálogo
+2 produtos, 1 clientes — sincronizado hoje. Preço velho pode ser recusado no envio.
+Baixar catálogo agora
+Novo pedido offline
+Abrir o sistema
+Enviar agora
+```
+
+O que isso prova, e por que importa:
+
+- **A contagem está no texto**, não só na cor: "Fila de envio (2)".
+- **O estado da rede é palavra**: "sem internet — tudo fica salvo aqui". Quem não
+  distingue o vermelho do verde continua sabendo que está offline.
+- **Cada pedido anuncia número e valor**: "OFF-0001", "R$ 4,50 · aguardando
+  sinal". Não é um cartão mudo com um ícone.
+- **Toda ação tem nome**: "Descartar", "Baixar catálogo agora", "Novo pedido
+  offline", "Abrir o sistema", "Enviar agora".
+
+Limite declarado: **TalkBack não foi executado** (o serviço não está instalado
+neste emulador `google_apis`). O dump acima é a árvore que ele leria; a fala de
+verdade fica `[!]` até um emulador com TalkBack ou um aparelho.
