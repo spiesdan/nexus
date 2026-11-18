@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Nexus Sentinel v1 — observar, provar e deixar a decisão com quem opera",
+    "subtitle": "detectores determinísticos sobre entidades reais; ocorrência idempotente, histórico append-only e nenhuma escrita no negócio"
+  },
+  "lanes": [
+    { "id": "gatilho", "label": "Quem aciona" },
+    { "id": "coleta", "label": "Fotografia (service role, org explícita)" },
+    { "id": "deteccao", "label": "Detecção pura" },
+    { "id": "persistencia", "label": "Persistência e idempotência" },
+    { "id": "humano", "label": "Quem decide" },
+    { "id": "saida", "label": "Trilha e retenção" }
+  ],
+  "mainPath": [
+    "cron",
+    "executor",
+    "coleta",
+    "motor",
+    "registrar",
+    "ocorrencias",
+    "painel",
+    "patch",
+    "eventos"
+  ],
+  "nodes": [
+    {
+      "id": "cron",
+      "lane": "gatilho",
+      "col": 0,
+      "type": "route",
+      "label": "cron/sentinel (15 min)",
+      "sublabel": "3 orgs por tick; cada org só quando o intervalo dela vence"
+    },
+    {
+      "id": "botao",
+      "lane": "gatilho",
+      "col": 0,
+      "type": "route",
+      "label": "POST /sentinel/scan",
+      "sublabel": "manager+, auditado; 409 quando desligado ou já varrendo"
+    },
+    {
+      "id": "killswitch",
+      "lane": "gatilho",
+      "col": 1,
+      "type": "config",
+      "label": "SENTINEL_ENABLED + sentinel_settings.ativo",
+      "sublabel": "instalação e organização; desligar não apaga histórico"
+    },
+    {
+      "id": "executor",
+      "lane": "coleta",
+      "col": 0,
+      "type": "lib",
+      "label": "lib/sentinel/execucao.ts",
+      "sublabel": "claim da rodada, teto de carga, encerramento por ausência e retenção"
+    },
+    {
+      "id": "coleta",
+      "lane": "coleta",
+      "col": 1,
+      "type": "lib",
+      "label": "lib/sentinel/coleta.ts",
+      "sublabel": "12 consultas com organization_id explícito e teto; falha isola e trunca"
+    },
+    {
+      "id": "entidades",
+      "lane": "coleta",
+      "col": 2,
+      "type": "table",
+      "label": "Entidades reais",
+      "sublabel": "invoices, commercial_orders, financial_receivables, catalog_products, job_queue, webhook_events_log, mercos_import_runs, campanhas"
+    },
+    {
+      "id": "snapshot",
+      "lane": "coleta",
+      "col": 3,
+      "type": "lib",
+      "label": "Snapshot (tipos.ts)",
+      "sublabel": "agoraMs entra como dado; detector não lê relógio"
+    },
+    {
+      "id": "motor",
+      "lane": "deteccao",
+      "col": 0,
+      "type": "lib",
+      "label": "lib/sentinel/motor.ts",
+      "sublabel": "regra que lança não derruba as outras; dedup por fingerprint; ordem determinística"
+    },
+    {
+      "id": "regras",
+      "lane": "deteccao",
+      "col": 1,
+      "type": "lib",
+      "label": "registry de regras",
+      "sublabel": "27 detectores fiscais, de operação, financeiro e campanha"
+    },
+    {
+      "id": "fiscal",
+      "lane": "deteccao",
+      "col": 2,
+      "type": "lib",
+      "label": "regras-fiscal.ts",
+      "sublabel": "rejeitada, travada, duplicada, sem vínculo/chave, divergência, retry, sync"
+    },
+    {
+      "id": "operacao",
+      "lane": "deteccao",
+      "col": 3,
+      "type": "lib",
+      "label": "regras-operacao.ts",
+      "sublabel": "estoque, pedido, recebível, fila, webhook, Mercos, campanha, cliente duplicado"
+    },
+    {
+      "id": "registrar",
+      "lane": "persistencia",
+      "col": 0,
+      "type": "table",
+      "label": "fn_sentinel_registrar_ocorrencia",
+      "sublabel": "upsert pelo índice parcial das abertas; reexecução = reafirmada, não cópia"
+    },
+    {
+      "id": "runs",
+      "lane": "persistencia",
+      "col": 1,
+      "type": "table",
+      "label": "sentinel_runs",
+      "sublabel": "uma linha por varredura; índice único impede duas na mesma org"
+    },
+    {
+      "id": "ocorrencias",
+      "lane": "persistencia",
+      "col": 2,
+      "type": "table",
+      "label": "sentinel_occurrences",
+      "sublabel": "fingerprint, evidência mínima, severidade, oito estados e recorrência"
+    },
+    {
+      "id": "eventos",
+      "lane": "persistencia",
+      "col": 3,
+      "type": "table",
+      "label": "sentinel_occurrence_events",
+      "sublabel": "append-only com antes/depois, ator e origem"
+    },
+    {
+      "id": "painel",
+      "lane": "humano",
+      "col": 0,
+      "type": "route",
+      "label": "/app/sentinel",
+      "sublabel": "KPIs, filtros, evidência, causa provável, histórico; porta = ⌘K"
+    },
+    {
+      "id": "patch",
+      "lane": "humano",
+      "col": 1,
+      "type": "route",
+      "label": "PATCH /sentinel/occurrences/[id]",
+      "sublabel": "transição validada em estado.ts; gestor ignora/encerra/aprova"
+    },
+    {
+      "id": "mudanca",
+      "lane": "persistencia",
+      "col": 4,
+      "type": "table",
+      "label": "fn_sentinel_aplicar_mudanca",
+      "sublabel": "update + evento na MESMA transação"
+    },
+    {
+      "id": "audit",
+      "lane": "saida",
+      "col": 0,
+      "type": "table",
+      "label": "api_audit_log",
+      "sublabel": "sentinel.run, occurrence_state, settings_changed — só quando há efeito"
+    },
+    {
+      "id": "retencao",
+      "lane": "saida",
+      "col": 1,
+      "type": "table",
+      "label": "fn_sentinel_expurgar",
+      "sublabel": "só terminais; piso 30 dias no corpo; aberta nunca é apagada"
+    },
+    {
+      "id": "lgpd",
+      "lane": "saida",
+      "col": 2,
+      "type": "config",
+      "label": "Minimização LGPD",
+      "sublabel": "sem conversa/doc/telefone; e-mail mascarado; erro de terceiro higienizado"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "cron", "to": "killswitch", "label": "liga/desliga instalação" },
+    { "id": "e2", "from": "botao", "to": "killswitch", "label": "liga/desliga org" },
+    { "id": "e3", "from": "killswitch", "to": "executor", "label": "autoriza" },
+    { "id": "e4", "from": "executor", "to": "coleta", "label": "abre a rodada" },
+    { "id": "e5", "from": "coleta", "to": "entidades", "label": "lê com org explícita" },
+    { "id": "e6", "from": "coleta", "to": "snapshot", "label": "monta fotografia" },
+    { "id": "e7", "from": "snapshot", "to": "motor", "label": "entrada pura" },
+    { "id": "e8", "from": "motor", "to": "regras", "label": "percorre registry" },
+    { "id": "e9", "from": "regras", "to": "fiscal", "label": "fiscal" },
+    { "id": "e10", "from": "regras", "to": "operacao", "label": "operação/financeiro/campanha" },
+    { "id": "e11", "from": "motor", "to": "executor", "label": "achados + regras avaliadas + falhas" },
+    { "id": "e12", "from": "executor", "to": "runs", "label": "abre/fecha a rodada" },
+    { "id": "e13", "from": "executor", "to": "registrar", "label": "um achado por chamada" },
+    { "id": "e14", "from": "registrar", "to": "ocorrencias", "label": "upsert idempotente" },
+    { "id": "e15", "from": "registrar", "to": "eventos", "label": "detectada/reafirmada" },
+    { "id": "e16", "from": "ocorrencias", "to": "painel", "label": "lista e detalhe" },
+    { "id": "e17", "from": "painel", "to": "patch", "label": "decisão humana" },
+    { "id": "e18", "from": "patch", "to": "mudanca", "label": "valida e aplica" },
+    { "id": "e19", "from": "mudanca", "to": "ocorrencias", "label": "novo estado" },
+    { "id": "e20", "from": "mudanca", "to": "eventos", "label": "antes/depois" },
+    { "id": "e21", "from": "executor", "to": "audit", "label": "quando há efeito/falha" },
+    { "id": "e22", "from": "executor", "to": "retencao", "label": "manutenção" },
+    { "id": "e23", "from": "retencao", "to": "ocorrencias", "label": "apaga terminais vencidas" },
+    { "id": "e24", "from": "registrar", "to": "lgpd", "label": "evidência mínima" }
+  ]
+}

@@ -101,6 +101,10 @@ CRONS="
 30 3 * * *|120|api/v1/cron/kb-conversations-batch
 15 4 * * *|60|api/v1/cron/sync-model-catalog
 40 4 * * *|120|api/v1/cron/data-retention
+# Sentinel (0313): tick de 15 min, mas cada organização só é varrida quando o
+# intervalo DELA vence (default 6h, configurável). O executor limita a 3 orgs
+# por tick para caber no timeout; rodada vazia não audita.
+*/15 * * * *|120|api/v1/cron/sentinel
 "
 
 # CRONTAB_PATH é ponto de injeção do teste (tests/shell/scheduler-entrypoint.test.sh).

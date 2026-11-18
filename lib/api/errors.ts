@@ -10,6 +10,8 @@
 export const ApiErrorCodes = {
   // 400 — body / params
   invalid_request: "invalid_request",
+  /** Corpo que não é JSON válido — distinto de schema inválido (`validation_failed`). */
+  invalid_json: "invalid_json",
   validation_failed: "validation_failed", // Zod retornou erros de schema (422 também aceita)
   invalid_cursor: "invalid_cursor",
 
@@ -77,6 +79,14 @@ export const ApiErrorCodes = {
    */
   contato_duplicado: "contato_duplicado",
   state_conflict: "state_conflict",
+  /**
+   * Sentinel (0313): varredura pedida enquanto o kill switch da organização
+   * está desligado. 409 e não 403 porque o papel permite — o que impede é o
+   * estado da configuração, e a tela mostra onde religar.
+   */
+  sentinel_disabled: "sentinel_disabled",
+  /** Já existe uma varredura em andamento para a organização (claim único). */
+  sentinel_busy: "sentinel_busy",
   invalid_state: "invalid_state", // resposta a um agent_case que saiu de awaiting_human (spec 15 §7)
   tenant_already_exists: "tenant_already_exists",
   duplicate_external_id: "duplicate_external_id",

@@ -619,6 +619,12 @@ export const AUDIT_ACTIONS = [
   "catalog_product.ncm_sugerido",
   "catalog_product.ncm_lote",
   "commercial_orders.mercos_import.enqueue",
+  // Sentinel (0313): a varredura e a decisão humana sobre a ocorrência. O
+  // código `sentinel.run` é emitido quando houve efeito (achado, encerramento
+  // ou falha) — rodada vazia e silenciosa é o próprio run no banco, não audit.
+  "sentinel.run",
+  "sentinel.occurrence_state",
+  "sentinel.settings_changed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

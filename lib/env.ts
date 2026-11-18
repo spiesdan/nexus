@@ -422,6 +422,17 @@ const schema = z.object({
   JOB_QUEUE_RETENTION_DAYS: z.string().optional().default(""),
   AUDIT_LOG_RETENTION_DAYS: z.string().optional().default(""),
 
+  /**
+   * Kill switch da INSTALAÇÃO para o Nexus Sentinel (0313). `false` desliga
+   * todas as varreduras — cron e execução manual respondem desligado em vez de
+   * rodar em silêncio. A decisão por organização vive em `sentinel_settings`.
+   *
+   * `z.enum` com default e `catch`: valor inválido degrada para o default em
+   * vez de derrubar o boot, porque a alavanca de emergência não pode ser ela
+   * mesma a causa do 500.
+   */
+  SENTINEL_ENABLED: z.enum(["true", "false"]).optional().default("true").catch("true"),
+
   // LGPD export (S-08.04)
   LGPD_SIGNING_KEY: z.string().optional().default(""),
   LGPD_EXPORT_EXPIRES_HOURS: z.string().optional().default("72"),

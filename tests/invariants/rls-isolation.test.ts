@@ -112,6 +112,8 @@ beforeAll(() => {
       v_compra uuid;
       v_va uuid;
       v_dest uuid;
+      v_sentinel_run uuid;
+      v_sentinel_occ uuid;
       v_tag text;
       v_chave text;
     begin
@@ -562,6 +564,35 @@ beforeAll(() => {
             (organization_id, destination_id, tentativa, provedor, consulta, motivo)
             values (v_org, v_dest, 1, 'nominatim', 'Rua da Prova, 100', 'seed de invariante RLS');
         end if;
+
+        -- migration 0315 — Sentinel: configuração, execução, ocorrência e
+        -- histórico. O seed do run/ocorrência/evento é a prova comportamental
+        -- (leitura org-scoped nas quatro); a escrita é service_role/agent+ e é
+        -- medida nas rotas, não aqui.
+        if not exists (select 1 from public.sentinel_settings where organization_id = v_org) then
+          insert into public.sentinel_settings (organization_id) values (v_org);
+        end if;
+        if not exists (select 1 from public.sentinel_runs where organization_id = v_org) then
+          insert into public.sentinel_runs (organization_id, status, finalizado_em)
+            values (v_org, 'sucesso', now()) returning id into v_sentinel_run;
+        end if;
+        select id into v_sentinel_run from public.sentinel_runs where organization_id = v_org limit 1;
+        if not exists (select 1 from public.sentinel_occurrences where organization_id = v_org) then
+          insert into public.sentinel_occurrences
+            (organization_id, fingerprint, regra, categoria, entidade_tipo, entidade_id,
+             titulo, estado, ultima_execucao_id)
+            values (v_org, 'seed-' || v_org::text, 'operacao.estoque_negativo', 'operacao',
+                    'seed', v_org::text, 'Ocorrência de invariante RLS', 'nova', v_sentinel_run)
+            returning id into v_sentinel_occ;
+        end if;
+        select id into v_sentinel_occ from public.sentinel_occurrences where organization_id = v_org limit 1;
+        if v_sentinel_occ is not null and not exists (
+          select 1 from public.sentinel_occurrence_events where organization_id = v_org
+        ) then
+          insert into public.sentinel_occurrence_events
+            (organization_id, occurrence_id, tipo, estado_novo, origem)
+            values (v_org, v_sentinel_occ, 'detectada', 'nova', 'sentinel');
+        end if;
       end loop;
     end
     $seed$;
@@ -726,6 +757,13 @@ export const TABLES = [
   // Leitura org-scoped; escrita agent+ e sem delete por papel: histórico de
   // correção de endereço é auditoria, não rascunho.
   "shipment_destination_recoveries",
+  // migration 0315 — Nexus Sentinel v1. Leitura org-scoped nas quatro; escrita
+  // de ocorrência/evento é agent+ (a rota PATCH valida a transição) e a do
+  // runner/funções é service_role. Seed em `beforeAll`.
+  "sentinel_settings",
+  "sentinel_runs",
+  "sentinel_occurrences",
+  "sentinel_occurrence_events",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {
