@@ -471,19 +471,22 @@ describe("detectores de operação — caso positivo e negativo", () => {
             contatoEndereco({ id: "c3", bairro: "NaN", cidade: "   " }),
             contatoEndereco({ id: "c4" }), // tudo null de verdade: não é lixo
             contatoEndereco({ id: "c5", logradouro: "Rua das Flores", cidade: "Curitiba" }),
+            contatoEndereco({ id: "c6", logradouro: "RUA NULL, 10" }),
+            contatoEndereco({ id: "c7", logradouro: "RUA NULLS" }),
           ],
         }),
       ),
     );
     expect(achado.regra).toBe("cadastro.endereco_com_lixo");
     expect(achado.severidade).toBe("media");
-    expect(achado.evidencia.total).toBe(3);
-    expect(achado.evidencia.logradouro).toBe(1);
+    expect(achado.evidencia.total).toBe(4);
+    expect(achado.evidencia.logradouro).toBe(2);
     expect(achado.evidencia.complemento).toBe(1);
     expect(achado.evidencia.bairro).toBe(1);
     expect(achado.evidencia.cidade).toBe(1);
-    expect(achado.evidencia.contatos).toEqual(["c1", "c2", "c3"]);
+    expect(achado.evidencia.contatos).toEqual(["c1", "c2", "c3", "c6"]);
     expect(JSON.stringify(achado.evidencia)).not.toContain("Rua das Flores");
+    expect(JSON.stringify(achado.evidencia)).not.toContain("RUA NULLS");
   });
 
   it("endereço válido ou null real não dispara", () => {

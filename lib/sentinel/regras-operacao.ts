@@ -679,7 +679,9 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
  * ocorrência por organização (a lista de ids é a evidência), sem despejar
  * endereço — dado pessoal — na tela.
  */
-const LITERAL_DE_AUSENCIA = /^(null|undefined|nan)$/i;
+// Borda de palavra, não substring: "RUA NULL" é literal; "RUA NULLS" é nome.
+// O `i` cobre Null/NULL; o trim já remove espaços das pontas.
+const LITERAL_DE_AUSENCIA = /\b(?:null|undefined|nan)\b/i;
 const CAMPOS_DE_ENDERECO = ["logradouro", "complemento", "bairro", "cidade"] as const;
 
 function campoDeEnderecoLixo(valor: string | null): boolean {
