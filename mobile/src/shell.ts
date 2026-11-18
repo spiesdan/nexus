@@ -310,7 +310,7 @@ async function drenar(db: Db): Promise<void> {
     // dois como "aguardando envio", com (2) no cabeçalho. O dado estava certo
     // no SQLite; a tela é que tinha sido desenhada antes do dreno e ninguém a
     // desenhou de novo.
-    await renderizar(db);
+    await renderizar();
   }
 }
 
