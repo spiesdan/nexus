@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { ToasterDoProduto } from "@/components/feedback/ToasterDoProduto";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
@@ -27,17 +27,32 @@ import "./globals.css";
 
 /* DESIGN.md pede OpenRunde, que não existe no Google Fonts: Inter é o
    substituto listado pela própria referência (Inter, DM Sans ou Geist Sans).
-   Pesos 400/500/600/700 cobrem corpo, botões e display. */
-const inter = Inter({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700"],
+   Pesos 400/500/600/700 cobrem corpo, botões e display.
+ *
+ * ─── FONTE LOCAL, NÃO `next/font/google` (C10, decisão do dono em 18/11/2026) ─
+ *
+ * `next/font/google` BAIXA a fonte durante o `build`. Numa VPS sem saída para
+ * `fonts.gstatic.com` (firewall, DNS, rede instável) o build do produto morre —
+ * foi a causa medida dos dois checks vermelhos do PR #447, e o produto é
+ * vendido como código que o cliente instala no servidor dele.
+ *
+ * Os arquivos vivem em `public/fonts/` e o texto da licença OFL ao lado
+ * (`OFL-Inter.txt`, `OFL-IBM-Plex-Mono.txt`). `Inter` é variável (um arquivo
+ * cobre 100–900); `IBM Plex Mono` vem em dois pesos estáticos. O subset é
+ * `latin`, que cobre o português (ã, ç, é…); `latin-ext` não é usado hoje.
+ */
+const inter = localFont({
+  src: "../public/fonts/inter-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-inter",
 });
 
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500"],
+const plexMono = localFont({
+  src: [
+    { path: "../public/fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../public/fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-mono",
 });

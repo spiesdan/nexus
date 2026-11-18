@@ -270,57 +270,72 @@
   /* ---- Agenda · cor de pessoa (8 trilhas) ------------------------------
    * Quem é o dono do compromisso é o eixo visual da grade, e a accent NÃO
    * serve para isso: ela é substituída em runtime pelo revendedor
-   * (`<style id="marca-instalacao">` no layout), então uma agenda pintada
-   * com ela ficaria monocromática — e azul — na instalação que comprou a
-   * marca em azul.
+   * (`<style id="marca-instalacao">` no layout), então uma agenda pintada com
+   * ela ficaria monocromática — e azul — na instalação que comprou a marca em
+   * azul.
    *
-   * OS VALORES SÃO DERIVADOS, NÃO ESCOLHIDOS A OLHO — e a primeira versão
-   * destas linhas dizia "os matizes saem de Okabe-Ito", o que a medição
-   * desmentiu: eu tinha ajustado tanto a luminosidade que a separação da
-   * referência não sobreviveu. Medido no par mais próximo, em OKLab:
+   * ─── RE-DERIVADAS EM 18/11/2026, com número ─────────────────────────────
    *
-   *     versão anterior (azul x petróleo) : 0.0507   <- indistinguíveis
-   *     Okabe-Ito, a referência (n=7)     : 0.1558
-   *     esta versão, pior par             : 0.1162
+   * As oito anteriores eram da era Sage e nunca tinham sido medidas contra o
+   * accent ATUAL (violeta, h≈283). Medido no tema escuro: a trilha violeta
+   * ficava a **0,040** do accent — indistinguível do estado selecionado, que é
+   * o que a paleta existe para evitar — e o pior par sob dicromacia
+   * (turquesa × framboesa) dava **0,009**, ou seja, a mesma cor para quem tem
+   * deuteranopia.
    *
-   * A régua é a distância OKLab entre os pares, e ela vem da própria
-   * referência em vez de um número inventado. Não alcançamos os 0.1558 dela
-   * por duas razões declaradas: são OITO trilhas no espaço em que ela põe
-   * sete, e o croma fica limitado a 0.13 porque este produto é para quem
-   * encara a tela oito horas por dia — a Okabe-Ito não tem essa restrição.
+   * A busca agora é declarada: matiz fixo por NOME (20–40, 60–85, 95–125,
+   * 170–200, 210–240, 245–258, 300–314, 330–355 — "Telha, Âmbar, Oliva,
+   * Turquesa, Azul, Índigo, Violeta, Framboesa: oito palavras diferentes" é
+   * requisito de nomeabilidade, não enfeite), croma ≤ 0,12, e a luminosidade
+   * otimizada para maximizar o MENOR de três distâncias OKLab:
    *
-   * Os matizes (30 70 100 190 225 262 300 340) são espalhados de propósito, e
-   * não pelo que maximiza a distância: uma busca livre chegou a 0.1155 pondo
-   * TRÊS trilhas na faixa dos roxos. Distância mede distinguibilidade e não
-   * mede NOMEABILIDADE — "o roxo da Ana" e "o roxo do Bruno" não servem numa
-   * equipe. Por isso Telha, Âmbar, Oliva, Turquesa, Azul, Índigo, Violeta,
-   * Framboesa: oito palavras diferentes.
+   *     pares entre pessoas (visão normal)   ≥ 0,079   (era 0,116 — ver abaixo)
+   *     pares sob deuteranopia/protanopia    ≥ 0,065   (era 0,009)
+   *     distância de cada trilha ao accent   ≥ 0,065   (era 0,040)
    *
-    * As oito trilhas NÃO foram re-derivadas nesta fase: os valores são os da era
-    * Sage, e a banda que elas evitavam (113-165, o verde de 139 graus) não é
-    * mais a do accent (agora violeta). Re-medir o afastamento trilha × accent é
-    * pendência da próxima fase — por enquanto vale o que sempre valeu: cor de
-    * PESSOA nunca é a única informação, a inicial acompanha sempre.
+   * `deltaESimulado` (lib/branding/contraste) é o pior caso entre as duas
+   * dicromacias, nunca a média: basta uma visão em que as duas colapsam para a
+   * pessoa perder a informação.
    *
-   * A luminosidade ALTERNA entre vizinhos, que é o truque da Okabe-Ito para
-   * separar o azul-céu do azul — e foi exatamente o que a minha versão
-   * anterior perdeu ao uniformizar o brilho.
+   * **O pior par de visão normal CAIU de 0,116 para 0,079** e isso é a troca,
+   * não um acidente: o mínimo agora equilibra os três eixos, e antes a paleta
+   * gastava toda a separação em matiz com dois pares praticamente iguais sob
+   * dicromacia. 0,079 continua acima do piso de 0,05 do repositório.
    *
-   * MESMO ASSIM, cor nunca é a única informação: todo lugar que usa uma
-   * destas trilhas carrega junto a inicial da pessoa.
+   * O croma ≤ 0,12 é decisão de produto: é para quem encara a tela oito horas
+   * por dia, e a Okabe-Ito (n=7, pior par 0,1558) não tem essa restrição.
+   *
+   * ─── A INICIAL TAMBÉM É MEDIDA ──────────────────────────────────────────
+   *
+   * `AvatarDaPessoa` pinta as iniciais SOBRE a trilha. Com três trilhas
+   * escuras no claro, o texto Carbon não passava (azul 3,2:1). Por isso cada
+   * trilha ganhou um `-fg` — branco ou Carbon, o que passar —, medido e
+   * vigiado: todas as iniciais ficam ≥ 4,5:1 e todas as trilhas ≥ 3:1 contra a
+   * superfície (o ponto/faixa é informação não textual).
+   *
+   * MESMO ASSIM, cor nunca é a única informação: todo lugar que usa uma destas
+   * trilhas carrega junto a inicial da pessoa.
    *
    * O fundo suave de cada bloco é derivado com `color-mix` no ponto de uso,
-   * não duplicado aqui — assim a relação entre a faixa e o fundo é uma só,
-   * e não dois hex que envelhecem separados.
+   * não duplicado aqui.
    */
-  --agenda-pessoa-1: #ac4d40; /* telha */
-  --agenda-pessoa-2: #bd7c20; /* âmbar */
-  --agenda-pessoa-3: #7e6f01; /* oliva */
-  --agenda-pessoa-4: #11a19b; /* turquesa */
-  --agenda-pessoa-5: #0b7a9a; /* azul */
-  --agenda-pessoa-6: #608bda; /* índigo */
-  --agenda-pessoa-7: #7b5bad; /* violeta */
-  --agenda-pessoa-8: #cc77b1; /* framboesa */
+  --agenda-pessoa-1: #974034; /* telha */
+  --agenda-pessoa-2: #ba7e2c; /* âmbar */
+  --agenda-pessoa-3: #7f7000; /* oliva */
+  --agenda-pessoa-4: #00918b; /* turquesa */
+  --agenda-pessoa-5: #3c99ba; /* azul */
+  --agenda-pessoa-6: #316caa; /* índigo */
+  --agenda-pessoa-7: #613f84; /* violeta */
+  --agenda-pessoa-8: #914a7b; /* framboesa */
+  /* Frente de cada trilha (iniciais do avatar): o que passar sobre a cor. */
+  --agenda-pessoa-1-fg: #ffffff;
+  --agenda-pessoa-2-fg: #181925;
+  --agenda-pessoa-3-fg: #ffffff;
+  --agenda-pessoa-4-fg: #181925;
+  --agenda-pessoa-5-fg: #181925;
+  --agenda-pessoa-6-fg: #ffffff;
+  --agenda-pessoa-7-fg: #ffffff;
+  --agenda-pessoa-8-fg: #ffffff;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -450,14 +465,22 @@
    * dentro de página escura herdaria os valores escuros, e a amostra de cor
    * mentiria sobre a cor que a pessoa tem.
    */
-  --agenda-pessoa-1: #ac4d40; /* telha */
-  --agenda-pessoa-2: #bd7c20; /* âmbar */
-  --agenda-pessoa-3: #7e6f01; /* oliva */
-  --agenda-pessoa-4: #11a19b; /* turquesa */
-  --agenda-pessoa-5: #0b7a9a; /* azul */
-  --agenda-pessoa-6: #608bda; /* índigo */
-  --agenda-pessoa-7: #7b5bad; /* violeta */
-  --agenda-pessoa-8: #cc77b1; /* framboesa */
+  --agenda-pessoa-1: #974034; /* telha */
+  --agenda-pessoa-2: #ba7e2c; /* âmbar */
+  --agenda-pessoa-3: #7f7000; /* oliva */
+  --agenda-pessoa-4: #00918b; /* turquesa */
+  --agenda-pessoa-5: #3c99ba; /* azul */
+  --agenda-pessoa-6: #316caa; /* índigo */
+  --agenda-pessoa-7: #613f84; /* violeta */
+  --agenda-pessoa-8: #914a7b; /* framboesa */
+  --agenda-pessoa-1-fg: #ffffff;
+  --agenda-pessoa-2-fg: #181925;
+  --agenda-pessoa-3-fg: #ffffff;
+  --agenda-pessoa-4-fg: #181925;
+  --agenda-pessoa-5-fg: #181925;
+  --agenda-pessoa-6-fg: #ffffff;
+  --agenda-pessoa-7-fg: #ffffff;
+  --agenda-pessoa-8-fg: #ffffff;
 }
 
 [data-theme="dark"] {
@@ -600,17 +623,29 @@
   --input: var(--color-border-control);
   --ring: var(--color-accent-400);
   /* ---- Agenda · cor de pessoa (tema escuro) ----------------------------
-   * Mais claras e menos saturadas que as do claro: sobre `#161510` a versão
-   * escura de cada matiz sumiria. Mesma ordem, mesmos nomes.
-   */
-  --agenda-pessoa-1: #f89080;
-  --agenda-pessoa-2: #ca8931;
-  --agenda-pessoa-3: #d1bf55;
-  --agenda-pessoa-4: #0cafa8;
-  --agenda-pessoa-5: #4ccffb;
-  --agenda-pessoa-6: #6c97e7;
-  --agenda-pessoa-7: #be9ef6;
-  --agenda-pessoa-8: #cc77b1;
+   * Mais claras e menos saturadas que as do claro: sobre `#151515` a versão
+   * escura de cada matiz sumiria. Mesma ordem, mesmos MATIZES (a pessoa não
+   * troca de cor quando troca de tema) e as medidas de separação no comentário
+   * do bloco claro.
+   *
+   * A `-fg` de cada trilha no escuro é `#151515` em todas: são as trilhas
+   * claras, e texto escuro é o que passa AA sobre elas. */
+  --agenda-pessoa-1: #c96d5f;
+  --agenda-pessoa-2: #e2a356;
+  --agenda-pessoa-3: #daca68;
+  --agenda-pessoa-4: #16aaa3;
+  --agenda-pessoa-5: #3492b3;
+  --agenda-pessoa-6: #84beff;
+  --agenda-pessoa-7: #b390dc;
+  --agenda-pessoa-8: #eb9cd1;
+  --agenda-pessoa-1-fg: #151515;
+  --agenda-pessoa-2-fg: #151515;
+  --agenda-pessoa-3-fg: #151515;
+  --agenda-pessoa-4-fg: #151515;
+  --agenda-pessoa-5-fg: #151515;
+  --agenda-pessoa-6-fg: #151515;
+  --agenda-pessoa-7-fg: #151515;
+  --agenda-pessoa-8-fg: #151515;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
