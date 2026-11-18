@@ -1,0 +1,7 @@
+# Tentativa 1 — 18/11/2026 ~05:40 (UTC-3)
+# Comando: E2E_PORT=3011 SENTRY_DSN=off NEXT_TELEMETRY_DISABLED=1 pnpm e2e:build
+# Host: macOS, 8 nucleos / 8 GB; load 15-25 com outros worktrees do programa; swap ~10 GB de 11 GB.
+# Resultado: ELIFECYCLE sem mensagem de erro. O processo principal morreu no meio do
+# build e deixou workers de transformacao orfaos em 0% de CPU (visto com ps).
+# O .env.e2e apontava para 127.0.0.1:54321 (local) — nao foi producao.
+
