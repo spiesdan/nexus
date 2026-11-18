@@ -12,7 +12,7 @@
 
 | Estado | Valor | Como foi medido |
 |---|---|---|
-| Código | `nexus/main` @ `771bcc2e` (merges até #476) | `git log --oneline -1 nexus/main` |
+| Código | `nexus/main` @ `139a1be5` (merges até #439) | `git log --oneline -1 nexus/main` |
 | PR de release | **#537** — `release/1.56.0`, CI rodando, **não mergeado** | API de PRs do GitHub |
 | Release | última tag `v1.55.0`; **nenhuma tag nova** | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Deploy | **nenhum**; produção intocada por este programa | — |
@@ -29,10 +29,10 @@ pnpm release:conferir     # não escreve nada
 Saída medida em 18/11/2026, com os fragmentos que estavam na `main` no corte:
 
 ```text
-1.55.0 + minor = 1.56.0  (25 fragmento(s))
+1.55.0 + minor = 1.56.0  (28 fragmento(s))
 ```
 
-O corte está no PR **#537** (`CHANGELOG.md` + os 25 fragmentos consumidos).
+O corte está no PR **#537** (`CHANGELOG.md` + os 28 fragmentos consumidos), refeito sobre `139a1be5`.
 
 **Por que minor**: há capacidade nova de verdade (Sentinel v1, `Idempotency-Key`
 fiscal, retransmissão idempotente, nome automático de campanha) e **nenhum
@@ -75,7 +75,7 @@ Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 | 0320 | `20261123130000_0320_search_path_dos_definer.sql` | `pg_temp` no `search_path` das definers | dirigido pelo catálogo | não |
 | 0321 | `20261123140000_0321_sentinel_recomendacoes.sql` | recomendações do Sentinel | `add column if not exists` | não |
 | 0322 | `…_0322_credencial_de_dispositivo_offline.sql` (#526, F) | credencial de dispositivo | — | **fora desta release** |
-| 0323 | `20261123160000_0323_telefone_fixo_e164.sql` (#439) | `create or replace fn_upsert_wa_contact` | `create or replace` | **fora desta release** |
+| 0323 | `20261123160000_0323_telefone_fixo_e164.sql` (#439) | `create or replace fn_upsert_wa_contact` | `create or replace` | não — entrou antes do corte final |
 
 Nenhuma migration destrutiva, nenhum `drop`. O caminho de update é o mesmo do
 install: o baseline inteiro, reaplicado.
@@ -124,7 +124,7 @@ Deploy (decisão humana separada; ver §6):
 |---|---|
 | Versão-alvo | `v1.56.0` (derivada; a tag só existe depois do merge do PR de release) |
 | Commit-alvo | o merge do PR de release na `main` (preencher no corte; não invente sha) |
-| Mudança de schema | **0313–0321** já na `main`; 0322 (#526) e 0323 (#439) ficam para a próxima |
+| Mudança de schema | **0313–0323** já na `main`; **0322** (#526) fica para a próxima |
 | Exige ação do operador | **não** (`update.sh` aplica o baseline) |
 | Janela sugerida | fora do horário de atendimento do WhatsApp da empresa — atualização reinicia a app |
 | Rollback (imagem) | voltar as **três** imagens no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` — o `update.sh` grava as três na mesma versão) e `up -d` com **os dois** `-f` |

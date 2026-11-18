@@ -13,10 +13,10 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida (rodada 10) | `771bcc2e` (`nexus/main`; merges até #476) | `git log --oneline -1 nexus/main` |
+| Commit de partida (rodada 10) | `139a1be5` (`nexus/main`; merges até #439) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
-| Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) (25 fragmentos) — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
+| Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) (28 fragmentos) — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
 | Runtime local | macOS (darwin), Node `v22.20.0`, pnpm `9.15.9`, Docker `29.8.2` | `node -v`, `pnpm -v`, `docker info` |
 | Gates | `pnpm gov:verify` = typecheck + lint + lint:channels + lint:role-rank + test:unit; `test:db` exige Docker; `test:e2e` exige app + banco | `package.json` |

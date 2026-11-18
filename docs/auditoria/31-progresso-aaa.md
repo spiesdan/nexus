@@ -266,9 +266,9 @@ de worker: mantém a fila, diz quem pega o quê, integra e roda os gates.
 
 ### Release
 
-**PR #537** corta a **1.56.0** (25 fragmentos, nenhum `exige_acao`). **Não
+**PR #537** corta a **1.56.0** (28 fragmentos, nenhum `exige_acao`, recorte final sobre `139a1be5`). **Não
 mergeado**: o merge é a aprovação humana e é ele que faz o CI criar a tag.
-`#526` (0322) e `#439` (0323) ficam para a próxima.
+`#439` (0323) entrou antes do corte; **`#526` (0322)** fica para a próxima.
 
 ### O que restou aberto
 

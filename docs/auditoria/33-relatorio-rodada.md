@@ -12,7 +12,7 @@
 |---|---|
 | Repositório | `spiesdan/nexus` (único remote) |
 | Branch do programa | `programa/nexus-aaa` |
-| Base | `nexus/main` @ `771bcc2e` (merges até #476) |
+| Base | `nexus/main` @ `139a1be5` (merges até #439) |
 | Versão publicada | `v1.55.0` |
 | Próxima release | `1.56.0` no PR #537, **não publicada** |
 | Produção | reportada em 1.55.0; **não verificada e não tocada** |
