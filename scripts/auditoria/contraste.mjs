@@ -115,7 +115,22 @@ for (const rota of ROTAS) {
     const pagina = await contexto.newPage();
     const registro = { rota, tema };
     try {
-      await pagina.goto(`${BASE}${rota}`, { waitUntil: "domcontentloaded", timeout: 45_000 });
+      await pagina.goto(`${BASE}${rota}`, { waitUntil: "domcontentloaded", timeout: 120_000 });
+
+      /*
+       * SESSÃO INVÁLIDA NÃO É TELA VERDE.
+       *
+       * Se a rota autenticada redireciona para `/login`, o instrumento media a
+       * tela de login e a gravava com o nome da rota — o mesmo defeito de
+       * instrumento que esta auditoria já pagou cinco vezes. Aqui o redirect é
+       * registrado como erro explícito e a medição é pulada.
+       */
+      const urlFinal = pagina.url();
+      const pedeSessao = rota.startsWith("/app") || rota.startsWith("/admin");
+      if (pedeSessao && /\/login/.test(urlFinal)) {
+        throw new Error(`sessão inválida: ${rota} redirecionou para ${urlFinal.replace(BASE, "")}`);
+      }
+
       await pagina.waitForTimeout(2_000);
       registro.medida = await pagina.evaluate(() => {
         const luminancia = ([r, g, b]) => {

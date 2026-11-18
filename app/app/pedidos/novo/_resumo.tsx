@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { comoMoeda } from "@/lib/format/moeda";
 import type { Parcela } from "@/lib/schemas/pedidos";
 
+import { rolarPara } from "@/lib/ui/movimento";
 export interface TotaisDoResumo {
   subtotal: number;
   descontoCents: number;
@@ -75,7 +76,10 @@ export function OrderSummary({
     <>
       <Card className="space-y-3 p-4 lg:sticky lg:top-4" id="resumo">
         {totais.aprovacaoNecessaria && (
-          <p role="alert" className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg">
+          <p
+            role="alert"
+            className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg"
+          >
             ⚠ {textos.aguardandoAprovacao}
           </p>
         )}
@@ -168,18 +172,17 @@ export function OrderSummary({
 
       {/* Barra mobile (§41): o resumo viaja com o vendedor. */}
       {mostrarAcoes ? (
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background p-3 lg:hidden">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">{textos.itensUnidades(totais.qtdItens, totais.qtdUnidades)}</p>
-          <p className="text-lg font-semibold tabular-nums">{comoMoeda(totais.total, "BRL")}</p>
-          <Button
-            size="sm"
-            onClick={() => document.getElementById("resumo")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            {textos.revisar}
-          </Button>
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background p-3 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              {textos.itensUnidades(totais.qtdItens, totais.qtdUnidades)}
+            </p>
+            <p className="text-lg font-semibold tabular-nums">{comoMoeda(totais.total, "BRL")}</p>
+            <Button size="sm" onClick={() => rolarPara(document.getElementById("resumo"))}>
+              {textos.revisar}
+            </Button>
+          </div>
         </div>
-      </div>
       ) : null}
     </>
   );

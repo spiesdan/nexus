@@ -2651,3 +2651,78 @@ overflow, contagem de textos) e `capturas/foco-e-aria.json`.
 
 **Limitações:** capturado em `next dev` (selos do Next nos cantos são indicadores de
 desenvolvimento); a sessão é a fixture local (`e2e-admin`), não uma conta de cliente.
+
+### V-66 · Alta · `text-accent-fg` era uma classe que não existe — **CORRIGIDO**
+
+A ponte `@theme inline` do `globals.css` mapeava `--color-accent-foreground` (o nome do shadcn) e
+**não** `--color-accent-fg`. Tailwind só gera utilitário a partir do `@theme`: `text-accent-fg`
+não existia, e as **10** telas que a usam herdavam a cor do `body`.
+
+| tema | texto herdado sobre o accent | razão |
+| --- | --- | --- |
+| claro | Carbon `#181925` sobre `#7e77f0` | 4,80:1 ✓ (por acidente) |
+| escuro | claro `#f4f4f4` sobre `#a4a5ff` | **2,03:1** ✗ |
+
+Medido em `/app/agenda`: o chip do dia selecionado — "Semana" (12 px) e "18" (11 px) — era o texto
+menos legível da tela. Depois da ponte (`--color-accent-fg: var(--color-accent-fg)`), a mesma
+medição dá **0 de 80** nos dois temas.
+
+Gate novo: `tests/unit/token-declarado-vira-utilitario.test.ts` — para cada classe
+`text-/bg-/border-/…-<nome>` cujo `<nome>` é um `--color-<nome>` declarado no CSS, exige que o
+`@theme` exponha o mesmo nome. Cores da paleta embutida do Tailwind não têm token no CSS e ficam de
+fora sozinhas. **Verificado por sabotagem**: removendo a linha da ponte, 7 casos reprovam.
+
+### V-67 · Média · A casca do `/admin` não tinha atalho para o conteúdo — **CORRIGIDO**
+
+Medido com `foco-e-aria.mjs` no `/admin`: o primeiro `Tab` caía em **"Sair pra app pessoal"**, no
+cabeçalho da sidebar. O `/app` tem "Pular para o conteúdo" desde sempre; a casca do admin é outra e
+o atalho não veio junto — quem usa teclado atravessa a navegação inteira em toda tela do painel.
+Corrigido com o mesmo par do `AppShell` (`sr-only focus:not-sr-only` + `<main id="conteudo">`).
+Depois: primeiro `Tab` = "Pular para o conteúdo", visível. Gate:
+`tests/unit/admin-tem-atalho-para-o-conteudo.test.tsx`.
+
+### V-68 · Telas que faltavam, medidas nos dois temas — **MEDIDO**
+
+Mesma régua do V-65, com sessão `e2e-admin` e (para `/admin`) `e2e-dono`:
+
+| Tela | escuro (medidos) | claro (medidos) | reprovados |
+| --- | --- | --- | --- |
+| `/app/agenda` | 80 | 80 | **0 / 0** (era 2 no escuro — V-66) |
+| `/app/settings` | 68 | 68 | **0 / 0** |
+| `/app/team` | 38 | 38 | **0 / 0** |
+| `/admin` | 32 | 32 | **0 / 0** |
+| `/admin/tenants` | 30 | 61 | **0 / 0** |
+| `/admin/audit` | 243 | 243 | **0 / 0** |
+
+**Foco e ARIA** nas seis: `<h1>` = 1, **0** controles sem nome acessível, primeiro `Tab` no atalho
+(ele fica visível), anel `solid 2px` no `/app`.
+
+`aria-current="page"` = 1 em agenda/settings/admin; **0 em `/app/team`** e em `/app/sentinel` — as
+duas estão no registro e **fora da sidebar de propósito** (`registry.ts` diz por quê: "a dobra é
+medida"), então não há item de menu para marcar. A orientação vem do `<h1>` e do título da rota.
+
+Capturas: `capturas/app_{agenda,settings,team}_{dark,light}_1440.png` e
+`capturas/admin{,_tenants}_{dark,light}_1440.png`.
+
+### V-69 · Média · Rolagem suave por JavaScript ignorava a preferência — **CORRIGIDO**
+
+A regra global de `prefers-reduced-motion` (`*` com `!important`) cobre CSS — **não** cobre
+`scrollIntoView({ behavior: "smooth" })`, onde a opção do JS vence o `scroll-behavior`. Eram
+**oito** pontos: formulário do pedido ao revelar erro, "revisar" do resumo, parada da expedição,
+linha da empresa na prospecção, ações fiscais, conversa do assistente e "editar campos" do lead.
+
+Um ponto único (`lib/ui/movimento.ts`: `rolarPara`, `rolarDentroDe`, `prefereMovimentoReduzido`) e
+gate: `tests/unit/movimento-respeita-a-preferencia.test.ts` reprova `behavior: "smooth"` fora do
+helper, verifica a regra global (inclusive `scroll-behavior: auto`) e as quatro animações nomeadas.
+
+### V-70 · Cabeçalho ordenável e foco de diálogo — **VERIFICADO E VIGIADO**
+
+- **`aria-sort`**: varredura do produto acha **uma** tabela ordenável, `/app/contacts`, e ela já
+  declara `aria-sort` no `columnheader` desde a V-48. Nada a corrigir; gate novo
+  (`cabecalho-ordenavel-anuncia-ordem.test.tsx`) reprova cabeçalho com botão de ordenação sem
+  `aria-sort` — e **verificado por sabotagem** (removendo a linha, o caso de contatos reprova).
+  `aria-sort` no `<button>` também reprova: o atributo é do `columnheader`.
+- **Diálogo e menu**: `tests/unit/dialogo-e-menu-prendem-o-foco.test.tsx` (5 casos) prova foco
+  dentro ao abrir, `Esc` fechando, foco voltando ao gatilho e Tab que **não escapa** do diálogo.
+  O Radix já fazia; o teste impede que alguém troque o primitivo por um `<div>` posicionado e perca
+  as três garantias sem erro de build.

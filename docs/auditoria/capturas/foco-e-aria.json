@@ -1,18 +1,18 @@
 {
-  "geradoEm": "2026-11-18T15:52:08.066Z",
+  "geradoEm": "2026-11-18T17:34:02.319Z",
   "base": "http://localhost:3021",
   "registros": [
     {
-      "rota": "/app",
+      "rota": "/admin",
       "tema": "dark",
       "antesDoTab": {
         "h1": [
-          "Boa tarde, E2E."
+          "Dashboard"
         ],
         "ariaCurrent": 1,
         "semNome": 0,
         "semNomeAmostra": [],
-        "focaveis": 67,
+        "focaveis": 17,
         "focoInicial": "body"
       },
       "primeiroTab": {
@@ -22,153 +22,19 @@
         "visivel": true,
         "outline": "solid 2px rgb(164, 165, 255)"
       },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
+      "anelDoMenu": null
     },
     {
-      "rota": "/app/pedidos",
-      "tema": "dark",
+      "rota": "/admin",
+      "tema": "light",
       "antesDoTab": {
         "h1": [
-          "Pedidos"
-        ],
-        "ariaCurrent": 2,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 148,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(164, 165, 255)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/inbox",
-      "tema": "dark",
-      "antesDoTab": {
-        "h1": [
-          "Inbox"
-        ],
-        "ariaCurrent": 2,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 40,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(164, 165, 255)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/financeiro",
-      "tema": "dark",
-      "antesDoTab": {
-        "h1": [
-          "Financeiro"
+          "Dashboard"
         ],
         "ariaCurrent": 1,
         "semNome": 0,
         "semNomeAmostra": [],
-        "focaveis": 48,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(164, 165, 255)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/notas",
-      "tema": "dark",
-      "antesDoTab": {
-        "h1": [
-          "Notas fiscais"
-        ],
-        "ariaCurrent": 1,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 51,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(164, 165, 255)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/sentinel",
-      "tema": "dark",
-      "antesDoTab": {
-        "h1": [
-          "Sentinel"
-        ],
-        "ariaCurrent": 0,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 35,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(164, 165, 255)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Boa tarde, E2E."
-        ],
-        "ariaCurrent": 1,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 67,
+        "focaveis": 17,
         "focoInicial": "body"
       },
       "primeiroTab": {
@@ -178,141 +44,7 @@
         "visivel": true,
         "outline": "solid 2px rgb(126, 119, 240)"
       },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/pedidos",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Pedidos"
-        ],
-        "ariaCurrent": 2,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 148,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(126, 119, 240)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/inbox",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Inbox"
-        ],
-        "ariaCurrent": 2,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 40,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(126, 119, 240)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/financeiro",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Financeiro"
-        ],
-        "ariaCurrent": 1,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 48,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(126, 119, 240)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/notas",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Notas fiscais"
-        ],
-        "ariaCurrent": 1,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 51,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(126, 119, 240)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
-    },
-    {
-      "rota": "/app/sentinel",
-      "tema": "light",
-      "antesDoTab": {
-        "h1": [
-          "Sentinel"
-        ],
-        "ariaCurrent": 0,
-        "semNome": 0,
-        "semNomeAmostra": [],
-        "focaveis": 35,
-        "focoInicial": "body"
-      },
-      "primeiroTab": {
-        "texto": "Pular para o conteúdo",
-        "largura": 162,
-        "altura": 38,
-        "visivel": true,
-        "outline": "solid 2px rgb(126, 119, 240)"
-      },
-      "anelDoMenu": {
-        "outlineStyle": "solid",
-        "outlineWidth": "2px",
-        "boxShadow": "none"
-      }
+      "anelDoMenu": null
     }
   ]
 }

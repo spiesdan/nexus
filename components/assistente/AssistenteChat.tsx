@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Loader2, Send, X } from "lucide-react";
 import { useT } from "@/hooks/i18n/useT";
+import { rolarDentroDe } from "@/lib/ui/movimento";
 import { cn } from "@/lib/utils";
 import { IconeAssistente } from "./IconeAssistente";
 import { responder, SUGESTOES_INICIAIS, type LinkDeAjuda, type RespostaDeAjuda } from "./respostas";
@@ -99,7 +100,8 @@ export function AssistenteChat({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    listaRef.current?.scrollTo({ top: listaRef.current.scrollHeight, behavior: "smooth" });
+    const lista = listaRef.current;
+    if (lista) rolarDentroDe(lista, { top: lista.scrollHeight });
   }, [mensagens, aberto, ocupado]);
 
   useEffect(() => {

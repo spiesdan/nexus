@@ -78,6 +78,21 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
         nas páginas longas do admin.
       */}
       <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
+        {/*
+          O PRIMEIRO ALVO DO TAB — o admin não tinha.
+          
+          Medido em 18/11/2026 com o instrumento de foco: no `/admin` o primeiro
+          Tab caía em "Sair pra app pessoal", no cabeçalho da sidebar. Quem
+          navega por teclado atravessava a navegação inteira antes de chegar ao
+          conteúdo, em TODA tela — enquanto `/app` já tinha o atalho desde
+          sempre. A casca do admin é outra, e o atalho não veio junto.
+        */}
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-md"
+        >
+          {t("Pular para o conteúdo")}
+        </a>
         <PlatformModeBanner />
         <div className="flex min-h-0 flex-1">
           <AdminSidebar userEmail={userEmail} />
@@ -122,7 +137,12 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
                 `AppShell` (ver comentário lá): se algo estourar a largura, a
                 PÁGINA não rola de lado; quem precisa de scroll horizontal é
                 o componente específico, contido nele mesmo. */}
-            <main className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
+            <main
+              id="conteudo"
+              className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6"
+            >
+              {children}
+            </main>
           </div>
         </div>
       </div>

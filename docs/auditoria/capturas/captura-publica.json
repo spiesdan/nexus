@@ -1,54 +1,54 @@
 {
-  "geradoEm": "2026-11-18T15:52:56.118Z",
+  "geradoEm": "2026-11-18T17:35:44.355Z",
   "base": "http://localhost:3021",
   "registros": [
     {
-      "rota": "/app",
+      "rota": "/admin",
       "tema": "dark",
-      "largura": 390,
-      "arquivo": "app_dark_390.png",
-      "titulo": "Dashboard · NEXUS",
+      "largura": 1440,
+      "arquivo": "admin_dark_1440.png",
+      "titulo": "Dashboard — Admin Plataforma",
       "h1": [
-        "Boa tarde, E2E."
+        "Dashboard"
       ],
       "overflowX": 0,
-      "textos": 120
+      "textos": 28
     },
     {
-      "rota": "/app",
+      "rota": "/admin",
       "tema": "light",
-      "largura": 390,
-      "arquivo": "app_light_390.png",
-      "titulo": "Dashboard · NEXUS",
+      "largura": 1440,
+      "arquivo": "admin_light_1440.png",
+      "titulo": "Dashboard — Admin Plataforma",
       "h1": [
-        "Boa tarde, E2E."
+        "Dashboard"
       ],
       "overflowX": 0,
-      "textos": 118
+      "textos": 28
     },
     {
-      "rota": "/app/inbox",
+      "rota": "/admin/tenants",
       "tema": "dark",
-      "largura": 390,
-      "arquivo": "app_inbox_dark_390.png",
-      "titulo": "Inbox · NEXUS",
+      "largura": 1440,
+      "arquivo": "admin_tenants_dark_1440.png",
+      "titulo": "Tenants — Admin Plataforma",
       "h1": [
-        "Inbox"
+        "Tenants"
       ],
       "overflowX": 0,
-      "textos": 54
+      "textos": 36
     },
     {
-      "rota": "/app/inbox",
+      "rota": "/admin/tenants",
       "tema": "light",
-      "largura": 390,
-      "arquivo": "app_inbox_light_390.png",
-      "titulo": "Inbox · NEXUS",
+      "largura": 1440,
+      "arquivo": "admin_tenants_light_1440.png",
+      "titulo": "Tenants — Admin Plataforma",
       "h1": [
-        "Inbox"
+        "Tenants"
       ],
       "overflowX": 0,
-      "textos": 54
+      "textos": 35
     }
   ]
 }

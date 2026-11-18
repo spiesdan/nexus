@@ -23,11 +23,17 @@ import {
 } from "@/components/ui/table";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
-import { lerMensagemCarta, type CartaDeCorrecao, type ConfigFiscalSalva, type InutilizacaoSalva } from "@/lib/schemas/fiscal";
+import {
+  lerMensagemCarta,
+  type CartaDeCorrecao,
+  type ConfigFiscalSalva,
+  type InutilizacaoSalva,
+} from "@/lib/schemas/fiscal";
 import { FileText, MagnifyingGlass, Receipt } from "@/lib/ui/icons";
 
 import type { Textos } from "./textos";
 
+import { rolarPara } from "@/lib/ui/movimento";
 const ANO_ATUAL = String(new Date().getFullYear() % 100).padStart(2, "0");
 
 function situacao(status: string | null): "success" | "error" | "neutral" {
@@ -130,19 +136,19 @@ export function AcoesFiscais({
     if (!ok) return;
     setInutilizando(true);
     try {
-      const r = await apiClient.post<{ data?: { status?: string; motivo_transmissao?: string | null } }>(
-        "/api/v1/fiscal-inutilizacoes",
-        {
-          serie: serieInut.trim() || "1",
-          numero_inicial: ini,
-          numero_final: fim,
-          motivo: motivoInut.trim(),
-          ano: anoInut.trim() || ANO_ATUAL,
-          modelo: modeloInut === "65" ? "65" : "55",
-        },
-      );
+      const r = await apiClient.post<{
+        data?: { status?: string; motivo_transmissao?: string | null };
+      }>("/api/v1/fiscal-inutilizacoes", {
+        serie: serieInut.trim() || "1",
+        numero_inicial: ini,
+        numero_final: fim,
+        motivo: motivoInut.trim(),
+        ano: anoInut.trim() || ANO_ATUAL,
+        modelo: modeloInut === "65" ? "65" : "55",
+      });
       const status = r.data?.status;
-      if (status === "transmitida") toast.success(`${textos.inutilizarFaixa} — ${textos.transmitida}`);
+      if (status === "transmitida")
+        toast.success(`${textos.inutilizarFaixa} — ${textos.transmitida}`);
       else if (status === "erro") toast.error(r.data?.motivo_transmissao ?? textos.erro);
       else toast.success(`${textos.inutilizarFaixa} — ${textos.registradaLocal}`);
       setNumIni("");
@@ -155,7 +161,6 @@ export function AcoesFiscais({
       setInutilizando(false);
     }
   }
-
 
   /**
    * Fecha os buracos da numeração de uma vez.
@@ -208,10 +213,9 @@ export function AcoesFiscais({
   async function retransmitirInutilizacao(id: string) {
     setRetransmitindo(id);
     try {
-      const r = await apiClient.post<{ data?: { status?: string; motivo_transmissao?: string | null } }>(
-        `/api/v1/fiscal-inutilizacoes/${id}/retransmitir`,
-        {},
-      );
+      const r = await apiClient.post<{
+        data?: { status?: string; motivo_transmissao?: string | null };
+      }>(`/api/v1/fiscal-inutilizacoes/${id}/retransmitir`, {});
       if (r.data?.status === "transmitida") toast.success(textos.retransmitidoOk);
       else toast.error(r.data?.motivo_transmissao ?? textos.erro);
       router.refresh();
@@ -225,10 +229,9 @@ export function AcoesFiscais({
   async function retransmitirCarta(id: string) {
     setRetransmitindo(id);
     try {
-      const r = await apiClient.post<{ data?: { status?: string; motivo_transmissao?: string | null } }>(
-        `/api/v1/fiscal-events/${id}/retransmitir`,
-        {},
-      );
+      const r = await apiClient.post<{
+        data?: { status?: string; motivo_transmissao?: string | null };
+      }>(`/api/v1/fiscal-events/${id}/retransmitir`, {});
       if (r.data?.status === "transmitida") toast.success(textos.retransmitidoOk);
       else toast.error(r.data?.motivo_transmissao ?? textos.erro);
       router.refresh();
@@ -241,7 +244,7 @@ export function AcoesFiscais({
 
   /** "Inutiliza Nota" (Odivix): traz o formulário de faixa para a vista. */
   function focarFormulario() {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    rolarPara(formRef.current, { block: "center" });
     window.setTimeout(() => document.getElementById("inut-ini")?.focus(), 350);
   }
 
@@ -290,7 +293,8 @@ export function AcoesFiscais({
     const ex = exIbpt.trim();
     if (ex) params.set("ex", ex);
     const valor = Number(valorIbpt.trim().replace(/\./g, "").replace(",", "."));
-    if (valorIbpt.trim() && Number.isFinite(valor) && valor >= 0) params.set("valor", String(valor));
+    if (valorIbpt.trim() && Number.isFinite(valor) && valor >= 0)
+      params.set("valor", String(valor));
     setConsultandoIbpt(true);
     try {
       const r = await apiClient.get<{ data?: { linhas?: LinhaIbptConsulta[] } }>(
@@ -526,7 +530,7 @@ export function AcoesFiscais({
       <Card className="hover-raise space-y-3 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-medium text-text">{textos.cartasCorrecao}</h2>
-          <div className="relative min-w-52 max-w-xs flex-1">
+          <div className="relative max-w-xs min-w-52 flex-1">
             <MagnifyingGlass
               size={16}
               className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground"
@@ -622,7 +626,12 @@ export function AcoesFiscais({
                 aria-label={textos.importarIbpt}
                 className="text-xs text-muted-foreground file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text"
               />
-              <Button size="sm" variant="outline" disabled={importandoIbpt} onClick={() => void importarIbpt()}>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={importandoIbpt}
+                onClick={() => void importarIbpt()}
+              >
                 {importandoIbpt ? t("Importando…") : textos.importarIbpt}
               </Button>
             </div>
@@ -656,7 +665,9 @@ export function AcoesFiscais({
             aria-label={textos.origem}
             className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
             value={origemIbpt}
-            onChange={(e) => setOrigemIbpt(e.target.value === "importado" ? "importado" : "nacional")}
+            onChange={(e) =>
+              setOrigemIbpt(e.target.value === "importado" ? "importado" : "nacional")
+            }
           >
             <option value="nacional">{textos.nacional}</option>
             <option value="importado">{textos.importado}</option>
@@ -689,10 +700,10 @@ export function AcoesFiscais({
                     </span>
                   )}
                 </div>
-                <p className="text-xs tabular-nums text-muted-foreground">
-                  {textos.nacional} {l.nacional_federal}% · {textos.importado} {l.importados_federal}% ·{" "}
-                  {textos.estadual} {l.estadual}% · {textos.municipal} {l.municipal}% · {textos.total}{" "}
-                  {l.total_percentual}%
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {textos.nacional} {l.nacional_federal}% · {textos.importado}{" "}
+                  {l.importados_federal}% · {textos.estadual} {l.estadual}% · {textos.municipal}{" "}
+                  {l.municipal}% · {textos.total} {l.total_percentual}%
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {textos.vigencia}: {vigenciaLocal(l.vigencia_inicio, tagIdioma)}

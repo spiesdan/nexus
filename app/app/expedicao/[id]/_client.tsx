@@ -59,6 +59,7 @@ import { FechamentoCarga } from "./_fechamento";
 import { ModoMotorista } from "./_motorista";
 import { Roteirizador } from "./_roteirizador";
 
+import { rolarPara } from "@/lib/ui/movimento";
 interface Textos {
   voltar: string;
   /** Rótulo curto da subtela — o título longo vive dentro dela. */
@@ -412,9 +413,7 @@ export function CargaClient({
       );
       const quantos = res?.data?.adicionados?.length ?? selecionados.size;
       toast.success(
-        quantos === 1
-          ? t("Pedido posto na carga.")
-          : `${quantos} ${t("pedidos postos na carga.")}`,
+        quantos === 1 ? t("Pedido posto na carga.") : `${quantos} ${t("pedidos postos na carga.")}`,
       );
       setAddAberto(false);
       await recarregar();
@@ -478,7 +477,7 @@ export function CargaClient({
 
   function focarParada(id: string) {
     setAbertaId(id);
-    document.getElementById(`parada-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    rolarPara(document.getElementById(`parada-${id}`), { block: "center" });
   }
 
   if (!detalhe) {
@@ -663,7 +662,11 @@ export function CargaClient({
           </div>
         </div>
         <div className="px-4 py-4 sm:px-6">
-          <ModoMotorista cargaId={cargaId} podeOperar={podeOperar} aoMudar={() => void recarregar()} />
+          <ModoMotorista
+            cargaId={cargaId}
+            podeOperar={podeOperar}
+            aoMudar={() => void recarregar()}
+          />
         </div>
       </div>
     );
@@ -852,78 +855,77 @@ export function CargaClient({
 
       {secao === "paradas" && (
         <>
-      {/* O que a carga significa em trabalho e em dinheiro — uma faixa de
+          {/* O que a carga significa em trabalho e em dinheiro — uma faixa de
           instrumentos, não quatro cartões iguais. */}
-      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4">
-        <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
-          <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-            {textos.paradasConcluidas}
-          </p>
-          <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-lg font-semibold text-text tabular-nums whitespace-nowrap sm:text-2xl">
-              {concluidas.length}/{itens.length}
-            </span>
-            <span className="truncate text-[11px] text-muted-foreground">
-              {pendentes.length}{" "}
-              {pendentes.length === 1 ? t("em aberto") : t("em aberto")}
-            </span>
+          <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4">
+            <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
+              <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {textos.paradasConcluidas}
+              </p>
+              <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
+                <span className="shrink-0 text-lg font-semibold whitespace-nowrap text-text tabular-nums sm:text-2xl">
+                  {concluidas.length}/{itens.length}
+                </span>
+                <span className="truncate text-[11px] text-muted-foreground">
+                  {pendentes.length} {pendentes.length === 1 ? t("em aberto") : t("em aberto")}
+                </span>
+              </div>
+              <span aria-hidden className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">
+                <span className="h-full bg-success" style={{ width: `${pctConcluido}%` }} />
+              </span>
+            </div>
+
+            <div className="border-b border-border px-3.5 py-3 sm:border-r sm:border-b-0">
+              <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {t("A separar")}
+              </p>
+              <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
+                <span
+                  className={cn(
+                    "shrink-0 text-lg font-semibold whitespace-nowrap tabular-nums sm:text-2xl",
+                    naoSeparados.length > 0 ? "text-warning-fg" : "text-text",
+                  )}
+                >
+                  {naoSeparados.length}
+                </span>
+                <span className="truncate text-[11px] text-muted-foreground">
+                  {separados.length} de {itens.length} {t("conferidos")}
+                </span>
+              </div>
+              <p className="mt-2 text-[11px] text-text-subtle">
+                {naoSeparados.length > 0
+                  ? t("a rota só sai com tudo conferido")
+                  : t("tudo conferido")}
+              </p>
+            </div>
+
+            <div className="border-r border-border px-3.5 py-3">
+              <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {textos.aCobrar}
+              </p>
+              <p className="mt-0.5 text-lg font-semibold whitespace-nowrap text-text tabular-nums sm:text-2xl">
+                {comoMoeda(aCobrar, "BRL")}
+              </p>
+              <p className="mt-2 text-[11px] text-text-subtle">
+                {totalPago > 0
+                  ? `${t("já recebido")} ${comoMoeda(totalPago, "BRL")}`
+                  : t("nada recebido ainda")}
+              </p>
+            </div>
+
+            <div className="px-3.5 py-3">
+              <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                {textos.totalMercadorias}
+              </p>
+              <p className="mt-0.5 text-lg font-semibold whitespace-nowrap text-text tabular-nums sm:text-2xl">
+                {comoMoeda(totalMercadorias, "BRL")}
+              </p>
+              <p className="mt-2 text-[11px] text-text-subtle">
+                {itens.length}{" "}
+                {itens.length === 1 ? t("pedido embarcado") : t("pedidos embarcados")}
+              </p>
+            </div>
           </div>
-          <span
-            aria-hidden
-            className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted"
-          >
-            <span className="h-full bg-success" style={{ width: `${pctConcluido}%` }} />
-          </span>
-        </div>
-
-        <div className="border-b border-border px-3.5 py-3 sm:border-r sm:border-b-0">
-          <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-            {t("A separar")}
-          </p>
-          <div className="mt-0.5 flex min-w-0 items-baseline gap-2">
-            <span
-              className={cn(
-                "shrink-0 text-lg font-semibold tabular-nums whitespace-nowrap sm:text-2xl",
-                naoSeparados.length > 0 ? "text-warning-fg" : "text-text",
-              )}
-            >
-              {naoSeparados.length}
-            </span>
-            <span className="truncate text-[11px] text-muted-foreground">
-              {separados.length} de {itens.length} {t("conferidos")}
-            </span>
-          </div>
-          <p className="mt-2 text-[11px] text-text-subtle">
-            {naoSeparados.length > 0
-              ? t("a rota só sai com tudo conferido")
-              : t("tudo conferido")}
-          </p>
-        </div>
-
-        <div className="border-r border-border px-3.5 py-3">
-          <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-            {textos.aCobrar}
-          </p>
-          <p className="mt-0.5 text-lg font-semibold text-text tabular-nums whitespace-nowrap sm:text-2xl">
-            {comoMoeda(aCobrar, "BRL")}
-          </p>
-          <p className="mt-2 text-[11px] text-text-subtle">
-            {totalPago > 0 ? `${t("já recebido")} ${comoMoeda(totalPago, "BRL")}` : t("nada recebido ainda")}
-          </p>
-        </div>
-
-        <div className="px-3.5 py-3">
-          <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-            {textos.totalMercadorias}
-          </p>
-          <p className="mt-0.5 text-lg font-semibold text-text tabular-nums whitespace-nowrap sm:text-2xl">
-            {comoMoeda(totalMercadorias, "BRL")}
-          </p>
-          <p className="mt-2 text-[11px] text-text-subtle">
-            {itens.length} {itens.length === 1 ? t("pedido embarcado") : t("pedidos embarcados")}
-          </p>
-        </div>
-      </div>
         </>
       )}
 
@@ -959,7 +961,7 @@ export function CargaClient({
             {passo.acao && <div className="w-full shrink-0 sm:w-auto">{passo.acao}</div>}
           </div>
 
-        {/* ── O trabalho: paradas, rota e caixa ───────────────────────────── */}
+          {/* ── O trabalho: paradas, rota e caixa ───────────────────────────── */}
           <section id="paradas" className="scroll-mt-44 space-y-3" aria-labelledby="titulo-paradas">
             <div className="flex flex-wrap items-end justify-between gap-2">
               <div>
@@ -1112,7 +1114,9 @@ export function CargaClient({
                                 <div className="flex flex-wrap items-center gap-2 rounded-lg border border-warning bg-warning-bg px-2 py-1.5 text-xs text-warning-fg">
                                   <span>
                                     {i.reconferir_motivo ??
-                                      t("Este pedido mudou no Mercos depois de entrar na carga.")}{" "}
+                                      t(
+                                        "Este pedido mudou no Mercos depois de entrar na carga.",
+                                      )}{" "}
                                     <span className="text-muted-foreground">
                                       {t("Confira a mercadoria e o destino antes da entrega.")}
                                     </span>
@@ -1165,7 +1169,9 @@ export function CargaClient({
                                       <select
                                         className="h-8 rounded-lg border border-input bg-surface px-2 text-sm"
                                         value={motivo}
-                                        onChange={(e) => setMotivo(e.target.value as MotivoDevolucao)}
+                                        onChange={(e) =>
+                                          setMotivo(e.target.value as MotivoDevolucao)
+                                        }
                                         aria-label={textos.motivo}
                                       >
                                         {MOTIVOS_DEVOLUCAO.map((m) => (
@@ -1230,8 +1236,7 @@ export function CargaClient({
                         aria-hidden
                         className={cn("transition-transform", !mostrarConcluidas && "-rotate-90")}
                       />
-                      {t("Concluídas")}{" "}
-                      <span className="tabular-nums">({concluidas.length})</span>
+                      {t("Concluídas")} <span className="tabular-nums">({concluidas.length})</span>
                       <span className="font-normal text-text-subtle">
                         {t("comprovante e valor pago ficam no histórico da parada")}
                       </span>
@@ -1326,9 +1331,7 @@ export function CargaClient({
         <Roteirizador cargaId={cargaId} podeOperar={podeOperar} aoMudar={() => void recarregar()} />
       )}
 
-      {secao === "fechamento" && (
-        <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
-      )}
+      {secao === "fechamento" && <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />}
 
       {/* ADICIONAR PEDIDO — a fila de embarque sem os que já estão em alguma
           carga. Busca e seleção múltipla: a doca costuma pôr mais de um. */}
