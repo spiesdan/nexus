@@ -183,6 +183,8 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção e cross-tenant |
 | `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis (roda no CI `critical`/`full`) |
 | `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
+| `tests/api/sentinel-permissoes.test.ts` | régua de papel no fio: agent assume/pede ação; gestor ignora/encerra; platform admin; motivo obrigatório |
+| `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
@@ -192,33 +194,47 @@ suíte completa:
 
 ```bash
 pnpm exec vitest run lib/sentinel
-#   7 arquivos, 55 testes verdes
+#   8 arquivos, 61 testes verdes
 
 pnpm exec vitest run tests/unit/sentinel-painel-revisavel.test.tsx
-#   1 arquivo, 7 testes verdes (lista, filtro, busca, detalhe+plano, histórico,
-#   kill switch, ocorrência antiga sem plano, viewer/agent/gestor)
+#   1 arquivo, 10 testes verdes: lista, filtro padrão, busca, detalhe+plano,
+#   histórico, kill switch (banner + switch salvando ativo:false), ocorrência
+#   antiga/incompleta sem plano, viewer, agent e gestor
 
-pnpm exec vitest run tests/unit/e2e-suices-aderentes.test.ts tests/unit/e2e-cobertura-completa.test.ts
-#   2 arquivos, 10 testes verdes (o spec do painel entra em critical/full)
+pnpm exec vitest run tests/api/sentinel-permissoes.test.ts
+#   1 arquivo, 8 testes verdes: auth negado, agent assume/não ignora/não encerra,
+#   gestor ignora com motivo, motivo obrigatório, transição inválida,
+#   platform admin
+
+pnpm exec vitest run lib/sentinel/somente-leitura.test.ts
+#   1 arquivo, 6 testes verdes (inclui controle positivo do scanner)
+
+pnpm exec vitest run tests/unit/e2e-suices-aderentes.test.ts tests/unit/e2e-cobertura-completa.test.ts \
+  tests/unit/jornadas-fecham.test.ts
+#   3 arquivos, 18 testes verdes (o spec do painel entra em critical/full e é
+#   declarado transversal em `scripts/auditoria/jornadas.ts`)
 
 pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
   tests/e2e/sentinel-painel.spec.ts tests/unit/sentinel-painel-revisavel.test.tsx \
-  tests/invariants/sentinel-idempotencia.test.ts
+  tests/api/sentinel-permissoes.test.ts tests/invariants/sentinel-idempotencia.test.ts
 #   sem saída (zero erros)
 
 pnpm typecheck
 #   zerado
 ```
 
+No CI do PR #528, `verify` (typecheck + lint + unit), `invariants`
+(`test:db`: install+update do baseline, RLS, idempotência), `build-and-size` e
+`e2e` (smoke) passaram. A prova de banco que esta máquina não podia dar veio do
+job `invariants`.
+
 **O E2E do painel NÃO foi executado nesta máquina, e o motivo é de ambiente, não
 de código:** o daemon do Docker está desligado (`Cannot connect to the Docker
-daemon`) e este worktree novo não tem `.env.e2e`/Supabase local — sem banco não
-há login nem seed. O spec `tests/e2e/sentinel-painel.spec.ts` continua versionado
-e vai rodar no job `e2e` (suítes `critical` e `full`) quando houver Docker. A
-prova de comportamento desta sessão é o teste de componente acima, que exercita
-a mesma tela com fixture determinística. `pnpm test:db` também depende de Docker
-e igualmente não rodou aqui; a migration 0321 e o apêndice do baseline foram
-revisados, mas a prova de banco é a do CI (`invariants`).
+daemon`) e este worktree não tem `.env.e2e`/Supabase local — sem banco não há
+login nem seed. O `e2e` do PR roda a suíte **smoke**, que não inclui
+`sentinel-painel.spec.ts`; o spec está em `critical`/`full` e estreia no `e2e`
+da `main`. A prova de tela desta fatia é o componente + rota acima, com fixture
+determinística.
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
