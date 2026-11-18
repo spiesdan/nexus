@@ -453,8 +453,14 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 
 ## 📜 Licença
 
-Nexus é um produto proprietário self-hosted. O uso, a cópia e a distribuição
-seguem os termos de uso do produto.
+O **código** deste repositório é licenciado sob a **licença MIT** — veja
+[`LICENSE`](LICENSE). Você pode usar, copiar, modificar e distribuir o código,
+inclusive comercialmente, mantendo o aviso de copyright.
+
+O que a licença **não** cobre: o **nome, a marca e os logotipos** do produto.
+Eles não são licenciados por este repositório e não podem ser usados para
+identificar uma distribuição derivada. A marca exibida na instalação é
+configurável (white-label) e pertence a quem a configura.
 
 ---
 

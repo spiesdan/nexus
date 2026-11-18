@@ -416,7 +416,14 @@ For **security vulnerabilities**, **do NOT open a public issue** — use [privat
 
 ## 📜 License
 
-Nexus is a proprietary self-hosted product. Use, copying and distribution follow the product's terms of use.
+The **code** in this repository is licensed under the **MIT License** — see
+[`LICENSE`](LICENSE). You may use, copy, modify and distribute the code, including
+commercially, keeping the copyright notice.
+
+What the license does **not** cover: the product **name, brand and logos**.
+They are not licensed by this repository and may not be used to identify a
+derivative distribution. The brand shown by an installation is configurable
+(white-label) and belongs to whoever configures it.
 
 ---
 
