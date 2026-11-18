@@ -85,11 +85,11 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | `docs/auditoria/29-capacidades.md` | E / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
-| **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | PR #438 aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
+| **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | E abriu #503 (reenvio de mensagem falha, J6); C fechou #494/#495/#497 e #496 (fiscal); J14 segue sem E2E | E / C / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
+| **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | C mergeou #494 (importação de entrada), #495 (recuperação de nota), #497 (relatório C1B) e #496 (cancelamento × drain); #438 (devolução/IE) segue aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
 | **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[x]` | #498 → `5a499313`: gerador + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
-| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | Capacidades 23–24; `docs/auditoria/08-mobile-offline.md` | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
-| **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | `#469` mergeado (axe em 10 telas); `#468` aberto (snapshots) | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
+| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | F ativo em `front/mobile`: `SincronizadorOffline`, `lib/offline/{db,outbox}`; sem dispositivo nesta máquina | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
+| **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 mergeado (tema claro: 2,85:1 corrigido + gate); #468 aberto (snapshots); D segue em `front/design-tinta` | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
 | **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | `#458` (teto nas listas); `#464` mergeado (`f3ea10d6`) com o índice 0313 e baseline restaurado | A / E | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
 | **P1-07** | Rate limit em MFA e recuperação de conta | `[x]` | #466 mergeado (`f56c0228`): teto em `verifyMfa` e `useRecoveryCode` com testes | B | — | Teto por IP e por identificador; teste de repetição; fallback documentado |
 
@@ -97,8 +97,8 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P2-01** | Fonte única de tokens, temas claro/escuro, contraste composto | `[~]` | `DESIGN.md`; `docs/design-system/`; `#468` | D | — | Tokens consumidos pelo produto; contraste calculado sobre cor final; desvios registrados |
-| **P2-02** | Shell: sidebar, topbar, busca, notificações, seletor de organização, breadcrumbs | `[~]` | `docs/auditoria/05-componentes.md`; `docs/auditoria/11-auditoria-visual.md` | D / E | P2-01 | Hierarquia uniforme; navegação por teclado; mobile não é desktop comprimido |
+| **P2-01** | Fonte única de tokens, temas claro/escuro, contraste composto | `[~]` | `DESIGN.md`; #491 (tema claro a11y); D em `front/design-tinta` | D | — | Tokens consumidos pelo produto; contraste calculado sobre cor final; desvios registrados |
+| **P2-02** | Shell: sidebar, topbar, busca, notificações, seletor de organização, breadcrumbs | `[~]` | D em `front/design-tinta`; E não toca shell (regra de frente) | D | P2-01 | Hierarquia uniforme; navegação por teclado; mobile não é desktop comprimido |
 | **P2-03** | Capabilities classificadas nos 7 estados (D3) | `[x]` | #475 mergeado (`470aac4e`): `29-capacidades.md` + gate `capacidades-classificadas.test.ts` | Coordenador | — | Toda capacidade com estado, evidência e lacuna nomeada; gate verde |
 | **P2-04** | Documentação de estado do produto sem número envelhecido | `[x]` | #506: `AGENTS.md` aponta `scripts/auditoria/inventario-service-role.mjs`; dois gates nomeados como proteção parcial | Coordenador | — | Onde a afirmação vira comando, vira comando; nenhum total sem fonte |
 
