@@ -1,49 +1,20 @@
 {
-  "geradoEm": "2026-11-18T13:58:08.276Z",
+  "geradoEm": "2026-11-18T15:51:22.118Z",
   "base": "http://localhost:3021",
   "resultados": [
     {
-      "rota": "/403",
+      "rota": "/app",
       "tema": "dark",
       "medida": {
-        "medidos": 4,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/403",
-      "tema": "light",
-      "medida": {
-        "medidos": 4,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/500",
-      "tema": "dark",
-      "medida": {
-        "medidos": 3,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/500",
-      "tema": "light",
-      "medida": {
-        "medidos": 3,
-        "naoMedidosPorImagem": 0,
+        "medidos": 150,
+        "naoMedidosPorImagem": 27,
         "reprovados": 0,
         "piores": []
       }
     },
     {
       "rota": "/app",
+      "tema": "light",
       "medida": {
         "medidos": 150,
         "naoMedidosPorImagem": 27,
@@ -53,8 +24,19 @@
     },
     {
       "rota": "/app/audit",
+      "tema": "dark",
       "medida": {
-        "medidos": 334,
+        "medidos": 326,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/audit",
+      "tema": "light",
+      "medida": {
+        "medidos": 326,
         "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
@@ -62,6 +44,7 @@
     },
     {
       "rota": "/app/contacts",
+      "tema": "dark",
       "medida": {
         "medidos": 122,
         "naoMedidosPorImagem": 0,
@@ -70,9 +53,70 @@
       }
     },
     {
-      "rota": "/app/indicadores",
+      "rota": "/app/contacts",
+      "tema": "light",
       "medida": {
-        "medidos": 219,
+        "medidos": 122,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/financeiro",
+      "tema": "dark",
+      "medida": {
+        "medidos": 62,
+        "naoMedidosPorImagem": 21,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/financeiro",
+      "tema": "light",
+      "medida": {
+        "medidos": 62,
+        "naoMedidosPorImagem": 21,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/inbox",
+      "tema": "dark",
+      "medida": {
+        "medidos": 58,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/inbox",
+      "tema": "light",
+      "medida": {
+        "medidos": 58,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/indicadores",
+      "tema": "dark",
+      "medida": {
+        "medidos": 121,
+        "naoMedidosPorImagem": 27,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/indicadores",
+      "tema": "light",
+      "medida": {
+        "medidos": 218,
         "naoMedidosPorImagem": 27,
         "reprovados": 0,
         "piores": []
@@ -80,6 +124,7 @@
     },
     {
       "rota": "/app/kanban",
+      "tema": "dark",
       "medida": {
         "medidos": 42,
         "naoMedidosPorImagem": 0,
@@ -88,16 +133,88 @@
       }
     },
     {
-      "rota": "/app/pedidos",
+      "rota": "/app/kanban",
+      "tema": "light",
       "medida": {
-        "medidos": 94,
-        "naoMedidosPorImagem": 262,
+        "medidos": 42,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/notas",
+      "tema": "dark",
+      "medida": {
+        "medidos": 79,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/notas",
+      "tema": "light",
+      "medida": {
+        "medidos": 79,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/pedidos",
+      "tema": "dark",
+      "medida": {
+        "medidos": 100,
+        "naoMedidosPorImagem": 284,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/pedidos",
+      "tema": "light",
+      "medida": {
+        "medidos": 101,
+        "naoMedidosPorImagem": 283,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/sentinel",
+      "tema": "dark",
+      "medida": {
+        "medidos": 53,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/sentinel",
+      "tema": "light",
+      "medida": {
+        "medidos": 53,
+        "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
       }
     },
     {
       "rota": "/app/settings/tenant",
+      "tema": "dark",
+      "medida": {
+        "medidos": 61,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "tema": "light",
       "medida": {
         "medidos": 61,
         "naoMedidosPorImagem": 0,
@@ -120,26 +237,6 @@
       "tema": "light",
       "medida": {
         "medidos": 8,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/signup",
-      "tema": "dark",
-      "medida": {
-        "medidos": 9,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/signup",
-      "tema": "light",
-      "medida": {
-        "medidos": 9,
         "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []

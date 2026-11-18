@@ -2610,3 +2610,55 @@ sido corrigido no instrumento de captura e continuava neste.
 rodada, então elas redirecionam para `/login` — e medir o login oito vezes com oito nomes seria o
 tipo de número que parece cobertura e não é. As capturas saíram em `next dev`, então trazem os dois
 selos do Next (canto inferior): são indicadores de desenvolvimento, não do produto.
+
+### V-65 · Telas autenticadas medidas — contraste composto e foco/ARIA, nos dois temas — **MEDIDO**
+
+A V-64 fechou com uma lacuna declarada: as telas de `/app/**` não tinham sido medidas porque o
+Supabase local estava parado. Com ele de pé (187 tabelas, seed E2E), a lacuna virou número.
+
+**Contraste composto** (`scripts/auditoria/contraste.mjs`, sessão real de `e2e-admin`):
+
+| Tela | escuro (medidos) | claro (medidos) | reprovados |
+| --- | --- | --- | --- |
+| `/app` | 150 | 150 | **0 / 0** |
+| `/app/pedidos` | 100 | 101 | **0 / 0** |
+| `/app/inbox` | 58 | 58 | **0 / 0** |
+| `/app/financeiro` | 62 | 62 | **0 / 0** |
+| `/app/notas` | 79 | 79 | **0 / 0** |
+| `/app/sentinel` | 53 | 53 | **0 / 0** |
+| **total** | **502** | **503** | **0** |
+
+**Foco e ARIA** (`scripts/auditoria/foco-e-aria.mjs`, instrumento novo): em todas as seis telas, nos
+dois temas —
+
+| Verificação | Resultado |
+| --- | --- |
+| primeiro `Tab` | **"Pular para o conteúdo"**, e ele fica **visível** ao receber foco |
+| `<h1>` | **1** em todas |
+| controle focável **sem nome acessível** | **0** em todas |
+| anel de foco no link da navegação | `outline: solid 2px` |
+| `aria-current="page"` | **1 ou 2** em cinco telas; **0** em `/app/sentinel` |
+
+O zero em `/app/sentinel` **não é defeito**: a tela está no registro de navegação mas de propósito
+**fora da sidebar** (decisão registrada em `lib/navigation/registry.ts:477`: "a dobra é medida e
+Operação já tem três portas"; a porta é o ⌘K e o deep link). Sem item de menu, não há o que marcar
+como atual — a orientação vem do `<h1>` e do título da rota. Fica registrado porque um leitor do
+número bruto leria "0" como falta.
+
+Capturas: `capturas/app{,_pedidos,_inbox,_financeiro,_notas,_sentinel}_{dark,light}_1440.png` e
+`capturas/app{,_inbox}_{dark,light}_390.png`, com `capturas/captura-publica.json` (título, `h1`,
+overflow, contagem de textos) e `capturas/foco-e-aria.json`.
+
+**Como a sessão foi obtida (e por que não virou script):** `scripts/seed-e2e-credentials.ts`
+grava `.e2e-creds.json` com a senha e o segredo TOTP; um Playwright avulso faz o login, completa os
+seis dígitos e salva `storageState`. Tentei empacotar isso em `scripts/auditoria/sessao-e2e.*` e
+**não passou de duas tentativas**: (a) importar `loginComoAdmin` de `tests/e2e/helpers` aborta no
+`tsx` com `ERR_REQUIRE_ASYNC_MODULE` (o grafo do helper tem `await` de topo); (b) reimplementado,
+o login depende de hidratação — preencher antes do React assumir envia os campos vazios (V-10) — e
+de o fator TOTP não ter sido rotacionado por outra sessão desde o seed. Um script que falha por
+essas razões e não diz qual delas foi seria pior que a receita. Fica a receita: **semeie, faça o
+login num Playwright avulso, salve o `storageState` e passe `--estado`**; se o MFA recusar, rode o
+seed de novo antes de repetir.
+
+**Limitações:** capturado em `next dev` (selos do Next nos cantos são indicadores de
+desenvolvimento); a sessão é a fixture local (`e2e-admin`), não uma conta de cliente.

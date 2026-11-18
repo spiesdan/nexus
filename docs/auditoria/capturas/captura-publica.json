@@ -1,102 +1,54 @@
 {
-  "geradoEm": "2026-11-18T13:56:37.047Z",
+  "geradoEm": "2026-11-18T15:52:56.118Z",
   "base": "http://localhost:3021",
   "registros": [
     {
-      "rota": "/login",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": "login_dark_1440.png",
-      "titulo": "Entrar · NEXUS",
-      "h1": [
-        "Entrar"
-      ],
-      "overflowX": 0,
-      "textos": 10
-    },
-    {
-      "rota": "/login",
+      "rota": "/app",
       "tema": "dark",
       "largura": 390,
-      "arquivo": "login_dark_390.png",
-      "titulo": "Entrar · NEXUS",
+      "arquivo": "app_dark_390.png",
+      "titulo": "Dashboard · NEXUS",
       "h1": [
-        "Entrar"
+        "Boa tarde, E2E."
       ],
       "overflowX": 0,
-      "textos": 10
+      "textos": 120
     },
     {
-      "rota": "/login",
-      "tema": "light",
-      "largura": 1440,
-      "arquivo": "login_light_1440.png",
-      "titulo": "Entrar · NEXUS",
-      "h1": [
-        "Entrar"
-      ],
-      "overflowX": 0,
-      "textos": 10
-    },
-    {
-      "rota": "/login",
+      "rota": "/app",
       "tema": "light",
       "largura": 390,
-      "arquivo": "login_light_390.png",
-      "titulo": "Entrar · NEXUS",
+      "arquivo": "app_light_390.png",
+      "titulo": "Dashboard · NEXUS",
       "h1": [
-        "Entrar"
+        "Boa tarde, E2E."
       ],
       "overflowX": 0,
-      "textos": 10
+      "textos": 118
     },
     {
-      "rota": "/signup",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": "signup_dark_1440.png",
-      "titulo": "Criar conta · NEXUS",
-      "h1": [
-        "Criar conta"
-      ],
-      "overflowX": 0,
-      "textos": 11
-    },
-    {
-      "rota": "/signup",
+      "rota": "/app/inbox",
       "tema": "dark",
       "largura": 390,
-      "arquivo": "signup_dark_390.png",
-      "titulo": "Criar conta · NEXUS",
+      "arquivo": "app_inbox_dark_390.png",
+      "titulo": "Inbox · NEXUS",
       "h1": [
-        "Criar conta"
+        "Inbox"
       ],
       "overflowX": 0,
-      "textos": 11
+      "textos": 54
     },
     {
-      "rota": "/signup",
-      "tema": "light",
-      "largura": 1440,
-      "arquivo": "signup_light_1440.png",
-      "titulo": "Criar conta · NEXUS",
-      "h1": [
-        "Criar conta"
-      ],
-      "overflowX": 0,
-      "textos": 11
-    },
-    {
-      "rota": "/signup",
+      "rota": "/app/inbox",
       "tema": "light",
       "largura": 390,
-      "arquivo": "signup_light_390.png",
-      "titulo": "Criar conta · NEXUS",
+      "arquivo": "app_inbox_light_390.png",
+      "titulo": "Inbox · NEXUS",
       "h1": [
-        "Criar conta"
+        "Inbox"
       ],
       "overflowX": 0,
-      "textos": 11
+      "textos": 54
     }
   ]
 }
