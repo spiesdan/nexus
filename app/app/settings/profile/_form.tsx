@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { updateProfile } from "@/app/actions/settings/updateProfile";
 import { useT } from "@/hooks/i18n/useT";
+import { primeiraMensagemDeCampo } from "@/lib/forms/mensagem-de-validacao";
 import { profileSchema, SEM_PREFERENCIA_DE_IDIOMA, type Locale } from "@/lib/schemas/settings";
 
 const TIMEZONES = [
@@ -47,6 +48,12 @@ export function ProfileForm({
   const [timezone, setTimezone] = useState(initialTimezone);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? "");
   const [isPending, startTransition] = useTransition();
+  const rotulos: Record<string, string> = {
+    full_name: t("Nome completo"),
+    locale: t("Idioma"),
+    timezone: t("Fuso horário"),
+    avatar_url: t("Avatar"),
+  };
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,13 +64,20 @@ export function ProfileForm({
       avatar_url: avatarUrl || null,
     });
     if (!parsed.success) {
-      toast.error(t("Dados inválidos."));
+      toast.error(primeiraMensagemDeCampo(parsed.error.flatten(), rotulos, t("Dados inválidos.")));
       return;
     }
     startTransition(async () => {
       const r = await updateProfile(parsed.data);
       if (r.ok) toast.success(t("Perfil atualizado."));
-      else toast.error(`${t("Erro")}: ${r.error}`);
+      else {
+        const padrao = `${t("Erro")}: ${r.error}`;
+        toast.error(
+          r.details
+            ? primeiraMensagemDeCampo(r.details, rotulos, padrao)
+            : padrao,
+        );
+      }
     });
   }
 
