@@ -37,9 +37,8 @@
 
 ## 3. Em PR ao encerrar a rodada
 
-| PR | O que é | Evidência local |
-|---|---|---|
-| #489 | **P0-07** Nexus Sentinel v1 somente leitura, migration 0316 (integra #487) | 68 unit + 184 invariantes; install+update verdes; typecheck/lint zerados |
+Nenhum PR de P0 ficou aberto. O **#489** (Sentinel v1) foi mergeado em
+`f644b21c` com CI 5/5; o #487 foi fechado em favor dele por colisão de versão.
 
 O #487 foi fechado em favor do #489 porque a 0315 já era da nota-viva (#484);
 a integração renumerou para 0316 e reconstruiu o baseline como `main + bloco 0316`.
@@ -115,8 +114,8 @@ pnpm exec vitest run lib/sentinel
 
 | Ambiente | Estado |
 |---|---|
-| Código | mergeado na `main` até `615de767` + #489 em PR |
-| PR | #489 aberto |
+| Código | mergeado na `main` até `f644b21c` (Sentinel v1 incluso) |
+| PR | nenhum P0 aberto; #489 mergeado |
 | Release | **nenhuma** tag nova nesta rodada; última `v1.55.0` |
 | Deploy | **nenhum**; produção intocada |
 | Banco remoto | **nenhuma** migration aplicada |
