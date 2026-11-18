@@ -62,10 +62,11 @@ function nota(status: NotaFiscal["status"]): NotaFiscal {
   };
 }
 
-function montar(status: NotaFiscal["status"]) {
+function montar(status: NotaFiscal["status"], totalNotas: number | null = null) {
   return render(
     <GradeNotas
       inicial={[nota(status)]}
+      totalNotas={totalNotas}
       pessoas={{}}
       operacaoPadrao=""
       ambientePadrao="homologacao"
@@ -127,5 +128,15 @@ describe("grade de notas — nota travada em Emitindo", () => {
     montar("pendente");
     expect(screen.queryByRole("button", { name: "Tentar de novo" })).toBeNull();
     expect(screen.queryByRole("button", { name: "reemitir" })).toBeNull();
+  });
+
+  it("a grade declara o teto de 200 quando a organização tem mais notas", () => {
+    montar("autorizada", 843);
+    expect(screen.getByRole("status")).toHaveTextContent("Mostrando 1 de 843 notas");
+  });
+
+  it("sem truncagem não inventa aviso", () => {
+    montar("autorizada", 1);
+    expect(screen.queryByRole("status")).toBeNull();
   });
 });

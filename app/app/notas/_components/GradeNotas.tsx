@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import { EmptyFilterResults, EmptyState } from "@/components/empty";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
@@ -88,6 +89,7 @@ function modeloDaNota(chave: string | null): "55" | "65" | null {
  */
 export function GradeNotas({
   inicial,
+  totalNotas = null,
   pessoas,
   operacaoPadrao,
   ambientePadrao,
@@ -95,6 +97,8 @@ export function GradeNotas({
   textos,
 }: {
   inicial: NotaFiscal[];
+  /** Total da organização (sem o teto de 200). `null` = não medido. */
+  totalNotas?: number | null;
   pessoas: Record<string, string>;
   operacaoPadrao: string;
   ambientePadrao: string;
@@ -419,6 +423,9 @@ export function GradeNotas({
 
   return (
     <div className="space-y-3">
+      {/* O teto da grade, dito. A busca/status filtram as 200 carregadas; sem o
+          aviso, "não achei a nota" parecia ausência de nota. */}
+      <RecorteDaLista mostrados={inicial.length} total={totalNotas} descricao="notas" />
       {/* ── A BARRA DE TRABALHO ──────────────────────────────────────────────
           Saíram os quatro cartões de resumo: os mesmos números já estão no topo
           da página, e repeti-los aqui empurrava a lista para baixo. No lugar,
