@@ -297,3 +297,168 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
    quem tinha build local não perde nada; clone novo roda `pnpm mobile:build`.
 9. **Produção.** Nenhum acesso, escrita, deploy ou operação real (fiscal, financeira,
    WhatsApp). Tudo local, em worktree.
+
+---
+
+## 9. Opção B (credencial de dispositivo) — estado em 18/11/2026
+
+**Decisão do dono: B.** Justificativa registrada: o APK é publicado uma vez para
+instalações self-host com URLs diferentes; `server.url` fixo (A) amarraria o artefato a um
+domínio, e abandonar o SQLite (C) jogaria fora a captura offline que já existe.
+
+> ⚠️ O worktree original (`.../T/aaa-front-mobile`) foi apagado por um reinício do
+> servidor. O novo worktree canônico desta fatia é
+> **`/Users/bill/Downloads/nexus-worktrees/offline-device`**, branch
+> **`feat/offline-device`** (a partir de `nexus/main` @ `014ccef3`).
+
+### 9.1 Entregue nesta parada (fatia B-1: credencial no servidor)
+
+| Peça | Arquivo |
+|---|---|
+| Tabela + RLS + índices + trigger | `supabase/migrations/20261123150000_0322_credencial_de_dispositivo_offline.sql` |
+| Apêndice idempotente | fim de `supabase/baseline.sql` |
+| Linha do MANIFEST | `supabase/migrations/MANIFEST.md` (0322) |
+| Auth do bearer (hash, expiração, revogação, escopo, papel ao vivo, rate limit, `last_seen`) | `lib/auth/device-token.ts` |
+| Schema de criação | `lib/schemas/offline-devices.ts` (+ export em `lib/schemas/index.ts`) |
+| Emitir/listar | `app/api/v1/offline-devices/route.ts` |
+| Revogar | `app/api/v1/offline-devices/[id]/revoke/route.ts` |
+| Validar pareamento | `app/api/v1/device/me/route.ts` |
+| Rota do aparelho liberada no proxy | `lib/auth/public-paths.ts` (`/^\/api\/v1\/device\//`) |
+| Auditoria | `lib/audit/actions.ts` (`offline_device.created`, `offline_device.revoked`) |
+| Teste unitário | `tests/unit/device-token.test.ts` (6/6) |
+
+**Contratos já fixados** (não reabrir sem motivo):
+
+- token `nod_<8 hex>_<32 bytes base64url>`; banco só `sha256` hex; prefixo `nod_ab12cd34` na lista;
+- escopos fechados: `offline:pedidos:write`, `offline:catalogo:read`; `scopes` não entra no body;
+- emissão `POST /api/v1/offline-devices` (admin; rate limit 10/h/org; plaintext uma vez);
+- `POST /api/v1/offline-devices/[id]/revoke` idempotente; `GET /api/v1/device/me` devolve org/nome/prazo;
+- 401 `token_expired` × 401 `token_revoked` × 403 `forbidden_scope`/`forbidden` (papel ao vivo);
+- uso: 120 req/min por hash+IP; `last_seen_at`/`last_seen_ip` atualizados em toda chamada válida;
+- credencial vinculada a `user_id` = **vendedor que assina o pedido** (default: quem cria); papel
+  exigido na emissão: `agent|vendedor|manager|admin`; revogar/remover o vínculo corta o aparelho na hora.
+
+### 9.2 Falta (ordem sugerida, uma fatia por PR)
+
+1. **B-2 — pedidos:** `POST /api/v1/device/orders` (auth + `ESCOPO_PEDIDOS` + papel, recusa
+   `ignorar_estoque|ignorar_credito`, chama `criarPedidoComercial(admin, admin, {orgId, userId,
+   podeIgnorar:false}, entrada)`, 200 em `ja_existia`, audit com `{canal:"offline_device", device_id}`).
+   Reaproveita a `chave_sincronizacao` existente — nenhuma regra nova.
+2. **B-3 — catálogo:** `GET /api/v1/device/catalog` (auth + `ESCOPO_CATALOGO`; contatos paginados por
+   `id` com cursor, 200/página; produtos 500 e tabelas 100 na primeira página; campos
+   `{id,nome,documento,cidade,limite_cents}` / `{id,codigo,nome,preco_cents,controla_estoque,quantidade,ativo}`;
+   excluir anonimizado/mesclado; nunca CPF/e-mail/telefone).
+3. **B-4 — cliente do shell:** `lib/offline/credencial.ts` (meta: `dispositivo_url|token|nome|
+   organizacao|usuario|expira_em|estado`; código `NEXUS1.<base64url({u,t})>`),
+   `lib/offline/http.ts` (CapacitorHttp nativo + fetch no navegador; Bearer só no header;
+   timeout 30 s), `lib/offline/catalogo.ts` (extrair `gravarCatalogo` e somar
+   `sincronizarCatalogoDoDispositivo`), `lib/offline/sync.ts` (4º parâmetro `caminhoDoPedido`,
+   default `/api/v1/commercial-orders`), `mobile/src/shell.ts` + `mobile/index.html` (pareamento,
+   estados pareado/expirado/revogado/sem_rede, dreno com backoff, 401 mantém a fila).
+4. **B-5 — UI no sistema:** `app/app/settings/devices/page.tsx` + `_components` (admin; lista,
+   criar com vendedor via `/api/v1/team/assignable`, exibir código de pareamento uma vez, revogar),
+   entrada em `lib/navigation/registry.ts` (`/app/settings/devices`, grupo `organizacao`,
+   seção “Dados e acesso”, `minRole: admin`, ícone `DeviceMobile`).
+5. **B-6 — testes/invariantes:** `tests/invariants/offline-devices-rls.test.ts` (dois tenants: token
+   de A não lê/revoga aparelho de B; `anon` sem select; hash único; CHECK de formato),
+   unit das rotas com dublê, e **`pnpm test:db`**.
+6. **B-7 — aparelho:** APK físico provando `CapacitorHttp` + pareamento + dreno + 401/revogação
+   (`[!]` até então). Atualizar a matriz do §2.
+
+### 9.3 Como retomar
+
+```bash
+cd /Users/bill/Downloads/nexus-worktrees/offline-device
+git fetch nexus && git rebase nexus/main      # branch feat/offline-device
+pnpm install                                   # já feito neste worktree
+pnpm exec vitest run tests/unit/device-token.test.ts
+pnpm test:db                                   # quando B-6 existir (Docker)
+```
+
+**Revisão de segurança:** pedir ao Agente A no PR — pontos a auditar: hash × plaintext, escopo
+fechado, filtro de `organization_id` vindo do token (nunca de body/query), papel lido ao vivo,
+`last_seen` como observabilidade e não autorização, `/device/*` público no proxy **com** guard na
+rota, e o fato de `/api/v1/offline-devices` (gestão) NÃO ser público.
+
+### 9.4 O que NÃO foi executado
+
+`pnpm test:db` (sem os invariantes de B-6 ainda), build do APK, e qualquer validação em aparelho.
+Nada de produção. A suíte completa não rodou nesta saída (ordem de teto de concorrência).
+
+### 9.5 B-2, B-3 e B-4 entregues — com prova no emulador (18/11/2026)
+
+| Fatia | O que entrou | Teste |
+|---|---|---|
+| **B-2** | `POST /api/v1/device/orders`: Bearer do aparelho + `offline:pedidos:write` + papel ao vivo; recusa `ignorar_estoque/credito`; chama `criarPedidoComercial` (mesma regra) com `chave_sincronizacao`; 200 em `ja_existia`; audit com `device_id`. | `offline-outbox-sync.test.ts`: caminho `/device/orders` e 401 que **mantém a linha** `pendente`. |
+| **B-3** | `GET /api/v1/device/catalog`: escopo de catálogo, contatos paginados (200/página), produtos 500 + tabelas 100 na 1ª página, sem CPF/e-mail/telefone. | `offline-catalogo.test.ts`: acumula páginas e grava uma vez; resposta sem lista **não apaga** o aparelho. |
+| **B-4** | `lib/offline/credencial.ts` (meta + código `NEXUS1.<base64url({u,t})>`), `lib/offline/http.ts` (CapacitorHttp nativo, fetch no navegador, Bearer só no header, timeout 30 s), `lib/offline/catalogo.ts` (`gravarCatalogo` compartilhado + sync do dispositivo), `drenarFila` com `caminhoDoPedido`, shell com pareamento/estados/backoff/401 sem descartar. | `pareamento.test.ts` (5) + `mobile-offline.spec.ts` (7/7, Chromium/Pixel 7) + fluxo Maestro abaixo. |
+
+**Correções de UX achadas no aparelho (não apareciam no navegador):**
+
+- `adiado` (timeout/DNS/5xx) não gerava aviso — o dreno trata por item e voltava normal; a tela ficava
+  idêntica a "nada aconteceu". Agora há aviso próprio. Medido com fila de 1 e host `.invalid`.
+- O aviso morava **abaixo** do botão "Enviar agora" e a falha existia fora da tela. Subiu para o topo
+  (logo abaixo do sinal).
+- O campo do código guardava o token visível quando a confirmação falhava por rede. Agora é limpo ao
+  salvar, mesmo em `sem_rede`.
+- `appName`/`strings.xml` do APK deixaram de ser "Bill Higiene": o rótulo é **"Pedidos offline"** e a
+  URL vem do pareamento. O artefato passou a ser genérico de verdade (white-label).
+
+**Prova no emulador** (AVD `nexus`, Pixel 7 arm64, Android 36, Maestro 2.12.1; APK debug local):
+
+```bash
+export JAVA_HOME="$HOME/android-sdk/jdk21/jdk-21.0.13+9/Contents/Home"
+export ANDROID_HOME="$HOME/android-sdk"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$HOME/.maestro/bin:$PATH"
+pnpm mobile:build && pnpm exec cap sync android && (cd android && ./gradlew assembleDebug)
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+maestro test tests/e2e-mobile/jornada-pareamento.yaml   # exit 0
+```
+
+Fluxo: sem credencial + fila (1) → cola código com host `https://sistema.invalid` → estado
+`sem rede — não deu para confirmar o pareamento` e "Credencial salva" → "Enviar agora" → aviso
+"Sem conexão com o sistema (sem conexão)… os pedidos continuam na fila" → **`(1)` e `OFF-0001`
+intactos**. Banco conferido após o teste: `status=pendente, tentativas=2,
+ultimo_erro=Unable to resolve host "sistema.invalid"`.
+Evidências: `docs/auditoria/evidencias/mobile-b-2026-11-18/` (3 capturas).
+
+**Ainda não provado no aparelho:** dreno **aceito** de ponta a ponta (exige instalação real com
+banco: o host do teste é deliberadamente inalcançável), 401/403 reais (`token_revoked`) e o catálogo
+baixado pelo token. `[!]` — o caminho de rede/DB do servidor está coberto por unit/invariante, não
+pelo emulador.
+
+### 9.6 B-5 e B-6 entregues
+
+**B-5 — UI `/app/settings/devices`** (`page.tsx` admin-only + `_components/DevicesClient.tsx`):
+lista com prefixo/visto/expira/estado; criação com nome, vendedor (via `/api/v1/team/assignable`)
+e validade 30/90/180/365; o código de pareamento aparece **uma vez** (textarea + copiar); revogar
+com confirmação e aviso de que a fila local NÃO é apagada. Entrada no `lib/navigation/registry.ts`
+(grupo `organizacao`, seção “Dados e acesso”, `minRole: admin`, sem sidebar — o menu já estoura a
+dobra em 900px) e ícone `DeviceMobile` em `lib/ui/icons.ts`. Gates: `eslint` 0, `tsc` da fatia 0,
+`navegacao-*` + `titulos` + `busca-global` **125/125**.
+
+> `[!]` Não houve **prova visual** da tela: o worktree não tem Supabase/`.env` para subir o sistema.
+> A validação foi de tipos, lint e regras de navegação. Antes de considerar a fatia fechada, abrir a
+> tela numa instalação e conferir o fluxo criar → copiar código → revogar.
+
+**B-6 — invariante cross-tenant + `test:db`:**
+`tests/invariants/offline-devices-rls.test.ts` prova, com `set role authenticated` + JWT simulado:
+admin de A lê o aparelho de A (controle positivo) e **zero** de B; `manager` lê zero (a policy é
+admin, de propósito); revogar por id de B afeta **zero** linhas; `anon` recebe `permission denied`;
+o banco recusa hash fora de sha256 (CHECK), prefixo fora de `nod_<8 hex>` e hash duplicado (UNIQUE).
+A varredura `rls-completude-varredura` foi satisfeita por `PROVA_PROPRIA` (a tabela fica fora de
+`TABLES` porque a policy é admin e o usuário semeado lá é `agent`).
+
+```bash
+pnpm test:db tests/invariants/offline-devices-rls.test.ts \
+             tests/invariants/rls-completude-varredura.test.ts
+# 2 arquivos, 168 testes, exit 0 (inclui install/update do baseline)
+```
+
+### 9.7 O que falta
+
+- **B-7** dreno **aceito** de ponta a ponta e `token_revoked` real no aparelho. O caminho está
+  inteiro no código e coberto por unit/invariante; o emulador só prova o lado da falha (host
+  inalcançável) porque não há instalação com banco acessível do emulador.
+- Prova visual da B-5 (acima).
+- Trocar o token em SQLite por Keystore/Keychain (plugin nativo) — limite registrado no §9.1.

@@ -63,15 +63,18 @@ test.setTimeout(120_000);
 test("shell: sem catálogo a captura não abre", async ({ page }) => {
   await page.goto("/index.html");
   await offline(page);
-  await expect(page.getByRole("heading", { name: "Bill Higiene" })).toBeVisible();
-  await expect(page.getByText("Catálogo vazio")).toBeVisible();
+  // Título neutro de propósito: o mesmo APK é pareado com qualquer instalação.
+  await expect(page.getByRole("heading", { name: "Pedidos offline" })).toBeVisible();
+  // Sem credencial não há catálogo — e a tela diz o que fazer (parear), em vez
+  // de mandar "abrir o sistema" sem saber o endereço dele.
+  await expect(page.getByText(/Pareie o aparelho para baixar o catálogo/)).toBeVisible();
 
   // O botão existe mas explica em vez de navegar: capturar sem preço é o que o
   // servidor recusa no sync, e aí a viagem vira retrabalho. `dispatch_event`
   // porque o `aria-disabled` (correto para leitor de tela) barra o click
   // normal do Playwright — e é o handler que está em teste, não a navegabilidade.
   await page.getByRole("link", { name: "Novo pedido offline" }).dispatchEvent("click");
-  await expect(page.getByText("Baixe o catálogo primeiro")).toBeVisible();
+  await expect(page.getByText("Pareie o aparelho e baixe o catálogo antes de capturar")).toBeVisible();
   expect(page.url()).toContain("index.html");
 });
 
@@ -117,7 +120,7 @@ test("shell: captura offline enfileira com OFF-0001 e o total certo", async ({ p
     await expect(page.getByText("OFF-0001")).toBeVisible();
     await expect(page.getByText("Fazenda Santa Clara")).toBeVisible();
     await expect(page.getByText("R$ 99,80")).toBeVisible();
-    await expect(page.getByText("aguardando sinal")).toBeVisible();
+    await expect(page.getByText(/aguardando envio/)).toBeVisible();
   }
 });
 
@@ -210,7 +213,7 @@ test("shell: recusado tem saída — tentar de novo e descartar", async ({ page 
   await page.getByRole("button", { name: "Tentar de novo" }).click();
   await expect(page.getByText(/OFF-0009 voltou para a fila/)).toBeVisible();
   await expect(page.getByText("OFF-0009", { exact: true })).toBeVisible();
-  await expect(page.getByText(/aguardando sinal/).first()).toBeVisible();
+  await expect(page.getByText(/aguardando envio/).first()).toBeVisible();
   await expect(page.getByText(/recusado/)).toHaveCount(0);
 
   // ─── Descartar pede confirmação: descarte é irreversível ─────────────────
@@ -250,7 +253,7 @@ test("shell: o botão Enviar agora explica em vez de não fazer nada", async ({ 
   // O handler só existe depois que `renderizar()` termina (o banco abre em
   // js/wasm, e não instantaneamente). "Catálogo vazio" é o último texto que
   // ela escreve — esperar por ele é esperar pela ligação do botão.
-  await expect(page.getByText("Catálogo vazio", { exact: false })).toBeVisible();
+  await expect(page.getByText(/Pareie o aparelho para baixar o catálogo/)).toBeVisible();
   await page.getByRole("button", { name: "Enviar agora" }).click();
   await expect(page.getByText("Não há pedido esperando envio.")).toBeVisible();
 });

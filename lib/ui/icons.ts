@@ -15,6 +15,8 @@ export {
   PlugsConnected,
   QrCode,
   Kanban,
+  // aparelho pareado do app offline (0320)
+  DeviceMobile,
   Users,
   UsersThree,
   Storefront,

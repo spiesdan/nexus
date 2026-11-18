@@ -77,6 +77,14 @@ interface Excecao {
  */
 const PROVA_PROPRIA: readonly Excecao[] = [
   {
+    tabela: "offline_devices",
+    razao:
+      "tests/invariants/offline-devices-rls.test.ts prova, com JWT simulado e " +
+      "countAs real, que admin de A lê zero aparelho de B, que revogar por id " +
+      "de B afeta zero linhas e que manager NÃO gerencia (a policy é admin) — " +
+      "por isso fica fora de TABLES, cujo usuário semeado é `agent`.",
+  },
+  {
     tabela: "webhook_lead_captures",
     razao:
       "tests/invariants/historico-de-captacao-rls.test.ts prova isolamento " +
