@@ -61,7 +61,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         .gte("created_at", inicio)
         .lt("created_at", fim)
         .order("numero", { ascending: true })
-        .limit(500),
+        .order("id").limit(500),
       supabase
         .from("fiscal_entradas")
         .select("dh_emi, itens_json")
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest): Promise<Response> {
         .gte("dh_emi", inicio)
         .lt("dh_emi", fim)
         .neq("status", "ignorada")
-        .limit(500),
+        .order("id").limit(500),
     ]);
 
   const cfg = config as unknown as {

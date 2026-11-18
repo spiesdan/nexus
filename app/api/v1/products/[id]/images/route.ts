@@ -55,7 +55,9 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .select("id, storage_path, posicao")
     .eq("product_id", id)
     .eq("organization_id", authz.org.orgId)
-    .order("posicao");
+    .order("posicao")
+    .order("id")
+    .limit(100);
 
   if (error) return fail("internal_error", "Erro ao ler as fotos.", 500, { requestId });
   return ok(

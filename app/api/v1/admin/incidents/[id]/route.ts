@@ -48,7 +48,7 @@ export async function GET(
     )
     .contains("metadata", { incident_id: id })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .order("id", { ascending: false }).limit(50);
 
   const org = Array.isArray(incident.organizations)
     ? incident.organizations[0]

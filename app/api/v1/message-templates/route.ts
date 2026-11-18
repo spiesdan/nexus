@@ -30,7 +30,9 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .from("message_templates")
     .select(COLS)
     .eq("organization_id", org.orgId)
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(200);
   if (error) return fail("internal_error", "Erro ao listar templates.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }

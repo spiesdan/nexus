@@ -86,7 +86,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("organization_id", orgId)
       .eq("contact_id", contactId)
       .order("created_at", { ascending: true })
-      .limit(2000);
+      .order("id").limit(2000);
     if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
 
     const historico = historicoReal(
@@ -168,7 +168,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       .eq("organization_id", orgId)
       .in("status", ["faturado", "expedido", "entregue"])
       .order("created_at", { ascending: false })
-      .limit(2000);
+      .order("id", { ascending: false }).limit(2000);
     if (erroFat) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
     const idsFat = ((faturados ?? []) as { id: string }[]).map((p) => p.id);
     let faturadosSemNota = 0;

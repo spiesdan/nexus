@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .select(COLUNAS_DA_TABELA)
     .eq("organization_id", authz.org.orgId)
     .order("nome")
-    .limit(100);
+    .order("id").limit(100);
 
   if (error) return fail("internal_error", "Erro ao listar as tabelas.", 500, { requestId });
   return ok(data ?? [], { requestId });

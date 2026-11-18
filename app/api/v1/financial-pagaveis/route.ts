@@ -31,7 +31,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     q = q.eq("entrada_id", entradaId);
   }
 
-  const { data, error } = await q.order("vencimento", { ascending: true }).limit(500);
+  const { data, error } = await q.order("vencimento", { ascending: true }).order("id").limit(500);
   if (error) return fail("internal_error", "Erro ao listar as contas a pagar.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }
