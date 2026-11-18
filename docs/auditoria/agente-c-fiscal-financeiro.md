@@ -1,13 +1,14 @@
-# Agente C — Fiscal e financeiro: o que foi fechado e o que depende de decisão
+# Agente C — Fiscal e financeiro: correções e decisões aplicadas
 
-> Worktree `aaa-front-fiscal` · branch base `front/fiscal` · commit base `239efd32`
-> (depois atualizado para `nexus/main` `f644b21c`, com #456 e #489). Medido em
-> 18/11/2026. Nenhuma operação fiscal real, pagamento ou cobrança foi executada;
-> nenhum acesso a produção.
+> Worktree `aaa-front-fiscal` · rebaseado em `nexus/main` `5a499313` na rodada
+> final. Medido em 18/11/2026. Nenhuma operação fiscal real, pagamento ou
+> cobrança foi executada; nenhum acesso a produção.
 >
-> PRs: **#494** (importação de entrada), **#500** (corrida do produto novo da
-> entrada), **#495** (recuperação de nota travada), **#496** (cancelamento ×
-> drain).
+> PRs merged: **#494** (importação de entrada), **#500** (corrida do produto
+> novo da entrada), **#495** (recuperação de nota travada), **#496**
+> (cancelamento × drain), **#508** (D1 — NF-e autorizada gera recebíveis),
+> **#509** (D3/D4 — claims de manifestação e cancelamento). Migration nova:
+> **0319** (a `0317` do D-03 e a `0318` da campanha não foram tocadas).
 
 ## 1. Reconciliação com o que já estava merged
 
@@ -196,17 +197,20 @@ só vira `cancelada` com protocolo do fisco, como antes.
 **Provas:** `cancel/route.test.ts` (claim livre, claim perdido 409, replay 200,
 falha libera) + o mesmo invariante Postgres.
 
-### Migration `0318` — isolada, sem tocar a `0317` do D-03
+### Migration `0319` — isolada, sem tocar a `0317` (D-03) nem a `0318` (D-02)
 
 Duas colunas `timestamptz` (`fiscal_entradas.manifestacao_em_andamento_em`,
 `invoices.cancelamento_em_andamento_em`), apêndice idempotente no `baseline`,
 linha no `MANIFEST` e tipos. Nenhuma policy/grant novo; nenhum status muda
-durante o claim. A `0317` (D-03) segue reservada e intocada.
+durante o claim. A `0317` (D-03) e a `0318` (campanha) seguem intocadas; esta usa a numeração seguinte livre.
 
 ## 4. Fora de escopo / limitações
 
 - Nenhuma transmissão à SEFAZ, pagamento, cobrança ou emissão real foi
   executada. As provas de banco rodam em Postgres descartável (`pnpm test:db`).
+- Gates finais: `verify`, `invariants`, `e2e`, `build-and-size` e `imagens-ok`
+  verdes nos PRs #508 e #509; `0319` aplicada em modo install **e** update no
+  `baseline.sql`.
 - `financial_pagaveis` segue sem baixa/cancelamento (documentado como fase
   futura na própria rota); não há operação de escrita para testar além da
   importação.
