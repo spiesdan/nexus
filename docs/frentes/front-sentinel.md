@@ -87,9 +87,10 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   cria cópia.
 - Quando o evento volta depois de fechado, nasce uma ocorrência `recorrente`,
   com `recorrencias` = quantas fechadas da mesma fingerprint já existiam.
-- O plano do Nível 1 é persistido em `recomendacao` junto da ocorrência; a
-  reexecução atualiza o plano da linha aberta, mas o histórico do que foi
-  recomendado antes continua no evento e nas linhas fechadas.
+- O plano do Nível 1 é persistido em `recomendacao` junto da ocorrência. A
+  reexecução atualiza o plano enquanto a linha está aberta; quando ela fecha, o
+  plano daquele desfecho deixa de ser reescrito. O evento guarda a execução e a
+  regra, não uma cópia do plano anterior.
 - Rodada **truncada** (teto de coleta, teto de ocorrências ou falha de regra)
   **não** encerra ocorrências por ausência: lista incompleta não é prova.
 - O encerramento automático grava evento `auto_encerrada` com motivo

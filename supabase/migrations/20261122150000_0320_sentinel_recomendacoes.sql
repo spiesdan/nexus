@@ -3,8 +3,9 @@
 --
 -- 1. `sentinel_occurrences.recomendacao`: o Nível 1 do Sentinel. Cada detector
 --    passa a produzir um plano (passos, pendências, risco, reversibilidade,
---    fonte e limitação) que é PERSISTIDO com a ocorrência. O plano de ontem não
---    muda quando a regra muda hoje — e nada nele é executado pela máquina.
+--    fonte e limitação) que é PERSISTIDO com a ocorrência. Enquanto ela está
+--    aberta, a reexecução atualiza o plano; ao fechar, o plano daquele desfecho
+--    deixa de ser reescrito. Nada nele é executado pela máquina.
 --
 -- 2. `sentinel_estoque_razao`: a melhor evidência disponível para divergência
 --    de estoque. `inventory_movements` nasceu na 0242 e NÃO tem saldo de

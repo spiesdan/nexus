@@ -7,8 +7,9 @@ titulo: Sentinel explica o que fazer — sem executar por você
 Cada ocorrência do Sentinel passa a carregar um plano de correção revisável:
 passos, campos que ainda faltam, risco da ação, reversibilidade, fontes e a
 limitação honesta do diagnóstico. O plano aparece no detalhe da ocorrência e é
-gravado junto dela — o histórico mostra o que se recomendava naquele momento,
-não o que a regra recomenda hoje.
+gravado junto dela. Enquanto a ocorrência está aberta, uma nova varredura
+atualiza o plano; quando ela é fechada, o plano daquele desfecho fica
+preservado, mesmo que a regra mude depois.
 
 Nada é executado automaticamente. Aprovar ou marcar como corrigida continua
 sendo um registro da decisão humana; a correção segue manual nesta versão.
