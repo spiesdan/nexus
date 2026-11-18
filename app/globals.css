@@ -687,6 +687,12 @@
 
   /* Accent — Sage */
   --color-accent: var(--color-accent);
+  /* `--color-accent-fg` TAMBÉM precisa de ponte: sem esta linha o utilitário
+     `text-accent-fg` simplesmente não existe, e as 10 telas que o usam herdam a
+     cor do texto. No claro isso passava por acidente (o texto herdado é Carbon e
+     o accent é violeta claro → 4,80:1); no escuro o texto herdado é claro sobre
+     um accent claro → **2,03:1**, medido em `/app/agenda` em 18/11/2026. */
+  --color-accent-fg: var(--color-accent-fg);
   --color-accent-foreground: var(--color-accent-fg);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-hover: var(--color-accent-hover);

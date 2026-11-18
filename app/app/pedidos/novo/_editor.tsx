@@ -52,6 +52,7 @@ import { OrderSummary } from "./_resumo";
 import { haQuantoTempo, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
+import { rolarPara } from "@/lib/ui/movimento";
 interface TextosBase {
   titulo: string;
   subtitulo: string;
@@ -597,9 +598,9 @@ export function OrderEditor({
 
   /** Rola até a seção: validação que reclama longe do campo não ensina nada. */
   function irPara(secao: "cliente" | "produtos") {
-    document
-      .getElementById(`secao-${secao}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    // `rolarPara` respeita `prefers-reduced-motion` (o CSS não alcança
+    // rolagem programática — ver lib/ui/movimento.ts).
+    rolarPara(document.getElementById(`secao-${secao}`), { block: "center" });
   }
 
   return (
@@ -768,55 +769,55 @@ export function OrderEditor({
             cartão da representada e o resumo, e a página trocava de gramática
             no meio. */}
         <Card className="space-y-3 p-4">
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="min-w-[200px] flex-1 space-y-1.5">
-            <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
-            <Select
-              value={tabelaId || "__nenhuma"}
-              onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+          <div className="flex flex-wrap items-end gap-2">
+            <div className="min-w-[200px] flex-1 space-y-1.5">
+              <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
+              <Select
+                value={tabelaId || "__nenhuma"}
+                onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+              >
+                <SelectTrigger id="tabela" className="w-full">
+                  <SelectValue placeholder={textos.semTabela} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
+                  {tabelas.map((tb) => (
+                    <SelectItem key={tb.id} value={tb.id}>
+                      {tb.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => setIaAberta(true)}
+              data-testid="adicionar-com-ia"
             >
-              <SelectTrigger id="tabela" className="w-full">
-                <SelectValue placeholder={textos.semTabela} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
-                {tabelas.map((tb) => (
-                  <SelectItem key={tb.id} value={tb.id}>
-                    {tb.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Sparkle size={16} className="mr-1.5" />
+              {t("Adicionar com IA")}
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="shrink-0"
-            onClick={() => setIaAberta(true)}
-            data-testid="adicionar-com-ia"
-          >
-            <Sparkle size={16} className="mr-1.5" />
-            {t("Adicionar com IA")}
-          </Button>
-        </div>
 
-        <ProductSearch
-          produtos={produtos}
-          tabela={tabela}
-          ultimosPrecos={ultimos}
-          inputRef={buscaRef}
-          aoAdicionar={(p, q) => {
-            const prod = porId.get(p.id);
-            if (prod) adicionar(prod, q);
-          }}
-          textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
-        />
+          <ProductSearch
+            produtos={produtos}
+            tabela={tabela}
+            ultimosPrecos={ultimos}
+            inputRef={buscaRef}
+            aoAdicionar={(p, q) => {
+              const prod = porId.get(p.id);
+              if (prod) adicionar(prod, q);
+            }}
+            textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
+          />
 
-        <OrderItems
-          linhas={linhas}
-          aoMudar={mudarLinha}
-          aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
-        />
+          <OrderItems
+            linhas={linhas}
+            aoMudar={mudarLinha}
+            aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
+          />
         </Card>
 
         <AfinsNoPedido

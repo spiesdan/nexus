@@ -1,7 +1,67 @@
 {
-  "geradoEm": "2026-11-18T15:51:22.118Z",
+  "geradoEm": "2026-11-18T17:30:02.425Z",
   "base": "http://localhost:3021",
   "resultados": [
+    {
+      "rota": "/admin",
+      "tema": "dark",
+      "medida": {
+        "medidos": 32,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin",
+      "tema": "light",
+      "medida": {
+        "medidos": 32,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/audit",
+      "tema": "dark",
+      "medida": {
+        "medidos": 243,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/audit",
+      "tema": "light",
+      "medida": {
+        "medidos": 243,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/tenants",
+      "tema": "dark",
+      "medida": {
+        "medidos": 30,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/tenants",
+      "tema": "light",
+      "medida": {
+        "medidos": 61,
+        "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
     {
       "rota": "/app",
       "tema": "dark",
@@ -18,6 +78,26 @@
       "medida": {
         "medidos": 150,
         "naoMedidosPorImagem": 27,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/agenda",
+      "tema": "dark",
+      "medida": {
+        "medidos": 80,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/agenda",
+      "tema": "light",
+      "medida": {
+        "medidos": 80,
+        "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
       }
@@ -203,6 +283,26 @@
       }
     },
     {
+      "rota": "/app/settings",
+      "tema": "dark",
+      "medida": {
+        "medidos": 68,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/settings",
+      "tema": "light",
+      "medida": {
+        "medidos": 68,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
       "rota": "/app/settings/tenant",
       "tema": "dark",
       "medida": {
@@ -217,6 +317,26 @@
       "tema": "light",
       "medida": {
         "medidos": 61,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/team",
+      "tema": "dark",
+      "medida": {
+        "medidos": 38,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/team",
+      "tema": "light",
+      "medida": {
+        "medidos": 38,
         "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []

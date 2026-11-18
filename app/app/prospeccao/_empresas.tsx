@@ -58,6 +58,7 @@ import { valoresDoParametro } from "@/lib/prospeccao/parametros";
 import type { PontoMapa } from "./_mapa";
 import { ROTULO_STATUS_COMERCIAL, STATUS_COMERCIAL, type Prospect } from "@/lib/schemas/prospeccao";
 
+import { rolarPara } from "@/lib/ui/movimento";
 /** Origem comercial do prospect — nome cru de provider (google_places) não é linguagem de vendedor (§1 da spec 19). */
 const ROTULO_ORIGEM: Record<string, string> = {
   google_places: "Busca de prospecção",
@@ -143,9 +144,7 @@ function EditorDeCategoria({
       </div>
       {prospect.categoria_revisar && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-amber-700">
-          <span>
-            {t("Categoria a revisar — não entra em campanha até alguém confirmar.")}
-          </span>
+          <span>{t("Categoria a revisar — não entra em campanha até alguém confirmar.")}</span>
           <Button
             size="sm"
             variant="secondary"
@@ -595,9 +594,7 @@ export function EmpresasTab({
   filtros.categorias.forEach((valor) => {
     chips.push({
       key: `categoria-${valor}`,
-      label: `${t("Categoria")}: ${
-        opcoesCategoria.find((c) => c.nome === valor)?.rotulo ?? valor
-      }`,
+      label: `${t("Categoria")}: ${opcoesCategoria.find((c) => c.nome === valor)?.rotulo ?? valor}`,
       onRemove: () => mudar({ categorias: filtros.categorias.filter((v) => v !== valor) }),
     });
   });
@@ -771,8 +768,7 @@ export function EmpresasTab({
   // literal no JSX muda a toda renderização (ex.: a cada clique de seleção),
   // congelando a tela com milhares de pontos. Só muda quando o recorte muda.
   const centroMapa = React.useMemo(
-    () =>
-      centroRaio ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude } : null,
+    () => (centroRaio ? { latitude: centroRaio.latitude, longitude: centroRaio.longitude } : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [centroRaio?.latitude, centroRaio?.longitude],
   );
@@ -827,7 +823,7 @@ export function EmpresasTab({
     if (id) {
       setDetalheId(null);
       requestAnimationFrame(() => {
-        refsLinhas.current.get(id)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        rolarPara(refsLinhas.current.get(id), { block: "nearest" });
       });
     }
   }
@@ -1734,7 +1730,10 @@ export function EmpresasTab({
           aberto
           onFechar={() => setDetalheId(null)}
           titulo={detalhe.nome}
-          subtitulo={[categoriaDaTela(detalhe), [detalhe.cidade, detalhe.estado].filter(Boolean).join("/")]
+          subtitulo={[
+            categoriaDaTela(detalhe),
+            [detalhe.cidade, detalhe.estado].filter(Boolean).join("/"),
+          ]
             .filter(Boolean)
             .join(" · ")}
           className="max-w-md"
