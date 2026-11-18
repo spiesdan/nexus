@@ -78,7 +78,7 @@ coordenador integra e roda os gates no código integrado.
 | **P0-05** | Emissão fiscal: impedir duas notas vivas para o mesmo pedido sob clique duplo/retry concorrente | `[x]` | #484 → `f691dc06`: trigger 0315, advisory lock por org+pedido; `test:db` 160/1497; CI 5/5 | Coordenador (C) | — | Banco recusa a segunda nota viva; nota cancelada permite nova emissão; teste concorrente e de cancelamento |
 | **P0-06** | Deploy aplica schema e falha alto; restore ensaiado | `[x]` | `1d10ff7c` (deploy aplica e verifica schema, sem `\|\| true`); `#462` (F-32 restore, perda de GRANTs); `tests/shell/deploy-aplica-schema.test.sh` | A | — | `pnpm test:shell` verde; ensaio de update e restore documentado em `25-ensaio-de-restauracao.md` |
 | **P0-07** | Sentinel v1 somente leitura, sem escrita fiscal/financeira e sem cross-tenant | `[x]` | #489 → `f644b21c` (integra #487, migration 0316): 27 detectores, ocorrência idempotente, RLS, kill switch; 68 unit + 184 invariantes; CI 5/5 | G / Coordenador | — | Detectores determinísticos com casos positivos/negativos; reexecução não duplica ocorrência; RLS e kill switch; zero ação de escrita |
-| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[~]` | Decisão D-03 tomada; PR #499: reivindicação forte, replay/original, 409 de payload, 0317 (request_hash text); 9 testes + 434 invariantes | Coordenador | Merge #499 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
+| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[x]` | #499 → `3141a483`: reivindicação forte, replay/original, 409 de payload, 0317 (request_hash text); 9 testes + 434 invariantes | Coordenador | — | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
 | **P0-09** | Recebimento de compra não pode somar estoque duas vezes sob concorrência | `[x]` | #485 → `239efd32`: CAS em `recebido_qtd` antes do estoque, devolução com o mesmo CAS e compensação; 5 casos unitários; CI 5/5 | Coordenador (C) | — | CAS em `recebido_qtd` antes do ajuste de estoque; perdedor não movimenta; teste concorrente com dois POSTs e soma final igual ao pedido |
 
 ## 4. Fila — P1 (jornadas críticas, integração, offline, a11y, desempenho)
@@ -87,7 +87,7 @@ coordenador integra e roda os gates no código integrado.
 |---|---|---|---|---|---|---|
 | **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | `docs/auditoria/29-capacidades.md` | E / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
 | **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | PR #438 aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
-| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[~]` | Decisão D-01/D-02 tomada; PR #498: gerador puro + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | Merge #498 | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
+| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[x]` | #498 → `5a499313`: gerador + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
 | **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | Capacidades 23–24; `docs/auditoria/08-mobile-offline.md` | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | `#469` mergeado (axe em 10 telas); `#468` aberto (snapshots) | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
 | **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | `#458` (teto nas listas); `#464` mergeado (`f3ea10d6`) com o índice 0313 e baseline restaurado | A / E | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
@@ -100,7 +100,7 @@ coordenador integra e roda os gates no código integrado.
 | **P2-01** | Fonte única de tokens, temas claro/escuro, contraste composto | `[~]` | `DESIGN.md`; `docs/design-system/`; `#468` | D | — | Tokens consumidos pelo produto; contraste calculado sobre cor final; desvios registrados |
 | **P2-02** | Shell: sidebar, topbar, busca, notificações, seletor de organização, breadcrumbs | `[~]` | `docs/auditoria/05-componentes.md`; `docs/auditoria/11-auditoria-visual.md` | D / E | P2-01 | Hierarquia uniforme; navegação por teclado; mobile não é desktop comprimido |
 | **P2-03** | Capabilities classificadas nos 7 estados (D3) | `[x]` | #475 mergeado (`470aac4e`): `29-capacidades.md` + gate `capacidades-classificadas.test.ts` | Coordenador | — | Toda capacidade com estado, evidência e lacuna nomeada; gate verde |
-| **P2-04** | Documentação de estado do produto sem número envelhecido | `[~]` | `AGENTS.md` diz 89/169 handlers; medido 244/418 | Coordenador | — | Onde a afirmação vira comando, vira comando; nenhum total sem fonte |
+| **P2-04** | Documentação de estado do produto sem número envelhecido | `[x]` | #506: `AGENTS.md` aponta `scripts/auditoria/inventario-service-role.mjs`; dois gates nomeados como proteção parcial | Coordenador | — | Onde a afirmação vira comando, vira comando; nenhum total sem fonte |
 
 ## 6. Fila — P3 (melhorias sem risco imediato)
 
@@ -108,7 +108,7 @@ coordenador integra e roda os gates no código integrado.
 |---|---|---|---|---|---|---|
 | **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30: ausente por decisão | Dono | Decisão de produto | Só entra com decisão registrada e dispositivo |
 | **P3-02** | Substituir fallback em memória do rate limit por Redis obrigatório em produção | `[~]` | `AGENTS.md` (limitação conhecida) | B | — | Produção falha alto sem Upstash, ou fallback declarado |
-| **P3-03** | Limpar `plan/progress.md` e planos antigos que ensinam `db push` | `[ ]` | `plan/progress.md:302`; `docs/superpowers/plans/*` | Coordenador | P0-01 | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
+| **P3-03** | Limpar planos antigos que ensinam `db push` | `[x]` | #506: 7 planos ativos apontam `pnpm db:migrate`; gate novo; `plan/progress.md` preservado como diário histórico | Coordenador | — | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
 
 ## 7. Itens bloqueados por decisão humana / dispositivo / credencial
 
@@ -170,7 +170,9 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | P0-03 service role revisado e vazamento corrigido | #483 → `dd515696` | 210 handlers, 100 cadeias, 42 arquivos; teste cross-org |
 | 18/11/2026 | Guarda no handler do MCP (follow-up P0-03) | #490 → `ac0d5e12` | fake encadeável corrigido; CI verde |
 | 18/11/2026 | D-01/D-02 nome de campanha | #498 | 11 + 2 testes; install/update verdes |
-| 18/11/2026 | D-03 idempotência fiscal | #499 | 9 testes; 434 invariantes |
+| 18/11/2026 | D-03 idempotência fiscal | #499 → `3141a483` | 9 testes; 434 invariantes; CI 14/14 |
+| 18/11/2026 | D-01/D-02 nome de campanha | #498 → `5a499313` | 13 testes; install/update verdes |
+| 18/11/2026 | P2-04/P3-03 docs e planos | #506 | gate de plano ativo; 12 testes |
 | 18/11/2026 | P0-04 teto do recebível na main | #480 → `7a498f9d` | CI 5/5; e2e 17m |
 | 18/11/2026 | P0-05 nota viva na main | #484 → `f691dc06` | CI 5/5 |
 | 18/11/2026 | P0-09 recebimento com CAS na main | #485 → `239efd32` | CI 5/5 |
