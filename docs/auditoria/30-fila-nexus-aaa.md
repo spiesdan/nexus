@@ -601,3 +601,31 @@ kit precisa da mesma régua.
 
 **Não cortar sem ordem.** O corte manual é recusado pelo gate (aconteceu na
 1.56.0); o caminho é o workflow.
+
+## 22. Rodada 13 — delegação e o que falta (18/11/2026)
+
+> Regra nova do dono: o coordenador **não para**. Todo fim de rodada escolhe a
+> próxima tarefa sem dono e delega. Abaixo, o dono de cada uma e o aceite.
+
+| Dono | Agora | Próxima | Aceite |
+|---|---|---|---|
+| **D** | fichas 5.4/5.6/5.8/5.10-5.11 entregues | **outbox no inbox web** (pendência da ficha 5.4) | mensagem enfileirada sobrevive a reload/rede; sem duplicar no dreno; estado visível |
+| **F** | smoke/critical local (1.58.0) | **anexar a prova da B-7** (dreno 200 + `401 token_revoked` com fila intacta) e a matriz do que o smoke não cobriu | evidência reproduzível; nada apontando para produção |
+| **G** | Sentinel v1.4 + §15/§16 | **painel de rejeição por fornecedor** (read-only), que faltou no v1.4; depois proposta de 2º caso de correção aprovada com análise de reversibilidade — **sem executar** | painel lê ocorrências por CNPJ/emitente; proposta lista risco e rollback; nenhuma escrita fiscal/financeira |
+| **Coordenação** | release #579 e deploy | fechar tag, matriz do E2E e inventário de exclusões | ver §23 |
+
+## 23. E2E completo — dono e o que é possível fechar
+
+O CI roda smoke em PR, critical na main e full no noturno; **três specs ficam
+fora** por motivo escrito no workflow. Fechar "E2E completo" não é rodar mais:
+é decidir o destino de cada exclusão.
+
+| Spec | Bloqueio real | Dá para fechar? |
+|---|---|---|
+| `vps-fresh-onboarding` | WAHA + Redis + Resend + Nuvemshop | só com serviços externos de teste (dono) |
+| `inbox-tempo-real` | conta Google de teste com consentimento | só com a conta (dono) |
+| `mobile-offline` | emulador Android no CI | emulador no runner é possível, mas caro; decisão do dono |
+
+**Dono da matriz:** F (depois da B-7). O aceite é uma tabela com veredito por
+spec — "entra no CI", "continua fora com dono e data", ou "morre" — e a
+fidelidade de `SPECS_PARTE_*` continua cobrada pelo gate existente.
