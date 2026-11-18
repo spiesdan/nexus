@@ -42,6 +42,12 @@ const args = new Map();
 }
 
 const rotas = String(args.get("--rotas") ?? "/login").split(",").filter(Boolean);
+/**
+ * `--estado` opcional: com ele a captura cobre telas AUTENTICADAS, sem ele
+ * continua servindo às públicas. O nome do arquivo ganha o prefixo `app_` para
+ * não colidir com uma captura pública de mesmo caminho.
+ */
+const estado = args.get("--estado");
 const larguras = String(args.get("--larguras") ?? "1440,390")
   .split(",")
   .map((v) => Number(v))
@@ -58,6 +64,7 @@ for (const rota of rotas) {
     for (const largura of larguras) {
       const altura = largura >= 1000 ? 900 : 844;
       const contexto = await navegador.newContext({
+        ...(estado ? { storageState: estado } : {}),
         viewport: { width: largura, height: altura },
         locale: "pt-BR",
       });
