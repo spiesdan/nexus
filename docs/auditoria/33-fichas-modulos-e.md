@@ -18,6 +18,9 @@
 | **Fiscal/UI 5.8** | **Tentar de novo** para nota travada em `em_emissao` (a porta que faltava para a recuperação por CAS do Agente C); confirmação em cancelar pendente/emitindo/erro, inutilizar faixa, manifestar desconhecimento/não realizada, ignorar e importar entrada | **mergeado** #505 (`4fb93801`) | `notas-reemitir-emissao` (4) + `fiscal-entrada-confirmacoes` (5) + `notas-importar-xmls` (3) ✓ |
 | **Fiscal/UI 5.8 (F6)** | Teto de lista **declarado**: “Mostrando X de Y” em eventos, manifestações, produtos, fornecedores e sincronizações | **nesta fatia** | `tests/unit/fiscal-recorte-da-lista.test.tsx` — 3 ✓ |
 | **Fiscal/UI 5.8** | Erro de leitura deixou de virar “Nenhum evento/fornecedor…”: as cinco listas lançam para a error boundary com retry e registram a organização | **nesta fatia** | `lib/fiscal/erro-de-leitura.test.ts` — 2 ✓ |
+| **Notas 5.8** | A grade declara o teto de 200 (“Mostrando X de Y notas”) em vez de esconder nota antiga atrás de busca/status | **mergeado** #512 | `notas-reemitir-emissao.test.tsx` — 6 ✓ |
+| **Estoque/Compras 5.6** | Catálogo deixa de ser 500 silencioso: `limite=2000` + amostra declarada no estoque; falha de catálogo em compras vira mensagem com retry (A7/F-30) | **PR #515** | `products-limite.test.ts` (parâmetro) ✓ |
+| **Admin 5.11** | As cinco listas (tenants, auditoria, incidentes, LGPD, usuários) deixam de renderizar vazio quando a consulta falha; erro com retry | **PR #519** | `tests/unit/admin-tenants-erro.test.tsx` — 2 ✓ |
 | **Faturamento 5.6** | Janela truncada em 2.000 deixa de parecer o período: \`meta.amostra_parcial\` + aviso na tela (A10) | **PR #510** | \`tests/unit/faturamento-amostra.test.tsx\` — 2 ✓ |
 | **Equipe 5.10** | Erro de leitura com **retry** e vazio com **CTA de convite** (antes: frase vermelha sem saída / frase morta) | **nesta fatia** | `TeamMembersClient.test.tsx` — 7 ✓ |
 | **Tokens 5.10** | Falha deixou de virar “nenhum token”; **Expirado ≠ Ativo**; “Não expira” explícito; revogação com confirmação | **nesta fatia** | `tests/unit/api-tokens-estados.test.tsx` — 5 ✓ |
@@ -126,8 +129,8 @@ entradas e manifestar.
    `exigirLeituraDeLista` e a falha chega à error boundary da rota (com retry) em vez de
    renderizar “Nenhum…”.
 **Aberto.** Sincronização sem retry por linha (F7, P2); `ignorar` exige só `agent` (F8,
-simetria de permissão — decisão de B); limite principal de `/app/notas` (200) ainda silencioso
-no KPI. **Não medido:** sidecar fiscal real, SEFAZ, 656 ao vivo.
+simetria de permissão — decisão de B). O teto de 200 da grade de notas agora se declara (PR #512) e o
+de 2.000 do faturamento também (PR #510); paginação continua F-30. **Não medido:** sidecar fiscal real, SEFAZ, 656 ao vivo.
 **Teste.** 4 + 5 + 3 + 3 + 2 ✓ (ver §0).
 **Classificação.** Existente com melhoria necessária; UI das ações críticas agora fecha o
 caminho sem confirmação.
@@ -174,7 +177,7 @@ gate de consentimento no pedido é **INFERIDO** (não escrito no repositório) �
 |---|---|---|
 | Prioridade, SLA, macros e presença do atendente | Inbox | Capacidade nova: exige schema, regra de negócio e decisão de produto. Registrado, não inventado. |
 | Contagem de opt-out/consentimento na prévia da campanha | Campanhas | Exige mudar o retorno de `listarClientesPorRegiao`; P2 de honestidade, sem regra nova. |
-| Paginação de cargas (200) e catálogo truncado (500) | Expedição/Estoque | F-30; decisão de UI/volume. |
+| Paginação de cargas (200) e das listas fiscais | Expedição/Estoque | F-30; decisão de UI/volume. O catálogo truncado em 500 foi corrigido (PR #515). |
 | Guarda da página de Equipe e expiração padrão de token | Equipe/Tokens | Autorização/segurança pertencem a B; UI já mostra o estado real. |
 | Retry por linha na sincronização fiscal | Fiscal | P2; regra de operação fiscal (C). |
 
