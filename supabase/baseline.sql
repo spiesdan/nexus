@@ -29323,3 +29323,37 @@ comment on column public.shipment_destinations.entrada_id is
 comment on column public.shipment_destinations.entrada_confirmada_em is
   'Quando o motorista confirmou na porta que o ponto é a entrada. NULL = ainda não confirmado.';
 
+
+-- ============================================================================
+-- ============================================================================
+-- 0312 — trilha do run de IA: ESTRUTURA e HASH, nunca o conteúdo da conversa.
+-- Ver supabase/migrations/20261119120000_0312_trilha_do_run_de_ia.sql.
+--
+-- Conteúdo de mensagem é PII e não entra em telemetria (invariante
+-- `llm-calls-registra-falha.test.ts`). O que entra é o que permite auditar:
+-- hashes, papéis, tamanhos e nomes de ferramenta.
+-- ============================================================================
+alter table public.llm_calls add column if not exists prompt_system_hash text;
+alter table public.llm_calls add column if not exists prompt_messages_meta jsonb;
+alter table public.llm_calls add column if not exists output_text_hash text;
+alter table public.llm_calls add column if not exists output_chars int;
+alter table public.llm_calls add column if not exists tool_calls jsonb;
+alter table public.llm_calls add column if not exists sources_meta jsonb;
+
+comment on column public.llm_calls.prompt_system_hash is
+  'sha256 do system prompt efetivo do turno (0312). Prova de QUAL política foi usada sem copiar o texto — o playbook é versionado.';
+
+comment on column public.llm_calls.prompt_messages_meta is
+  'Contexto do turno SEM conteúdo: {total, papeis:[{role,chars}], sha256} (0312). O texto fica em `messages`, sob retenção e anonimização daquela tabela.';
+
+comment on column public.llm_calls.output_text_hash is
+  'sha256 da saída final do modelo (0312). NULL em erro/abort — não houve resposta. O texto enviado está em `messages`.';
+
+comment on column public.llm_calls.output_chars is
+  'Tamanho da saída em caracteres (0312), para distinguir resposta vazia de resposta truncada sem guardar o texto.';
+
+comment on column public.llm_calls.tool_calls is
+  'Ferramentas do turno: [{tool, input_hash, output_hash, output_chars}] (0312). A fonte consultada é auditável por hash; o trecho não é duplicado.';
+
+comment on column public.llm_calls.sources_meta is
+  'Citações do provedor em forma agregada: {total, hosts:[...]} (0312). Sem título nem URL completa.';

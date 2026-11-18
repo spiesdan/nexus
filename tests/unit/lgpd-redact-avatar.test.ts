@@ -225,3 +225,37 @@ describe("drainStorageRedactionQueue — o arquivo sai do bucket", () => {
     });
   });
 });
+
+/**
+ * A TRILHA DA IA é uma CÓPIA da conversa.
+ *
+ * Desde a 0312, `llm_calls` guarda o prompt (histórico + entrada) e a saída do
+ * modelo. A RPC da cascata anonimiza `contacts`/`messages`, mas não conhece
+ * essa tabela: sem o passo abaixo, a pessoa "anonimizada" continuaria ali,
+ * palavra por palavra, no prompt e na resposta do agente — o mesmo defeito que
+ * o avatar órfão, em outra forma.
+ */
+describe("cascadeRedactContact — trilha de IA (0312)", () => {
+  it("zera prompt, mensagens, saída, ferramentas e fontes das chamadas do contato", async () => {
+    await cascadeRedactContact({ organizationId: ORG, contactId: CONTATO, requestId: PEDIDO });
+
+    const trilha = updates.find((u) => u.tabela === "llm_calls");
+    expect(trilha, "a cascata precisa zerar a trilha de llm_calls").toBeDefined();
+    expect(trilha?.patch).toEqual({
+      prompt_system_hash: null,
+      prompt_messages_meta: null,
+      output_text_hash: null,
+      output_chars: null,
+      tool_calls: null,
+      sources_meta: null,
+    });
+  });
+
+  it("o passo da trilha é DEPOIS da RPC, e não substitui a cascata", async () => {
+    await cascadeRedactContact({ organizationId: ORG, contactId: CONTATO, requestId: PEDIDO });
+    const posRpc = ops.indexOf("rpc");
+    const posTrilha = ops.indexOf("update:llm_calls");
+    expect(posRpc).toBeGreaterThanOrEqual(0);
+    expect(posTrilha).toBeGreaterThan(posRpc);
+  });
+});
