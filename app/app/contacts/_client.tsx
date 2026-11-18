@@ -17,6 +17,7 @@ import {
   type ActiveChip,
 } from "@/components/filters/FilterBar";
 import { useContactList } from "@/hooks/contacts/useContactList";
+import { useContactCities } from "@/hooks/contacts/useContactCities";
 import { ContactsTable } from "@/components/contacts/ContactsTable";
 import { BulkTagBar } from "./_bulkbar";
 import { NewContactDialog } from "@/components/contacts/NewContactDialog";
@@ -39,6 +40,7 @@ export function ContactsListClient() {
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState<string | undefined>(undefined);
   const [source, setSource] = useState<string | undefined>(undefined);
+  const [cidade, setCidade] = useState<string | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<ContactOrderBy>("last_activity_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [limit, setLimit] = useState<number>(25);
@@ -52,10 +54,12 @@ export function ContactsListClient() {
   }, [searchInput]);
 
   const filters = useMemo(
-    () => ({ search, tag, source, order_by: orderBy, order_dir: orderDir, limit }),
-    [search, tag, source, orderBy, orderDir, limit],
+    () => ({ search, tag, source, cidade, order_by: orderBy, order_dir: orderDir, limit }),
+    [search, tag, source, cidade, orderBy, orderDir, limit],
   );
   const q = useContactList(filters);
+  // Opções do seletor de cidade: vêm da rota própria, não da página carregada.
+  const cidades = useContactCities().data ?? [];
 
   const allContacts = useMemo(
     () => q.data?.pages.flatMap((p) => p.data) ?? [],
@@ -85,6 +89,7 @@ export function ContactsListClient() {
     setSearch("");
     setTag(undefined);
     setSource(undefined);
+    setCidade(undefined);
   }
 
   const chips: ActiveChip[] = [];
@@ -100,6 +105,13 @@ export function ContactsListClient() {
   }
   if (tag) {
     chips.push({ key: "tag", label: `${t("Tag")}: ${tag}`, onRemove: () => setTag(undefined) });
+  }
+  if (cidade) {
+    chips.push({
+      key: "cidade",
+      label: `${t("Cidade")}: ${cidade}`,
+      onRemove: () => setCidade(undefined),
+    });
   }
   if (source) {
     chips.push({
@@ -155,6 +167,14 @@ export function ContactsListClient() {
             onChange={(v) => setTag(v || undefined)}
             options={tagOptions.map((tagOption) => ({ value: tagOption, label: tagOption }))}
             allLabel={t("Todas")}
+          />
+          <FilterSelect
+            id="filtro-cidade"
+            label={t("Cidade")}
+            value={cidade ?? ""}
+            onChange={(v) => setCidade(v || undefined)}
+            options={cidades.map((nome) => ({ value: nome, label: nome }))}
+            allLabel={t("Todas as cidades")}
           />
           <FilterSelect
             id="filtro-origem"
