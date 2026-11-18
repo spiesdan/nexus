@@ -30262,7 +30262,7 @@ comment on index public.messages_org_created_idx is
 --
 -- O helper grava/compara SHA-256 em hex; como bytea, a string sem `\x` falhava
 -- no PostgREST e a idempotência não persistia. A conversão preserva as linhas.
--- ============================================================================
+-- =====================================================================-- ============================================================================
 do $mig$
 begin
   if exists (
@@ -30278,3 +30278,32 @@ begin
   end if;
 end
 $mig$;
+
+-- ============================================================================
+-- 0318 — `prospecting_campaigns.nome_manual` (D-02).
+-- Ver supabase/migrations/20261122130000_0318_campanha_nome_manual.sql.
+--
+-- O nome automático é gerado pelas cidades (D-01); `true` significa que o
+-- operador editou e o app nunca sobrescreve. Campanhas existentes viram `true`
+-- (o nome atual foi escolhido antes do gerador) — só quando a coluna nasce,
+-- para a reaplicação do baseline não converter campanha nova em manual.
+-- ============================================================================
+do $mig$
+begin
+  if not exists (
+    select 1
+      from information_schema.columns c
+     where c.table_schema = 'public'
+       and c.table_name = 'prospecting_campaigns'
+       and c.column_name = 'nome_manual'
+  ) then
+    alter table public.prospecting_campaigns
+      add column nome_manual boolean not null default false;
+
+    update public.prospecting_campaigns set nome_manual = true;
+  end if;
+end
+$mig$;
+
+comment on column public.prospecting_campaigns.nome_manual is
+  'D-02: true = nome editado pelo operador (nunca sobrescrever); false = gerado pelas cidades (0318).';

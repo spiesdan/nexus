@@ -538,13 +538,33 @@ export function PedidosClient({
     const alvos = pedidos.filter(
       (p) => selecionados.includes(p.id) && !(FINALIZADOS as string[]).includes(p.status),
     );
+    if (alvos.length === 0) {
+      toast.info(t("Nenhum dos selecionados pode ser cancelado."));
+      return;
+    }
+    // Cancelar é terminal e mexe em estoque: o servidor devolve o que a venda
+    // baixou, e pedido com nota ativa é recusado. Sem esta confirmação, um
+    // clique na barra de massa cancelava N pedidos sem o operador ver o efeito.
+    const confirmado = await confirmar({
+      title: t(`Cancelar ${alvos.length} pedido(s)?`),
+      description: t(
+        "O cancelamento é definitivo e não há como reverter o status. O estoque baixado por estes pedidos volta; pedido com nota ativa é recusado e fica como está.",
+      ),
+      confirmLabel: t("Cancelar pedidos"),
+      cancelLabel: t("Voltar"),
+    });
+    if (!confirmado) return;
+
+    let ok = 0;
     for (const p of alvos) {
       try {
         await apiClient.patch(`/api/v1/commercial-orders/${p.id}`, { status: "cancelado" });
+        ok++;
       } catch (e) {
         showApiError(e);
       }
     }
+    toast.success(t(`${ok} de ${alvos.length} cancelados`));
     await recarregar(filtros);
   }
 
