@@ -202,7 +202,15 @@
   --shadow-lg: rgba(24, 25, 37, 0.08) 0px 4px 8px -2px, rgba(24, 25, 37, 0.12) 0px 14px 28px -6px;
   --shadow-xl: rgba(24, 25, 37, 0.1) 0px 8px 16px -4px, rgba(24, 25, 37, 0.16) 0px 28px 50px -12px;
 
-  /* Density — Aerada */
+  /* Density — Aerada.
+     ESPELHO, não mecanismo: nenhum componente lê `var(--density-*)`. Quem usa
+     estes números é o TypeScript (`lib/nexus/tokens.ts`: `tableRowHeight`,
+     `tableGap`, `tablePaddingX/Y`), e o CSS repete os mesmos valores para que a
+     densidade seja legível junto dos outros tokens. Um `var()` que ninguém lê é
+     uma afirmação, não um sistema — por isso o par é VIGIADO: se os dois lados
+     divergirem, `tests/unit/densidade-css-e-espelho-ts.test.ts` reprova. Foi
+     assim que `--color-border-strong` deixou de ser um token sem efeito (era
+     literalmente igual a `--color-border`). */
   --density-row: 56px;
   --density-gap: 24px;
   --density-px: 20px;
