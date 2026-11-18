@@ -8,6 +8,378 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.56.0] — 2026-11-18
+
+### Adicionado
+
+- **Sentinel — a operação inconsistente aparece antes de virar prejuízo** O Sentinel observa nota fiscal, pedido, recebível, estoque, fila, webhook,
+  importação do Mercos e campanha, e abre uma ocorrência com evidência, causa
+  provável e severidade quando encontra uma inconsistência. Ele **não** corrige,
+  não emite nota, não paga e não envia mensagem: a decisão continua com a equipe.
+
+  A varredura roda a cada 15 minutos (cada organização respeita o próprio
+  intervalo, padrão 6 horas) ou pelo botão **Sentinel** na busca (⌘K). Rodar de
+  novo não duplica ocorrências; a mesma ocorrência vista outra vez ganha
+  `vezes_vista` e volta como `recorrente` se já tinha sido fechada.
+
+  Desligar é uma decisão com dois níveis: `SENTINEL_ENABLED=false` no `.env`
+  desliga a instalação; a tela **Configurações › Sentinel** desliga apenas a
+  organização. Desligar não apaga histórico, e a retenção (padrão 180 dias) só
+  alcança ocorrências já encerradas, ignoradas ou corrigidas.
+
+- **Sentinel explica o que fazer — sem executar por você** Cada ocorrência do Sentinel passa a carregar um plano de correção revisável:
+  passos, campos que ainda faltam, risco da ação, reversibilidade, fontes e a
+  limitação honesta do diagnóstico. O plano aparece no detalhe da ocorrência e é
+  gravado junto dela. Enquanto a ocorrência está aberta, uma nova varredura
+  atualiza o plano; quando ela é fechada, o plano daquele desfecho fica
+  preservado, mesmo que a regra mude depois.
+
+  Nada é executado automaticamente. Aprovar ou marcar como corrigida continua
+  sendo um registro da decisão humana; a correção segue manual nesta versão.
+
+  Duas evidências novas entram com a limitação declarada: divergência entre saldo
+  e razão de estoque (confiança baixa, porque o razão não tem saldo de abertura) e
+  leads duplicados no mesmo funil pela identidade que o produto já normaliza
+  (contato, telefone E.164 e e-mail). Nenhuma configuração nova é exigida.
+
+- **Idempotency-Key fiscal — o retry devolve a mesma nota, nunca uma segunda** A emissão de NF-e e a inutilização de faixa agora honram `Idempotency-Key` de
+  verdade: a chave é reivindicada **antes** do efeito, o segundo request com a
+  mesma chave espera o primeiro e recebe a resposta original com o header
+  `Idempotency-Replayed: true`. Mesma chave com outro payload é
+  `409 idempotency_conflict` — reusar chave para outro pedido é erro do cliente,
+  não cache hit.
+
+  Antes, dois cliques/retries simultâneos podiam criar duas notas (cada uma com
+  job de emissão) ou duas faixas inutilizadas. A trava de nota viva do #484 fecha
+  o caso do mesmo pedido; esta fecha o retry da mesma requisição, inclusive
+  quando o payload é idêntico.
+
+  A tabela `idempotency_keys.request_hash` passa de `bytea` para `text` (hex):
+  o helper gravava/comparava hex e o insert como bytea falhava em silêncio, então
+  a chave não persistia. A conversão preserva as linhas existentes.
+
+- **Retransmissão de inutilização e carta de correção também honra Idempotency-Key** As duas retransmissões fiscais que ainda criam efeito externo passam a usar o
+  mesmo contrato da emissão: a chave é reivindicada antes de falar com a SEFAZ,
+  o retry com a mesma chave devolve a resposta original com
+  `Idempotency-Replayed: true`, e a mesma chave com outro evento é
+  `409 idempotency_conflict`. Falha no meio do caminho libera a chave.
+
+- **Campanha ganha nome automático pelas cidades — e respeita o nome do operador** Ao montar uma campanha por região, o nome passa a ser gerado pelas cidades
+  selecionadas: uma cidade vira `Campanha {Cidade}`; duas a quatro viram a lista
+  em ordem alfabética pt-BR; cinco ou mais mostram as três primeiras e `+N`. O
+  gerador deduplica sem diferenciar caixa, preserva o casing da primeira
+  ocorrência e corta em limite de palavra com `…` no teto de 80 caracteres.
+
+  Quem edita o nome manualmente não perde o texto: a campanha grava
+  `nome_manual = true` e o app nunca sobrescreve.
+  O botão **Voltar ao nome automático** limpa a flag e regenera pela seleção
+  atual. Campanhas que já existiam foram marcadas como manuais na migração — o
+  nome delas foi escolhido antes de o gerador existir.
+
+### Alterado
+
+- **Rodapé do DANFE é configurável — e sem marca embutida no código** O PDF do DANFE imprimia o crédito padrão da biblioteca que o gera
+  ("Powered by NFePHP"). Quem revende o produto não tinha como pôr a própria
+  marca, e a alternativa — escrever um nome fixo no código — é justamente o que a
+  doutrina de marca própria proíbe: o DANFE chega ao cliente final, e o nome do
+  produto resolve da configuração da instalação, não do repositório.
+
+  O rodapé passa a ler `FISCAL_DANFE_CREDITO`. **Vazio significa sem crédito** —
+  nenhum nome é impresso por padrão. Quem quiser creditar alguém configura a
+  própria frase no `.env`, sem editar código.
+
+### Corrigido
+
+- **Falha de leitura no painel de plataforma deixa de parecer "nenhum registro"** Tenants, auditoria, incidentes, LGPD e usuários renderizavam a tabela vazia
+  quando a consulta falhava. No painel de plataforma, "nenhum tenant" pode ser
+  lido como perda de dados.
+
+  As cinco listas passaram a distinguir erro de vazio: erro mostra o motivo com
+  "Tentar novamente", e o vazio real continua sendo o da tabela.
+
+- **Faturamento avisa quando o número é de uma amostra** Quando o período passava do teto de 2.000 lançamentos, a tela somava a amostra e
+  apresentava o total como se fosse o faturamento inteiro do período. O aviso
+  existia só no log do servidor.
+
+  A resposta agora declara que a amostra está parcial, e a tela diz que os
+  indicadores e a lista são da amostra, com o caminho para refinar o período.
+
+- **O aviso deixa de pintar com a paleta da biblioteca** O aviso (toast) era o único feedback do produto que pintava fora do design
+  system: a biblioteca escolhia as cores de sucesso, erro, aviso e informação, sem
+  passar pelo tema nem pela régua de contraste.
+
+  Agora os quatro tipos usam os nossos tokens semânticos, e o texto passa AA sobre
+  o fundo **composto** (o token translúcido sobre a superfície, que é a cor que se
+  vê): sucesso 5,7 no claro e 6,1 no escuro; aviso 5,3 e 6,2; erro 6,5 e 5,3;
+  informação 6,1 e 6,4.
+
+  O aviso sem tipo continua na superfície com o texto do produto. Nenhum fluxo
+  muda: só a cor de quem informa.
+
+- **O botão de fechar o aviso deixa de ser anunciado em inglês** O aviso (toast) do produto tem botão de fechar, e o nome acessível dele vinha
+  do padrão da biblioteca: **"Close toast"**. Num produto que só tem pt-BR, quem
+  usa leitor de tela ouvia inglês no único controle do aviso.
+
+  Agora é "Fechar aviso". Um detalhe que custou uma tentativa: o parâmetro
+  `closeButtonAriaLabel` do componente de avisos é aceito mas **ignorado** em
+  tempo de execução na versão instalada — o valor só chega por `toastOptions`. O
+  teste olha o nome acessível de um aviso de verdade, então uma regressão dessas
+  não passa.
+
+  Nada muda visualmente: posição, cores, duração e o botão continuam os mesmos.
+
+- **A borda do campo de formulário deixa de ser invisível (1,21:1 → 3,39:1)** A borda que identifica um campo de formulário é a única que a WCAG cobra de
+  verdade: o item 1.4.11 pede 3:1 para a informação visual que identifica o
+  controle. Ela media **1,21:1** no tema claro (1,31:1 no escuro) — na prática,
+  invisível.
+
+  Continua **1px**: o "hairline" é a espessura, não a invisibilidade. O que muda é
+  a cor, e ela virou um token próprio (`--color-border-control`), separado da
+  divisória entre blocos — que segue discreta, porque divisória não identifica
+  controle nenhum.
+
+  - claro: `#848c98` — 3,39 sobre o cartão, 3,17 sobre o fundo, 3,25 sobre a superfície elevada;
+  - escuro: `#747a82` — 3,93 / 4,22 / 3,49.
+
+  Os estados continuam crescendo: repouso ~3,4, hover com o accent (3,63 / 4,69) e
+  foco com a tinta do accent (5,56 / 7,63) mais o anel de 2px. Vale para os
+  primitivos (campo de texto, área de texto, seletor) e para os campos escritos à
+  mão — agenda, cadastro de horários e busca.
+
+- **A trilha para de oferecer link sem destino e o sino anuncia o que chega** Duas correções na casca, as duas de acessibilidade e nenhuma de regra.
+
+  **Trilha de navegação:** segmento que o registro não conhece (rota legada, tela
+  nova ainda não registrada) entrava como `<Link href="#">` — uma migalha que
+  parece link, entra na ordem de Tab e, ao ser ativada, joga a pessoa no topo da
+  página. Migalha sem destino agora é texto: não recebe foco e não promete
+  navegação.
+
+  **Central de avisos:** o total em aberto só era lido por leitor de tela quando o
+  foco passava pelo sino. Quem está digitando no inbox recebia um aviso novo em
+  silêncio. Agora existe uma região viva que anuncia o novo total — e só quando o
+  número **aumenta**: a carga inicial não é novidade e uma recontagem que cai é
+  ajuste, não alerta.
+
+- **Catálogo do estoque e das compras não esconde mais produto** As duas telas pediam o catálogo sem limite e recebiam 500 linhas por padrão. No
+  estoque, "menor saldo" era o menor dentro dos 500 primeiros por nome: um produto
+  com saldo baixo além do corte simplesmente não aparecia. Em compras, o seletor
+  de item não tinha o produto.
+
+  As duas passaram a pedir o teto da rota (2.000) e a declarar a amostra quando o
+  catálogo ainda excede. Falha de leitura das compras deixou de virar seletor
+  vazio: mostra o erro com "Tentar novamente" no diálogo.
+
+- **Texto secundário do tema claro volta a passar no contraste AA** No tema claro, o tom de texto mais discreto (`text-subtle`, usado em rótulo de
+  dia, contagem de pedidos, "desativado" e meta de linha) media **2,85:1** sobre o
+  cartão branco — o piso AA para texto normal é 4,5:1. Eram 74 usos de texto que
+  se lê, em 11 px na maioria.
+
+  Agora mede 5,02:1 sobre o cartão, 4,69:1 sobre o fundo da página e 4,81:1 sobre
+  a superfície elevada. O tema escuro já tinha sido corrigido pelo mesmo motivo; o
+  claro ficou para trás porque o teste estático tratava esse token como decoração
+  e o instrumento de contraste rodava só no tema padrão.
+
+  O tom discreto continua mais claro que o secundário — a hierarquia não mudou,
+  só o degrau passou a ser legível. O instrumento de contraste e o de tokens agora
+  medem os **dois** temas e reprovam o que não passa.
+
+- **NF-e deixa de ser rejeitada por IE da entrega, pagamento e devolução** Quatro rejeições da SEFAZ apareceram na emissão e cada uma tinha uma causa
+  diferente no XML. O grupo `<entrega>` era emitido sempre, repetindo o endereço
+  do destinatário: a SEFAZ cobrava a IE daquele local (176) e, para cliente sem
+  IE cadastrada, não havia o que informar — o grupo não é mais emitido. A
+  descrição do pagamento ia junto com formas que não a aceitam (442). E a
+  devolução de venda saía como compra para comercialização, sem referenciar a
+  nota original e com valor de pagamento (327 e 904); agora sai como entrada,
+  com o CFOP derivado da venda, referenciando a chave original e sem pagamento.
+
+  Cliente contribuinte precisa da IE no cadastro: sem ela a SEFAZ recusa a nota
+  (232), e a tela de correção da nota é onde ela se preenche.
+
+- **Flywheel não paga duas vezes o mesmo julgamento** Quando mais de uma réplica do worker está no ar, as duas pegavam os mesmos
+  turnos recentes e chamavam o modelo para julgar cada um — só uma conseguia
+  gravar o veredito, mas as duas pagavam a chamada de IA.
+
+  O lote agora ignora turnos que já têm veredito e cada turno é reservado por
+  uma réplica antes do julgamento; a outra pula sem gastar token. Se a réplica
+  cair no meio, a reserva é liberada com a conexão.
+
+- **Campos de data/hora da agenda e as duas buscas voltam a mostrar onde está o foco** Seis campos da agenda (o motivo de uma remarcação e os cinco do cadastro de
+  horário) sinalizavam foco trocando `border-border` por `border-border-strong`:
+  a borda ia de 1,21:1 para 1,40:1. A mudança existe, mas é praticamente
+  invisível — na prática, quem navega por teclado perdia a posição.
+
+  Passam a usar o foco canônico do produto (borda accent + anel de 2 px), o mesmo
+  de todo `Input`. As duas buscas (a página `/app/busca` e a paleta ⌘K) escondiam
+  o anel no campo e não pintavam nada no lugar; agora o contêiner mostra o foco
+  com `focus-within`.
+
+  Nenhuma regra muda: só o indicador de foco.
+
+- **Instalação não depende mais do Google para ter fonte** O build do produto baixava as fontes (Inter, IBM Plex Mono e as do mostruário
+  de design) dos servidores do Google. Numa VPS sem saída para a internet — ou
+  com a rede instável — o build inteiro falhava, e a instalação parava antes de
+  começar.
+
+  As fontes agora vêm do próprio repositório, em arquivos versionados e com o
+  texto da licença aberta ao lado. O build não acessa a rede para tipografia.
+
+- **Grade de notas declara o teto em vez de "não achei a nota"** A lista de notas carrega 200 por vez, e a busca e o filtro de situação
+  trabalhavam só sobre essas 200. Numa organização maior, "não achei a nota" podia
+  significar apenas que ela estava além do corte.
+
+  A grade passou a declarar "Mostrando X de Y" com o caminho para refinar período
+  ou busca, em vez de esconder a nota antiga sem avisar.
+
+- **Painel de uso e contagens do inbox consultam a janela de mensagens pelo índice** Contar as mensagens de uma organização num período — o que o painel de uso e as
+  contagens do inbox fazem — percorria a tabela inteira, porque o único índice
+  por organização em mensagens era parcial (só as pendentes e falhas) e não
+  cobria a janela.
+
+  Uma migração cria o índice da janela por organização e data. Medido com 200 mil
+  mensagens: a contagem caiu de 25–54 ms para 6–19 ms. Instalações grandes devem
+  aplicar a atualização em janela de manutenção.
+
+- **Manifestação e cancelamento não transmitem duas vezes** Manifestação de entrada e cancelamento de nota autorizada falavam com a SEFAZ
+  antes de qualquer trava: dois cliques simultâneos podiam registrar dois eventos
+  no órgão, um deles sem volta.
+
+  As duas operações passaram a reservar a transmissão no banco antes de sair. O
+  segundo clique recebe resposta de conflito (ou o resultado da primeira, se ela já
+  terminou), e a reserva de um processo morto é retomada depois de cinco minutos.
+  Nenhum status fiscal muda durante a reserva.
+
+- **NF-e autorizada já gera os recebíveis do pedido** Quando a SEFAZ autorizava a nota de um pedido aprovado, o pedido virava
+  faturado mas o financeiro continuava vazio até alguém clicar em "Gerar
+  financeiro". Quem faturava pela nota podia passar dias sem cobrança na tela.
+
+  A autorização passou a gerar os recebíveis pelo mesmo caminho do botão. A
+  geração é idempotente por organização, pedido e parcela: retry ou queda no meio
+  não duplica parcela, e uma falha em um pedido da nota não derruba a autorização
+  nem os outros pedidos.
+
+- **Recebível avulso não duplica quando o envio é repetido** Criar um recebível avulso (sem pedido) não honrava o cabeçalho
+  `Idempotency-Key` que o próprio cliente do produto envia: um retry por
+  timeout — ou um segundo clique — criava as parcelas de novo, e o cliente
+  ficava com duas dívidas do mesmo valor no mesmo mês.
+
+  Agora a rota usa a chave: repetir a mesma requisição devolve as mesmas
+  parcelas, sem inserir; reutilizar a chave com outro corpo é recusado com 409,
+  em vez de virar um cache errado. O mecanismo vive num lugar só
+  (`lib/api/idempotencia.ts`), pronto para as demais rotas de criação.
+
+- **O seletor de empresa diz onde você está, e o cabeçalho de tabela declara a coluna** O botão de trocar de empresa tinha o nome acessível "Trocar de empresa" — a
+  ação, nunca o estado. Quem tem duas organizações ouvia o que o botão faz e não
+  sabia em qual está; e o nome da empresa ativa era texto que some no celular.
+  Agora o rótulo compõe estado + ação ("Empresa atual: X. Trocar de empresa"), e o
+  item ativo do menu ganha um "atual" que o leitor de tela lê — o check é ícone,
+  não informação.
+
+  Nas tabelas, o cabeçalho passa a declarar `scope="col"`. Sem isso a associação
+  cabeçalho↔célula é adivinhada pela posição, e a adivinhação erra em tabela com
+  célula mesclada (as listagens usam). Os três lugares que declaram `<th>` à mão
+  também declaram.
+
+- **Estoque sem nenhuma movimentação deixa de escapar do Sentinel** O detector de divergência de estoque comparava o saldo guardado com a soma das
+  movimentações, mas só enxergava produto que tivesse pelo menos uma movimentação.
+  Um produto controlado, criado depois do razão, com saldo 50 e nenhuma entrada ou
+  saída ficava invisível — justamente o caso mais óbvio de divergência.
+
+  Agora o razão vazio entra na comparação: saldo 50 contra 0 aparece como
+  ocorrência de confiança baixa, com a limitação escrita no próprio achado. A
+  diferença continua sendo hipótese até a contagem física, porque o razão não tem
+  saldo de abertura. O ajuste é sempre manual e com movimento; o Sentinel não
+  altera saldo.
+
+- **Sentinel mede a rodada e não deixa uma regra travar o cron** A varredura do Sentinel passa a ter um orçamento de tempo para a fase de
+  detecção. Se uma regra patológica estourar o teto, as seguintes não rodam, a
+  rodada é marcada como truncada e o Sentinel **não** encerra ocorrências por
+  ausência — lista incompleta não é prova.
+
+  O tempo medido fica no histórico da execução (não em coluna nova) e no log
+  estruturado. Medição desta entrega: 29 detectores sobre 2 mil produtos, 2 mil
+  pedidos, 2 mil recebíveis e 2 mil leads levam 7 ms nesta máquina; o teto padrão
+  é de 8 s, folga para o cron de 15 minutos.
+
+- **Sentinel também confere a nota duplicada pelo pedido secundário** O detector de nota duplicada passou a considerar todos os pedidos que compõem
+  uma NF-e (`invoice_orders`), e não só o pedido principal. Um agrupamento em que
+  duas notas vivas compartilham o mesmo pedido secundário agora vira ocorrência,
+  em vez de passar despercebido.
+
+  Nada muda para quem opera a VPS: nenhuma configuração nova, nenhum comando e
+  nenhuma migração além da 0316 já publicada.
+
+- **Telefone fixo com WhatsApp não derruba mais a campanha** A campanha de prospecção mandava para a RPC de contato o telefone só com dígitos, e a função só colocava o `+` quando o número era celular. Fixo — que também pode ter WhatsApp — era gravado sem o `+`, o banco recusava a linha (`contacts_phone_e164_format`) e a tentativa queimava a cota do dia sem mandar nada. Agora todo número com dígitos recebe o `+`; o celular continua ganhando o nono.
+
+- **No tema claro, o produto volta a pintar a própria paleta (a camada de terceiro não vence mais)** A biblioteca visual vendorizada declara os mesmos nomes de token num seletor
+  mais específico (`:root[data-theme="light"]`), e no tema claro ela vencia o
+  `[data-theme="light"]` do produto. Medido no navegador: o fundo da página saía
+  `#f1f1f4` (o produto diz `#f6f7f9`), a divisória `#e4e4e9` (`#e7e9ee`) e o
+  texto `#0d0d12` (`#181925`). No escuro o produto ganhava; só o claro ficava com
+  a paleta de terceiro.
+
+  Os quatro tokens que colidiam saíram da camada de terceiro, e o texto dela
+  passou a apontar para o token do produto. Agora os dois temas pintam a mesma
+  paleta: fundo `#f6f7f9`/`#151515`, texto `#181925`/`#f4f4f4`.
+
+  Junto: o instrumento de contraste ganhou `--rotas` (medir sem sessão) e passou a
+  **mesclar** o artefato em vez de sobrescrever — uma rodada de 4 rotas apagava as
+  8 anteriores.
+
+- **Teto de lista deixa de esconder item sem avisar** Cinco telas do fiscal (eventos, manifestações, produtos, fornecedores e
+  sincronizações) carregavam no máximo 300 linhas e não diziam isso: a lista
+  parecia completa. Em Equipe, uma falha de leitura virava uma frase vermelha sem
+  saída; em tokens de API, virava "Nenhum token criado ainda".
+
+  As listas agora declaram "Mostrando X de Y" usando a contagem da mesma consulta,
+  com o caminho para refinar. Falha de leitura mostra o erro com "Tentar
+  novamente" — na equipe, o vazio real ganhou o convite de convidar alguém. Token
+  vencido aparece como "Expirado", e revogar pede confirmação.
+
+- **Código de MFA e de recuperação têm teto de tentativas** O código de seis dígitos do MFA tinha apenas um contador guardado no navegador
+  — quem apagasse o cookie recomeçava do zero, e seis dígitos são um milhão de
+  tentativas. O código de recuperação, de oito caracteres, não tinha teto nenhum.
+
+  Os dois passam a ter limite por pessoa e por origem, independente do navegador.
+  A resposta continua genérica: nunca revela se o e-mail existe nem que houve
+  bloqueio.
+
+- **Link e selo em accent voltam a passar no contraste, nos dois temas** O accent do produto serve a dois papéis e usava um token só. Como
+  **preenchimento** (botão primário) ele está certo: `#7e77f0` com texto Carbon dá
+  4,80:1. Como **tinta** — link "Ver detalhes", aba ativa, selo — o mesmo
+  `#7e77f0` dá **3,63:1** sobre o cartão e **3,06:1** sobre o fundo suave do selo
+  no tema claro: abaixo do piso AA de 4,5 para texto normal. No tema escuro
+  passava, e é por isso que as medições feitas no tema padrão nunca acharam.
+
+  Agora existe `--color-accent-ink`: o grau 700 no claro (5,56 / 5,19 / 5,33, e
+  4,68 sobre o fundo suave) e o 400 no escuro (7,63). Os dois são paradas da
+  rampa, então a marca do revendedor continua mandando na cor.
+
+  O texto do botão destrutivo também deixou de ser branco fixo: branco sobre o
+  vermelho do tema escuro dava 3,48:1. O token `--destructive-foreground` já
+  escolhia o lado certo por tema; o componente é que não o usava.
+
+  Nada muda de lugar, de fluxo ou de regra — só o tom de quem é lido como texto.
+
+- **As cores de pessoa da agenda se distinguem — inclusive para quem tem dicromacia** As oito trilhas de cor da agenda eram da era Sage e nunca tinham sido medidas
+  contra o accent atual (violeta). Dois problemas, um deles invisível para quem
+  enxerga todas as cores:
+
+  - a trilha violeta do tema escuro ficava a **0,040** do accent — a cor da pessoa
+    e o estado selecionado liam como a mesma coisa;
+  - turquesa e framboesa ficavam a **0,009** uma da outra sob deuteranopia, ou
+    seja, a mesma cor para quem tem a condição.
+
+  As novas foram escolhidas por matiz (com o nome preservado) e luminosidade
+  otimizada para o pior caso de três distâncias: entre pessoas, sob dicromacia e
+  contra o accent. Resultado: 0,082 / 0,065 / 0,065, contra 0,116 / 0,009 / 0,040.
+  O pior par de visão normal caiu um pouco — é a troca, e está registrada.
+
+  Junto, um terceiro achado: em três trilhas do tema claro as **iniciais** do
+  avatar davam 3,2:1 (piso 4,5). Cada trilha ganhou uma frente própria (branco ou
+  escuro, o que passar), e todas ficam ≥ 4,5:1.
+
+  Muda a cor das pessoas na agenda; não muda quem vê o quê.
+
 ## [1.55.0] — 2026-11-18
 
 ### Adicionado
@@ -7508,7 +7880,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.55.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.56.0...HEAD
+[1.56.0]: https://github.com/spiesdan/nexus/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/spiesdan/nexus/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/spiesdan/nexus/compare/v1.53.0...v1.54.0
 [1.53.0]: https://github.com/spiesdan/nexus/compare/v1.52.6...v1.53.0

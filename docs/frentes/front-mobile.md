@@ -29,6 +29,7 @@ O que foi **executado** e o que é **limitação de equipamento** (`[!]`).
 | Ambiente | Versão | Jornadas exercitadas | Resultado |
 |---|---|---|---|
 | Chromium headless (Playwright 1.64.0), emulação `Pixel 7` — 412×915, `isMobile`, `hasTouch` | vite 8.3.4, jeep-sqlite 2.8.0, SQLite via wasm | shell: catálogo ausente bloqueia captura · captura cliente→item→quantidade→salvar · OFF-0001/OFF-0002 · fila recusada com motivo · tentar de novo · descartar · botão "Enviar agora" | `[x]` 6/6 (`playwright.mobile.config.ts`) |
+| **Emulador AVD `nexus`** (Pixel 7 arm64, Android 36) + Maestro 2.12.1, contra o **servidor real** do worktree (`10.0.2.2:3022` → Supabase local) | APK debug local | parear por código · 2 capturas em modo avião · dreno aceito (nº 65/66) · replay idempotente sem duplicata · `401 token_revoked` com fila intacta | `[x]` ver §9.7 e `docs/auditoria/evidencias/mobile-b7-2026-11-18/` |
 | Node 22 + jsdom (vitest 4.1.11) | — | transições da fila, dreno (200/201/422/401/500/timeout), chave de sincronização, retomada após reinício | `[x]` ver §5 |
 | Android físico (qualquer aparelho) | APK debug do `apk.yml` | abrir shell sem rede, capturar, drenar no sistema, notificação, reinício do processo no meio do POST | `[!]` **não executado** — sem aparelho Android disponível nesta sessão |
 | iOS físico/simulador | — | idem | `[!]` não aplicável: não existe projeto iOS |
@@ -455,28 +456,37 @@ pnpm test:db tests/invariants/offline-devices-rls.test.ts \
 # 2 arquivos, 168 testes, exit 0 (inclui install/update do baseline)
 ```
 
-### 9.7 B-7 — harness pronto, prova pendente de emulador
+### 9.7 B-7 — CONCLUÍDO no aparelho, contra servidor real (18/11/2026)
 
-O harness já está na `main` (entrou junto do #526):
+Ambiente: AVD `nexus` (Pixel 7, Android 36) + **dev server do próprio worktree** em
+`http://10.0.2.2:3022`, apontando para o **Supabase local** (`127.0.0.1:54321`). Nada de
+produção; a credencial foi emitida pela tela/rota real com login `e2e-admin@nexus.test`
+(fixture local, MFA TOTP semeado).
 
-- `android/app/src/debug/` libera cleartext **só** para `10.0.2.2`/`localhost` na build de
-  debug — a release continua só HTTPS;
-- `tests/e2e-mobile/stub-device-api.mjs` responde `/device/me`, `/device/catalog` e
-  `/device/orders` com os contratos reais, inclusive replay idempotente e `REVOKED=1` (401);
-- `jornada-dreno-aceito.yaml` e `jornada-token-revogado.yaml` cobrem os dois estados;
-- `tests/e2e-mobile/README.md` documenta o `adb reverse` e a semente da credencial.
+| Passo | Resultado |
+|---|---|
+| parear colando o código `NEXUS1.…` no shell | `pareado`, título “E2E Test Org”, catálogo baixado do servidor (**23 produtos, 74 clientes**) |
+| capturar 2 pedidos em **modo avião** | fila `(2)`, `OFF-0001`/`OFF-0002` |
+| voltar a rede e abrir o app | aviso “2 pedido(s) enviado(s) — nº **65, 66**”; fila zerada |
+| reenviar os MESMOS UUIDs (replay) | servidor devolve os mesmos pedidos; banco com **exatamente 2** ordens, sem duplicata |
+| revogar a credencial na rota real e tentar de novo | `401 token_revoked` visível (“não está mais autorizado… pareie de novo”), fila **intacta** (`OFF-0003` pendente) |
 
-O que falta é **rodar** os fluxos num aparelho. Precisa de:
+Evidências: `docs/auditoria/evidencias/mobile-b7-2026-11-18/` (pareado, 2 pedidos offline,
+fila drenada, fila intacta após revogação).
 
-1. emulador de pé (`emulator -avd nexus -no-window -no-audio -no-boot-anim -no-snapshot -gpu
-   swiftshader_indirect`) — a máquina tem 8 GB e o AVD anterior morreu por OOM;
-2. nada mais para o caminho do CLIENTE (stub + APK debug + semente local).
+**Defeito encontrado no aparelho e corrigido:** depois do dreno, o aviso dizia “2 enviados”
+e a lista continuava mostrando os dois como “aguardando envio” com `(2)` no cabeçalho — o
+SQLite estava certo, mas a tela tinha sido desenhada ANTES do dreno e ninguém a desenhou de
+novo. `drenar` agora termina com `renderizar(db)`. Coberto pelo e2e de navegador (7/7) e
+pelos unit do offline (41/41); a correção foi provada no aparelho com o replay acima.
 
-Para provar também o **servidor real** (regra de negócio no aparelho), precisa de uma
-instalação local acessível do emulador: Supabase local + `pnpm dev` + org/usuário/produto
-semeados e uma credencial emitida — ou uma instalação de teste preparada pelo coordenador.
-**Não** aponta para produção; o stub cobre o comportamento do shell e o servidor já tem
-unit + invariante.
+O harness segue em `tests/e2e-mobile/` (stub para o caminho rápido, `README` com `adb
+reverse` e semente) e a build **debug** libera cleartext só para `10.0.2.2`/`localhost`.
 
-Outros pendentes: prova visual da B-5 (sem Supabase local no worktree) e trocar o token em
-SQLite por Keystore/Keychain (plugin nativo).
+**B-5 com prova visual (18/11/2026):** `/app/settings/devices` aberta por Playwright com sessão
+real (login + MFA de fixture) na instalação local: formulário (nome, vendedor, validade), tabela
+com prefixo `nod_…`, “visto por último”, prazo e estado **desconectado** do aparelho revogado no
+teste. Evidência: `docs/auditoria/evidencias/mobile-b5-2026-11-18/40-tela-dispositivos.png`.
+(Fotos em tema escuro, 1360×900; a página também foi exercitada pela rota na prova B-7.)
+
+**Ainda não provado:** troca do token em SQLite por Keystore/Keychain (plugin nativo).

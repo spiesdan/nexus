@@ -420,6 +420,12 @@ class ServicoNfe
         try {
             $danfe = new \NFePHP\DA\NFe\Danfe($xml);
             $danfe->debugMode(false);
+            // Rodapé do DANFE: o `sped-da` imprime "Powered by NFePHP" por padrão.
+            // Aqui o crédito é CONFIGURAÇÃO, nunca um nome embutido no código:
+            // vazio = sem crédito. Quem revende configura a própria marca em
+            // FISCAL_DANFE_CREDITO (o PDF chega ao cliente final, então o nome
+            // do produto não mora no repositório — doutrina de marca própria).
+            $danfe->creditsIntegratorFooter(trim((string) getenv('FISCAL_DANFE_CREDITO')));
             // Sem logo o DANFE sai igual (o layout reserva o espaço e centraliza
             // os dados do emitente). Com logo, é o do EMITENTE — o arquivo que a
             // própria organização subiu, nunca a marca de quem revende o produto.

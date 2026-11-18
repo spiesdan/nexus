@@ -1,0 +1,54 @@
+{
+  "geradoEm": "2026-11-18T15:52:56.118Z",
+  "base": "http://localhost:3021",
+  "registros": [
+    {
+      "rota": "/app",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_dark_390.png",
+      "titulo": "Dashboard · NEXUS",
+      "h1": [
+        "Boa tarde, E2E."
+      ],
+      "overflowX": 0,
+      "textos": 120
+    },
+    {
+      "rota": "/app",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_light_390.png",
+      "titulo": "Dashboard · NEXUS",
+      "h1": [
+        "Boa tarde, E2E."
+      ],
+      "overflowX": 0,
+      "textos": 118
+    },
+    {
+      "rota": "/app/inbox",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_inbox_dark_390.png",
+      "titulo": "Inbox · NEXUS",
+      "h1": [
+        "Inbox"
+      ],
+      "overflowX": 0,
+      "textos": 54
+    },
+    {
+      "rota": "/app/inbox",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_inbox_light_390.png",
+      "titulo": "Inbox · NEXUS",
+      "h1": [
+        "Inbox"
+      ],
+      "overflowX": 0,
+      "textos": 54
+    }
+  ]
+}

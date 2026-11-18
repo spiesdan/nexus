@@ -17,12 +17,10 @@
      across the fold where the hero ended. Measured rather than guessed —
      swatches laid over the hero, and #000 was the only one that disappeared
      into it. */
-  --color-bg: #000000; /* surface/background */
-  --color-surface: #0d0d0d; /* surface/raised */
+  /* `--color-bg`/`surface`/`border`/`border-strong` vivem no `globals.css`
+     (fonte única) — aqui ficariam como terceira declaração do mesmo nome. */
   --color-stage: #0c0c0c; /* surface/stage */
   --color-stage-2: #101010;
-  --color-border: #1c1c1c; /* line/border */
-  --color-border-strong: #262626;
   /* Dropped from #151515 once the page went to true black: a 21-point slab on
      a black ground read as a light grey rectangle rather than as a card. At 15
      points it still separates from the page, and the preview inside it still
@@ -46,7 +44,7 @@
   --color-hairline: #2e2e2e; /* visible dividers, avatar rings */
 
   /* Text — mapped from Figma variables */
-  --color-fg: #f5f5f5; /* text/primary */
+  --color-fg: var(--color-text); /* text/primary = o token do produto */
   --color-fg-secondary: #a1a1a1; /* text/secondary */
   --color-fg-muted: #737373; /* text/muted */
 
@@ -176,14 +174,27 @@
   /* Surfaces, mirrored. A card is still nearer the reader than the page and a
      well is still further, which is why frame goes to pure white and the page
      does not. */
-  --color-bg: #f1f1f4;
-  --color-surface: #ffffff;
+  /*
+   * `--color-bg`, `--color-surface`, `--color-border` e `--color-border-strong`
+   * NÃO são declarados aqui de propósito.
+   *
+   * Este bloco é `:root[data-theme="light"]` — especificidade (0,2,0) —, e ele
+   * VENCE o `[data-theme="light"]` (0,1,0) do `app/globals.css`. Na prática o
+   * tema claro era pintado por ESTA paleta, não pela do produto: medido no
+   * navegador em 18/11/2026, o canvas saía `#f1f1f4` em vez de `#f6f7f9` e a
+   * divisória `#e4e4e9` em vez de `#e7e9ee` — duas fontes para o mesmo pixel, e
+   * a que ganhava era a que ninguém audita.
+   *
+   * Os quatro tokens ficam no `globals.css`, que é a fonte única; as regras
+   * deste arquivo que os usam (`body`, bordas, cartões) continuam funcionando,
+   * agora com a cor do produto. Os tokens que são SÓ desta biblioteca
+   * (`stage`, `frame`, `well`, `sunk`, `raised`, `chip`, `hairline`, `fg*`)
+   * seguem aqui.
+   */
   --color-stage: #fafafb;
   --color-stage-2: #f4f4f6;
   --color-frame: #ffffff;
   --color-well: #f5f5f8;
-  --color-border: #e4e4e9;
-  --color-border-strong: #d3d3db;
 
   --color-sunk: #e8e8ed;
   --color-sunk-2: #ededf1;
@@ -193,7 +204,7 @@
   --color-hairline: #dcdce3;
 
   /* Text, mirrored. */
-  --color-fg: #0d0d12;
+  --color-fg: var(--color-text);
   --color-fg-secondary: #4a4a55;
   --color-fg-muted: #696977;
 

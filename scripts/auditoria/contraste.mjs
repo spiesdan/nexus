@@ -31,7 +31,7 @@
  * Uso:
  *   node scripts/auditoria/contraste.mjs --estado /tmp/sessao.json
  */
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { chromium } from "@playwright/test";
@@ -55,16 +55,24 @@ if (!estado || !existsSync(estado)) {
 }
 
 /** Telas onde texto pequeno e denso vive: listas, painéis, configuração. */
-const ROTAS = [
-  "/app",
-  "/app/pedidos",
-  "/app/contacts",
-  "/app/kanban",
-  "/app/audit",
-  "/app/settings/tenant",
-  "/app/indicadores",
-  "/login",
-];
+/**
+ * `--rotas a,b,c` restringe a varredura. Existe porque nem sempre há sessão:
+ * sem Supabase de pé (ou sem seed), `/app/**` redireciona para `/login` e o
+ * instrumento mediria a MESMA tela oito vezes com oito nomes — o tipo de número
+ * que parece cobertura e não é.
+ */
+const ROTAS = (args.get("--rotas") ?? "").split(",").filter(Boolean).length
+  ? String(args.get("--rotas")).split(",")
+  : [
+      "/app",
+      "/app/pedidos",
+      "/app/contacts",
+      "/app/kanban",
+      "/app/audit",
+      "/app/settings/tenant",
+      "/app/indicadores",
+      "/login",
+    ];
 
 const navegador = await chromium.launch();
 const resultados = [];
@@ -211,10 +219,34 @@ for (const rota of ROTAS) {
 
 await navegador.close();
 const arquivo = path.join(SAIDA, "contraste.json");
+
+/**
+ * O ARTEFATO É MESCLADO, NÃO SOBRESCRITO.
+ *
+ * Uma execução parcial (só `/login`, porque não há sessão) apagava as 8 rotas
+ * da execução anterior — o defeito V-33, corrigido no instrumento de captura e
+ * que continuava aqui. A chave é `rota|tema`: a mesma dupla é substituída pela
+ * medição nova, o resto sobrevive.
+ *
+ * Medições antigas (antes de o instrumento medir os dois temas) não têm `tema`
+ * e entram como `dark`, que é onde foram feitas — o produto é dark-first.
+ */
+const anterior = existsSync(arquivo)
+  ? JSON.parse(readFileSync(arquivo, "utf8"))
+  : { resultados: [] };
+const porChave = new Map();
+for (const r of anterior.resultados ?? []) porChave.set(`${r.rota}|${r.tema ?? "dark"}`, r);
+for (const r of resultados) porChave.set(`${r.rota}|${r.tema}`, r);
+const mesclados = [...porChave.values()].sort(
+  (a, b) => String(a.rota).localeCompare(String(b.rota)) || String(a.tema).localeCompare(String(b.tema)),
+);
+
 writeFileSync(
   arquivo,
-  JSON.stringify({ geradoEm: new Date().toISOString(), base: BASE, resultados }, null, 2) + "\n",
+  JSON.stringify({ geradoEm: new Date().toISOString(), base: BASE, resultados: mesclados }, null, 2) +
+    "\n",
 );
+process.stdout.write(`\nartefato com ${mesclados.length} medições (mesclado)\n`);
 
 for (const tema of TEMAS) {
   const doTema = resultados.filter((r) => r.tema === tema);
