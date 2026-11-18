@@ -116,3 +116,58 @@ pnpm test:shell                                  # kit de instalação
 
 A triagem de PR usou a API REST do GitHub (o `gh` não está instalado); os
 comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
+
+## 7. O que falta para o DoD — item por item (18/11/2026)
+
+> Sem "quase pronto": cada linha é uma entrega que o §13 do prompt mestre cobra e
+> que **não** está fechada. O que está fechado tem `[x]` na fila com prova.
+
+### Módulos (fichas + estados)
+
+| Módulo | Estado | O que falta |
+|---|---|---|
+| 5.4 inbox/atendimento/campanhas | `[~]` | #563 (estado offline) em CI; falta ficha com evidência dos 7 estados e o recorte de campanhas |
+| 5.6 pedidos/estoque/compras/expedição | `[ ]` | ficha por subtela + estados; E caiu antes de começar |
+| 5.8 fiscal | `[~]` | telas cobertas por testes de rota; falta ficha visual/estados |
+| 5.10/5.11 configurações/equipe/LGPD/admin | `[~]` | equipe/tokens/admin com estados honestos (#507/#519); falta ficha e o recorte de LGPD |
+
+### Jornadas
+
+| Jornada | Estado | O que falta |
+|---|---|---|
+| J6 inbox | `[~]` | prova em Vitest (#517) e reenvio corrigido (#503); falta E2E de navegador |
+| J13 fiscal | `[~]` | prova em Vitest; falta E2E com nota em homologação (sem SEFAZ real) |
+| J14 LGPD | `[~]` | sem E2E; export/anonimização provados por unidade |
+
+### Sentinel
+
+| Item | Estado |
+|---|---|
+| v1.2/v1.3 (estoque sem movimento, correção aprovada, observabilidade) | `[x]` na 1.57.0 |
+| **v1.4** — timeout/erro de SEFAZ agrupado por código e emitente, com painel | `[ ]` — não iniciado |
+| `cadastro.endereco_com_lixo` | `[x]` (#560/#564) |
+
+### Mobile e acessibilidade
+
+| Item | Estado |
+|---|---|
+| B-7: dreno aceito e `401 token_revoked` com fila intacta | `[~]` — F no emulador; prova ainda não anexada |
+| **Leitor de tela em aparelho (TalkBack)** | `[!]` — exige dispositivo; nada foi executado |
+| iOS | `[!]` — fora de escopo por decisão (P3-01) |
+
+### Testes e operação
+
+| Item | Estado |
+|---|---|
+| E2E completo | `[~]` — PR roda smoke; critical na main; full noturno. 3 specs fora do CI por motivo escrito |
+| `update.sh` falhar alto em DDL | `[ ]` — **P0 da fila (§20)**, dono orquestrador |
+| Deploy da 1.58.0 | `[ ]` — depende do corte (não autorizado) |
+| Pareamento do catálogo em produção | `[ ]` — só depois de release + deploy do `nexus-mercos` + `--dry-run` aprovado |
+
+### O que **está** fechado (para não repetir)
+
+P0 de código inteiro (F-09, F-17 73/73, service role, financeiro, fiscal,
+estoque, deploy/restore, Sentinel v1), idempotência fiscal nas quatro rotas,
+nome de campanha, nome fantasia, catálogo do Mercos **em código**, e a release
+1.57.0 publicada. Produção roda 1.57.0 (deploy do dono), com sidecar da mesma
+versão.
