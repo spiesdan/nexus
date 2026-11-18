@@ -371,9 +371,20 @@ aplica.
 
 ## Reproducibility
 
-Migrations were applied directly via the Supabase MCP `apply_migration` tool during the autonomous bootstrap session. The SQL of each migration is also embedded in the corresponding spec under `docs/specs/0X-spec-*.md` and the database keeps them in `supabase_migrations.schema_migrations`.
+**Esta pasta é HISTÓRICO, não instalador.** O schema oficial é
+[`supabase/baseline.sql`](../baseline.sql) — é ele que `install.sh`, `update.sh`,
+`deploy.sh`, `pnpm db:migrate` e `pnpm db:reset` aplicam, com verificação.
 
-To re-apply on a fresh Supabase project, replay the migrations in version order via `supabase db push` (Supabase CLI) or via the MCP.
+**PROIBIDO** aplicar esta cadeia: `supabase db push`, `supabase migration up` e
+`supabase db reset` marcam migrations como aplicadas sobre um schema parcial
+(35 de 292 aplicam; 257 falham por pré-requisito ausente). Decisão do dono em
+18/11/2026 (F-09 = B), com o motivo medido em
+[`docs/auditoria/20-f09-estrategia.md`](../../docs/auditoria/20-f09-estrategia.md).
+O aviso e o caminho correto estão em [`README.md`](README.md).
+
+As linhas abaixo registram o que foi aplicado e quando. Para instalar ou
+atualizar, use o baseline; para criar schema novo, escreva a migration **e** o
+apêndice idempotente no baseline (ver `README.md`).
 
 ## Tables created (33 total, all RLS enabled)
 
@@ -391,3 +402,4 @@ To re-apply on a fresh Supabase project, replay the migrations in version order 
 | `20261118120000` | `0311_entrada_do_destino` | **Endereço sem número ganha entrada, não pino aproximado.** Medido em 15/11/2026: dos 49 destinos de produção, 31 têm número, 12 são `S/N` e 6 têm o campo vazio — **37% da operação não tem número de casa**, e nenhum geocodificador devolve a porta nesse caso (o Nominatim cai para rua/bairro/cidade, com erro de centenas de metros a quilômetros). O botão "Tentar de novo" era uma promessa impossível. Cria `endereco_entradas` (chave = endereço normalizado, com `referencia` textual, autor, data e contador de `confirmacoes`) e `shipment_destinations.entrada_id`/`entrada_confirmada_em`/`entrada_confirmada_por`. Marcar uma vez vale para as cargas seguintes do mesmo endereço; o motorista confirma "é aqui" na entrega e fecha o laço, porque marcação do escritório é estimativa e quem está na porta é prova. `geo_fonte` passa a gravar `entrada` em vez de `manual`, que era indistinguível de uma correção de geocode. RLS por comando (leitura org, escrita agent+, sem delete por papel). Apêndice idempotente no fim do baseline. |
 | `20261119120000` | `0312_trilha_do_run_de_ia` | **O run de IA ganha trilha auditável SEM conteúdo pessoal.** Medido em 17/11/2026: `llm_calls` guardava tokens/custo/erro e nada que explicasse a resposta; a primeira versão da trilha gravava prompt e saída crus e foi reprovada pelo invariante `llm-calls-registra-falha.test.ts` ("o conteúdo da conversa não vai junto"). Cria `prompt_system_hash` (sha256 do system efetivo), `prompt_messages_meta` ({total, papéis, chars, sha256} — o contexto em forma verificável), `output_text_hash`/`output_chars`, `tool_calls` ([{tool, input_hash, output_hash, output_chars}]) e `sources_meta` ({total, hosts}). A correlação com a conversa é por hash: o texto segue em `messages`, sob retenção e anonimização daquela tabela. `ai_agent_runs` não serve — o motor de produção não escreve nela. Apêndice idempotente no fim do baseline. |
 | `20261120120000` | `0313_indice_janela_de_mensagens` | **A janela de mensagens por organização ganha índice.** Medido em 17/11/2026 em Postgres 15.19 com 200.000 mensagens de uma org: `count(*) where organization_id = ? and created_at >= ?` (usado por `/admin/usage` e pelas contagens do inbox) rodava em 25–54 ms porque o único índice por organização em `messages` é PARCIAL por status (`sending`/`failed`), que não cobre a janela. Cria `messages_org_created_idx (organization_id, created_at desc)`: mesmas três execuções caem para 5,7–19 ms, com leitura só de índice. `create index` sem `concurrently` de propósito — o baseline é aplicado por `psql` e a cadeia é replayada dentro de transação; instalação grande aplica em janela de manutenção. Apêndice idempotente no fim do baseline. |
+| `20261121120000` | `0314_saldo_do_recebivel` | **O teto do recebível passou a ser garantia do banco.** Medido em 18/11/2026: `registrarPagamento` lia a soma, validava em memória e inseria; dois pagamentos simultâneos com `Idempotency-Key` diferentes passavam os dois e somavam acima do valor original — o unique parcial só cobre retry da mesma chave. `BEFORE INSERT/UPDATE` em `financial_payments` trava o recebível (`for update`), soma e recusa o excesso (`23514`); `AFTER` recalcula `aberto`/`parcial`/`pago` na mesma transação. Cancelado continua fechado e estorno continua permitido. Nenhuma coluna, policy ou grant novo em tabela existente; funções em `private` com revoke explícito. Apêndice idempotente no fim do baseline. |

@@ -158,6 +158,23 @@ describe("F-09 — o aviso está na doc de quem instala, nos três idiomas", () 
     expect(setup).toMatch(/PROIBIDO/);
   });
 
+  it("o MANIFEST não manda reaplicar a cadeia (é registro, não instalador)", () => {
+    // Achado em 18/11/2026: o README da pasta já dizia "PROIBIDO", mas a seção
+    // "Reproducibility" do MANIFEST mandava "replay the migrations in version
+    // order via supabase db push". Quem lê o MANIFEST — o arquivo que registra
+    // cada migration — recebia a instrução contrária à decisão F-09=B.
+    const manifesto = readFileSync(path.join(RAIZ, "supabase/migrations/MANIFEST.md"), "utf8");
+    expect(manifesto, "o MANIFEST precisa avisar que a pasta é histórico").toMatch(
+      /HISTÓRICO, não instalador/,
+    );
+    expect(manifesto, "o MANIFEST precisa nomear o caminho proibido").toMatch(/PROIBIDO/);
+    expect(manifesto).toContain("baseline.sql");
+    expect(
+      manifesto,
+      "o MANIFEST não pode instruir replay da cadeia — o schema vem do baseline",
+    ).not.toMatch(/replay the migrations|reaplicar as migrations|aplique as migrations em ordem/i);
+  });
+
   it("a estratégia de F-09 está escrita", () => {
     const caminho = path.join(RAIZ, "docs/auditoria/20-f09-estrategia.md");
     expect(existsSync(caminho), "20-f09-estrategia.md existe").toBe(true);
