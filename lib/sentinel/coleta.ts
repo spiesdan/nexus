@@ -18,6 +18,7 @@ import type {
   CampanhaVenda,
   ClienteDuplicado,
   ContatoEndereco,
+  ConversaParada,
   CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
@@ -53,6 +54,7 @@ const TETO_DUPLICADOS = 200;
 // a coleta trunca e a rodada não encerra por ausência.
 const TETO_CORRECOES = 100;
 const TETO_CONTATOS_ENDERECO = 1_000;
+const TETO_CONVERSAS_PARADAS = 200;
 const TETO_EVENTOS_CORRECAO = 2_000;
 
 interface Coleta<T> {
@@ -133,6 +135,7 @@ export async function coletarSnapshot(
     campanhasVenda,
     clientesDuplicados,
     contatosEndereco,
+    conversasParadas,
   ] = await Promise.all([
     coletar<NotaFiscal>(
       "notas",
@@ -328,6 +331,19 @@ export async function coletarSnapshot(
         .limit(TETO_CONTATOS_ENDERECO + 1),
       TETO_CONTATOS_ENDERECO,
     ),
+    coletar<ConversaParada>(
+      "conversas_paradas",
+      admin
+        .from("conversations")
+        .select("id, status, assigned_to_user_id, assigned_at, last_message_at")
+        .eq("organization_id", organizationId)
+        .eq("status", "claimed")
+        .not("assigned_to_user_id", "is", null)
+        .lt("assigned_at", iso(7 * DIA_MS))
+        .order("assigned_at", { ascending: true })
+        .limit(TETO_CONVERSAS_PARADAS + 1),
+      TETO_CONVERSAS_PARADAS,
+    ),
   ]);
 
   // ─── Observabilidade da correção aprovada (v1.3+) ───────────────────────
@@ -438,6 +454,7 @@ export async function coletarSnapshot(
     campanhasVenda,
     clientesDuplicados,
     contatosEndereco,
+    conversasParadas,
     ocorrenciasCorrecao,
     eventosCorrecao,
     jobsCorrecao,
@@ -464,6 +481,7 @@ export async function coletarSnapshot(
       clientesDuplicados: clientesDuplicados.dados,
       correcoes,
       contatosEndereco: contatosEndereco.dados,
+      conversasParadas: conversasParadas.dados,
     },
     truncado: coletas.some((c) => c.truncado),
     falhas: coletas.map((c) => c.falha).filter((f): f is string => f !== null),

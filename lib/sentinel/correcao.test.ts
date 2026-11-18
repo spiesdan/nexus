@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { hashDaCorrecao, planejarAntecipacao, type JobCorrigivel } from "./correcao";
-import { correcaoDeJobSuportada } from "./correcao-constantes";
+import {
+  hashDaCorrecao,
+  planejarAntecipacao,
+  planejarLiberacaoConversa,
+  type ConversaCorrigivel,
+  type JobCorrigivel,
+} from "./correcao";
+import { correcaoDeConversaSuportada, correcaoDeJobSuportada } from "./correcao-constantes";
 
 const AGORA = "2026-11-18T18:00:00.000Z";
 
@@ -69,5 +75,67 @@ describe("correção aprovada — antecipar job de manutenção", () => {
     expect(
       hashDaCorrecao("job-1", "2026-11-18T14:00:00.000+00:00", "2026-11-18T18:00:01.000Z"),
     ).not.toBe(base);
+  });
+});
+
+function conversa(over: Partial<ConversaCorrigivel> = {}): ConversaCorrigivel {
+  return {
+    id: "conversa-1",
+    organization_id: "org-1",
+    status: "claimed",
+    assigned_to_user_id: "atendente-1",
+    assigned_at: "2026-11-08T12:00:00.000+00:00",
+    last_message_at: "2026-11-09T12:00:00.000+00:00",
+    ...over,
+  };
+}
+
+describe("correção aprovada — liberar claim de conversa", () => {
+  it("só a regra/entidade da conversa tem este caso", () => {
+    expect(correcaoDeConversaSuportada("operacao.conversa_claim_parado", "conversations")).toBe(
+      true,
+    );
+    expect(correcaoDeConversaSuportada("fiscal.nota_rejeitada", "invoices")).toBe(false);
+    expect(correcaoDeConversaSuportada("operacao.conversa_claim_parado", "contacts")).toBe(false);
+  });
+
+  it("claim de 10 dias sem mensagem é elegível; antes/depois/hash exatos", () => {
+    const r = planejarLiberacaoConversa(conversa(), AGORA);
+    expect(r.elegivel).toBe(true);
+    if (!r.elegivel) return;
+    expect(r.plano.antes).toEqual({
+      atendente_id: "atendente-1",
+      assigned_at: "2026-11-08T12:00:00.000+00:00",
+    });
+    expect(r.plano.depois).toEqual({ status: "open", atendente_id: null, assigned_at: null });
+    expect(r.plano.hash).toBe(
+      hashDaCorrecao(
+        "conversa-1",
+        "atendente-1|2026-11-08T12:00:00.000+00:00",
+        "open",
+      ),
+    );
+  });
+
+  it("recusa claim recente, mensagem recente, sem responsável e status não-claimed", () => {
+    expect(
+      planejarLiberacaoConversa(
+        conversa({ assigned_at: "2026-11-16T12:00:00.000Z", last_message_at: null }),
+        AGORA,
+      ),
+    ).toMatchObject({ elegivel: false });
+    expect(
+      planejarLiberacaoConversa(
+        conversa({ last_message_at: "2026-11-17T12:00:00.000Z" }),
+        AGORA,
+      ),
+    ).toMatchObject({ elegivel: false });
+    expect(
+      planejarLiberacaoConversa(conversa({ assigned_to_user_id: null }), AGORA),
+    ).toMatchObject({ elegivel: false });
+    expect(planejarLiberacaoConversa(conversa({ status: "open" }), AGORA)).toMatchObject({
+      elegivel: false,
+    });
+    expect(planejarLiberacaoConversa(null, AGORA)).toMatchObject({ elegivel: false });
   });
 });

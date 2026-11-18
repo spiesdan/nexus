@@ -10,6 +10,7 @@ import type {
   CampanhaVenda,
   ClienteDuplicado,
   ContatoEndereco,
+  ConversaParada,
   CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
@@ -242,6 +243,17 @@ export function contatoEndereco(over: Partial<ContatoEndereco> = {}): ContatoEnd
   };
 }
 
+export function conversaParada(over: Partial<ConversaParada> = {}): ConversaParada {
+  return {
+    id: "conversa-1",
+    status: "claimed",
+    assigned_to_user_id: "atendente-1",
+    assigned_at: ha(10 * DIA),
+    last_message_at: ha(9 * DIA),
+    ...over,
+  };
+}
+
 export function correcaoSentinel(over: Partial<CorrecaoSentinel> = {}): CorrecaoSentinel {
   return {
     ocorrencia_id: "ocorrecao-1",
@@ -285,6 +297,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     clientesDuplicados: [],
     correcoes: [],
     contatosEndereco: [],
+    conversasParadas: [],
     ...over,
   };
 }
