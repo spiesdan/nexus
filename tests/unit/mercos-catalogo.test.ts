@@ -102,7 +102,7 @@ describe("classificação do lote", () => {
     ]);
 
     expect(validas).toHaveLength(1);
-    expect(validas[0].codigo).toBe("411");
+    expect(validas[0]!.codigo).toBe("411");
     expect(divergentes.map((d) => d.motivo)).toEqual(["sem nome", "preço ilegível"]);
     expect(semCodigo).toHaveLength(2);
   });
@@ -113,8 +113,8 @@ describe("classificação do lote", () => {
       { codigo: "411", nome: "TOALHINHA 5KG", preco: "11,00" },
     ]);
     expect(validas).toHaveLength(1);
-    expect(validas[0].preco_cents).toBe(1100);
-    expect(divergentes[0].motivo).toContain("código repetido");
+    expect(validas[0]!.preco_cents).toBe(1100);
+    expect(divergentes[0]!.motivo).toContain("código repetido");
   });
 });
 
@@ -135,7 +135,7 @@ describe("upsert: criados, atualizados e nome divergente", () => {
     expect(criados.map((p) => p.codigo)).toEqual(["900"]);
     expect(atualizados).toHaveLength(1);
     // O nome que vai para o upsert é o do BANCO, não o do ERP.
-    expect(atualizados[0].nome).toBe("Toalhinha 5kg");
+    expect(atualizados[0]!.nome).toBe("Toalhinha 5kg");
     expect(divergentes).toEqual([
       expect.objectContaining({
         codigo: "411",
