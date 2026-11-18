@@ -9,6 +9,7 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
   JobDaFila,
@@ -227,6 +228,28 @@ export function leadAberto(over: Partial<LeadAberto> = {}): LeadAberto {
   };
 }
 
+export function correcaoSentinel(over: Partial<CorrecaoSentinel> = {}): CorrecaoSentinel {
+  return {
+    ocorrencia_id: "ocorrecao-1",
+    estado: "corrigida",
+    job_id: "job-1",
+    aprovada_em: ha(20 * MIN),
+    correcao: {
+      job_id: "job-1",
+      run_after_antes: ha(3 * HORA),
+      run_after_depois: ha(10 * MIN),
+      executada_em: ha(10 * MIN),
+    },
+    job: {
+      id: "job-1",
+      kind: "watchdog",
+      status: "pending",
+      run_after: ha(10 * MIN),
+    },
+    ...over,
+  };
+}
+
 export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
   return {
     organizationId: "org-1",
@@ -246,6 +269,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     campanhasProspeccao: [],
     campanhasVenda: [],
     clientesDuplicados: [],
+    correcoes: [],
     ...over,
   };
 }

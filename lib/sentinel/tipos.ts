@@ -308,6 +308,34 @@ export interface LeadAberto {
  * (não como `Date.now()` dentro das regras) para que o teste de tempo seja
  * determinístico e a mesma varredura seja reproduzível.
  */
+/**
+ * Uma correção aprovada do Nível 2, vista pela ocorrência e pelo job.
+ *
+ * `correcao` só existe quando o evento `nota` de `antecipar_job` foi gravado;
+ * `job` reflete o estado ATUAL (inclusive `done`, que a fila normal não lê).
+ * É a fotografia que permite observar, sem escrever, se a reversão ainda é
+ * honesta e se a aprovação venceu.
+ */
+export interface CorrecaoSentinel {
+  ocorrencia_id: string;
+  estado: "aprovada" | "corrigida";
+  job_id: string;
+  /** created_at do último evento que levou a ocorrência a `aprovada`. */
+  aprovada_em: string | null;
+  correcao: {
+    job_id: string;
+    run_after_antes: string;
+    run_after_depois: string;
+    executada_em: string;
+  } | null;
+  job: {
+    id: string;
+    kind: string;
+    status: string;
+    run_after: string;
+  } | null;
+}
+
 export interface Snapshot {
   organizationId: string;
   agoraMs: number;
@@ -326,6 +354,7 @@ export interface Snapshot {
   campanhasProspeccao: CampanhaProspeccao[];
   campanhasVenda: CampanhaVenda[];
   clientesDuplicados: ClienteDuplicado[];
+  correcoes: CorrecaoSentinel[];
 }
 
 /** Metadados da regra no registry — a tela lê daqui a explicação. */
@@ -356,5 +385,6 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     campanhasProspeccao: [],
     campanhasVenda: [],
     clientesDuplicados: [],
+    correcoes: [],
   };
 }

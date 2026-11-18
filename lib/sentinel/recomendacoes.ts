@@ -547,4 +547,42 @@ export const RECOMENDACOES: Record<string, Construtor> = {
           "Só é possível comparar leads com contato vinculado; e-mail/telefone normalizados são indício.",
       },
     ),
+
+  "operacao.correcao_sem_reversao": () =>
+    plano(
+      "Conferir o efeito do job e registrar por que a reversão não vale mais.",
+      [
+        "Leia o resultado/erro do job e confirme se ele rodou como esperado.",
+        "Se o job não deveria ter rodado, registre o impacto no histórico da ocorrência.",
+        "Não tente reverter por SQL: a janela honesta passou quando o worker reclamou o job.",
+      ],
+      ["resultado do job", "impacto observado", "quem confirma"],
+      {
+        fonte: ["sentinel_occurrences", "sentinel_occurrence_events", "job_queue"],
+        risco: "baixo",
+        reversibilidade: "irreversivel",
+        exigeAprovacao: false,
+        limitacao:
+          "Reverter agora exigiria mexer em job já reclamado; a máquina não finge desfazer.",
+      },
+    ),
+
+  "operacao.aprovacao_expirada": () =>
+    plano(
+      "Revalidar a aprovação antes de executar a correção.",
+      [
+        "Confira se o job ainda está pendente e atrasado.",
+        "Simule a correção de novo para ver o antes/depois atual.",
+        "Confirme a execução ou encerre a ocorrência com motivo.",
+      ],
+      ["estado atual do job", "novo antes/depois", "decisão do gestor"],
+      {
+        fonte: ["sentinel_occurrences", "sentinel_occurrence_events", "job_queue"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        exigeAprovacao: false,
+        limitacao:
+          "A janela de 5 min é a mesma da RPC; o dry-run não é persistido, então a contagem começa na aprovação.",
+      },
+    ),
 };

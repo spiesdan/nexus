@@ -1,4 +1,4 @@
-# Frente `front/sentinel` — Nexus Sentinel v1.3
+# Frente `front/sentinel` — Nexus Sentinel v1.3 (observabilidade)
 
 > Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v13`
 > Baseline desta fatia: `nexus/main` @ `9ede1d6b` (v1.1 em `2116db86`, prova em `05570d11`, v1.2 em `9ede1d6b`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (29)
+## 2. Regras implementadas (31)
 
 ### Fiscal (12)
 
@@ -40,7 +40,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.job_retry_excessivo` | 3+ tentativas na mesma nota | media |
 | `fiscal.sincronizacao_falhou` | sync fiscal com erro/bloqueio nas últimas 24 h (agrupada por dia) | media/alta |
 
-### Operação, financeiro e campanha (17)
+### Operação, financeiro e campanha (19)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
@@ -61,6 +61,8 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `campanha.cidade_repetida` | mesma cidade repetida no recorte ativo | baixa |
 | `operacao.cliente_duplicado_email` | mesmo e-mail normalizado em 2+ clientes ativos | media |
 | `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
+| `operacao.correcao_sem_reversao` | correção aplicada cujo job saiu de `pending`/do `run_after` gravado — reversão não é mais honesta | media |
+| `operacao.aprovacao_expirada` | ocorrência `aprovada` além da janela de 5 min do plano revisado | baixa |
 
 **Falsos positivos evitados de propósito:**
 
@@ -136,6 +138,7 @@ transação.
 | Concorrência | índice único parcial em `sentinel_runs (organization_id)` para `status='executando'`; execução órfã > 30 min vira `erro` |
 | Trilha | `sentinel_occurrence_events` (append-only) + `api_audit_log` (`sentinel.run`, `sentinel.occurrence_state`, `sentinel.settings_changed`, `sentinel.correction_applied`, `sentinel.correction_reverted`) |
 | Correção aprovada | Só `operacao.job_fila_travado` + `job_queue` + `watchdog`/`pending`/atrasado; `manager+`, ocorrência `aprovada`, dry-run + confirmação, hash e CAS; reversão só com job ainda `pending` no valor gravado |
+| Observabilidade da correção | `operacao.correcao_sem_reversao` (mesmo CAS: pending + run_after gravado) e `operacao.aprovacao_expirada` (janela de 5 min); só leitura, nenhuma ação |
 
 Rodada vazia **não** audita — o próprio `sentinel_runs` é o registro de que o
 cron rodou. Rodada com achado, encerramento ou falha audita.
@@ -175,8 +178,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
-| `lib/sentinel/coleta.ts` | 15 consultas com teto e filtro de org |
+| `lib/sentinel/coleta.ts` | 18 consultas com teto e filtro de org (inclui ocorrências/eventos/jobs da correção) |
 | `lib/sentinel/recomendacoes.ts` | plano revisável por regra (Nível 1) |
+| `lib/sentinel/regras-correcao.ts` | observa reversão honesta e aprovação vencida — sem executar nada |
 | `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
 | `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
@@ -195,6 +199,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `tests/api/sentinel-permissoes.test.ts` | régua de papel no fio: agent assume/pede ação; gestor ignora/encerra; platform admin; motivo obrigatório |
 | `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/invariants/sentinel-correcao.test.ts` | RPC 0325: antecipa, reverte, recusa running/flywheel/outra org |
+| `lib/sentinel/regras-correcao.test.ts` | observabilidade: CAS de reversão e janela de 5 min, com negativos |
 | `tests/api/sentinel-correcao.test.ts` | simular/executar/reverter: papel, aprovação, hash, audit |
 | `tests/unit/sentinel-correcao-tela.test.tsx` | executar só após confirmação explícita; reverter |
 | `scripts/medir-sentinel-carga.ts` | 50k pedidos + 200k mensagens, scan medido e orçamento forçado |
@@ -278,10 +283,26 @@ CI, o `critical`/`full` usa o baseline completo.
 spec do painel continua no `e2e` `critical`/`full` da main. A prova de tela é
 componente + rota (PR #538, mergeado) e a de banco é o `test:db` acima.
 
+### v1.3 — observabilidade das correções aprovadas
+
+```bash
+pnpm exec vitest run lib/sentinel
+#   10 arquivos, 73 testes verdes (inclui os 6 da observabilidade)
+
+# coleta real contra o Supabase local: ocorrência corrigida + evento nota +
+# job running → snapshot.correcoes preenchido e 1 achado de sem_reversao
+pnpm exec tsx scripts/probe-obs.ts
+#   (script descartável; o caminho de produção é coleta.ts)
+```
+
+Os dois detectores são **somente leitura**: leem as ocorrências/eventos do
+próprio Sentinel e o `job_queue` atual. Não executam, não revertem e não
+aprovam; a correção continua sendo da rota de Nível 2.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
-## 9. Limitações declaradas (v1.3)
+## 9. Limitações declaradas (v1.3 + observabilidade)
 
 1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
    saldo de abertura e a comparação só vale para produtos criados a partir da
@@ -313,7 +334,14 @@ fiscal/financeira real.
     demais casos exigem uma fatia própria com antes/depois comprovado.
 12. **Reversão honesta ou nenhuma:** se o worker reclamou o job, a RPC devolve
     zero linhas e a tela responde 409; não existe "desfiz" que não desfez.
-13. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+13. **`operacao.aprovacao_expirada` conta da aprovação, não do dry-run:** o
+    dry-run não é persistido; a janela de 5 min da RPC é aplicada à aprovação.
+    Um gestor que simulou de novo sem executar ainda pode ver o alerta — ele
+    pede revalidação, não bloqueia nada.
+14. **`operacao.correcao_sem_reversao` só enxerga correções de job watchdog
+    feitas pela 0325.** Correção manual de estado (`corrigida` sem evento de
+    antecipação) não entra, porque não há antes/depois para comparar.
+15. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
     estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
@@ -331,12 +359,15 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (v1.3, 18/11/2026)
+## 11. Onde retomar (observabilidade, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-v13`): 0325 (correção aprovada de job
-  watchdog), rotas de simular/executar/reverter, tela com confirmação explícita,
-  invariante de banco e medição de carga (50k/200k).
-- **E2E do painel**: spec reescrita para ocorrência nascer do scan; falta rodar
-  no CI (o app local não hidratou sob a carga da máquina).
+- **Esta fatia** (`front/sentinel-obs`): `operacao.correcao_sem_reversao` e
+  `operacao.aprovacao_expirada`, sem migration nova (a 0325 já tem os dados).
+  Coleta lê ocorrências/eventos do Sentinel + job atual; nenhuma escrita.
+- **Próxima da fila P2**: `cadastro.endereco_com_lixo` — `contacts` com
+  `logradouro/complemento/bairro/cidade` em `NULL`/`undefined`/`NaN` literais ou
+  só espaços, agrupado por organização com id de evidência. Observação: o
+  escritor não está vivo no código; 84 cadastros históricos medidos.
+- **E2E do painel**: já coberto na v1.3; o CI roda no `critical`/`full`.
 - **Próxima de produto**: v1.4 — outro caso de correção com reversão honesta,
   um por vez; nunca em nota, saldo, pagamento ou envio externo.
