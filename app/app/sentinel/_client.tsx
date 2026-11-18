@@ -127,14 +127,29 @@ function duracao(ms: number | null): string {
   return `${Math.round(ms / 60_000)} min`;
 }
 
-/** Ocorrências anteriores à v1.1 têm `{}`; não invente plano na tela. */
+/**
+ * Ocorrências anteriores à v1.1 têm `{}`; não invente plano na tela.
+ *
+ * O motor só persiste plano validado, mas a tela lê o banco: uma linha antiga
+ * ou editada à mão não pode branquear o detalhe inteiro. Plano incompleto vira
+ * "sem plano" (a evidência continua visível), nunca exceção de render.
+ */
 function planoDe(ocorrencia: OcorrenciaSentinel): Recomendacao | null {
   const bruto = ocorrencia.recomendacao;
   if (!bruto || typeof bruto !== "object") return null;
   const r = bruto as Partial<Recomendacao>;
-  if (typeof r.resumo !== "string" || !Array.isArray(r.passos) || r.passos.length === 0) {
+  if (typeof r.resumo !== "string" || r.resumo.trim().length < 8) return null;
+  if (!Array.isArray(r.passos) || r.passos.length === 0) return null;
+  if (!r.passos.every((p) => typeof p === "string")) return null;
+  if (!Array.isArray(r.campos_pendentes)) return null;
+  if (!["baixo", "medio", "alto"].includes(r.risco as string)) return null;
+  if (!["reversivel", "parcial", "irreversivel"].includes(r.reversibilidade as string)) {
     return null;
   }
+  if (!["alta", "media", "baixa"].includes(r.confianca as string)) return null;
+  if (typeof r.exige_aprovacao !== "boolean") return null;
+  if (!Array.isArray(r.fonte) || r.fonte.length === 0) return null;
+  if (r.limitacao !== null && typeof r.limitacao !== "string") return null;
   return r as Recomendacao;
 }
 

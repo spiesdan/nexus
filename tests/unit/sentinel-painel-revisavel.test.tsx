@@ -266,6 +266,24 @@ describe("Sentinel — painel revisável", () => {
     expect(within(dialogo).queryByText("Plano de correção (revisável)")).not.toBeInTheDocument();
   });
 
+  it("plano incompleto no banco não branqueia o detalhe", async () => {
+    const quebrado = ocorrencia({
+      id: "oc-4",
+      titulo: "Ocorrência com plano truncado",
+      // Sem `fonte`/`reversibilidade`: o motor não gravaria, mas a tela lê o banco.
+      recomendacao: {
+        resumo: "Plano que veio truncado do banco.",
+        passos: ["Um passo qualquer"],
+        risco: "alto",
+      } as unknown as Recomendacao,
+    });
+    renderizar({ ocorrencias: [quebrado] });
+    const dialogo = await abrirDetalheDe(quebrado);
+
+    expect(within(dialogo).getByText("Sem plano registrado", { exact: false })).toBeInTheDocument();
+    expect(within(dialogo).getByText("O que foi encontrado")).toBeInTheDocument();
+  });
+
   it("kill switch desligado explica e desabilita a varredura", () => {
     renderizar({ configuracao: { ...CONFIG, ativo: false } });
 
