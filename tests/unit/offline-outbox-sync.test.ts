@@ -466,6 +466,34 @@ describe("o dreno", () => {
     expect(r.itens[0]?.resultado).toBe("parado_sem_sessao");
     // O segundo nem foi tocado: continua pendente com zero tentativas.
     expect(db.linhas.find((l) => l.uuid === UUID2)?.tentativas).toBe(0);
+    // E o primeiro VOLTA para a fila: aparelho desconectado não pode perder
+    // pedido. É o que a tela do shell promete ("os pedidos continuam salvos").
+    expect(db.linhas.find((l) => l.uuid === UUID1)?.status).toBe("pendente");
+  });
+
+  it("o dreno do aparelho posta em /api/v1/device/orders", async () => {
+    // O caminho do cookie e o do bearer não podem se cruzar: o shell não tem
+    // sessão, e um default silencioso mandaria o pedido para a rota errada —
+    // 401 em produção, com a fila parada no aparelho.
+    const db = bancoFake();
+    await enfileirarPedido(db, {
+      uuid: UUID1,
+      numero_provisorio: "OFF-0001",
+      payload: pedidoFake(),
+      agora: AGORA,
+    });
+    const urls: string[] = [];
+    const r = await drenarFila(
+      db,
+      async (url) => {
+        urls.push(url);
+        return { status: 201, corpo: async () => ({ data: { id: "p-1", numero: 10 } }) };
+      },
+      undefined,
+      "/api/v1/device/orders",
+    );
+    expect(urls).toEqual(["/api/v1/device/orders"]);
+    expect(r.aceitos).toBe(1);
   });
 
   it("500 não é rejeição — volta para a fila", async () => {
