@@ -15,7 +15,7 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/lib/api/types";
-import { emitirNota } from "@/lib/fiscal/emitir-nota";
+import { emitirNota, pedidoJaTemNotaViva } from "@/lib/fiscal/emitir-nota";
 import { statusFaturavel } from "@/lib/schemas/fiscal";
 
 const PEDIDO_ID = "33333333-3333-4333-8333-333333333333";
@@ -355,5 +355,23 @@ describe("informações adicionais do pedido viram o infCpl da nota", () => {
     const { banco, promessa } = emitir("faturado");
     await expect(promessa).resolves.toBeTruthy();
     expect(extrasGravados(banco)).toBeNull();
+  });
+});
+
+describe("nota viva por pedido (0315)", () => {
+  it("o erro do trigger vira 409, não 500 — e só o marcador certo conta", () => {
+    expect(
+      pedidoJaTemNotaViva({
+        code: "23505",
+        message: 'duplicate key value violates unique constraint: invoice_pedido_ja_tem_nota_viva',
+      }),
+    ).toBe(true);
+    expect(pedidoJaTemNotaViva({ code: "23505", message: "invoices_org_serie_numero_key" })).toBe(
+      false,
+    );
+    expect(pedidoJaTemNotaViva({ code: "23503", message: "invoice_pedido_ja_tem_nota_viva" })).toBe(
+      false,
+    );
+    expect(pedidoJaTemNotaViva(null)).toBe(false);
   });
 });
