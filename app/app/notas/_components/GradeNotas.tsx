@@ -133,6 +133,15 @@ export function GradeNotas({
     erros: string[];
   } | null>(null);
   const [erroXml, setErroXml] = React.useState<string | null>(null);
+  /**
+   * Qual nota está com a reemissão EM CURSO.
+   *
+   * Sem isto o botão "Tentar de novo" continuava clicável durante a chamada: o
+   * segundo clique mandava outro POST antes de o primeiro voltar. A rota é
+   * idempotente por job aberto, mas o operador via dois toasts e não sabia se
+   * tinha pedido duas vezes — e o estado da tela dizia "nada acontecendo".
+   */
+  const [reemitindoId, setReemitindoId] = React.useState<string | null>(null);
   const arquivoXmlRef = React.useRef<HTMLInputElement>(null);
 
   // O NSU foi embora desta aba de propósito: a distribuição da SEFAZ é do
@@ -175,12 +184,36 @@ export function GradeNotas({
    */
   const chips = [
     { valor: "", rotulo: textos.todos, contagem: inicial.length },
-    { valor: "autorizada", rotulo: textos.autorizada, contagem: inicial.filter((n) => n.status === "autorizada").length },
-    { valor: "em_emissao", rotulo: textos.emitindo, contagem: inicial.filter((n) => n.status === "em_emissao").length },
-    { valor: "pendente", rotulo: textos.pendente, contagem: inicial.filter((n) => n.status === "pendente").length },
-    { valor: "cancelada", rotulo: textos.cancelada, contagem: inicial.filter((n) => n.status === "cancelada").length },
-    { valor: "erro", rotulo: textos.erro, contagem: inicial.filter((n) => n.status === "erro").length },
-    { valor: "denegada", rotulo: textos.denegada, contagem: inicial.filter((n) => n.status === "denegada").length },
+    {
+      valor: "autorizada",
+      rotulo: textos.autorizada,
+      contagem: inicial.filter((n) => n.status === "autorizada").length,
+    },
+    {
+      valor: "em_emissao",
+      rotulo: textos.emitindo,
+      contagem: inicial.filter((n) => n.status === "em_emissao").length,
+    },
+    {
+      valor: "pendente",
+      rotulo: textos.pendente,
+      contagem: inicial.filter((n) => n.status === "pendente").length,
+    },
+    {
+      valor: "cancelada",
+      rotulo: textos.cancelada,
+      contagem: inicial.filter((n) => n.status === "cancelada").length,
+    },
+    {
+      valor: "erro",
+      rotulo: textos.erro,
+      contagem: inicial.filter((n) => n.status === "erro").length,
+    },
+    {
+      valor: "denegada",
+      rotulo: textos.denegada,
+      contagem: inicial.filter((n) => n.status === "denegada").length,
+    },
   ].filter((c) => c.valor === "" || c.contagem > 0);
   const somaVisiveis = visiveis.reduce((a, n) => a + n.total_cents, 0);
 
@@ -295,20 +328,18 @@ export function GradeNotas({
         credentials: "same-origin",
         body: form,
       });
-      const json = (await res.json().catch(() => null)) as
-        | {
-            data?: {
-              importados: number;
-              jaExistiam: number;
-              fora_do_emitente: number;
-              ilegiveis: number;
-              conflitos: number;
-              naoAutorizadas: number;
-              erros: string[];
-            };
-            error?: { message?: string };
-          }
-        | null;
+      const json = (await res.json().catch(() => null)) as {
+        data?: {
+          importados: number;
+          jaExistiam: number;
+          fora_do_emitente: number;
+          ilegiveis: number;
+          conflitos: number;
+          naoAutorizadas: number;
+          erros: string[];
+        };
+        error?: { message?: string };
+      } | null;
       if (!res.ok || !json?.data) {
         setErroXml(json?.error?.message ?? t("Não consegui importar os XMLs."));
         return;
@@ -366,12 +397,15 @@ export function GradeNotas({
       cancelLabel: t("Voltar"),
     });
     if (!ok) return;
+    setReemitindoId(id);
     try {
       await apiClient.post(`/api/v1/invoices/${id}/reemitir`, {});
       toast.success(t("Nota enfileirada para emissão"));
       router.refresh();
     } catch (e) {
       showApiError(e);
+    } finally {
+      setReemitindoId(null);
     }
   }
 
@@ -539,227 +573,247 @@ export function GradeNotas({
         </div>
       </div>
 
-        {progressoXml && (
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground tabular-nums">
-              {textos.exportaXmls}: {progressoXml.feitos}/{progressoXml.total}
-            </p>
+      {progressoXml && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {textos.exportaXmls}: {progressoXml.feitos}/{progressoXml.total}
+          </p>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={progressoXml.total}
+            aria-valuenow={progressoXml.feitos}
+            aria-label={textos.exportaXmls}
+            className="h-2 w-full overflow-hidden rounded-full bg-muted"
+          >
             <div
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={progressoXml.total}
-              aria-valuenow={progressoXml.feitos}
-              aria-label={textos.exportaXmls}
-              className="h-2 w-full overflow-hidden rounded-full bg-muted"
-            >
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{
-                  width: `${(progressoXml.feitos / Math.max(progressoXml.total, 1)) * 100}%`,
-                }}
-              />
-            </div>
+              className="h-full rounded-full bg-primary transition-all"
+              style={{
+                width: `${(progressoXml.feitos / Math.max(progressoXml.total, 1)) * 100}%`,
+              }}
+            />
           </div>
-        )}
+        </div>
+      )}
 
-        {inicial.length === 0 ? (
-          <EmptyState
-            icon={Receipt}
-            headline="Nenhuma nota ainda"
-            subcopy="As notas nascem dos pedidos que já foram aprovados, concluídos, faturados ou expedidos."
-          />
-        ) : visiveis.length === 0 ? (
-          <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
-        ) : (
-          <>
-            <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead>{textos.status}</TableHead>
-                    <TableHead className="hidden 2xl:table-cell">{textos.protocolo}</TableHead>
-                    <TableHead className="hidden 2xl:table-cell">{textos.operacao}</TableHead>
-                    <TableHead>{textos.data}</TableHead>
-                    <TableHead className="text-right">{textos.numNota}</TableHead>
-                    <TableHead className="hidden 2xl:table-cell">{textos.serie}</TableHead>
-                    <TableHead>{textos.pessoa}</TableHead>
-                    <TableHead className="text-right">{textos.valorTotal}</TableHead>
-                    <TableHead className="hidden min-[1700px]:table-cell">{textos.ambiente}</TableHead>
-                    <TableHead>
-                      <span className="sr-only">{textos.acoes}</span>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visiveis.map((n) => (
-                    <React.Fragment key={n.id}>
-                      <TableRow>
-                        <TableCell>
-                          <Badge variant={VARIANTE_STATUS[n.status]}>
-                            {ROTULO_DA_NOTA[n.status] ?? n.status}
-                          </Badge>
-                          {n.erro && <span className="block text-xs text-error-fg">{n.erro}</span>}
-                        </TableCell>
-                        <TableCell className="hidden font-mono text-xs whitespace-nowrap 2xl:table-cell">
-                          {n.protocolo ?? "—"}
-                        </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-muted-foreground 2xl:table-cell">
-                          {operacaoPadrao === "" ? "—" : operacaoPadrao}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                          {new Date(n.created_at).toLocaleDateString(tagIdioma)}
-                        </TableCell>
-                        <TableCell className="text-right font-medium whitespace-nowrap text-text tabular-nums">
-                          {n.numero === null ? textos.semNumero : n.numero}
-                        </TableCell>
-                        <TableCell className="hidden text-muted-foreground 2xl:table-cell">{n.serie}</TableCell>
-                        <TableCell className="max-w-56 truncate">
-                          {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
-                        </TableCell>
-                        <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
-                          {comoMoeda(n.total_cents, "BRL")}
-                        </TableCell>
-                        <TableCell className="hidden whitespace-nowrap text-muted-foreground min-[1700px]:table-cell">
-                          {ambientePadrao === "producao" ? textos.producao : textos.homologacao}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              title={textos.detalhe}
-                              aria-label={textos.detalhe}
-                              onClick={() => setExpandida(expandida === n.id ? null : n.id)}
-                              aria-expanded={expandida === n.id}
-                            >
-                              <MagnifyingGlass size={14} />
-                            </Button>
-                            {n.status === "autorizada" && (
-                              <>
+      {inicial.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          headline="Nenhuma nota ainda"
+          subcopy="As notas nascem dos pedidos que já foram aprovados, concluídos, faturados ou expedidos."
+          primary={{ label: t("Ver pedidos"), href: "/app/pedidos" }}
+        />
+      ) : visiveis.length === 0 ? (
+        <EmptyFilterResults primary={{ label: t("Limpar filtros"), onClick: limparFiltros }} />
+      ) : (
+        <>
+          <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{textos.status}</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">{textos.protocolo}</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">{textos.operacao}</TableHead>
+                  <TableHead>{textos.data}</TableHead>
+                  <TableHead className="text-right">{textos.numNota}</TableHead>
+                  <TableHead className="hidden 2xl:table-cell">{textos.serie}</TableHead>
+                  <TableHead>{textos.pessoa}</TableHead>
+                  <TableHead className="text-right">{textos.valorTotal}</TableHead>
+                  <TableHead className="hidden min-[1700px]:table-cell">
+                    {textos.ambiente}
+                  </TableHead>
+                  <TableHead>
+                    <span className="sr-only">{textos.acoes}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visiveis.map((n) => (
+                  <React.Fragment key={n.id}>
+                    <TableRow>
+                      <TableCell>
+                        <Badge variant={VARIANTE_STATUS[n.status]}>
+                          {ROTULO_DA_NOTA[n.status] ?? n.status}
+                        </Badge>
+                        {n.erro && <span className="block text-xs text-error-fg">{n.erro}</span>}
+                        {/*
+                            EM EMISSÃO NÃO É ESTADO FINAL — e a tela dizia só
+                            "Emitindo". O job velho é reaberto por CAS no
+                            servidor (>15 min), mas quem olha a tela não sabia
+                            que existe saída: a dica ficava no `title` do
+                            botão, que não aparece no toque nem no teclado.
+                          */}
+                        {n.status === "em_emissao" && (
+                          <span className="block max-w-64 text-xs text-muted-foreground">
+                            {t(
+                              "Processando. Se ficar assim por mais de 15 minutos, use “Tentar de novo”.",
+                            )}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden font-mono text-xs whitespace-nowrap 2xl:table-cell">
+                        {n.protocolo ?? "—"}
+                      </TableCell>
+                      <TableCell className="hidden whitespace-nowrap text-muted-foreground 2xl:table-cell">
+                        {operacaoPadrao === "" ? "—" : operacaoPadrao}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap text-muted-foreground">
+                        {new Date(n.created_at).toLocaleDateString(tagIdioma)}
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap text-text tabular-nums">
+                        {n.numero === null ? textos.semNumero : n.numero}
+                      </TableCell>
+                      <TableCell className="hidden text-muted-foreground 2xl:table-cell">
+                        {n.serie}
+                      </TableCell>
+                      <TableCell className="max-w-56 truncate">
+                        {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
+                        {comoMoeda(n.total_cents, "BRL")}
+                      </TableCell>
+                      <TableCell className="hidden whitespace-nowrap text-muted-foreground min-[1700px]:table-cell">
+                        {ambientePadrao === "producao" ? textos.producao : textos.homologacao}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            title={textos.detalhe}
+                            aria-label={textos.detalhe}
+                            onClick={() => setExpandida(expandida === n.id ? null : n.id)}
+                            aria-expanded={expandida === n.id}
+                          >
+                            <MagnifyingGlass size={14} />
+                          </Button>
+                          {n.status === "autorizada" && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title={textos.verDanfe}
+                                aria-label={textos.verDanfe}
+                                asChild
+                              >
+                                <a
+                                  href={`/api/v1/invoices/${n.id}/danfe`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <Printer size={14} />
+                                </a>
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title={textos.baixarXml}
+                                aria-label={textos.baixarXml}
+                                asChild
+                              >
+                                <a
+                                  href={`/api/v1/invoices/${n.id}/xml`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <DownloadSimple size={14} />
+                                </a>
+                              </Button>
+                              {podeEmitir && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  title={textos.verDanfe}
-                                  aria-label={textos.verDanfe}
-                                  asChild
+                                  title={textos.cartaCorrecao}
+                                  aria-label={textos.cartaCorrecao}
+                                  onClick={() => {
+                                    setCartaPara(n);
+                                    setCorrecao("");
+                                  }}
                                 >
-                                  <a
-                                    href={`/api/v1/invoices/${n.id}/danfe`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <Printer size={14} />
-                                  </a>
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  title={textos.baixarXml}
-                                  aria-label={textos.baixarXml}
-                                  asChild
-                                >
-                                  <a
-                                    href={`/api/v1/invoices/${n.id}/xml`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <DownloadSimple size={14} />
-                                  </a>
-                                </Button>
-                                {podeEmitir && (
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    title={textos.cartaCorrecao}
-                                    aria-label={textos.cartaCorrecao}
-                                    onClick={() => {
-                                      setCartaPara(n);
-                                      setCorrecao("");
-                                    }}
-                                  >
-                                    <FileText size={14} />
-                                  </Button>
-                                )}
-                              </>
-                            )}
-                            {podeEmitir && (n.status === "erro" || n.status === "pendente") && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-1.5"
-                                onClick={() => setCorrigirPara(n)}
-                                title={t("Corrigir nota")}
-                              >
-                                <PencilSimple size={14} />
-                                {t("Corrigir")}
-                              </Button>
-                            )}
-                            {podeEmitir && (n.status === "erro" || n.status === "em_emissao") && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => void reemitir(n.id, n.status)}
-                                title={
-                                  n.status === "em_emissao"
-                                    ? t("Só depois de 15 minutos em Emitindo sem mudar")
-                                    : undefined
-                                }
-                              >
-                                {n.status === "erro" ? textos.reemitir : t("Tentar de novo")}
-                              </Button>
-                            )}
-                            {podeEmitir &&
-                              (OBJETIVOS_CANCELAMENTO.includes(n.status) ||
-                                n.status === "autorizada") && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => confirmaCancelamento(n)}
-                                >
-                                  {textos.cancelar}
+                                  <FileText size={14} />
                                 </Button>
                               )}
-                          </div>
+                            </>
+                          )}
+                          {podeEmitir && (n.status === "erro" || n.status === "pendente") && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5"
+                              onClick={() => setCorrigirPara(n)}
+                              title={t("Corrigir nota")}
+                            >
+                              <PencilSimple size={14} />
+                              {t("Corrigir")}
+                            </Button>
+                          )}
+                          {podeEmitir && (n.status === "erro" || n.status === "em_emissao") && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={reemitindoId === n.id}
+                              onClick={() => void reemitir(n.id, n.status)}
+                              title={
+                                n.status === "em_emissao"
+                                  ? t("Só depois de 15 minutos em Emitindo sem mudar")
+                                  : undefined
+                              }
+                            >
+                              {n.status === "erro" ? textos.reemitir : t("Tentar de novo")}
+                            </Button>
+                          )}
+                          {podeEmitir &&
+                            (OBJETIVOS_CANCELAMENTO.includes(n.status) ||
+                              n.status === "autorizada") && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => confirmaCancelamento(n)}
+                              >
+                                {textos.cancelar}
+                              </Button>
+                            )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {expandida === n.id && (
+                      <TableRow className="bg-muted/30">
+                        <TableCell colSpan={6} className="p-3 2xl:hidden">
+                          <DetalheNota id={n.id} textos={textos} />
+                        </TableCell>
+                        <TableCell colSpan={10} className="hidden p-3 2xl:table-cell">
+                          <DetalheNota id={n.id} textos={textos} />
                         </TableCell>
                       </TableRow>
-                      {expandida === n.id && (
-                        <TableRow className="bg-muted/30">
-                          <TableCell colSpan={6} className="p-3 2xl:hidden">
-                            <DetalheNota id={n.id} textos={textos} />
-                          </TableCell>
-                          <TableCell colSpan={10} className="hidden p-3 2xl:table-cell">
-                            <DetalheNota id={n.id} textos={textos} />
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-              <Table>
-                <TableBody>
-                  <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
-                    <TableCell colSpan={3} className="2xl:hidden">
-                      {visiveis.length} {textos.notas}
-                    </TableCell>
-                    <TableCell colSpan={7} className="hidden 2xl:table-cell">
-                      {visiveis.length} {textos.notas}
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap tabular-nums">
-                      {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
-                    </TableCell>
-                    <TableCell colSpan={2} className="hidden 2xl:table-cell" />
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {textos.filtrandoPor}: {partesFiltro.join(" · ")}
-            </p>
-          </>
-        )}
+                    )}
+                  </React.Fragment>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+            <Table>
+              <TableBody>
+                <TableRow className="bg-muted/40 font-medium hover:bg-muted/40">
+                  <TableCell colSpan={3} className="2xl:hidden">
+                    {visiveis.length} {textos.notas}
+                  </TableCell>
+                  <TableCell colSpan={7} className="hidden 2xl:table-cell">
+                    {visiveis.length} {textos.notas}
+                  </TableCell>
+                  <TableCell className="text-right whitespace-nowrap tabular-nums">
+                    {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
+                  </TableCell>
+                  <TableCell colSpan={2} className="hidden 2xl:table-cell" />
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {textos.filtrandoPor}: {partesFiltro.join(" · ")}
+          </p>
+        </>
+      )}
 
       {corrigirPara && (
         <CorrigirNota

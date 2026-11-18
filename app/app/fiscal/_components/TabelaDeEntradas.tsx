@@ -172,6 +172,11 @@ export function TabelaDeEntradas({
               ? t("Use Sincronizar na Visão Geral para buscar as notas emitidas contra o CNPJ.")
               : t("Ajuste a busca ou limpe os filtros.")
           }
+          primary={
+            inicial.length === 0
+              ? { label: t("Abrir a Visão Geral"), href: "/app/fiscal" }
+              : undefined
+          }
         />
       ) : (
         <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
