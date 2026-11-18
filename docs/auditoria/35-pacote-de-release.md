@@ -58,9 +58,9 @@ mobile/offline de #514 estão no código, mas a ponte SQLite↔remoto no APK ain
 não existe (P1-04 `[!]`). Fragmento de capacidade nova ali prometeria algo que
 não chega ao aparelho; fica para quando a ponte entrar.
 
-## 4. Inventário de migrations 0313–0324
+## 4. Inventário de migrations 0313–0327
 
-> Recorte medido em `9ede1d6b`. A **fonte** é `supabase/migrations/MANIFEST.md`; esta
+> Recorte medido em `0c239946`. A **fonte** é `supabase/migrations/MANIFEST.md`; esta
 tabela existe para o revisor do deploy ver o que muda de schema sem abrir 300
 + arquivos. Migration nova depois deste corte entra na tabela no próximo recorte.
 
@@ -81,9 +81,23 @@ Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 | 0322 | `20261123150000_0322_credencial_de_dispositivo_offline.sql` | `offline_devices` + policies | `create table if not exists` | não |
 | 0323 | `20261123160000_0323_telefone_fixo_e164.sql` | `create or replace fn_upsert_wa_contact` | `create or replace` | não |
 | 0324 | `20261123170000_0324_sentinel_estoque_sem_movimento.sql` | detector do Sentinel | `create or replace` | não |
+| 0325 | `20261123180000_0325_sentinel_correcao_aprovada.sql` | RPC de correção/reversão (Nível 2 restrito) | `create or replace` | não |
+| 0326 | `20261123190000_0326_devolucao_nao_concorre_com_a_venda.sql` | trigger de nota viva considera finalidade e cancelada | `create or replace` | **já aplicada em produção** por correção manual |
+| 0327 | `20261123200000_0327_definer_com_search_path_vazio.sql` | definers com `search_path` vazio | dirigido pelo catálogo | **já aplicada em produção** por correção manual |
 
 Nenhuma migration destrutiva, nenhum `drop`. O caminho de update é o mesmo do
 install: o baseline inteiro, reaplicado.
+
+**0326/0327 em produção, por correção manual.** O deploy da 1.57.0 bateu nos três
+defeitos e o dono aplicou o baseline corrigido com `ON_ERROR_STOP=1` (0 erros),
+além do ajuste manual que devolveu o vínculo do pedido 19560. Isso **não** torna o
+update perigoso: as duas são `create or replace` dirigidos por catálogo, e
+reaplicar o baseline inteiro é idempotente — o `update.sh` (com o #568) agora para
+antes de trocar imagens se qualquer DDL não-benigno aparecer.
+
+**Rollback do schema:** 0326/0327 não são revertidas por rollback de imagem. A
+1.57.0 roda com elas aplicadas (o trigger apenas recusa menos duplicata e as
+definers ficam com `search_path` válido).
 
 **Conferir antes do corte** (com Docker):
 
@@ -127,9 +141,9 @@ Deploy (decisão humana separada; ver §6):
 
 | Campo | Valor |
 |---|---|
-| Versão-alvo | `v1.56.0` (derivada; a tag só existe depois do merge do PR de release) |
-| Commit-alvo | o merge do PR de release na `main` (preencher no corte; não invente sha) |
-| Mudança de schema | **0313–0324** já na `main` (0322 = `offline_devices`, tabela nova) |
+| Versão-alvo | **`v1.58.0`** (derivada no corte; a tag só existe depois do merge do PR do workflow) |
+| Commit-alvo | o merge do PR de release (preencher no corte; não invente sha) |
+| Mudança de schema | **0313–0327** (0322 = `offline_devices`; 0316 = `sentinel_*`; 0326/0327 **já em produção**) |
 | Exige ação do operador | **não** (`update.sh` aplica o baseline) |
 | Janela sugerida | fora do horário de atendimento do WhatsApp da empresa — atualização reinicia a app |
 | Rollback (imagem) | voltar as **três** imagens no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` — o `update.sh` grava as três na mesma versão) e `up -d` com **os dois** `-f` |
@@ -143,18 +157,43 @@ Passos, na ordem do [`runbook`](../runbooks/deploy.md):
 3. **Depois** (as duas verificações do runbook, não só `healthy`):
    - `docker inspect "$(docker compose -f docker-compose.prod.yml ps -q app)" --format '{{.Config.Labels}}' | grep -o 'traefik.enable:[^ ]*'` → `traefik.enable:true`
    - `curl -I https://<dominio>/` → `307`
-4. Abrir a tela de Notas e a de Estoque com dado real: são as duas mudanças de lista desta release (teto declarado).
+4. **Tabelas novas existem** (o `health` não olha schema; 0322 nasceu no deploy da 1.57.0 e ficou faltando):
+   ```bash
+   psql "$SUPABASE_DB_ADMIN_URL" -Atc \
+     "select to_regclass('public.offline_devices'), to_regclass('public.sentinel_occurrences'), to_regclass('public.sentinel_occurrence_events'), to_regclass('public.sentinel_runs')"
+   # esperado: as quatro colunas preenchidas, nenhuma vazia
+   ```
+5. **Funções da correção existem e são executáveis só pelo serviço**:
+   ```bash
+   psql "$SUPABASE_DB_ADMIN_URL" -Atc \
+     "select proname from pg_proc where proname in ('fn_sentinel_corrigir_job','fn_sentinel_reverter_job','fn_invoice_order_uma_viva') order by 1"
+   ```
+6. Abrir **Notas** e **Estoque** com dado real: são as duas mudanças de lista desta
+   release (teto declarado) e a devolução é o caso que travou o backfill.
+
+### 6.1 Rollback para 1.57.0
+
+1. No `.env`, voltar as **três** imagens para `1.57.0` (`APP_IMAGE`,
+   `WORKER_IMAGE`, `SCHEDULER_IMAGE`) — o `update.sh` grava as três juntas; uma
+   esquecida deixa o worker em outra versão.
+2. `docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d`.
+3. **Não** reverter o schema: 0326/0327 são compatíveis com a 1.57.0 e reverter
+   trigger exigiria outra migration. O baseline é aditivo por contrato.
+4. Se o problema for schema pela metade, o caminho não é rollback de imagem: é
+   `restore.sh` do backup feito no passo 1 — e o motivo fica no relatório.
 
 Critério de abortar: `update.sh` sai ≠ 0, verificação de schema falha, ou qualquer
 uma das duas verificações do passo 3 não bate. Nesse caso: não "tentar de novo
 mais tarde" sem coletar `docker compose logs app` e o motivo do `psql`.
 
-**Aprovação** (humano). O merge do PR #537 é o que cria a tag; nada abaixo foi feito:
+**Aprovação** (humano). Nada abaixo foi feito; o corte é do workflow, e o dono
+ainda não liberou:
 
 ```
-[ ] Aprovado cortar v1.56.0 (merge do PR #537)
+[ ] Aprovado cortar v1.58.0 (workflow_dispatch do "release")
 [ ] Aprovado publicar imagens
 [ ] Aprovado deploy na VPS ___ em __/__/____
+[ ] `to_regclass` das quatro tabelas conferido depois do deploy
 ```
 
 ## 7. Riscos e o que não entra
