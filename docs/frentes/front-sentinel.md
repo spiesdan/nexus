@@ -1,7 +1,7 @@
 # Frente `front/sentinel` — Nexus Sentinel v1.2
 
 > Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v12`
-> Baseline desta fatia: `nexus/main` @ `3b1ad7b8` (o v1.1 entrou em `2116db86` e a prova em `05570d11`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Baseline desta fatia: `nexus/main` @ `81a26f45` (o v1.1 entrou em `2116db86` e a prova em `05570d11`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
 > Escopo: **v1 + v1.1 + v1.2 somente leitura** — detectar, classificar, abrir ocorrência, propor plano revisável e medir a rodada. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
