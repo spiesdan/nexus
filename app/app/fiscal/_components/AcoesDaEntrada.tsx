@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/hooks/i18n/useT";
@@ -43,6 +44,7 @@ export function AcoesDaEntrada({
 }) {
   const t = useT();
   const router = useRouter();
+  const confirmar = useConfirmar();
   const [evento, setEvento] = React.useState<string>("210210");
   const [justificativa, setJustificativa] = React.useState("");
   const [agindo, setAgindo] = React.useState<string | null>(null);
@@ -67,6 +69,50 @@ export function AcoesDaEntrada({
   );
   const exigeJustificativa = evento === "210240";
   const justificativaCurta = exigeJustificativa && justificativa.trim().length < 15;
+
+  /**
+   * AS TRÊS AÇÕES QUE NÃO TÊM BOTÃO DE VOLTAR.
+   *
+   * Medido na auditoria 5.8: manifestar desconhecimento/não realizada, ignorar
+   * e importar eram um clique só — e importar move estoque e cria contas a
+   * pagar. A confirmação nomeia o efeito, inclusive que a manifestação vai à
+   * SEFAZ e não é desfeita por esta tela.
+   */
+  async function confirmarManifestacao(): Promise<boolean> {
+    const rotulo = EVENTOS.find((e) => e.codigo === evento)?.rotulo ?? evento;
+    if (evento === "210210") return true; // Ciência é o passo normal do fluxo.
+    return confirmar({
+      title: t(`Manifestar "${t(rotulo)}" para esta nota?`),
+      description: t(
+        "A manifestação é transmitida à SEFAZ e fica registrada na nota de entrada. Não há como desfazer por esta tela.",
+      ),
+      confirmLabel: t("Manifestar"),
+      cancelLabel: t("Voltar"),
+    });
+  }
+
+  async function confirmarImportacao(): Promise<boolean> {
+    return confirmar({
+      title: t("Importar esta entrada para estoque e financeiro?"),
+      description: t(
+        "A importação grava o movimento de estoque e cria as contas a pagar da nota. Confira os itens na conferência antes: esta tela não desfaz a importação.",
+      ),
+      confirmLabel: t("Importar"),
+      cancelLabel: t("Voltar"),
+    });
+  }
+
+  async function confirmarIgnorar(): Promise<boolean> {
+    return confirmar({
+      title: t("Ignorar esta nota de entrada?"),
+      description: t(
+        "A nota sai do fluxo de conferência e importação. Ela continua no histórico, mas não entra em estoque nem em contas a pagar.",
+      ),
+      confirmLabel: t("Ignorar"),
+      cancelLabel: t("Voltar"),
+      danger: true,
+    });
+  }
 
   return (
     <div className="space-y-4 rounded-lg border border-border bg-surface p-4">
@@ -111,16 +157,19 @@ export function AcoesDaEntrada({
               size="sm"
               variant="outline"
               disabled={agindo !== null || justificativaCurta}
-              onClick={() =>
-                void acao(
-                  "manifestar",
-                  {
-                    evento,
-                    ...(exigeJustificativa ? { justificativa } : {}),
-                  },
-                  t("Manifestação registrada."),
-                )
-              }
+              onClick={() => {
+                void (async () => {
+                  if (!(await confirmarManifestacao())) return;
+                  await acao(
+                    "manifestar",
+                    {
+                      evento,
+                      ...(exigeJustificativa ? { justificativa } : {}),
+                    },
+                    t("Manifestação registrada."),
+                  );
+                })();
+              }}
             >
               {agindo === "manifestar" ? t("Enviando…") : t("Manifestar")}
             </Button>
@@ -128,7 +177,12 @@ export function AcoesDaEntrada({
               size="sm"
               variant="ghost"
               disabled={agindo !== null}
-              onClick={() => void acao("ignorar", {}, t("Nota ignorada."))}
+              onClick={() => {
+                void (async () => {
+                  if (!(await confirmarIgnorar())) return;
+                  await acao("ignorar", {}, t("Nota ignorada."));
+                })();
+              }}
             >
               {t("Ignorar")}
             </Button>
@@ -189,7 +243,12 @@ export function AcoesDaEntrada({
                 ? undefined
                 : t("Aprove a conferência antes de mover estoque.")
             }
-            onClick={() => void acao("importar", {}, t("Entrada importada."))}
+            onClick={() => {
+              void (async () => {
+                if (!(await confirmarImportacao())) return;
+                await acao("importar", {}, t("Entrada importada."));
+              })();
+            }}
           >
             {agindo === "importar" ? t("Importando…") : t("Importar para estoque e financeiro")}
           </Button>

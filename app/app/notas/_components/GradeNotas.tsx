@@ -7,6 +7,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults, EmptyState } from "@/components/empty";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,7 @@ export function GradeNotas({
   const t = useT();
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
+  const confirmar = useConfirmar();
   const [expandida, setExpandida] = React.useState<string | null>(null);
   const [filtroStatus, setFiltroStatus] = React.useState("");
   const [busca, setBusca] = React.useState("");
@@ -338,7 +340,28 @@ export function GradeNotas({
     }
   }
 
-  async function reemitir(id: string) {
+  async function reemitir(id: string, status: StatusDaNota) {
+    // Nota em `erro` é dead-letter; `em_emissao` pode estar PROCESSANDO ou
+    // travada. Os dois usam a mesma rota, que decide pelo job aberto e recusa
+    // com 409 quando a tentativa ainda está viva — por isso a confirmação diz
+    // o que acontece em cada caso, em vez de prometer um reenvio que pode não
+    // sair.
+    const travada = status === "em_emissao";
+    const ok = await confirmar({
+      title: travada
+        ? t("Tentar de novo uma nota que ficou em Emitindo?")
+        : t("Tentar emitir esta nota de novo?"),
+      description: travada
+        ? t(
+            "Use quando a nota está em Emitindo há mais de 15 minutos sem mudar: o processamento travou e esta ação devolve o mesmo job à fila, sem criar outro. Se ela ainda estiver sendo processada, o servidor recusa e nada é duplicado.",
+          )
+        : t(
+            "A nota volta para a fila de emissão e a tentativa anterior continua no histórico. Nada é transmitido agora: o worker pega o job em seguida.",
+          ),
+      confirmLabel: t("Tentar de novo"),
+      cancelLabel: t("Voltar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.post(`/api/v1/invoices/${id}/reemitir`, {});
       toast.success(t("Nota enfileirada para emissão"));
@@ -360,7 +383,7 @@ export function GradeNotas({
     }
   }
 
-  function confirmaCancelamento(n: NotaFiscal) {
+  async function confirmaCancelamento(n: NotaFiscal) {
     if (n.status === "autorizada") {
       const m = window.prompt(textos.motivo, "");
       if (m === null) return;
@@ -371,6 +394,26 @@ export function GradeNotas({
       void cancelar(n.id, m);
       return;
     }
+    // Pendente/emitindo/erro NÃO são terminais, mas o cancelamento encerra a
+    // tentativa e apaga o erro que explica o que deu errado. Sem esta
+    // confirmação, um clique no ícone da linha descartava o diagnóstico que o
+    // operador ia usar para corrigir e reemitir.
+    const rotulo = ROTULO_DA_NOTA[n.status] ?? n.status;
+    const ok = await confirmar({
+      title: t(`Cancelar esta nota (${rotulo})?`),
+      description:
+        n.status === "em_emissao"
+          ? t(
+              "A nota está em emissão agora. Cancelar interrompe esta tentativa e não há como voltar atrás — se o que você quer é tentar de novo, use “Tentar de novo”.",
+            )
+          : t(
+              "O cancelamento é definitivo. O erro registrado nesta tentativa deixa de aparecer na nota, e você pode emitir outra depois.",
+            ),
+      confirmLabel: t("Cancelar nota"),
+      cancelLabel: t("Voltar"),
+      danger: true,
+    });
+    if (!ok) return;
     void cancelar(n.id);
   }
 
@@ -644,13 +687,18 @@ export function GradeNotas({
                                 {t("Corrigir")}
                               </Button>
                             )}
-                            {podeEmitir && n.status === "erro" && (
+                            {podeEmitir && (n.status === "erro" || n.status === "em_emissao") && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => void reemitir(n.id)}
+                                onClick={() => void reemitir(n.id, n.status)}
+                                title={
+                                  n.status === "em_emissao"
+                                    ? t("Só depois de 15 minutos em Emitindo sem mudar")
+                                    : undefined
+                                }
                               >
-                                {textos.reemitir}
+                                {n.status === "erro" ? textos.reemitir : t("Tentar de novo")}
                               </Button>
                             )}
                             {podeEmitir &&

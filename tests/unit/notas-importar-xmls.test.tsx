@@ -23,6 +23,9 @@ vi.mock("@/components/feedback/ApiErrorToast", () => ({ showApiError: vi.fn() })
 vi.mock("@/components/nexus-ui/feedback/nexus-toast", () => ({
   nexusToast: { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
 }));
+vi.mock("@/components/nexus-ui/forms/ConfirmacaoProvider", () => ({
+  useConfirmar: () => async () => true,
+}));
 
 const refresh = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push: vi.fn() }) }));

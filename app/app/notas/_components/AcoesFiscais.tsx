@@ -115,6 +115,19 @@ export function AcoesFiscais({
       toast.error(textos.dicaMotivo);
       return;
     }
+    // A inutilização vai à SEFAZ e NÃO tem desfazer. O botão das lacunas já
+    // pedia confirmação; o da faixa digitada era um clique só — o mesmo efeito
+    // fiscal irreversível, sem a mesma pausa.
+    const ok = await confirmar({
+      title: t(`Inutilizar a numeração ${ini} a ${fim}?`),
+      description: t(
+        "A faixa é transmitida à SEFAZ e não tem como desfazer. Os números deixam de existir para esta série e ano; nota viva na faixa faz a SEFAZ recusar.",
+      ),
+      confirmLabel: t("Inutilizar faixa"),
+      cancelLabel: t("Voltar"),
+      danger: true,
+    });
+    if (!ok) return;
     setInutilizando(true);
     try {
       const r = await apiClient.post<{ data?: { status?: string; motivo_transmissao?: string | null } }>(
