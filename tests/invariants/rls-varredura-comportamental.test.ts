@@ -61,6 +61,14 @@ const ORG_A = "aaaaaaaa-0000-4000-8000-000000000001";
 const ORG_B = "bbbbbbbb-0000-4000-8000-000000000002";
 const USER_A = "aaaaaaaa-1111-4000-8000-000000000001";
 const USER_B = "bbbbbbbb-1111-4000-8000-000000000002";
+/**
+ * O papel mais BAIXO da hierarquia, nas duas orgs. O eixo de admin prova que a
+ * organização filtra; ele NÃO prova que a policy não deixa um `viewer` — que é
+ * o papel com menos direito — atravessar. Foi um `viewer` que, em 0143,
+ * desligou a camada anti-jailbreak pelo PostgREST.
+ */
+const VIEWER_A = "aaaaaaaa-1111-4000-8000-000000000011";
+const VIEWER_B = "bbbbbbbb-1111-4000-8000-000000000012";
 
 /** Uma linha por tabela, por organização. Ver o cabeçalho: replica mode. */
 const SEED = `
@@ -68,7 +76,9 @@ const SEED = `
 
   insert into auth.users (id, email) values
     ('${USER_A}', 'rls-varre-a@invariant.test'),
-    ('${USER_B}', 'rls-varre-b@invariant.test')
+    ('${USER_B}', 'rls-varre-b@invariant.test'),
+    ('${VIEWER_A}', 'rls-varre-viewer-a@invariant.test'),
+    ('${VIEWER_B}', 'rls-varre-viewer-b@invariant.test')
   on conflict (id) do nothing;
 
   insert into public.organizations (id, slug, legal_name, display_name) values
@@ -78,7 +88,9 @@ const SEED = `
 
   insert into public.user_organizations (user_id, organization_id, role, accepted_at) values
     ('${USER_A}', '${ORG_A}', 'admin', now()),
-    ('${USER_B}', '${ORG_B}', 'admin', now())
+    ('${USER_B}', '${ORG_B}', 'admin', now()),
+    ('${VIEWER_A}', '${ORG_A}', 'viewer', now()),
+    ('${VIEWER_B}', '${ORG_B}', 'viewer', now())
   on conflict do nothing;
 
   do $seed$
@@ -293,7 +305,7 @@ const SEED = `
 
       insert into public.idempotency_keys
         (organization_id, key, endpoint, request_hash, status_code, response_body)
-        values (v_org, 'chave-' || v_tag, '/probe', '\\x00'::bytea, 200, '{}'::jsonb);
+        values (v_org, 'chave-' || v_tag, '/probe', 'probe-' || v_tag, 200, '{}'::jsonb);
 
       insert into public.incidents (organization_id, type, severity)
         values (v_org, 'probe', 'info');
@@ -372,6 +384,23 @@ const SEED = `
 
       insert into public.webhook_events_log (organization_id, provider, event_type)
         values (v_org, 'generic', 'probe');
+
+      -- ── SEGUNDA linha em tabelas sem UNIQUE que a impeça ──────────────
+      -- Uma linha só não distingue "a policy filtra por organização" de "a
+      -- policy devolve no máximo uma linha". As demais tabelas da lista têm
+      -- UNIQUE por (org, …) e ficam com uma linha; o limite está declarado no
+      -- doc.
+      insert into public.event_log (organization_id, event_type, entity_kind)
+        values (v_org, 'probe.insert2', 'probe');
+      insert into public.lead_notes (organization_id, contact_id, headline, body)
+        values (v_org, v_contact, 'titulo 2', 'corpo 2');
+      insert into public.conversation_notes (organization_id, conversation_id, body)
+        values (v_org, v_conv, 'nota 2');
+      insert into public.orders
+        (organization_id, external_id, external_provider, status, total_cents, ordered_at)
+        values (v_org, 'pedido2-' || v_tag, 'nuvemshop', 'paid', 200, now());
+      insert into public.webhook_events_log (organization_id, provider, event_type)
+        values (v_org, 'generic', 'probe2');
     end loop;
   end
   $seed$;
@@ -453,6 +482,11 @@ interface Sondagem {
   readonly delB: string;
   readonly insB: string;
   readonly insA: string;
+  /** Mesmos eixos com o papel mais BAIXO (viewer) da org A. */
+  readonly viewSelB: string;
+  readonly viewSelA: string;
+  readonly viewUpdB: string;
+  readonly viewInsB: string;
 }
 
 /**
@@ -479,6 +513,11 @@ function sondar(tabela: string): Sondagem {
     select 'insB', public.__probe_inserir('${tabela}', :'linha'::jsonb);
     select 'insA', public.__probe_inserir('${tabela}',
       jsonb_set(:'linha'::jsonb, '{organization_id}', to_jsonb('${ORG_A}'::uuid)));
+    select set_config('request.jwt.claims', '{"sub":"${VIEWER_A}"}', false) \\g /dev/null
+    select 'viewSelB', public.__probe('${tabela}', '${ORG_B}', 'select');
+    select 'viewSelA', public.__probe('${tabela}', '${ORG_A}', 'select');
+    select 'viewUpdB', public.__probe('${tabela}', '${ORG_B}', 'update');
+    select 'viewInsB', public.__probe_inserir('${tabela}', :'linha'::jsonb);
   `);
   const valores = new Map<string, string>();
   for (const linha of out.split("\n")) {
@@ -497,14 +536,34 @@ function sondar(tabela: string): Sondagem {
     delB: pega("delB"),
     insB: pega("insB"),
     insA: pega("insA"),
+    viewSelB: pega("viewSelB"),
+    viewSelA: pega("viewSelA"),
+    viewUpdB: pega("viewUpdB"),
+    viewInsB: pega("viewInsB"),
   };
   SONDAGENS.set(tabela, sondagem);
   return sondagem;
 }
 
+/**
+ * Tabelas cuja policy cita `fn_role_at_least` — nelas, um `viewer` pode
+ * legitimamente ler 0 linhas da PRÓPRIA organização. Sem esta distinção o
+ * controle positivo do viewer acusaria de "policy quebrada" o que é gate de
+ * papel correto.
+ */
+const COM_GATE_DE_PAPEL = new Set<string>();
+
 beforeAll(() => {
   sql(SEED);
   sql(SONDAS);
+  for (const t of sql(`
+    select distinct tablename from pg_policies
+     where schemaname = 'public'
+       and (coalesce(qual, '') like '%fn_role_at_least%'
+         or coalesce(with_check, '') like '%fn_role_at_least%');
+  `).split("\n")) {
+    if (t.trim()) COM_GATE_DE_PAPEL.add(t.trim());
+  }
   // Guarda de vacuidade do seed: cada tabela da lista TEM linha das duas orgs.
   // Sem isto, uma tabela cujo seed parou de inserir passaria em todos os eixos
   // cross-org por ausência de dado — o modo de falha que a varredura de
@@ -607,6 +666,62 @@ describe("F-17 — isolamento comportamental (73 tabelas que eram dívida)", () 
       );
     });
   }
+
+  for (const tabela of TABELAS_DA_VARREDURA) {
+    describe(`${tabela} — papel mais baixo (viewer)`, () => {
+      it("viewer da org A lê 0 linhas da org B", () => {
+        const s = sondar(tabela);
+        expect(
+          ["ok:0", "err:42501"],
+          `VAZAMENTO PARA VIEWER: ${tabela} devolveu linha da org B (${s.viewSelB})`,
+        ).toContain(s.viewSelB);
+      });
+
+      it("viewer não escreve na org B (UPDATE e INSERT)", () => {
+        const s = sondar(tabela);
+        expect(
+          ["ok:0", "err:42501"],
+          `ESCRITA CROSS-ORG POR VIEWER: UPDATE em ${tabela} afetou linhas (${s.viewUpdB})`,
+        ).toContain(s.viewUpdB);
+        expect(
+          s.viewInsB,
+          `ESCRITA CROSS-ORG POR VIEWER: INSERT em ${tabela} com a org B PASSOU`,
+        ).not.toBe("ok");
+      });
+
+      it("viewer lê a própria org quando a policy não tem gate de papel", () => {
+        const s = sondar(tabela);
+        if (COM_GATE_DE_PAPEL.has(tabela)) return;
+        if (SEM_LEITURA_POR_DESENHO[tabela]) return;
+        expect(
+          s.viewSelA,
+          `${tabela}: a policy não tem gate de papel, mas o viewer não leu a própria org (${s.viewSelA}) — ` +
+            `ou a policy fecha demais, ou o papel do seed está errado.`,
+        ).toMatch(/^ok:[1-9]\d*$/);
+      });
+    });
+  }
+
+  it("volume: as tabelas com segunda linha têm 2+ por org e seguem isoladas", () => {
+    // A segunda linha existe para distinguir "filtra por organização" de
+    // "devolve no máximo uma linha". Só entram tabelas sem UNIQUE que impeça
+    // a duplicata — o limite está declarado no doc.
+    const comDuas = ["event_log", "lead_notes", "conversation_notes", "orders", "webhook_events_log"];
+    for (const tabela of comDuas) {
+      const contagem = sql(`
+        select string_agg(n::text, '/') from (
+          select (select count(*) from public.${tabela} where organization_id = '${ORG_A}') as n
+          union all
+          select (select count(*) from public.${tabela} where organization_id = '${ORG_B}')
+        ) x;`);
+      expect(
+        contagem,
+        `${tabela}: esperava 2+ linhas em cada org para a prova de volume (medido ${contagem})`,
+      ).toMatch(/^[2-9]\d*\/[2-9]\d*$/);
+      const s = sondar(tabela);
+      expect(s.selB, `${tabela}: vazou linha de B com 2+ linhas semeadas`).toBe("ok:0");
+    }
+  });
 
   it("nenhuma sonda cross-org é vacuidade: as linhas da org B existem", () => {
     // Mede como superusuário (fora da RLS) que cada tabela tem linha das duas

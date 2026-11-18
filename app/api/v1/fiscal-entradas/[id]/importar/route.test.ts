@@ -100,11 +100,15 @@ function montar(over: {
   produtoPorId?: Record<string, unknown> | null;
   produtoPorCodigo?: Record<string, unknown> | null;
   reivindicacaoPerdida?: boolean;
+  /** Corrida: o produto não existe na 1ª consulta e o INSERT perde para outro. */
+  corridaDeProduto?: { produto: Record<string, unknown> };
 }) {
   // O mesmo produto pode ser encontrado por id (ajuste de estoque, que relê
   // pelo id) ou por código (casamento da importação). O teste 2 só declara o
   // segundo — sem o fallback, o ajuste por id não acharia o produto.
-  const catalogo = over.produtoPorId ?? over.produtoPorCodigo ?? null;
+  const catalogo =
+    over.produtoPorId ?? over.corridaDeProduto?.produto ?? over.produtoPorCodigo ?? null;
+  let consultasPorCodigo = 0;
   vi.mocked(createClient).mockResolvedValue({
     from: fake({
       fiscal_entradas: (ctx) => {
@@ -131,7 +135,12 @@ function montar(over: {
             }
           : { data: null },
       catalog_products: (ctx) => {
-        if (ctx.op === "insert") return { data: { id: "prod-novo" } };
+        if (ctx.op === "insert") {
+          if (over.corridaDeProduto) {
+            return { data: null, error: { code: "23505", message: "duplicate key" } };
+          }
+          return { data: { id: "prod-novo" } };
+        }
         // O UPDATE do ajustarEstoque precisa devolver a linha atualizada
         // (`data.length > 0` é o que o CAS lê como sucesso).
         if (ctx.op === "update") return { data: [{ quantidade: 1 }] };
@@ -140,7 +149,7 @@ function montar(over: {
           : null;
         // O teste diferencia as duas consultas pela coluna do `eq`.
         const porCodigo = ctx.filtros.some(([campo, coluna]) => campo === "eq" && coluna === "codigo")
-          ? (over.produtoPorCodigo ?? null)
+          ? (over.corridaDeProduto ? (consultasPorCodigo++ === 0 ? null : over.corridaDeProduto.produto) : (over.produtoPorCodigo ?? null))
           : null;
         return { data: porCodigo ?? porId };
       },
@@ -219,6 +228,31 @@ describe("importar — associação manual", () => {
       (c) => c.op === "update" || c.op === "insert",
     );
     expect(primeiraEscrita?.tabela).toBe("fiscal_entradas");
+  });
+
+  it("corrida na criação do produto relê o vencedor e movimenta o estoque desta nota", async () => {
+    montar({
+      associacao: { produto_id: null },
+      corridaDeProduto: {
+        produto: { id: "prod-vencedor", quantidade: 10, controla_estoque: true },
+      },
+    });
+
+    const res = await importar();
+    expect(res.status).toBe(201);
+
+    // Sem a releitura, o produto ficaria sem vínculo e a quantidade desta nota
+    // (2) não entraria — perda silenciosa.
+    const atualizacoes = chamadas.filter(
+      (c) => c.tabela === "catalog_products" && c.op === "update",
+    );
+    expect(atualizacoes).toHaveLength(1);
+    expect(atualizacoes[0]!.args[0]).toMatchObject({ quantidade: 12 });
+
+    const vinculos = chamadas.filter(
+      (c) => c.tabela === "fiscal_document_items" && c.op === "update",
+    );
+    expect(vinculos.some((c) => (c.args[0] as { produto_id?: string }).produto_id === "prod-vencedor")).toBe(true);
   });
 
   it("quem perde a reivindicação não movimenta estoque e recebe 409", async () => {

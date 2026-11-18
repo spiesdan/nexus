@@ -205,7 +205,7 @@ export async function POST(
         }
       } else if (codigo !== "") {
         // Produto novo: nasce do XML — custo = o que pagamos ao fornecedor.
-        const { data: criado } = await supabase
+        const { data: criado, error: erroCriacao } = await supabase
           .from("catalog_products")
           .insert({
             organization_id: authz.org.orgId,
@@ -224,13 +224,64 @@ export async function POST(
           })
           .select("id")
           .single();
-        const novoId = (criado as unknown as { id: string } | null)?.id;
+        let novoId = (criado as unknown as { id: string } | null)?.id;
+
+        // Corrida na unique (org, codigo): outra importação criou o MESMO
+        // produto entre a consulta por código e o INSERT. Sem reler, o item
+        // desta nota ficaria sem vínculo e a quantidade dela não entraria no
+        // estoque — perda silenciosa, não duplicidade. Relê e soma a
+        // quantidade desta nota (o INSERT do vencedor já contou a dele).
+        if (!novoId && erroCriacao?.code === "23505") {
+          const { data: existente } = await supabase
+            .from("catalog_products")
+            .select("id, quantidade, controla_estoque")
+            .eq("organization_id", authz.org.orgId)
+            .eq("codigo", codigo)
+            .maybeSingle();
+          const produtoExistente = existente as unknown as {
+            id: string;
+            quantidade: number;
+            controla_estoque: boolean;
+          } | null;
+          if (produtoExistente) {
+            novoId = produtoExistente.id;
+            if (qtd !== 0) {
+              const ajuste = await ajustarEstoque(supabase, {
+                organizationId: authz.org.orgId,
+                productId: produtoExistente.id,
+                delta: qtd,
+                permitirNegativo: true,
+              });
+              if (!ajuste.ok) {
+                avisos.push(`Estoque de ${codigo} não movimentado (${ajuste.motivo}).`);
+                logger.error("[fiscal-entradas.importar] ajuste pós-corrida falhou", {
+                  organization_id: authz.org.orgId,
+                  entrada_id: id,
+                  product_id: produtoExistente.id,
+                  motivo: ajuste.motivo,
+                });
+              }
+            }
+          }
+        }
+
         if (novoId && vinculo && !vinculo.produto_id) {
           await supabase
             .from("fiscal_document_items")
             .update({ produto_id: novoId, associado_em: new Date().toISOString() })
             .eq("organization_id", authz.org.orgId)
             .eq("id", vinculo.id);
+        }
+        if (!novoId) {
+          // Nem criou, nem achou o vencedor: o item não pode sumir em silêncio.
+          avisos.push(`Produto ${codigo} não criado (${erroCriacao?.code ?? "erro"}).`);
+          logger.error("[fiscal-entradas.importar] produto não criado", {
+            organization_id: authz.org.orgId,
+            entrada_id: id,
+            codigo,
+            erro: erroCriacao?.message?.slice(0, 300) ?? "sem erro e sem id",
+          });
+          continue;
         }
       } else {
         // Sem código e sem associação: não há como identificar o produto.

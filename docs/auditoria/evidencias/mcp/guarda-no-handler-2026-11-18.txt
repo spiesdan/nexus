@@ -1,0 +1,58 @@
+# MCP — guarda de organização NO handler, 2026-11-18
+# comando: TEST_DB_CONTAINER=<c> TEST_DB_TEMPLATE=inv_baseline TEST_DB_PORT=<p> npx vitest run --config vitest.db.config.ts tests/invariants/{mcp-nao-alcanca-outro-tenant,pg-como-supabase}.test.ts --reporter=verbose
+# ambiente: pgvector/pgvector:pg15 + baseline.sql install; client = pgComoSupabase (service role, sem RLS)
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.db.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db
+
+stderr | tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts
+[env] Nenhuma chave de IA configurada (AI_GATEWAY_API_KEY, ANTHROPIC_API_KEY ou OPENROUTER_API_KEY) — o agente vai pular toda resposta com reason='ai_gateway_key_missing'.
+[env] OPENAI_API_KEY ausente — ela é o ÚLTIMO degrau da escada de chave da OpenAI (preparo de material do acervo e transcrição de áudio). Se alguma organização já cadastrou a chave em IA › Credenciais, os dois seguem funcionando por ela; se não cadastrou nenhuma, ambos ficam parados até que alguém cadastre — pela tela ou aqui.
+[env] IMPERSONATE_COOKIE_SECRET not set or shorter than 32 chars — impersonate flow will return 503 at runtime.
+
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > o cenário está montado — sem isto, os casos abaixo medem o vazio 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > NÃO é legível por `crm_get_lead` 1ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > a listagem RODA — sem isto, o caso abaixo passa com uma lista vazia por ERRO 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > NÃO aparece em `crm_list_leads` 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > NÃO é editável por `crm_update_lead` — e o título prova 3ms
+stderr | tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o contato da outra organização (`crm_get_contact` / patch) > edita o da própria org (controle positivo do patch)
+[audit] insert error TypeError: fetch failed { action: 'contact.updated' }
+
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o negócio da outra organização > NÃO é movível por `crm_move_lead_stage` 3ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o contato da outra organização (`crm_get_contact` / patch) > NÃO é legível por `getContactHandler` — e o da própria org É (controle positivo) 5ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o contato da outra organização (`crm_get_contact` / patch) > NÃO é editável por `patchContactHandler` — o nome de B continua o mesmo 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o contato da outra organização (`crm_get_contact` / patch) > edita o da própria org (controle positivo do patch) 17ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > a conversa da outra organização (`crm_list_messages`) > a listagem RODA na própria conversa (controle positivo) 381ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > a conversa da outra organização (`crm_list_messages`) > NÃO devolve mensagem da conversa de B para o agente de A 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o funil da outra organização (`crm_list_pipelines`) > a listagem não traz o funil de B e traz o de A (controle positivo) 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o compromisso da outra organização (`crm_*_appointment`) > NÃO é alterável — e a nota de B prova 6ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o compromisso da outra organização (`crm_*_appointment`) > NÃO é cancelável — o status de B continua o mesmo 2ms
+ ✓ tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts > o compromisso da outra organização (`crm_*_appointment`) > altera o da própria org (controle positivo) 2ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador FILTRA > `.eq` restringe de verdade — sem isto, todo teste que o usa mede a tabela inteira 2ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador FILTRA > filtro que não casa devolve `data: null` SEM erro — 'não achei' ≠ 'falhou' 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador COMPARA — `lt`/`gt`, não só igualdade > `lt` filtra por menor que, e não devolve a tabela inteira 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador COMPARA — `lt`/`gt`, não só igualdade > `gt` é o espelho — e os dois convivem com `eq` na mesma consulta 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador COMPARA — `lt`/`gt`, não só igualdade > `in` casa só os valores da lista — e lista vazia não vira 'tudo' 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador ORDENA > `.order(asc).limit(1)` traz o de menor valor, não o primeiro que o Postgres devolver 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador ORDENA > descendente inverte — a opção `ascending` é lida, não decorativa 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador distingue os desfechos que o PostgREST distingue > `maybeSingle` com MAIS DE UMA linha é ERRO — engolir a duplicata esconderia dado incoerente 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador distingue os desfechos que o PostgREST distingue > `insert().select().single()` devolve a linha criada 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador distingue os desfechos que o PostgREST distingue > `insert().select().maybeSingle()` também devolve a linha — a forma que o vencimento usa 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o adaptador distingue os desfechos que o PostgREST distingue > violação de constraint vira `{error}`, NUNCA exceção — o chamador trata desfecho, não catch 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > UPDATE — implementado depois, e por pressão do próprio adaptador > atualiza só as linhas do filtro 11ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > UPDATE — implementado depois, e por pressão do próprio adaptador > `.select().maybeSingle()` devolve a linha ATUALIZADA, não a anterior 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > UPDATE — implementado depois, e por pressão do próprio adaptador > com `.select()`, o await direto devolve AS LINHAS — não null 2ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > UPDATE — implementado depois, e por pressão do próprio adaptador > SEM `.select()`, `data: null` continua certo — é o que o PostgREST devolve 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > UPDATE — implementado depois, e por pressão do próprio adaptador > filtro que não casa devolve `data: null` SEM erro 0ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > rpc — argumentos NOMEADOS, como o PostgREST > chama a função e devolve o valor 3ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > rpc — argumentos NOMEADOS, como o PostgREST > função inexistente vira `{error}`, não exceção 1ms
+ ✓ tests/invariants/pg-como-supabase.test.ts > o que NÃO está implementado estoura > método ausente lança em vez de devolver vazio — vazio silencioso é teste verde medindo nada 1ms
+
+ Test Files  2 passed (2)
+      Tests  34 passed (34)
+   Start at  02:46:32
+   Duration  2.04s (transform 282ms, setup 642ms, import 506ms, tests 707ms, environment 0ms)
+

@@ -57,10 +57,22 @@
   --color-surface-elevated: #fafafa;
   --color-overlay: rgba(24, 25, 37, 0.42);
 
-  /* Text (light) — Carbon / Graphite / Ash */
+  /* Text (light) — Carbon / Graphite / Ash.
+     `subtle` era o Ash da referência (#999999) e media **2,85:1** sobre
+     `--color-surface`, 2,66 sobre `--color-bg`: abaixo do piso AA de 4,5 para
+     texto normal. Ele já tinha sido corrigido no ESCURO (#8d8d8d, ver o bloco
+     `[data-theme="dark"]`) e o CLARO ficou para trás pelo mesmo motivo de
+     sempre — o gate o excluía como "decoração", e o instrumento de contraste
+     rodava no tema padrão (escuro), então o claro nunca era medido.
+     Não é decoração: são 74 usos de TEXTO que se lê (rótulo de dia e contagem
+     de pedidos em 11 px, "desativado" na agenda, meta de linha em listas).
+     #6f6f6f é o menor degrau que passa nos três fundos de página do tema
+     (5,02 sobre surface, 4,69 sobre bg, 4,81 sobre surface-elevated) e mantém
+     `subtle` mais claro que `muted` (#666666), que é a relação desenhada.
+     O par está travado em `tests/unit/tailwind-tokens.test.ts`. */
   --color-text: #181925;
   --color-text-muted: #666666;
-  --color-text-subtle: #999999;
+  --color-text-subtle: #6f6f6f;
 
   /* Borders (light) — Fog hairlines, com hierarquia: a `strong` era LITERALMENTE
      igual à `border` (#e8e8e8 nos dois), ou seja, um token sem efeito — todo
@@ -308,7 +320,8 @@
   --color-overlay: rgba(24, 25, 37, 0.42);
   --color-text: #181925;
   --color-text-muted: #666666;
-  --color-text-subtle: #999999;
+  /* Espelho do `:root` — o comentário da medição está lá (AA nos dois fundos). */
+  --color-text-subtle: #6f6f6f;
   --color-border: #e7e9ee;
   --color-border-strong: #d6dae2;
   --color-accent: var(--color-accent-600);

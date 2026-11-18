@@ -1291,7 +1291,7 @@ montar_vps() {
   local raiz="$1" pasta="$2"
   VPS_RAIZ="$raiz"; VPS_PROJ="$raiz/$pasta"; VPS_LOG="$raiz/docker.log"
   mkdir -p "$raiz/bin" "$VPS_PROJ"
-  cp install.sh update.sh backup.sh _common.sh "$raiz/"
+  cp install.sh update.sh backup.sh backup-uploads.sh _common.sh "$raiz/"
   : > "$VPS_PROJ/docker-compose.prod.yml"
   cat > "$raiz/bin/docker"
   # Só o v_supabase_url exige resposta online (000 reprova); os outros toleram.

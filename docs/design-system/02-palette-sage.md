@@ -1,6 +1,12 @@
 # 02 — Paleta Sage
 
-> **Source of truth:** `app/design/lib/tokens.ts` → `PALETTES.sage`
+> **⚠️ Histórico (2026-04-28).** Este capítulo descreve a era **Sage**, superada em
+> 2026-09-21 pelo redesign descrito em [`DESIGN.md`](../../DESIGN.md). Os valores que o
+> produto pinta estão em [`app/globals.css`](../../app/globals.css); **em conflito, o CSS
+> vence**. Ver [`README.md`](./README.md) para o mapa do que ainda vale.
+
+> **Fonte canônica hoje:** [`app/globals.css`](../../app/globals.css) → `--color-accent-*` (lavanda).
+> Esta página descreve a **Sage**, paleta da era abril/2026 — ver o aviso acima.
 
 ## Filosofia da paleta
 

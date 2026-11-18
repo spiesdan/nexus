@@ -550,9 +550,20 @@ describe("Tailwind 4 — cor de texto precisa passar no contraste, com ou sem al
     // relatório (fg `#8b8b8b`, bg `#262626`, 12px normal) — e a correção certa
     // é o TOKEN, não um `text-text` local que só esconde o par defeituoso.
     //
-    // `text-subtle` fica de fora de propósito: ele é decoração (divisor, ícone
-    // desligado), não texto que se lê.
-    const TOKENS_DE_TEXTO = ["text", "text-muted"];
+    // `text-subtle` estava FORA desta lista, com a justificativa "é decoração
+    // (divisor, ícone desligado)". A justificativa era falsa e a exclusão custou
+    // duas fases de auditoria: no CLARO o token era `#999999` e media **2,85:1**
+    // sobre `--color-surface` (2,66 sobre `--color-bg`), com **74 usos de texto
+    // que se lê** — rótulo de dia e contagem de pedidos em 11 px, "desativado"
+    // na agenda, meta de linha nas listas. O escuro já tinha sido corrigido
+    // (`#8d8d8d`) justamente porque o gate o tratava como decoração; o claro
+    // ficou para trás e o instrumento de contraste, que rodava só no tema padrão
+    // (escuro), nunca o viu.
+    //
+    // Um token de texto que ninguém mede não é um token aprovado. Se existir um
+    // papel realmente decorativo (divisor, ícone puramente ornamental), ele deve
+    // usar `--color-border`/`aria-hidden`, não o token de TEXTO.
+    const TOKENS_DE_TEXTO = ["text", "text-muted", "text-subtle"];
     const reprovados: string[] = [];
     for (const tema of ["claro", "escuro"] as const) {
       for (const token of TOKENS_DE_TEXTO) {

@@ -108,6 +108,28 @@ describe("o adaptador COMPARA — `lt`/`gt`, não só igualdade", () => {
       .gt("position", 25);
     expect((data as Array<{ name: string }>).map((x) => x.name)).toEqual(["Alfa"]);
   });
+
+  it("`in` casa só os valores da lista — e lista vazia não vira 'tudo'", async () => {
+    // Nasceu para exercitar `getContactHandler` (que lista conversas com
+    // `.in("contact_id", ids)`). O risco do `in` mal implementado é o mesmo de
+    // qualquer filtro: devolver a tabela inteira. Lista vazia é o caso que mais
+    // engana — `in ()` sem a guarda vira erro de sintaxe, e um `any` frouxo
+    // devolveria todas as linhas.
+    const { data } = await db
+      .from("crm_pipelines")
+      .select("name")
+      .eq("organization_id", ORG)
+      .eq("is_default", false)
+      .in("name", ["Alfa", "Bravo"]);
+    expect((data as Array<{ name: string }>).map((x) => x.name).sort()).toEqual(["Alfa", "Bravo"]);
+
+    const vazio = await db
+      .from("crm_pipelines")
+      .select("name")
+      .eq("organization_id", ORG)
+      .in("name", []);
+    expect(vazio.data).toEqual([]);
+  });
 });
 
 describe("o adaptador ORDENA", () => {

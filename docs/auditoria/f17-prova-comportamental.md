@@ -53,6 +53,32 @@ As duas sem controle positivo de leitura estão em `SEM_LEITURA_POR_DESENHO`:
 
 Nenhuma das duas deixa de ser medida: os eixos de escrita continuam valendo para elas.
 
+### 2.1 Papel mais baixo (viewer) — adicionado em 18/11/2026
+
+O eixo de admin prova que a **organização** filtra; não prova que a policy não
+deixa um `viewer` atravessar — e foi um `viewer` que, na 0143, desligou a
+camada anti-jailbreak pelo PostgREST. Cada uma das 73 passa a ser medida também
+com o JWT de um **viewer** da org A:
+
+| Eixo do viewer | Resultado medido |
+|---|---|
+| SELECT da org B | **0** ou recusa em 73/73 |
+| UPDATE da org B | **0** ou recusa em 73/73 |
+| INSERT declarando org B | **recusado** em 73/73 |
+| SELECT da própria org | **≥1** em todas as tabelas cuja policy **não** cita `fn_role_at_least` (a lista de gates vem do catálogo, não de suposição) |
+
+Nas tabelas com gate de papel, o viewer poder ler 0 da própria org é **correto**
+— e o teste não cobra o contrário. O que ele cobra sempre é o eixo cross-org.
+
+### 2.2 Volume: 2+ linhas onde a tabela permite
+
+Uma linha só não distingue "a policy filtra por organização" de "a policy
+devolve no máximo uma linha". Cinco tabelas sem UNIQUE que impeça a duplicata
+ganham **duas linhas por organização** (`event_log`, `lead_notes`,
+`conversation_notes`, `orders`, `webhook_events_log`), e o teste exige 2+/2+ e
+cross-org = 0 mesmo com multiplicidade. As demais 68 têm UNIQUE por
+`(organização, …)` e ficam com uma linha — limite declarado.
+
 ## 3. Um caminho que só o teste comportamental pega
 
 `crm_lead_activities` recusa o INSERT cross-org com `23503` (`lead_org_mismatch`), e
@@ -101,11 +127,12 @@ recontado pelo caso de inventário do arquivo.
   `api_audit_log`, até 10k linhas). Ela usa `requireRole("manager")` + client de
   usuário (RLS) **e** filtra `.eq("organization_id", activeOrg.orgId)` explicitamente —
   e `api_audit_log` é uma das 73 tabelas provadas aqui.
-- **O seed é sintético.** Uma linha por tabela não prova comportamento sob volume,
-  ordenação ou paginação — prova o predicado da policy, que é o que vaza entre tenants.
-- **O papel medido é `admin`.** Policies com gate de papel mais baixo (`agent`, `viewer`)
-  são cobertas pelos arquivos por módulo (`catalogo-so-gestor-muda-preco`,
-  `historico-de-captacao-rls`, `gov-*`). Aqui o alvo é o eixo **organização**.
+- **O seed é sintético.** Uma linha por tabela (duas em 5 delas, §2.2) não prova
+  ordenação nem paginação — prova o predicado da policy, que é o que vaza entre
+  tenants.
+- **Os papéis medidos são `admin` e `viewer`.** O `agent` especificamente, e gates
+  finos (`manager`), ficam nos arquivos por módulo
+  (`catalogo-so-gestor-muda-preco`, `historico-de-captacao-rls`, `gov-*`).
 
 ## 6. Reproduzir
 

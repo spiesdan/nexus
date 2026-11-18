@@ -1,6 +1,8 @@
 # 06 — Componentes
 
-> **Source of truth:** `components/ui/*` (shadcn customizado), `app/design/showcase.css` (`.ds-*` canônicos).
+> **Fonte canônica hoje:** [`components/nexus-ui/`](../../components/nexus-ui) (barril público, importar de
+> `@/components/nexus-ui`) e [`components/ui/`](../../components/ui) (primitivos shadcn). O `showcase.css`
+> é a maquete histórica e não vale para o produto.
 
 Inventário completo dos componentes de UI do Nexus. Cada um tem variants finitos, states nomeados e regras de uso. Não fork, não custom-CSS solto: se um componente precisa de variant novo, ele entra aqui.
 

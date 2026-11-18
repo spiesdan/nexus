@@ -68,6 +68,60 @@ export async function POST(
     return fail("validation_failed", "Cancelar nota autorizada exige motivo.", 422, { requestId });
   }
 
+  // ─── A CORRIDA COM O DRAIN ───────────────────────────────────────────────
+  //
+  // O drain reivindica o job (`pendente → processando`) ANTES de falar com a
+  // SEFAZ e grava o resultado na nota no fim. Cancelar no meio dessa janela
+  // marcava a nota `cancelada` e o drain, ao voltar, sobrescrevia com
+  // `autorizada` — ou o contrário: a nota existe no fisco e o app diz que foi
+  // cancelada. O comentário antigo ("o claim condicional protege") valia para
+  // dois drains, não para cancel × drain.
+  //
+  // A ordem agora é a única segura:
+  // - job `processando` → 409. Há transmissão em curso; espere o resultado
+  //   (autorizada vira cancelamento formal; erro volta a ser cancelável).
+  // - job `pendente` → encerra por CAS (`where status = 'pendente'`). Se o
+  //   drain reivindicou no meio, o CAS devolve 0 linhas e respondemos 409 —
+  //   nunca "cancelada" com transmissão viva.
+  const admin = createAdminClient();
+  const { data: jobAbertoDb } = await admin
+    .from("fiscal_jobs")
+    .select("id, status")
+    .eq("organization_id", authz.org.orgId)
+    .eq("invoice_id", id)
+    .in("status", ["pendente", "processando"])
+    .maybeSingle();
+  const jobAberto = jobAbertoDb as unknown as { id: string; status: string } | null;
+  if (jobAberto?.status === "processando") {
+    return fail(
+      "conflict",
+      "A nota está sendo transmitida agora. Aguarde o resultado antes de cancelar.",
+      409,
+      { requestId },
+    );
+  }
+  if (jobAberto?.status === "pendente") {
+    const { data: encerrado } = await admin
+      .from("fiscal_jobs")
+      .update({
+        status: "concluido",
+        ultimo_erro: "nota cancelada",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("organization_id", authz.org.orgId)
+      .eq("id", jobAberto.id)
+      .eq("status", "pendente")
+      .select("id");
+    if ((encerrado ?? []).length === 0) {
+      return fail(
+        "conflict",
+        "A nota começou a ser transmitida agora. Aguarde o resultado antes de cancelar.",
+        409,
+        { requestId },
+      );
+    }
+  }
+
   // Nota autorizada: o fisco decide antes do banco. Transmitir primeiro — se
   // falhar, a nota segue autorizada e a resposta diz por quê.
   let protocoloCancelamento: string | null = null;
@@ -122,31 +176,27 @@ export async function POST(
     protocoloCancelamento = r.protocolo;
   }
 
-  // Cancela também o job aberto: sem isso o drain emitiria uma nota que o
-  // usuário acabou de cancelar (o claim condicional já protege a corrida —
-  // quem chegar primeiro vence, o outro encontra o estado final).
-  const admin = createAdminClient();
-  await admin
-    .from("fiscal_jobs")
-    .update({
-      status: "concluido",
-      ultimo_erro: "nota cancelada",
-      updated_at: new Date().toISOString(),
-    })
-    .eq("organization_id", authz.org.orgId)
-    .eq("invoice_id", id)
-    .in("status", ["pendente", "processando"]);
-
+  // CAS no status lido: se o drain/outra chamada mudou a nota no meio (por
+  // exemplo, terminou a emissão), não sobrescrevemos com um "cancelada" velho.
   const { data, error } = await supabase
     .from("invoices")
     .update({ status: "cancelada", erro: justificativa })
     .eq("id", id)
     .eq("organization_id", authz.org.orgId)
+    .eq("status", atual.status)
     .select(COLUNAS_DA_NOTA)
-    .single();
+    .maybeSingle();
 
-  if (error || !data) {
+  if (error) {
     return fail("internal_error", "Erro ao cancelar a nota.", 500, { requestId });
+  }
+  if (!data) {
+    return fail(
+      "conflict",
+      "O estado da nota mudou durante o cancelamento. Recarregue e confira antes de tentar de novo.",
+      409,
+      { requestId },
+    );
   }
 
   await admin.from("fiscal_events").insert({

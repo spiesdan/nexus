@@ -30255,3 +30255,26 @@ create index if not exists messages_org_created_idx
 
 comment on index public.messages_org_created_idx is
   'Janela de mensagens por organização (0313). Cobre count/list por org + período — usado por /admin/usage e pelas contagens do inbox. Sem ele: 25–54 ms em 200k linhas; com: 5,7–19 ms (medido em 17/11/2026).';
+
+-- ============================================================================
+-- 0317 — `idempotency_keys.request_hash` vira TEXT (hex), não bytea.
+-- Ver supabase/migrations/20261122120000_0317_idempotency_hash_texto.sql.
+--
+-- O helper grava/compara SHA-256 em hex; como bytea, a string sem `\x` falhava
+-- no PostgREST e a idempotência não persistia. A conversão preserva as linhas.
+-- ============================================================================
+do $mig$
+begin
+  if exists (
+    select 1
+      from information_schema.columns c
+     where c.table_schema = 'public'
+       and c.table_name = 'idempotency_keys'
+       and c.column_name = 'request_hash'
+       and c.data_type = 'bytea'
+  ) then
+    alter table public.idempotency_keys
+      alter column request_hash type text using encode(request_hash, 'hex');
+  end if;
+end
+$mig$;

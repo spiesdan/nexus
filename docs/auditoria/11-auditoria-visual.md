@@ -768,6 +768,10 @@ tamanho, como a norma manda.
 
 **1.030 textos medidos em 8 telas. 48 abaixo do mínimo. Depois das correções: 22.**
 
+> **Ressalva medida em 18/11/2026:** estes números são do tema **escuro**. O produto é dark-first
+> e o instrumento abria as telas sem escolher tema; o claro não foi medido nesta rodada. Depois
+> de corrigi-lo para percorrer os dois, o claro reprovou por `--color-text-subtle` — ver V-52.
+
 | #    | O que era                                                                                | Números                                                           | Desfecho                                                                                |
 | ---- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | V-27 | `--color-text-subtle` no tema escuro tinha o valor do **claro** (`#5e5e5e`)              | **2,82:1** sobre `#151515`, em texto de 11 px da lista de pedidos | **corrigido** → `#8d8d8d` (4,9:1 / 4,5:1 no elevado)                                    |
@@ -1844,7 +1848,7 @@ números que o prompt fixa (3.2 a 3.12).
 
 | Item do prompt | Exigência | Medido | Situação |
 | --- | --- | --- | --- |
-| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | **127 tokens** em `:root`, **127** em `[data-theme="light"]`, **127** em `[data-theme="dark"]` | **igual** |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **127** · `[data-theme="light"]` **79** · `[data-theme="dark"]` **90**. Não são conjuntos iguais e não devem ser: o escuro sobrescreve 90 chaves, e o espelho claro redeclara exatamente essas 90 **menos as 11 da rampa accent** (79) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
 | 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
 | 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
 | 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
@@ -2202,3 +2206,76 @@ emitir, e "no Mercos tem!".
 **O que não foi feito:** atualizar o contato existente dentro do importador do Mercos — mudança
 de função SQL (migration + baseline + MANIFEST); fica para o próximo bloco. O script e a tela
 resolvem o caso imediato.
+
+## Tema claro: o contraste que nenhum instrumento olhava (18/11/2026)
+
+Esta rodada começou com uma pergunta simples — "o contraste publicado cobre os dois temas?" —
+e a resposta era **não**. O produto é dark-first (`app/layout.tsx` fixa `data-theme="dark"` antes
+do primeiro paint), e `scripts/auditoria/contraste.mjs` abria as 8 telas **sem escolher tema**:
+as 1.030 medições de 17/11/2026 descreviam só o escuro. O claro, que qualquer pessoa liga no
+menu, nunca foi medido por ele.
+
+### V-52 · Alta · No tema claro, `text-subtle` media 2,85:1 em 74 usos de texto — **CORRIGIDO**
+
+| | antes (`#999999`) | depois (`#6f6f6f`) |
+| --- | --- | --- |
+| sobre `--color-surface` (`#ffffff`) | **2,85:1** ✗ | **5,02:1** ✓ |
+| sobre `--color-bg` (`#f6f7f9`) | **2,66:1** ✗ | **4,69:1** ✓ |
+| sobre `--color-surface-elevated` (`#fafafa`) | **2,73:1** ✗ | **4,81:1** ✓ |
+
+Piso AA de texto normal: **4,5:1**. O escuro já havia sido corrigido na V-27 (`#8d8d8d`) pelo
+mesmo motivo; o claro herdou a cor da referência (Ash `#999`) e ficou para trás.
+
+**Não é decoração.** Medido: **75 usos** de `text-text-subtle` em `app/` e `components/`, dos
+quais **74** não estão em `aria-hidden` — são texto que se lê. Exemplos onde o defeito aparece
+como produto:
+
+| Onde | O que é | Tamanho |
+| --- | --- | --- |
+| `app/app/pedidos/_client.tsx:1165` | rótulo do dia na lista ("QUINTA-FEIRA, 15 DE OUTUBRO") | 11 px |
+| `app/app/pedidos/_client.tsx:1174` | "N pedidos · R$ X" ao lado do dia | 11 px |
+| `app/app/expedicao/_client.tsx:966` | rótulo de seção em caixa alta | 9 px |
+| `app/app/settings/tenant/agenda/_client.tsx:299` | "desativado" ao lado do tipo de compromisso | 12 px |
+
+**As duas causas eram de régua, não de tela** — e por isso o defeito atravessou quatro fases de
+auditoria sem aparecer:
+
+1. `tests/unit/tailwind-tokens.test.ts` excluía `text-subtle` da lista de tokens de TEXTO com a
+   justificativa "é decoração (divisor, ícone desligado)". A justificativa era falsa: o próprio
+   `globals.css` já dizia, no bloco escuro, que "o gate o excluía como decoração — e ele não é".
+   **Corrigido no gate, não só no token**: `text-subtle` entrou em `TOKENS_DE_TEXTO` e é medido
+   contra os três fundos de página nos dois temas.
+2. `scripts/auditoria/contraste.mjs` media um tema só. Agora percorre `dark` e `light`, semeia
+   `nexus-theme` antes do primeiro paint (o mesmo caminho do `ThemeProvider`) e grava `tema` em
+   cada registro. O resumo é **por tema**: um total agregado transforma um defeito do claro em
+   "quase tudo bem".
+
+**Prova reproduzível sem banco nem navegador:** `node scripts/auditoria/tokens-do-tema.mjs` agora
+mede os papéis de texto contra os três fundos de página, nos três blocos, e imprime as reprovas.
+Com o `HEAD` anterior: **6 reprovas — as MESMAS 3**, medidas duas vezes (`:root` e o espelho
+claro, que redeclara o mesmo valor); o escuro já passava. Com esta correção: **0**.
+
+### V-53 · Média · O instrumento de tokens lia o `:root` como se fosse o tema escuro
+
+O artefato de 17/11 (`capturas/tokens-do-tema.json`) afirmava "127 tokens em cada um dos três
+blocos — o mesmo conjunto, sem tema de segunda classe". A frase nunca foi medida: `blocoDeTema`
+usava `CSS.indexOf('[data-theme="dark"]')` e achava a primeira ocorrência da string, que é o
+`@custom-variant dark (&:where([data-theme="dark"], …))` no topo do arquivo. O recorte ia dali
+até o primeiro `\n}` — ou seja, **o bloco `:root` inteiro**. A coluna "dark" era a coluna clara
+com outro nome.
+
+| Bloco | Antes (medido errado) | Depois |
+| --- | --- | --- |
+| `:root` | 127 | **127** |
+| `[data-theme="light"]` | 127 | **79** |
+| `[data-theme="dark"]` | 127 (era o `:root`) | **90** |
+
+Os números certos **não** são iguais, e não deveriam ser: o escuro sobrescreve 90 chaves e o
+espelho claro redeclara 90 − 11 da rampa accent = 79. A paridade real é cobrada por
+`tests/unit/branding-tema-claro-escopavel.test.ts` (conjunto e valor, chave por chave) — o
+instrumento estava só repetindo o `:root` três vezes. O seletor passou a ser ancorado no começo
+da linha (`^...` com flag `m`), o mesmo cuidado que o teste já tinha.
+
+É a **sexta** vez nesta auditoria em que o defeito estava na régua (F-20, F-21, V-10, V-26, V-33,
+esta). A regra que fica: antes de publicar um número que absolve o produto, provar que a régua
+olhou para o lado certo.
