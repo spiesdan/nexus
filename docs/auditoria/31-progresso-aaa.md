@@ -162,3 +162,20 @@ A fila P0 está **fechada em código**. O que resta são P1/P2/P3 nas frentes C/
 - **P0-08 fechado** em todas as rotas fiscais com efeito externo: emissão, inutilização e as duas retransmissões.
 - **#503** (E, inbox) mergeado: reenvio de mensagem falha. P1-01 avança em J6.
 - P2-04/P3-03 na `main` (`9107b42b`); AGENTS.md mede, planos não ensinam `db push`.
+
+## Rodada 6 — 18/11/2026 (main `13fefad3`)
+
+| Merge | O que entrou |
+|---|---|
+| #503 | E: reenvio de mensagem falha no inbox (J6) |
+| #507 | E: módulos restantes — estado vazio/erro honesto |
+| #508 | C: recebíveis da NF-e |
+| #509 | C: claims fiscais de manifestação/cancelamento (migration **0319**) |
+| #510 | E: amostra de faturamento não parece o período inteiro |
+| #511 | D-03 nas retransmissões (inutilização + CC-e) |
+| #513 | C: relatório D1/D3/D4 |
+| #514 | F: sincronizador offline montado, retomada/retry, anti-duplo-toque, backup APK sem PII |
+
+**#498 (D-01/D-02) está mergeado** em `5a499313` — não sumiu; o conteúdo (`lib/prospeccao/nome-da-campanha.ts` e a migration 0318) está na `main`.
+
+**P0 em código: fechado.** P1 avança em J6 (E), fiscal (C) e mobile (F); P2-04/P3-03 na main. Próxima migration livre: **0320**.
