@@ -1,7 +1,9 @@
 # 04 — Densidade Aerada
 
 > **Fonte canônica hoje:** [`lib/nexus/tokens.ts`](../../lib/nexus/tokens.ts) (`tableRowHeight`, `tableGap`,
-> `tablePaddingX/Y`) e `--density-*` em [`app/globals.css`](../../app/globals.css). A densidade Aerada desta
+> `tablePaddingX/Y`) — é o que o código lê. As variáveis `--density-*` de
+> [`app/globals.css`](../../app/globals.css) são **espelho** (nenhum componente lê `var(--density-*)`), e o par
+> é vigiado por `tests/unit/densidade-css-e-espelho-ts.test.ts`: divergir reprova. A densidade Aerada desta
 > página continua sendo a do produto.
 
 ## Tokens
