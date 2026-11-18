@@ -174,6 +174,12 @@ pnpm test:shell                                   # kit de instalação/deploy
 
 Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção recomendada.
 
+### 9.1 Divergência de doutrina a resolver (não resolvida por suposição)
+
+| Item | Divergência | Recomendação | Quem decide |
+|---|---|---|---|
+| Tag da release | `docs/doctrine/versionamento.md` diz que **a tag nasce no CI**; `docs/doctrine/packaging.md` §checklist item 5 ainda manda `git tag vX.Y.Z && git push origin vX.Y.Z` — e o remote `origin` **não existe mais** | alinhar o checklist do packaging à regra do CI (tag só de commit da `main`, criada pelo workflow); a linha do `origin` morre junto | Dono / mantenedor da doutrina |
+
 ## 10. Registro de execução
 
 | Data | Marco | Commit/PR | Evidência |

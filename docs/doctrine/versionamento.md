@@ -183,7 +183,7 @@ Não está escrita aqui, e isso é deliberado: afirmação de versão envelhece 
 foi assim que `AGENTS.md` passou seis minors dizendo `1.0.0`. Comando não envelhece:
 
 ```bash
-git ls-remote --tags --refs origin 'refs/tags/v*' \
+git ls-remote --tags --refs nexus 'refs/tags/v*' \
   | sed 's#.*refs/tags/v##' | awk '!/-/' | sort -V | tail -1
 ```
 
