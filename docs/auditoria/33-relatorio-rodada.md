@@ -33,6 +33,7 @@
 | #484 | `f691dc06` | **P0-05** uma nota viva por pedido | `test:db` 160/1497; CI 5/5 |
 | #485 | `239efd32` | **P0-09** recebimento de compra com CAS | 5 casos + CI 5/5 |
 | #486 | `2e95f74f` | F-17 nos 4 eixos (SELECT/UPDATE/DELETE/INSERT) | 367 testes |
+| #456 | `615de767` | Recebível avulso honra `Idempotency-Key` | testes de rota |
 
 ## 3. Em PR ao encerrar a rodada
 
@@ -114,7 +115,7 @@ pnpm exec vitest run lib/sentinel
 
 | Ambiente | Estado |
 |---|---|
-| Código | mergeado na `main` até `239efd32` + #489 em PR |
+| Código | mergeado na `main` até `615de767` + #489 em PR |
 | PR | #489 aberto |
 | Release | **nenhuma** tag nova nesta rodada; última `v1.55.0` |
 | Deploy | **nenhum**; produção intocada |
