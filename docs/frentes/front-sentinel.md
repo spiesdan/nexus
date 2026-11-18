@@ -161,9 +161,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | Path | O que |
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
-| `supabase/migrations/20261122150000_0320_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
-| `supabase/baseline.sql` (apêndices 0316/0320) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0320 |
+| `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
+| `supabase/baseline.sql` (apêndices 0316/0321) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
@@ -217,7 +217,7 @@ há login nem seed. O spec `tests/e2e/sentinel-painel.spec.ts` continua versiona
 e vai rodar no job `e2e` (suítes `critical` e `full`) quando houver Docker. A
 prova de comportamento desta sessão é o teste de componente acima, que exercita
 a mesma tela com fixture determinística. `pnpm test:db` também depende de Docker
-e igualmente não rodou aqui; a migration 0320 e o apêndice do baseline foram
+e igualmente não rodou aqui; a migration 0321 e o apêndice do baseline foram
 revisados, mas a prova de banco é a do CI (`invariants`).
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
