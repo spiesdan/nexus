@@ -62,8 +62,9 @@ olhar aprova qualquer mudança — inclusive a que quebrou a tela.
 
 ## 5. A lacuna declarada: CI por plataforma
 
-O Playwright grava baseline com **sufixo de plataforma** (`…-darwin.png`,
-`…-linux.png`). Os 14 baselines versionados foram gerados em macOS; o job `e2e`
+O Playwright grava baseline com **sufixo de plataforma** — o nome do arquivo
+termina em `-darwin` no macOS e `-linux` no runner. Os 14 baselines versionados
+foram gerados em macOS; o job `e2e`
 roda em `ubuntu-latest`, e sem baselines linux ele reprovaria **por plataforma**,
 não por regressão visual.
 
