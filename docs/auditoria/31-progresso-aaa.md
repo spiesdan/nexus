@@ -154,3 +154,11 @@ O `verify` vermelho era instrumento: o teste `contato-audit-from-to` usava um fa
 Conflito previsto e resolvido no #498: o baseline e o MANIFEST receberam **os dois** apêndices (0317 e 0318), sem renumerar — a numeração não colidiu. O update sobre banco com 0317 já aplicado rodou com `ON_ERROR_STOP=1` e exit 0.
 
 A fila P0 está **fechada em código**. O que resta são P1/P2/P3 nas frentes C/D/E/F/G/A ou dependentes de dispositivo.
+
+
+## Rodada 5 — 18/11/2026 (fim da decisão D-03)
+
+- **#511** (`97132fb8`): as retransmissões de inutilização e de carta de correção também honram `Idempotency-Key`. Replay devolve a resposta original; outro evento com a mesma chave é 409; falha aborta a chave. Sem schema novo.
+- **P0-08 fechado** em todas as rotas fiscais com efeito externo: emissão, inutilização e as duas retransmissões.
+- **#503** (E, inbox) mergeado: reenvio de mensagem falha. P1-01 avança em J6.
+- P2-04/P3-03 na `main` (`9107b42b`); AGENTS.md mede, planos não ensinam `db push`.

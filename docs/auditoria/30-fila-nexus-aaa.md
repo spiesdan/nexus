@@ -78,7 +78,7 @@ coordenador integra e roda os gates no código integrado.
 | **P0-05** | Emissão fiscal: impedir duas notas vivas para o mesmo pedido sob clique duplo/retry concorrente | `[x]` | #484 → `f691dc06`: trigger 0315, advisory lock por org+pedido; `test:db` 160/1497; CI 5/5 | Coordenador (C) | — | Banco recusa a segunda nota viva; nota cancelada permite nova emissão; teste concorrente e de cancelamento |
 | **P0-06** | Deploy aplica schema e falha alto; restore ensaiado | `[x]` | `1d10ff7c` (deploy aplica e verifica schema, sem `\|\| true`); `#462` (F-32 restore, perda de GRANTs); `tests/shell/deploy-aplica-schema.test.sh` | A | — | `pnpm test:shell` verde; ensaio de update e restore documentado em `25-ensaio-de-restauracao.md` |
 | **P0-07** | Sentinel v1 somente leitura, sem escrita fiscal/financeira e sem cross-tenant | `[x]` | #489 → `f644b21c` (integra #487, migration 0316): 27 detectores, ocorrência idempotente, RLS, kill switch; 68 unit + 184 invariantes; CI 5/5 | G / Coordenador | — | Detectores determinísticos com casos positivos/negativos; reexecução não duplica ocorrência; RLS e kill switch; zero ação de escrita |
-| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[~]` | #499 → `3141a483` (emissão/inutilização, 0317); #511 cobre as retransmissões de inutilização e CC-e | Coordenador | Merge #511 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
+| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[x]` | #499 → `3141a483` (emissão/inutilização, 0317) + #511 → `97132fb8` (retransmissões de inutilização e CC-e) | Coordenador | — | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
 | **P0-09** | Recebimento de compra não pode somar estoque duas vezes sob concorrência | `[x]` | #485 → `239efd32`: CAS em `recebido_qtd` antes do estoque, devolução com o mesmo CAS e compensação; 5 casos unitários; CI 5/5 | Coordenador (C) | — | CAS em `recebido_qtd` antes do ajuste de estoque; perdedor não movimenta; teste concorrente com dois POSTs e soma final igual ao pedido |
 
 ## 4. Fila — P1 (jornadas críticas, integração, offline, a11y, desempenho)
@@ -173,7 +173,7 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | D-03 idempotência fiscal | #499 → `3141a483` | 9 testes; 434 invariantes; CI 14/14 |
 | 18/11/2026 | D-01/D-02 nome de campanha | #498 → `5a499313` | 13 testes; install/update verdes |
 | 18/11/2026 | P2-04/P3-03 docs e planos | #506 → `9107b42b` | gate de plano ativo; 12 testes |
-| 18/11/2026 | D-03 nas retransmissões | #511 | handler + replay/409/abort |
+| 18/11/2026 | D-03 nas retransmissões | #511 → `97132fb8` | handler + replay/409/abort |
 | 18/11/2026 | P0-04 teto do recebível na main | #480 → `7a498f9d` | CI 5/5; e2e 17m |
 | 18/11/2026 | P0-05 nota viva na main | #484 → `f691dc06` | CI 5/5 |
 | 18/11/2026 | P0-09 recebimento com CAS na main | #485 → `239efd32` | CI 5/5 |
