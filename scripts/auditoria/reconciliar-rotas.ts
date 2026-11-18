@@ -53,7 +53,18 @@ function rotasDoPrompt(): { rota: string; secao: string }[] {
   const texto = readFileSync(DOC_PROMPT, "utf8");
   const inicio = texto.indexOf("Inventário inicial de rotas a reconciliar");
   const fim = texto.indexOf("Contabilidade do inventário", inicio);
-  if (inicio < 0 || fim < 0) throw new Error("seção de rotas do prompt não encontrada");
+  if (inicio < 0 || fim < 0) {
+    // O prompt de 18/11/2026 não traz uma lista inicial de rotas: a Fase 1
+    // manda gerar o inventário pelo filesystem (`scripts/auditoria/inventario.ts`).
+    // Sair com mensagem clara é melhor que reescrever o documento histórico
+    // com uma lista vazia e transformar todas as telas em "acréscimo".
+    console.error(
+      "O prompt atual não traz a seção 'Inventário inicial de rotas a reconciliar'. " +
+        "Este script era do prompt anterior (pré-18/11); use o inventário da Fase 1 " +
+        "(`pnpm exec tsx scripts/auditoria/inventario.ts`).",
+    );
+    process.exit(3);
+  }
   const trecho = texto.slice(inicio, fim);
 
   const rotas: { rota: string; secao: string }[] = [];
