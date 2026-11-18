@@ -1,10 +1,10 @@
 {
-  "medido_em": "2026-11-17T14:43:21.161Z",
+  "medido_em": "2026-11-18T06:45:56.990Z",
   "resumo": {
     "tokensPorTema": {
       "claro": 127,
-      "light": 127,
-      "dark": 127
+      "light": 79,
+      "dark": 90
     },
     "fontes": [
       {
@@ -55,6 +55,177 @@
       "--duration-slow=320ms"
     ],
     "reducedMotion": true,
-    "escalasDeFonteNoCss": []
+    "escalasDeFonteNoCss": [],
+    "contrasteDosTextos": {
+      "claro": [
+        {
+          "papel": "--color-text",
+          "fundo": "--color-bg",
+          "razao": 16.26,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface",
+          "razao": 17.43,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface-elevated",
+          "razao": 16.7,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-bg",
+          "razao": 5.36,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface",
+          "razao": 5.74,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface-elevated",
+          "razao": 5.5,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-bg",
+          "razao": 4.69,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface",
+          "razao": 5.02,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface-elevated",
+          "razao": 4.81,
+          "passa": true
+        }
+      ],
+      "light": [
+        {
+          "papel": "--color-text",
+          "fundo": "--color-bg",
+          "razao": 16.26,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface",
+          "razao": 17.43,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface-elevated",
+          "razao": 16.7,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-bg",
+          "razao": 5.36,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface",
+          "razao": 5.74,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface-elevated",
+          "razao": 5.5,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-bg",
+          "razao": 4.69,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface",
+          "razao": 5.02,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface-elevated",
+          "razao": 4.81,
+          "passa": true
+        }
+      ],
+      "dark": [
+        {
+          "papel": "--color-text",
+          "fundo": "--color-bg",
+          "razao": 16.6,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface",
+          "razao": 15.49,
+          "passa": true
+        },
+        {
+          "papel": "--color-text",
+          "fundo": "--color-surface-elevated",
+          "razao": 13.76,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-bg",
+          "razao": 5.72,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface",
+          "razao": 5.34,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-muted",
+          "fundo": "--color-surface-elevated",
+          "razao": 4.74,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-bg",
+          "razao": 5.5,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface",
+          "razao": 5.13,
+          "passa": true
+        },
+        {
+          "papel": "--color-text-subtle",
+          "fundo": "--color-surface-elevated",
+          "razao": 4.56,
+          "passa": true
+        }
+      ]
+    },
+    "reprovasDeContraste": []
   }
 }
