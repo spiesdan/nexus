@@ -313,3 +313,14 @@ passa a ser **relido a cada rodada**. Resumo do estado:
 **Produção:** 1.57.0 saudável · 1.58.0 tagueada e **deploy aprovado**, em curso pelo
 dono. O pareamento do catálogo só acontece depois desse deploy e de `--dry-run`
 aprovado.
+
+
+## Fila por worker (mantida a cada rodada)
+
+A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
+
+```
+D — agora: outbox do inbox web · próximo: pedidos com paginação declarada · depois: subtelas de expedição
+F — agora: J6/J13/J14 no navegador · próximo: matriz das 3 specs fora do CI · depois: regressão local da 1.58.0
+G — agora: painel de rejeição por fornecedor · próximo: proposta do 2º caso reversível · depois: retenção/LGPD provada
+```
