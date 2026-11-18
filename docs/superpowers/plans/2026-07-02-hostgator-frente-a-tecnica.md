@@ -150,7 +150,7 @@ Expected: imagem builda. `docker run --rm -e SUPABASE_SERVICE_ROLE_KEY=... nexus
 
 - [ ] **Step 2:** Garantir no baseline: `alter publication supabase_realtime add table public.messages, public.conversations, public.crm_leads;` e `alter table ... replica identity full;` nessas 3 (+ conferir as de IA).
 
-- [ ] **Step 3:** Em `package.json`, trocar o stub `db:migrate` por: `psql "$SUPABASE_DB_URL" -f supabase/baseline.sql && supabase db push`.
+- [ ] **Step 3:** Em `package.json`, trocar o stub `db:migrate` por: `pnpm db:migrate` (aplica o baseline; a cadeia histórica é proibida — F-09=B).
 
 - [ ] **Step 4 (verificação):** aplicar num **projeto Supabase de teste** (branch/efêmero) e conferir 38 tabelas, os 2 buckets e a publication:
 ```sql
