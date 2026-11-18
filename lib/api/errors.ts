@@ -93,6 +93,18 @@ export const ApiErrorCodes = {
   sentinel_disabled: "sentinel_disabled",
   /** Já existe uma varredura em andamento para a organização (claim único). */
   sentinel_busy: "sentinel_busy",
+  /** v1.3: a ocorrência não é do único caso com correção aprovada (job watchdog). */
+  correcao_nao_suportada: "correcao_nao_suportada",
+  /** A ocorrência ainda não foi aprovada por um gestor (execução recusada). */
+  aprovacao_pendente: "aprovacao_pendente",
+  /** O job mudou/está em estado sem antes/depois reversível (running/dead/flywheel...). */
+  correcao_nao_elegivel: "correcao_nao_elegivel",
+  /** O hash/antes/depois não é o plano que o gestor revisou (dry-run venceu). */
+  plano_desatualizado: "plano_desatualizado",
+  /** A RPC recusou o CAS: o worker reclamou o job antes da execução. */
+  correcao_nao_aplicada: "correcao_nao_aplicada",
+  /** Não há reversão honesta: o job já foi reclamado ou não está mais no valor gravado. */
+  reversao_indisponivel: "reversao_indisponivel",
   invalid_state: "invalid_state", // resposta a um agent_case que saiu de awaiting_human (spec 15 §7)
   tenant_already_exists: "tenant_already_exists",
   duplicate_external_id: "duplicate_external_id",

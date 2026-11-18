@@ -13,6 +13,7 @@ import * as React from "react";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { correcaoDeJobSuportada } from "@/lib/sentinel/correcao-constantes";
 
 import type { OcorrenciaSentinel } from "./_tipos";
@@ -30,9 +31,9 @@ interface Simulacao {
   job: { id: string; kind: string; status: string; attempts: number; max_attempts: number };
 }
 
-function quando(iso: string): string {
+function quando(iso: string, tag: string): string {
   const ms = Date.parse(iso);
-  return Number.isNaN(ms) ? iso : new Date(ms).toLocaleString("pt-BR");
+  return Number.isNaN(ms) ? iso : new Date(ms).toLocaleString(tag);
 }
 
 export function CorrecaoAprovada({
@@ -43,6 +44,7 @@ export function CorrecaoAprovada({
   onAtualizar: () => void | Promise<void>;
 }) {
   const suportada = correcaoDeJobSuportada(ocorrencia.regra, ocorrencia.entidade_tipo);
+  const tagDeIdioma = useTagDeIdioma();
   const [simulacao, setSimulacao] = React.useState<Simulacao | null>(null);
   const [erro, setErro] = React.useState<string | null>(null);
   const [simulando, setSimulando] = React.useState(false);
@@ -157,11 +159,11 @@ export function CorrecaoAprovada({
           <dl className="grid gap-2 sm:grid-cols-2">
             <div>
               <dt className="text-xs uppercase tracking-wide text-text-muted">Antes</dt>
-              <dd className="text-text">{quando(simulacao.plano.antes.run_after)}</dd>
+              <dd className="text-text">{quando(simulacao.plano.antes.run_after, tagDeIdioma)}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-text-muted">Depois</dt>
-              <dd className="text-text">{quando(simulacao.plano.depois.run_after)}</dd>
+              <dd className="text-text">{quando(simulacao.plano.depois.run_after, tagDeIdioma)}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-text-muted">Job</dt>
