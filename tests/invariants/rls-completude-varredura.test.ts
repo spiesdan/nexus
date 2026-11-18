@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { sql } from "./gov-helpers";
+import { TABELAS_DA_VARREDURA } from "./_rls-varredura-tabelas";
 import { TABELAS_PROVADAS_AQUI } from "./f17-tabelas-provadas";
 import { TABLES } from "./rls-isolation.test";
 
@@ -36,32 +37,28 @@ import { TABLES } from "./rls-isolation.test";
  * `TABLES` nem numa exceção nomeada — forçando toda tabela nova a ganhar o
  * teste comportamental de verdade antes que o gate deixe passar.
  *
- * ## As duas listas de exceção, e por que são duas coisas diferentes
+ * ## As três listas de exceção, e por que são coisas diferentes
  *
  * Não existe uma varredura anterior a esta, então aplicar a regra "está em
- * TABLES ou reprova" de uma vez batia em 73 tabelas que já existem hoje, têm
- * RLS ligada, mas nunca ganharam um teste `set role authenticated` + contagem
- * cross-org num arquivo dedicado — dívida herdada, não introduzida por esta
- * mudança. Fingir que elas "passam" seria mentir; fazer o gate nascer vermelho
- * em 73 tabelas de uma vez não é tratável nesta sessão (cada uma exigiria seed
- * + fixture própria). A saída honesta é DISTINGUIR as duas classes:
+ * TABLES ou reprova" de uma vez batia em 73 tabelas que já existiam, têm RLS
+ * ligada, mas nunca tinham ganhado um teste `set role authenticated` + contagem
+ * cross-org num arquivo dedicado — dívida herdada. Fingir que elas "passavam"
+ * seria mentir. A saída honesta foi DISTINGUIR as classes:
  *
- *   - `PROVA_PROPRIA`: tabela fora de `TABLES`, mas com teste comportamental
- *     real (JWT simulado + contagem cross-org) em outro arquivo — o mesmo
- *     padrão de `webhook_lead_captures`, que já vivia assim antes desta
- *     varredura existir. Cada entrada cita o arquivo que prova.
- *   - `DEBITO_CONHECIDO`: tabela SEM prova comportamental nenhuma, encontrada
- *     por esta varredura no dia em que ela nasceu (2026-08-27). Não é uma
- *     declaração de segurança — é a fotografia da dívida, para o gate proteger
- *     dali para frente sem fingir que o passado está resolvido. Tabela NOVA
- *     nunca entra aqui: entra em `TABLES` ou em `PROVA_PROPRIA`, com teste de
- *     verdade. Reduzir esta lista com o tempo (escrevendo o teste que falta e
- *     movendo a tabela para `TABLES`) é o caminho — não engordá-la.
+ *   - `TABLES` (rls-isolation.test.ts): teste comportamental por tabela.
+ *   - `PROVA_PROPRIA`: tabela fora de `TABLES`, com teste comportamental real
+ *     (JWT simulado + contagem cross-org) em outro arquivo. Cada entrada cita o
+ *     arquivo que prova.
+ *   - `PROVADA_POR_VARREDURA`: as 73 que eram `DEBITO_CONHECIDO` até
+ *     2026-11-18. A dívida foi FECHADA: `rls-varredura-comportamental.test.ts`
+ *     semeia uma linha por organização em cada uma e mede os quatro eixos
+ *     (SELECT/UPDATE/DELETE cross-org, INSERT cross-org recusado, com controle
+ *     positivo na própria org). `DEBITO_CONHECIDO` deixou de existir — não há
+ *     mais tabela tenant-aware neste repositório sem prova comportamental.
  *
- * Em ambas, `relrowsecurity = true` é reconferido pela própria varredura: uma
- * exceção — de qualquer das duas listas — cuja tabela sumiu ou perdeu RLS
- * reprova, na hora, em vez de continuar "documentando" uma proteção que já não
- * existe.
+ * Em todas, `relrowsecurity = true` é reconferido pela própria varredura: uma
+ * exceção cuja tabela sumiu ou perdeu RLS reprova, na hora, em vez de continuar
+ * "documentando" uma proteção que já não existe.
  */
 
 interface Excecao {
@@ -223,54 +220,37 @@ const PROVA_PROPRIA: readonly Excecao[] = [
 ];
 
 /**
- * Dívida herdada — sem teste comportamental, fotografada em 2026-08-27 por
- * esta própria varredura. Ver o cabeçalho do arquivo: NÃO adicione tabela nova
- * aqui. Tabela nova entra em `TABLES` (rls-isolation.test.ts) com teste real,
- * ou em `PROVA_PROPRIA` acima, citando o arquivo que prova.
+ * Tabelas que SAÍRAM da dívida e agora têm prova comportamental em
+ * `rls-varredura-comportamental.test.ts` (seed de uma linha por organização +
+ * JWT simulado + contagem cross-org nos eixos de leitura E escrita).
+ *
+ * A lista vive em `_rls-varredura-tabelas.ts` porque é o contrato de seed
+ * daquele arquivo: se ela crescer sem que a varredura saiba semear, o controle
+ * positivo de lá reprova. Aqui ela só é reconhecida como classe de exceção.
  */
-const RAZAO_DEBITO_CONHECIDO =
-  "sem teste comportamental (JWT simulado + contagem cross-org) em nenhum " +
-  "arquivo no dia em que esta varredura nasceu (2026-08-27); relrowsecurity " +
-  "= true confirmado pela própria varredura, mas isso NÃO é prova de " +
-  "isolamento (ver cabeçalho do arquivo). Dívida herdada, não introduzida " +
-  "por esta mudança — não é declaração de que a tabela está segura.";
-
-const DEBITO_CONHECIDO: readonly Excecao[] = [
-  "agent_case_events",
-  "agent_cases",
-  "ai_agent_runs",
-  "ai_agent_versions",
-  "ai_agents",
-  "ai_budgets",
-  "ai_chunks",
-  "ai_faq_items",
-  "ai_invocations",
-  "ai_knowledge_sources",
-  "ai_knowledge_versions",
-  "ai_purpose_bindings",
-  "ai_router_members",
-  "api_audit_log",
-  "attendant_availability",
-  "calendar_oauth_nonces",
-  "channel_session_warmup",
-  "conversation_assignment_events",
-  "crm_lead_activities",
-  "crm_lead_links",
-  "crm_lead_reactivations",
-  "crm_lead_risk_states",
-  "demanda_conversas",
-  "demandas",
-  "event_log",
-  "idempotency_keys",
-  "incidents",
-  "lgpd_requests",
-  "merge_queue",
-  "nuvemshop_products",
-  "orders",
-  "org_memory_pointers",
-  "storage_redaction_queue",
-  "webhook_events_log",
-].map((tabela) => ({ tabela, razao: RAZAO_DEBITO_CONHECIDO }));
+/**
+ * F-17 — a dívida foi PAGA, e por duas frentes que se somam:
+ *
+ *   - `rls-camadas-restantes-do-debito.test.ts` provou 39 tabelas nos eixos de
+ *     LEITURA (cross-org = 0 e controle positivo), com admin de duas orgs;
+ *   - `rls-varredura-comportamental.test.ts` prova as 73 nos QUATRO eixos
+ *     (SELECT/UPDATE/DELETE cross-org e INSERT cross-org recusado), com seed
+ *     próprio por tabela.
+ *
+ * A lista de 73 vive em `_rls-varredura-tabelas.ts` porque é o contrato de seed
+ * daquele arquivo: se ela crescer sem que a varredura saiba semear, o controle
+ * positivo de lá reprova. `DEBITO_CONHECIDO` deixou de existir — não há tabela
+ * tenant-aware neste repositório sem prova comportamental.
+ */
+const PROVADA_POR_VARREDURA: readonly Excecao[] = TABELAS_DA_VARREDURA.map(
+  (tabela) => ({
+    tabela,
+    razao:
+      "tests/invariants/rls-varredura-comportamental.test.ts — linha semeada em 2 " +
+      "organizações, JWT de admin, contagem cross-org em SELECT/UPDATE/DELETE e " +
+      "INSERT cross-org recusado.",
+  }),
+);
 
 interface TabelaOrg {
   readonly tabela: string;
@@ -326,17 +306,19 @@ describe("varredura: completude de RLS sobre toda tabela com organization_id", (
     ).toEqual([]);
   });
 
-  it("toda tabela tenant-aware tem prova comportamental — está em TABLES ou é exceção nomeada", () => {
+  it("toda tabela tenant-aware tem prova comportamental — TABLES, PROVA_PROPRIA ou a varredura", () => {
     // Este é o caso que fecha o buraco de verdade: RLS ligada (caso acima) não
     // é isolamento provado — só a forma que o isolamento tem que ter. Uma
     // tabela só passa aqui se estiver em TABLES (teste comportamental de
     // verdade), em PROVA_PROPRIA (teste comportamental em outro arquivo,
-    // citado) ou em DEBITO_CONHECIDO (dívida herdada, fotografada — não uma
-    // aprovação).
+    // citado) ou em PROVADA_POR_VARREDURA (a varredura comportamental semeia e
+    // mede os quatro eixos). A antiga lista `DEBITO_CONHECIDO` — que nomeava
+    // tabela sem prova — não existe mais: as 73 que estavam lá agora são
+    // medidas em `rls-varredura-comportamental.test.ts`.
     const conhecidas = new Set<string>([
       ...TABLES,
       ...PROVA_PROPRIA.map((e) => e.tabela),
-      ...DEBITO_CONHECIDO.map((e) => e.tabela),
+      ...PROVADA_POR_VARREDURA.map((e) => e.tabela),
     ]);
     const semRegistro = inventario()
       .map((t) => t.tabela)
@@ -347,9 +329,9 @@ describe("varredura: completude de RLS sobre toda tabela com organization_id", (
         "a tabela em TABLES (tests/invariants/rls-isolation.test.ts) com um " +
         "teste `set role authenticated` + JWT + contagem cross-org, no MESMO " +
         "commit da migration — ou, se já existir teste assim em outro " +
-        "arquivo, declare em PROVA_PROPRIA (neste arquivo) citando-o. NÃO " +
-        "acrescente em DEBITO_CONHECIDO: aquela lista é só a dívida herdada " +
-        "de antes desta varredura existir.",
+        "arquivo, declare em PROVA_PROPRIA (neste arquivo) citando-o, ou " +
+        "semeie-a em `_rls-varredura-tabelas.ts` e a varredura comportamental " +
+        "a mede nos quatro eixos.",
     ).toEqual([]);
   });
 
@@ -368,14 +350,17 @@ describe("varredura: completude de RLS sobre toda tabela com organization_id", (
     }
   });
 
-  it("as exceções de DEBITO_CONHECIDO ainda existem e ainda têm RLS ligada", () => {
+  it("as exceções de PROVADA_POR_VARREDURA ainda existem e ainda têm RLS ligada", () => {
     const porTabela = new Map(inventario().map((t) => [t.tabela, t]));
-    for (const { tabela } of DEBITO_CONHECIDO) {
+    for (const { tabela } of PROVADA_POR_VARREDURA) {
       const achada = porTabela.get(tabela);
-      expect(achada, `DEBITO_CONHECIDO cita tabela inexistente: ${tabela} — remova a entrada`).toBeDefined();
+      expect(
+        achada,
+        `PROVADA_POR_VARREDURA cita tabela inexistente: ${tabela} — remova a entrada de _rls-varredura-tabelas.ts`,
+      ).toBeDefined();
       expect(
         achada?.rlsLigada,
-        `${tabela} está em DEBITO_CONHECIDO mas perdeu RLS — isto não é mais só falta de teste, é tabela exposta`,
+        `${tabela} está na varredura comportamental mas perdeu RLS — isto não é mais falta de teste, é tabela exposta`,
       ).toBe(true);
     }
   });
