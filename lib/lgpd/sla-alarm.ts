@@ -191,25 +191,24 @@ Base legal: LGPD Lei nº 13.709/2018, Art. 18.`;
   // 5. Update request_payload.last_alarm_at (programmatic org filter)
   // ──────────────────────────────────────────────────────────────────────────
   try {
+    // UM update, e não `rpc("jsonb_set_last_alarm_at")` com fallback: a RPC
+    // nunca existiu em `public` (medido pelo invariante
+    // `hardening-definer-propriedades`, que resolve toda chamada literal contra
+    // o catálogo). O caminho era "chama, recebe erro, faz o update" — o erro
+    // era garantido e o update sempre rodava; sobrava uma ida ao banco e um
+    // `{ error }` que ninguém lia. O filtro de organização é explícito, como
+    // antes.
     const supabaseAdmin = createAdminClient();
-    const { error } = await supabaseAdmin.rpc("jsonb_set_last_alarm_at", {
-      p_id: request.id,
-      p_organization_id: request.organization_id,
-    });
-
-    // RPC may not exist yet — fall back to raw update
-    if (error) {
-      await supabaseAdmin
-        .from("lgpd_requests")
-        .update({
-          request_payload: {
-            ...((request.request_payload as Record<string, unknown>) ?? {}),
-            last_alarm_at: new Date().toISOString(),
-          },
-        })
-        .eq("id", request.id)
-        .eq("organization_id", request.organization_id); // programmatic filter — never from body
-    }
+    await supabaseAdmin
+      .from("lgpd_requests")
+      .update({
+        request_payload: {
+          ...((request.request_payload as Record<string, unknown>) ?? {}),
+          last_alarm_at: new Date().toISOString(),
+        },
+      })
+      .eq("id", request.id)
+      .eq("organization_id", request.organization_id); // programmatic filter — never from body
   } catch (err) {
     console.warn("[lgpd-sla-alarm] failed to update last_alarm_at", err);
   }
