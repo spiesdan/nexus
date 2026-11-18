@@ -48,6 +48,7 @@ import { comoMoeda } from "@/lib/format/moeda";
 import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { FlowArrow, Lightbulb, Package, Plus } from "@/lib/ui/icons";
 
+import { mensagemDeErro } from "@/lib/ui/erros";
 type ProdutoEstoque = {
   id: string;
   codigo: string;
@@ -190,7 +191,7 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
       setErro("");
       setEstado(lista.length === 0 ? "empty" : "ready");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar o estoque.");
+      setErro(mensagemDeErro(e, "Erro ao carregar o estoque."));
       setEstado("error");
     }
   }, []);
@@ -335,7 +336,7 @@ function AbaMovimentos({ podeEscrever }: { podeEscrever: boolean }) {
       setErro("");
       setEstado((corpo.data ?? []).length === 0 ? "empty" : "ready");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar movimentos.");
+      setErro(mensagemDeErro(e, "Erro ao carregar movimentos."));
       setEstado("error");
     }
   }, []);
@@ -504,7 +505,7 @@ function AbaSugestoes() {
       setErro("");
       setEstado((corpo.data?.sugestoes ?? []).length === 0 ? "empty" : "ready");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar sugestões.");
+      setErro(mensagemDeErro(e, "Erro ao carregar sugestões."));
       setEstado("error");
     }
   }, []);
@@ -656,7 +657,7 @@ function DialogNovoMovimento({
       setQuantidade("");
       setObservacao("");
     } catch (e) {
-      setErroServidor(e instanceof Error ? e.message : "Erro ao registrar o movimento.");
+      setErroServidor(mensagemDeErro(e, "Erro ao registrar o movimento."));
     } finally {
       setSubmetendo(false);
     }
