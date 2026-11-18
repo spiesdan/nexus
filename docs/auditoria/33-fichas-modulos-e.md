@@ -18,6 +18,7 @@
 | **Fiscal/UI 5.8** | **Tentar de novo** para nota travada em `em_emissao` (a porta que faltava para a recuperação por CAS do Agente C); confirmação em cancelar pendente/emitindo/erro, inutilizar faixa, manifestar desconhecimento/não realizada, ignorar e importar entrada | **mergeado** #505 (`4fb93801`) | `notas-reemitir-emissao` (4) + `fiscal-entrada-confirmacoes` (5) + `notas-importar-xmls` (3) ✓ |
 | **Fiscal/UI 5.8 (F6)** | Teto de lista **declarado**: “Mostrando X de Y” em eventos, manifestações, produtos, fornecedores e sincronizações | **nesta fatia** | `tests/unit/fiscal-recorte-da-lista.test.tsx` — 3 ✓ |
 | **Fiscal/UI 5.8** | Erro de leitura deixou de virar “Nenhum evento/fornecedor…”: as cinco listas lançam para a error boundary com retry e registram a organização | **nesta fatia** | `lib/fiscal/erro-de-leitura.test.ts` — 2 ✓ |
+| **Faturamento 5.6** | Janela truncada em 2.000 deixa de parecer o período: \`meta.amostra_parcial\` + aviso na tela (A10) | **PR #510** | \`tests/unit/faturamento-amostra.test.tsx\` — 2 ✓ |
 | **Equipe 5.10** | Erro de leitura com **retry** e vazio com **CTA de convite** (antes: frase vermelha sem saída / frase morta) | **nesta fatia** | `TeamMembersClient.test.tsx` — 7 ✓ |
 | **Tokens 5.10** | Falha deixou de virar “nenhum token”; **Expirado ≠ Ativo**; “Não expira” explícito; revogação com confirmação | **nesta fatia** | `tests/unit/api-tokens-estados.test.tsx` — 5 ✓ |
 
@@ -71,8 +72,9 @@ timeline, financeiro e nota que **não** convertem erro em “sem dado”.
 **Mudança desta rodada.** Concluir/faturar/entregar e cancelar em massa pedem confirmação com o
 efeito escrito; aprovar e expedir seguem em um clique. Recusar não chama a API.
 **Aberto.** `desconto_pct` em `duplicar` já corrigido (A5); fornecedor sem editar/desativar (A14,
-P2); histórico de preço é capacidade nova (P3). **Não medido:** impressão real em impressora
-térmica e o comportamento com Mercos lento.
+P2); histórico de preço é capacidade nova (P3). O teto de 2.000 do faturamento agora se declara
+(PR #510), mas a paginação continua F-30. **Não medido:** impressão real em impressora térmica e
+o comportamento com Mercos lento.
 **Teste.** `pnpm exec vitest run app/app/pedidos/[id]/_detalhe.test.tsx` → 6 ✓.
 **Classificação.** Existente com melhoria necessária (o que resta é P2/P3).
 
