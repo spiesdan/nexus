@@ -110,6 +110,14 @@ O botão "Enviar agora" existia no HTML do shell e não fazia nada ao ser tocado
 defeito do F-MOB-1 em escala menor (peça visível sem ligação). Agora explica cada estado
 (sem fila, com recusado, sem sinal) ou abre o sistema, que é quem drena.
 
+### F-MOB-9 `[x]` — 200 sem lista apagava o catálogo do aparelho
+
+`baixarProdutos`/`baixarContatos`/`baixarTabelas` liam `corpo.data ?? []`. Uma resposta 200
+sem `data` (shape mudado, proxy, erro embrulhado) era interpretada como "catálogo vazio":
+o `DELETE` rodava, o aparelho zerava e a tela passava a exigir "abra o sistema com internet"
+no meio da rota — sem erro visível. Agora só `data: []` significa vazio; ausência de lista
+lança antes de qualquer `DELETE`.
+
 ### F-MOB-8 `[x]` — o Android fazia backup do SQLite com CPF/CNPJ dos clientes
 
 `android/app/src/main/AndroidManifest.xml` nascia com `android:allowBackup="true"` (default do
@@ -187,7 +195,7 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
 ### 5.1 Números (preenchidos na execução)
 
 <!-- medido em 2026-11-18, worktree aaa-front-mobile -->
-- unit offline + wiring + faixa + manifest + manifest Android: **52/52** em 9 arquivos.
+- unit offline + wiring + faixa + manifests + catálogo: **58/58** em 9 arquivos.
 - e2e shell: **7/7**.
 - typecheck/lint/suíte completa: registrados no PR desta frente (o comando não cabe em
   prosa que envelhece).
