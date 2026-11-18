@@ -80,6 +80,21 @@
      acima, para os lugares que pedem mais definição (inputs, cabecilhos). */
   --color-border: #e7e9ee;
   --color-border-strong: #d6dae2;
+  /* BORDA DE CAMPO — o único "hairline" que a WCAG cobra.
+   *
+   * `--color-border` é divisória: 1px entre dois blocos, e ninguém precisa
+   * acertá-la com o cursor. A borda de um CAMPO é outra coisa: ela é a
+   * informação visual que identifica o controle (WCAG 2.2 AA, 1.4.11, piso
+   * 3:1). Medido em 18/11/2026: `--color-border` sobre a superfície dava
+   * **1,21:1** — não é "hairline sutil", é borda invisível.
+   *
+   * Escolhido `#848c98` (cinza-frio da família dos neutros): 3,39 sobre
+   * `--color-surface`, 3,17 sobre `--color-bg`, 3,25 sobre a elevada. Continua
+   * 1px — o que muda é a cor, não a espessura.
+   *
+   * A hierarquia dos estados continua crescendo: repouso 3,39 → hover
+   * `accent-600` 3,63 → foco `accent-ink` 5,56 (+ anel de 2px). */
+  --color-border-control: #848c98;
 
   /* Accent — rampa derivada da semente #7e77f0 (ver cabeçalho do bloco).
      Grau 500 (#918dff) é a lavanda do DESIGN.md; o funcional é o 600. */
@@ -249,7 +264,7 @@
   --destructive: var(--color-error);
   --destructive-foreground: #ffffff;
   --border: var(--color-border);
-  --input: var(--color-border);
+  --input: var(--color-border-control);
   --ring: var(--color-accent-600);
   --radius: var(--radius-md);
   /* ---- Agenda · cor de pessoa (8 trilhas) ------------------------------
@@ -352,6 +367,8 @@
   --color-text-subtle: #6f6f6f;
   --color-border: #e7e9ee;
   --color-border-strong: #d6dae2;
+  /* Espelho do `:root` — as medidas da borda de campo estão no primeiro bloco. */
+  --color-border-control: #848c98;
   --color-accent: var(--color-accent-600);
   --color-accent-fg: #181925;
   --color-accent-soft: var(--color-accent-100);
@@ -424,7 +441,7 @@
   --destructive: var(--color-error);
   --destructive-foreground: #ffffff;
   --border: var(--color-border);
-  --input: var(--color-border);
+  --input: var(--color-border-control);
   --ring: var(--color-accent-600);
   /* ---- Agenda · cor de pessoa (espelho do :root) -----------------------
    * Espelhado aqui porque o tema escuro sobrescreve estas oito chaves, e
@@ -479,6 +496,10 @@
   /* Borders (dark) */
   --color-border: #313131;
   --color-border-strong: #424242;
+  /* Borda de campo no escuro: `#747a82` dá 3,93 sobre `--color-surface`,
+     4,22 sobre `--color-bg` e 3,49 sobre a elevada. O `#313131` da divisória
+     dava 1,31 — mesma classe de defeito do claro. */
+  --color-border-control: #747a82;
 
   /* Accent stays same hex stops (lavanda, como o :root); default shifts up for
      dark contrast */
@@ -576,7 +597,7 @@
      certo (5,63:1 sobre #a94a3c). */
   --destructive-foreground: #151515;
   --border: var(--color-border);
-  --input: var(--color-border);
+  --input: var(--color-border-control);
   --ring: var(--color-accent-400);
   /* ---- Agenda · cor de pessoa (tema escuro) ----------------------------
    * Mais claras e menos saturadas que as do claro: sobre `#161510` a versão
@@ -695,7 +716,8 @@
      é decisão de design, não de migração. */
   --color-border: var(--color-border);
   --color-border-strong: var(--color-border-strong);
-  --color-input: var(--color-border);
+  --color-border-control: var(--color-border-control);
+  --color-input: var(--color-border-control);
   --color-ring: var(--color-accent-600);
   --color-background: var(--color-bg);
   --color-foreground: var(--color-text);

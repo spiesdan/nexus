@@ -134,7 +134,7 @@ export function BuscaClient({ q }: { q: string }) {
         subtitle={t("Telas, conversas, clientes, pedidos, leads, produtos e títulos num lugar só.")}
       />
 
-      <div className="flex items-center gap-3 rounded-card border px-4 transition-shadow focus-within:border-accent-600 focus-within:ring-2 focus-within:ring-accent-soft">
+      <div className="flex items-center gap-3 rounded-card border border-border-control px-4 transition-shadow focus-within:border-accent-ink focus-within:ring-2 focus-within:ring-accent-soft">
         <MagnifyingGlass size={16} aria-hidden className="shrink-0 text-muted-foreground" />
         <input
           autoFocus
