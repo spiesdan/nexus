@@ -14,6 +14,7 @@ import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
+import { hashDaRequisicao, reservarIdempotencia } from "@/lib/api/idempotencia";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { transmitirInutilizacaoRegistrada } from "@/lib/fiscal/transmissao";
@@ -86,6 +87,48 @@ export async function POST(req: NextRequest): Promise<Response> {
   const ambiente = (config as unknown as { ambiente?: string } | null)?.ambiente === "producao" ? "producao" : "homologacao";
 
   const admin = createAdminClient();
+
+  // D-03 — inutilização é efeito externo irreversível: a chave é reivindicada
+  // antes do INSERT/transmissão. Replay devolve a MESMA faixa registrada.
+  const chave = req.headers.get("Idempotency-Key")?.trim() || null;
+  let reserva: Awaited<ReturnType<typeof reservarIdempotencia>> | null = null;
+  if (chave) {
+    reserva = await reservarIdempotencia(admin, {
+      orgId: authz.org.orgId,
+      endpoint: "POST /api/v1/fiscal-inutilizacoes",
+      chave,
+      requestHash: hashDaRequisicao(parsed.data),
+    });
+    if (reserva.estado === "replay") {
+      return ok(reserva.resposta.body, {
+        requestId,
+        status: 200,
+        headers: { "Idempotency-Replayed": "true" },
+      });
+    }
+    if (reserva.estado === "conflito") {
+      return fail(
+        "idempotency_conflict",
+        "Esta Idempotency-Key já foi usada com outra faixa/motivo.",
+        409,
+        { requestId },
+      );
+    }
+    if (reserva.estado === "em_andamento") {
+      return fail(
+        "idempotency_in_progress",
+        "A inutilização com esta chave ainda está em andamento. Tente de novo em instantes.",
+        409,
+        { requestId },
+      );
+    }
+    if (reserva.estado === "erro") {
+      return fail("internal_error", "Não foi possível reservar a chave de idempotência.", 500, {
+        requestId,
+      });
+    }
+  }
+
   const { data, error } = await admin
     .from("fiscal_inutilizacoes")
     .insert({
@@ -102,6 +145,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    if (reserva?.estado === "livre") await reserva.abortar();
     return fail("internal_error", "Erro ao registrar a inutilização.", 500, { requestId });
   }
   const inutilizacaoId = (data as unknown as { id: string }).id;
@@ -135,7 +179,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       .maybeSingle();
     final = relida as unknown as (typeof final) | null;
   }
-  if (!final) return fail("internal_error", "Erro ao registrar a inutilização.", 500, { requestId });
+  if (!final) {
+    if (reserva?.estado === "livre") await reserva.abortar();
+    return fail("internal_error", "Erro ao registrar a inutilização.", 500, { requestId });
+  }
 
-  return ok({ ...final, ...(motivoTransmissao ? { motivo_transmissao: motivoTransmissao } : {}) }, { requestId, status: 201 });
+  const resposta = { ...final, ...(motivoTransmissao ? { motivo_transmissao: motivoTransmissao } : {}) };
+  if (reserva?.estado === "livre") await reserva.finalizar({ status: 201, body: resposta });
+  return ok(resposta, { requestId, status: 201 });
 }

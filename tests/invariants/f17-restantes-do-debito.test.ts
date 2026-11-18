@@ -169,7 +169,7 @@ function seed(): void {
           values (v_org, 'test.event', 'contact');
         insert into public.idempotency_keys
           (organization_id, key, endpoint, request_hash, status_code, response_body)
-          values (v_org, 'key-'||v_tag, '/teste', decode(md5(v_tag), 'hex'), 200, '{}'::jsonb);
+          values (v_org, 'key-'||v_tag, '/teste', md5(v_tag), 200, '{}'::jsonb);
         insert into public.incidents (organization_id, type, severity)
           values (v_org, 'teste', 'info');
         insert into public.lgpd_requests (organization_id, request_type, source, due_at)
