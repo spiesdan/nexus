@@ -3,6 +3,19 @@
 import { toast, type ExternalToast } from "sonner";
 
 /**
+ * O COMPONENTE que renderiza os avisos também sai daqui.
+ *
+ * O gate `auditoria-aceite-100` permite `sonner` cru em três portas: o layout
+ * (que monta o `<Toaster/>`), esta porta e o runtime de servidor. Movemos a
+ * montagem do layout para `components/feedback/ToasterDoProduto` — que precisa
+ * do tradutor (`useT`) e por isso não pode morar num Server Component — e essa
+ * mudança criaria uma QUARTA porta. Reexportar daqui mantém três: quem precisa
+ * do componente importa da porta, e a porta continua sendo o único lugar que
+ * conhece a biblioteca.
+ */
+export { Toaster } from "sonner";
+
+/**
  * PORTA ÚNICA de toast do produto (Fase 3f do redesign §100).
  *
  * Antes havia 3 API em paralelo: `sonner` cru em 128 arquivos (cada um com
@@ -59,12 +72,10 @@ export const nexusToast: PortaDeToast = Object.assign(
   {
     success: (message: string, dados?: Argumento): Retorno =>
       encaminhar(toast.success, message, dados),
-    error: (message: string, dados?: Argumento): Retorno =>
-      encaminhar(toast.error, message, dados),
+    error: (message: string, dados?: Argumento): Retorno => encaminhar(toast.error, message, dados),
     warning: (message: string, dados?: Argumento): Retorno =>
       encaminhar(toast.warning, message, dados),
-    info: (message: string, dados?: Argumento): Retorno =>
-      encaminhar(toast.info, message, dados),
+    info: (message: string, dados?: Argumento): Retorno => encaminhar(toast.info, message, dados),
     loading: (message: string, dados?: Argumento): Retorno =>
       encaminhar(toast.loading, message, dados),
     message: (message: string, dados?: Argumento): Retorno =>

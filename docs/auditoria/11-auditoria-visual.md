@@ -2427,3 +2427,59 @@ anel tem de morar na caixa que a pessoa vê).
 foco por fundo, que é o padrão do Radix e passa o piso de 3:1 (`bg-accent-soft` com texto
 `accent-ink`); e `AppShell` suprime o anel no contêiner de rolagem, que não é foco de controle.
 O método é a varredura, não a lista: `grep -rn "outline-hidden\|outline-none" app components`.
+
+### V-59 · Baixa · O botão de fechar o aviso era anunciado em inglês — **CORRIGIDO**
+
+O `<Toaster/>` do `app/layout.tsx` ligava `closeButton` sem passar o rótulo. O `sonner` 2.0.8
+declara `closeButtonAriaLabel = 'Close toast'` como padrão
+(`node_modules/sonner/dist/index.js:502`), e o produto só tem `pt-BR`
+(`lib/i18n/idiomas.ts`).
+
+| Onde se ouvia | O que se ouvia |
+| --- | --- |
+| todo aviso (toast) com botão de fechar | "Close toast" |
+
+Corrigido com um wrapper de cliente (`components/feedback/ToasterDoProduto.tsx`) que usa o
+tradutor do produto e passa o rótulo por `toastOptions`.
+
+**A armadilha medida, e por que ela fica escrita:** a primeira correção passou
+`closeButtonAriaLabel` direto no `<Toaster>` — o tipo aceita, e o DOM continuou com
+`aria-label="Close toast"`. O pacote desestrutura o prop com o default (linha 502) mas só o
+repassa adiante via `toastOptions` (linha 1233): o prop de topo é aceito e **ignorado**. O teste
+(`tests/unit/toast-fala-portugues.test.tsx`) dispara um aviso de verdade e exige
+`getByRole("button", { name: "Fechar aviso" })` — foi ele que pegou a primeira tentativa.
+
+**Não medido:** o `richColors` do aviso usa a paleta da biblioteca, não os tokens do produto (o
+aviso é o único feedback que pinta fora do design system). Trocar isso é mudança visível de
+superfície e fica para uma fatia com captura — com a operação atual (sem build), não se prova
+pixel.
+
+### V-60 · Média · O aviso pintava com a paleta da biblioteca — **CORRIGIDO**
+
+`richColors` fazia o `sonner` escolher as cores de sucesso/alerta/erro/informação. Era o único
+feedback do produto fora do design system: sem tema, sem régua de contraste, sem marca — e o
+contraste do texto sobre aquelas cores nunca foi medido por ninguém.
+
+Decisão do dono: remover. Os quatro tipos passam a usar `--color-success|warning|error|info` com
+o `-fg` correspondente, e o texto é medido sobre o fundo **composto** (o `-bg` é translúcido:
+`rgba(…, 0.12)` no claro, `0.18` no escuro):
+
+| Tipo | Claro | Escuro |
+| --- | --- | --- |
+| sucesso | **5,66:1** | **6,13:1** |
+| aviso | **5,25:1** | **6,21:1** |
+| erro | **6,50:1** | **5,32:1** |
+| informação | **6,11:1** | **6,42:1** |
+
+As classes moram em `components/feedback/cores-do-aviso.ts`, junto do mapa de pares que o gate
+mede — duas listas (componente e teste) seriam duas verdades, e a que envelhece é sempre a que não
+está em produção. O `!` (important) é deliberado: o `sonner` injeta `background: var(--normal-bg)`
+em `[data-sonner-toast]`, mesma especificidade de um utilitário nosso, e a ordem de injeção não é
+contrato.
+
+Gate: `tests/unit/aviso-com-nossos-tokens.test.ts` — compõe o fundo antes de medir, exige ≥4,5:1
+nos dois temas e **recusa o `richColors` de volta** (senão a biblioteca pintaria por cima das
+nossas classes e o gate de contraste continuaria verde enquanto o produto voltava ao errado).
+
+**Não medido em pixel:** sem build nesta rodada, a prova é a cor final composta por token — que é
+exatamente o par que importa para contraste de texto.
