@@ -427,10 +427,38 @@ banco: o host do teste é deliberadamente inalcançável), 401/403 reais (`token
 baixado pelo token. `[!]` — o caminho de rede/DB do servidor está coberto por unit/invariante, não
 pelo emulador.
 
-### 9.6 O que falta
+### 9.6 B-5 e B-6 entregues
 
-- **B-5** UI `/app/settings/devices` (lista, criar com vendedor via `/team/assignable`, código de
-  pareamento uma vez, revogar) + entrada no `lib/navigation/registry.ts`.
-- **B-6** `tests/invariants/offline-devices-rls.test.ts` (dois tenants, `anon`, hash único, CHECKs)
-  e `pnpm test:db` uma vez.
-- **B-7** dreno aceito e `token_revoked` no aparelho real (ver acima).
+**B-5 — UI `/app/settings/devices`** (`page.tsx` admin-only + `_components/DevicesClient.tsx`):
+lista com prefixo/visto/expira/estado; criação com nome, vendedor (via `/api/v1/team/assignable`)
+e validade 30/90/180/365; o código de pareamento aparece **uma vez** (textarea + copiar); revogar
+com confirmação e aviso de que a fila local NÃO é apagada. Entrada no `lib/navigation/registry.ts`
+(grupo `organizacao`, seção “Dados e acesso”, `minRole: admin`, sem sidebar — o menu já estoura a
+dobra em 900px) e ícone `DeviceMobile` em `lib/ui/icons.ts`. Gates: `eslint` 0, `tsc` da fatia 0,
+`navegacao-*` + `titulos` + `busca-global` **125/125**.
+
+> `[!]` Não houve **prova visual** da tela: o worktree não tem Supabase/`.env` para subir o sistema.
+> A validação foi de tipos, lint e regras de navegação. Antes de considerar a fatia fechada, abrir a
+> tela numa instalação e conferir o fluxo criar → copiar código → revogar.
+
+**B-6 — invariante cross-tenant + `test:db`:**
+`tests/invariants/offline-devices-rls.test.ts` prova, com `set role authenticated` + JWT simulado:
+admin de A lê o aparelho de A (controle positivo) e **zero** de B; `manager` lê zero (a policy é
+admin, de propósito); revogar por id de B afeta **zero** linhas; `anon` recebe `permission denied`;
+o banco recusa hash fora de sha256 (CHECK), prefixo fora de `nod_<8 hex>` e hash duplicado (UNIQUE).
+A varredura `rls-completude-varredura` foi satisfeita por `PROVA_PROPRIA` (a tabela fica fora de
+`TABLES` porque a policy é admin e o usuário semeado lá é `agent`).
+
+```bash
+pnpm test:db tests/invariants/offline-devices-rls.test.ts \
+             tests/invariants/rls-completude-varredura.test.ts
+# 2 arquivos, 168 testes, exit 0 (inclui install/update do baseline)
+```
+
+### 9.7 O que falta
+
+- **B-7** dreno **aceito** de ponta a ponta e `token_revoked` real no aparelho. O caminho está
+  inteiro no código e coberto por unit/invariante; o emulador só prova o lado da falha (host
+  inalcançável) porque não há instalação com banco acessível do emulador.
+- Prova visual da B-5 (acima).
+- Trocar o token em SQLite por Keystore/Keychain (plugin nativo) — limite registrado no §9.1.

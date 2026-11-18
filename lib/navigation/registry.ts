@@ -10,6 +10,7 @@ import {
   CalendarBlank,
   ChartBar,
   ChartLineUp,
+  DeviceMobile,
   ClipboardText,
   ClockCountdown,
   ClockCounterClockwise,
@@ -1001,6 +1002,19 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "organizacao",
     section: "Dados e acesso",
     minRole: "admin",
+  },
+  {
+    // A porta do pareamento (0320). Sem esta tela, a credencial do aparelho só
+    // existiria por curl — e o vendedor não teria como ligar o app à empresa.
+    href: "/app/settings/devices",
+    label: "Dispositivos offline",
+    description: "Aparelhos que enviam pedidos capturados sem internet.",
+    icon: DeviceMobile,
+    group: "organizacao",
+    section: "Dados e acesso",
+    minRole: "admin",
+    // SEM `sidebar`: é tarefa de uma vez, como a marca — o menu já estoura a
+    // dobra em 900px. Fica no hub e no ⌘K.
   },
 
   // ---- Canais e integrações — por onde as mensagens entram e saem ----
