@@ -24,10 +24,24 @@
 
 | Frente | Worktree / branch | Dono | Escopo |
 |---|---|---|---|
-| Coordenação | `…/aaa-programa` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, fiscal/financeiro, arquitetura |
-| Banco e segurança | `…/aaa-front-db` · `front/db-seguranca` | Agente A | F-09, F-17, service role, migrations, isolamento |
-| Sentinel | `…/aaa-front-sentinel` · `front/sentinel` | Agente G | Nexus Sentinel v1 somente leitura |
-| Fiscal/financeiro | `programa/nexus-aaa` (fatias) | Coordenador (Agente C) | idempotência, duplicidade, vínculo pedido×nota |
+| Coordenação | `…/aaa-programa` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, D-01/D-02/D-03, arquitetura |
+| Banco e segurança | `…/aaa-front-db` · `f17/papel-e-volume` | Agente A | MCP/guarda no handler, backup/restore, F-17, service role |
+| Fiscal/financeiro | `…/aaa-front-fiscal` · `front/fiscal` | Agente C | cancelamento×drain, importação de entrada, recuperação de nota, conciliação |
+| Design system | `…/aaa-front-design` · `front/design-tinta` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio |
+| Módulos e jornadas | `…/aaa-front-modulos` · `front/modulos` | Agente E | 5.4 (inbox/campanhas), 5.6 (pedidos), 5.8 (fiscal/UI), 5.10/5.11 (config/admin) — **não** toca tokens/design nem schema/migrations |
+| Mobile/offline | `…/aaa-front-mobile` · `front/mobile` | Agente F | PWA/Capacitor/offline, fila/retry/conflito, estado de sincronização — **não** declara dispositivo não testado |
+| Sentinel | `…/aaa-front-sentinel` · `front/sentinel` | Agente G | Sentinel v1 (na main) e v1.1 (recomendações, sem escrita fiscal) |
+
+### Regras de não-duplicação e dono de schema
+
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Reservas atuais: **0317** = D-03 (`idempotency_keys.request_hash`), **0318** = D-01/D-02 (`prospecting_campaigns.nome_manual`).
+- **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
+- **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
+- **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
+- **Sentinel**: G é dono de `lib/sentinel/**`, `app/app/sentinel/**`, `api/v1/sentinel/**` e das tabelas `sentinel_*`; mudança de schema passa pelo Coordenador.
+- **Tipos compartilhados/contrato de API**: mudança é anunciada na fila antes de codar; duas frentes não editam o mesmo arquivo.
+- **Mobile**: F pode mexer em `mobile/`, `app/sw*`, `lib/entregas/**` e fila offline; não altera regra de negócio do servidor nem promete APK/iOS sem dispositivo.
+
 
 Regra de convivência: nenhum agente edita arquivo de outro. Mudança em schema,
 baseline, tipos compartilhados ou contrato de API tem **um** responsável por vez; o
@@ -64,7 +78,7 @@ coordenador integra e roda os gates no código integrado.
 | **P0-05** | Emissão fiscal: impedir duas notas vivas para o mesmo pedido sob clique duplo/retry concorrente | `[x]` | #484 → `f691dc06`: trigger 0315, advisory lock por org+pedido; `test:db` 160/1497; CI 5/5 | Coordenador (C) | — | Banco recusa a segunda nota viva; nota cancelada permite nova emissão; teste concorrente e de cancelamento |
 | **P0-06** | Deploy aplica schema e falha alto; restore ensaiado | `[x]` | `1d10ff7c` (deploy aplica e verifica schema, sem `\|\| true`); `#462` (F-32 restore, perda de GRANTs); `tests/shell/deploy-aplica-schema.test.sh` | A | — | `pnpm test:shell` verde; ensaio de update e restore documentado em `25-ensaio-de-restauracao.md` |
 | **P0-07** | Sentinel v1 somente leitura, sem escrita fiscal/financeira e sem cross-tenant | `[x]` | #489 → `f644b21c` (integra #487, migration 0316): 27 detectores, ocorrência idempotente, RLS, kill switch; 68 unit + 184 invariantes; CI 5/5 | G / Coordenador | — | Detectores determinísticos com casos positivos/negativos; reexecução não duplica ocorrência; RLS e kill switch; zero ação de escrita |
-| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[ ]` | Achado F5 (`docs/auditoria/17-modulos-5.4-5.11.md`): nenhuma rota fiscal usa `Idempotency-Key` | Coordenador (C) | P0-05; decisão D-03 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
+| **P0-08** | Idempotência nas rotas fiscais que criam efeito externo (emissão, inutilização, manifestação, retransmissão) | `[~]` | Decisão D-03 tomada; PR #499: reivindicação forte, replay/original, 409 de payload, 0317 (request_hash text); 9 testes + 434 invariantes | Coordenador | Merge #499 | Retry com a mesma chave não cria segundo job/documento; teste de repetição e de timeout |
 | **P0-09** | Recebimento de compra não pode somar estoque duas vezes sob concorrência | `[x]` | #485 → `239efd32`: CAS em `recebido_qtd` antes do estoque, devolução com o mesmo CAS e compensação; 5 casos unitários; CI 5/5 | Coordenador (C) | — | CAS em `recebido_qtd` antes do ajuste de estoque; perdedor não movimenta; teste concorrente com dois POSTs e soma final igual ao pedido |
 
 ## 4. Fila — P1 (jornadas críticas, integração, offline, a11y, desempenho)
@@ -73,7 +87,7 @@ coordenador integra e roda os gates no código integrado.
 |---|---|---|---|---|---|---|
 | **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | `docs/auditoria/29-capacidades.md` | E / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
 | **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | PR #438 aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
-| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[!]` | §8 do prompt mestre; não existe gerador no código; o wizard exige nome manual (`_campanha-wizard.tsx:696`) | E / Coordenador | **Decisão de produto sobre a regra do nome** (opções abaixo) | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
+| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[~]` | Decisão D-01/D-02 tomada; PR #498: gerador puro + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | Merge #498 | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
 | **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | Capacidades 23–24; `docs/auditoria/08-mobile-offline.md` | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | `#469` mergeado (axe em 10 telas); `#468` aberto (snapshots) | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
 | **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | `#458` (teto nas listas); `#464` mergeado (`f3ea10d6`) com o índice 0313 e baseline restaurado | A / E | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
@@ -130,9 +144,9 @@ pnpm test:shell                                   # kit de instalação/deploy
 
 | ID | Decisão | Opções medidas | Impacto | Quem decide |
 |---|---|---|---|---|
-| D-01 | Regra do nome automático de campanha por cidade (P1-03) | (a) lista literal: `Bituruna, Cruz Machado, União da Vitória`; (b) primeira + contagem: `Bituruna +2 cidades`; (c) prefixo fixo: `Prospecção — Bituruna, ...` | Nome é o que o operador vê na lista; define duplicata, tamanho máximo (hoje 120) e como voltar ao automático depois de editar | Dono |
-| D-02 | Comportamento do nome ao editar manualmente (P1-03) | (a) edição manual desliga o automático até "Usar nome sugerido"; (b) edição manual é sobrescrita a cada mudança de cidade; (c) campo separado "sugestão" ao lado | (b) apaga trabalho do operador — o prompt proíbe apagar em silêncio. Recomendação: (a) | Dono |
-| D-03 | Idempotência das rotas fiscais (P0-08): repetir com a mesma `Idempotency-Key` devolve a nota/job original ou 409? | (a) devolver o recurso original (200, como o financeiro); (b) 409 nomeando a nota existente | (a) é retry seguro de verdade; (b) é honesto mas obriga o cliente a tratar | Dono |
+| D-01 | Regra do nome automático de campanha por cidade (P1-03) | **DECIDIDA 18/11**: trim, dedupe case-insensitive, ordem pt-BR, 1/2–4/5+, teto 80 em palavra | Implementada no #498 | Dono |
+| D-02 | Comportamento do nome ao editar manualmente (P1-03) | **DECIDIDA 18/11**: edição grava `nome_manual=true` e nunca é sobrescrita; ação "Voltar ao nome automático" limpa e regenera | Implementada no #498 | Dono |
+| D-03 | Idempotência das rotas fiscais (P0-08) | **DECIDIDA 18/11**: mesma chave+payload devolve o recurso original com `Idempotency-Replayed`; payload diferente 409 | Implementada no #499 | Dono |
 
 Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção recomendada.
 
@@ -154,6 +168,9 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | F-17 nos 4 eixos (escrita) | #486 | 367 testes verdes |
 | 18/11/2026 | P0-09 recebimento com CAS | #485 | 5 casos unitários |
 | 18/11/2026 | P0-03 service role revisado e vazamento corrigido | #483 → `dd515696` | 210 handlers, 100 cadeias, 42 arquivos; teste cross-org |
+| 18/11/2026 | Guarda no handler do MCP (follow-up P0-03) | #490 → `ac0d5e12` | fake encadeável corrigido; CI verde |
+| 18/11/2026 | D-01/D-02 nome de campanha | #498 | 11 + 2 testes; install/update verdes |
+| 18/11/2026 | D-03 idempotência fiscal | #499 | 9 testes; 434 invariantes |
 | 18/11/2026 | P0-04 teto do recebível na main | #480 → `7a498f9d` | CI 5/5; e2e 17m |
 | 18/11/2026 | P0-05 nota viva na main | #484 → `f691dc06` | CI 5/5 |
 | 18/11/2026 | P0-09 recebimento com CAS na main | #485 → `239efd32` | CI 5/5 |
