@@ -774,7 +774,7 @@ Jornadas críticas (16)
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | 8.1 | Auditar authn, sessão, MFA, authz, RLS, secrets, CORS, CSRF, XSS, SSRF, upload, webhooks, rate limits, dependências, logs, IA, multi-tenancy | `[~]`  |
 | 8.2 | Limites de exposição de dados e segurança administrativa                                                                                     | `[~]`  |
-| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[~]`  |
+| 8.3 | Baseline de carregamento, navegação, queries lentas, listas, gráficos, bundle, imagens, fontes, workers                                      | `[~]`  | **Bundle — uma frente fechada em 17/11/2026**: `gpt-tokenizer` (~1 MB gz) era import estático no contador de tokens do editor de agente e ia em toda visita; agora é `import()` dentro do efeito. Medido no build: o chunk do tokenizador tem **1.034.435 bytes gz** e **não** aparece entre os 26 chunks do manifesto inicial da rota (`total 333.816 gz ≈ 326 KB`); gate `token-counter-carrega-sob-demanda.test.tsx` (2 casos). **Falta**: Inbox 386 KB gz, maplibre `-dev` 5,3 MB, imagens/fontes e workers |
 | 8.4 | Otimizar só com baseline → gargalo → resultado                                                                                               | `[~]`  |
 | 8.5 | WCAG 2.2 AA, teclado, foco, semântica, contraste, leitores, erros, toque, reduced motion                                                     | `[~]`  |
 
