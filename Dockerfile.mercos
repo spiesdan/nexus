@@ -4,7 +4,7 @@
 # `@playwright/test` do lockfile. Instalar Chromium por cima do Alpine seria
 # maior, mais lento e sujeito a mismatch de versão — o modo de falha clássico
 # é o browser abrir e o protocolo não casar.
-FROM mcr.microsoft.com/playwright:v1.64.0-noble
+FROM mcr.microsoft.com/playwright:v1.65.1-noble
 
 # Procedência (doutrina de packaging, invariante 2). Sem estes rótulos a imagem
 # publicada não diz de onde veio — e o `docker image inspect` da VPS não
@@ -21,11 +21,30 @@ ENV APP_VERSION=$APP_VERSION
 WORKDIR /app
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+# A base v1.65.1 não traz mais o `corepack` (a v1.64 trazia): `corepack enable`
+# falhava com exit 127 e o build parava. Instalar o pnpm pelo npm é o caminho
+# que existe em qualquer base com node, e a versão continua fixa.
+RUN npm install -g pnpm@9.15.9
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
+
+# ── A IMAGEM BASE PRECISA TRAZER O HEADLESS SHELL ──────────────────────────
+#
+# Medido em produção em 18/11/2026: o lockfile tinha `@playwright/test` 1.65.1 e
+# a base era `v1.64.0-noble`. O worker de PEDIDOS funcionava (Chromium completo),
+# mas o coletor de CATÁLOGO chamava o headless shell que a base não tinha:
+#
+#   browserType.launch: Executable doesn't exist at
+#   /ms-playwright/chromium_headless_shell-1255/...
+#
+# O erro só aparecia em runtime, no primeiro uso — o build passava verde. Duas
+# travas: aqui, a existência do headless shell; e o teste
+# `tests/unit/dockerfile-playwright-alinhado.test.ts`, que reprova quando o
+# `FROM` deixa de casar com a versão do lockfile.
+RUN ls -d /ms-playwright/chromium_headless_shell-* >/dev/null \
+ && echo "headless shell presente na base do Playwright"
 
 # A credencial NÃO entra na imagem: vem do ambiente do serviço no compose.
 ENV NODE_ENV=production
