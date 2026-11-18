@@ -565,7 +565,7 @@ beforeAll(() => {
             values (v_org, v_dest, 1, 'nominatim', 'Rua da Prova, 100', 'seed de invariante RLS');
         end if;
 
-        -- migration 0313 — Sentinel: configuração, execução, ocorrência e
+        -- migration 0315 — Sentinel: configuração, execução, ocorrência e
         -- histórico. O seed do run/ocorrência/evento é a prova comportamental
         -- (leitura org-scoped nas quatro); a escrita é service_role/agent+ e é
         -- medida nas rotas, não aqui.
@@ -757,7 +757,7 @@ export const TABLES = [
   // Leitura org-scoped; escrita agent+ e sem delete por papel: histórico de
   // correção de endereço é auditoria, não rascunho.
   "shipment_destination_recoveries",
-  // migration 0313 — Nexus Sentinel v1. Leitura org-scoped nas quatro; escrita
+  // migration 0315 — Nexus Sentinel v1. Leitura org-scoped nas quatro; escrita
   // de ocorrência/evento é agent+ (a rota PATCH valida a transição) e a do
   // runner/funções é service_role. Seed em `beforeAll`.
   "sentinel_settings",

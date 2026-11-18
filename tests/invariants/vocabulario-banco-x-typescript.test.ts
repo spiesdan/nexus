@@ -300,7 +300,7 @@ const PARES: Array<{
   {
     tabela: "sentinel_occurrences",
     coluna: "severidade",
-    // lib/sentinel/tipos.ts → Severidade (migration 0313). O CHECK e a união
+    // lib/sentinel/tipos.ts → Severidade (migration 0315). O CHECK e a união
     // nasceram no mesmo commit: severidade desconhecida viraria 23514 no
     // upsert do runner — que roda sozinho no cron, sem ninguém olhando.
     arquivo: "lib/sentinel/tipos.ts",

@@ -28548,8 +28548,8 @@ grant execute on function public.fn_conversas_contagens(uuid, uuid, text[], text
 
 -- ============================================================================
 -- ============================================================================
--- 0313 — NEXUS SENTINEL: ocorrências, histórico e estado das varreduras.
--- Ver supabase/migrations/20261118130000_0313_sentinel_ocorrencias.sql.
+-- 0315 — NEXUS SENTINEL: ocorrências, histórico e estado das varreduras.
+-- Ver supabase/migrations/20261121130000_0315_sentinel_ocorrencias.sql.
 --
 -- v1 SOMENTE LEITURA sobre o negócio: grava o que viu (ocorrência), o que
 -- mudou nela (histórico append-only) e o resultado de cada execução. Nenhuma
@@ -28974,7 +28974,7 @@ grant select on public.sentinel_contatos_duplicados to service_role;
 comment on view public.sentinel_contatos_duplicados is
   'Clientes com o mesmo e-mail normalizado na organização. Agregado para o detector; security_invoker mantém a RLS de contacts.';
 
--- ─── Sentinel: mudança de estado atômica (0313) ────────────────────────────
+-- ─── Sentinel: mudança de estado atômica (0315) ────────────────────────────
 create or replace function public.fn_sentinel_aplicar_mudanca(
   p_organization_id uuid,
   p_occurrence_id uuid,
