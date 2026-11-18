@@ -1,0 +1,383 @@
+# F-17 — eixo de ESCRITA nas 73 tabelas, 2026-11-18
+# comando: TEST_DB_CONTAINER=<container> TEST_DB_TEMPLATE=inv_baseline npx vitest run --config vitest.db.config.ts tests/invariants/rls-varredura-comportamental.test.ts --reporter=verbose
+# ambiente: pgvector/pgvector:pg15 + baseline.sql install no molde (main @ 7a498f9d)
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.db.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 /private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db
+
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > a lista bate com o contrato do arquivo de dados 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_case_events > admin da org A lê 0 linhas da org B 192ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_case_events > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_case_events > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_case_events > INSERT declarando a org B é recusado 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_case_events > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_cases > admin da org A lê 0 linhas da org B 289ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_cases > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_cases > UPDATE e DELETE da org B não alcançam linha nenhuma 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_cases > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_cases > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_inbox_items > admin da org A lê 0 linhas da org B 332ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_inbox_items > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_inbox_items > UPDATE e DELETE da org B não alcançam linha nenhuma 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_inbox_items > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > agent_inbox_items > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_runs > admin da org A lê 0 linhas da org B 343ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_runs > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_runs > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_runs > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_runs > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_versions > admin da org A lê 0 linhas da org B 321ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_versions > INSERT declarando a org B é recusado 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agent_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agents > admin da org A lê 0 linhas da org B 203ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agents > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agents > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agents > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_agents > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_budgets > admin da org A lê 0 linhas da org B 260ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_budgets > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_budgets > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_budgets > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_budgets > INSERT na própria org: negado no privilégio (escrita só server-side) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_chunks > admin da org A lê 0 linhas da org B 228ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_chunks > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_chunks > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_chunks > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_chunks > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_faq_items > admin da org A lê 0 linhas da org B 249ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_faq_items > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_faq_items > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_faq_items > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_faq_items > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_invocations > admin da org A lê 0 linhas da org B 246ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_invocations > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_invocations > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_invocations > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_invocations > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_sources > admin da org A lê 0 linhas da org B 237ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_sources > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_sources > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_sources > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_sources > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_versions > admin da org A lê 0 linhas da org B 412ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_knowledge_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_provider_credentials > admin da org A lê 0 linhas da org B 267ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_provider_credentials > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_provider_credentials > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_provider_credentials > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_provider_credentials > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_purpose_bindings > admin da org A lê 0 linhas da org B 233ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_purpose_bindings > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_purpose_bindings > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_purpose_bindings > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_purpose_bindings > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_router_members > admin da org A lê 0 linhas da org B 241ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_router_members > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_router_members > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_router_members > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > ai_router_members > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_audit_log > admin da org A lê 0 linhas da org B 251ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_audit_log > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_audit_log > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_audit_log > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_audit_log > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_tokens > admin da org A lê 0 linhas da org B 252ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_tokens > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_tokens > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_tokens > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > api_tokens > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > attendant_availability > admin da org A lê 0 linhas da org B 267ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > attendant_availability > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > attendant_availability > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > attendant_availability > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > attendant_availability > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > before_send_traces > admin da org A lê 0 linhas da org B 252ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > before_send_traces > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > before_send_traces > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > before_send_traces > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > before_send_traces > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > calendar_oauth_nonces > admin da org A lê 0 linhas da org B 277ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > calendar_oauth_nonces > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > calendar_oauth_nonces > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > calendar_oauth_nonces > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > calendar_oauth_nonces > INSERT na própria org: negado no privilégio (escrita só server-side) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_knobs > admin da org A lê 0 linhas da org B 483ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_knobs > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_knobs > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_knobs > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_knobs > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_health > admin da org A lê 0 linhas da org B 446ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_health > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_health > UPDATE e DELETE da org B não alcançam linha nenhuma 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_health > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_health > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_warmup > admin da org A lê 0 linhas da org B 512ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_warmup > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_warmup > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_warmup > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_session_warmup > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_sessions > admin da org A lê 0 linhas da org B 704ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_sessions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_sessions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_sessions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > channel_sessions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_assignment_events > admin da org A lê 0 linhas da org B 326ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_assignment_events > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_assignment_events > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_assignment_events > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_assignment_events > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_notes > admin da org A lê 0 linhas da org B 194ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_notes > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_notes > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_notes > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > conversation_notes > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_activities > admin da org A lê 0 linhas da org B 409ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_activities > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_activities > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_activities > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_activities > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_links > admin da org A lê 0 linhas da org B 579ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_links > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_links > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_links > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_links > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_reactivations > admin da org A lê 0 linhas da org B 411ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_reactivations > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_reactivations > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_reactivations > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_reactivations > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_risk_states > admin da org A lê 0 linhas da org B 309ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_risk_states > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_risk_states > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_risk_states > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_risk_states > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_scores > admin da org A lê 0 linhas da org B 322ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_scores > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_scores > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_scores > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_lead_scores > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_pipelines > admin da org A lê 0 linhas da org B 206ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_pipelines > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_pipelines > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_pipelines > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_pipelines > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_stages > admin da org A lê 0 linhas da org B 292ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_stages > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_stages > UPDATE e DELETE da org B não alcançam linha nenhuma 4ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_stages > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > crm_stages > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > cron_jobs > admin da org A lê 0 linhas da org B 264ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > cron_jobs > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > cron_jobs > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > cron_jobs > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > cron_jobs > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demanda_conversas > admin da org A lê 0 linhas da org B 330ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demanda_conversas > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demanda_conversas > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demanda_conversas > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demanda_conversas > INSERT na própria org: aceito pela policy 12ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demandas > admin da org A lê 0 linhas da org B 252ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demandas > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demandas > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demandas > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > demandas > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_pointers > admin da org A lê 0 linhas da org B 220ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_versions > admin da org A lê 0 linhas da org B 230ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 4ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > disclosure_template_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > event_log > admin da org A lê 0 linhas da org B 194ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > event_log > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > event_log > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > event_log > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > event_log > INSERT na própria org: negado no privilégio (escrita só server-side) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_distiller_proposals > admin da org A lê 0 linhas da org B 191ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_distiller_proposals > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_distiller_proposals > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_distiller_proposals > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_distiller_proposals > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_judge_verdicts > admin da org A lê 0 linhas da org B 276ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_judge_verdicts > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_judge_verdicts > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_judge_verdicts > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > flywheel_judge_verdicts > INSERT na própria org: aceito pela policy 2ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > idempotency_keys > admin da org A lê 0 linhas da org B 368ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > idempotency_keys > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > idempotency_keys > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > idempotency_keys > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > idempotency_keys > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > incidents > admin da org A lê 0 linhas da org B 255ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > incidents > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > incidents > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > incidents > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > incidents > INSERT na própria org: negado no privilégio (escrita só server-side) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > job_queue > admin da org A lê 0 linhas da org B 226ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > job_queue > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > job_queue > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > job_queue > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > job_queue > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > judge_alignment_pool > admin da org A lê 0 linhas da org B 260ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > judge_alignment_pool > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > judge_alignment_pool > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > judge_alignment_pool > INSERT declarando a org B é recusado 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > judge_alignment_pool > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_checkpoints > admin da org A lê 0 linhas da org B 279ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_checkpoints > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_checkpoints > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_checkpoints > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_checkpoints > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_notes > admin da org A lê 0 linhas da org B 206ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_notes > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_notes > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_notes > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_notes > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state > admin da org A lê 0 linhas da org B 287ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state_transitions > admin da org A lê 0 linhas da org B 333ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state_transitions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state_transitions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state_transitions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lead_state_transitions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lgpd_requests > admin da org A lê 0 linhas da org B 239ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lgpd_requests > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lgpd_requests > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lgpd_requests > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > lgpd_requests > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > llm_calls > admin da org A lê 0 linhas da org B 349ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > llm_calls > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > llm_calls > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > llm_calls > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > llm_calls > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > merge_queue > admin da org A lê 0 linhas da org B 275ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > merge_queue > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > merge_queue > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > merge_queue > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > merge_queue > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > message_templates > admin da org A lê 0 linhas da org B 331ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > message_templates > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > message_templates > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > message_templates > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > message_templates > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > metrics > admin da org A lê 0 linhas da org B 246ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > metrics > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > metrics > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > metrics > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > metrics > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nuvemshop_products > admin da org A lê 0 linhas da org B 412ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nuvemshop_products > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nuvemshop_products > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nuvemshop_products > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nuvemshop_products > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > orders > admin da org A lê 0 linhas da org B 420ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > orders > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > orders > UPDATE e DELETE da org B não alcançam linha nenhuma 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > orders > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > orders > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > org_memory_pointers > admin da org A lê 0 linhas da org B 259ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > org_memory_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > org_memory_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > org_memory_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > org_memory_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > outbound_copies > admin da org A lê 0 linhas da org B 310ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > outbound_copies > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > outbound_copies > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > outbound_copies > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > outbound_copies > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > pacing_ledger > admin da org A lê 0 linhas da org B 370ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > pacing_ledger > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > pacing_ledger > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > pacing_ledger > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > pacing_ledger > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_pointers > admin da org A lê 0 linhas da org B 399ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_pointers > INSERT declarando a org B é recusado 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_versions > admin da org A lê 0 linhas da org B 275ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > playbook_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_pointers > admin da org A lê 0 linhas da org B 398ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 2ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_versions > admin da org A lê 0 linhas da org B 400ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > promise_table_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_pointers > admin da org A lê 0 linhas da org B 262ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_versions > admin da org A lê 0 linhas da org B 324ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 2ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_knob_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_pointers > admin da org A lê 0 linhas da org B 393ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_versions > admin da org A lê 0 linhas da org B 343ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > reentry_template_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > send_ledger > admin da org A lê 0 linhas da org B 458ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > send_ledger > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > send_ledger > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > send_ledger > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > send_ledger > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_pointers > admin da org A lê 0 linhas da org B 336ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_pointers > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_pointers > UPDATE e DELETE da org B não alcançam linha nenhuma 1ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_pointers > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_pointers > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_versions > admin da org A lê 0 linhas da org B 599ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_versions > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_versions > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_versions > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > skill_versions > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > storage_redaction_queue > admin da org A lê 0 linhas da org B 298ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > storage_redaction_queue > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > storage_redaction_queue > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > storage_redaction_queue > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > storage_redaction_queue > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > tenant_integrations > admin da org A lê 0 linhas da org B 288ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > tenant_integrations > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > tenant_integrations > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > tenant_integrations > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > tenant_integrations > INSERT na própria org: aceito pela policy 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > webhook_events_log > admin da org A lê 0 linhas da org B 211ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > webhook_events_log > controle positivo: enxerga as próprias linhas (ou a leitura é negada por desenho) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > webhook_events_log > UPDATE e DELETE da org B não alcançam linha nenhuma 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > webhook_events_log > INSERT declarando a org B é recusado 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > webhook_events_log > INSERT na própria org: negado no privilégio (escrita só server-side) 0ms
+ ✓ tests/invariants/rls-varredura-comportamental.test.ts > F-17 — isolamento comportamental (73 tabelas que eram dívida) > nenhuma sonda cross-org é vacuidade: as linhas da org B existem 468ms
+
+ Test Files  1 passed (1)
+      Tests  367 passed (367)
+   Start at  02:12:44
+   Duration  26.83s (transform 226ms, setup 1.27s, import 216ms, tests 24.77s, environment 0ms)
+
