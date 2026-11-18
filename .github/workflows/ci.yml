@@ -31,7 +31,13 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # 25, não 15. Medido em 18/11/2026: com o grupo de dependências do #455,
+    # o verify da `main` levou 14m33s no PR (873 s) e passou dos 15 min no merge,
+    # sendo CANCELADO pelo timeout — não por teste vermelho. Um job cancelado é
+    # check vermelho para a branch protection, então a folga aqui não esconde
+    # regressão: ela impede que uma suíte que passa seja reprovada pelo relógio.
+    # Se voltar a encostar no teto, o conserto é fatiar `test:unit`, não subir de novo.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 
