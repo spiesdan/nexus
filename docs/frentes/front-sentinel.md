@@ -252,6 +252,11 @@ fiscal/financeira real.
 10. **Prova de banco e E2E pendentes nesta máquina** (Docker desligado, sem
     `.env.e2e`): o merge não é declarado "verde em tudo" até `invariants` e
     `e2e` rodarem no CI.
+11. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+    `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
+    normal, então a regra herdada da v1 não dispara na base atual. A regra de
+    estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
+    regra morta ou afrouxar a constraint é decisão de produto, não desta frente.
 
 ## 10. Próximas fatias seguras
 
