@@ -12,7 +12,7 @@
 
 | Estado | Valor | Como foi medido |
 |---|---|---|
-| Código | `nexus/main` @ `139a1be5` (merges até #439) | `git log --oneline -1 nexus/main` |
+| Código | `nexus/main` @ `5d87ac0d` | `git log --oneline -1 nexus/main` |
 | PR de release | **#537** — `release/1.56.0`, CI rodando, **não mergeado** | API de PRs do GitHub |
 | Release | última tag `v1.55.0`; **nenhuma tag nova** | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Deploy | **nenhum**; produção intocada por este programa | — |
@@ -29,10 +29,10 @@ pnpm release:conferir     # não escreve nada
 Saída medida em 18/11/2026, com os fragmentos que estavam na `main` no corte:
 
 ```text
-1.55.0 + minor = 1.56.0  (28 fragmento(s))
+1.55.0 + minor = 1.56.0  (29 fragmento(s) no corte vigente)
 ```
 
-O corte está no PR **#537** (`CHANGELOG.md` + os 28 fragmentos consumidos), refeito sobre `139a1be5`.
+O corte está no PR **#537** (`CHANGELOG.md` + os fragmentos consumidos), refeito sobre `5d87ac0d`. O número de fragmentos muda a cada merge; o que vale é o do PR, e ele vem de `pnpm release:conferir`.
 
 **Por que minor**: há capacidade nova de verdade (Sentinel v1, `Idempotency-Key`
 fiscal, retransmissão idempotente, nome automático de campanha) e **nenhum
