@@ -1,0 +1,8 @@
+# Tentativa 3 — 18/11/2026 ~06:32 (UTC-3)
+# Comando: set -a; . ./.env.e2e; set +a; NODE_OPTIONS=--max-old-space-size=4096 \
+#          SENTRY_DSN=off NEXT_TELEMETRY_DISABLED=1 next build
+# Host: mesmo, load ~19; swap 14 GB de 14 GB.
+# Resultado: parou em "Creating an optimized production build ..." sem erro; processo
+# principal morto, workers orfaos em 0% de CPU. Nao e erro de configuracao do repo:
+# a mesma arvore builda no CI (build-and-size verde no PR #517).
+
