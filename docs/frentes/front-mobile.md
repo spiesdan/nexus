@@ -455,10 +455,28 @@ pnpm test:db tests/invariants/offline-devices-rls.test.ts \
 # 2 arquivos, 168 testes, exit 0 (inclui install/update do baseline)
 ```
 
-### 9.7 O que falta
+### 9.7 B-7 — harness pronto, prova pendente de emulador
 
-- **B-7** dreno **aceito** de ponta a ponta e `token_revoked` real no aparelho. O caminho está
-  inteiro no código e coberto por unit/invariante; o emulador só prova o lado da falha (host
-  inalcançável) porque não há instalação com banco acessível do emulador.
-- Prova visual da B-5 (acima).
-- Trocar o token em SQLite por Keystore/Keychain (plugin nativo) — limite registrado no §9.1.
+O harness já está na `main` (entrou junto do #526):
+
+- `android/app/src/debug/` libera cleartext **só** para `10.0.2.2`/`localhost` na build de
+  debug — a release continua só HTTPS;
+- `tests/e2e-mobile/stub-device-api.mjs` responde `/device/me`, `/device/catalog` e
+  `/device/orders` com os contratos reais, inclusive replay idempotente e `REVOKED=1` (401);
+- `jornada-dreno-aceito.yaml` e `jornada-token-revogado.yaml` cobrem os dois estados;
+- `tests/e2e-mobile/README.md` documenta o `adb reverse` e a semente da credencial.
+
+O que falta é **rodar** os fluxos num aparelho. Precisa de:
+
+1. emulador de pé (`emulator -avd nexus -no-window -no-audio -no-boot-anim -no-snapshot -gpu
+   swiftshader_indirect`) — a máquina tem 8 GB e o AVD anterior morreu por OOM;
+2. nada mais para o caminho do CLIENTE (stub + APK debug + semente local).
+
+Para provar também o **servidor real** (regra de negócio no aparelho), precisa de uma
+instalação local acessível do emulador: Supabase local + `pnpm dev` + org/usuário/produto
+semeados e uma credencial emitida — ou uma instalação de teste preparada pelo coordenador.
+**Não** aponta para produção; o stub cobre o comportamento do shell e o servidor já tem
+unit + invariante.
+
+Outros pendentes: prova visual da B-5 (sem Supabase local no worktree) e trocar o token em
+SQLite por Keystore/Keychain (plugin nativo).

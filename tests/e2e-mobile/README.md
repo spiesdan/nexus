@@ -69,3 +69,33 @@ o dreno não pode alcançar a instalação de ninguém.
 | `stopApp` + `launchApp` → `(1)` e `OFF-0001` | retomada após reinício; a fila não some |
 | toque duplo → `(2)`, nunca `(3)` | o "salvar uma vez só" segura o polegar |
 | "Enviar agora" sem sinal → `(2)` + aviso | falha de envio não perde nem inventa sucesso |
+
+## Pareamento e dreno com credencial de dispositivo (0322)
+
+Duas jornadas novas provam o ciclo do shell pareado **sem apontar para produção**:
+
+| Fluxo | Prova |
+|---|---|
+| `jornada-pareamento.yaml` | sem credencial + fila (1) → código com host `.invalid` → “Credencial salva / sem rede” → “Enviar agora” → aviso de falha e fila **intacta** |
+| `jornada-dreno-aceito.yaml` | dreno **aceito** contra o stub local: fila zera e o aviso mostra o número definitivo (1234) |
+| `jornada-token-revogado.yaml` | `401 token_revoked`: estado visível e fila **intacta** |
+
+O servidor dos dois últimos é um stub sem dependências, que responde os mesmos
+contratos de `/api/v1/device/*` (inclusive replay idempotente):
+
+```bash
+# aceita pedidos (porta 8787)
+node tests/e2e-mobile/stub-device-api.mjs
+
+# 401 token_revoked
+REVOKED=1 node tests/e2e-mobile/stub-device-api.mjs
+
+# o emulador alcança a máquina em 10.0.2.2; a build DEBUG libera cleartext
+# apenas para 10.0.2.2/localhost (android/app/src/debug/...)
+adb reverse tcp:8787 tcp:8787
+```
+
+A credencial é semeada no banco local do app com `dispositivo_url =
+http://10.0.2.2:8787` e um `dispositivo_token` igual ao `TOKEN` do stub (default
+`nod_aaaaaaaa_0123...`). O que o stub **não** prova é a regra de negócio — ela
+é a mesma `criarPedidoComercial` reaproveitada, coberta por unit e invariantes.
