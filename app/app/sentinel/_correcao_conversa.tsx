@@ -177,7 +177,7 @@ export function CorrecaoDeConversa({
           </dl>
 
           <div className="space-y-1">
-            <label htmlFor="sentinel-motivo-conversa" className="text-sm text-text">
+            <label htmlFor="sentinel-motivo-conversa" className="block text-sm text-text">
               Motivo (obrigatório, fica no histórico)
             </label>
             <Textarea
