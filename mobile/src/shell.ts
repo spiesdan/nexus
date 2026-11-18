@@ -305,7 +305,12 @@ async function drenar(db: Db): Promise<void> {
     );
   } finally {
     rodando = false;
-    await agendarSePreciso(db);
+    // Repinta DEPOIS do dreno. Medido no emulador em 18/11/2026: o aviso dizia
+    // "2 pedido(s) enviado(s) — nº 65, 66" e a lista continuava mostrando os
+    // dois como "aguardando envio", com (2) no cabeçalho. O dado estava certo
+    // no SQLite; a tela é que tinha sido desenhada antes do dreno e ninguém a
+    // desenhou de novo.
+    await renderizar(db);
   }
 }
 
