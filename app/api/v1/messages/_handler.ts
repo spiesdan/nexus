@@ -302,6 +302,28 @@ export async function sendMessageHandler(
   };
   const c = conv as unknown as Joined;
 
+  // A ORGANIZAÇÃO DA CONVERSA TEM DE SER A DO CTX.
+  //
+  // Este handler é chamado com dois clients: o do usuário, em que a RLS já
+  // esconde a conversa do vizinho (a busca por id devolve `null` e o 404 acima
+  // resolve), e o de SERVICE ROLE — MCP (`lib/mcp/server.ts`, `lib/mcp/auth.ts`),
+  // agent-engine e follow-ups —, que BYPASSA RLS. No segundo caso a busca por
+  // `id` devolve a conversa de QUALQUER organização, e todo o resto do caminho
+  // usa `c.organization_id` para escrever: a mensagem outbound, o update da
+  // conversa e o `last_activity_at` do contato.
+  //
+  // Sem esta comparação, um `conversation_id` de outro tenant virava envio real
+  // para o cliente dele — medido com o teste `messages-envio-nao-atravessa-org`:
+  // ctx da org A + conversa da org B = mensagem inserida com o telefone de B
+  // como destinatário. O MCP torna o caminho alcançável de fora
+  // (`crm_send_whatsapp_message` aceita `conversation_id` do corpo e roda com
+  // admin client).
+  //
+  // 404 e não 403: 403 confirmaria a existência da conversa em outro tenant.
+  if (c.organization_id !== ctx.organization_id) {
+    throw new ApiError(404, "not_found", undefined, ctx.requestId, "Conversa não encontrada.");
+  }
+
   if (c.contacts?.is_blocked) {
     throw new ApiError(
       403,
