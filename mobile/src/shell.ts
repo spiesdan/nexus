@@ -18,7 +18,13 @@
  */
 
 import { banco } from "@/lib/offline/db";
-import { contarAbertos, filaAberta, type PedidoNaFila } from "@/lib/offline/outbox";
+import {
+  contarAbertos,
+  descartarPendente,
+  filaAberta,
+  reabrirRejeitado,
+  type PedidoNaFila,
+} from "@/lib/offline/outbox";
 import { carimboDoCatalogo, contarCatalogo } from "@/lib/offline/catalogo";
 import { temSinal } from "@/lib/offline/rede";
 
@@ -42,10 +48,30 @@ function dinheiro(cents: number): string {
 }
 
 function estadoDaLinha(p: PedidoNaFila): string {
-  if (p.status === "rejeitado") return `precisa de decisão: ${p.ultimo_erro ?? "ver motivo"}`;
+  if (p.status === "rejeitado") return `recusado: ${p.ultimo_erro ?? "ver motivo"}`;
   if (p.status === "enviando") return "enviando…";
   const tent = p.tentativas > 0 ? ` (${p.tentativas} tentativas)` : "";
   return `aguardando sinal${tent}`;
+}
+
+/**
+ * Um botão de ação por linha da fila.
+ *
+ * `type="button"` porque a lista não é form: sem isto, um Enter no teclado
+ * virtual do Android submeteria a página.
+ */
+function botaoDeAcao(rotulo: string, aoClicar: () => Promise<void>): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = rotulo;
+  b.className = "btn secundario";
+  b.onclick = () => {
+    b.disabled = true;
+    void aoClicar().finally(() => {
+      b.disabled = false;
+    });
+  };
+  return b;
 }
 
 async function renderizar(): Promise<void> {
@@ -69,8 +95,48 @@ async function renderizar(): Promise<void> {
     const li = document.createElement("li");
     const total = totalDoPayload(p.payload);
     li.innerHTML =
-      `<strong>${p.numero_provisorio}</strong> — ${escapeHtml(nomeDoPayload(p.payload))}<br>` +
+      `<strong>${escapeHtml(p.numero_provisorio)}</strong> — ${escapeHtml(nomeDoPayload(p.payload))}<br>` +
       `<span class="miudo">${dinheiro(total)} · ${escapeHtml(estadoDaLinha(p))}</span>`;
+
+    /*
+     * ─── Por que a linha recusada tem botão ──────────────────────────────
+     *
+     * `rejeitado` é terminal por desenho: o servidor disse "não" (crédito,
+     * preço, estoque) e repetir sozinho repetiria o mesmo 422 para sempre.
+     * Mas terminal sem saída é pedido perdido: o vendedor lia o motivo e não
+     * tinha o que tocar. As duas saídas moram aqui — "Tentar de novo" (depois
+     * de resolver o motivo) e "Descartar" (o cliente desistiu, o pedido estava
+     * errado). Sem elas, a única forma de limpar a fila seria desinstalar.
+     */
+    const acoes = document.createElement("div");
+    acoes.className = "acoes-item";
+
+    if (p.status === "rejeitado") {
+      acoes.appendChild(
+        botaoDeAcao("Tentar de novo", async () => {
+          if (await reabrirRejeitado(db, p.uuid)) {
+            avisar(`${p.numero_provisorio} voltou para a fila. Envie abrindo o sistema com internet.`);
+          }
+          await renderizar();
+        }),
+      );
+    }
+
+    if (p.status !== "enviando") {
+      acoes.appendChild(
+        botaoDeAcao("Descartar", async () => {
+          const mesmo = p.status === "rejeitado" ? "este pedido recusado" : "este pedido";
+          if (!window.confirm(`Descartar ${mesmo}? Ele não será enviado e não dá para recuperar.`)) {
+            return;
+          }
+          await descartarPendente(db, p.uuid);
+          avisar(`${p.numero_provisorio} descartado.`);
+          await renderizar();
+        }),
+      );
+    }
+
+    if (acoes.childElementCount > 0) li.appendChild(acoes);
     lista.appendChild(li);
   }
 
@@ -102,6 +168,28 @@ async function renderizar(): Promise<void> {
   $("btn-sistema").onclick = () => {
     if (!online) {
       avisar("Sem internet — o sistema precisa de sinal. Seus pedidos estão salvos aqui e enviam sozinhos depois.");
+      return;
+    }
+    window.location.href = `${URL_DO_SISTEMA}/app/meu-dia`;
+  };
+
+  /*
+   * O botão existia no HTML e NÃO tinha handler — tocar nele não fazia nada.
+   * É o mesmo defeito do sincronizador não montado, em escala menor: a peça
+   * visível sem a ligação. Ele abre o sistema, que é quem tem a sessão e, ao
+   * carregar, drena a fila (`SincronizadorOffline`).
+   */
+  $("btn-enviar").onclick = () => {
+    if (pendentes + rejeitados === 0) {
+      avisar("Não há pedido esperando envio.");
+      return;
+    }
+    if (rejeitados > 0) {
+      avisar("Há pedido recusado na fila — resolva o motivo e toque em “Tentar de novo” antes de enviar.");
+      return;
+    }
+    if (!online) {
+      avisar("Sem internet agora. Assim que o sinal voltar, abra o sistema: a fila sobe sozinha.");
       return;
     }
     window.location.href = `${URL_DO_SISTEMA}/app/meu-dia`;
