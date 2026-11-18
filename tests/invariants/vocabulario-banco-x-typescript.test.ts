@@ -297,6 +297,32 @@ const PARES: Array<{
     arquivo: "lib/prospeccao/laya-fit.ts",
     simbolo: "LayaFit",
   },
+  {
+    tabela: "sentinel_occurrences",
+    coluna: "severidade",
+    // lib/sentinel/tipos.ts → Severidade (migration 0313). O CHECK e a união
+    // nasceram no mesmo commit: severidade desconhecida viraria 23514 no
+    // upsert do runner — que roda sozinho no cron, sem ninguém olhando.
+    arquivo: "lib/sentinel/tipos.ts",
+    simbolo: "Severidade",
+  },
+  {
+    tabela: "sentinel_occurrences",
+    coluna: "estado",
+    // lib/sentinel/tipos.ts → EstadoOcorrencia. A tela filtra e a rota PATCH
+    // decide transição usando a MESMA união; um estado que o banco recusasse
+    // seria um 422 que ninguém saberia explicar.
+    arquivo: "lib/sentinel/tipos.ts",
+    simbolo: "EstadoOcorrencia",
+  },
+  {
+    tabela: "sentinel_occurrences",
+    coluna: "categoria",
+    // lib/sentinel/tipos.ts → Categoria. Registry, filtro e CHECK falam o
+    // mesmo vocabulário; categoria nova entra num lugar só.
+    arquivo: "lib/sentinel/tipos.ts",
+    simbolo: "Categoria",
+  },
 ];
 
 /** Tira um nível de parênteses externos, se ele envolver a expressão inteira. */
