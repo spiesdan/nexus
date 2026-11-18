@@ -132,7 +132,7 @@ describe("F-09 — o aviso está na doc de quem instala, nos três idiomas", () 
     ["README.md", /não use `supabase db push`|não as migrations/i],
     ["README.en.md", /NOT the migrations|`supabase db push` "succeeds"/i],
     ["README.es.md", /NO las migrations|`supabase db push` "pasa"/i],
-    ["docs/SETUP.md", /Não use `supabase db push`/i],
+    ["docs/SETUP.md", /PROIBIDO|Não use `supabase db push`/i],
   ];
 
   for (const [arquivo, aviso] of docs) {
@@ -143,11 +143,26 @@ describe("F-09 — o aviso está na doc de quem instala, nos três idiomas", () 
     });
   }
 
+  it("o caminho proibido está documentado para quem opera", () => {
+    const proibicao = readFileSync(path.join(RAIZ, "supabase/migrations/README.md"), "utf8");
+    expect(proibicao).toMatch(/PROIBIDO/);
+    expect(proibicao).toContain("supabase db push");
+    expect(proibicao).toContain("baseline.sql");
+
+    const doutrina = readFileSync(path.join(RAIZ, "CLAUDE.md"), "utf8");
+    expect(doutrina, "a doutrina de migrations precisa proibir o push").toMatch(
+      /NUNCA[^\n]*supabase db push|supabase db push[^\n]*NUNCA/,
+    );
+
+    const setup = readFileSync(path.join(RAIZ, "docs/SETUP.md"), "utf8");
+    expect(setup).toMatch(/PROIBIDO/);
+  });
+
   it("a estratégia de F-09 está escrita", () => {
     const caminho = path.join(RAIZ, "docs/auditoria/20-f09-estrategia.md");
     expect(existsSync(caminho), "20-f09-estrategia.md existe").toBe(true);
     const texto = readFileSync(caminho, "utf8");
     expect(texto).toContain("F-09");
-    expect(texto, "a recomendação precisa estar explícita").toMatch(/Recomendação/);
+    expect(texto, "a decisão precisa estar explícita").toMatch(/DECISÃO|Recomendação/);
   });
 });

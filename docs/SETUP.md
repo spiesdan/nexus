@@ -125,7 +125,7 @@ psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c \
 psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/baseline.sql
 ```
 
-> ⚠️ **Não use `supabase db push` num banco novo.** As migrations `0001`–`0009` e `0013`
+> ⚠️ **`supabase db push` é caminho PROIBIDO, em qualquer banco.** A cadeia de migrations é histórico morto (F-09; ver `supabase/migrations/README.md`). As migrations `0001`–`0009` e `0013`
 > são stubs `SELECT 1;` — o schema fundacional não está nelas, e a cadeia não sobe do
 > zero. O `db push` **passa sem erro** e te deixa com um banco vazio, e você só descobre
 > muito depois, num erro que não aponta pra cá. O `supabase/baseline.sql` é o schema real

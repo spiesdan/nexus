@@ -1,6 +1,6 @@
 # F-09 — a cadeia de migrations não reproduz o schema
 
-> **P0 aberto.** Medido em 16/11/2026 por execução, não por leitura:
+> **FECHADO em 18/11/2026 — decisão do dono: caminho B (histórico morto).** A cadeia não é caminho de instalação; `supabase db push` é proibido. Medido em 16/11/2026 por execução, não por leitura:
 > `bash scripts/auditoria/replay-migrations.sh` em Postgres 15.19 descartável. O relatório
 > completo, com classificação de cada falha e o diff dos dois caminhos, está em
 > [`12-migrations-e-rls.md`](12-migrations-e-rls.md). Este documento é a **decisão** que
@@ -63,9 +63,16 @@ instalação.
 - **Veredito**: só vale se o dono quiser o `supabase db push` como caminho suportado. Hoje
   o produto não depende dele.
 
-## 3. Recomendação
+## 3. DECISÃO (18/11/2026): caminho B — a cadeia é histórico morto
 
-**B agora, A/C sob decisão do dono.** Razões, na ordem em que pesam:
+**O dono autorizou B.** O schema oficial é `supabase/baseline.sql`; a cadeia de
+292 migrations é **registro histórico** e **não é caminho de instalação**.
+`db:migrate`, `db:reset`, `install.sh`, `update.sh` e `deploy.sh` aplicam o
+baseline; `supabase db push`/`migration up`/`db reset` ficam **proibidos** e
+documentados como tal (`supabase/migrations/README.md`, `CLAUDE.md`, SETUP,
+README nos três idiomas). As 10 fundações **não** serão reescritas.
+
+Razões registradas quando a recomendação foi escrita:
 
 1. o produto **é** instalado pelo `baseline.sql`; a cadeia nunca foi caminho de instalação
    em nenhum script do kit (`install.sh`, `update.sh`, `deploy.sh`, `db:migrate`);
@@ -89,10 +96,15 @@ registrada.
 | Doc de operação avisa em PT/EN/ES | `README.md`, `README.en.md`, `README.es.md`, `docs/SETUP.md` | teste lê o disco |
 | Aviso ao dono | canal de atualizações + fila | mensagem |
 
-## 5. Critério de conclusão de F-09
+## 5. Critério de conclusão de F-09 — cumprido em 18/11/2026
 
-- **Curto prazo (esta fatia)**: estratégia escrita, catraca verde, aviso dado → o prompt
-  recebe `[!]` com o link deste documento e a pergunta ao dono ("A/C ou manter B?").
-- **Fechamento real (`[x]`)**: ou a cadeia aplica 292/292 num Postgres limpo **e** o
-  replay é gate de CI, ou o dono decide formalmente que a cadeia é histórico morto e o
-  `[!]` vira `[-]` com a decisão citada. Nenhum dos dois acontece sem o dono.
+- **Decisão formal registrada**: B (histórico morto). ✅
+- **Caminho proibido documentado e com catraca**: `supabase/migrations/README.md`,
+  `CLAUDE.md` (item 7 da doutrina de migrations), SETUP e README pt/en/es;
+  `tests/unit/cadeia-de-migrations-nao-e-instalacao.test.ts` reprova stub novo,
+  script que aplique a cadeia e documentação que deixe de avisar. ✅
+- **Caminho oficial único**: `baseline.sql` (install/update/deploy/db:migrate),
+  validado por `pnpm test:db` em install **e** update. ✅
+- **Fora de escopo por decisão**: reescrever as 10 fundações (caminhos A/C). ❌
+
+F-09 fecha como `[x]` **por decisão**, não por reescrever histórico.
