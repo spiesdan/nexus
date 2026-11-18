@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { comoMoeda } from "@/lib/format/moeda";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { createClient } from "@/lib/supabase/server";
@@ -39,7 +40,7 @@ export default async function FornecedoresPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data, count } = await supabase
+  const { data, count, error } = await supabase
     .from("suppliers")
     .select(
       "id, nome, cnpj, ie, email, telefone, total_notas, total_comprado_cents, ultima_nota_em",
@@ -50,6 +51,7 @@ export default async function FornecedoresPage() {
     .order("total_comprado_cents", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "fornecedores", org.orgId);
   const linhas = (data ?? []) as unknown as Fornecedor[];
 
   return (

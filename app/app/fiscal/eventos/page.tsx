@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { identificacaoDaEntrada } from "@/lib/schemas/fiscal-entrada";
@@ -56,7 +57,7 @@ export default async function EventosPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data, count } = await supabase
+  const { data, count, error } = await supabase
     .from("fiscal_document_events")
     .select(
       "id, entrada_id, chave, nsu, tipo, tp_evento, descricao, protocolo, dh_evento, created_at, " +
@@ -67,6 +68,7 @@ export default async function EventosPage() {
     .order("dh_evento", { ascending: false, nullsFirst: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "eventos", org.orgId);
   const eventos = (data ?? []) as unknown as Evento[];
 
   return (

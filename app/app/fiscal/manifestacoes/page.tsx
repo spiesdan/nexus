@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { ROTULO_DA_MANIFESTACAO, identificacaoDaEntrada } from "@/lib/schemas/fiscal-entrada";
@@ -50,7 +51,7 @@ export default async function ManifestacoesPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data, count } = await supabase
+  const { data, count, error } = await supabase
     .from("fiscal_manifestations")
     .select(
       "id, entrada_id, evento, justificativa, protocolo, cstat, resultado, mensagem, created_at, " +
@@ -61,6 +62,7 @@ export default async function ManifestacoesPage() {
     .order("created_at", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "manifestacoes", org.orgId);
   const linhas = (data ?? []) as unknown as Linha[];
 
   return (

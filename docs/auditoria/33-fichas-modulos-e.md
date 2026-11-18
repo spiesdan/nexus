@@ -17,6 +17,7 @@
 | **Pedidos 5.6** | Confirmação em **concluir, faturar, marcar entregue e cancelar em massa**; recusar não chama a API | **mergeado** #504 (`bb2b058c`) | `_detalhe.test.tsx` — 6 ✓ |
 | **Fiscal/UI 5.8** | **Tentar de novo** para nota travada em `em_emissao` (a porta que faltava para a recuperação por CAS do Agente C); confirmação em cancelar pendente/emitindo/erro, inutilizar faixa, manifestar desconhecimento/não realizada, ignorar e importar entrada | **mergeado** #505 (`4fb93801`) | `notas-reemitir-emissao` (4) + `fiscal-entrada-confirmacoes` (5) + `notas-importar-xmls` (3) ✓ |
 | **Fiscal/UI 5.8 (F6)** | Teto de lista **declarado**: “Mostrando X de Y” em eventos, manifestações, produtos, fornecedores e sincronizações | **nesta fatia** | `tests/unit/fiscal-recorte-da-lista.test.tsx` — 3 ✓ |
+| **Fiscal/UI 5.8** | Erro de leitura deixou de virar “Nenhum evento/fornecedor…”: as cinco listas lançam para a error boundary com retry e registram a organização | **nesta fatia** | `lib/fiscal/erro-de-leitura.test.ts` — 2 ✓ |
 | **Equipe 5.10** | Erro de leitura com **retry** e vazio com **CTA de convite** (antes: frase vermelha sem saída / frase morta) | **nesta fatia** | `TeamMembersClient.test.tsx` — 7 ✓ |
 | **Tokens 5.10** | Falha deixou de virar “nenhum token”; **Expirado ≠ Ativo**; “Não expira” explícito; revogação com confirmação | **nesta fatia** | `tests/unit/api-tokens-estados.test.tsx` — 5 ✓ |
 
@@ -119,10 +120,13 @@ entradas e manifestar.
    entrada (estoque + contas a pagar). Ciência (210210) segue direta.
 3. **Teto de lista declarado** (F6) em eventos, manifestações, produtos, fornecedores e
    sincronizações — `RecorteDaLista` usa o `count` da mesma consulta.
+4. **Erro de leitura não é lista vazia**: as cinco listas passam pelo
+   `exigirLeituraDeLista` e a falha chega à error boundary da rota (com retry) em vez de
+   renderizar “Nenhum…”.
 **Aberto.** Sincronização sem retry por linha (F7, P2); `ignorar` exige só `agent` (F8,
 simetria de permissão — decisão de B); limite principal de `/app/notas` (200) ainda silencioso
 no KPI. **Não medido:** sidecar fiscal real, SEFAZ, 656 ao vivo.
-**Teste.** 4 + 5 + 3 + 3 ✓ (ver §0).
+**Teste.** 4 + 5 + 3 + 3 + 2 ✓ (ver §0).
 **Classificação.** Existente com melhoria necessária; UI das ações críticas agora fecha o
 caminho sem confirmação.
 

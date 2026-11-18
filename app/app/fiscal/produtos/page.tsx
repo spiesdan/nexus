@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { comoMoeda } from "@/lib/format/moeda";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { identificacaoDaEntrada } from "@/lib/schemas/fiscal-entrada";
 import { createClient } from "@/lib/supabase/server";
@@ -52,7 +53,7 @@ interface Item {
 export default async function ProdutosDasNotasPage() {
   const { org } = await contextoFiscal();
   const supabase = await createClient();
-  const { data, count } = await supabase
+  const { data, count, error } = await supabase
     .from("fiscal_document_items")
     .select(
       "id, entrada_id, numero_item, codigo, descricao, ncm, cfop, unidade, quantidade, " +
@@ -64,6 +65,7 @@ export default async function ProdutosDasNotasPage() {
     .order("created_at", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "produtos", org.orgId);
   const itens = (data ?? []) as unknown as Item[];
 
   return (

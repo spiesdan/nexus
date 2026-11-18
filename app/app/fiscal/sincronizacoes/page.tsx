@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { createClient } from "@/lib/supabase/server";
@@ -54,7 +55,7 @@ export default async function SincronizacoesPage() {
   const { org, podeOperar, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data, count } = await supabase
+  const { data, count, error } = await supabase
     .from("fiscal_sync_logs")
     .select(
       "id, origem, iniciado_em, finalizado_em, nsu_inicial, nsu_final, max_nsu, " +
@@ -65,6 +66,7 @@ export default async function SincronizacoesPage() {
     .order("iniciado_em", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "sincronizacoes", org.orgId);
   const logs = (data ?? []) as unknown as Log[];
 
   return (
