@@ -213,7 +213,25 @@ function somaQtd(productId: string): number {
   return itens.filter((i) => i.product_id === productId).reduce((s, i) => s + i.quantidade, 0);
 }
 
+/**
+ * O SALVAR UMA VEZ SÓ.
+ *
+ * `salvar` gera um UUID NOVO a cada chamada e enfileira. Dois toques rápidos
+ * (o polegar na fazenda, a tela que não respondeu no primeiro toque) criavam
+ * dois pedidos — e a idempotência do servidor NÃO salva aqui, porque as chaves
+ * são diferentes: são dois pedidos legítimos do ponto de vista dele, com
+ * números provisórios OFF-0001 e OFF-0002. O cliente recebe o dobro.
+ *
+ * A trava é síncrona, no começo da função, antes de qualquer `await`: o
+ * segundo clique do toque duplo acontece depois que o botão já está
+ * `disabled`, e botão desabilitado não emite clique.
+ */
+let salvando = false;
+
 async function salvar(db: Db): Promise<void> {
+  if (salvando) return;
+  const botao = $("btn-salvar") as HTMLButtonElement;
+
   const nomeDigitado = ($("busca-cliente") as HTMLInputElement).value.trim();
   const nome = contato?.nome ?? nomeDigitado;
   if (!nome || nome.length < 2) {
@@ -224,6 +242,9 @@ async function salvar(db: Db): Promise<void> {
     avisar("Adicione ao menos 1 item.");
     return;
   }
+
+  salvando = true;
+  botao.disabled = true;
   const numero_provisorio = await proximoProvisorio(db);
   const payload = {
     cliente_nome: nome,
@@ -238,7 +259,21 @@ async function salvar(db: Db): Promise<void> {
       desconto_pct: 0,
     })),
   };
-  await enfileirarPedido(db, { uuid: uuid(), numero_provisorio, payload, agora: new Date().toISOString() });
+  try {
+    await enfileirarPedido(db, {
+      uuid: uuid(),
+      numero_provisorio,
+      payload,
+      agora: new Date().toISOString(),
+    });
+  } catch (e) {
+    // Banco cheio/travado: o botão precisa voltar, senão a tela fica morta e
+    // o vendedor perde o pedido digitado sem saber o motivo.
+    salvando = false;
+    botao.disabled = false;
+    avisar(`Não deu para salvar na fila: ${e instanceof Error ? e.message : "erro no aparelho"}`);
+    return;
+  }
   window.location.href = "./index.html";
 }
 
