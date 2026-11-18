@@ -1,7 +1,7 @@
 # Frente `front/sentinel` — Nexus Sentinel v1.2
 
 > Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v12`
-> Baseline desta fatia: `nexus/main` @ `f8699f7e` (o v1.1 entrou em `2116db86`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Baseline desta fatia: `nexus/main` @ `f7568f05` (o v1.1 entrou em `2116db86` e a prova em `05570d11`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
 > Escopo: **v1 + v1.1 + v1.2 somente leitura** — detectar, classificar, abrir ocorrência, propor plano revisável e medir a rodada. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
@@ -188,6 +188,8 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `tests/invariants/sentinel-estoque-razao.test.ts` | left join, `ultimo_movimento` null e `security_invoker` entre orgs |
 | `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis (roda no CI `critical`/`full`) |
 | `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
+| `tests/api/sentinel-permissoes.test.ts` | régua de papel no fio: agent assume/pede ação; gestor ignora/encerra; platform admin; motivo obrigatório |
+| `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
@@ -196,25 +198,35 @@ Nesta sessão (v1.2), rodando **dirigido** — não a suíte completa:
 
 ```bash
 pnpm exec vitest run lib/sentinel
-#   7 arquivos, 57 testes verdes (inclui orçamento de detecção e o detector
-#   de estoque com zero movimentações)
+#   8 arquivos, 63 testes verdes (inclui orçamento, estoque sem movimento
+#   e a catraca de somente leitura)
 
 pnpm test:db
 #   170 arquivos, 2300 testes verdes | 1 esperado | 1 pulado
 #   install+update do baseline, RLS, retenção (10 dias fica, 31 apaga) e a
 #   view left join com/sem movimentação entre duas organizações
 
-pnpm exec vitest run tests/unit/migrations-numero-unico.test.ts   tests/unit/manifest-x-migrations.test.ts   tests/unit/kind-check-migration-x-baseline.test.ts   tests/unit/baseline-reaplicavel.test.ts   tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts
+pnpm exec vitest run tests/api/sentinel-permissoes.test.ts tests/unit/sentinel-painel-revisavel.test.tsx
+#   18 testes verdes: papéis na rota, gestor, kill switch salvando ativo:false,
+#   plano/histórico e ocorrência sem plano
+
+pnpm exec vitest run tests/unit/migrations-numero-unico.test.ts \
+  tests/unit/manifest-x-migrations.test.ts \
+  tests/unit/kind-check-migration-x-baseline.test.ts \
+  tests/unit/baseline-reaplicavel.test.ts \
+  tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts
 #   5 arquivos, 21 testes verdes
 
 pnpm typecheck   # zerado
-pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel
+pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
+  tests/api/sentinel-permissoes.test.ts tests/invariants/sentinel-estoque-razao.test.ts \
+  tests/invariants/sentinel-idempotencia.test.ts
 #   zero erros
 ```
 
 **E2E de navegador não rodou nesta máquina**: o worktree não tem `.env.e2e` e a
-spec do painel continua no `e2e` `critical`/`full` da main. A prova de tela desta
-fatia é componente + rota (PR da prova) e a de banco é o `test:db` acima.
+spec do painel continua no `e2e` `critical`/`full` da main. A prova de tela é
+componente + rota (PR #538, mergeado) e a de banco é o `test:db` acima.
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
@@ -265,11 +277,11 @@ fiscal/financeira real.
 
 ## 11. Onde retomar (v1.2, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-v12`): 0323 (left join), orçamento de detecção
-  (8 s; 7 ms medidos com 2k de cada entidade), retenção medida dos dois lados
-  (10 dias fica, 31 apaga) e a guarda de lead sem contato no detector.
-- **PR da prova** (`front/sentinel-prova`, #538): papéis na rota, kill switch na
-  tela e catraca de somente leitura. Não depende desta fatia para mergear.
+- **Esta fatia** (`front/sentinel-v12`, PR #541): 0323 (left join), orçamento de
+  detecção (8 s; 7 ms medidos com 2k de cada entidade), retenção medida dos dois
+  lados (10 dias fica, 31 apaga) e a guarda de lead sem contato no detector.
+- **Prova** (`front/sentinel-prova`, #538, mergeada em `05570d11`): papéis na
+  rota, kill switch na tela e catraca de somente leitura.
 - **E2E do painel**: continua sem execução local; estreia no `critical` da main.
 - **Próxima de produto**: v1.3 — correção aprovada e reversível, com
   antes/depois e aprovação de gestor; nunca em nota, saldo, pagamento ou envio

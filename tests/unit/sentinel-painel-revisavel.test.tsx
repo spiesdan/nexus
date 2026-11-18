@@ -314,6 +314,38 @@ describe("Sentinel — painel revisável", () => {
     expect(within(dialogo).queryByRole("button", { name: "Ignorar" })).not.toBeInTheDocument();
   });
 
+  it("gestor configura a varredura e decide o que o agent não pode", async () => {
+    renderizar({ podeAgir: true, podeGerir: true });
+
+    expect(screen.getByRole("button", { name: "Configurações" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Executar agora/ })).toBeInTheDocument();
+
+    const dialogo = await abrirDetalheDe(ABERTA);
+    expect(within(dialogo).getByRole("button", { name: "Ignorar" })).toBeInTheDocument();
+    expect(within(dialogo).getByRole("button", { name: "Encerrar" })).toBeInTheDocument();
+  });
+
+  it("o switch de kill switch salva ativo:false", async () => {
+    vi.mocked(apiClient.patch).mockResolvedValue({
+      data: { configuracao: { ...CONFIG, ativo: false } },
+    } as never);
+    renderizar();
+
+    fireEvent.click(screen.getByRole("button", { name: "Configurações" }));
+    const config = screen.getByRole("dialog");
+    expect(within(config).getByText("Configurações do Sentinel")).toBeInTheDocument();
+
+    fireEvent.click(within(config).getByRole("switch"));
+    fireEvent.click(within(config).getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() =>
+      expect(apiClient.patch).toHaveBeenCalledWith(
+        "/api/v1/sentinel/settings",
+        expect.objectContaining({ ativo: false }),
+      ),
+    );
+  });
+
   it("agent age no detalhe, mas não configura a varredura", async () => {
     renderizar({ podeAgir: true, podeGerir: false });
 
