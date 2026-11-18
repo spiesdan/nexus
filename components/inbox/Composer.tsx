@@ -1,5 +1,6 @@
 "use client";
 import { useT } from "@/hooks/i18n/useT";
+import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import {
   forwardRef,
   useEffect,
@@ -120,6 +121,30 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
   function handleSubmit() {
     const body = text.trim();
     if (!body || (mode === "note" ? isDisabled : respostaBarrada)) return;
+
+    /*
+     * OFFLINE, O ENVIO NÃO SAI — E O TEXTO NÃO PODE SUMIR.
+     *
+     * O TanStack Query pausa MUTATIONS quando o navegador está sem rede (o
+     * mesmo modo `online` que pausa as queries). Não é erro, não é sucesso: a
+     * mutation fica pendente. Como este composer limpa o campo ANTES de saber
+     * o resultado — de propósito, para dar para digitar a próxima —, sem esta
+     * guarda o parágrafo escrito ficava perdido, sem toast e sem aviso, e a
+     * mensagem sairia sozinha quando a rede voltasse.
+     *
+     * A checagem é `navigator.onLine === false`, e não a mutation: é a única
+     * que responde ANTES de o texto ser apagado. Wi-Fi sem internet
+     * (`onLine: true`) cai no erro normal, que restaura o texto.
+     */
+    const semRede = typeof navigator !== "undefined" && navigator.onLine === false;
+    if (semRede) {
+      nexusToast.warning(
+        t(
+          "Sem conexão: a mensagem não saiu. Ela continua aqui para você enviar quando a rede voltar.",
+        ),
+      );
+      return;
+    }
 
     setText("");
     requestAnimationFrame(() => autoresize());

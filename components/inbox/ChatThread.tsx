@@ -5,6 +5,7 @@ import { useLocaleDeData } from "@/hooks/i18n/useLocaleDeData";
 import type { Locale } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import { format, isToday, isYesterday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -396,19 +397,25 @@ export function ChatThread({ conversationId, onResponder }: Props) {
           {/* Sentinela do carregamento automático + o botão como caminho
               alternativo (teclado, navegador sem IntersectionObserver). */}
           <div ref={sentinelaRef}>
-            {q.hasNextPage && (
-              <div className="flex justify-center py-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={`rounded-lg ${BTN_REF}`}
-                  onClick={carregarAntigas}
-                  disabled={q.isFetchingNextPage}
-                >
-                  {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais antigas")}
-                </Button>
-              </div>
-            )}
+            {q.hasNextPage &&
+              (q.isPaused ? (
+                // Offline a query fica pausada: o botão não faria nada.
+                <div className="flex justify-center py-2">
+                  <AvisoSemConexao />
+                </div>
+              ) : (
+                <div className="flex justify-center py-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className={`rounded-lg ${BTN_REF}`}
+                    onClick={carregarAntigas}
+                    disabled={q.isFetchingNextPage}
+                  >
+                    {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais antigas")}
+                  </Button>
+                </div>
+              ))}
           </div>
 
           {groups.map((g) => (
