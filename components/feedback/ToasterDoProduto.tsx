@@ -4,6 +4,8 @@ import { Toaster } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { useT } from "@/hooks/i18n/useT";
 
+import { CLASSES_DO_AVISO } from "./cores-do-aviso";
+
 /**
  * O `<Toaster />` do produto, com o nome acessível no idioma da tela.
  *
@@ -41,18 +43,24 @@ import { useT } from "@/hooks/i18n/useT";
  * em que houver um segundo idioma. O wrapper é client, usa `useT` e mantém o
  * layout no papel dele: montar infraestrutura, não decidir texto.
  *
- * As demais opções do `Toaster` (posição, cores ricas, fechar, 4 s) foram
- * movidas para cá sem mudança de valor.
+ * As demais opções (posição, botão de fechar, 4 s) foram movidas para cá sem
+ * mudança de valor. O `richColors` SAIU: os quatro tipos usam os tokens do
+ * produto — a explicação e as classes estão em `cores-do-aviso.ts`.
  */
 export function ToasterDoProduto() {
   const t = useT();
   return (
     <Toaster
       position="top-right"
-      richColors
       closeButton
       duration={4000}
-      toastOptions={{ closeButtonAriaLabel: t("Fechar aviso") }}
+      toastOptions={{
+        closeButtonAriaLabel: t("Fechar aviso"),
+        // Sem `richColors`: os quatro tipos usam os tokens do produto. As
+        // classes moram em `cores-do-aviso.ts` porque o gate mede os MESMOS
+        // pares que o componente pinta.
+        classNames: CLASSES_DO_AVISO,
+      }}
     />
   );
 }
