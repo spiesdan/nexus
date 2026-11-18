@@ -30,11 +30,14 @@ vi.mock("@/components/nexus-ui/feedback/nexus-toast", () => ({
 vi.mock("@/components/feedback/ApiErrorToast", () => ({ showApiError: vi.fn() }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (texto: string) => texto }));
 vi.mock("@/hooks/i18n/useLocaleDeData", () => ({ useTagDeIdioma: () => "pt-BR" }));
+const confirmarMock = vi.hoisted(() => vi.fn());
 vi.mock("@/components/nexus-ui/forms/ConfirmacaoProvider", () => ({
-  useConfirmar: () => async () => true,
+  useConfirmar: () => confirmarMock,
 }));
 vi.mock("@/components/nexus-ui/layout/NexusPageHeader", () => ({
-  NexusPageHeader: () => null,
+  // As ações da ficha moram no slot do cabeçalho: um mock que devolve null
+  // esconde justamente os botões que estes testes clicam.
+  NexusPageHeader: ({ actions }: { actions?: React.ReactNode }) => <div>{actions}</div>,
 }));
 vi.mock("../../products/_fotos", () => ({ FotosDoProduto: () => null }));
 // O editor de itens é outro componente (e outro teste): aqui só interessa que
@@ -165,5 +168,88 @@ describe("ficha do pedido — itens atualizados no Mercos", () => {
       expect(vista.getByText("PRODUTO QUE O MERCOS COLOCOU")).toBeTruthy();
     });
     expect(vista.queryByText("PRODUTO QUE O MERCOS TIROU")).toBeNull();
+  });
+});
+
+/**
+ * FATURAR, ENTREGAR E CONCLUIR NÃO PODEM SER CLIQUE SOLTO.
+ *
+ * A auditoria 5.6 mediu a ficha sem confirmação nas três ações que mudam o
+ * estado do pedido sem volta. O teste prova o contrato da TELA: pergunta antes,
+ * e recusar não chama a API.
+ */
+describe("ficha do pedido — confirmação das ações com consequência", () => {
+  function buscarPorId(status: PedidoComercial["status"]) {
+    return render(
+      <DetalheDoPedido
+        pedido={pedidoDeTeste(status)}
+        itens={ITENS_ANTIGOS}
+        contato={null}
+        nomeVendedor={null}
+        nomeOrganizacao="Bill Higiene"
+        podeEditar
+        podeExcluir={false}
+        podeSincronizarMercos
+      />,
+    );
+  }
+
+  beforeEach(() => {
+    confirmarMock.mockReset();
+    vi.mocked(apiClient.patch).mockReset();
+    vi.mocked(apiClient.patch).mockResolvedValue({ data: {} } as never);
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (url.includes("/timeline")) return { data: [] } as never;
+      if (url.includes("/financeiro/recebiveis")) return { data: [] } as never;
+      if (url.includes("/invoices")) return { data: [] } as never;
+      return { data: { ...pedidoDeTeste("rascunho"), itens: ITENS_ANTIGOS } } as never;
+    });
+  });
+
+  it("faturar pergunta; recusar não chama a API", async () => {
+    const usuario = userEvent.setup();
+    confirmarMock.mockResolvedValue(false);
+    buscarPorId("aprovado");
+
+    await usuario.click(screen.getByRole("button", { name: "Faturar pedido" }));
+
+    expect(confirmarMock).toHaveBeenCalledTimes(1);
+    expect(apiClient.patch).not.toHaveBeenCalled();
+  });
+
+  it("marcar entregue pergunta; confirmar manda o status", async () => {
+    const usuario = userEvent.setup();
+    confirmarMock.mockResolvedValue(true);
+    buscarPorId("expedido");
+
+    await usuario.click(screen.getByRole("button", { name: "Marcar entregue" }));
+
+    expect(confirmarMock).toHaveBeenCalledTimes(1);
+    await waitFor(() =>
+      expect(apiClient.patch).toHaveBeenCalledWith(`/api/v1/commercial-orders/${PEDIDO_ID}`, {
+        status: "entregue",
+      }),
+    );
+  });
+
+  it("concluir pergunta e recusar não fecha a venda", async () => {
+    const usuario = userEvent.setup();
+    confirmarMock.mockResolvedValue(false);
+    buscarPorId("rascunho");
+
+    await usuario.click(screen.getByRole("button", { name: "Marcar como concluído" }));
+
+    expect(confirmarMock).toHaveBeenCalledTimes(1);
+    expect(apiClient.patch).not.toHaveBeenCalled();
+  });
+
+  it("aprovar segue em um clique — é o caminho do dia a dia, e o servidor valida a alçada", async () => {
+    const usuario = userEvent.setup();
+    buscarPorId("rascunho");
+
+    await usuario.click(screen.getByRole("button", { name: "Aprovar pedido" }));
+
+    expect(confirmarMock).not.toHaveBeenCalled();
+    await waitFor(() => expect(apiClient.patch).toHaveBeenCalled());
   });
 });
