@@ -52,7 +52,7 @@ export function BotaoReenviar({ message }: { message: Message }) {
       type="button"
       onClick={reenviar}
       disabled={send.isPending}
-      className="inline-flex items-center gap-0.5 rounded px-1 font-semibold text-destructive underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+      className="inline-flex items-center gap-0.5 rounded-md px-1 font-semibold text-destructive underline-offset-2 hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
       aria-label={t("Reenviar mensagem")}
     >
       {send.isPending ? (
