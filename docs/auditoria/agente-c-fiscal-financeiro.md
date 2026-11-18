@@ -134,56 +134,74 @@ corrida”: ele protege dois drains, não cancel × drain.
 
 **Provas:** `app/api/v1/invoices/[id]/cancel/route.test.ts` (4 casos).
 
-## 3. Decisões pendentes (não implementadas de propósito)
+## 3. Decisões do dono (18/11/2026) — implementadas
 
-### D1 — NF-e autorizada não gera recebíveis
+### D1 — SIM: NF-e autorizada gera recebíveis
 
-Quando a SEFAZ autoriza, o drain marca o pedido `aprovado → faturado`
-(`faturarPedidosDaNota`), mas **não** chama `gerarRecebiveis`. Só o PATCH do
-pedido em `/api/v1/commercial-orders/[id]` gera. Resultado: um pedido faturado
-pela nota aparece na conciliação como `pedido_sem_financeiro` até alguém clicar
-“Gerar financeiro”.
+Quando a SEFAZ autoriza e o pedido `aprovado` vira `faturado`, o drain agora
+chama o **mesmo** `gerarRecebiveis` do PATCH de faturamento
+(`gerarRecebiveisDaNotaAutorizada`, em `lib/fiscal/drain.ts`). A regra “faturar
+gera os recebíveis” passa a valer para o fato que fatura de verdade.
 
-A regra escrita no código (“chamar ao faturar”) cobre o PATCH, não o caminho da
-NF. Não há regra de produto dizendo que a autorização **deve** criar o
-recebível — e criar dinheiro a partir de um evento externo é decisão de negócio.
+- Idempotente por `(organização, pedido, parcela)`: retry ou crash não duplica;
+  parcela existente é pulada e `23505` da corrida conta como existente.
+- Cobre os pedidos secundários do agrupamento (`invoice_orders`).
+- Origem registrada na auditoria: `financial_receivable.generated` com
+  `origem: nfe_autorizada`, `invoice_id`, série/número e contagem.
+- Roda para todo pedido da nota em `faturado` (inclusive os que já estavam),
+  fechando o intervalo entre “marcou faturado” e “gerou” depois de um crash.
+- Falha de um pedido não derruba os outros nem a autorização; fica no log e a
+  conciliação mostra. Nada é gerado para pedido fora de `faturado`.
+- O valor usa `commercial_orders.total_cents` — o mesmo do PATCH. Divergência
+  entre nota e pedido continua visível na conciliação como `valor_divergente`;
+  não foi escondida nem “corrigida” com um valor inventado.
 
-**Opções:**
-1. **Gerar na autorização** (idempotente por pedido/parcela, já provado pela
-   `0315`): o fato fiscal fecha o laço financeiro sem clique. Risco: o valor do
-   recebível vem de `commercial_orders.total_cents`, não do total autorizado da
-   nota (frete/ajustes podem divergir).
-2. **Manter manual** e a conciliação/Sentinel sinalizar o pedido faturado sem
-   recebível (comportamento atual, mas hoje ninguém é avisado na tela).
-3. **Gerar só quando `total_cents` da nota == soma dos pedidos**, senão abrir
-   ocorrência. Mais seguro, mais código e uma regra nova.
+**Provas:** `drain.test.ts` (geração, retry sem auditoria nova, agrupamento,
+falha parcial, falha de leitura) + `financeiro.test.ts` (pula existente e trata
+`23505`) + invariante Postgres `financeiro-recebivel-gerado-idempotente`
+(unique com duas conexões simultâneas).
 
-Recomendação: (1) com a condição da (3) — a nota é a prova do fato; divergência
-de valor deve virar ocorrência, não recebível silenciosamente errado.
+### D2 — NÃO recompor automaticamente (decisão)
 
-### D2 — Recebível gerado antes da edição do pedido não é recomposto
+Total do pedido alterado depois do recebível **não** recalcula em silêncio. A
+conciliação continua apontando `valor_divergente`; a correção é explícita
+(ajuste/cancelamento/reemissão, conforme a regra financeira vigente). Nenhum
+código novo para recomposição.
 
-`gerarRecebiveis` só insere parcelas que faltam. Se o total do pedido mudar
-depois, as parcelas antigas ficam e a soma diverge do pedido (a conciliação
-mostra `valor_divergente`). Regerar/cancelar recebível existente é mudança de
-regra financeira: precisa de decisão (recompor? exigir cancelamento explícito?
-bloquear edição de total com recebível pago?).
+### D3 — SIM: manifestação concorrente não transmite duas vezes
 
-### D3 — Manifestação de entrada concorrente transmite duas vezes
+`POST /fiscal-entradas/[id]/manifestar` agora:
 
-`POST /fiscal-entradas/[id]/manifestar` não tem CAS no status antes de chamar a
-SEFAZ. Dois cliques simultâneos podem gerar dois eventos 210210 (a SEFAZ
-normalmente recusa o segundo como duplicidade, e a rota grava a recusa como
-`erro`). Não é corrupção de dados, mas polui a timeline e o histórico. Opções:
-CAS em `manifestada_em is null` antes de transmitir (recomendado) ou aceitar o
-comportamento da SEFAZ.
+1. devolve **200 replay** se o mesmo evento já tem `resultado = 'sucesso'`
+   (protocolo/cStat originais), sem chamar a SEFAZ;
+2. reivindica a transmissão por claim em
+   `fiscal_entradas.manifestacao_em_andamento_em` (UPDATE condicional,
+   `NULL OR < now() - 5 min`); o concorrente recebe **409**;
+3. libera o claim logo após a resposta da SEFAZ (sucesso ou erro), então um
+   retry explícito não espera o TTL; processo morto é recuperado em 5 min.
 
-### D4 — Cancelamento concorrente de nota autorizada
+**Provas:** `manifestar/route.test.ts` (replay, claim livre, claim perdido 409,
+falha libera) + invariante Postgres `fiscal-claims-nao-transmitem-duas-vezes`
+(duas conexões, retomada de claim velho, claim não muda status).
 
-Dois cancelamentos simultâneos de uma nota `autorizada` podem transmitir dois
-eventos 110111; o segundo tende a ser recusado pela SEFAZ como duplicidade e a
-rota devolve 422. O estado final é correto. Serializar exigiria uma coluna de
-“cancelamento em curso” (schema novo) — não vale o custo agora.
+### D4 — SIM: cancelamento concorrente de autorizada não duplica evento
+
+`POST /invoices/[id]/cancel` de nota `autorizada` agora reivindica
+`invoices.cancelamento_em_andamento_em` **antes** de transmitir o 110111. A
+segunda chamada concorrente recebe **409**; se a primeira já terminou e a nota
+já está `cancelada`, recebe **200 replay** (`ja_cancelada: true`) sem novo
+evento. Falha da SEFAZ libera o claim; claim morto é retomado em 5 min. A nota
+só vira `cancelada` com protocolo do fisco, como antes.
+
+**Provas:** `cancel/route.test.ts` (claim livre, claim perdido 409, replay 200,
+falha libera) + o mesmo invariante Postgres.
+
+### Migration `0318` — isolada, sem tocar a `0317` do D-03
+
+Duas colunas `timestamptz` (`fiscal_entradas.manifestacao_em_andamento_em`,
+`invoices.cancelamento_em_andamento_em`), apêndice idempotente no `baseline`,
+linha no `MANIFEST` e tipos. Nenhuma policy/grant novo; nenhum status muda
+durante o claim. A `0317` (D-03) segue reservada e intocada.
 
 ## 4. Fora de escopo / limitações
 

@@ -5808,6 +5808,7 @@ export type Database = {
           id: string;
           itens_json: NonNullable<Json>;
           manifestacao: string | null;
+          manifestacao_em_andamento_em: string | null;
           manifestada_em: string | null;
           natureza_operacao: string | null;
           nsu: number;
@@ -5844,6 +5845,7 @@ export type Database = {
           id?: string;
           itens_json?: NonNullable<Json>;
           manifestacao?: string | null;
+          manifestacao_em_andamento_em?: string | null;
           manifestada_em?: string | null;
           natureza_operacao?: string | null;
           nsu: number;
@@ -5880,6 +5882,7 @@ export type Database = {
           id?: string;
           itens_json?: NonNullable<Json>;
           manifestacao?: string | null;
+          manifestacao_em_andamento_em?: string | null;
           manifestada_em?: string | null;
           natureza_operacao?: string | null;
           nsu?: number;
@@ -7024,6 +7027,7 @@ export type Database = {
       };
       invoices: {
         Row: {
+          cancelamento_em_andamento_em: string | null;
           chave_acesso: string | null;
           created_at: string;
           created_by: string | null;
@@ -7044,6 +7048,7 @@ export type Database = {
           xml: string | null;
         };
         Insert: {
+          cancelamento_em_andamento_em?: string | null;
           chave_acesso?: string | null;
           created_at?: string;
           created_by?: string | null;
@@ -7064,6 +7069,7 @@ export type Database = {
           xml?: string | null;
         };
         Update: {
+          cancelamento_em_andamento_em?: string | null;
           chave_acesso?: string | null;
           created_at?: string;
           created_by?: string | null;

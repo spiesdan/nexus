@@ -15,6 +15,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { limiteDoClaim } from "@/lib/fiscal/claims";
 import {
   carregarContextoSped,
   motivoDeNaoTransmitir,
@@ -152,11 +153,77 @@ export async function POST(
         requestId,
       });
     }
-    const r = await transmitirCancelamento(contexto!, {
-      chave: atual.chave_acesso,
-      protocolo: atual.protocolo,
-      justificativa: justificativa!,
-    });
+
+    // ─── UM CANCELAMENTO POR VEZ ─────────────────────────────────────────
+    //
+    // Dois cliques simultâneos de "cancelar" transmitiam dois eventos 110111
+    // para a mesma chave. O claim abaixo dura só a transmissão: quem chega
+    // depois encontra 0 linhas e recebe 409 (ou replay, se a primeira já
+    // terminou e a nota já está cancelada). Passados 5 min sem liberação
+    // (processo morto), o claim pode ser retomado.
+    const claimEm = new Date().toISOString();
+    const limite = limiteDoClaim(new Date());
+    let reivindicado = false;
+    {
+      const { data } = await supabase
+        .from("invoices")
+        .update({ cancelamento_em_andamento_em: claimEm })
+        .eq("id", id)
+        .eq("organization_id", authz.org.orgId)
+        .eq("status", "autorizada")
+        .is("cancelamento_em_andamento_em", null)
+        .select("id");
+      reivindicado = (data ?? []).length > 0;
+    }
+    if (!reivindicado) {
+      const { data } = await supabase
+        .from("invoices")
+        .update({ cancelamento_em_andamento_em: claimEm })
+        .eq("id", id)
+        .eq("organization_id", authz.org.orgId)
+        .eq("status", "autorizada")
+        .lt("cancelamento_em_andamento_em", limite)
+        .select("id");
+      reivindicado = (data ?? []).length > 0;
+    }
+    if (!reivindicado) {
+      const { data: depois } = await supabase
+        .from("invoices")
+        .select("status")
+        .eq("id", id)
+        .eq("organization_id", authz.org.orgId)
+        .maybeSingle();
+      if ((depois as { status?: string } | null)?.status === "cancelada") {
+        return ok({ id, ja_cancelada: true }, { requestId, status: 200 });
+      }
+      return fail(
+        "conflict",
+        "O cancelamento desta nota já está sendo transmitido. Aguarde o resultado.",
+        409,
+        { requestId },
+      );
+    }
+    const liberarClaim = async (): Promise<void> => {
+      await supabase
+        .from("invoices")
+        .update({ cancelamento_em_andamento_em: null })
+        .eq("id", id)
+        .eq("organization_id", authz.org.orgId)
+        .eq("cancelamento_em_andamento_em", claimEm);
+    };
+
+    let r: Awaited<ReturnType<typeof transmitirCancelamento>>;
+    try {
+      r = await transmitirCancelamento(contexto!, {
+        chave: atual.chave_acesso,
+        protocolo: atual.protocolo,
+        justificativa: justificativa!,
+      });
+    } catch (err) {
+      await liberarClaim();
+      throw err;
+    }
+    await liberarClaim();
     if (!r.ok) {
       const detalhe = r.cstat
         ? `cStat ${r.cstat}: ${r.xmotivo ?? "sem motivo"}`

@@ -12,6 +12,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { caminhoDoCertificadoNoSidecar } from "@/lib/fiscal/certificado";
+import { limiteDoClaim } from "@/lib/fiscal/claims";
 import { manifestarNaSefaz, type ContextoEntrada } from "@/lib/fiscal/entrada";
 import { carregarContextoSped } from "@/lib/fiscal/sped-payload";
 import { resolverProvedor } from "@/lib/fiscal/provedor";
@@ -121,12 +122,94 @@ export async function POST(
     senhaCertificado: ctx.senhaCertificado,
   };
 
-  const resultado = await manifestarNaSefaz(
-    ctxEntrada,
-    entrada.chave,
-    parsed.data.evento,
-    parsed.data.justificativa,
-  );
+  // ─── A MESMA MANIFESTAÇÃO NÃO VAI DUAS VEZES À SEFAZ ───────────────────
+  //
+  // Retry depois do sucesso: o evento já tem protocolo gravado; devolve o
+  // resultado original em vez de transmitir de novo (a SEFAZ recusaria como
+  // duplicidade e a timeline ficaria com um "erro" falso).
+  const evento = NOME_DO_EVENTO[parsed.data.evento];
+  const { data: jaFeita } = await supabase
+    .from("fiscal_manifestations")
+    .select("protocolo, cstat, created_at")
+    .eq("organization_id", authz.org.orgId)
+    .eq("entrada_id", id)
+    .eq("evento", evento)
+    .eq("resultado", "sucesso")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (jaFeita) {
+    return ok(
+      {
+        evento,
+        protocolo: (jaFeita as { protocolo: string | null }).protocolo,
+        cstat: (jaFeita as { cstat: string | null }).cstat,
+        ja_existia: true,
+      },
+      { requestId, status: 200 },
+    );
+  }
+
+  // Claim da transmissão: dois cliques simultâneos, um transmite e o outro
+  // recebe 409. O TTL de 5 min recupera processo morto. Nenhum status muda
+  // aqui — a entrada só vira `manifestada` depois do protocolo.
+  const claimEm = new Date().toISOString();
+  const limite = limiteDoClaim(new Date());
+  let reivindicado = false;
+  {
+    const { data } = await supabase
+      .from("fiscal_entradas")
+      .update({ manifestacao_em_andamento_em: claimEm })
+      .eq("organization_id", authz.org.orgId)
+      .eq("id", id)
+      .is("manifestacao_em_andamento_em", null)
+      .select("id");
+    reivindicado = (data ?? []).length > 0;
+  }
+  if (!reivindicado) {
+    const { data } = await supabase
+      .from("fiscal_entradas")
+      .update({ manifestacao_em_andamento_em: claimEm })
+      .eq("organization_id", authz.org.orgId)
+      .eq("id", id)
+      .lt("manifestacao_em_andamento_em", limite)
+      .select("id");
+    reivindicado = (data ?? []).length > 0;
+  }
+  if (!reivindicado) {
+    return fail(
+      "conflict",
+      "A manifestação desta entrada já está sendo transmitida. Aguarde o resultado.",
+      409,
+      { requestId },
+    );
+  }
+  const liberarClaim = async (): Promise<void> => {
+    await supabase
+      .from("fiscal_entradas")
+      .update({ manifestacao_em_andamento_em: null })
+      .eq("organization_id", authz.org.orgId)
+      .eq("id", id)
+      .eq("manifestacao_em_andamento_em", claimEm);
+  };
+
+  let resultado: Awaited<ReturnType<typeof manifestarNaSefaz>>;
+  try {
+    resultado = await manifestarNaSefaz(
+      ctxEntrada,
+      entrada.chave,
+      parsed.data.evento,
+      parsed.data.justificativa,
+    );
+  } catch (err) {
+    await liberarClaim();
+    throw err;
+  }
+  // A transmissão terminou (com sucesso ou erro): o claim já cumpriu o papel.
+  // Liberar antes das gravações permite que um retry explícito prossiga sem
+  // esperar o TTL; a SEFAZ não é chamada de novo por causa disso.
+  await liberarClaim();
+
   if (!resultado.ok) {
     // A tentativa que falhou também é histórico: sem esta linha, a tela de
     // manifestações mostraria só os sucessos e o operador não saberia que a
