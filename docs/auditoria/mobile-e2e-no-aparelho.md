@@ -82,11 +82,11 @@ a órfã; e "disco cheio" continua subindo).
 
 | Passo | Prova |
 |---|---|
-| captura com sinal desligado | `01-cliente-encontrado.png`, `02-produto-encontrado.png` |
-| salvar | `03-item-adicionado.png`, `04-salvo-volta-para-home.png` (home mostra `Fila de envio (1)`) |
-| `stopApp` + `launchApp` | `05-fila-sobrevive-ao-reinicio.png` — `(1)` e `OFF-0001` |
-| toque duplo em "Salvar na fila" | `06-duplo-toque-nao-duplica.png` — `(2)`, nunca `(3)` |
-| "Enviar agora" sem sinal | `07-enviar-sem-sinal.png` — `(2)` e o aviso visível |
+| captura com sinal desligado | `evidencias/mobile-2026-11-18/01-cliente-encontrado.png`, `evidencias/mobile-2026-11-18/02-produto-encontrado.png` |
+| salvar | `evidencias/mobile-2026-11-18/03-item-adicionado.png`, `evidencias/mobile-2026-11-18/04-salvo-volta-para-home.png` (home mostra `Fila de envio (1)`) |
+| `stopApp` + `launchApp` | `evidencias/mobile-2026-11-18/05-fila-sobrevive-ao-reinicio.png` — `(1)` e `OFF-0001` |
+| toque duplo em "Salvar na fila" | `evidencias/mobile-2026-11-18/06-duplo-toque-nao-duplica.png` — `(2)`, nunca `(3)` |
+| "Enviar agora" sem sinal | `evidencias/mobile-2026-11-18/07-enviar-sem-sinal.png` — `(2)` e o aviso visível |
 
 Banco depois do fluxo, lido do aparelho:
 
