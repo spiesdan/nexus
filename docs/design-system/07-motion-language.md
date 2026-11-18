@@ -1,6 +1,8 @@
 # 07 — Motion Language
 
-> **Source of truth:** `app/design/lib/tokens.ts` → `MOTION`, `app/design/showcase.css` (keyframes `ds-*`)
+> **Fonte canônica hoje:** `--duration-*` e `--ease-*` em [`app/globals.css`](../../app/globals.css), espelhados
+> em [`lib/nexus/tokens.ts`](../../lib/nexus/tokens.ts). A regra global de `prefers-reduced-motion` está no
+> mesmo CSS (V-26). As curvas e os 4 tipos abaixo continuam valendo.
 
 ## Filosofia
 

@@ -1,6 +1,8 @@
 # 04 — Densidade Aerada
 
-> **Source of truth:** `app/design/lib/tokens.ts` → `DENSITIES.aerada`
+> **Fonte canônica hoje:** [`lib/nexus/tokens.ts`](../../lib/nexus/tokens.ts) (`tableRowHeight`, `tableGap`,
+> `tablePaddingX/Y`) e `--density-*` em [`app/globals.css`](../../app/globals.css). A densidade Aerada desta
+> página continua sendo a do produto.
 
 ## Tokens
 

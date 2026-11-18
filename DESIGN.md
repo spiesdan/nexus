@@ -5,6 +5,24 @@
 
 Visitors is a bright white-canvas analytics product with a restrained grayscale spine and a single lavender accent (#918df6) that does the heavy lifting as a CTA color. Typography is confident and geometric — OpenRunde at heavy display weights with tight negative tracking, creating headlines that feel engineered rather than editorial. The interface lives flat: hairline borders, subtle surface tinting, minimal elevation, and pill-shaped controls that read as light and fast. Color appears as functional punctuation — green for positive deltas, amber for neutral data, pink and blue for feature categories — never as decoration on chrome.
 
+## O que este documento é — e o que ele NÃO é
+
+Este é o **documento de intenção** (a referência "Visitors" e a tradução dela para o
+produto). Os **valores** que o produto pinta vivem em `app/globals.css`: é lá que
+`--color-*`, `--space-*`, `--radius-*`, `--shadow-*` e `--duration-*` são declarados, e
+há teste lendo os dois temas (`tests/unit/tailwind-tokens.test.ts`,
+`branding-contraste.test.ts`, `branding-tema-claro-escopavel.test.ts`).
+
+**Em conflito, o CSS vence.** Este arquivo descreve a intenção; o CSS é o pixel. Quando a
+implementação precisou se afastar da referência — e precisou, em dois pontos — a
+divergência fica escrita aqui com o número que a decidiu:
+
+| Referência | Produto | Por quê |
+|---|---|---|
+| Lavanda `#918df6` no botão principal | **`--color-lavender` = `#918df6`** (papel decorativo: ícone, tag) e **`--color-accent` = `#7e77f0`** no claro / **`#a4a5ff`** no escuro (grau 600 e 400 da rampa, papel funcional) | `#918df6` dá **2,86:1** contra o branco e reprova o piso de componente (3:1). O grau 600 dá 3,63:1 e o texto sobre ele é Carbon (4,80:1); branco sobre o 600 daria 4,0:1 e reprovaria o piso de texto. No escuro o accent sobe para o 400, que é o degrau legível sobre `#151515` |
+| OpenRunde | **Inter** (`next/font`, `--font-inter`) | OpenRunde não existe no Google Fonts; Inter é a primeira alternativa listada pela própria referência |
+| Raios 6/10/14 (prompt AAA) | **4/8/12/16/24/pill** | escala do produto, aplicada em todo componente; trocá-la muda todo canto de uma vez — decisão do dono, registrada em `docs/auditoria/11-auditoria-visual.md` §3 |
+
 ## Tokens — Colors
 
 | Name | Value | Token | Role |

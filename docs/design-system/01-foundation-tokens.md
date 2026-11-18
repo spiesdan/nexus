@@ -1,6 +1,9 @@
 # 01 — Foundation Tokens
 
-> **Source of truth:** `app/design/lib/tokens.ts` (`SPACING`, `RADII`, `BORDERS`, `SHADOWS`, `Z_INDEX`, `MOTION`)
+> **Fonte canônica hoje:** [`app/globals.css`](../../app/globals.css) — `--space-*`, `--radius-*`, `--shadow-*`,
+> `--duration-*`, `--z-*` — e o espelho tipado em [`lib/nexus/tokens.ts`](../../lib/nexus/tokens.ts).
+> O `app/design/lib/tokens.ts` é a **maquete histórica** de abril/2026.
+> **Em conflito, o CSS vence.**
 
 Todos os tokens primitivos do Nexus. Componentes compõem **só** a partir desta camada — nunca digite valores literais (`16px`, `#000`, `300ms`) em CSS de feature.
 
