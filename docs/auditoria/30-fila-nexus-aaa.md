@@ -13,11 +13,11 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida (rodada 11) | `0201faaf` (`nexus/main`) | `git log --oneline -1 nexus/main` |
+| Commit de partida (rodada 12) | `8e65b527` (`nexus/main`; Sentinel v1.3 incluso) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) — a contagem de fragmentos é o que `pnpm release:conferir` disser; o PR é o corte vigente — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
-| Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
+| Produção | **estado misto, informado pelo dono em 18/11**: `app`/`worker`/`scheduler` em **1.55.0**; **sidecar fiscal em 1.56.0** (subido para liberar a NF-e 4656). Tag `v1.56.0` publicada; **deploy completo pendente de aprovação**. Não verificado por este programa (sem acesso) | relato do dono |
 | Runtime local | macOS (darwin), Node `v22.20.0`, pnpm `9.15.9`, Docker `29.8.2` | `node -v`, `pnpm -v`, `docker info` |
 | Gates | `pnpm gov:verify` = typecheck + lint + lint:channels + lint:role-rank + test:unit; `test:db` exige Docker; `test:e2e` exige app + banco | `package.json` |
 
@@ -54,7 +54,7 @@
 
 ### Regras de não-duplicação e dono de schema
 
-- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`request_hash`), **0318** D-01/D-02 (`nome_manual`), **0319** C (claims fiscais), **0320** A (`pg_temp` nas definers, #518 mergeado). **0321** é do Sentinel v1.1 (#528, mergeado); **0322 está reservada à credencial de dispositivo (#526, F)**; **0323 é do #439** (telefone E.164, renumerado três vezes: 0312→0320→0322→0323, porque cada merge da main tomou o número). O teste `tests/unit/migrations-numero-unico.test.ts` reprova número repetido — foi o defeito do #439 que o motivou. Próxima livre: **0324**.
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`request_hash`), **0318** D-01/D-02 (`nome_manual`), **0319** C (claims fiscais), **0320** A (`pg_temp` nas definers, #518 mergeado). Na `main` até **0325**: 0320 definers (#518), 0321 Sentinel v1.1 (#528), 0322 credencial de dispositivo (#526), 0323 telefone E.164 (#439, renumerado três vezes porque cada merge tomava o número), 0324 estoque sem movimento (Sentinel v1.2) e 0325 correção aprovada (Sentinel v1.3). O teste `tests/unit/migrations-numero-unico.test.ts` reprova número repetido — foi o defeito do #439 que o motivou. **Próxima livre: 0326.**
 - **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
 - **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
 - **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
@@ -387,3 +387,146 @@ produção. A execução real é decisão do dono, depois do relatório.
 Medir antes com `explain analyze` e **propor** índice; não criar migration sem
 essa medição. Próxima livre continua **0325** (reservada em potencial para o
 catálogo do Mercos).
+
+## 15. Fila nova — observabilidade das correções aprovadas (P1, 18/11/2026)
+
+> **Dono:** Agente **G**. Fecha o laço do 7º invariante da doutrina: a ação do
+> Sentinel não termina quando ela executa — termina quando o produto **sabe** o
+> que aconteceu com ela.
+>
+> Escolhida entre as três sugestões por **risco**: a v1.3 (`0325`) passou a
+> escrever (`job_queue.run_after`), e hoje não existe detector para o estado que
+> ela mesma cria. As outras duas (agrupamento de rejeição SEFAZ e carga de cron
+> com duas organizações) são medição/painel; esta é fechamento de ciclo.
+
+### Por que agora
+
+`fn_sentinel_corrigir_job` antecipa `run_after` de um job `watchdog` pendente e
+grava o antes/depois em `sentinel_occurrence_events.detalhe`
+(`reversivel: true`). A reversão (`fn_sentinel_reverter_job`) restaura **somente**
+se o job ainda estiver `pending` com o `run_after` que foi gravado — depois de
+reclamado, reverter seria mentira e a RPC devolve zero linhas. Ou seja: o produto
+já **sabe** que a correção pode deixar de ser reversível; o que falta é alguém
+dizer isso na tela.
+
+### Detector 1 — `operacao.correcao_sem_reversao` (sem decisão pendente)
+
+Para ocorrência em `corrigida` cuja última correção aplicada tem
+`detalhe.correcao = 'antecipar_job'` e `detalhe.reversivel = true`:
+
+- carregar o job (`detalhe.job_id`) e comparar com `detalhe.run_after_depois`;
+- se `status <> 'pending'` **ou** `run_after <> run_after_depois`, a reversão já
+  não é possível pelo CAS da própria RPC → abrir ocorrência com severidade
+  **média**, evidência (`job_id`, `status`, `run_after_atual`,
+  `run_after_esperado`, `ocorrencia_origem`), e ação sugerida "registre o
+  desfecho no histórico; reverter não é mais possível";
+- **não** abrir quando o job voltou a `pending` com o mesmo `run_after` (a
+  reversão continua possível) nem quando a ocorrência já está `encerrada`.
+
+Critério de prova: job reclamado/executado gera a ocorrência; job intocado
+**não** gera; reexecução não duplica (chave aberta por ocorrência de origem).
+
+### Detector 2 — `operacao.aprovacao_expirada` (regra já existe, não inventar TTL)
+
+`fn_sentinel_corrigir_job` recusa execução quando o `depois` do dry-run está
+fora de **±5 minutos** do agora — é a janela que o gestor revisou. Logo, uma
+ocorrência parada em `aprovada` cuja aprovação é mais velha que essa janela está
+**objetivamente** expirada: executá-la exigiria outro valor, que ninguém viu.
+
+- gatilho: `estado = 'aprovada'` e o evento que levou a `aprovada` mais antigo
+  que 5 minutos;
+- severidade **baixa** (não há dano; há decisão esquecida), ação "peça nova
+  prévia antes de aprovar";
+- a constante da janela vem de **um lugar só** (a mesma que a rota usa), não de
+  um `5` copiado.
+
+### Fora de escopo
+
+- Executar, reverter ou aprovar por conta própria (detector só observa).
+- Mudar a janela de 5 min: ela é da RPC; se o dono quiser outra, é decisão dele.
+- Painel novo: as ocorrências aparecem no painel existente.
+
+### Testes
+
+Casos positivos e negativos dos dois detectores com fixture de ocorrência +
+job; reexecução sem duplicata; RLS/tenant (a ocorrência de A não aparece em B).
+
+## 16. Fila nova — detector `cadastro.endereco_com_lixo` (P2, 18/11/2026)
+
+> **Dono:** **G** depois da observabilidade das correções (§15); se sobrar, D/F.
+> **Não interrompe o G agora.** Observação pura: cai no Sentinel v1, sem escrita.
+
+### O que motivou
+
+O `"NULL"` literal no endereço apareceu em **84 linhas** de `contacts`. O dono
+investigou o escritor e **não achou caminho vivo** que produza isso: o import de
+CSV não toca endereço, o `importar-mercos` não escreve endereço de contato, e
+`EditContactDialog`/`EnderecoFields` fazem `trim() || null`. Conclusão registrada:
+aquelas linhas eram **históricas** (export antigo de WP/Mercos).
+
+A proteção de leitura (#554) e a limpeza resolvem o **passado**. O que falta é o
+**futuro**: nada garante que um import novo não traga o literal de volta, e o
+sintoma só aparece quando a SEFAZ rejeita uma nota.
+
+### Regra
+
+Varrer `contacts.logradouro`, `complemento`, `bairro` e `cidade` por:
+
+- `\mNULL\M` (palavra, qualquer caixa);
+- `\mundefined\M`;
+- `\mNaN\M`;
+- texto não vazio que é só espaços.
+
+Abrir **uma ocorrência por organização** (agrupada), severidade **média**,
+contagem no `titulo`/evidência e **evidência com ids de contato** (para o dono
+limpar sem precisar procurar). Campo `null` legítimo **não** é ocorrência; string
+vazia também não — só o literal e o "só espaços".
+
+### Fora de escopo
+
+- Corrigir dado (é observação; limpeza é decisão do dono).
+- Bloquear import (o detector avisa; o gate de import é outra fatia).
+- Varredura de outros campos por enquanto.
+
+### Testes
+
+Positivo para cada token e para "só espaços"; negativo para `null`, `""` e
+endereço legítimo; reexecução não duplica (chave aberta por organização+regra);
+cross-tenant zero.
+
+## 17. Catálogo do Mercos — ordem de execução (não pareou nada ainda)
+
+O coletor do #559 é **código de worker**, e worker roda na imagem `nexus-mercos`.
+A produção está em **1.55.0** (app/worker/scheduler); o coletor **não existe lá**.
+Portanto a ordem é esta, e ninguém deve ler "mergeado" como "pareado":
+
+1. **Entrar na próxima release** (corte pelo workflow `release`; tag nova).
+2. **Deploy da imagem `nexus-mercos`** na VPS — ato humano, ver `35-pacote-de-release.md`.
+3. **`--dry-run` em produção**: o coletor lê `/produtos/` e devolve o relatório
+   (`criados`, `atualizados`, `divergentes`, `sem_codigo`, itens casáveis por
+   código) **sem escrever**.
+4. **Relatório para o dono aprovar** — inclusive a contagem de itens históricos
+   que casariam por código (616 itens/72 códigos medidos em 18/11).
+5. **Só então** o pareamento é aplicado, com backup das linhas afetadas.
+
+Enquanto 3–5 não acontecerem, `product_id IS NULL` continua igual e o 411
+continua com os 2.010 itens que já tinha.
+
+## 18. Delegação — D nos módulos (a lacuna mais antiga)
+
+O Agente E caiu no meio e não voltou: **5.4, 5.6, 5.8, 5.10/5.11 não têm ficha
+fechada**. O D tem os instrumentos de captura e a régua de estados, então pega
+essa lacuna **por módulo**, começando pelo de maior uso:
+
+| Ordem | Módulo | Entrega por PR |
+|---|---|---|
+| 1 | **5.4** inbox/atendimento/campanhas | ficha + estados com evidência (vazio, carregando, erro, permissão, retry) |
+| 2 | **5.6** pedidos/estoque/compras/expedição | idem |
+| 3 | **5.8** fiscal | idem |
+| 4 | **5.10/5.11** configurações/equipe/LGPD/admin | idem |
+
+Limites: **não toca regra de negócio** (fiscal, financeiro, autorização); a
+evidência é visual/estado, não reescrita de comportamento. Se um estado revelar
+defeito real, vira item de fila com dono — não conserto silencioso no mesmo PR.
+A alternativa (P1-01, J6/J13/J14 por teste de rota) fica registrada como
+próxima, caso o D prefira jornada a módulo.

@@ -15,7 +15,7 @@
 | Código | `nexus/main` @ `9ede1d6b` | `git log --oneline -1 nexus/main` |
 | PR de release | **#537** — `release/1.56.0`, CI rodando, **não mergeado** | API de PRs do GitHub |
 | Release | última tag `v1.55.0`; **nenhuma tag nova** | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
-| Deploy | **nenhum**; produção intocada por este programa | — |
+| Deploy | **parcial, fora deste programa**: sidecar fiscal já em 1.56.0 (liberar a NF-e 4656); app/worker/scheduler em 1.55.0. **Deploy completo pendente de aprovação do dono** | relato do dono |
 
 Código mergeado não é release; release não é deploy. Este pacote anda os dois
 primeiros passos e para antes do terceiro.

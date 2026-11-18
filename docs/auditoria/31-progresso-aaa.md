@@ -274,3 +274,29 @@ mergeado**: o merge é a aprovação humana e é ele que faz o CI criar a tag.
 
 `#439` (CI), `#457` (CI pós-rebase), `#533`/`#535` (D), `#526` (F, 0322),
 `#538` (G), `#307` (`[!]` marca) e `#537` (release, aguardando o dono).
+
+## Marco — fila de PRs zerada (18/11/2026, `8e65b527`)
+
+Pela primeira vez no programa, **nenhum PR aberto** de rodada anterior: os 24 PRs
+que estavam na triagem foram mergeados, fechados com motivo ou separados em PR
+novo. Os três últimos a sair foram #307 (decisão de marca — `"By nexus"` no
+DANFE não entra; a parte configurável virou #545), #165 (`actions/checkout@v7`)
+e #13 (`actions/cache@v6`).
+
+**Quantos entraram desde o início do programa** — contado pelos merges, não
+estimado:
+
+```bash
+git log --merges 126f4bb3..nexus/main --format='%s' | grep -c 'Merge pull request #'
+# 93
+git log --merges 126f4bb3..nexus/main | wc -l
+# 114   (93 PRs + 21 merges de sincronização sem PR)
+```
+
+Ou seja: **93 PRs** mergeados em **114 merge commits** desde `126f4bb3`
+(baseline do prompt mestre, #478). O tag `v1.56.0` saiu dentro dessa janela, pelo
+workflow `release` (#548).
+
+O que ainda está aberto é só trabalho novo: o PR desta fila (#556) e o que os
+três workers abrirem. Fila zerada não é programa concluído — é a primeira vez que
+a dívida de triagem não tem item.
