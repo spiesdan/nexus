@@ -37,9 +37,13 @@ adb shell input tap ...            # exploração (TalkBack usa toque)
 adb shell uiautomator dump /sdcard/ui.xml
 ```
 
-Evidências em `docs/auditoria/evidencias/talkback-2026-11-18/`:
-`home.png`, `home.xml`, `home-fila.xml`, `novo-pedido.png`,
-`novo-pedido.xml`, `talkback-tts.txt`.
+Evidências em `evidencias/talkback-2026-11-18/`:
+`evidencias/talkback-2026-11-18/home.png`,
+`evidencias/talkback-2026-11-18/home.xml`,
+`evidencias/talkback-2026-11-18/home-fila.xml`,
+`evidencias/talkback-2026-11-18/novo-pedido.png`,
+`evidencias/talkback-2026-11-18/novo-pedido.xml`,
+`evidencias/talkback-2026-11-18/talkback-tts.txt`.
 
 ## 3. O que foi verificado
 
