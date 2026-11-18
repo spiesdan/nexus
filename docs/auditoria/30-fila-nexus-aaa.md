@@ -13,7 +13,7 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida | `f3ea10d6` (base `nexus/main`, tag `v1.55.0` + #478 + #453 + #464) | `git log --oneline -1` |
+| Commit de partida | `13fefad3` (base `nexus/main`; merges até #514) | `git log --oneline -1` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags nexus` |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
@@ -34,7 +34,7 @@
 
 ### Regras de não-duplicação e dono de schema
 
-- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Reservas atuais: **0317** = D-03 (`idempotency_keys.request_hash`), **0318** = D-01/D-02 (`prospecting_campaigns.nome_manual`).
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`idempotency_keys.request_hash`), **0318** D-01/D-02 (`prospecting_campaigns.nome_manual`), **0319** C (claims de manifestação/cancelamento). Próxima livre: **0320**.
 - **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
 - **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
 - **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
@@ -88,9 +88,9 @@ coordenador integra e roda os gates no código integrado.
 | **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | E abriu #503 (reenvio de mensagem falha, J6); C fechou #494/#495/#497 e #496 (fiscal); J14 segue sem E2E | E / C / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
 | **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | C mergeou #494 (importação de entrada), #495 (recuperação de nota), #497 (relatório C1B) e #496 (cancelamento × drain); #438 (devolução/IE) segue aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
 | **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[x]` | #498 → `5a499313`: gerador + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
-| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | F ativo em `front/mobile`: `SincronizadorOffline`, `lib/offline/{db,outbox}`; sem dispositivo nesta máquina | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
+| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | #514 mergeado: sincronizador montado, retomada de `enviando`, retry/backoff, anti-duplo-toque, backup APK sem PII; 58 unit + 7 e2e emulados | F | **Ponte SQLite shell↔remoto no APK** (decisão A/B/C) + dispositivo real | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 mergeado (tema claro: 2,85:1 corrigido + gate); #468 aberto (snapshots); D segue em `front/design-tinta` | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
-| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | `#458` (teto nas listas); `#464` mergeado (`f3ea10d6`) com o índice 0313 e baseline restaurado | A / E | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
+| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); E/C mergearam #507 (teto declarado), #510 (amostra de faturamento), #508/#509 (claims fiscais) e #503 | A / E / C | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
 | **P1-07** | Rate limit em MFA e recuperação de conta | `[x]` | #466 mergeado (`f56c0228`): teto em `verifyMfa` e `useRecoveryCode` com testes | B | — | Teto por IP e por identificador; teste de repetição; fallback documentado |
 
 ## 5. Fila — P2 (identidade, shell, consistência)
@@ -178,4 +178,7 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | P0-05 nota viva na main | #484 → `f691dc06` | CI 5/5 |
 | 18/11/2026 | P0-09 recebimento com CAS na main | #485 → `239efd32` | CI 5/5 |
 | 18/11/2026 | F-17 nos 4 eixos | #486 → `2e95f74f` | 367 testes |
+| 18/11/2026 | #503 inbox reenvio (E) | `e9302c58` | P1-01/J6 |
+| 18/11/2026 | #507/#508/#509/#510/#513 (E/C) | main `8359ac66` | módulos, claims fiscais, faturamento |
+| 18/11/2026 | #514 mobile sync (F) | `13fefad3` | 58 unit + 7 e2e emulados; ponte declarada |
 | 18/11/2026 | Sentinel v1 na main | #489 → `f644b21c` | 68 unit + 184 invariantes; CI 5/5; instalação/update verdes |
