@@ -511,6 +511,12 @@ jobs:
         vps-fresh-onboarding.spec.ts
         inbox-tempo-real.spec.ts
         mobile-offline.spec.ts
+        visual-snapshots.spec.ts
+        # motivo: baseline de PIXEL tem sufixo de plataforma (…-darwin.png ×
+        # …-linux.png). Os baselines versionados foram gerados em macOS; rodar
+        # o job ubuntu sem os baselines linux reprovaria por plataforma, não por
+        # regressão. A entrada no CI exige runner fixo (container oficial do
+        # Playwright) — declarado como lacuna em docs/auditoria/09.5.
     steps:
       - uses: actions/checkout@v7
 
