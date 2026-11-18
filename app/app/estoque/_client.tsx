@@ -162,6 +162,10 @@ export function EstoqueClient({ podeEscrever }: { podeEscrever: boolean }) {
 function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
   const [produtos, setProdutos] = React.useState<ProdutoEstoque[]>([]);
   const [busca, setBusca] = React.useState("");
+  // Catálogo maior que o teto pedido: a lista de saldos vira amostra e a tela
+  // precisa dizer (A7). Antes eram 500 fixos e o "menor saldo" era o menor
+  // DENTRO dos 500 primeiros por nome.
+  const [amostraParcial, setAmostraParcial] = React.useState(false);
   const [estado, setEstado] = React.useState<"loading" | "error" | "ready" | "empty">("loading");
   const [erro, setErro] = React.useState("");
   const [dialogo, setDialogo] = React.useState<{ produto: string | null; seq: number }>({
@@ -172,10 +176,15 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
 
   const carregar = React.useCallback(async (termo: string) => {
     try {
-      const qs = termo ? `?busca=${encodeURIComponent(termo)}` : "";
-      const corpo = await apiClient.get<{ data: ProdutoEstoque[] }>(`/api/v1/products${qs}`);
+      const qs = new URLSearchParams({ limite: "2000" });
+      if (termo) qs.set("busca", termo);
+      const corpo = await apiClient.get<{ data: ProdutoEstoque[] }>(
+        `/api/v1/products?${qs.toString()}`,
+      );
+      const bruto = corpo.data ?? [];
+      setAmostraParcial(bruto.length >= 2000);
       // Só o que tem controle de estoque: o resto não tem saldo a mostrar.
-      const lista = (corpo.data ?? []).filter((p) => p.controla_estoque);
+      const lista = bruto.filter((p) => p.controla_estoque);
       lista.sort((a, b) => a.quantidade - b.quantidade);
       setProdutos(lista);
       setErro("");
@@ -249,6 +258,16 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
           </FilterActions>
         ) : null}
       </FilterBar>
+
+      {amostraParcial && (
+        <p
+          role="status"
+          className="rounded-lg border border-warning/40 bg-warning-bg px-3.5 py-2.5 text-sm text-warning-fg"
+        >
+          O catálogo tem mais de 2.000 produtos. A lista abaixo é uma amostra — use a busca pelo
+          nome ou código para encontrar os demais.
+        </p>
+      )}
 
       <NexusDataTable
         state={estado}
@@ -327,7 +346,7 @@ function AbaMovimentos({ podeEscrever }: { podeEscrever: boolean }) {
     void carregar(tipo);
     // Nomes dos produtos junto: o razão devolve só o product_id.
     apiClient
-      .get<{ data: ProdutoEstoque[] }>("/api/v1/products")
+      .get<{ data: ProdutoEstoque[] }>("/api/v1/products?limite=2000")
       .then((c) => {
         if (vivo) setProdutos(c.data ?? []);
       })
