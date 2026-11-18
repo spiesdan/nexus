@@ -6,8 +6,7 @@
 > efeito e a evidência que já existe em gate.
 >
 > **Regra que atravessa tudo:** o schema entra pelo `supabase/baseline.sql`, nunca
-> pela cadeia de migrations. `supabase db push` é **caminho proibido** (F-09=B;
-> ver `supabase/migrations/README.md`).
+> pela cadeia de migrations. `supabase db push` é **caminho proibido** (F-09=B; ver a proibição em `CLAUDE.md` e no README da pasta de migrations).
 
 ## 0. O que roda onde
 
