@@ -90,6 +90,23 @@ describe("detectores fiscais — caso positivo e negativo", () => {
         }),
       ),
     ).toHaveLength(0);
+
+    // Agrupamento (0294): a nota principal é de outro pedido, mas as duas
+    // compartilham um pedido secundário — é duplicidade do mesmo jeito.
+    const secundario = notasDuplicadasPorPedido(
+      snapshot({
+        notas: [
+          nota({ id: "a", order_id: "pedido-a", status: "autorizada" }),
+          nota({ id: "b", order_id: "pedido-b", status: "pendente", numero: 12 }),
+        ],
+        notasPedidos: [
+          { invoice_id: "a", order_id: "pedido-x" },
+          { invoice_id: "b", order_id: "pedido-x" },
+        ],
+      }),
+    );
+    expect(secundario).toHaveLength(1);
+    expect(primeiro(secundario).entidadeId).toBe("pedido-x");
   });
 
   it("divergência de valor: totais diferentes disparam; iguais não", () => {

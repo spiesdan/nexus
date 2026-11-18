@@ -21,6 +21,7 @@ import type {
   JobDaFila,
   JobFiscal,
   NotaFiscal,
+  NotaPedido,
   Pedido,
   Produto,
   Recebivel,
@@ -31,6 +32,7 @@ import type {
 import { DIA_MS } from "./utilitarios";
 
 const TETO_NOTAS = 500;
+const TETO_NOTAS_PEDIDOS = 2_000;
 const TETO_PEDIDOS = 500;
 const TETO_JOBS_FISCAIS = 500;
 const TETO_SYNC_FISCAL = 100;
@@ -84,6 +86,7 @@ export async function coletarSnapshot(
 
   const [
     notas,
+    notasPedidos,
     pedidos,
     jobsFiscais,
     sincronizacoesFiscais,
@@ -108,6 +111,15 @@ export async function coletarSnapshot(
         .order("updated_at", { ascending: false })
         .limit(TETO_NOTAS + 1),
       TETO_NOTAS,
+    ),
+    coletar<NotaPedido>(
+      "notas_pedidos",
+      admin
+        .from("invoice_orders")
+        .select("invoice_id, order_id")
+        .eq("organization_id", organizationId)
+        .limit(TETO_NOTAS_PEDIDOS + 1),
+      TETO_NOTAS_PEDIDOS,
     ),
     coletar<Pedido>(
       "pedidos",
@@ -245,6 +257,7 @@ export async function coletarSnapshot(
 
   const coletas = [
     notas,
+    notasPedidos,
     pedidos,
     jobsFiscais,
     sincronizacoesFiscais,
@@ -263,6 +276,7 @@ export async function coletarSnapshot(
       organizationId,
       agoraMs,
       notas: notas.dados,
+      notasPedidos: notasPedidos.dados,
       pedidos: pedidos.dados,
       jobsFiscais: jobsFiscais.dados,
       sincronizacoesFiscais: sincronizacoesFiscais.dados,

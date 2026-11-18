@@ -157,34 +157,57 @@ export function notasAutorizadasSemChave(s: Snapshot): Achado[] {
 }
 
 export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
-  const porPedido = new Map<string, NotaFiscal[]>();
-  for (const n of s.notas) {
-    if (!n.order_id || !NOTA_ATIVA.has(n.status)) continue;
-    const lista = porPedido.get(n.order_id) ?? [];
-    lista.push(n);
-    porPedido.set(n.order_id, lista);
+  // Um pedido pode estar ligado à nota como principal (`invoices.order_id`) ou
+  // como secundário (`invoice_orders`, 0294). Contar só o principal deixaria a
+  // duplicidade de um agrupamento passar — que é exatamente o caso em que duas
+  // notas vivas transmitem o mesmo pedido à SEFAZ.
+  const ativas = new Map(s.notas.filter((n) => NOTA_ATIVA.has(n.status)).map((n) => [n.id, n]));
+  const pedidosPorNota = new Map<string, Set<string>>();
+
+  for (const n of ativas.values()) {
+    const pedidos = pedidosPorNota.get(n.id) ?? new Set<string>();
+    if (n.order_id) pedidos.add(n.order_id);
+    pedidosPorNota.set(n.id, pedidos);
+  }
+  for (const vinculo of s.notasPedidos) {
+    if (!ativas.has(vinculo.invoice_id)) continue;
+    const pedidos = pedidosPorNota.get(vinculo.invoice_id) ?? new Set<string>();
+    pedidos.add(vinculo.order_id);
+    pedidosPorNota.set(vinculo.invoice_id, pedidos);
   }
 
-  return [...porPedido.entries()]
-    .filter(([, notas]) => notas.length > 1)
-    .map(([pedidoId, notas]) => ({
-      regra: "fiscal.nota_duplicada_por_pedido",
-      categoria: "fiscal" as const,
-      entidadeTipo: "commercial_orders",
-      entidadeId: pedidoId,
-      titulo: `${notas.length} NF-e ativas para o mesmo pedido`,
-      resumo:
-        "Mais de uma nota viva aponta para o mesmo pedido. Emitir de novo pode duplicar o documento fiscal.",
-      causaProvavel:
-        "Retry tratado como emissão nova, duplo clique no faturamento ou nota anterior não cancelada antes da reemissão.",
-      severidade: "critica" as const,
-      href: `/app/pedidos/${pedidoId}`,
-      evidencia: {
-        total_notas: notas.length,
-        notas: notas.map((n) => `${n.id}:${n.status}:${n.serie}/${n.numero ?? "s/n"}`),
-        valores_cents: notas.map((n) => n.total_cents),
-      },
-    }));
+  const notasPorPedido = new Map<string, Set<string>>();
+  for (const [notaId, pedidos] of pedidosPorNota) {
+    for (const pedidoId of pedidos) {
+      const notas = notasPorPedido.get(pedidoId) ?? new Set<string>();
+      notas.add(notaId);
+      notasPorPedido.set(pedidoId, notas);
+    }
+  }
+
+  return [...notasPorPedido.entries()]
+    .filter(([, ids]) => ids.size > 1)
+    .map(([pedidoId, ids]) => {
+      const notas = [...ids].map((id) => ativas.get(id)).filter((n): n is NotaFiscal => Boolean(n));
+      return {
+        regra: "fiscal.nota_duplicada_por_pedido" as const,
+        categoria: "fiscal" as const,
+        entidadeTipo: "commercial_orders",
+        entidadeId: pedidoId,
+        titulo: `${notas.length} NF-e ativas para o mesmo pedido`,
+        resumo:
+          "Mais de uma nota viva aponta para o mesmo pedido. Emitir de novo pode duplicar o documento fiscal.",
+        causaProvavel:
+          "Retry tratado como emissão nova, duplo clique no faturamento ou nota anterior não cancelada antes da reemissão.",
+        severidade: "critica" as const,
+        href: `/app/pedidos/${pedidoId}`,
+        evidencia: {
+          total_notas: notas.length,
+          notas: notas.map((n) => `${n.id}:${n.status}:${n.serie}/${n.numero ?? "s/n"}`),
+          valores_cents: notas.map((n) => n.total_cents),
+        },
+      };
+    });
 }
 
 export function divergenciaDeValorDaNota(s: Snapshot): Achado[] {

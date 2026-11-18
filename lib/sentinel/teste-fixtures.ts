@@ -204,6 +204,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     organizationId: "org-1",
     agoraMs: AGORA,
     notas: [],
+    notasPedidos: [],
     pedidos: [],
     jobsFiscais: [],
     sincronizacoesFiscais: [],
