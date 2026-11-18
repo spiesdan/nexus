@@ -1,10 +1,10 @@
 {
-  "medido_em": "2026-11-18T11:13:51.189Z",
+  "medido_em": "2026-11-18T13:46:51.186Z",
   "resumo": {
     "tokensPorTema": {
-      "claro": 129,
-      "light": 81,
-      "dark": 92
+      "claro": 137,
+      "light": 89,
+      "dark": 100
     },
     "fontes": [
       {

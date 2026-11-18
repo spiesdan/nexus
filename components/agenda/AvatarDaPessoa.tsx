@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import { corDaTrilha, iniciaisDe } from "./paleta";
+import { corDaTrilha, frenteDaTrilha, iniciaisDe } from "./paleta";
 import type { Pessoa } from "./tipos";
 
 const TAMANHOS = {
@@ -38,14 +38,16 @@ export function AvatarDaPessoa({
       data-ativo={ativo}
       title={pessoa.nome}
       className={cn(
-        "inline-flex shrink-0 select-none items-center justify-center rounded-full font-semibold",
+        "inline-flex shrink-0 items-center justify-center rounded-full font-semibold select-none",
         "ring-2 ring-surface transition-[background-color,opacity] duration-fast ease-out",
         TAMANHOS[tamanho],
         className,
       )}
       style={{
         backgroundColor: ativo ? corDaTrilha(pessoa.trilha) : "var(--color-surface-elevated)",
-        color: ativo ? "var(--color-accent-fg)" : "var(--color-text-muted)",
+        // A frente é POR TRILHA: com três trilhas escuras no tema claro, uma
+        // frente única (Carbon) reprovava AA nas iniciais. Ver `paleta.ts`.
+        color: ativo ? frenteDaTrilha(pessoa.trilha) : "var(--color-text-muted)",
       }}
     >
       {iniciaisDe(pessoa.nome)}

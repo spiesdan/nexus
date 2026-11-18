@@ -1848,7 +1848,7 @@ números que o prompt fixa (3.2 a 3.12).
 
 | Item do prompt | Exigência | Medido | Situação |
 | --- | --- | --- | --- |
-| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **129** · `[data-theme="light"]` **81** · `[data-theme="dark"]` **92** (18/11: +2 com `--color-border-control`). Não são conjuntos iguais e não devem ser: o escuro sobrescreve 92 chaves, e o espelho claro redeclara exatamente essas 92 **menos as 11 da rampa accent** (81) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **137** · `[data-theme="light"]` **89** · `[data-theme="dark"]` **100** (18/11: +1 com `--color-border-control`, +16 com as frentes das trilhas da agenda). Não são conjuntos iguais e não devem ser: o escuro sobrescreve 100 chaves, e o espelho claro redeclara exatamente essas 100 **menos as 11 da rampa accent** (89) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
 | 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
 | 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
 | 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
@@ -2483,3 +2483,48 @@ nossas classes e o gate de contraste continuaria verde enquanto o produto voltav
 
 **Não medido em pixel:** sem build nesta rodada, a prova é a cor final composta por token — que é
 exatamente o par que importa para contraste de texto.
+
+### V-61 · Alta · As trilhas de cor da agenda não se distinguiam — nem do accent, nem sob dicromacia — **CORRIGIDO**
+
+As oito cores de pessoa eram da era Sage e nunca tinham sido medidas contra o accent **atual**
+(violeta, h≈283). Medido em 18/11/2026, em OKLab:
+
+| | antes | depois | piso |
+| --- | --- | --- | --- |
+| pior par de visão normal (escuro) | 0,116 | **0,082** | 0,075 |
+| pior par sob dicromacia (turquesa × framboesa) | **0,009** | **0,065** | 0,06 |
+| trilha mais perto do accent (violeta no escuro) | **0,040** | **0,065** | 0,06 |
+| iniciais sobre a trilha (claro, azul) | **3,2:1** | **5,36:1** | 4,5 |
+| trilha como gráfico contra a superfície | 3,07 | **3,25** | 3,0 |
+
+Dois defeitos, um deles invisível para quem enxerga todas as cores:
+
+1. **o violeta do escuro era o accent** (0,040): a cor da pessoa e o estado "selecionado" liam
+   como a mesma coisa — exatamente o que a paleta existe para impedir;
+2. **turquesa e framboesa eram a mesma cor para quem tem deuteranopia** (0,009). O produto já
+   declara que "cor nunca é a única informação, a inicial acompanha sempre", mas 0,009 é
+   indistinguível até com a inicial do lado.
+
+E um terceiro, achado no caminho: em três trilhas do claro a **inicial do avatar** (texto Carbon
+sobre a trilha) dava 3,2:1 — abaixo do piso AA de 4,5.
+
+**Como as novas foram escolhidas**, e é o que fica registrado: matiz fixo por NOME (janelas de
+18–46°, 55–88°, 92–128°, 170–202°, 205–240°, 244–260°, 298–316°, 328–356° — "Telha, Âmbar,
+Oliva…" é requisito de nomeabilidade), croma ≤ 0,12, e luminosidade otimizada para maximizar o
+**menor** de três distâncias: pares entre pessoas, pares sob dicromacia (`deltaESimulado`, o pior
+caso entre deuteranopia e protanopia) e distância ao accent.
+
+**A troca declarada:** o pior par de visão normal caiu de 0,116 para 0,082. Antes a paleta
+gastava toda a separação em matiz e deixava dois pares idênticos para quem tem dicromacia; o
+mínimo agora equilibra os três eixos, e 0,082 continua acima do piso de 0,05 do repositório.
+
+As iniciais passaram a ter **frente por trilha** (`--agenda-pessoa-N-fg`, branco ou Carbon, o que
+passar): `AvatarDaPessoa` usava um foreground único. O helper é `frenteDaTrilha()`, ao lado de
+`corDaTrilha()` — nenhum hex no componente.
+
+Instrumento: `scripts/auditoria/trilhas-da-agenda.ts` → `capturas/trilhas-da-agenda.json`
+(reproduzível sem banco e sem build). Gate: `tests/unit/trilhas-da-agenda-se-separam.test.ts`
+— os cinco pisos, as janelas de matiz e a prova de que o avatar usa a frente por trilha.
+
+**Ilustração, não medida:** a paleta será avaliada visualmente quando houver captura; a decisão
+de matiz/luminosidade acima é toda numérica, como o dono pediu ("não basta olhar").
