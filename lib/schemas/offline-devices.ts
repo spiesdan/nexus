@@ -1,5 +1,5 @@
 /**
- * Schemas da credencial de dispositivo offline (0320).
+ * Schemas da credencial de dispositivo offline (0322).
  *
  * O corpo é `snake_case` como o resto da API. `scopes` NÃO é campo de entrada:
  * o escopo é fechado no servidor (`offline:pedidos:write`,

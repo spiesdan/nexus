@@ -30367,8 +30367,9 @@ begin
 end
 $mig_definer_search_path$;
 
--- 0321 — credencial de dispositivo do shell offline.
--- Ver supabase/migrations/20261123140000_0321_credencial_de_dispositivo_offline.sql.
+-- ============================================================================
+-- 0322 — credencial de dispositivo do shell offline.
+-- Ver supabase/migrations/20261123160000_0322_credencial_de_dispositivo_offline.sql.
 --
 -- O shell (origem https://localhost) não tem o cookie de sessão do sistema e a
 -- ponte do Capacitor não atravessa a navegação para a origem remota. Ele passa

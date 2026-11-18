@@ -67,7 +67,7 @@ export const AUDIT_ACTIONS = [
   "member.revoked",
   "token.created",
   "token.revoked",
-  // Credencial do aparelho offline (0320). Emitir e revogar um bearer que
+  // Credencial do aparelho offline (0322). Emitir e revogar um bearer que
   // captura pedido é ato de administração — e "quem deu este aparelho a quem"
   // é exatamente a pergunta que se faz depois de um pedido estranho.
   "offline_device.created",
