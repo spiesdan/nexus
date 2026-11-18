@@ -579,7 +579,9 @@ export const COLUNAS_DA_NOTA =
  *
  * `aprovado` entrou em 2026-11-17 por decisão do dono: o pedido aprovado já é
  * compromisso comercial e pode ser faturado antes de a venda fechar no ERP.
- * `rascunho` e `em_analise` continuam sendo intenção — não viram nota.
+ * Quando a NF-e é AUTORIZADA, o dreno marca o pedido aprovado como `faturado`
+ * (a atualização é condicional e só alcança o `aprovado`); rejeição não mexe no
+ * pedido. `rascunho` e `em_analise` continuam sendo intenção — não viram nota.
  */
 export const STATUS_FATURAVEL = ["aprovado", "concluido", "faturado", "expedido", "entregue"] as const;
 
