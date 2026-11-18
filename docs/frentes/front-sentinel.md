@@ -1,8 +1,8 @@
-# Frente `front/sentinel` — Nexus Sentinel v1
+# Frente `front/sentinel` — Nexus Sentinel v1.1
 
-> Worktree: `/private/var/folders/.../aaa-front-sentinel` · branch `front/sentinel`
-> Baseline: `nexus/main` @ `9ddc9005` (release 1.55.0)
-> Escopo desta entrega: **v1 somente leitura** — detectar, classificar e abrir ocorrência. Nenhuma correção autônoma.
+> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel`
+> Baseline desta fatia: `nexus/main` @ `014ccef3` (merge feito no worktree; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Escopo: **v1 + v1.1 somente leitura** — detectar, classificar, abrir ocorrência e propor um plano revisável. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
 
@@ -40,7 +40,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.job_retry_excessivo` | 3+ tentativas na mesma nota | media |
 | `fiscal.sincronizacao_falhou` | sync fiscal com erro/bloqueio nas últimas 24 h (agrupada por dia) | media/alta |
 
-### Operação, financeiro e campanha (15)
+### Operação, financeiro e campanha (17)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
@@ -180,43 +180,77 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `docs/architecture/sentinel.architecture.json` | mapa (22 peças, 26 arestas) |
 | `tests/invariants/rls-isolation.test.ts` | seed + TABLES das 4 tabelas |
 | `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção e cross-tenant |
-| `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis |
+| `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis (roda no CI `critical`/`full`) |
+| `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
 | `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
 
+Nesta sessão (v1.1, após o merge com `nexus/main`), rodando **dirigido** — não a
+suíte completa:
+
 ```bash
-pnpm vitest run lib/sentinel                         # regras, planos, motor e estados
-pnpm test:db                                        # install+update, RLS, idempotência
-pnpm typecheck && pnpm lint && pnpm lint:channels && pnpm lint:role-rank
-pnpm test:unit
-E2E_PORT=3011 pnpm exec playwright test tests/e2e/sentinel-painel.spec.ts
+pnpm exec vitest run lib/sentinel
+#   7 arquivos, 55 testes verdes
+
+pnpm exec vitest run tests/unit/sentinel-painel-revisavel.test.tsx
+#   1 arquivo, 7 testes verdes (lista, filtro, busca, detalhe+plano, histórico,
+#   kill switch, ocorrência antiga sem plano, viewer/agent/gestor)
+
+pnpm exec vitest run tests/unit/e2e-suices-aderentes.test.ts tests/unit/e2e-cobertura-completa.test.ts
+#   2 arquivos, 10 testes verdes (o spec do painel entra em critical/full)
+
+pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
+  tests/e2e/sentinel-painel.spec.ts tests/unit/sentinel-painel-revisavel.test.tsx \
+  tests/invariants/sentinel-idempotencia.test.ts
+#   sem saída (zero erros)
+
+pnpm typecheck
+#   zerado
 ```
 
-Resultados desta sessão ficam no relatório do PR. **Nada foi implantado** — sem
-deploy, sem escrita em produção/VPS, sem operação fiscal/financeira real.
+**O E2E do painel NÃO foi executado nesta máquina, e o motivo é de ambiente, não
+de código:** o daemon do Docker está desligado (`Cannot connect to the Docker
+daemon`) e este worktree novo não tem `.env.e2e`/Supabase local — sem banco não
+há login nem seed. O spec `tests/e2e/sentinel-painel.spec.ts` continua versionado
+e vai rodar no job `e2e` (suítes `critical` e `full`) quando houver Docker. A
+prova de comportamento desta sessão é o teste de componente acima, que exercita
+a mesma tela com fixture determinística. `pnpm test:db` também depende de Docker
+e igualmente não rodou aqui; a migration 0320 e o apêndice do baseline foram
+revisados, mas a prova de banco é a do CI (`invariants`).
+
+**Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
+fiscal/financeira real.
 
 ## 9. Limitações declaradas (v1.1)
 
 1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
    saldo de abertura e a comparação só vale para produtos criados a partir da
    0242. Confirmação exige contagem física.
-2. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
+2. A view `sentinel_estoque_razao` usa **inner join** com
+   `inventory_movements`: produto controlado criado após a 0242 que nunca teve
+   movimentação **não entra** na comparação, mesmo com saldo cacheado. É
+   omissão conhecida (poderia ser `left join`), mantida nesta versão porque a
+   prova de banco exigiria Docker; o caminho de evolução é o item 5 de §10.
+3. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
    contato não tem identidade normalizada — ficar de fora é decisão, não
    omissão.
-3. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
+4. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
    v1.1 recomenda passos, não inventa valor fiscal.
-4. **Não há correção automática.** O plano é persistido e revisável; os estados
+5. **Não há correção automática.** O plano é persistido e revisável; os estados
    `aprovada`/`corrigida` registram a decisão humana, mas nada é executado pela
    máquina.
-5. O cron processa **3 organizações por tick**; instalação com muitas orgs
+6. O cron processa **3 organizações por tick**; instalação com muitas orgs
    drena ao longo dos ticks (15 min cada).
-6. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
+7. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
    fica de fora de propósito.
-7. O painel entrega 500 ocorrências por render; a API pagina até 200 por
+8. O painel entrega 500 ocorrências por render; a API pagina até 200 por
    chamada. Acima disso, filtros são a forma de recorte.
-8. O plano é uma recomendação textual/determinística; não há simulação de
+9. O plano é uma recomendação textual/determinística; não há simulação de
    impacto nem execução assistida na v1.1.
+10. **Prova de banco e E2E pendentes nesta máquina** (Docker desligado, sem
+    `.env.e2e`): o merge não é declarado "verde em tudo" até `invariants` e
+    `e2e` rodarem no CI.
 
 ## 10. Próximas fatias seguras
 
@@ -228,4 +262,7 @@ deploy, sem escrita em produção/VPS, sem operação fiscal/financeira real.
    (hoje a porta é o ⌘K, porque a dobra do sidebar é medida).
 4. Saldo de abertura explícito no razão (`abertura`/snapshot mensal) para elevar
    a confiança da divergência de estoque.
-5. Ampliar o E2E visual para outras resoluções/dispositivos.
+5. Trocar o `inner join` de `sentinel_estoque_razao` por `left join` (produto
+   sem movimentação também é divergência) **com** a prova de `test:db` que
+   valide as duas linhas e o `null` de `ultimo_movimento`.
+6. Ampliar o E2E visual para outras resoluções/dispositivos.
