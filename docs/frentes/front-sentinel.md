@@ -160,9 +160,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | Path | O que |
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
-| `supabase/migrations/20261122130000_0318_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
-| `supabase/baseline.sql` (apêndices 0316/0318) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0318 |
+| `supabase/migrations/20261122140000_0319_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
+| `supabase/baseline.sql` (apêndices 0316/0319) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0319 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
