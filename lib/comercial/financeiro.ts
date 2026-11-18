@@ -128,6 +128,21 @@ export function situacaoDe(
 
 export type ErroPagamento = "acima_do_saldo" | "valor_invalido" | "recebivel_fechado" | "nao_achado";
 
+/**
+ * Traduz o erro que o trigger `financial_payments_valida_saldo` (0314) levanta
+ * para o mesmo discriminante que a validação em memória usa. Sob concorrência,
+ * quem perde a corrida chega aqui — e a resposta continua sendo 422, não 500.
+ */
+export function erroDePagamentoDoBanco(
+  error: { code?: string | null; message?: string | null } | null | undefined,
+): ErroPagamento | null {
+  const mensagem = error?.message ?? "";
+  if (mensagem.includes("financial_payment_acima_do_saldo")) return "acima_do_saldo";
+  if (mensagem.includes("financial_payment_recebivel_fechado")) return "recebivel_fechado";
+  if (mensagem.includes("financial_payment_recebivel_nao_encontrado")) return "nao_achado";
+  return null;
+}
+
 /** Teto do caixa: pagamento (0, saldo]. Erro discriminado, nunca throw. */
 export function validarPagamento(valorCents: number, saldoCents: number): ErroPagamento | null {
   if (!Number.isInteger(valorCents) || valorCents <= 0) return "valor_invalido";
@@ -289,14 +304,31 @@ export async function registrarPagamento(
     if (error.code === "23505" && args.chave) {
       return registrarPagamento(admin, { ...args, chave: args.chave });
     }
+    // O trigger 0314 é a garantia final do teto sob concorrência. Quando ele
+    // recusa, a resposta é a mesma 422 de saldo — nunca 500.
+    const mapeado = erroDePagamentoDoBanco(error);
+    if (mapeado) return { ok: false, erro: mapeado };
     throw new Error(`registrar-pagamento: ${error.message}`);
   }
   const novoStatus = statusAposPagamento(saldo - args.valorCents);
-  await admin
+  // O status é recalculado pelo trigger 0314 na MESMA transação do INSERT.
+  // Antes, este UPDATE era feito aqui com a soma lida antes do insert: dois
+  // recebimentos concorrentes podiam terminar com o segundo gravando "pago" e
+  // o primeiro sobrescrevendo com "parcial" — regressão de estado, não de saldo.
+  // Aqui só lemos o que a transação deixou; o banco é a fonte.
+  const { data: atual } = await admin
     .from("financial_receivables")
-    .update({ status: novoStatus, updated_at: new Date().toISOString() })
-    .eq("id", args.receivableId);
-  return { ok: true, pagamentoId: (novo as unknown as { id: string }).id, jaExistia: false, novoStatus };
+    .select("status")
+    .eq("organization_id", args.orgId)
+    .eq("id", args.receivableId)
+    .maybeSingle();
+  return {
+    ok: true,
+    pagamentoId: (novo as unknown as { id: string }).id,
+    jaExistia: false,
+    novoStatus: ((atual as { status?: StatusRecebivelGravado } | null)?.status ??
+      novoStatus) as StatusRecebivelGravado,
+  };
 }
 
 /** Estorna um recebimento e recalcula o status (nunca deixa pago fantasma). */
@@ -323,18 +355,17 @@ export async function estornarPagamento(
     status: StatusRecebivelGravado;
   } | null;
   if (recebivel && recebivel.status !== "cancelado") {
-    const { data: pagos } = await admin
-      .from("financial_payments")
-      .select("valor_cents")
-      .eq("organization_id", args.orgId)
-      .eq("receivable_id", receivableId);
-    const total = somarPagamentos((pagos ?? []) as { valor_cents: number }[]);
-    const novoStatus: StatusRecebivelGravado =
-      total >= recebivel.valor_original_cents ? "pago" : total > 0 ? "parcial" : "aberto";
-    await admin
+    // Trigger 0314 recalcula no DELETE; lemos o estado final em vez de competir
+    // com ele. Estorno concorrente com recebimento não deixa status atrasado.
+    const { data: atual } = await admin
       .from("financial_receivables")
-      .update({ status: novoStatus, updated_at: new Date().toISOString() })
-      .eq("id", receivableId);
+      .select("status")
+      .eq("organization_id", args.orgId)
+      .eq("id", receivableId)
+      .maybeSingle();
+    const novoStatus =
+      ((atual as { status?: StatusRecebivelGravado } | null)?.status ??
+        recebivel.status) as StatusRecebivelGravado;
     return { ok: true, novoStatus };
   }
   return { ok: true, novoStatus: recebivel?.status ?? "aberto" };

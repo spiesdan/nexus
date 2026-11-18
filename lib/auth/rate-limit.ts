@@ -138,6 +138,19 @@ export const AUTH_LIMITS = {
   signup: { ip: 20, windowSec: 3600 },
   reset: { ip: 30, id: 3, windowSec: 3600 },
   invite_accept: { ip: 60, windowSec: 3600 },
+  /**
+   * Código TOTP (6 dígitos). O contador por COOKIE do `verifyMfa` é burlável:
+   * quem apaga o cookie recomeça do zero. Este teto é por USUÁRIO (hash do id)
+   * e por IP, independente do navegador — 10 tentativas em 5 min cobre o
+   * usuário legítimo que erra a digitação e barra a varredura de 10^6 códigos.
+   */
+  mfa: { ip: 30, id: 10, windowSec: 300 },
+  /**
+   * Código de recuperação (8 caracteres). Sem limite, um ataque distribuído
+   * tenta o espaço inteiro; o erro devolvido é genérico (nunca revela se o
+   * e-mail existe), e o balde por identificador usa o hash do e-mail.
+   */
+  recovery_code: { ip: 20, id: 5, windowSec: 900 },
 } satisfies Record<string, AuthRateLimits>;
 
 export const __LOGIN_IP_DEFAULT_PARA_TESTE = LOGIN_IP_DEFAULT;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { sql } from "./gov-helpers";
+import { TABELAS_PROVADAS_AQUI } from "./f17-tabelas-provadas";
 import { TABLES } from "./rls-isolation.test";
 
 /**
@@ -209,6 +210,222 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "vê 0 linhas da org A, `writeCountAs` recusa escrita cross-org e " +
       "viewer não escreve nem na própria org (migration 0311).",
   },
+  // F-17 — 39 tabelas que estavam em DEBITO_CONHECIDO e ganharam prova
+  // comportamental real (JWT simulado + contagem cross-org + controle positivo)
+  // em rls-camadas-restantes-do-debito.test.ts. A lista vive em módulo próprio
+  // para os dois arquivos lerem a MESMA fonte.
+  ...TABELAS_PROVADAS_AQUI.map((tabela) => ({
+    tabela,
+    razao:
+      "tests/invariants/rls-camadas-restantes-do-debito.test.ts — admin da org D " +
+      "lê 0 linhas da org E e ≥1 da própria org, por tabela (F-17).",
+  })),
+  {
+    tabela: "agent_case_events",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "agent_cases",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_agent_runs",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_agent_versions",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_agents",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_budgets",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_chunks",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_faq_items",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_invocations",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_knowledge_sources",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_knowledge_versions",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_purpose_bindings",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "ai_router_members",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "api_audit_log",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "attendant_availability",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "calendar_oauth_nonces",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — a policy é " +
+      "`using (false)` e o authenticated não tem SELECT: nonce de OAuth é " +
+      "service role. A prova é o acesso negado, mais forte que contar org.",
+  },
+  {
+    tabela: "channel_session_warmup",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "conversation_assignment_events",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "crm_lead_activities",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "crm_lead_links",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "crm_lead_reactivations",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "crm_lead_risk_states",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "demanda_conversas",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "demandas",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "event_log",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "idempotency_keys",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "incidents",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — policy " +
+      "`platform_admin_only_incidents`: admin de tenant lê 0 nas DUAS orgs; " +
+      "a leitura de plataforma é provada nos testes de admin.",
+  },
+  {
+    tabela: "lgpd_requests",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "merge_queue",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "nuvemshop_products",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "orders",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "org_memory_pointers",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "storage_redaction_queue",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
+  {
+    tabela: "webhook_events_log",
+    razao:
+      "tests/invariants/f17-restantes-do-debito.test.ts — admin da org D lê " +
+      "0 linhas da org E e ≥1 da própria org, com seed nas duas orgs.",
+  },
 ];
 
 /**
@@ -217,88 +434,7 @@ const PROVA_PROPRIA: readonly Excecao[] = [
  * aqui. Tabela nova entra em `TABLES` (rls-isolation.test.ts) com teste real,
  * ou em `PROVA_PROPRIA` acima, citando o arquivo que prova.
  */
-const RAZAO_DEBITO_CONHECIDO =
-  "sem teste comportamental (JWT simulado + contagem cross-org) em nenhum " +
-  "arquivo no dia em que esta varredura nasceu (2026-08-27); relrowsecurity " +
-  "= true confirmado pela própria varredura, mas isso NÃO é prova de " +
-  "isolamento (ver cabeçalho do arquivo). Dívida herdada, não introduzida " +
-  "por esta mudança — não é declaração de que a tabela está segura.";
-
-const DEBITO_CONHECIDO: readonly Excecao[] = [
-  "agent_case_events",
-  "agent_cases",
-  "agent_inbox_items",
-  "ai_agent_runs",
-  "ai_agent_versions",
-  "ai_agents",
-  "ai_budgets",
-  "ai_chunks",
-  "ai_faq_items",
-  "ai_invocations",
-  "ai_knowledge_sources",
-  "ai_knowledge_versions",
-  "ai_provider_credentials",
-  "ai_purpose_bindings",
-  "ai_router_members",
-  "api_audit_log",
-  "api_tokens",
-  "attendant_availability",
-  "before_send_traces",
-  "calendar_oauth_nonces",
-  "channel_knobs",
-  "channel_session_health",
-  "channel_session_warmup",
-  "channel_sessions",
-  "conversation_assignment_events",
-  "conversation_notes",
-  "crm_lead_activities",
-  "crm_lead_links",
-  "crm_lead_reactivations",
-  "crm_lead_risk_states",
-  "crm_lead_scores",
-  "crm_pipelines",
-  "crm_stages",
-  "cron_jobs",
-  "demanda_conversas",
-  "demandas",
-  "disclosure_template_pointers",
-  "disclosure_template_versions",
-  "event_log",
-  "flywheel_distiller_proposals",
-  "flywheel_judge_verdicts",
-  "idempotency_keys",
-  "incidents",
-  "job_queue",
-  "judge_alignment_pool",
-  "lead_checkpoints",
-  "lead_notes",
-  "lead_state",
-  "lead_state_transitions",
-  "lgpd_requests",
-  "llm_calls",
-  "merge_queue",
-  "message_templates",
-  "metrics",
-  "nuvemshop_products",
-  "orders",
-  "org_memory_pointers",
-  "outbound_copies",
-  "pacing_ledger",
-  "playbook_pointers",
-  "playbook_versions",
-  "promise_table_pointers",
-  "promise_table_versions",
-  "reentry_knob_pointers",
-  "reentry_knob_versions",
-  "reentry_template_pointers",
-  "reentry_template_versions",
-  "send_ledger",
-  "skill_pointers",
-  "skill_versions",
-  "storage_redaction_queue",
-  "tenant_integrations",
-  "webhook_events_log",
-].map((tabela) => ({ tabela, razao: RAZAO_DEBITO_CONHECIDO }));
+const DEBITO_CONHECIDO: readonly Excecao[] = [];
 
 interface TabelaOrg {
   readonly tabela: string;

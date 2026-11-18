@@ -28547,6 +28547,130 @@ revoke execute on function public.fn_conversas_contagens(uuid, uuid, text[], tex
 grant execute on function public.fn_conversas_contagens(uuid, uuid, text[], text[]) to authenticated, service_role;
 
 -- ============================================================================
+-- 0314 — teto do recebível: garantia da TRANSAÇÃO, não da leitura do app.
+-- Ver supabase/migrations/20261121120000_0314_saldo_do_recebivel.sql.
+--
+-- A leitura seguida de INSERT permitia dois pagamentos concorrentes com chaves
+-- diferentes somarem acima do valor original. O BEFORE trava o recebível e
+-- recusa o excesso; o AFTER recalcula `aberto`/`parcial`/`pago` na mesma
+-- transação. Regra de negócio inalterada (`pagamento > saldo` = erro).
+-- ============================================================================
+create or replace function private.fn_financial_payment_valida_saldo()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_original bigint;
+  v_status text;
+  v_total bigint;
+begin
+  select r.valor_original_cents, r.status
+    into v_original, v_status
+    from public.financial_receivables r
+   where r.id = new.receivable_id
+     and r.organization_id = new.organization_id
+   for update;
+
+  if not found then
+    raise exception 'financial_payment_recebivel_nao_encontrado'
+      using errcode = '23503';
+  end if;
+
+  if v_status = 'cancelado' then
+    raise exception 'financial_payment_recebivel_fechado'
+      using errcode = '23514';
+  end if;
+
+  select coalesce(sum(p.valor_cents), 0)
+    into v_total
+    from public.financial_payments p
+   where p.organization_id = new.organization_id
+     and p.receivable_id = new.receivable_id
+     and p.id <> new.id;
+
+  if v_total + new.valor_cents > v_original then
+    raise exception 'financial_payment_acima_do_saldo'
+      using errcode = '23514';
+  end if;
+
+  return new;
+end;
+$$;
+
+create or replace function private.fn_financial_payment_atualiza_status()
+returns trigger
+language plpgsql
+as $$
+declare
+  v_org uuid;
+  v_receivable uuid;
+  v_original bigint;
+  v_status text;
+  v_total bigint;
+  v_novo text;
+begin
+  if tg_op = 'DELETE' then
+    v_org := old.organization_id;
+    v_receivable := old.receivable_id;
+  else
+    v_org := new.organization_id;
+    v_receivable := new.receivable_id;
+  end if;
+
+  select r.valor_original_cents, r.status
+    into v_original, v_status
+    from public.financial_receivables r
+   where r.id = v_receivable
+     and r.organization_id = v_org
+   for update;
+
+  if not found then
+    return null;
+  end if;
+
+  if v_status = 'cancelado' then
+    return null;
+  end if;
+
+  select coalesce(sum(p.valor_cents), 0)
+    into v_total
+    from public.financial_payments p
+   where p.organization_id = v_org
+     and p.receivable_id = v_receivable;
+
+  v_novo := case
+    when v_total >= v_original then 'pago'
+    when v_total > 0 then 'parcial'
+    else 'aberto'
+  end;
+
+  if v_novo <> v_status then
+    update public.financial_receivables
+       set status = v_novo,
+           updated_at = now()
+     where id = v_receivable
+       and organization_id = v_org;
+  end if;
+
+  return null;
+end;
+$$;
+
+revoke all on function private.fn_financial_payment_valida_saldo() from public, anon;
+revoke all on function private.fn_financial_payment_atualiza_status() from public, anon;
+grant execute on function private.fn_financial_payment_valida_saldo() to authenticated, service_role;
+grant execute on function private.fn_financial_payment_atualiza_status() to authenticated, service_role;
+
+drop trigger if exists financial_payments_valida_saldo on public.financial_payments;
+create trigger financial_payments_valida_saldo
+  before insert or update on public.financial_payments
+  for each row execute function private.fn_financial_payment_valida_saldo();
+
+drop trigger if exists financial_payments_atualiza_status on public.financial_payments;
+create trigger financial_payments_atualiza_status
+  after insert or update or delete on public.financial_payments
+  for each row execute function private.fn_financial_payment_atualiza_status();
+
 -- ============================================================================
 -- 0315 — NEXUS SENTINEL: ocorrências, histórico e estado das varreduras.
 -- Ver supabase/migrations/20261121130000_0315_sentinel_ocorrencias.sql.
@@ -29846,3 +29970,18 @@ comment on column public.llm_calls.tool_calls is
 
 comment on column public.llm_calls.sources_meta is
   'Citações do provedor em forma agregada: {total, hosts:[...]} (0312). Sem título nem URL completa.';
+
+-- ============================================================================
+-- 0313 — índice da JANELA de mensagens por organização.
+-- Ver supabase/migrations/20261120120000_0313_indice_janela_de_mensagens.sql.
+--
+-- A janela (`organization_id` + `created_at`) não tinha índice que a cobrisse:
+-- o único por org em `messages` é PARCIAL por status. Medido com 200.000 linhas:
+-- 25–54 ms → 5,7–19 ms. `create index` sem `concurrently` porque o baseline é
+-- aplicado por `psql` e a cadeia é replayada dentro de transação.
+-- ============================================================================
+create index if not exists messages_org_created_idx
+  on public.messages (organization_id, created_at desc);
+
+comment on index public.messages_org_created_idx is
+  'Janela de mensagens por organização (0313). Cobre count/list por org + período — usado por /admin/usage e pelas contagens do inbox. Sem ele: 25–54 ms em 200k linhas; com: 5,7–19 ms (medido em 17/11/2026).';

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   dividirParcelas,
+  erroDePagamentoDoBanco,
   prazosDaCondicao,
   situacaoDe,
   somarPagamentos,
@@ -44,6 +45,23 @@ describe("situacaoDe", () => {
     expect(vencido.situacao).toBe("vencido");
     expect(vencido.diasAtraso).toBe(3);
     expect(situacaoDe({ ...base, status: "cancelado" }, [], "2026-09-08").situacao).toBe("cancelado");
+  });
+});
+
+describe("erroDePagamentoDoBanco", () => {
+  it("o trigger 0314 vira 422, não 500: mesma resposta da validação em memória", () => {
+    expect(erroDePagamentoDoBanco({ message: "financial_payment_acima_do_saldo" })).toBe("acima_do_saldo");
+    expect(erroDePagamentoDoBanco({ message: "financial_payment_recebivel_fechado" })).toBe(
+      "recebivel_fechado",
+    );
+    expect(erroDePagamentoDoBanco({ message: "financial_payment_recebivel_nao_encontrado" })).toBe(
+      "nao_achado",
+    );
+  });
+
+  it("erro desconhecido continua erro interno (não mascara falha de infraestrutura)", () => {
+    expect(erroDePagamentoDoBanco({ code: "57P01", message: "terminating connection" })).toBeNull();
+    expect(erroDePagamentoDoBanco(null)).toBeNull();
   });
 });
 
