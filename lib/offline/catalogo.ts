@@ -89,6 +89,31 @@ export async function sincronizarCatalogo(
   const produtos = await baixarProdutos(buscar);
   const contatos = await baixarContatos(buscar);
   const tabelas = await baixarTabelas(buscar);
+  return gravarCatalogo(db, { produtos, contatos, tabelas }, agora);
+}
+
+interface TabelaEmCache {
+  id: string;
+  nome: string;
+  desconto_pct: number;
+  itens: unknown[];
+}
+
+/**
+ * A TROCA — uma função só, para as duas portas (sessão e dispositivo).
+ *
+ * Separar o DOWNLOAD da GRAVAÇÃO é o que impede as duas rotas de divergirem na
+ * parte que importa: o `DELETE` antes de cada `INSERT` (troca, não mescla) e o
+ * carimbo no fim. Um caminho que esquecesse o `DELETE` deixaria produto
+ * desativado vendável no aparelho; outro que gravasse antes de baixar tudo
+ * apagaria o catálogo quando a rede caísse no meio.
+ */
+export async function gravarCatalogo(
+  db: Db,
+  dados: { produtos: ProdutoEmCache[]; contatos: ContatoEmCache[]; tabelas: TabelaEmCache[] },
+  agora: () => string = () => new Date().toISOString(),
+): Promise<{ produtos: number; contatos: number; tabelas: number }> {
+  const { produtos, contatos, tabelas } = dados;
 
   await db.execute(`DELETE FROM catalogo_produtos`);
   for (const p of produtos) {
@@ -131,6 +156,87 @@ export async function sincronizarCatalogo(
   );
 
   return { produtos: produtos.length, contatos: contatos.length, tabelas: tabelas.length };
+}
+
+/**
+ * O CATÁLOGO PELO TOKEN DO APARELHO — o caminho do shell.
+ *
+ * Uma rota só (`/api/v1/device/catalog`), com contatos paginados por cursor.
+ * Produtos e tabelas vêm na primeira página; as seguintes trazem só contatos,
+ * e o acumulador junta tudo antes de gravar — se qualquer página falhar, o
+ * catálogo antigo fica intacto (o `gravarCatalogo` só roda no fim).
+ *
+ * Chave ausente é erro, não `?? []` — a lição de F-MOB-9: 200 sem lista não
+ * pode apagar o aparelho.
+ */
+export async function sincronizarCatalogoDoDispositivo(
+  db: Db,
+  buscar: GetJson,
+  agora: () => string = () => new Date().toISOString(),
+): Promise<{ produtos: number; contatos: number; tabelas: number }> {
+  const produtos: ProdutoEmCache[] = [];
+  const contatos: ContatoEmCache[] = [];
+  const tabelas: TabelaEmCache[] = [];
+  let cursor: string | null = null;
+
+  // Teto de segurança: 100 páginas × 200 = 20.000 contatos. Sem ele, um cursor
+  // quebrado em loop baixaria para sempre e o vendedor ficaria sem bateria.
+  for (let pagina = 0; pagina < 100; pagina++) {
+    const url = `/api/v1/device/catalog${
+      cursor ? `?cursor=${encodeURIComponent(cursor)}` : ""
+    }`;
+    const r = await buscar(url);
+    if (r.status !== 200) throw new Error(`catálogo: servidor respondeu ${r.status}`);
+
+    const corpo = (await r.corpo()) as {
+      data?: { produtos?: unknown; contatos?: unknown; tabelas?: unknown };
+      meta?: { cursor?: string | null; has_more?: boolean };
+    };
+    const dados = corpo?.data;
+    if (!dados || !Array.isArray(dados.contatos)) {
+      throw new Error("catálogo: resposta sem lista de contatos");
+    }
+
+    for (const c of dados.contatos as Array<Record<string, unknown>>) {
+      contatos.push({
+        id: String(c.id),
+        nome: String(c.nome ?? ""),
+        documento: (c.documento as string | null) ?? null,
+        cidade: (c.cidade as string | null) ?? null,
+        limite_cents: c.limite_cents != null ? Number(c.limite_cents) : null,
+      });
+    }
+
+    if (pagina === 0) {
+      if (!Array.isArray(dados.produtos) || !Array.isArray(dados.tabelas)) {
+        throw new Error("catálogo: primeira página sem produtos ou tabelas");
+      }
+      for (const p of dados.produtos as Array<Record<string, unknown>>) {
+        produtos.push({
+          id: String(p.id),
+          codigo: (p.codigo as string | null) ?? null,
+          nome: String(p.nome ?? ""),
+          preco_cents: Number(p.preco_cents ?? 0),
+          controla_estoque: Boolean(p.controla_estoque),
+          quantidade: p.quantidade != null ? Number(p.quantidade) : null,
+          ativo: p.ativo !== false,
+        });
+      }
+      for (const t of dados.tabelas as Array<Record<string, unknown>>) {
+        tabelas.push({
+          id: String(t.id),
+          nome: String(t.nome ?? ""),
+          desconto_pct: Number(t.desconto_pct ?? 0),
+          itens: Array.isArray(t.itens) ? t.itens : [],
+        });
+      }
+    }
+
+    if (!corpo.meta?.has_more || !corpo.meta?.cursor) break;
+    cursor = corpo.meta.cursor;
+  }
+
+  return gravarCatalogo(db, { produtos, contatos, tabelas }, agora);
 }
 
 async function baixarProdutos(buscar: GetJson): Promise<ProdutoEmCache[]> {

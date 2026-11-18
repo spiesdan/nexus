@@ -384,3 +384,53 @@ rota, e o fato de `/api/v1/offline-devices` (gestão) NÃO ser público.
 
 `pnpm test:db` (sem os invariantes de B-6 ainda), build do APK, e qualquer validação em aparelho.
 Nada de produção. A suíte completa não rodou nesta saída (ordem de teto de concorrência).
+
+### 9.5 B-2, B-3 e B-4 entregues — com prova no emulador (18/11/2026)
+
+| Fatia | O que entrou | Teste |
+|---|---|---|
+| **B-2** | `POST /api/v1/device/orders`: Bearer do aparelho + `offline:pedidos:write` + papel ao vivo; recusa `ignorar_estoque/credito`; chama `criarPedidoComercial` (mesma regra) com `chave_sincronizacao`; 200 em `ja_existia`; audit com `device_id`. | `offline-outbox-sync.test.ts`: caminho `/device/orders` e 401 que **mantém a linha** `pendente`. |
+| **B-3** | `GET /api/v1/device/catalog`: escopo de catálogo, contatos paginados (200/página), produtos 500 + tabelas 100 na 1ª página, sem CPF/e-mail/telefone. | `offline-catalogo.test.ts`: acumula páginas e grava uma vez; resposta sem lista **não apaga** o aparelho. |
+| **B-4** | `lib/offline/credencial.ts` (meta + código `NEXUS1.<base64url({u,t})>`), `lib/offline/http.ts` (CapacitorHttp nativo, fetch no navegador, Bearer só no header, timeout 30 s), `lib/offline/catalogo.ts` (`gravarCatalogo` compartilhado + sync do dispositivo), `drenarFila` com `caminhoDoPedido`, shell com pareamento/estados/backoff/401 sem descartar. | `pareamento.test.ts` (5) + `mobile-offline.spec.ts` (7/7, Chromium/Pixel 7) + fluxo Maestro abaixo. |
+
+**Correções de UX achadas no aparelho (não apareciam no navegador):**
+
+- `adiado` (timeout/DNS/5xx) não gerava aviso — o dreno trata por item e voltava normal; a tela ficava
+  idêntica a "nada aconteceu". Agora há aviso próprio. Medido com fila de 1 e host `.invalid`.
+- O aviso morava **abaixo** do botão "Enviar agora" e a falha existia fora da tela. Subiu para o topo
+  (logo abaixo do sinal).
+- O campo do código guardava o token visível quando a confirmação falhava por rede. Agora é limpo ao
+  salvar, mesmo em `sem_rede`.
+- `appName`/`strings.xml` do APK deixaram de ser "Bill Higiene": o rótulo é **"Pedidos offline"** e a
+  URL vem do pareamento. O artefato passou a ser genérico de verdade (white-label).
+
+**Prova no emulador** (AVD `nexus`, Pixel 7 arm64, Android 36, Maestro 2.12.1; APK debug local):
+
+```bash
+export JAVA_HOME="$HOME/android-sdk/jdk21/jdk-21.0.13+9/Contents/Home"
+export ANDROID_HOME="$HOME/android-sdk"
+export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$HOME/.maestro/bin:$PATH"
+pnpm mobile:build && pnpm exec cap sync android && (cd android && ./gradlew assembleDebug)
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+maestro test tests/e2e-mobile/jornada-pareamento.yaml   # exit 0
+```
+
+Fluxo: sem credencial + fila (1) → cola código com host `https://sistema.invalid` → estado
+`sem rede — não deu para confirmar o pareamento` e "Credencial salva" → "Enviar agora" → aviso
+"Sem conexão com o sistema (sem conexão)… os pedidos continuam na fila" → **`(1)` e `OFF-0001`
+intactos**. Banco conferido após o teste: `status=pendente, tentativas=2,
+ultimo_erro=Unable to resolve host "sistema.invalid"`.
+Evidências: `docs/auditoria/evidencias/mobile-b-2026-11-18/` (3 capturas).
+
+**Ainda não provado no aparelho:** dreno **aceito** de ponta a ponta (exige instalação real com
+banco: o host do teste é deliberadamente inalcançável), 401/403 reais (`token_revoked`) e o catálogo
+baixado pelo token. `[!]` — o caminho de rede/DB do servidor está coberto por unit/invariante, não
+pelo emulador.
+
+### 9.6 O que falta
+
+- **B-5** UI `/app/settings/devices` (lista, criar com vendedor via `/team/assignable`, código de
+  pareamento uma vez, revogar) + entrada no `lib/navigation/registry.ts`.
+- **B-6** `tests/invariants/offline-devices-rls.test.ts` (dois tenants, `anon`, hash único, CHECKs)
+  e `pnpm test:db` uma vez.
+- **B-7** dreno aceito e `token_revoked` no aparelho real (ver acima).

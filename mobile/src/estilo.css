@@ -206,3 +206,15 @@ input[type="number"] {
   padding: 8px 12px;
   border-width: 1px;
 }
+
+/* Pareamento: o campo e o rótulo ficam no mesmo cartão dos botões, e o
+   vendedor precisa ler o rótulo antes de colar (é o que explica que o código
+   vem do sistema, não deste aparelho). */
+.cartao label {
+  display: block;
+  margin: 10px 0 4px;
+}
+
+#codigo {
+  margin-bottom: 10px;
+}

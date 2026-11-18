@@ -1,0 +1,44 @@
+appId: tech.billhigiene.crm
+---
+# PAREAmento + falha de envio sem perder a fila.
+# Pré-condição: catálogo semeado, 1 pedido pendente, SEM credencial.
+# O host do código é `sistema.invalid` (TLD reservado): a chamada falha por
+# DNS, nunca alcança instalação de ninguém.
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 15000
+- assertVisible: "Pedidos offline"
+- assertVisible:
+    text: ".*não pareado.*"
+- assertVisible:
+    text: ".*\\(1\\).*"
+- takeScreenshot: "10-nao-pareado-com-fila"
+
+- tapOn:
+    id: "codigo"
+- inputText: "NEXUS1.eyJ1IjoiaHR0cHM6Ly9zaXN0ZW1hLmludmFsaWQiLCJ0Ijoibm9kX2FhYWFhYWFhXzAxMjM0NTY3ODlhYmNkZWYwMTIzNDU2Nzg5YWJjZGVmMDEyMzQ1NjcifQ"
+- hideKeyboard
+- tapOn:
+    id: "btn-parear"
+- waitForAnimationToEnd:
+    timeout: 20000
+- assertVisible:
+    text: ".*sem rede.*"
+- assertVisible:
+    text: ".*Credencial salva.*"
+- takeScreenshot: "11-credencial-salva-sem-rede"
+
+# Enviar com credencial mas host inalcançável: aviso PRÓPRIO e fila intacta.
+- tapOn:
+    id: "btn-enviar"
+# O host é `.invalid`: o Android tenta resolver e desiste em segundos, mas o
+# CapacitorHttp pode segurar o POST até o timeout. Espera longa de propósito —
+# é o caso real (3G ruim), não uma pausa de animação.
+- extendedWaitUntil:
+    visible: ".*Sem conexão com o sistema.*"
+    timeout: 60000
+- assertVisible:
+    text: ".*\\(1\\).*"
+- assertVisible: "OFF-0001"
+- takeScreenshot: "12-falha-de-envio-fila-intacta"
