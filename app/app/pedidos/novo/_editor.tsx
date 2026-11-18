@@ -721,6 +721,9 @@ export function OrderEditor({
         onCreated={(c) => {
           const novo: ContatoOpcao = {
             id: c.id,
+            // O cadastro inline pode nascer com fantasia; o seletor a usa como
+            // nome principal (regra de 18/11/2026).
+            fantasia: (c as { fantasia?: string | null }).fantasia ?? null,
             name: c.name,
             display_name: c.display_name,
             phone_number: c.phone_number,

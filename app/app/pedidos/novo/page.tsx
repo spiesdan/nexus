@@ -79,6 +79,7 @@ export default async function NovoPedidoPage() {
       contatos={
         (contatos ?? []) as unknown as {
           id: string;
+          fantasia: string | null;
           display_name: string | null;
           name: string | null;
           phone_number: string | null;
