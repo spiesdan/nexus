@@ -63,7 +63,7 @@
       "col": 1,
       "type": "lib",
       "label": "lib/sentinel/coleta.ts",
-      "sublabel": "12 consultas com organization_id explícito e teto; falha isola e trunca"
+      "sublabel": "13 consultas com organization_id explícito e teto; falha isola e trunca"
     },
     {
       "id": "entidades",

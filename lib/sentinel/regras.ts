@@ -45,7 +45,7 @@ export const REGRAS: readonly Regra[] = [
   {
     id: "fiscal.nota_duplicada_por_pedido",
     categoria: "fiscal",
-    descricao: "Mais de uma nota viva para o mesmo pedido: risco de documento fiscal duplicado.",
+    descricao: "Mais de uma nota viva para o mesmo pedido (principal ou secundário do agrupamento).",
     detectar: fiscal.notasDuplicadasPorPedido,
   },
   {

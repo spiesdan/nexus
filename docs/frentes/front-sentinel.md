@@ -32,7 +32,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.nota_pendente_antiga` | `pendente` criada há > 24 h | media |
 | `fiscal.nota_sem_vinculo` | autorizada com `order_id` nulo | media |
 | `fiscal.nota_sem_chave` | autorizada sem `chave_acesso` | alta |
-| `fiscal.nota_duplicada_por_pedido` | 2+ notas vivas no mesmo pedido | crítica |
+| `fiscal.nota_duplicada_por_pedido` | 2+ notas vivas no mesmo pedido (principal **ou** secundário de agrupamento) | crítica |
 | `fiscal.divergencia_valor_nota` | total da nota ≠ total do pedido | alta |
 | `fiscal.nota_autorizada_pedido_nao_faturado` | nota autorizada + pedido em rascunho/análise/aprovado | media |
 | `fiscal.pedido_com_nf_sem_nota` | `exige_nf` + status avançado sem nota ativa (janela 1 h/24 h) | crítica/alta |
@@ -132,7 +132,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
   transição e chama `fn_sentinel_aplicar_mudanca` com service role: a máquina de
   estados não é contornável com a anon key.
 - Coleta usa service role e filtra `organization_id` explicitamente em **todas**
-  as 12 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
+  as 13 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
   body.
 - Evidência não carrega conversa, documento, telefone ou e-mail completo. Erro
   de terceiro passa por `higienizar()` (e-mail → `[email]`, sequência de dígitos
@@ -155,7 +155,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/regras-operacao.ts` | 15 detectores de operação/financeiro/campanha |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
-| `lib/sentinel/coleta.ts` | 12 consultas com teto e filtro de org |
+| `lib/sentinel/coleta.ts` | 13 consultas com teto e filtro de org |
 | `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
 | `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |

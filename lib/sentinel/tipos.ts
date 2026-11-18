@@ -112,6 +112,13 @@ export interface NotaFiscal {
   updated_at: string;
 }
 
+/** Pedidos que compõem a nota (0294): o principal fica em `invoices.order_id`
+ * e os secundários nesta tabela. */
+export interface NotaPedido {
+  invoice_id: string;
+  order_id: string;
+}
+
 export interface Pedido {
   id: string;
   numero: number;
@@ -238,6 +245,7 @@ export interface Snapshot {
   organizationId: string;
   agoraMs: number;
   notas: NotaFiscal[];
+  notasPedidos: NotaPedido[];
   pedidos: Pedido[];
   jobsFiscais: JobFiscal[];
   sincronizacoesFiscais: SyncFiscal[];
@@ -265,6 +273,7 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     organizationId,
     agoraMs,
     notas: [],
+    notasPedidos: [],
     pedidos: [],
     jobsFiscais: [],
     sincronizacoesFiscais: [],
