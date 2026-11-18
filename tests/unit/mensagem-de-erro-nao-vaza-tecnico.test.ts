@@ -49,7 +49,7 @@ describe("erro do produto mantém o texto do produto", () => {
       422,
       "validation_error",
       undefined,
-      undefined,
+      "req-1",
       "Quantidade inválida.",
     );
     expect(ehErroDeRede(erro)).toBe(false);
