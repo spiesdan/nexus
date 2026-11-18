@@ -1279,7 +1279,7 @@ export function CampanhaWizard({
                         key={chaveDaCidade(c)}
                         type="button"
                         onClick={() => removerCidade(c)}
-                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent-ink"
                         title={t("Remover cidade")}
                       >
                         {rotuloDaCidade(c)}
@@ -1416,7 +1416,7 @@ export function CampanhaWizard({
                         key={c.busca}
                         type="button"
                         onClick={() => alternarCategoria(c.busca)}
-                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent"
+                        className="inline-flex items-center gap-1 rounded-full border bg-accent-soft px-2.5 py-1 text-xs text-accent-ink"
                         title={t("Remover categoria")}
                       >
                         {c.rotulo}

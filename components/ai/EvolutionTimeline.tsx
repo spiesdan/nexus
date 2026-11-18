@@ -13,7 +13,7 @@ import { useT } from "@/hooks/i18n/useT";
  * três coisas diferentes a fazer se ele quiser mais.
  */
 const TIPOS: Record<TimelineItem["kind"], { rotulo: string; Icone: typeof Brain; cor: string }> = {
-  memory: { rotulo: "Regra que você ensinou", Icone: Brain, cor: "text-accent" },
+  memory: { rotulo: "Regra que você ensinou", Icone: Brain, cor: "text-accent-ink" },
   proposal: { rotulo: "Melhoria que você aprovou", Icone: Lightbulb, cor: "text-warning-fg" },
   skill: { rotulo: "Habilidade instalada", Icone: PuzzlePiece, cor: "text-info-fg" },
 };

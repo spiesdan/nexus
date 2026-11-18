@@ -92,7 +92,7 @@ export function ScoreSlot({ probability, band, reason, factors }: ScoreSlotProps
                 <span
                   className={cn(
                     "shrink-0 tabular-nums",
-                    f.pontos > 0 ? "text-accent" : "text-warning-fg",
+                    f.pontos > 0 ? "text-accent-ink" : "text-warning-fg",
                   )}
                 >
                   {f.pontos > 0 ? "+" : "−"}

@@ -29,7 +29,7 @@ export const NODE_VISUALS: Record<NodeType, NodeVisual> = {
     type: "trigger",
     paletteLabel: "Gatilho",
     icon: Play,
-    chipClassName: "bg-accent-soft text-accent",
+    chipClassName: "bg-accent-soft text-accent-ink",
     borderClassName: "border-l-accent-500",
     defaultLabel: "Início do fluxo",
     defaultConfig: () => ({}),

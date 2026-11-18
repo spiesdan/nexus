@@ -69,7 +69,7 @@ const COR_DO_STATUS: Record<string, string> = {
   pending: "border-transparent bg-success-bg text-success-fg",
   claimed: "border-transparent bg-success-bg text-success-fg",
   ai_handling: "border-transparent bg-success-bg text-success-fg",
-  resolved: "border-transparent bg-accent-soft text-accent",
+  resolved: "border-transparent bg-accent-soft text-accent-ink",
   closed: "border-border text-muted-foreground",
   archived: "border-border text-muted-foreground",
 };

@@ -233,7 +233,7 @@ export function InboxFilters({ value, onChange }: Props) {
                     existe para responder, e em cinza ele disputava atenção com
                     o próprio rótulo (referência: `.tabs b` em `--brand`). */}
                 {typeof count === "number" && count > 0 && (
-                  <span className="text-[10px] font-bold text-accent tabular-nums">{count}</span>
+                  <span className="text-[10px] font-bold text-accent-ink tabular-nums">{count}</span>
                 )}
               </button>
             );

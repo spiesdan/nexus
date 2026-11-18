@@ -90,7 +90,7 @@ function ItemDock({
       aria-current={ativo ? "page" : undefined}
       className={cn(
         "flex min-h-[44px] min-w-[56px] flex-col items-center justify-center gap-0.5 rounded-lg px-2",
-        ativo ? "text-accent" : "text-muted-foreground",
+        ativo ? "text-accent-ink" : "text-muted-foreground",
       )}
     >
       <Icon size={20} weight={ativo ? "fill" : "regular"} aria-hidden />

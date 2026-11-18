@@ -46,8 +46,15 @@ const SEMENTES = [
   "#fafafa", "#506d48",
 ] as const;
 
-/** Quantos pares cada tema tem no globals.css de hoje — o piso da vacuidade. */
-const PARES_DE_HOJE = { claro: 18, escuro: 26 } as const;
+/** Quantos pares cada tema tem no globals.css de hoje — o piso da vacuidade.
+ *
+ * 18/26 → 22/32 quando o produto ganhou `--color-accent-ink` (o accent como
+ * TINTA, distinto do accent como preenchimento). O papel novo é um
+ * `var(--color-accent-700)`/`400` e entra na conta como COMPONENTE: 4 pares no
+ * claro (3 superfícies + o soft) e 6 no escuro (o soft translúcido compõe sobre
+ * cada base). Número que sobe aqui é papel novo entrando na régua, não teste
+ * afrouxado. */
+const PARES_DE_HOJE = { claro: 22, escuro: 32 } as const;
 
 const TEMAS = [
   { nome: "claro" as const, seletor: ":root:root" },

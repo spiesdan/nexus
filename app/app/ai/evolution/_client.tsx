@@ -179,7 +179,7 @@ function Vazio({
             <Link
               key={a.href}
               href={a.href}
-              className="text-sm font-medium text-accent underline underline-offset-4"
+              className="text-sm font-medium text-accent-ink underline underline-offset-4"
             >
               {a.label}
             </Link>

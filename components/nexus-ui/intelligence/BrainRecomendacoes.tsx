@@ -51,7 +51,7 @@ function CartaoRecomendacao({ item }: { item: SalesBrainItem }) {
       <div className="flex items-center justify-between gap-2">
         <Link
           href={`/app/contacts/${item.contact_id}`}
-          className="truncate text-sm font-medium text-text hover:text-accent"
+          className="truncate text-sm font-medium text-text hover:text-accent-ink"
         >
           {item.contact_name?.trim() || `${t("Cliente")} ${item.contact_id.slice(0, 8)}`}
         </Link>

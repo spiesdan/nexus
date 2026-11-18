@@ -739,7 +739,7 @@ export function OrderEditor({
         <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
         <Card className="space-y-1 p-4">
           <p className="text-sm">
-            <span className="font-medium text-accent">{nomeOrganizacao || "—"}</span>
+            <span className="font-medium text-accent-ink">{nomeOrganizacao || "—"}</span>
             {(() => {
               const linha = [representada?.razaoSocial, representada?.cnpj]
                 .filter((v): v is string => Boolean(v && v.trim()))

@@ -83,7 +83,7 @@ export function CartaoDaConexaoGoogle({
             <a
               href={linkDeConfiguracao}
               data-testid="ir-configurar-google"
-              className="font-medium text-accent underline underline-offset-2 hover:text-accent-strong"
+              className="font-medium text-accent-ink underline underline-offset-2 hover:text-accent-ink"
             >
               {t("Cadastrar as credenciais do Google")}
             </a>
@@ -94,7 +94,7 @@ export function CartaoDaConexaoGoogle({
               {t("Não é nada que você tenha feito: quem instalou o sistema precisa habilitar a conexão. Até lá a agenda funciona normalmente, só não troca compromissos com o Google.")}
             </p>
             <details className="mt-1">
-              <summary className="cursor-pointer text-xs text-accent">
+              <summary className="cursor-pointer text-xs text-accent-ink">
                 {t("Ver o que falta")}
               </summary>
               <div className="mt-1.5 space-y-1 text-xs leading-4 text-text-muted">

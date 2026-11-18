@@ -210,7 +210,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <span className="mr-1.5 text-accent">1</span> {textos.emitente}
+          <span className="mr-1.5 text-accent-ink">1</span> {textos.emitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -258,7 +258,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <span className="mr-1.5 text-accent">2</span> {textos.enderecoEmitente}
+          <span className="mr-1.5 text-accent-ink">2</span> {textos.enderecoEmitente}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -313,7 +313,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <span className="mr-1.5 text-accent">3</span> {textos.emissaoSefaz}
+          <span className="mr-1.5 text-accent-ink">3</span> {textos.emissaoSefaz}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -353,7 +353,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <span className="mr-1.5 text-accent">4</span> {textos.certificado}
+          <span className="mr-1.5 text-accent-ink">4</span> {textos.certificado}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -421,7 +421,7 @@ export function ConfigFiscal({
 
       <fieldset className="space-y-3">
         <legend className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <span className="mr-1.5 text-accent">5</span> {t("Recebimento de NF-e (entrada)")}
+          <span className="mr-1.5 text-accent-ink">5</span> {t("Recebimento de NF-e (entrada)")}
         </legend>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="flex items-start gap-2 text-sm">

@@ -838,7 +838,7 @@ export function CargaClient({
           <Link
             href={`/app/expedicao/${cargaId}/motorista`}
             aria-label={textos.modoMotorista}
-            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent-soft"
+            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium text-accent-ink transition-colors hover:bg-accent-soft"
           >
             <Truck size={14} aria-hidden />
             {/* No celular o rótulo sai: com ele a barra passava da largura e
@@ -1081,7 +1081,7 @@ export function CargaClient({
                                     href={mapa}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 font-medium text-accent underline underline-offset-4"
+                                    className="inline-flex items-center gap-1 font-medium text-accent-ink underline underline-offset-4"
                                   >
                                     <MapPin size={13} aria-hidden />
                                     {t("Abrir no mapa")}
@@ -1284,7 +1284,7 @@ export function CargaClient({
                                     href={`/api/v1/shipments/${carga.id}/orders/${i.order_id}/proof`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-accent underline underline-offset-4"
+                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-ink underline underline-offset-4"
                                   >
                                     <FileText className="h-3.5 w-3.5" aria-hidden />
                                     {textos.verComprovante}

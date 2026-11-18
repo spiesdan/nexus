@@ -71,7 +71,7 @@ function Linha({ item, aoVivo }: { item: TimelineItemView; aoVivo?: boolean }) {
           {aoVivo && (
             // O que chegou AGORA fica marcado: sem isto ele entraria na lista
             // idêntico ao resto e a chegada seria indistinguível do histórico.
-            <span className="ml-1.5 text-[10px] uppercase tracking-wide text-accent">
+            <span className="ml-1.5 text-[10px] uppercase tracking-wide text-accent-ink">
               {t("agora")}
             </span>
           )}

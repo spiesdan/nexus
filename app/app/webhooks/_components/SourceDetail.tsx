@@ -208,7 +208,7 @@ export function SourceDetail({ source, open, onOpenChange }: Props) {
             </Button>
             {testOk ? (
               <p className="text-sm">
-                <Link href="/app/kanban" className="text-accent underline underline-offset-4">
+                <Link href="/app/kanban" className="text-accent-ink underline underline-offset-4">
                   {t("Ver no Kanban")}
                 </Link>
               </p>

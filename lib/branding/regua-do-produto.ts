@@ -104,6 +104,16 @@ export const REGUA_DO_PRODUTO: Regua = {
         "contra": null
       },
       {
+        "token": "--color-accent-ink",
+        "tipo": "componente",
+        "fonte": {
+          "tipo": "grau",
+          "indice": 7,
+          "alfa": 1
+        },
+        "contra": null
+      },
+      {
         "token": "--ring",
         "tipo": "componente",
         "fonte": {
@@ -240,6 +250,16 @@ export const REGUA_DO_PRODUTO: Regua = {
         "fonte": {
           "tipo": "grau",
           "indice": 3,
+          "alfa": 1
+        },
+        "contra": null
+      },
+      {
+        "token": "--color-accent-ink",
+        "tipo": "componente",
+        "fonte": {
+          "tipo": "grau",
+          "indice": 4,
           "alfa": 1
         },
         "contra": null

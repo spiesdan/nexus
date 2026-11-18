@@ -128,7 +128,7 @@ function colunasAdmin(
       celula: (row) => (
         <Link
           href={`/admin/users/${row.user_id}`}
-          className="text-xs font-medium text-accent hover:underline"
+          className="text-xs font-medium text-accent-ink hover:underline"
         >
           {t("Ver")}
         </Link>

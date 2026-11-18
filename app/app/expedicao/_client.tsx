@@ -432,7 +432,7 @@ export function ExpedicaoClient({
                         ? t("1 parada pela frente")
                         : `${Math.max(0, pr.total - feitas)} ${t("paradas pela frente")}`}
                     </span>
-                    <span className="flex items-center gap-1 text-sm font-medium text-accent">
+                    <span className="flex items-center gap-1 text-sm font-medium text-accent-ink">
                       {t("Abrir rota")}
                       <ArrowRight size={15} aria-hidden />
                     </span>
@@ -494,7 +494,7 @@ export function ExpedicaoClient({
           </span>
           <Link
             href="/app/connections"
-            className="font-medium text-accent underline-offset-4 hover:underline"
+            className="font-medium text-accent-ink underline-offset-4 hover:underline"
           >
             {t("Ver conexões")}
           </Link>

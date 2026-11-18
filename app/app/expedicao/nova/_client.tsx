@@ -496,7 +496,7 @@ export function NovaCargaClient({
                 <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
                   {t("3 · O que vai")}
                 </p>
-                <h2 className="text-sm font-medium text-accent">
+                <h2 className="text-sm font-medium text-accent-ink">
                   {t("Na carga")} ({jaSelecionados.length})
                 </h2>
               </div>

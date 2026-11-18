@@ -251,7 +251,7 @@ export const Composer = forwardRef<ComposerHandle, Props>(function Composer(
             className={cn(
               "border-b-2 px-0 py-1 text-sm font-semibold transition-colors",
               mode === "reply"
-                ? "border-accent text-accent"
+                ? "border-accent text-accent-ink"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
