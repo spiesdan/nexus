@@ -110,6 +110,19 @@ O botão "Enviar agora" existia no HTML do shell e não fazia nada ao ser tocado
 defeito do F-MOB-1 em escala menor (peça visível sem ligação). Agora explica cada estado
 (sem fila, com recusado, sem sinal) ou abre o sistema, que é quem drena.
 
+### F-MOB-8 `[x]` — o Android fazia backup do SQLite com CPF/CNPJ dos clientes
+
+`android/app/src/main/AndroidManifest.xml` nascia com `android:allowBackup="true"` (default do
+template do Capacitor), e o banco `crm-offline` guarda o catálogo de contatos — nome, cidade
+e **documento** — além da fila de pedidos. O sistema operacional copiava isso para a conta
+Google do usuário sem nenhuma decisão do produto; não existe backup como funcionalidade.
+
+Correção: `allowBackup="false"` + `fullBackupContent="false"` + `dataExtractionRules`
+excluindo `database` e `sharedpref` nas duas portas (nuvem **e** aparelho→aparelho — no
+Android 12+, `allowBackup=false` sozinho não bloqueia a segunda). Gate em
+`tests/unit/android-manifest-privacidade.test.ts`. Não validado em aparelho: sem Android
+SDK/aparelho nesta sessão, a prova é a configuração + teste estático.
+
 ### F-MOB-7 `[x]` — toque duplo em "Salvar na fila" enfileirava dois pedidos
 
 Cada clique gerava um UUID novo e enfileirava; a idempotência do servidor não cobre
@@ -198,7 +211,11 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
    de `cap sync`; quem clona precisa rodar o build uma vez. Verificado: `pnpm mobile:build`
    continua gerando `mobile/www/` (agora ignorado).
 6. `[ ]` Notificação nativa (app fechado) não existe; o push web cobre o PWA, não o APK.
-7. `[ ]` Deep link (`tech.billhigiene.crm://`) declarado em `strings.xml` sem
+7. `[~]` A faixa da fila e a faixa de "WhatsApp desconectado" são ambas `sticky top-0` e
+   podem se sobrepor no caso raro (fila pendente + canal caído). Não é falha silenciosa:
+   a de conexão fica por cima (z-50) e a da fila continua logo abaixo ao rolar. Ajuste
+   visual fica para o Agente D, dono do shell.
+8. `[ ]` Deep link (`tech.billhigiene.crm://`) declarado em `strings.xml` sem
    `intent-filter` — não abre nada.
 
 ## 7. Próximas fatias seguras (sem decisão pendente)
