@@ -57,6 +57,7 @@ import {
   Warning,
 } from "@/lib/ui/icons";
 
+import { CorrecaoAprovada } from "./_correcao";
 import type {
   ConfiguracaoSentinelCliente,
   DetalheSentinel,
@@ -648,11 +649,19 @@ export function SentinelClient({
 
                       <p className="mt-3 text-xs text-text-muted">
                         Fontes: {plano.fonte.join(", ")}. Nada é executado automaticamente: aprovar
-                        registra a decisão; a correção continua manual nesta versão.
+                        registra a decisão e, quando a regra tem correção suportada, a execução é
+                        confirmada à parte.
                       </p>
                     </section>
                   );
                 })()}
+
+                {podeGerir ? (
+                  <CorrecaoAprovada
+                    ocorrencia={detalhe.ocorrencia}
+                    onAtualizar={() => abrirDetalhe(detalhe.ocorrencia)}
+                  />
+                ) : null}
 
                 <section>
                   <h3 className="mb-1 font-medium text-text">Evidência</h3>

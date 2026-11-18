@@ -6,12 +6,30 @@
     "subtitle": "detectores determinísticos sobre entidades reais; ocorrência idempotente, histórico append-only e nenhuma escrita no negócio"
   },
   "lanes": [
-    { "id": "gatilho", "label": "Quem aciona" },
-    { "id": "coleta", "label": "Fotografia (service role, org explícita)" },
-    { "id": "deteccao", "label": "Detecção pura" },
-    { "id": "persistencia", "label": "Persistência e idempotência" },
-    { "id": "humano", "label": "Quem decide" },
-    { "id": "saida", "label": "Trilha e retenção" }
+    {
+      "id": "gatilho",
+      "label": "Quem aciona"
+    },
+    {
+      "id": "coleta",
+      "label": "Fotografia (service role, org explícita)"
+    },
+    {
+      "id": "deteccao",
+      "label": "Detecção pura"
+    },
+    {
+      "id": "persistencia",
+      "label": "Persistência e idempotência"
+    },
+    {
+      "id": "humano",
+      "label": "Quem decide"
+    },
+    {
+      "id": "saida",
+      "label": "Trilha e retenção"
+    }
   ],
   "mainPath": [
     "cron",
@@ -200,34 +218,202 @@
       "type": "config",
       "label": "Minimização LGPD",
       "sublabel": "sem conversa/doc/telefone; e-mail mascarado; erro de terceiro higienizado"
+    },
+    {
+      "id": "correcao",
+      "lane": "humano",
+      "col": 2,
+      "type": "route",
+      "label": "POST /sentinel/occurrences/[id]/correcao",
+      "sublabel": "Nível 2 restrito: dry-run, execução aprovada com hash, antes/depois e reversão honesta"
     }
   ],
   "edges": [
-    { "id": "e1", "from": "cron", "to": "killswitch", "label": "liga/desliga instalação" },
-    { "id": "e2", "from": "botao", "to": "killswitch", "label": "liga/desliga org" },
-    { "id": "e3", "from": "killswitch", "to": "executor", "label": "autoriza" },
-    { "id": "e4", "from": "executor", "to": "coleta", "label": "abre a rodada" },
-    { "id": "e5", "from": "coleta", "to": "entidades", "label": "lê com org explícita" },
-    { "id": "e6", "from": "coleta", "to": "snapshot", "label": "monta fotografia" },
-    { "id": "e7", "from": "snapshot", "to": "motor", "label": "entrada pura" },
-    { "id": "e8", "from": "motor", "to": "regras", "label": "percorre registry" },
-    { "id": "e9", "from": "regras", "to": "fiscal", "label": "fiscal" },
-    { "id": "e10", "from": "regras", "to": "operacao", "label": "operação/financeiro/campanha" },
-    { "id": "e11", "from": "motor", "to": "executor", "label": "achados + regras avaliadas + falhas" },
-    { "id": "e12", "from": "executor", "to": "runs", "label": "abre/fecha a rodada" },
-    { "id": "e13", "from": "executor", "to": "registrar", "label": "um achado por chamada" },
-    { "id": "e14", "from": "registrar", "to": "ocorrencias", "label": "upsert idempotente" },
-    { "id": "e15", "from": "registrar", "to": "eventos", "label": "detectada/reafirmada" },
-    { "id": "e16", "from": "ocorrencias", "to": "painel", "label": "lista e detalhe" },
-    { "id": "e17", "from": "painel", "to": "patch", "label": "decisão humana" },
-    { "id": "e18", "from": "patch", "to": "mudanca", "label": "valida e aplica" },
-    { "id": "e19", "from": "mudanca", "to": "ocorrencias", "label": "novo estado" },
-    { "id": "e20", "from": "mudanca", "to": "eventos", "label": "antes/depois" },
-    { "id": "e21", "from": "executor", "to": "audit", "label": "quando há efeito/falha" },
-    { "id": "e22", "from": "executor", "to": "retencao", "label": "manutenção" },
-    { "id": "e23", "from": "retencao", "to": "ocorrencias", "label": "apaga terminais vencidas" },
-    { "id": "e24", "from": "registrar", "to": "lgpd", "label": "evidência mínima" },
-    { "id": "e25", "from": "motor", "to": "recomendacoes", "label": "anexa o plano de cada achado" },
-    { "id": "e26", "from": "recomendacoes", "to": "registrar", "label": "plano persiste com a ocorrência" }
+    {
+      "id": "e1",
+      "from": "cron",
+      "to": "killswitch",
+      "label": "liga/desliga instalação"
+    },
+    {
+      "id": "e2",
+      "from": "botao",
+      "to": "killswitch",
+      "label": "liga/desliga org"
+    },
+    {
+      "id": "e3",
+      "from": "killswitch",
+      "to": "executor",
+      "label": "autoriza"
+    },
+    {
+      "id": "e4",
+      "from": "executor",
+      "to": "coleta",
+      "label": "abre a rodada"
+    },
+    {
+      "id": "e5",
+      "from": "coleta",
+      "to": "entidades",
+      "label": "lê com org explícita"
+    },
+    {
+      "id": "e6",
+      "from": "coleta",
+      "to": "snapshot",
+      "label": "monta fotografia"
+    },
+    {
+      "id": "e7",
+      "from": "snapshot",
+      "to": "motor",
+      "label": "entrada pura"
+    },
+    {
+      "id": "e8",
+      "from": "motor",
+      "to": "regras",
+      "label": "percorre registry"
+    },
+    {
+      "id": "e9",
+      "from": "regras",
+      "to": "fiscal",
+      "label": "fiscal"
+    },
+    {
+      "id": "e10",
+      "from": "regras",
+      "to": "operacao",
+      "label": "operação/financeiro/campanha"
+    },
+    {
+      "id": "e11",
+      "from": "motor",
+      "to": "executor",
+      "label": "achados + regras avaliadas + falhas"
+    },
+    {
+      "id": "e12",
+      "from": "executor",
+      "to": "runs",
+      "label": "abre/fecha a rodada"
+    },
+    {
+      "id": "e13",
+      "from": "executor",
+      "to": "registrar",
+      "label": "um achado por chamada"
+    },
+    {
+      "id": "e14",
+      "from": "registrar",
+      "to": "ocorrencias",
+      "label": "upsert idempotente"
+    },
+    {
+      "id": "e15",
+      "from": "registrar",
+      "to": "eventos",
+      "label": "detectada/reafirmada"
+    },
+    {
+      "id": "e16",
+      "from": "ocorrencias",
+      "to": "painel",
+      "label": "lista e detalhe"
+    },
+    {
+      "id": "e17",
+      "from": "painel",
+      "to": "patch",
+      "label": "decisão humana"
+    },
+    {
+      "id": "e18",
+      "from": "patch",
+      "to": "mudanca",
+      "label": "valida e aplica"
+    },
+    {
+      "id": "e19",
+      "from": "mudanca",
+      "to": "ocorrencias",
+      "label": "novo estado"
+    },
+    {
+      "id": "e20",
+      "from": "mudanca",
+      "to": "eventos",
+      "label": "antes/depois"
+    },
+    {
+      "id": "e21",
+      "from": "executor",
+      "to": "audit",
+      "label": "quando há efeito/falha"
+    },
+    {
+      "id": "e22",
+      "from": "executor",
+      "to": "retencao",
+      "label": "manutenção"
+    },
+    {
+      "id": "e23",
+      "from": "retencao",
+      "to": "ocorrencias",
+      "label": "apaga terminais vencidas"
+    },
+    {
+      "id": "e24",
+      "from": "registrar",
+      "to": "lgpd",
+      "label": "evidência mínima"
+    },
+    {
+      "id": "e25",
+      "from": "motor",
+      "to": "recomendacoes",
+      "label": "anexa o plano de cada achado"
+    },
+    {
+      "id": "e26",
+      "from": "recomendacoes",
+      "to": "registrar",
+      "label": "plano persiste com a ocorrência"
+    },
+    {
+      "id": "e27",
+      "from": "painel",
+      "to": "correcao",
+      "label": "gestor simula e confirma"
+    },
+    {
+      "id": "e28",
+      "from": "correcao",
+      "to": "ocorrencias",
+      "label": "lê aprovada/corrigida"
+    },
+    {
+      "id": "e29",
+      "from": "correcao",
+      "to": "entidades",
+      "label": "CAS em job_queue watchdog/pending"
+    },
+    {
+      "id": "e30",
+      "from": "correcao",
+      "to": "eventos",
+      "label": "nota antes/depois + reaberta"
+    },
+    {
+      "id": "e31",
+      "from": "correcao",
+      "to": "audit",
+      "label": "correction_applied/reverted"
+    }
   ]
 }
