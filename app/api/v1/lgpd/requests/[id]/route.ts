@@ -60,7 +60,7 @@ export async function GET(
       `resource_id.eq.${id},metadata->>request_id.eq.${id}`,
     )
     .order("created_at", { ascending: true })
-    .limit(50);
+    .order("id").limit(50);
 
   if (auditErr) {
     // Non-fatal — return empty trail

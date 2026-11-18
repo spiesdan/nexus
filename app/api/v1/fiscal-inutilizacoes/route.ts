@@ -35,7 +35,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .select("id, serie, numero_inicial, numero_final, motivo, ambiente, status, sefaz_protocolo, sefaz_xmotivo, created_at")
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .order("id", { ascending: false }).limit(200);
   if (error) return fail("internal_error", "Erro ao listar as inutilizações.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }

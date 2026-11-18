@@ -40,7 +40,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     q = q.eq("status", status);
   }
 
-  const { data, error } = await q.order("created_at", { ascending: false }).limit(200);
+  const { data, error } = await q.order("created_at", { ascending: false }).order("id", { ascending: false }).limit(200);
   if (error) return fail("internal_error", "Erro ao listar as cargas.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }

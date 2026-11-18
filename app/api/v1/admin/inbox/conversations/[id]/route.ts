@@ -93,7 +93,7 @@ export async function GET(
     `)
     .eq("conversation_id", id)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .order("id", { ascending: false }).limit(50);
 
   if (msgError) {
     return fail("internal_error", "Messages query failed", 500, {

@@ -84,7 +84,7 @@ export async function GET(
     )
     .eq("actor_user_id", id)
     .order("created_at", { ascending: false })
-    .limit(50);
+    .order("id", { ascending: false }).limit(50);
 
   if (auditError) {
     // Non-fatal: return empty array and continue

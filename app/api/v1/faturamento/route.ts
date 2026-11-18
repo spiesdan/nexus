@@ -48,7 +48,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .eq("organization_id", authz.org.orgId)
     .in("status", ["faturado", "expedido", "entregue"])
     .order("created_at", { ascending: false })
-    .limit(2000);
+    .order("id", { ascending: false }).limit(2000);
   if (de) q = q.gte("created_at", `${de}T00:00:00Z`);
   if (ate) {
     // "Até 15/11" inclui o dia 15 inteiro. Com `.lt(15T00:00Z)` o dia 15

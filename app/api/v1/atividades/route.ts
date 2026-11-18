@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .select(COLUNAS)
     .eq("organization_id", authz.org.orgId)
     .order("ocorrida_em", { ascending: false })
-    .limit(500);
+    .order("id", { ascending: false }).limit(500);
   if (error) return fail("internal_error", "Erro ao ler as atividades.", 500, { requestId });
 
   const ids = [...new Set(((data ?? []) as { contact_id: string | null }[]).map((a) => a.contact_id).filter(Boolean))] as string[];

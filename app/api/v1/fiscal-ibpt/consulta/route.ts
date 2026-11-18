@@ -90,7 +90,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .lte("vigencia_inicio", hoje)
     .or(`vigencia_fim.is.null,vigencia_fim.gte.${hoje}`)
     .order("vigencia_inicio", { ascending: false })
-    .limit(50);
+    .order("id", { ascending: false }).limit(50);
   if (ex) consulta = consulta.eq("ex", ex);
 
   const { data, error } = await consulta;

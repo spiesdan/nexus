@@ -78,7 +78,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   // menor. `numero` é único por organização, então a ordem é total e o pedido
   // recém-criado aparece no topo. O filtro de período continua sendo por
   // `created_at` (o dia que o dono conta) — ele não decide a posição.
-  const { data, error } = await q.order("numero", { ascending: false }).limit(200);
+  const { data, error } = await q.order("numero", { ascending: false }).order("id", { ascending: false }).limit(200);
 
   if (error) return fail("internal_error", "Erro ao listar os pedidos.", 500, { requestId });
   // "Emitido por <nome>": a lista da tela refaz aqui a cada filtro, então o

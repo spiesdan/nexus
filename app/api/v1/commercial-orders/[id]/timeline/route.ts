@@ -46,7 +46,7 @@ export async function GET(
     .eq("resource_type", "commercial_orders")
     .eq("resource_id", id)
     .order("created_at", { ascending: true })
-    .limit(200);
+    .order("id").limit(200);
 
   if (error) return fail("internal_error", "Erro ao ler o histórico.", 500, { requestId });
 

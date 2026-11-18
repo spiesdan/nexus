@@ -37,7 +37,7 @@ export async function GET(_req: Request, ctx: RouteCtx): Promise<Response> {
     .select("id, created_at:received_at, valid_signature, payload_parsed, status")
     .eq("webhook_path_token", source.path_token)
     .order("received_at", { ascending: false })
-    .limit(20);
+    .order("id", { ascending: false }).limit(20);
   if (error) return fail("internal_error", error.message, 500, { requestId });
 
   return ok(data ?? [], { requestId });
