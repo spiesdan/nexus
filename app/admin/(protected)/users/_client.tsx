@@ -14,6 +14,7 @@ import {
   UsersTableAdmin,
   UsersTableAdminSkeleton,
 } from "@/components/admin/users/UsersTableAdmin";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -33,7 +34,7 @@ export function UsersClient() {
     .flatMap((p) => p.data ?? [])
     .map((t) => ({ id: t.id, slug: t.slug, display_name: t.display_name }));
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useAdminUsers(filters);
 
   const rows = data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -122,6 +123,11 @@ export function UsersClient() {
       {/* Table */}
       {isLoading ? (
         <UsersTableAdminSkeleton />
+      ) : isError ? (
+        <NexusErrorState
+          description={t("Erro ao carregar os usuários.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <UsersTableAdmin
           data={rows}

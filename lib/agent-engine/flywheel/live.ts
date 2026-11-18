@@ -30,17 +30,52 @@ interface TraceMaterial {
   rollingSummary: string;
 }
 
-async function collectRecentTurns(pool: pg.Pool, limit: number): Promise<TurnRow[]> {
+/**
+ * Os turnos que ainda NÃO foram julgados neste dataset/dimensão.
+ *
+ * A unique `(dataset, trace_id, dimension)` já impedia **veredito** duplicado,
+ * mas cada réplica pagava a chamada de LLM antes de descobrir isso: duas
+ * réplicas a cada 6 h julgavam os mesmos turnos e só uma gravava — custo de IA
+ * dobrado por turno. O `not exists` remove do lote o que já tem veredito.
+ *
+ * Ele NÃO fecha a corrida de duas réplicas que leem ao mesmo tempo: para isso
+ * existe `reservarTurno` (advisory lock por turno).
+ */
+export async function turnosParaJulgar(pool: pg.Pool, limit: number): Promise<TurnRow[]> {
   const { rows } = await pool.query<TurnRow>(
     `select j.id as job_id, j.organization_id, j.contact_id
      from job_queue j
      where j.kind = 'inbound_turn' and j.status = 'done' and j.contact_id is not null
        and exists (select 1 from llm_calls c where c.job_id = j.id and c.purpose = 'agent_turn')
+       and not exists (
+         select 1 from flywheel_judge_verdicts v
+          where v.dataset = $2 and v.trace_id = j.id::text and v.dimension = $3
+       )
      order by j.created_at desc
      limit $1`,
-    [limit],
+    [limit, DATASET, DIMENSION],
   );
   return rows;
+}
+
+/**
+ * Claim do turno para UMA réplica (advisory lock de sessão).
+ *
+ * `pg_try_advisory_lock` não espera: quem chega segundo recebe `false` e pula o
+ * turno, em vez de pagar a mesma chamada de LLM. O lock é de SESSÃO — a
+ * conexão `lockClient` do chamador é quem solta (`liberarTurno`), e o
+ * `finally` do run fecha a conexão se algo lançar, liberando tudo.
+ */
+export async function reservarTurno(client: pg.PoolClient, jobId: string): Promise<boolean> {
+  const { rows } = await client.query<{ ok: boolean }>(
+    `select pg_try_advisory_lock(hashtext($1)) as ok`,
+    [`flywheel:${jobId}`],
+  );
+  return rows[0]?.ok === true;
+}
+
+export async function liberarTurno(client: pg.PoolClient, jobId: string): Promise<void> {
+  await client.query(`select pg_advisory_unlock(hashtext($1))`, [`flywheel:${jobId}`]);
 }
 
 async function buildMaterial(pool: pg.Pool, turn: TurnRow): Promise<TraceMaterial> {
@@ -135,12 +170,23 @@ export async function runFlywheelOnce(
 ): Promise<FlywheelRunResult> {
   const runId = crypto.randomUUID();
   const { limit, log } = opts;
-  const turns = await collectRecentTurns(pool, limit);
+  const turns = await turnosParaJulgar(pool, limit);
   log.info('flywheel: turnos reais coletados', { run_id: runId, turns: turns.length });
   let judged = 0;
   let proposals = 0;
 
+  // Uma conexão dedicada aos locks da rodada: advisory lock é de SESSÃO, então
+  // soltar num `pool.query` qualquer poderia cair noutra conexão e falhar
+  // calado. Cada turno solta o lock no próprio `finally`; o `finally` externo
+  // devolve a conexão ao pool.
+  const lockClient = await pool.connect();
+  try {
   for (const turn of turns) {
+    if (!(await reservarTurno(lockClient, turn.job_id))) {
+      log.info('flywheel: turno já reservado por outra réplica', { job_id: turn.job_id, run_id: runId });
+      continue;
+    }
+    try {
     const material = await buildMaterial(pool, turn);
     const optionOrder = parseInt(turn.job_id.slice(0, 8), 16) % 2 === 0 ? 'yes_first' : 'no_first';
 
@@ -214,6 +260,15 @@ export async function runFlywheelOnce(
       proposals += 1;
       log.info('flywheel: proposta do distiller gravada (gate humano pendente)', { job_id: turn.job_id });
     }
+    } finally {
+      // Solta o lock no MESMO caminho, inclusive se o julgamento lançar. O
+      // `release` do pool não fecha a conexão, então um lock esquecido ficaria
+      // preso na conexão devolvida ao pool e bloquearia a próxima rodada.
+      await liberarTurno(lockClient, turn.job_id);
+    }
+  }
+  } finally {
+    lockClient.release();
   }
   // Task 8.2 — o sinal (followup_enrollments.outcome) já existe (Ondas 4/5);
   // aqui só agregamos por org tocada nesta rodada (via os turnos coletados

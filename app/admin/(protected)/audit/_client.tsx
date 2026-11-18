@@ -7,6 +7,7 @@ import {
   AuditTable,
   AuditTableSkeleton,
 } from "@/components/admin/audit/AuditTable";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -22,7 +23,7 @@ export function AuditClient() {
     display_name: t.display_name,
   }));
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useAdminAuditLog(filters);
 
   const rows = data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -45,6 +46,11 @@ export function AuditClient() {
       {/* Table */}
       {isLoading ? (
         <AuditTableSkeleton />
+      ) : isError ? (
+        <NexusErrorState
+          description={t("Erro ao carregar a auditoria.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <AuditTable
           data={rows}
