@@ -24,7 +24,7 @@ export const PUBLIC_PATHS: RegExp[] = [
   // a rota existir — mesmo modo de falha do callback do Google (v1.8.0).
   // Ancorado em `/device/` de propósito: `/offline-devices` (gestão, com
   // sessão) NÃO é público.
-  /^\/api\/v1\/device\/,
+  /^\/api\/v1\/device\//,
   // Relógio Hobby (GitHub Actions / cron-job.org). Auth é Bearer na própria
   // rota — sem isto o proxy devolve 401 e o follow-up waiting_reply nunca anda.
   /^\/api\/v1\/system\/relogio\/tick$/,
