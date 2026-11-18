@@ -2528,3 +2528,36 @@ Instrumento: `scripts/auditoria/trilhas-da-agenda.ts` → `capturas/trilhas-da-a
 
 **Ilustração, não medida:** a paleta será avaliada visualmente quando houver captura; a decisão
 de matiz/luminosidade acima é toda numérica, como o dono pediu ("não basta olhar").
+
+### V-62 · Média · O seletor de empresa não dizia qual empresa estava ativa — **CORRIGIDO**
+
+`components/shell/TenantSwitcher.tsx` tinha `aria-label="Trocar de empresa"` no gatilho. Como
+`aria-label` SUBSTITUI o conteúdo do botão na árvore de acessibilidade, quem usa leitor de tela
+ouvia só a AÇÃO. E o nome da empresa ativa é texto visual que **some abaixo de `sm`** (no celular
+sobra a inicial) — então nem o contexto visual socorria.
+
+| | antes | depois |
+| --- | --- | --- |
+| nome do gatilho | "Trocar de empresa" | "Empresa atual: Alfa Distribuidora. Trocar de empresa" |
+| item ativo no menu | check `aria-hidden` + `aria-current` | + texto recortado ", atual" |
+
+`aria-current` em `menuitem` tem suporte irregular entre leitores de tela, e o check é decoração:
+o texto recortado é o que garante que "qual está ativa" chegue. O título do menu também virou
+`DropdownMenuLabel` (nomeia o grupo).
+
+Gate: `tests/unit/seletor-de-empresa-diz-onde-esta.test.tsx` — exige o nome COMPLETO no gatilho
+(um `getByRole` com `/Trocar de empresa/` continuaria verde se o estado sumisse) e o ", atual" no
+item ativo.
+
+### V-63 · Baixa · O cabeçalho de tabela não declarava a coluna — **CORRIGIDO**
+
+`TableHead` renderizava `<th>` sem `scope`. Sem o atributo, o leitor de tela adivinha a associação
+cabeçalho↔célula pela posição, e a adivinhação erra quando há `colSpan` — que as listagens do
+produto usam na linha de grupo e na de "carregar mais".
+
+`scope="col"` passou a ser o padrão do primitivo (o `{...props}` vem depois, então `scope="row"`
+continua possível), e os três arquivos que declaram `<th>` à mão — impressão de pedidos, diff de
+versão de agente e a galeria — declaram também.
+
+Gate: `tests/unit/tabela-cabecalho-declara-coluna.test.tsx` — renderiza o primitivo (coluna e
+linha) e varre todo `app/`/`components/` atrás de `<th>` sem `scope`.
