@@ -13,10 +13,10 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida (rodada 8) | `232c5fbf` (`nexus/main`; merges até #522) | `git log --oneline -1 nexus/main` |
+| Commit de partida (rodada 10) | `139a1be5` (`nexus/main`; merges até #439) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
-| Próxima release | **1.56.0** (derivada dos fragmentos, não digitada) — pacote em [`35-pacote-de-release.md`](35-pacote-de-release.md) | `pnpm release:conferir` |
+| Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) (28 fragmentos) — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
 | Runtime local | macOS (darwin), Node `v22.20.0`, pnpm `9.15.9`, Docker `29.8.2` | `node -v`, `pnpm -v`, `docker info` |
 | Gates | `pnpm gov:verify` = typecheck + lint + lint:channels + lint:role-rank + test:unit; `test:db` exige Docker; `test:e2e` exige app + banco | `package.json` |
@@ -31,13 +31,13 @@
 
 | Frente | Worktree / branch | Dono | Escopo | Estado |
 |---|---|---|---|---|
-| Coordenação | `…/opencode/aaa-programa-2` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, D-01/D-02/D-03, pacote de release | ativo |
+| Coordenação | `…/opencode/aaa-programa-2` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, pacote de release, delegação | ativo |
 | Banco e segurança | `…/aaa-front-db` · `rate/fallback-declarado` | Agente A | SECURITY DEFINER/`pg_temp`, rate limit P3-02, listas P1-06 | **pausado** (#518/#520/#521 aguardam retomada) |
 | Fiscal/financeiro | `…/aaa-front-fiscal` · `front/fiscal` | Agente C | cancelamento×drain, importação de entrada, recuperação de nota, conciliação | sem PR aberto; retomada quando houver vaga |
-| Design system | `…/aaa-front-shell` · `front/shell-2` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio | **ativo** |
+| Design system | `…/aaa-front-shell` · `front/shell-2` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio | **ativo** — #533 (trilhas) e #535 (seletor de empresa) |
 | Módulos e jornadas | `…/aaa-front-modulos` · `front/modulos` | Agente E | 5.4 (inbox/campanhas), 5.6 (pedidos), 5.8 (fiscal/UI), 5.10/5.11 (config/admin) | **pausado** (#515/#519/#522 mergeados) |
-| Mobile/offline | `…/aaa-front-mobile` · `front/mobile` | Agente F | PWA/Capacitor/offline, fila/retry/conflito, estado de sincronização | **pausado** (P1-04 `[!]` por dispositivo) |
-| Sentinel | `…/opencode/aaa-front-sentinel` · `front/sentinel` | Agente G | Sentinel v1 (na main) e v1.1 (recomendações, sem escrita fiscal) | **ativo** |
+| Mobile/offline | worktree do F (lado do dono) · `feat/offline-device` | Agente F | credencial de dispositivo (opção B) — **migration 0322 reservada** | **ativo** (#526; não mergear até o dono liberar) |
+| Sentinel | `…/opencode/aaa-front-sentinel` · `front/sentinel` | Agente G | Sentinel v1.1 **mergeado** (`2116db86`); agora prova de papéis e catraca de somente leitura (#538) | **ativo** |
 | Jornadas/DOD | `…/aaa-front-jornadas` · `front/jornadas` | Agente H | J6/J13/J14 e `34-prova-de-dod.md` | **pausado** (#517 mergeado: prova em Vitest) |
 
 **Ponto de retomada por frente pausada** (para não recomeçar do zero):
@@ -54,7 +54,7 @@
 
 ### Regras de não-duplicação e dono de schema
 
-- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`idempotency_keys.request_hash`), **0318** D-01/D-02 (`prospecting_campaigns.nome_manual`), **0319** C (claims de manifestação/cancelamento). **0320 reservada ao #439** (telefone fixo E.164, renumerada de 0312 no rebase); o branch do #518 ainda diz 0320 → **renumerar para 0321** na retomada. Próxima livre depois disso: **0322**.
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`request_hash`), **0318** D-01/D-02 (`nome_manual`), **0319** C (claims fiscais), **0320** A (`pg_temp` nas definers, #518 mergeado). **0321** é do Sentinel v1.1 (#528, mergeado); **0322 está reservada à credencial de dispositivo (#526, F)**; **0323 é do #439** (telefone E.164, renumerado três vezes: 0312→0320→0322→0323, porque cada merge da main tomou o número). O teste `tests/unit/migrations-numero-unico.test.ts` reprova número repetido — foi o defeito do #439 que o motivou. Próxima livre: **0324**.
 - **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
 - **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
 - **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
@@ -271,3 +271,33 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 Nenhum PR de P0 ficou aberto. O que resta em P1/P2 depende de decisão humana,
 de dispositivo ou da retomada de uma frente pausada — não de trabalho que o
 coordenador possa abrir sozinho sem furar o rodízio de 2 workers.
+
+### 11.4 Rodada 9 (`nexus/main` = `6daec49d`)
+
+| PR | Estado em 18/11 à tarde | Observação |
+|---|---|---|
+| #523, #524, #525, #529 | **mergeados** (design/D) | shell sem link morto, foco visível, densidade, relatório D |
+| #518 | **mergeado** (`243ab166`) | migration **0320** `search_path` das definers — 42 definers ganharam `pg_temp` |
+| #520 | **mergeado** (`6daec49d`) | rate limit: fallback declarado e saúde 503 em produção |
+| #530 | **mergeado** (`3175ee21`) | docs do programa: fila, relatório, pacote 1.56.0, 7 fragmentos, catraca de numeração, teto do `verify` 15→25 min |
+| #521 | rebaseado, CI rodando | listas com tie-breaker e teto (P1-06); o `verify` anterior foi **cancelado** por timeout, não por teste |
+| #536 | PR aberto pela coordenação | invariante do flywheel media o relógio (flake), não o lock — conserto no teste |
+| #439 | renumberado **0322**, CI rodando | 0320 passou a ser do #518; 0321 é do #528 (G) |
+| #476/#477/#472/#468/#465/#457 | rebaseados, CI rodando | docs/fontes/MIT/snapshots; nenhum toca schema |
+| #13/#165 | rebaseados, CI rodando | dependabot actions |
+| #307 | `[!]` decisão de marca | inalterado |
+| #526/#534 | do dono/F | **não tocar** (credencial de dispositivo e SQLite no aparelho) |
+| #531/#533/#535 | design/D | em rebase pelo dono da frente |
+
+
+## 12. Delegação vigente (3 workers + 1 coordenador)
+
+| Slot | Dono | O que está com ele agora | Critério de devolução |
+|---|---|---|---|
+| 1 | **D** | #533 (trilhas da agenda) e #535 (seletor de empresa + `scope` da tabela); rebase e CI | verde nos 5 checks + prova visual |
+| 2 | **F** | #526 credencial de dispositivo (opção B), **migration 0322**; renumerar se a main tomar o número | CI verde e `apk-debug`; dispositivo/emulador declarado |
+| 3 | **G** | #538 prova de papéis na rota do Sentinel + catraca de somente leitura | invariantes verdes, nenhuma escrita |
+| — | **Coordenador** | fila, release #537, triagem dos PRs antigos, integração e gates | — |
+
+O coordenador **não executa** o trabalho de worker: distribui, integra e cobra a
+prova. Frente pausada não recebe tarefa nova até abrir slot.

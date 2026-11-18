@@ -239,3 +239,38 @@ nenhuma imagem publicada por este programa, nenhum deploy.**
   #439.
 - `e2e` continua cobrindo smoke em PR — os baselines visuais (#468) rodam local.
 - Nenhuma frente pausada avançou; pausa não é conclusão.
+
+
+## Rodada 10 — 18/11/2026 (integração final, release empacotada e delegação)
+
+### Regra de operação
+
+**3 workers + 1 coordenador.** Slots: **D** (design), **F** (mobile, credencial de
+dispositivo) e **G** (Sentinel v1.1 e provas). O coordenador não executa trabalho
+de worker: mantém a fila, diz quem pega o quê, integra e roda os gates.
+
+### Mergeado na `main`
+
+| PR | O que entrou |
+|---|---|
+| #523/#524/#525/#529/#531 | design/a11y: shell sem link morto, foco visível, densidade, borda de campo ≥3:1 |
+| #534 | mobile: a segunda página reabre o banco local (fix do dono) |
+| #518 | **0320**: 42 definers ganham `pg_temp` no `search_path` |
+| #520 | rate limit: fallback declarado e saúde 503 em produção |
+| #521 | listas com tie-breaker e teto (P1-06) |
+| #528 | **0321**: Sentinel v1.1 — plano revisável, estoque divergente, lead duplicado |
+| #536 | invariante do flywheel deixa de medir o relógio (flake provado) |
+| #472/#465/#468/#477/#476 | docs de auditoria, snapshots visuais, MIT, fontes locais |
+| #13/#165 | dependabot: `actions/cache@v6`, `actions/checkout@v7` |
+| #530 | docs do programa, catraca de numeração, teto do `verify` 15→25 min |
+
+### Release
+
+**PR #537** corta a **1.56.0** (28 fragmentos, nenhum `exige_acao`, recorte final sobre `139a1be5`). **Não
+mergeado**: o merge é a aprovação humana e é ele que faz o CI criar a tag.
+`#439` (0323) entrou antes do corte; **`#526` (0322)** fica para a próxima.
+
+### O que restou aberto
+
+`#439` (CI), `#457` (CI pós-rebase), `#533`/`#535` (D), `#526` (F, 0322),
+`#538` (G), `#307` (`[!]` marca) e `#537` (release, aguardando o dono).

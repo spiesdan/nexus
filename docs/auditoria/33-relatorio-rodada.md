@@ -12,9 +12,9 @@
 |---|---|
 | Repositório | `spiesdan/nexus` (único remote) |
 | Branch do programa | `programa/nexus-aaa` |
-| Base | `nexus/main` @ `232c5fbf` (merges até #522) |
+| Base | `nexus/main` @ `139a1be5` (merges até #439) |
 | Versão publicada | `v1.55.0` |
-| Próxima release | `1.56.0` derivada, **não cortada** |
+| Próxima release | `1.56.0` no PR #537, **não publicada** |
 | Produção | reportada em 1.55.0; **não verificada e não tocada** |
 | Ambiente | macOS, Node 22.20.0, pnpm 9.15.9 |
 | Regra de operação | **2 workers + 1 coordenador**; ativos D e G |
@@ -31,6 +31,14 @@
 | #522 | ficha do Agente E fechada (E, pausado) |
 | #455 | 48 updates minor/patch do dependabot |
 | #163/#164/#166 | actions do `apk.yml` na versão corrente |
+| #518 | **0320**: definers com `pg_temp` (A) |
+| #520 | rate limit declarado (A) |
+| #521 | listas com teto e tie-breaker (A) |
+| #528 | **0321**: Sentinel v1.1 (G) |
+| #523/#524/#525/#529/#531 | design/a11y (D) |
+| #536 | invariante do flywheel sem medir o relógio |
+| #472/#465/#468/#477/#476 | auditoria, snapshots, MIT, fontes |
+| #13/#165 | dependabot actions |
 
 ### 2.2 Rebase e renumeração
 
