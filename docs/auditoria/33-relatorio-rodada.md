@@ -171,3 +171,28 @@ estoque, deploy/restore, Sentinel v1), idempotência fiscal nas quatro rotas,
 nome de campanha, nome fantasia, catálogo do Mercos **em código**, e a release
 1.57.0 publicada. Produção roda 1.57.0 (deploy do dono), com sidecar da mesma
 versão.
+
+### Atualização de 18/11 (fim do dia) — o que mudou de verdade
+
+| Fato | Consequência |
+|---|---|
+| **1.57.0 em produção** (app/worker/scheduler/fiscal/mercos/ocr/rota), healthy, health 200 | a versão que roda hoje não é a do repositório de ontem; o programa passou a medir contra ela |
+| **Três defeitos de schema revelados pelo deploy**: devolução (finalidade 4) barrada pela 0315; nota cancelada contando como viva no trigger de `invoice_orders`; bloco da 0320 quebrando com `search_path` vazio | corrigidos no **#566** (0326/0327); baseline aplicado em produção com `ON_ERROR_STOP`: 0 erros; pedido 19560 voltou a ter 2 vínculos |
+| **`update.sh` seguia com schema pela metade** e dizia "healthy" | **#568**: para antes de trocar as imagens; escape explícito `NEXUS_SCHEMA_NAO_FATAL=1`; teste no kit |
+| **Fichas de módulo**: 5.4 (#563, estado offline), 5.6 (#571, erro de rede em português), 5.8 (#572, estados da nota/listas) | três das cinco lacunas fechadas; falta **5.10/5.11** (#574, G) |
+| **Jornadas** J6/J13/J14 | prova em Vitest (#517) e defeitos corrigidos; **E2E de navegador continua aberto** |
+| **Sentinel v1.4** (rejeição de SEFAZ agrupada) | entrou (`sentinel-rejeicao-repetida`); falta painel por fornecedor se o dono quiser |
+| **B-7 do mobile** | F medindo dreno aceito e `401 token_revoked` no emulador; prova ainda não anexada |
+
+### O que continua aberto — dono e critério de aceite
+
+| Item | Dono | Aceite |
+|---|---|---|
+| Ficha **5.10/5.11** | G (#574) | ficha + estados de configurações/equipe/LGPD/admin com evidência; sem tocar regra |
+| **J6/J13/J14 E2E** | F (depois da B-7) | navegador real: sucesso, erro e recuperação; nenhuma marcada "instável" sem causa |
+| **B-7** | F | dreno aceito (200) + `401 token_revoked` com fila intacta + repetição sem duplicar |
+| **TalkBack em aparelho** | Dono (dispositivo) | leitura das 3 telas de operação; hoje `[!]`, nada executado |
+| **Pareamento do catálogo** | D + Dono | release → deploy `nexus-mercos` → `--dry-run` → relatório aprovado → aplicar |
+| **E2E completo** | Coordenação | full noturno verde; 3 specs fora do CI com motivo escrito |
+| **Corte da 1.58.0** | Dono | os três critérios dele (5.10/5.11, smoke do F, fragmentos) |
+| **Deploy da 1.58.0** | Dono | plano do `35` §6.1, com `to_regclass` verde |
