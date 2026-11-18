@@ -1,7 +1,7 @@
 # Frente `front/sentinel` — Nexus Sentinel v1.1
 
 > Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel`
-> Baseline desta fatia: `nexus/main` @ `014ccef3` (merge feito no worktree; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Baseline desta fatia: `nexus/main` @ `6daec49d` (merge feito no worktree; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
 > Escopo: **v1 + v1.1 somente leitura** — detectar, classificar, abrir ocorrência e propor um plano revisável. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
@@ -288,3 +288,20 @@ fiscal/financeira real.
    sem movimentação também é divergência) **com** a prova de `test:db` que
    valide as duas linhas e o `null` de `ultimo_movimento`.
 6. Ampliar o E2E visual para outras resoluções/dispositivos.
+
+## 11. Onde retomar (pausa de 18/11/2026)
+
+- **#528** (`front/sentinel` @ `14dc3d0a`): v1.1 completa, `build-and-size`
+  verde; `verify`, `invariants` e `e2e` reenfileirados depois da renumeração
+  0320→0321 e ainda **pending** na fila do Actions. Mergear quando verdes; não
+  há mudança de código pendente.
+- **`front/sentinel-prova`** (dois commits sobre o topo do #528): prova de rota
+  de papéis (`tests/api/sentinel-permissoes.test.ts`), gestor + switch de kill
+  switch no componente e catraca de somente leitura
+  (`lib/sentinel/somente-leitura.test.ts`). Testes dirigidos verdes e typecheck
+  zerado. Abrir PR **depois** do merge do #528 e rebasear na `main`.
+- **E2E do painel**: continua sem execução local (Docker desligado). A spec
+  estreia no `e2e` `critical` da `main`; se falhar, o primeiro conserto é no
+  spec, não no painel.
+- **Próxima fatia de produto**: v1.2 (§10 item 1), com aprovação de gestor e
+  antes/depois — nunca em nota, saldo, pagamento ou envio externo.
