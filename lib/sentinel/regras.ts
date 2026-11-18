@@ -85,6 +85,13 @@ export const REGRAS: readonly Regra[] = [
     descricao: "Sincronização de NF-e recebidas falhou nas últimas 24 horas.",
     detectar: fiscal.sincronizacaoFiscalComFalha,
   },
+  {
+    id: "fiscal.rejeicao_repetida",
+    categoria: "fiscal",
+    descricao:
+      "O mesmo cStat de rejeição se repete 3+ vezes na mesma série/emitente em 24h — padrão, não azar.",
+    detectar: fiscal.rejeicoesRepetidas,
+  },
 
   // ─── Operação ─────────────────────────────────────────────────────────────
   {

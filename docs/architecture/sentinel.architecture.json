@@ -113,7 +113,7 @@
       "col": 1,
       "type": "lib",
       "label": "registry de regras",
-      "sublabel": "32 detectores fiscais, de operação, financeiro, campanha, observabilidade da correção e endereço"
+      "sublabel": "33 detectores fiscais, de operação, financeiro, campanha, observabilidade da correção, endereço e rejeição repetida"
     },
     {
       "id": "recomendacoes",
