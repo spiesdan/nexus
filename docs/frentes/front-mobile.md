@@ -281,7 +281,10 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
    prosa.
 5. **Evidências.** Commits nesta branch, com o "antes" medido em cada mensagem
    (`grep -c "<SincronizadorOffline"` = 0; `eslint` warning; `allowBackup="true"`;
-   `btn-enviar` sem handler). Os testes novos falham se as correções forem revertidas.
+   `btn-enviar` sem handler). Os testes novos falham se as correções forem revertidas —
+   provado por mutação: removendo a linha `<SincronizadorOffline />` do layout,
+   `layout-componentes-montados.test.ts` reprova com "importado e nunca renderizado"
+   (exit 1; arquivo restaurado em seguida).
 6. **Riscos.** O bloqueio do §4 é de produto: sem decisão, pedido offline não sobe no APK.
    A faixa nova é `sticky top-0` como as demais faixas do shell; sobreposição rara
    documentada (§6.7). A migração de coluna usa `PRAGMA` — se o plugin negar `PRAGMA`,
