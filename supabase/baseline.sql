@@ -29525,8 +29525,8 @@ comment on function public.fn_sentinel_registrar_ocorrencia(
   'Upsert idempotente de ocorrência + plano revisável + evento de histórico. Só service_role (runner).';
 
 -- ============================================================================
--- 0323 — divergência de estoque também quando não há movimentação (left join).
--- Ver supabase/migrations/20261123160000_0323_sentinel_estoque_sem_movimento.sql.
+-- 0324 — divergência de estoque também quando não há movimentação (left join).
+-- Ver supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql.
 -- ============================================================================
 
 create or replace view public.sentinel_estoque_razao

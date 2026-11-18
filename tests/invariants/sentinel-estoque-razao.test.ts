@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { countAs, lastLine, sql } from "./gov-helpers";
 
 /**
- * A view de divergência de estoque (0321 + 0323) só é útil se:
+ * A view de divergência de estoque (0321 + 0324) só é útil se:
  *
  *  1. produto SEM movimentação aparecer com `movimentos = 0`,
  *     `saldo_razao = 0` e `ultimo_movimento = null` (left join);

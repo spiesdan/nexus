@@ -70,7 +70,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   e-mail, e é essa que a view agregada detecta;
 - divergência de estoque **é detectada como hipótese**: `inventory_movements`
   não tem saldo de abertura, então a regra só olha produtos criados a partir da
-  0242, exige um piso de diferença e nasce com confiança baixa. A 0323 passou a
+  0242, exige um piso de diferença e nasce com confiança baixa. A 0324 passou a
   incluir produto **sem nenhuma movimentação** (razão vazio × saldo cacheado);
   o plano manda contar fisicamente antes de ajustar e a limitação vai na
   evidência;
@@ -165,7 +165,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
 | `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
-| `supabase/migrations/20261123160000_0323_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
+| `supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
 | `supabase/baseline.sql` (apêndices 0316/0321/0323) | o que o self-host aplica |
 | `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0323 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |

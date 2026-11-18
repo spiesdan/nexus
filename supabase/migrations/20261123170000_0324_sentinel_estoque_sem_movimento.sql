@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0323 — DIVERGÊNCIA DE ESTOQUE TAMBÉM QUANDO NÃO HÁ MOVIMENTAÇÃO.
+-- 0324 — DIVERGÊNCIA DE ESTOQUE TAMBÉM QUANDO NÃO HÁ MOVIMENTAÇÃO.
 --
 -- A 0321 criou `sentinel_estoque_razao` com INNER JOIN em
 -- `inventory_movements`: produto controlado criado depois da 0242 e sem nenhuma
