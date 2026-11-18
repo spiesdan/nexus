@@ -12,6 +12,10 @@ import { type NextRequest } from "next/server";
 
 import { ApiError } from "@/lib/api/types";
 import { audit } from "@/lib/audit";
+import {
+  hashDaRequisicao,
+  reservarIdempotencia,
+} from "@/lib/api/idempotencia";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { emitirNota } from "@/lib/fiscal/emitir-nota";
@@ -65,13 +69,56 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   const supabase = await createClient();
+  const admin = createAdminClient();
+
+  // D-03 — idempotência FORTE: a chave é reivindicada antes da emissão. Replay
+  // devolve a MESMA nota; payload diferente é 409; concorrente espera o
+  // vencedor. Sem header, o comportamento é o de sempre.
+  const chave = req.headers.get("Idempotency-Key")?.trim() || null;
+  let reserva: Awaited<ReturnType<typeof reservarIdempotencia>> | null = null;
+  if (chave) {
+    reserva = await reservarIdempotencia(admin, {
+      orgId: authz.org.orgId,
+      endpoint: "POST /api/v1/invoices",
+      chave,
+      requestHash: hashDaRequisicao(parsed.data),
+    });
+    if (reserva.estado === "replay") {
+      return ok(reserva.resposta.body, {
+        requestId,
+        status: 200,
+        headers: { "Idempotency-Replayed": "true" },
+      });
+    }
+    if (reserva.estado === "conflito") {
+      return fail(
+        "idempotency_conflict",
+        "Esta Idempotency-Key já foi usada com outro payload.",
+        409,
+        { requestId },
+      );
+    }
+    if (reserva.estado === "em_andamento") {
+      return fail(
+        "idempotency_in_progress",
+        "A emissão com esta chave ainda está em andamento. Tente de novo em instantes.",
+        409,
+        { requestId },
+      );
+    }
+    if (reserva.estado === "erro") {
+      return fail("internal_error", "Não foi possível reservar a chave de idempotência.", 500, {
+        requestId,
+      });
+    }
+  }
 
   // A regra mora em `lib/fiscal/emitir-nota.ts` — a rota autentica, valida e
   // traduz, e o assistente interno chama a MESMA função na `/executar`.
   try {
     const nota = await emitirNota({
       supabase,
-      admin: createAdminClient(),
+      admin,
       orgId: authz.org.orgId,
       userId: authz.user.id,
       requestId,
@@ -79,6 +126,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       orderIds: parsed.data.order_ids ?? null,
       extras: parsed.data.extras ?? null,
     });
+
+    if (reserva?.estado === "livre") {
+      await reserva.finalizar({ status: 201, body: nota });
+    }
 
     await audit({
       organizationId: authz.org.orgId,
@@ -91,6 +142,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     return ok(nota, { requestId, status: 201 });
   } catch (err) {
+    if (reserva?.estado === "livre") await reserva.abortar();
     if (err instanceof ApiError) {
       return fail(
         err.code as "validation_failed" | "not_found" | "conflict" | "internal_error",

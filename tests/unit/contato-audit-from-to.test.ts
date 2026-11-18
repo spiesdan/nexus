@@ -50,18 +50,25 @@ let estadoAtual: Record<string, unknown>;
  * um SELECT de pré-condição, um UPDATE com retorno, e `rpc` para o evento.
  */
 function clienteFalso(): unknown {
+  // O handler encadeia `.eq(...).eq(...)`: `id` + `organization_id`. O fake
+  // precisa devolver um construtor que se encadeia — um `eq` que retorna só
+  // `{ maybeSingle }` reprova o teste por instrumento, não por produto.
+  const seletor = {
+    eq: (): unknown => seletor,
+    maybeSingle: async (): Promise<unknown> => ({ data: estadoAtual, error: null }),
+  };
   return {
     from: () => ({
-      select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: estadoAtual, error: null }) }),
-      }),
-      update: (patch: Record<string, unknown>) => ({
-        eq: () => ({
+      select: (): unknown => seletor,
+      update: (patch: Record<string, unknown>): unknown => {
+        const atualizador = {
+          eq: (): unknown => atualizador,
           select: () => ({
             maybeSingle: async () => ({ data: { ...estadoAtual, ...patch }, error: null }),
           }),
-        }),
-      }),
+        };
+        return atualizador;
+      },
     }),
     rpc: () => ({ then: (r: (v: unknown) => unknown) => r({ error: null }) }),
   };

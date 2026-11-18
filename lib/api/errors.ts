@@ -72,6 +72,12 @@ export const ApiErrorCodes = {
   // 409 — conflito
   idempotency_conflict: "idempotency_conflict",
   /**
+   * A mesma chave está em execução (reivindicada por outra requisição) e não
+   * terminou dentro da espera. É 409, não 500: repetir com a mesma chave
+   * depois devolve o replay; usar outra chave é decisão do cliente.
+   */
+  idempotency_in_progress: "idempotency_in_progress",
+  /**
    * Contato já existe nesta organização (índice único parcial de telefone,
    * e-mail ou CPF). Era `500 internal_error`: a tela dizia "erro interno" para
    * um caso que o usuário resolve escolhendo outro telefone — ou abrindo a

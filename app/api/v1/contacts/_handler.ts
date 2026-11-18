@@ -472,6 +472,13 @@ export async function patchContactHandler(
     // patch dele passou a ser MERGE (ver abaixo), e merge precisa do estado
     // anterior.
     .select("id, organization_id, is_anonymized, tags, email, phone_number, name, display_name, consent")
+    // ⚠️ A ORGANIZAÇÃO ENTRA NO FILTRO, não só no SELECT. Esta função é genérica
+    // e roda também com service role (que bypassa RLS): sem o `eq`, o contato de
+    // OUTRA organização era buscado por id — e o update abaixo, também sem
+    // filtro, o reescrevia. Medido pelo invariante de cross-tenant do MCP
+    // (`mcp-nao-alcanca-outro-tenant`): antes da correção, o agente de A
+    // renomeava o contato de B.
+    .eq("organization_id", ctx.organization_id)
     .eq("id", contactId)
     .maybeSingle();
 
@@ -565,7 +572,13 @@ export async function patchContactHandler(
 
   const { data: updated, error: updErr } = await supabase
     .from("contacts")
+    // O filtro entra AQUI TAMBÉM, e não só no SELECT acima: entre ler e escrever
+    // há uma janela, e defesa que depende de uma leitura anterior é defesa que
+    // some quando alguém reordena o código. É o mesmo par do `updateLeadHandler`
+    // (`leads/_handler.ts`) — e pelo MCP o client é service-role, que bypassa
+    // RLS: sem o filtro, o contato de outra organização é editável por id.
     .update(patch)
+    .eq("organization_id", ctx.organization_id)
     .eq("id", contactId)
     .select(SELECT_COLS)
     .maybeSingle();

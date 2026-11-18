@@ -3,11 +3,29 @@
 # CUIDADO: sobrescreve o schema/dados atuais do banco.
 #
 #   bash hostgator-setup-kit/restore.sh backups/db-20260702-030000.sql.gz
+#   bash hostgator-setup-kit/restore.sh backups/db-*.sql.gz \
+#        --uploads backups/uploads-product-images-20260702-030000.tgz
+#
+# Os uploads vêm em arquivo SEPARADO de propósito: o dump do banco não carrega
+# arquivo, e restaurar um sem o outro devolve linhas apontando para imagens que
+# não existem mais. Ver `backup-uploads.sh` para a decisão de não sobrescrever
+# destino com conteúdo sem `--substituir`.
 source "$(dirname "$0")/_common.sh"
 enter_project
 
-DUMP="${1:-}"
-[ -n "$DUMP" ] && [ -f "$DUMP" ] || die "Uso: restore.sh <arquivo-db-*.sql.gz>"
+DUMP=""
+UPLOADS=""
+SUBSTITUIR=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --uploads) UPLOADS="${2:-}"; shift 2 ;;
+    --substituir) SUBSTITUIR="--substituir" ;;
+    -*) die "argumento desconhecido: $1" ;;
+    *) DUMP="$1"; shift ;;
+  esac
+done
+
+[ -n "$DUMP" ] && [ -f "$DUMP" ] || die "Uso: restore.sh <arquivo-db-*.sql.gz> [--uploads <uploads-*.tgz>] [--substituir]"
 
 c_ylw "⚠ Isto vai SOBRESCREVER o banco em $NEXT_PUBLIC_SUPABASE_URL."
 read -r -p "Digite 'RESTAURAR' para confirmar: " a
@@ -59,3 +77,20 @@ if [ -f "$PROJECT_DIR/supabase/baseline.sql" ]; then
 fi
 
 c_ylw "Reinicie o app: docker compose $(dc_files) restart app"
+# ── Uploads: um arquivo SEPARADO, e por decisão ─────────────────────────────
+#
+# O dump do banco não leva arquivo. Quem restaura o banco e esquece os uploads
+# fica com linhas apontando para imagens que não existem — a tela mostra
+# imagem quebrada sem erro no log. Aqui o restore dos uploads é EXPLÍCITO
+# (`--uploads`), e não automático: varrer o diretório atrás de "um uploads-*"
+# escolheria pelo nome mais recente, que pode ser de outra instalação.
+if [ -n "$UPLOADS" ]; then
+  step "Restaurando uploads de $UPLOADS"
+  # shellcheck disable=SC2086
+  bash "$(dirname "$0")/backup-uploads.sh" --restore "$UPLOADS" $SUBSTITUIR \
+    || die "o banco foi restaurado, mas os UPLOADS NÃO. NÃO suba o app assim."
+  c_grn "✓ uploads restaurados"
+else
+  c_ylw "⚠ uploads NÃO restaurados (nenhum --uploads informado)."
+  c_dim "  Se este backup tem uploads-*.tgz, restaure com --uploads <arquivo>."
+fi

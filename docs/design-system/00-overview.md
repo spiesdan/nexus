@@ -1,6 +1,12 @@
 # 00 — Overview
 
-> **Source of truth:** `app/design/README.md`, `app/design/lib/tokens.ts`
+> **⚠️ Histórico (2026-04-28).** Este capítulo descreve a era **Sage**, superada em
+> 2026-09-21 pelo redesign descrito em [`DESIGN.md`](../../DESIGN.md). Os valores que o
+> produto pinta estão em [`app/globals.css`](../../app/globals.css); **em conflito, o CSS
+> vence**. Ver [`README.md`](./README.md) para o mapa do que ainda vale.
+
+> **Fonte canônica hoje:** [`DESIGN.md`](../../DESIGN.md) + [`app/globals.css`](../../app/globals.css).
+> O `app/design/lib/tokens.ts` citado abaixo é a **maquete histórica** de abril/2026.
 
 ## Filosofia
 

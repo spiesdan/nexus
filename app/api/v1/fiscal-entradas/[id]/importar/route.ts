@@ -12,6 +12,9 @@ import { type NextRequest } from "next/server";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { ajustarEstoque } from "@/lib/estoque/ajustar";
+import { reivindicarLadoDaImportacao } from "@/lib/fiscal/importacao-da-entrada";
+import { logger } from "@/lib/logger";
 import {
   COLUNAS_DA_ENTRADA,
   type DuplicataEntrada,
@@ -107,8 +110,34 @@ export async function POST(
     contactId = (contato as unknown as { id: string } | null)?.id ?? null;
   }
 
-  let produtosTocados = 0;
+  // Cada lado é reivindicado por CAS antes de tocar em qualquer coisa: dois
+  // POSTs concorrentes não somam o mesmo estoque duas vezes. Quem perde a
+  // reivindicação e encontra o lado ainda em andamento recebe 409 — nunca um
+  // falso "importada".
+  const avisos: string[] = [];
+  let estoqueReivindicado = false;
   if (!entrada.estoque_processado_em) {
+    const reivindicacao = await reivindicarLadoDaImportacao(supabase, {
+      orgId: authz.org.orgId,
+      entradaId: id,
+      lado: "estoque",
+    });
+    if (reivindicacao.estado === "erro") {
+      return fail("internal_error", "Erro ao reivindicar a importação do estoque.", 500, { requestId });
+    }
+    if (reivindicacao.estado === "em_andamento") {
+      return fail(
+        "state_conflict",
+        "Importação desta entrada em andamento — aguarde e recarregue.",
+        409,
+        { requestId },
+      );
+    }
+    estoqueReivindicado = reivindicacao.estado === "reivindicado";
+  }
+
+  let produtosTocados = 0;
+  if (estoqueReivindicado) {
     for (const [indice, item] of itens.entries()) {
       const codigo = (item.codigo || "").trim();
       const qtd = Math.round(Number(item.quantidade) || 0);
@@ -151,16 +180,32 @@ export async function POST(
 
       if (achado) {
         // Estoque fracionado (kg, metro) arredonda: a coluna é inteira.
-        if (achado.controla_estoque && qtd !== 0) {
-          await supabase
-            .from("catalog_products")
-            .update({ quantidade: achado.quantidade + qtd })
-            .eq("id", achado.id)
-            .eq("organization_id", authz.org.orgId);
+        //
+        // A soma passa por `ajustarEstoque` (compare-and-swap), não por
+        // `quantidade lida + qtd`: outra entrada/pedido pode mexer no mesmo
+        // produto entre a leitura e a escrita, e o UPDATE absoluto apagaria a
+        // movimentação alheia. O CAS relê e tenta de novo.
+        if (qtd !== 0) {
+          const ajuste = await ajustarEstoque(supabase, {
+            organizationId: authz.org.orgId,
+            productId: achado.id,
+            delta: qtd,
+            permitirNegativo: true,
+          });
+          if (!ajuste.ok) {
+            const aviso = `Estoque de ${codigo || achado.id} não movimentado (${ajuste.motivo}).`;
+            avisos.push(aviso);
+            logger.error("[fiscal-entradas.importar] ajuste de estoque falhou", {
+              organization_id: authz.org.orgId,
+              entrada_id: id,
+              product_id: achado.id,
+              motivo: ajuste.motivo,
+            });
+          }
         }
       } else if (codigo !== "") {
         // Produto novo: nasce do XML — custo = o que pagamos ao fornecedor.
-        const { data: criado } = await supabase
+        const { data: criado, error: erroCriacao } = await supabase
           .from("catalog_products")
           .insert({
             organization_id: authz.org.orgId,
@@ -179,7 +224,47 @@ export async function POST(
           })
           .select("id")
           .single();
-        const novoId = (criado as unknown as { id: string } | null)?.id;
+        let novoId = (criado as unknown as { id: string } | null)?.id;
+
+        // Corrida na unique (org, codigo): outra importação criou o MESMO
+        // produto entre a consulta por código e o INSERT. Sem reler, o item
+        // desta nota ficaria sem vínculo e a quantidade dela não entraria no
+        // estoque — perda silenciosa, não duplicidade. Relê e soma a
+        // quantidade desta nota (o INSERT do vencedor já contou a dele).
+        if (!novoId && erroCriacao?.code === "23505") {
+          const { data: existente } = await supabase
+            .from("catalog_products")
+            .select("id, quantidade, controla_estoque")
+            .eq("organization_id", authz.org.orgId)
+            .eq("codigo", codigo)
+            .maybeSingle();
+          const produtoExistente = existente as unknown as {
+            id: string;
+            quantidade: number;
+            controla_estoque: boolean;
+          } | null;
+          if (produtoExistente) {
+            novoId = produtoExistente.id;
+            if (qtd !== 0) {
+              const ajuste = await ajustarEstoque(supabase, {
+                organizationId: authz.org.orgId,
+                productId: produtoExistente.id,
+                delta: qtd,
+                permitirNegativo: true,
+              });
+              if (!ajuste.ok) {
+                avisos.push(`Estoque de ${codigo} não movimentado (${ajuste.motivo}).`);
+                logger.error("[fiscal-entradas.importar] ajuste pós-corrida falhou", {
+                  organization_id: authz.org.orgId,
+                  entrada_id: id,
+                  product_id: produtoExistente.id,
+                  motivo: ajuste.motivo,
+                });
+              }
+            }
+          }
+        }
+
         if (novoId && vinculo && !vinculo.produto_id) {
           await supabase
             .from("fiscal_document_items")
@@ -187,21 +272,58 @@ export async function POST(
             .eq("organization_id", authz.org.orgId)
             .eq("id", vinculo.id);
         }
+        if (!novoId) {
+          // Nem criou, nem achou o vencedor: o item não pode sumir em silêncio.
+          avisos.push(`Produto ${codigo} não criado (${erroCriacao?.code ?? "erro"}).`);
+          logger.error("[fiscal-entradas.importar] produto não criado", {
+            organization_id: authz.org.orgId,
+            entrada_id: id,
+            codigo,
+            erro: erroCriacao?.message?.slice(0, 300) ?? "sem erro e sem id",
+          });
+          continue;
+        }
       } else {
         // Sem código e sem associação: não há como identificar o produto.
         continue;
       }
       produtosTocados++;
     }
+    // O flag do estoque já foi gravado pela reivindicação (CAS). Aqui só fica
+    // o contato do fornecedor, que não participa da trava.
     await supabase
       .from("fiscal_entradas")
-      .update({ estoque_processado_em: new Date().toISOString(), contact_id: contactId })
+      .update({ contact_id: contactId })
       .eq("id", id)
       .eq("organization_id", authz.org.orgId);
   }
 
-  let parcelasGeradas = 0;
+  let financeiroReivindicado = false;
+  let financeiroConcluido = !!entrada.financeiro_processado_em;
   if (!entrada.financeiro_processado_em) {
+    const reivindicacao = await reivindicarLadoDaImportacao(supabase, {
+      orgId: authz.org.orgId,
+      entradaId: id,
+      lado: "financeiro",
+    });
+    if (reivindicacao.estado === "erro") {
+      return fail("internal_error", "Erro ao reivindicar a importação do financeiro.", 500, { requestId });
+    }
+    if (reivindicacao.estado === "em_andamento") {
+      return fail(
+        "state_conflict",
+        "Importação desta entrada em andamento — aguarde e recarregue.",
+        409,
+        { requestId },
+      );
+    }
+    financeiroReivindicado = reivindicacao.estado === "reivindicado";
+    financeiroConcluido =
+      reivindicacao.estado === "reivindicado" || reivindicacao.estado === "ja_processado";
+  }
+
+  let parcelasGeradas = 0;
+  if (financeiroReivindicado) {
     const { data: ja } = await supabase
       .from("financial_pagaveis")
       .select("parcela_n")
@@ -247,11 +369,27 @@ export async function POST(
           resourceId: id,
           requestId,
         });
+      } else if (error.code !== "23505") {
+        // 23505 = retry da mesma parcela (unique org+entrada+parcela_n):
+        // conta como existente. Qualquer outro erro é dinheiro que não nasceu.
+        const aviso = `Parcela ${p.n} não gerada (${error.code ?? "erro"}).`;
+        avisos.push(aviso);
+        logger.error("[fiscal-entradas.importar] pagável não criado", {
+          organization_id: authz.org.orgId,
+          entrada_id: id,
+          parcela: p.n,
+          erro: error.message.slice(0, 300),
+        });
       }
     }
+  }
+
+  // `importada` só depois do financeiro: estoque movido sem contas a pagar
+  // continua "manifestada" e a conciliação cobra a outra metade.
+  if (financeiroConcluido) {
     await supabase
       .from("fiscal_entradas")
-      .update({ financeiro_processado_em: new Date().toISOString(), status: "importada" })
+      .update({ status: "importada" })
       .eq("id", id)
       .eq("organization_id", authz.org.orgId);
   }
@@ -265,5 +403,13 @@ export async function POST(
     requestId,
   });
 
-  return ok({ importada: true, produtosTocados, parcelasGeradas }, { requestId, status: 201 });
+  return ok(
+    {
+      importada: true,
+      produtosTocados,
+      parcelasGeradas,
+      ...(avisos.length > 0 ? { avisos } : {}),
+    },
+    { requestId, status: 201 },
+  );
 }

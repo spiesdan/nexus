@@ -82,6 +82,20 @@ class ConsultaPg<T> implements PromiseLike<RespostaFalsa<T[]>> {
   }
 
   /**
+   * `.in(coluna, valores)` → `coluna = ANY($n)`.
+   *
+   * Nasceu porque `withConversas` (contacts/_handler.ts) lista as conversas dos
+   * contatos da página com `.in("contact_id", ids)` e o adaptador ESTOUROU ao
+   * ser chamado pelo invariante de cross-tenant. Lista vazia é caso real do
+   * chamador? Não — ele faz early-return antes; aqui a lista vazia devolve
+   * "nenhuma linha", que é o que `= ANY('{}')` faz.
+   */
+  in(coluna: string, valores: readonly unknown[]): this {
+    this.filtros.push(["in", coluna, [...valores]]);
+    return this;
+  }
+
+  /**
    * `<` e `>` — nasceram porque `vencePropostasDeDado` os usa e o adaptador
    * ESTOUROU ao ser chamado. Terceira vez que o `naoImplementado` paga o
    * próprio custo: devolver vazio teria deixado 7 casos verdes medindo nada.
@@ -127,10 +141,7 @@ class ConsultaPg<T> implements PromiseLike<RespostaFalsa<T[]>> {
     return this;
   }
 
-  /** Presentes para ESTOURAR: o código que os usar precisa de implementação real. */
-  in(): never {
-    return naoImplementado("in");
-  }
+  /** Presente para ESTOURAR: o código que o usar precisa de implementação real. */
   neq(): never {
     return naoImplementado("neq");
   }
@@ -138,6 +149,19 @@ class ConsultaPg<T> implements PromiseLike<RespostaFalsa<T[]>> {
   private montar(): { texto: string; valores: unknown[] } {
     const valores: unknown[] = [];
     const onde = this.filtros.map(([op, c, v]) => {
+      // `.in` vira `in ($n, $n+1, …)` e não `= ANY($n)`: array JS chega ao
+      // driver como `{a,b}` de tipo desconhecido, e `ANY` sem tipo inferido
+      // estoura — o que faria o adaptador reprovar por instrumento, não por
+      // isolamento. Lista vazia → `in (null)`, que não casa com nada.
+      if (op === "in") {
+        const lista = (v as unknown[]) ?? [];
+        if (lista.length === 0) return `"${c}" in (null)`;
+        const marcas = lista.map((item) => {
+          valores.push(item);
+          return `$${valores.length}`;
+        });
+        return `"${c}" in (${marcas.join(", ")})`;
+      }
       valores.push(v);
       return `"${c}" ${op} $${valores.length}`;
     });

@@ -1,5 +1,10 @@
 # 09 — Anti-patterns
 
+> **⚠️ Histórico (2026-04-28).** Este capítulo descreve a era **Sage**, superada em
+> 2026-09-21 pelo redesign descrito em [`DESIGN.md`](../../DESIGN.md). Os valores que o
+> produto pinta estão em [`app/globals.css`](../../app/globals.css); **em conflito, o CSS
+> vence**. Ver [`README.md`](./README.md) para o mapa do que ainda vale.
+
 > **Quando em dúvida, consulte aqui antes de implementar.** Cada item tem o "por quê" curto.
 
 Lista canônica do que **não fazer** no Nexus. Anti-patterns ficam aqui pra preservar identidade visual e evitar convergência ao padrão SaaS genérico.
@@ -23,14 +28,14 @@ Lista canônica do que **não fazer** no Nexus. Anti-patterns ficam aqui pra pre
 ## 3. ❌ Gradient roxo/azul/rosa em hero ou primary button
 
 **Por quê:** símbolo do "AI SaaS 2024". Datado e clichê. Não combina com soft-tech calmo.
-**✅ Sim:** solid `accent-500` (Sage `#67885d`). Profundidade vem de border + shadow neutro, não gradient.
+**✅ Sim:** solid `--color-accent` (o grau 600 da rampa; `#7e77f0` na instalação de fábrica — o valor real está em `app/globals.css`). Profundidade vem de border + shadow neutro, não gradient.
 
 ---
 
 ## 4. ❌ `bg-zinc-900` ou `bg-slate-900` em dark mode
 
 **Por quê:** zinc/slate são cool-gray geométricos. A paleta é warm (greige). Misturar quebra coerência.
-**✅ Sim:** `bg: #161510` (warm dark canônico). Ver `02-palette-sage.md`.
+**✅ Sim:** `bg-background` / `bg-surface` (os neutros quentes do tema escuro: `#151515` / `#1c1c1c` no CSS). Ver `app/globals.css` → `[data-theme="dark"]`.
 
 ---
 
