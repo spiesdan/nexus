@@ -297,3 +297,90 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
    quem tinha build local não perde nada; clone novo roda `pnpm mobile:build`.
 9. **Produção.** Nenhum acesso, escrita, deploy ou operação real (fiscal, financeira,
    WhatsApp). Tudo local, em worktree.
+
+---
+
+## 9. Opção B (credencial de dispositivo) — estado em 18/11/2026
+
+**Decisão do dono: B.** Justificativa registrada: o APK é publicado uma vez para
+instalações self-host com URLs diferentes; `server.url` fixo (A) amarraria o artefato a um
+domínio, e abandonar o SQLite (C) jogaria fora a captura offline que já existe.
+
+> ⚠️ O worktree original (`.../T/aaa-front-mobile`) foi apagado por um reinício do
+> servidor. O novo worktree canônico desta fatia é
+> **`/Users/bill/Downloads/nexus-worktrees/offline-device`**, branch
+> **`feat/offline-device`** (a partir de `nexus/main` @ `014ccef3`).
+
+### 9.1 Entregue nesta parada (fatia B-1: credencial no servidor)
+
+| Peça | Arquivo |
+|---|---|
+| Tabela + RLS + índices + trigger | `supabase/migrations/20261123140000_0321_credencial_de_dispositivo_offline.sql` |
+| Apêndice idempotente | fim de `supabase/baseline.sql` |
+| Linha do MANIFEST | `supabase/migrations/MANIFEST.md` (0320) |
+| Auth do bearer (hash, expiração, revogação, escopo, papel ao vivo, rate limit, `last_seen`) | `lib/auth/device-token.ts` |
+| Schema de criação | `lib/schemas/offline-devices.ts` (+ export em `lib/schemas/index.ts`) |
+| Emitir/listar | `app/api/v1/offline-devices/route.ts` |
+| Revogar | `app/api/v1/offline-devices/[id]/revoke/route.ts` |
+| Validar pareamento | `app/api/v1/device/me/route.ts` |
+| Rota do aparelho liberada no proxy | `lib/auth/public-paths.ts` (`/^\/api\/v1\/device\//`) |
+| Auditoria | `lib/audit/actions.ts` (`offline_device.created`, `offline_device.revoked`) |
+| Teste unitário | `tests/unit/device-token.test.ts` (6/6) |
+
+**Contratos já fixados** (não reabrir sem motivo):
+
+- token `nod_<8 hex>_<32 bytes base64url>`; banco só `sha256` hex; prefixo `nod_ab12cd34` na lista;
+- escopos fechados: `offline:pedidos:write`, `offline:catalogo:read`; `scopes` não entra no body;
+- emissão `POST /api/v1/offline-devices` (admin; rate limit 10/h/org; plaintext uma vez);
+- `POST /api/v1/offline-devices/[id]/revoke` idempotente; `GET /api/v1/device/me` devolve org/nome/prazo;
+- 401 `token_expired` × 401 `token_revoked` × 403 `forbidden_scope`/`forbidden` (papel ao vivo);
+- uso: 120 req/min por hash+IP; `last_seen_at`/`last_seen_ip` atualizados em toda chamada válida;
+- credencial vinculada a `user_id` = **vendedor que assina o pedido** (default: quem cria); papel
+  exigido na emissão: `agent|vendedor|manager|admin`; revogar/remover o vínculo corta o aparelho na hora.
+
+### 9.2 Falta (ordem sugerida, uma fatia por PR)
+
+1. **B-2 — pedidos:** `POST /api/v1/device/orders` (auth + `ESCOPO_PEDIDOS` + papel, recusa
+   `ignorar_estoque|ignorar_credito`, chama `criarPedidoComercial(admin, admin, {orgId, userId,
+   podeIgnorar:false}, entrada)`, 200 em `ja_existia`, audit com `{canal:"offline_device", device_id}`).
+   Reaproveita a `chave_sincronizacao` existente — nenhuma regra nova.
+2. **B-3 — catálogo:** `GET /api/v1/device/catalog` (auth + `ESCOPO_CATALOGO`; contatos paginados por
+   `id` com cursor, 200/página; produtos 500 e tabelas 100 na primeira página; campos
+   `{id,nome,documento,cidade,limite_cents}` / `{id,codigo,nome,preco_cents,controla_estoque,quantidade,ativo}`;
+   excluir anonimizado/mesclado; nunca CPF/e-mail/telefone).
+3. **B-4 — cliente do shell:** `lib/offline/credencial.ts` (meta: `dispositivo_url|token|nome|
+   organizacao|usuario|expira_em|estado`; código `NEXUS1.<base64url({u,t})>`),
+   `lib/offline/http.ts` (CapacitorHttp nativo + fetch no navegador; Bearer só no header;
+   timeout 30 s), `lib/offline/catalogo.ts` (extrair `gravarCatalogo` e somar
+   `sincronizarCatalogoDoDispositivo`), `lib/offline/sync.ts` (4º parâmetro `caminhoDoPedido`,
+   default `/api/v1/commercial-orders`), `mobile/src/shell.ts` + `mobile/index.html` (pareamento,
+   estados pareado/expirado/revogado/sem_rede, dreno com backoff, 401 mantém a fila).
+4. **B-5 — UI no sistema:** `app/app/settings/devices/page.tsx` + `_components` (admin; lista,
+   criar com vendedor via `/api/v1/team/assignable`, exibir código de pareamento uma vez, revogar),
+   entrada em `lib/navigation/registry.ts` (`/app/settings/devices`, grupo `organizacao`,
+   seção “Dados e acesso”, `minRole: admin`, ícone `DeviceMobile`).
+5. **B-6 — testes/invariantes:** `tests/invariants/offline-devices-rls.test.ts` (dois tenants: token
+   de A não lê/revoga aparelho de B; `anon` sem select; hash único; CHECK de formato),
+   unit das rotas com dublê, e **`pnpm test:db`**.
+6. **B-7 — aparelho:** APK físico provando `CapacitorHttp` + pareamento + dreno + 401/revogação
+   (`[!]` até então). Atualizar a matriz do §2.
+
+### 9.3 Como retomar
+
+```bash
+cd /Users/bill/Downloads/nexus-worktrees/offline-device
+git fetch nexus && git rebase nexus/main      # branch feat/offline-device
+pnpm install                                   # já feito neste worktree
+pnpm exec vitest run tests/unit/device-token.test.ts
+pnpm test:db                                   # quando B-6 existir (Docker)
+```
+
+**Revisão de segurança:** pedir ao Agente A no PR — pontos a auditar: hash × plaintext, escopo
+fechado, filtro de `organization_id` vindo do token (nunca de body/query), papel lido ao vivo,
+`last_seen` como observabilidade e não autorização, `/device/*` público no proxy **com** guard na
+rota, e o fato de `/api/v1/offline-devices` (gestão) NÃO ser público.
+
+### 9.4 O que NÃO foi executado
+
+`pnpm test:db` (sem os invariantes de B-6 ainda), build do APK, e qualquer validação em aparelho.
+Nada de produção. A suíte completa não rodou nesta saída (ordem de teto de concorrência).

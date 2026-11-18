@@ -11,6 +11,7 @@ export * from "./health";
 export * from "./leads";
 export * from "./contacts";
 export * from "./team";
+export * from "./offline-devices";
 export * from "./onboarding";
 export * from "./messaging";
 export * from "./routing";

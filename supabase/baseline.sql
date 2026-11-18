@@ -30433,8 +30433,7 @@ comment on column public.invoices.cancelamento_em_andamento_em is
 -- 42 das 62 definers de public estavam nessa forma. O bloco ADICIONA `pg_temp`
 -- ao fim do caminho que cada uma já tinha — não troca o caminho existente,
 -- então quem listava `private`/`extensions` continua listando.
--- ============================================================================
-do $mig_definer_search_path$
+-- =====================================================================do $mig_definer_search_path$
 declare
   f record;
 begin
@@ -30461,3 +30460,63 @@ begin
   end loop;
 end
 $mig_definer_search_path$;
+=======
+-- 0321 — credencial de dispositivo do shell offline.
+-- Ver supabase/migrations/20261123140000_0321_credencial_de_dispositivo_offline.sql.
+--
+-- O shell (origem https://localhost) não tem o cookie de sessão do sistema e a
+-- ponte do Capacitor não atravessa a navegação para a origem remota. Ele passa
+-- a drenar a própria fila com um bearer emitido com sessão humana, escopo
+-- fechado e prazo. O token só vale em /api/v1/device/*; guarda-se só o sha256.
+-- ============================================================================
+create table if not exists public.offline_devices (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  nome text not null check (char_length(btrim(nome)) between 1 and 100),
+  token_hash text not null,
+  token_prefix text not null,
+  scopes jsonb not null default
+    '["offline:pedidos:write","offline:catalogo:read"]'::jsonb
+    check (jsonb_typeof(scopes) = 'array'),
+  last_seen_at timestamptz,
+  last_seen_ip inet,
+  expires_at timestamptz not null,
+  revoked_at timestamptz,
+  revoked_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint offline_devices_token_hash_key unique (token_hash),
+  constraint offline_devices_hash_formato check (token_hash ~ '^[0-9a-f]{64}$'),
+  constraint offline_devices_prefixo_formato check (token_prefix ~ '^nod_[0-9a-f]{8}$')
+);
+
+create index if not exists offline_devices_org_idx
+  on public.offline_devices (organization_id, created_at desc)
+  where revoked_at is null;
+
+create index if not exists offline_devices_expira_idx
+  on public.offline_devices (expires_at)
+  where revoked_at is null;
+
+alter table public.offline_devices enable row level security;
+
+drop policy if exists offline_devices_admin_only on public.offline_devices;
+create policy offline_devices_admin_only on public.offline_devices
+  using (
+    public.fn_is_platform_admin()
+    or public.fn_role_at_least(organization_id, 'admin')
+  )
+  with check (
+    public.fn_is_platform_admin()
+    or public.fn_role_at_least(organization_id, 'admin')
+  );
+
+revoke all on public.offline_devices from anon;
+grant select, insert, update, delete on public.offline_devices to authenticated;
+grant all on public.offline_devices to service_role;
+
+drop trigger if exists trg_offline_devices_updated_at on public.offline_devices;
+create trigger trg_offline_devices_updated_at
+  before update on public.offline_devices
+  for each row execute function public.fn_set_updated_at();
