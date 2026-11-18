@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
-import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import { comoMoeda } from "@/lib/format/moeda";
 
 export interface ContatoOpcao {
   id: string;
+  /** Nome fantasia (PJ). Regra do dono: é ele que aparece primeiro. */
+  fantasia: string | null;
   display_name: string | null;
   name: string | null;
   phone_number: string | null;
@@ -153,7 +155,7 @@ export function CustomerSelector({
     const b = busca.trim().toLowerCase();
     if (!b) return [];
     const locais = contatos.filter((c) =>
-      [c.display_name, c.name, c.phone_number, c.email]
+      [c.fantasia, c.display_name, c.name, c.phone_number, c.email]
         .filter(Boolean)
         .some((v) => (v as string).toLowerCase().includes(b)),
     );
@@ -183,12 +185,13 @@ export function CustomerSelector({
                   type="button"
                   className="w-full px-3 py-2 text-left text-sm hover:bg-muted"
                   onClick={() => {
-                    const nome = rotuloDoContato(c, t);
+                    const nome = nomeDeExibicao(c, t);
                     setBusca(nome);
                     aoEscolher(c.id, nome);
                   }}
+                  aria-label={[nomeDeExibicao(c, t), c.phone_number].filter(Boolean).join(" — ")}
                 >
-                  {rotuloDoContato(c, t)}
+                  {nomeDeExibicao(c, t)}
                   {c.phone_number && (
                     <span className="ml-2 text-xs text-muted-foreground">{c.phone_number}</span>
                   )}

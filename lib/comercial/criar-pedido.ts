@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { cabeNoCredito, situacaoDeCredito } from "@/lib/comercial/credito";
 import { vendedorDoPedido } from "@/lib/comercial/vendedor-do-pedido";
+import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import {
   calcularParcelas,
   COLUNAS_DO_PEDIDO,
@@ -310,13 +311,33 @@ export async function criarPedidoComercial(
     return { ok: false, code: "internal_error", message: "Erro ao numerar o pedido." };
   }
 
+  /**
+   * O nome gravado no pedido sai do CADASTRO, não do que a tela mandou.
+   *
+   * Regra do dono (18/11/2026): nome fantasia primeiro; sem fantasia, razão
+   * social/nome. A tela já manda o rótulo certo, mas o corpo da requisição não
+   * é fonte confiável para o snapshot que vai para o PDF e para o financeiro —
+   * e a tool de IA/mcp também cria pedido por aqui. Sem `contact_id` (cliente
+   * avulso), o nome digitado é a única fonte e é preservado.
+   */
+  let nomeDoClienteDoPedido = entrada.cliente_nome;
+  if (entrada.contact_id) {
+    const { data: contato } = await supabase
+      .from("contacts")
+      .select("fantasia, display_name, name")
+      .eq("id", entrada.contact_id)
+      .eq("organization_id", ctx.orgId)
+      .maybeSingle();
+    if (contato) nomeDoClienteDoPedido = nomeDeExibicao(contato);
+  }
+
   const { data: pedido, error: erroPedido } = await supabase
     .from("commercial_orders")
     .insert({
       organization_id: ctx.orgId,
       numero,
       contact_id: entrada.contact_id ?? null,
-      cliente_nome: entrada.cliente_nome,
+      cliente_nome: nomeDoClienteDoPedido,
       cliente_documento: entrada.cliente_documento ?? null,
       vendedor_user_id: vendedorDoPedido(entrada, ctx.userId),
       status: statusFinal,

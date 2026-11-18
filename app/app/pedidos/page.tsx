@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { isServiceRoleConfigured } from "@/lib/audit";
 import { comNomeDoEmitente } from "@/lib/comercial/emitente";
+import { comNomeDoContato } from "@/lib/contacts/nome-de-exibicao";
 import { extremosDoPeriodo, FUSO_PADRAO } from "@/lib/comercial/janela-do-dia";
 import { vendedoresDoMercos } from "@/lib/comercial/vendedores-do-mercos";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -103,11 +104,42 @@ export default async function PedidosPage({
       erro: error.message.slice(0, 300),
     });
   }
+  /**
+   * O NOME DO CLIENTE vem do contato VINCULADO, em tempo de leitura.
+   *
+   * `cliente_nome` é snapshot: é o nome que valia no dia do pedido (e o que o
+   * impresso usou). A regra do dono (18/11/2026) é que a tela mostre **nome
+   * fantasia** primeiro; resolver aqui, e não no snapshot, faz o pedido antigo
+   * mostrar a fantasia de hoje **sem reescrever o histórico**. Pedido sem
+   * vínculo continua com o snapshot, porque não há cadastro de onde tirar.
+   */
+  const pedidosDaPagina = (data ?? []) as unknown as Array<{
+    contact_id: string | null;
+    cliente_nome: string;
+    created_by: string | null;
+    vendedor_user_id: string | null;
+  }>;
+  const idsDosContatos = [
+    ...new Set(pedidosDaPagina.map((p) => p.contact_id).filter((id): id is string => Boolean(id))),
+  ];
+  const contatosPorId = new Map<string, { fantasia: string | null; display_name: string | null; name: string | null }>();
+  if (idsDosContatos.length > 0) {
+    const { data: contatos } = await supabase
+      .from("contacts")
+      .select("id, fantasia, display_name, name")
+      .eq("organization_id", activeOrg.orgId)
+      .in("id", idsDosContatos);
+    for (const contato of (contatos ?? []) as Array<{
+      id: string;
+      fantasia: string | null;
+      display_name: string | null;
+      name: string | null;
+    }>) {
+      contatosPorId.set(contato.id, contato);
+    }
+  }
   const iniciaisComEmitente = await comNomeDoEmitente(
-    (data ?? []) as unknown as Array<{
-      created_by: string | null;
-      vendedor_user_id: string | null;
-    }>,
+    comNomeDoContato(pedidosDaPagina, contatosPorId),
   );
 
   /**

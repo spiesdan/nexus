@@ -6,6 +6,7 @@
  * DELETE /api/v1/commercial-orders/[id] — exclui (manager+). Devolve o
  *         estoque baixado, barra com NF vinculada ou embarque ativo.
  */
+import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
@@ -142,15 +143,22 @@ export async function PATCH(
     } else {
       const { data: contato } = await supabase
         .from("contacts")
-        .select("display_name, name, cnpj")
+        .select("fantasia, display_name, name, cnpj")
         .eq("id", parsed.data.contact_id)
         .eq("organization_id", authz.org.orgId)
         .maybeSingle();
       if (!contato) {
         return fail("validation_failed", "Cliente não encontrado.", 422, { requestId });
       }
-      const c = contato as unknown as { display_name: string | null; name: string | null; cnpj: string | null };
-      atualizacao.cliente_nome = (c.display_name ?? c.name ?? "SEM NOME").slice(0, 200);
+      const c = contato as unknown as {
+        fantasia: string | null;
+        display_name: string | null;
+        name: string | null;
+        cnpj: string | null;
+      };
+      // Regra do dono (18/11/2026): fantasia primeiro; sem fantasia, razão
+      // social/nome. Um resolvedor só — nada de `??` repetido por tela.
+      atualizacao.cliente_nome = nomeDeExibicao(c).slice(0, 200);
       atualizacao.cliente_documento = c.cnpj;
     }
   }
