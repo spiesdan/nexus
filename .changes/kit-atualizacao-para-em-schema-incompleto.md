@@ -4,8 +4,8 @@ secao: corrigido
 titulo: Atualização para quando o banco recusa parte do schema
 ---
 
-O `update.sh` aplicava o schema e, se o banco recusasse parte dele, **avisava e
-continuava**: contêineres subiam na versão nova, o site respondia 200 e uma
+O `update.sh` aplicava o schema e, se o banco recusasse parte dele, avisava e
+**continuava**: contêineres subiam na versão nova, o site respondia 200 e uma
 tabela simplesmente não existia — o defeito apareceria só quando alguém usasse o
 recurso.
 
