@@ -18,6 +18,7 @@ import {
   marcarAceito,
   marcarRejeitado,
   reabrirRejeitado,
+  recuperarTravados,
   reservarParaEnvio,
   type Db,
 } from "@/lib/offline/outbox";
@@ -32,6 +33,7 @@ interface Linha {
   ultimo_erro: string | null;
   criado_em: string;
   enviado_em: string | null;
+  reservado_em: string | null;
   pedido_id: string | null;
   pedido_numero: number | null;
 }
@@ -85,16 +87,39 @@ function bancoFake(): Db & { linhas: Linha[] } {
           ultimo_erro: null,
           criado_em,
           enviado_em: null,
+          reservado_em: null,
           pedido_id: null,
           pedido_numero: null,
         });
         return { changes: 1 };
       }
       if (q.startsWith("UPDATE pedidos_pendentes SET status = 'enviando'")) {
-        const l = linhas.find((x) => x.uuid === params[0] && x.status === "pendente");
+        const [agora, uuid] = params as [string, string];
+        const l = linhas.find((x) => x.uuid === uuid && x.status === "pendente");
         if (!l) return { changes: 0 };
         l.status = "enviando";
+        l.reservado_em = agora;
         return { changes: 1 };
+      }
+      // Recuperação das reservas abandonadas — vem ANTES do ramo genérico de
+      // `pendente`, senão o prefixo compartilhado o engoliria e o teste
+      // mediria a transição errada.
+      if (
+        q.startsWith(
+          "UPDATE pedidos_pendentes SET status = 'pendente', reservado_em = NULL",
+        )
+      ) {
+        const limite = params[0] as string;
+        let n = 0;
+        for (const l of linhas) {
+          if (l.status !== "enviando") continue;
+          if (l.reservado_em === null || l.reservado_em < limite) {
+            l.status = "pendente";
+            l.reservado_em = null;
+            n++;
+          }
+        }
+        return { changes: n };
       }
       if (q.startsWith("UPDATE pedidos_pendentes SET status = 'aceito'")) {
         const l = linhas.find((x) => x.uuid === params[3]);
@@ -278,6 +303,77 @@ describe("a fila", () => {
     await reservarParaEnvio(db, UUID2);
     await marcarRejeitado(db, { uuid: UUID2, motivo: "x", agora: AGORA });
     expect(await contarAbertos(db)).toEqual({ pendentes: 1, rejeitados: 1 });
+  });
+});
+
+describe("retomada após reinício", () => {
+  it("reserva abandonada volta para a fila depois do limite", async () => {
+    const db = bancoFake();
+    await enfileirarPedido(db, {
+      uuid: UUID1,
+      numero_provisorio: "OFF-0001",
+      payload: pedidoFake(),
+      agora: "2026-10-10T11:00:00.000Z",
+    });
+    // O app reservou e morreu: a linha ficou `enviando`.
+    expect(await reservarParaEnvio(db, UUID1, "2026-10-10T11:00:00.000Z")).toBe(true);
+    expect(db.linhas[0]?.status).toBe("enviando");
+
+    expect(await recuperarTravados(db, { agora: AGORA })).toBe(1);
+    expect(db.linhas[0]?.status).toBe("pendente");
+    expect(await filaPendente(db)).toHaveLength(1);
+    // E volta a ser reservável — é o que faz o pedido subir na próxima.
+    expect(await reservarParaEnvio(db, UUID1, AGORA)).toBe(true);
+  });
+
+  it("reserva RECENTE não é roubada de quem está enviando agora", async () => {
+    const db = bancoFake();
+    await enfileirarPedido(db, {
+      uuid: UUID1,
+      numero_provisorio: "OFF-0001",
+      payload: pedidoFake(),
+      agora: AGORA,
+    });
+    await reservarParaEnvio(db, UUID1, "2026-10-10T12:00:00.000Z");
+    expect(await recuperarTravados(db, { agora: "2026-10-10T12:00:30.000Z" })).toBe(0);
+    expect(db.linhas[0]?.status).toBe("enviando");
+  });
+
+  it("linha sem carimbo (versão anterior à coluna) também é recuperada", async () => {
+    // O APK antigo não gravava `reservado_em`: a coluna chega nula. Não há como
+    // saber quando reservou — e a chave de sincronização cobre o reenvio.
+    const db = bancoFake();
+    await enfileirarPedido(db, {
+      uuid: UUID1,
+      numero_provisorio: "OFF-0001",
+      payload: pedidoFake(),
+      agora: AGORA,
+    });
+    db.linhas[0]!.status = "enviando";
+    db.linhas[0]!.reservado_em = null;
+    expect(await recuperarTravados(db, { agora: AGORA })).toBe(1);
+    expect(db.linhas[0]?.status).toBe("pendente");
+  });
+
+  it("o dreno retoma o que ficou preso em vez de ignorar para sempre", async () => {
+    const db = bancoFake();
+    await enfileirarPedido(db, {
+      uuid: UUID1,
+      numero_provisorio: "OFF-0001",
+      payload: pedidoFake(),
+      agora: "2026-10-10T11:00:00.000Z",
+    });
+    await reservarParaEnvio(db, UUID1, "2026-10-10T11:00:00.000Z");
+
+    const r = await drenarFila(
+      db,
+      async () => ({ status: 201, corpo: async () => ({ data: { id: "p-1", numero: 77 } }) }),
+      () => AGORA,
+    );
+    expect(r.retomados).toBe(1);
+    expect(r.aceitos).toBe(1);
+    expect(db.linhas[0]?.status).toBe("aceito");
+    expect(db.linhas[0]?.pedido_numero).toBe(77);
   });
 });
 

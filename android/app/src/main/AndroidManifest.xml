@@ -1,8 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      `allowBackup` era `true` (o default do template do Capacitor). O app
+      guarda em SQLite o catálogo de clientes — nome, cidade e CPF/CNPJ — e a
+      fila de pedidos; com backup ligado, o Android copiava esse banco para o
+      Google Drive do usuário sem ninguém decidir isso. Não existe backup como
+      funcionalidade no produto, então não há recurso a preservar.
+
+      `dataExtractionRules` cobre o que `allowBackup=false` NÃO cobre no
+      Android 12+: transferência aparelho→aparelho.
+    -->
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"

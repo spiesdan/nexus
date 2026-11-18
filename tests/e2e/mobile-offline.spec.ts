@@ -167,6 +167,90 @@ test("shell: rejeitado aparece com o motivo", async ({ page }) => {
   });
   await page.reload();
   await expect(page.getByText("OFF-0009")).toBeVisible();
-  await expect(page.getByText(/precisa de decisão/)).toBeVisible();
+  await expect(page.getByText(/recusado/)).toBeVisible();
   await expect(page.getByText(/limite de crédito/)).toBeVisible();
+});
+
+test("shell: recusado tem saída — tentar de novo e descartar", async ({ page }) => {
+  await page.goto("/index.html");
+  await offline(page);
+  await page.evaluate(async () => {
+    const api = (
+      window as unknown as {
+        __offline: {
+          banco: () => Promise<{
+            execute: (sql: string, params?: unknown[]) => Promise<unknown>;
+          }>;
+        };
+      }
+    ).__offline;
+    const db = await api.banco();
+    const linha = async (uuid: string, numero: string, status: string, erro: string | null) => {
+      await db.execute(
+        `INSERT INTO pedidos_pendentes (uuid, numero_provisorio, payload, status, tentativas, ultimo_erro, criado_em)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          uuid,
+          numero,
+          JSON.stringify({ cliente_nome: "Cliente", itens: [] }),
+          status,
+          erro ? 1 : 0,
+          erro,
+          new Date().toISOString(),
+        ],
+      );
+    };
+    await linha("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "OFF-0009", "rejeitado", "Crédito excedido.");
+    await linha("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", "OFF-0010", "pendente", null);
+  });
+  await page.reload();
+
+  // ─── Tentar de novo: a decisão humana devolve à fila ─────────────────────
+  await expect(page.getByText("OFF-0009")).toBeVisible();
+  await page.getByRole("button", { name: "Tentar de novo" }).click();
+  await expect(page.getByText(/OFF-0009 voltou para a fila/)).toBeVisible();
+  await expect(page.getByText("OFF-0009", { exact: true })).toBeVisible();
+  await expect(page.getByText(/aguardando sinal/).first()).toBeVisible();
+  await expect(page.getByText(/recusado/)).toHaveCount(0);
+
+  // ─── Descartar pede confirmação: descarte é irreversível ─────────────────
+  page.once("dialog", (d) => void d.accept());
+  await page.getByRole("button", { name: "Descartar" }).first().click();
+  await expect(page.getByText(/OFF-0009 descartado/)).toBeVisible();
+  // Escopo na lista: o aviso acima também cita o número do pedido.
+  await expect(page.locator("#fila").getByText("OFF-0009", { exact: true })).toHaveCount(0);
+  await expect(page.locator("#fila").getByText("OFF-0010", { exact: true })).toBeVisible();
+});
+
+test("shell: toque duplo em salvar NÃO enfileira dois pedidos", async ({ page }) => {
+  // O toque duplo gera dois UUIDs e a idempotência do servidor não cobre isso
+  // (são chaves diferentes — dois pedidos legítimos para ele). O cliente
+  // receberia o dobro. A trava é síncrona, antes do primeiro await.
+  await page.goto("/index.html");
+  await offline(page);
+  await semearCatalogo(page);
+  await page.goto("/novo-pedido.html");
+  await page.getByPlaceholder("Digite o nome…").fill("santa clara");
+  await page.getByRole("button", { name: /Fazenda Santa Clara/ }).click();
+  await page.getByPlaceholder("Digite o produto…").fill("sabão");
+  await page.getByRole("button", { name: /Sabão Líquido/ }).click();
+
+  await page.getByRole("button", { name: "Salvar na fila" }).dblclick();
+  await expect(page).toHaveURL(/index\.html/);
+  await expect(page.locator("#fila").getByText("OFF-0001", { exact: true })).toBeVisible();
+  await expect(page.locator("#fila").getByText("OFF-0002", { exact: true })).toHaveCount(0);
+});
+
+test("shell: o botão Enviar agora explica em vez de não fazer nada", async ({ page }) => {
+  // Medido antes desta correção: o `<button id="btn-enviar">` existia no HTML e
+  // não tinha handler — tocar nele não produzia nada. Silêncio em botão é pior
+  // que erro: o vendedor acha que enviou.
+  await page.goto("/index.html");
+  await offline(page);
+  // O handler só existe depois que `renderizar()` termina (o banco abre em
+  // js/wasm, e não instantaneamente). "Catálogo vazio" é o último texto que
+  // ela escreve — esperar por ele é esperar pela ligação do botão.
+  await expect(page.getByText("Catálogo vazio", { exact: false })).toBeVisible();
+  await page.getByRole("button", { name: "Enviar agora" }).click();
+  await expect(page.getByText("Não há pedido esperando envio.")).toBeVisible();
 });

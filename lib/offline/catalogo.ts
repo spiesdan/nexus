@@ -141,7 +141,12 @@ async function baixarProdutos(buscar: GetJson): Promise<ProdutoEmCache[]> {
   const r = await buscar("/api/v1/products");
   if (r.status !== 200) throw new Error(`produtos: servidor respondeu ${r.status}`);
   const corpo = (await r.corpo()) as { data?: Record<string, unknown>[] };
-  return (corpo.data ?? []).map((p) => ({
+  // 200 sem `data` NÃO é catálogo vazio — é resposta que não se entende. Tratar
+  // como vazio apagaria o catálogo do aparelho e o vendedor perderia o dia
+  // ("sem catálogo sincronizado, o botão de novo pedido nem aparece"). O
+  // servidor vazio de verdade responde `data: []`.
+  if (!Array.isArray(corpo?.data)) throw new Error("produtos: resposta sem lista");
+  return corpo.data.map((p) => ({
     id: String(p.id),
     codigo: (p.codigo as string | null) ?? null,
     nome: String(p.nome ?? ""),
@@ -166,7 +171,8 @@ async function baixarContatos(buscar: GetJson): Promise<ContatoEmCache[]> {
       data?: Record<string, unknown>[];
       meta?: { cursor?: string | null; has_more?: boolean };
     };
-    for (const c of corpo.data ?? []) {
+    if (!Array.isArray(corpo?.data)) throw new Error("contatos: resposta sem lista");
+    for (const c of corpo.data) {
       // Os nomes são os da API real (`SELECT_COLS` em contacts/_handler.ts):
       // `cnpj` em texto (o CPF é cifrado e não sai na lista), limite em
       // `limite_credito_cents`. Chutar nome de campo aqui baixa coluna vazia
@@ -193,8 +199,9 @@ async function baixarTabelas(
   const corpo = (await r.corpo()) as {
     data?: { id: string; nome: string; desconto_pct: number }[];
   };
+  if (!Array.isArray(corpo?.data)) throw new Error("tabelas: resposta sem lista");
   const saida: { id: string; nome: string; desconto_pct: number; itens: unknown[] }[] = [];
-  for (const t of corpo.data ?? []) {
+  for (const t of corpo.data) {
     const ri = await buscar(`/api/v1/price-tables/${t.id}/items`);
     if (ri.status !== 200) continue;
     const ci = (await ri.corpo()) as { data?: unknown[] };

@@ -18,6 +18,11 @@
  *
  *   pendente  → esperando sinal. O sincronizador tenta nesta ordem.
  *   enviando  → um drain pegou; trava contra dois drains simultâneos.
+ *               `reservado_em` é o carimbo da reserva: se o app morrer no meio
+ *               do POST (usuário fecha, Android mata o processo, bateria
+ *               acaba), a linha fica `enviando` para sempre e o pedido nunca
+ *               mais sobe. `recuperarTravados` a devolve para a fila depois do
+ *               limite — é o que faz "retomada após reinício" existir.
  *   aceito    → o servidor respondeu 200/201. Linha FINAL: nunca reenvia.
  *   rejeitado → o servidor respondeu 422 (crédito, preço, estoque). NÃO tenta
  *               sozinho: alguém precisa olhar o motivo e decidir. Tentar de
@@ -54,6 +59,7 @@ export interface PedidoNaFila {
   ultimo_erro: string | null;
   criado_em: string;
   enviado_em: string | null;
+  reservado_em: string | null;
   pedido_id: string | null;
   pedido_numero: number | null;
 }
@@ -68,12 +74,27 @@ CREATE TABLE IF NOT EXISTS pedidos_pendentes (
   ultimo_erro TEXT,
   criado_em TEXT NOT NULL,
   enviado_em TEXT,
+  reservado_em TEXT,
   pedido_id TEXT,
   pedido_numero INTEGER
 );
 CREATE INDEX IF NOT EXISTS pedidos_pendentes_status_idx
   ON pedidos_pendentes (status, criado_em);
 `;
+
+/**
+ * Coluna nova em banco que já existe no aparelho.
+ *
+ * `CREATE TABLE IF NOT EXISTS` não acrescenta coluna: quem instalou o APK
+ * anterior tem a tabela sem `reservado_em`, e o `UPDATE` da reserva quebraria
+ * com "no such column" — em produção, no celular, sem log. `db.ts` consulta o
+ * `PRAGMA table_info` e roda este `ALTER` só quando a coluna falta.
+ */
+export const COLUNA_DA_RESERVA = {
+  tabela: "pedidos_pendentes",
+  coluna: "reservado_em",
+  ddl: "ALTER TABLE pedidos_pendentes ADD COLUMN reservado_em TEXT",
+} as const;
 
 function linhaParaPedido(l: Record<string, unknown>): PedidoNaFila {
   return {
@@ -85,6 +106,7 @@ function linhaParaPedido(l: Record<string, unknown>): PedidoNaFila {
     ultimo_erro: (l.ultimo_erro as string | null) ?? null,
     criado_em: l.criado_em as string,
     enviado_em: (l.enviado_em as string | null) ?? null,
+    reservado_em: (l.reservado_em as string | null) ?? null,
     pedido_id: (l.pedido_id as string | null) ?? null,
     pedido_numero: l.pedido_numero != null ? Number(l.pedido_numero) : null,
   };
@@ -152,12 +174,60 @@ export async function contarAbertos(db: Db): Promise<{ pendentes: number; rejeit
  * UPDATE não casa em nada. Sem isto, o mesmo pedido seria POSTado duas vezes —
  * e aí só a idempotência do servidor salvaria.
  */
-export async function reservarParaEnvio(db: Db, uuid: string): Promise<boolean> {
+export async function reservarParaEnvio(
+  db: Db,
+  uuid: string,
+  agora: string = new Date().toISOString(),
+): Promise<boolean> {
   const r = await db.execute(
-    `UPDATE pedidos_pendentes SET status = 'enviando' WHERE uuid = ? AND status = 'pendente'`,
-    [uuid],
+    `UPDATE pedidos_pendentes
+     SET status = 'enviando', reservado_em = ?
+     WHERE uuid = ? AND status = 'pendente'`,
+    [agora, uuid],
   );
   return r.changes > 0;
+}
+
+/** Quanto tempo uma reserva pode durar antes de ser considerada abandonada. */
+export const LIMITE_DA_RESERVA_MS = 3 * 60_000;
+
+/**
+ * Devolve à fila as linhas que ficaram `enviando` sem ninguém enviando.
+ *
+ * ─── Por que isto é obrigatório ─────────────────────────────────────────────
+ *
+ * `drenarFila` reserva ANTES do POST. Se o processo morrer entre a reserva e a
+ * resposta (Android mata o WebView em segundo plano, o vendedor fecha o app, a
+ * bateria acaba), a linha fica `enviando` para sempre: `filaPendente` só lê
+ * `pendente`, então o pedido nunca mais é tentado. A tela mostra "enviando…"
+ * eternamente e ninguém descobre — falha silenciosa, o pior tipo.
+ *
+ * O retry é seguro por construção: a linha volta com o MESMO `uuid`, que é a
+ * `chave_sincronizacao` do servidor. Se o POST anterior chegou a commitar, o
+ * próximo devolve o pedido existente (`ja_existia`) em vez de duplicar.
+ *
+ * ─── O limite ───────────────────────────────────────────────────────────────
+ *
+ * Um POST tem timeout de 30 s (`sync.ts`); 3 minutos é folga para o aparelho
+ * lento sem deixar o pedido preso por uma eternidade. Linha com
+ * `reservado_em` nulo é de versão anterior à coluna (ou semeada por teste) e
+ * também é recuperada: não há como saber quando foi reservada, e a idempotência
+ * do servidor cobre a dúvida.
+ */
+export async function recuperarTravados(
+  db: Db,
+  args: { agora: string; limiteMs?: number },
+): Promise<number> {
+  const limite = new Date(
+    Date.parse(args.agora) - (args.limiteMs ?? LIMITE_DA_RESERVA_MS),
+  ).toISOString();
+  const r = await db.execute(
+    `UPDATE pedidos_pendentes
+     SET status = 'pendente', reservado_em = NULL
+     WHERE status = 'enviando' AND (reservado_em IS NULL OR reservado_em < ?)`,
+    [limite],
+  );
+  return r.changes;
 }
 
 /** O servidor aceitou: grava o definitivo e encerra a linha. */
@@ -199,7 +269,8 @@ export async function devolverParaFila(
 ): Promise<void> {
   await db.execute(
     `UPDATE pedidos_pendentes
-     SET status = 'pendente', ultimo_erro = ?, tentativas = tentativas + 1
+     SET status = 'pendente', ultimo_erro = ?, tentativas = tentativas + 1,
+         reservado_em = NULL
      WHERE uuid = ?`,
     [args.erro, args.uuid],
   );

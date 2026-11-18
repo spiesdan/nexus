@@ -23,8 +23,14 @@ on:
     paths:
       - "mobile/**"
       - "lib/offline/**"
+      # `android/**` entrou em 18/11/2026: o manifest do app e as regras de
+      # backup/extracao mudam o APK e NAO mudavam nada que disparasse este
+      # job — a edicao passava em PR sem nunca ser compilada.
+      - "android/**"
       - "capacitor.config.ts"
       - "app/app/_components/SincronizadorOffline.tsx"
+      - "tests/e2e/mobile-*.spec.ts"
+      - "playwright.mobile.config.ts"
       - ".github/workflows/apk.yml"
 
 permissions:

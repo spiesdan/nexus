@@ -22,7 +22,7 @@
 
 import type { Db } from "./outbox";
 import type { SQLiteDBConnection } from "@capacitor-community/sqlite";
-import { SCHEMA_DA_FILA } from "./outbox";
+import { COLUNA_DA_RESERVA, SCHEMA_DA_FILA } from "./outbox";
 import { SCHEMA_DO_CATALOGO } from "./catalogo";
 
 const NOME_DO_BANCO = "crm-offline";
@@ -63,6 +63,7 @@ async function abrir(): Promise<Db> {
   // dois contextos, não quebra nada. `execute` aqui é DDL sem parâmetros.
   await conn.execute(SCHEMA_DA_FILA);
   await conn.execute(SCHEMA_DO_CATALOGO);
+  await garantirColunas(conn);
 
   return {
     async query(sql: string, params?: unknown[]) {
@@ -82,6 +83,26 @@ async function abrir(): Promise<Db> {
       return { changes: Number(r.changes?.changes ?? 0) };
     },
   };
+}
+
+/**
+ * Acrescenta coluna que nasceu depois da primeira instalação.
+ *
+ * `CREATE TABLE IF NOT EXISTS` não altera tabela existente. Quem já tem o
+ * banco no aparelho (o APK anterior) precisa do `ALTER`; quem acabou de
+ * instalar já nasce com a coluna. Perguntar ao `PRAGMA` — em vez de tentar o
+ * `ALTER` e engolir o erro — é o que impede o catch de esconder uma falha de
+ * verdade (disco cheio, banco travado) atrás de "já existia".
+ *
+ * Roda a cada abertura: é uma consulta sem escrita, barata, e mantém o banco
+ * de versões antigas alcançável sem passo manual.
+ */
+async function garantirColunas(conn: SQLiteDBConnection): Promise<void> {
+  const info = await conn.query(`PRAGMA table_info(${COLUNA_DA_RESERVA.tabela})`);
+  const colunas = (info.values ?? []).map((c) => String((c as { name?: unknown }).name ?? ""));
+  if (!colunas.includes(COLUNA_DA_RESERVA.coluna)) {
+    await conn.execute(COLUNA_DA_RESERVA.ddl);
+  }
 }
 
 /** Fecha e esquece — para teste e para troca de usuário no aparelho. */

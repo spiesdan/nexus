@@ -38,6 +38,7 @@ import {
   filaPendente,
   marcarAceito,
   marcarRejeitado,
+  recuperarTravados,
   reservarParaEnvio,
   type Db,
 } from "./outbox";
@@ -55,6 +56,8 @@ export interface ResultadoDoDreno {
   aceitos: number;
   rejeitados: number;
   adiados: number;
+  /** Linhas que estavam presas em `enviando` (app morto no meio do POST). */
+  retomados: number;
 }
 
 type FetchDoSync = (
@@ -72,13 +75,24 @@ export async function drenarFila(
   buscar: FetchDoSync,
   agora: () => string = () => new Date().toISOString(),
 ): Promise<ResultadoDoDreno> {
-  const saida: ResultadoDoDreno = { itens: [], aceitos: 0, rejeitados: 0, adiados: 0 };
+  // Antes de montar a fila: linha presa em `enviando` (o app morreu no POST)
+  // volta a `pendente`. Sem isto ela nunca aparece em `filaPendente` e o
+  // pedido fica no aparelho para sempre — retomada após reinício é isto.
+  const retomados = await recuperarTravados(db, { agora: agora() });
+
+  const saida: ResultadoDoDreno = {
+    itens: [],
+    aceitos: 0,
+    rejeitados: 0,
+    adiados: 0,
+    retomados,
+  };
 
   for (const item of await filaPendente(db)) {
     // A reserva é o que impede dois drenos de mandarem o mesmo pedido — ver
     // `reservarParaEnvio`. Sem ela, abrir o sistema com o evento `online`
     // disparando junto duplicaria o POST (e aí só a chave salvaria).
-    const reservado = await reservarParaEnvio(db, item.uuid);
+    const reservado = await reservarParaEnvio(db, item.uuid, agora());
     if (!reservado) continue;
 
     let resposta: { status: number; corpo: () => Promise<unknown> };
