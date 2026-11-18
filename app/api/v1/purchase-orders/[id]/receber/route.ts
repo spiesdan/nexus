@@ -4,7 +4,8 @@
  * `{ itens: [{ item_id, quantidade }] }` (default: o restante de cada
  * item). Só com pedido `enviado`. Cada quantidade recebida vira movimento
  * `entrada` (origem compra) + soma no saldo; idempotente por
- * `recebido_qtd` (re-tick recebe só o que falta). Completo vira
+ * `recebido_qtd` com CAS — re-tick recebe só o que falta e dois POSTs
+ * concorrentes não movimentam o estoque duas vezes. Completo vira
  * `recebido` sozinho. Auditoria `purchase.received` com o lote.
  */
 import { randomUUID } from "node:crypto";
@@ -18,6 +19,10 @@ import { requireRole } from "@/lib/auth/require-role";
 import { validateRequest } from "@/lib/schemas";
 import { createClient } from "@/lib/supabase/server";
 import { ajustarEstoque } from "@/lib/estoque/ajustar";
+import {
+  devolverReservaDeRecebimento,
+  reservarRecebimento,
+} from "@/lib/compras/recebimento";
 
 export const dynamic = "force-dynamic";
 
@@ -111,6 +116,20 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     if (a.receber <= 0 || !a.product_id) continue;
     const saldo = saldos.get(a.product_id);
     if (!saldo || !saldo.controla_estoque) continue;
+    // A reserva vem ANTES do estoque: se outra requisição recebeu o mesmo item,
+    // este perde o CAS e não movimenta nada. Antes, o CAS existia só no saldo e
+    // duas entradas para o mesmo recebimento passavam.
+    const reserva = await reservarRecebimento(supabase, {
+      orgId,
+      itemId: a.id,
+      recebidoAtual: a.recebido_qtd,
+      quantidade: a.receber,
+    });
+    if (reserva.erro) {
+      return fail("internal_error", `Falha ao reservar ${a.produto_codigo}.`, 500, { requestId });
+    }
+    if (!reserva.reservado) continue; // outra requisição já recebeu este item
+
     // O saldo entra pelo CAS (`ajustarEstoque`): o `select + update` anterior
     // perdia uma entrada quando dois recebimentos corriam juntos.
     const ajuste = await ajustarEstoque(supabase, {
@@ -119,6 +138,12 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
       delta: a.receber,
     });
     if (!ajuste.ok) {
+      await devolverReservaDeRecebimento(supabase, {
+        orgId,
+        itemId: a.id,
+        recebidoAtual: a.recebido_qtd,
+        quantidade: a.receber,
+      });
       return fail("validation_failed", `Estoque de ${a.produto_codigo} recusou a entrada (${ajuste.motivo}).`, 422, {
         requestId,
       });
@@ -133,12 +158,20 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
       observacao: `Recebimento compra ${(pedido as unknown as { numero: number }).numero}`,
       created_by: authz.user.id,
     });
-    const { error: erroItem } = await supabase
-      .from("purchase_order_items")
-      .update({ recebido_qtd: a.recebido_qtd + a.receber })
-      .eq("organization_id", orgId)
-      .eq("id", a.id);
-    if (erroMov || erroItem) {
+    if (erroMov) {
+      // Desfaz o que dava para desfazer — o item não pode ficar "recebido" sem
+      // movimento. Se a compensação do saldo falhar, o log/erro já nomeia o item.
+      await ajustarEstoque(supabase, {
+        organizationId: orgId,
+        productId: a.product_id,
+        delta: -a.receber,
+      });
+      await devolverReservaDeRecebimento(supabase, {
+        orgId,
+        itemId: a.id,
+        recebidoAtual: a.recebido_qtd,
+        quantidade: a.receber,
+      });
       return fail("internal_error", `Falha ao receber ${a.produto_codigo} — confira o pedido antes de repetir.`, 500, {
         requestId,
       });

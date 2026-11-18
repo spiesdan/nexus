@@ -58,6 +58,17 @@ export interface NotaEmitida {
   total_cents: number;
 }
 
+/**
+ * O trigger `invoices_uma_viva_por_pedido` (0315) levanta `23505` com este
+ * marcador. A rota traduz para 409 — nunca 500, nunca "tente novamente" para
+ * um pedido que já tem nota viva.
+ */
+export function pedidoJaTemNotaViva(
+  error: { code?: string | null; message?: string | null } | null | undefined,
+): boolean {
+  return error?.code === "23505" && (error.message ?? "").includes("invoice_pedido_ja_tem_nota_viva");
+}
+
 export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   const { supabase, admin, orgId, userId, requestId, orderId, orderIds, extras } = input;
 
@@ -89,7 +100,10 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   // é uma nota que nunca emite e nunca morre — a tela mostra "Emitindo" para
   // sempre. Descartar devolve a emissão ao estado anterior (nada emitido) e
   // deixa a pessoa tentar de novo.
-  const descartarNota = async (motivo: string): Promise<never> => {
+  const descartarNota = async (
+    motivo: string,
+    opcoes: { status?: 409 | 500; code?: "conflict" | "internal_error" } = {},
+  ): Promise<never> => {
     const { error: erroDescarte } = await admin.from("invoices").delete().eq("id", notaId);
     if (erroDescarte) {
       logger.error("fiscal: falha ao descartar a nota órfã", {
@@ -98,7 +112,13 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
         erro: erroDescarte.message.slice(0, 300),
       });
     }
-    throw new ApiError(500, "internal_error", { requestId }, requestId, motivo);
+    throw new ApiError(
+      opcoes.status ?? 500,
+      opcoes.code ?? "internal_error",
+      { requestId },
+      requestId,
+      motivo,
+    );
   };
 
   if (avulsa) {
@@ -391,6 +411,15 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     .select(COLUNAS_DA_NOTA)
     .single();
   if (error || !nota) {
+    if (pedidoJaTemNotaViva(error)) {
+      throw new ApiError(
+        409,
+        "conflict",
+        { requestId },
+        requestId,
+        "Um destes pedidos já tem nota (não cancelada).",
+      );
+    }
     throw new ApiError(500, "internal_error", { requestId }, requestId, "Erro ao registrar a nota.");
   }
   const notaId = (nota as unknown as { id: string }).id;
@@ -417,6 +446,12 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   );
 
   if (erroVinculos) {
+    if (pedidoJaTemNotaViva(erroVinculos)) {
+      return descartarNota(
+        "Um destes pedidos já tem nota (não cancelada). Nada foi emitido.",
+        { status: 409, code: "conflict" },
+      );
+    }
     return descartarNota("Não foi possível vincular os pedidos da nota. Nada foi emitido — tente novamente.");
   }
 
