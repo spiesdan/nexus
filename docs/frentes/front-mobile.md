@@ -187,7 +187,7 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
 ### 5.1 Números (preenchidos na execução)
 
 <!-- medido em 2026-11-18, worktree aaa-front-mobile -->
-- unit offline + wiring + faixa do sincronizador: **45/45** em 7 arquivos.
+- unit offline + wiring + faixa + manifest + manifest Android: **52/52** em 9 arquivos.
 - e2e shell: **7/7**.
 - typecheck/lint/suíte completa: registrados no PR desta frente (o comando não cabe em
   prosa que envelhece).
@@ -220,8 +220,8 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
 
 ## 7. Próximas fatias seguras (sem decisão pendente)
 
-- Desfazer o versionamento de `mobile/www/` e documentar o passo de build local.
-- Teste de instalação do PWA (manifest + `/icone-512` + `start_url`) em Chromium, sem
-  declarar "instalado em aparelho".
+- Teste de instalação do PWA em Chromium (o manifest já tem gate estático; falta o
+  evento `beforeinstallprompt` numa build de produção), sem declarar "instalado em
+  aparelho".
 - Marca do shell por configuração de build (`CAPACITOR_APP_NAME` / `VITE_SYSTEM_URL`),
   com default neutro e entrada no `.env.example` — só depois da decisão do item 4.
