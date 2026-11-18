@@ -12,8 +12,8 @@
 
 | Estado | Valor | Como foi medido |
 |---|---|---|
-| Código | `nexus/main` após os merges desta rodada | `git log --oneline -1 nexus/main` |
-| PR aberto | ver [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11 | API de PRs do GitHub |
+| Código | `nexus/main` @ `771bcc2e` (merges até #476) | `git log --oneline -1 nexus/main` |
+| PR de release | **#537** — `release/1.56.0`, CI rodando, **não mergeado** | API de PRs do GitHub |
 | Release | última tag `v1.55.0`; **nenhuma tag nova** | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Deploy | **nenhum**; produção intocada por este programa | — |
 
@@ -26,11 +26,13 @@ primeiros passos e para antes do terceiro.
 pnpm release:conferir     # não escreve nada
 ```
 
-Saída medida em 18/11/2026, com os 19 fragmentos acumulados:
+Saída medida em 18/11/2026, com os fragmentos que estavam na `main` no corte:
 
 ```text
-1.55.0 + minor = 1.56.0  (19 fragmento(s))
+1.55.0 + minor = 1.56.0  (25 fragmento(s))
 ```
+
+O corte está no PR **#537** (`CHANGELOG.md` + os 25 fragmentos consumidos).
 
 **Por que minor**: há capacidade nova de verdade (Sentinel v1, `Idempotency-Key`
 fiscal, retransmissão idempotente, nome automático de campanha) e **nenhum
@@ -45,7 +47,7 @@ número vira **2.0.0** sozinho — não se "corrige" o número à mão.
 
 | Seção | Fragmentos |
 |---|---|
-| **Adicionado** | Sentinel v1 · `Idempotency-Key` fiscal · retransmissão idempotente · nome automático de campanha |
+| **Adicionado** | Sentinel v1 e v1.1 (plano revisável) · `Idempotency-Key` fiscal · retransmissão idempotente · nome automático de campanha |
 | **Corrigido** | tema claro (texto e accent) · NF-e devolução/IE/`<entrega>` · flywheel sem julgamento duplo · índice da janela de mensagens · claims de manifestação/cancelamento · recebíveis da NF-e autorizada · recebível avulso idempotente · Sentinel vínculo secundário · MFA/recuperação com teto · teto de lista declarado (fiscal/equipe/notas/catálogo) · amostra do faturamento · admin não confunde erro com vazio |
 
 Cada linha acima tem arquivo em `.changes/`; o texto é o que vai para a tela de
@@ -56,7 +58,7 @@ mobile/offline de #514 estão no código, mas a ponte SQLite↔remoto no APK ain
 não existe (P1-04 `[!]`). Fragmento de capacidade nova ali prometeria algo que
 não chega ao aparelho; fica para quando a ponte entrar.
 
-## 4. Inventário de migrations 0313–0320
+## 4. Inventário de migrations 0313–0323
 
 Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 `install.sh`/`update.sh`/`deploy.sh` aplicam — nunca a cadeia).
@@ -70,7 +72,10 @@ Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 | 0317 | `20261122120000_0317_idempotency_hash_texto.sql` | `idempotency_keys.request_hash` bytea→text | bloco `do` com guarda de tipo | **não**, mas ver §7 |
 | 0318 | `20261122130000_0318_campanha_nome_manual.sql` | `prospecting_campaigns.nome_manual` | `add column if not exists` + guarda | não |
 | 0319 | `20261122140000_0319_claims_fiscais.sql` | colunas de claim em `fiscal_entradas`/`invoices` | `add column if not exists` | não |
-| 0320 | `20261122150000_0320_telefone_fixo_e164.sql` (PR #439) | `create or replace fn_upsert_wa_contact` | `create or replace` | não — **só entra se #439 mergear** |
+| 0320 | `20261123130000_0320_search_path_dos_definer.sql` | `pg_temp` no `search_path` das definers | dirigido pelo catálogo | não |
+| 0321 | `20261123140000_0321_sentinel_recomendacoes.sql` | recomendações do Sentinel | `add column if not exists` | não |
+| 0322 | `…_0322_credencial_de_dispositivo_offline.sql` (#526, F) | credencial de dispositivo | — | **fora desta release** |
+| 0323 | `20261123160000_0323_telefone_fixo_e164.sql` (#439) | `create or replace fn_upsert_wa_contact` | `create or replace` | **fora desta release** |
 
 Nenhuma migration destrutiva, nenhum `drop`. O caminho de update é o mesmo do
 install: o baseline inteiro, reaplicado.
@@ -119,7 +124,7 @@ Deploy (decisão humana separada; ver §6):
 |---|---|
 | Versão-alvo | `v1.56.0` (derivada; a tag só existe depois do merge do PR de release) |
 | Commit-alvo | o merge do PR de release na `main` (preencher no corte; não invente sha) |
-| Mudança de schema | 0313–0319 já na `main`; **0320 só se #439 mergear** |
+| Mudança de schema | **0313–0321** já na `main`; 0322 (#526) e 0323 (#439) ficam para a próxima |
 | Exige ação do operador | **não** (`update.sh` aplica o baseline) |
 | Janela sugerida | fora do horário de atendimento do WhatsApp da empresa — atualização reinicia a app |
 | Rollback (imagem) | voltar as **três** imagens no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` — o `update.sh` grava as três na mesma versão) e `up -d` com **os dois** `-f` |
@@ -139,10 +144,10 @@ Critério de abortar: `update.sh` sai ≠ 0, verificação de schema falha, ou q
 uma das duas verificações do passo 3 não bate. Nesse caso: não "tentar de novo
 mais tarde" sem coletar `docker compose logs app` e o motivo do `psql`.
 
-**Aprovação** (humano):
+**Aprovação** (humano). O merge do PR #537 é o que cria a tag; nada abaixo foi feito:
 
 ```
-[ ] Aprovado cortar v1.56.0 (merge do PR de release)
+[ ] Aprovado cortar v1.56.0 (merge do PR #537)
 [ ] Aprovado publicar imagens
 [ ] Aprovado deploy na VPS ___ em __/__/____
 ```
@@ -154,9 +159,9 @@ mais tarde" sem coletar `docker compose logs app` e o motivo do `psql`.
 | 0317 muda `request_hash` de `bytea` para `text` | update aplica e converte; **rollback de imagem com o banco novo não foi ensaiado** — tratar como forward-only |
 | 0316 cria tabelas do Sentinel | aditivas; app antigo ignora. Nenhuma varredura roda sozinha sem agenda configurada |
 | 0313 cria índice | em base grande, o `create index` segura escrita na tabela de mensagens durante o build |
-| `#307` (crédito do DANFE) | **não entra**: default `"By nexus"` no PDF viola a regra de marca (`[!]` na fila) |
-| `#518`/`#520`/`#521` (banco/A) | **não entram**: CI vermelho/pendente e a frente está pausada |
-| `#517`/`#522` | mergeados nesta rodada (testes de jornada e fichas) |
+| `#307` (crédito do DANFE) | **não entra**: default `"By nexus"` no PDF viola a regra de marca; a imagem do app também não constrói no CI dele |
+| `#518`/`#520`/`#521` (banco/A) | **entraram** em 18/11 (`243ab166`, `6daec49d`, `ee0c8093`) — 0320 e P1-06 incluídos |
+| `#517`/`#522`/`#530`/`#536` | mergeados nesta rodada (jornadas, fichas, docs do programa, invariante do flywheel) |
 | mobile/offline em aparelho | `[!]`: sem APK/emulador nesta máquina |
 
 ## 8. Assinatura de quem preparou
