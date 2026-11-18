@@ -438,6 +438,9 @@ function DialogNovaCompra({
   aoCriar: (id: string) => void;
 }) {
   const [produtos, setProdutos] = React.useState<Produto[]>([]);
+  // Catálogo vazio por FALHA não é catálogo vazio: o seletor dizia "Produto…" e
+  // o operador concluía que o produto não existia (mesma classe do A11).
+  const [erroProdutos, setErroProdutos] = React.useState<string | null>(null);
   const [supplierId, setSupplierId] = React.useState("");
   const [observacoes, setObservacoes] = React.useState("");
   const [itens, setItens] = React.useState<ItemForm[]>([
@@ -446,13 +449,25 @@ function DialogNovaCompra({
   const [submetendo, setSubmetendo] = React.useState(false);
   const [erroServidor, setErroServidor] = React.useState<string | null>(null);
 
+  const carregarProdutos = React.useCallback(() => {
+    // `limite=2000`: o padrão de 500 escondia produto de catálogo maior no
+    // seletor de compra (A7).
+    apiClient
+      .get<{ data: Produto[] }>("/api/v1/products?limite=2000")
+      .then((c) => {
+        setProdutos(c.data ?? []);
+        setErroProdutos(null);
+      })
+      .catch(() => {
+        setProdutos([]);
+        setErroProdutos("Não foi possível carregar o catálogo de produtos.");
+      });
+  }, []);
+
   React.useEffect(() => {
     if (!aberto) return;
-    apiClient
-      .get<{ data: Produto[] }>("/api/v1/products")
-      .then((c) => setProdutos(c.data ?? []))
-      .catch(() => setProdutos([]));
-  }, [aberto]);
+    carregarProdutos();
+  }, [aberto, carregarProdutos]);
 
   const trocarItem = (i: number, patch: Partial<ItemForm>) =>
     setItens((ant) => ant.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
@@ -521,6 +536,18 @@ function DialogNovaCompra({
 
           <div className="space-y-2">
             <Label>Itens</Label>
+            {erroProdutos && (
+              <p role="alert" className="text-sm text-destructive">
+                {erroProdutos}{" "}
+                <button
+                  type="button"
+                  className="underline underline-offset-4"
+                  onClick={carregarProdutos}
+                >
+                  Tentar novamente
+                </button>
+              </p>
+            )}
             {itens.map((item, i) => {
               const produto = produtos.find((p) => p.id === item.product_id);
               return (
