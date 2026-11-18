@@ -32,7 +32,7 @@
 | Frente | Worktree / branch | Dono | Escopo | Estado |
 |---|---|---|---|---|
 | Coordenação | `…/opencode/aaa-programa-2` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, pacote de release, delegação | ativo |
-| Banco e segurança | `…/aaa-front-db` · `rate/fallback-declarado` | Agente A | SECURITY DEFINER/`pg_temp`, rate limit P3-02, listas P1-06 | **pausado** (#518/#520/#521 aguardam retomada) |
+| Banco e segurança | `…/aaa-front-db` · `rate/fallback-declarado` | Agente A | SECURITY DEFINER/`pg_temp`, rate limit P3-02, listas P1-06 | **concluído**: #518/#520/#521 mergeados; slot liberado |
 | Fiscal/financeiro | `…/aaa-front-fiscal` · `front/fiscal` | Agente C | cancelamento×drain, importação de entrada, recuperação de nota, conciliação | sem PR aberto; retomada quando houver vaga |
 | Design system | `…/aaa-front-shell` · `front/shell-2` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio | **ativo** — #533 (trilhas) e #535 (seletor de empresa) |
 | Módulos e jornadas | `…/aaa-front-modulos` · `front/modulos` | Agente E | 5.4 (inbox/campanhas), 5.6 (pedidos), 5.8 (fiscal/UI), 5.10/5.11 (config/admin) | **pausado** (#515/#519/#522 mergeados) |
@@ -127,8 +127,8 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30: ausente por decisão | Dono | Decisão de produto | Só entra com decisão registrada e dispositivo |
-| **P3-02** | Substituir fallback em memória do rate limit por Redis obrigatório em produção | `[~]` | #520 (`rate/fallback-declarado`): fallback declarado e saúde 503 em produção — CI pendente | A (pausado) | Retomada de A | Produção falha alto sem Upstash, ou fallback declarado |
+| **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30 — ausente por decisão; **não iniciado**, sem `ios/` nem conta Apple | Dono | Decisão de produto + conta Apple | Só entra com decisão registrada e dispositivo |
+| **P3-02** | Rate limit: produção não pode cair em fallback de memória em silêncio | `[x]` | #520 → `6daec49d`: fallback **declarado** (backend/motivo/desde) e `/api/v1/health` com check `rate_limit` que dá 503 em produção | A | — | Produção falha alto sem Upstash, ou fallback declarado |
 | **P3-03** | Limpar planos antigos que ensinam `db push` | `[x]` | #506: 7 planos ativos apontam `pnpm db:migrate`; gate novo; `plan/progress.md` preservado como diário histórico | Coordenador | — | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
 
 ## 7. Itens bloqueados por decisão humana / dispositivo / credencial
@@ -138,7 +138,7 @@ coordenador integra e roda os gates no código integrado.
 | P3-01 iOS | Não há `ios/` nem `@capacitor/ios` | Decisão de escopo e conta Apple | Dono |
 | P1-04 prova em dispositivo | Sem emulador/APK nesta máquina | Dispositivo Android ou emulador | Dono |
 | P0-07 Sentinel em produção | Depende de deploy e agenda | Aprovação de release | Dono |
-| **#307 crédito do DANFE** | Default `"By nexus"` no PDF que chega ao cliente final | Decidir: sem crédito por padrão **ou** crédito vindo da marca resolvida (`platform_branding`/`APP_NAME`) | Dono |
+| ~~#307 crédito do DANFE~~ | **DECIDIDA 18/11**: `"By nexus"` **não entra**; o rodapé é configuração (`FISCAL_DANFE_CREDITO`), vazio = sem crédito, nunca string fixa | Parte aproveitável separada no **#545**; o PR original foi fechado | Dono |
 | **Corte da 1.56.0** | Pacote pronto, tag não criada | Aprovar o merge do PR de release (`35-pacote-de-release.md` §6) | Dono |
 | **Retomada de A/E/F/H** | Limite de 2 workers simultâneos | Vaga no rodízio (D e G ativos) | Dono |
 | Emissão real de NF-e / pagamento | Proibido pelo prompt | Nunca neste programa | — |
@@ -265,8 +265,8 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 |---|---|---|---|
 | #307 | `[!]` decisão de marca | Dono | default `"By nexus"` no DANFE viola a doutrina de marca; escolher "sem crédito" ou "marca resolvida"; depois rebase + `imagens-ok` |
 | #518 | `verify` vermelho (`health/route.test.ts`: Upstash recebe host sem esquema) | A (pausado) | consertar o teste/env; **renumerar 0320→0321** |
-| #520 | CI pendente | A (pausado) | retomada de A (P3-02) |
-| #521 | `verify` pendente | A (pausado) | retomada de A (P1-06: tie-breaker e teto) |
+| #545 | CI rodando | Coordenação | rodapé do DANFE configurável, sem nome de produto (sobra do #307) |
+| ~~#521~~ | **mergeado** (`ee0c8093`) | A | listas com tie-breaker e teto (P1-06) |
 
 Nenhum PR de P0 ficou aberto. O que resta em P1/P2 depende de decisão humana,
 de dispositivo ou da retomada de uma frente pausada — não de trabalho que o
@@ -285,7 +285,7 @@ coordenador possa abrir sozinho sem furar o rodízio de 2 workers.
 | #439 | renumberado **0322**, CI rodando | 0320 passou a ser do #518; 0321 é do #528 (G) |
 | #476/#477/#472/#468/#465/#457 | rebaseados, CI rodando | docs/fontes/MIT/snapshots; nenhum toca schema |
 | #13/#165 | rebaseados, CI rodando | dependabot actions |
-| #307 | `[!]` decisão de marca | inalterado |
+| #307 | **fechado** por decisão de marca; parte configurável no #545 | decisão do dono |
 | #526/#534 | do dono/F | **não tocar** (credencial de dispositivo e SQLite no aparelho) |
 | #531/#533/#535 | design/D | em rebase pelo dono da frente |
 
