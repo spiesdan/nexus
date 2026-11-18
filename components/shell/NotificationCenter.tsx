@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNowStrict } from "date-fns";
 
@@ -36,76 +36,110 @@ export function NotificationCenter() {
   const { data, isLoading } = useAgentInbox("open");
   const count = data?.open_count ?? 0;
   const itens = (data?.items ?? []).slice(0, MAX_NO_PAINEL);
+  /**
+   * O CONTADOR MUDA E NINGUÉM OUVE.
+   *
+   * O badge do sino é `<span>` visual: o `aria-label` do botão diz quantos
+   * estão em aberto, mas só quando o foco passa por ele. Quem está digitando no
+   * inbox com leitor de tela recebia um aviso novo sem nenhum anúncio — o número
+   * mudava na tela e o produto ficava em silêncio.
+   *
+   * A região viva abaixo resolve com duas regras que evitam o efeito contrário:
+   *   - só começa a valer depois do primeiro carregamento (`isLoading`), para
+   *     não anunciar a carga inicial como se fosse novidade;
+   *   - anuncia só quando o total AUMENTA. Recontagem que cai (item resolvido em
+   *     outra aba) é ajuste, não alerta.
+   */
+  const anterior = useRef<number | null>(null);
+  const [anuncio, setAnuncio] = useState("");
+  useEffect(() => {
+    if (isLoading) return;
+    if (anterior.current === null) {
+      anterior.current = count;
+      return;
+    }
+    const cresceu = count > anterior.current;
+    anterior.current = count;
+    if (cresceu) setAnuncio(`${t("Central de avisos")}: ${count} ${t("em aberto")}`);
+  }, [count, isLoading, t]);
   // Um rótulo, dois consumidores: o leitor de tela (aria-label) e o tooltip
   // nativo (title). Antes só o primeiro existia — quem usa mouse via um sino
   // sem nome até passar o cursor e esperar o painel abrir.
   const rotulo =
-    count > 0
-      ? `${t("Central de avisos")} — ${count} ${t("em aberto")}`
-      : t("Central de avisos");
+    count > 0 ? `${t("Central de avisos")} — ${count} ${t("em aberto")}` : t("Central de avisos");
 
   return (
-    <Popover open={aberto} onOpenChange={setAberto}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label={rotulo}
-          aria-expanded={aberto}
-          title={rotulo}
-          data-testid="alerts-bell"
-          className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:h-9 lg:w-9"
-        >
-          <Bell size={18} aria-hidden />
-          {count > 0 ? (
-            <span
-              data-testid="alerts-bell-count"
-              className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-destructive-foreground"
-            >
-              {count > 99 ? "99+" : count}
-            </span>
-          ) : null}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0" data-testid="notification-center">
-        <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
-          <p className="text-sm font-semibold">{t("Central de avisos")}</p>
-          {count > 0 ? (
-            <span className="text-xs text-muted-foreground">
-              {count} {t("em aberto")}
-            </span>
-          ) : null}
-        </header>
-        {isLoading ? (
-          <div className="space-y-2 p-4">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        ) : itens.length === 0 ? (
-          <div className="flex flex-col items-center gap-1 px-4 py-8 text-center">
-            <Bell size={24} className="text-muted-foreground" aria-hidden />
-            <p className="text-sm font-medium">{t("Nenhum aviso em aberto")}</p>
-            <p className="text-xs text-muted-foreground">
-              {t("Quando o assistente precisar de você, o aviso aparece aqui.")}
-            </p>
-          </div>
-        ) : (
-          <ul className="max-h-80 divide-y divide-border overflow-y-auto">
-            {itens.map((item) => (
-              <PainelRow key={item.id} item={item} aoAbrir={() => setAberto(false)} />
-            ))}
-          </ul>
-        )}
-        <footer className="border-t p-2">
-          <Link
-            href="/app/ai/inbox"
-            onClick={() => setAberto(false)}
-            className="block rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    <>
+      {/*
+        Região viva FORA do Popover e fora do botão: dentro do botão, o
+        `aria-label` substitui o conteúdo e o anúncio não sairia. `sr-only`
+        porque o anúncio é para leitor de tela — na tela o número já é o badge.
+      */}
+      <span role="status" aria-live="polite" className="sr-only">
+        {anuncio}
+      </span>
+      <Popover open={aberto} onOpenChange={setAberto}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={rotulo}
+            aria-expanded={aberto}
+            title={rotulo}
+            data-testid="alerts-bell"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:h-9 lg:w-9"
           >
-            {t("Abrir a central de avisos")}
-          </Link>
-        </footer>
-      </PopoverContent>
-    </Popover>
+            <Bell size={18} aria-hidden />
+            {count > 0 ? (
+              <span
+                data-testid="alerts-bell-count"
+                className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] leading-none font-semibold text-destructive-foreground"
+              >
+                {count > 99 ? "99+" : count}
+              </span>
+            ) : null}
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-80 p-0" data-testid="notification-center">
+          <header className="flex items-center justify-between gap-2 border-b px-4 py-3">
+            <p className="text-sm font-semibold">{t("Central de avisos")}</p>
+            {count > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                {count} {t("em aberto")}
+              </span>
+            ) : null}
+          </header>
+          {isLoading ? (
+            <div className="space-y-2 p-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : itens.length === 0 ? (
+            <div className="flex flex-col items-center gap-1 px-4 py-8 text-center">
+              <Bell size={24} className="text-muted-foreground" aria-hidden />
+              <p className="text-sm font-medium">{t("Nenhum aviso em aberto")}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("Quando o assistente precisar de você, o aviso aparece aqui.")}
+              </p>
+            </div>
+          ) : (
+            <ul className="max-h-80 divide-y divide-border overflow-y-auto">
+              {itens.map((item) => (
+                <PainelRow key={item.id} item={item} aoAbrir={() => setAberto(false)} />
+              ))}
+            </ul>
+          )}
+          <footer className="border-t p-2">
+            <Link
+              href="/app/ai/inbox"
+              onClick={() => setAberto(false)}
+              className="block rounded-md px-2 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              {t("Abrir a central de avisos")}
+            </Link>
+          </footer>
+        </PopoverContent>
+      </Popover>
+    </>
   );
 }
 

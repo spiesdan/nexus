@@ -91,10 +91,18 @@ export function Breadcrumb() {
             <span className="truncate font-medium text-text" aria-current="page">
               {t(m.label)}
             </span>
-          ) : (
-            <Link href={m.href ?? "#"} className="truncate transition-colors hover:text-text">
+          ) : m.href ? (
+            <Link href={m.href} className="truncate transition-colors hover:text-text">
               {t(m.label)}
             </Link>
+          ) : (
+            /*
+             * Segmento que o registro NÃO conhece (rota legada) não tem destino
+             * para onde ir. Antes ele virava `<Link href="#">`: um alvo de Tab
+             * focável que não navega, que parece clicável e joga a pessoa no
+             * topo da página. Migalha sem destino é TEXTO — não é ação.
+             */
+            <span className="truncate">{t(m.label)}</span>
           )}
         </Fragment>
       ))}
