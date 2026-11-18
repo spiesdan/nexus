@@ -507,6 +507,15 @@ class ServicoNfe
         if ($erroExtras !== null) {
             return $erroExtras;
         }
+        // `finalidade` é o único campo de extras que muda o DOCUMENTO (tpNF,
+        // finNFe, CFOP e pagamento), não só um bloco. O schema TS só aceita
+        // 1/4; repetir aqui impede que um payload fora do app (ou uma versão
+        // antiga do lado Node) vire uma nota com semântica de venda/devolução
+        // ambígua.
+        $finalidade = $this->extras['finalidade'] ?? null;
+        if ($finalidade !== null && (string)$finalidade !== '1' && (string)$finalidade !== '4') {
+            return 'extras.finalidade deve ser 1 (venda) ou 4 (devolução).';
+        }
         if ($this->isDevolucao()) {
             $ref = preg_replace('/\D/', '', (string)($this->extras['ref_nfe'] ?? ''));
             if (strlen((string)$ref) !== 44) {

@@ -262,6 +262,15 @@ describe("emissor NF-e do sidecar", () => {
     expect(src).not.toContain("'1002'");
   });
 
+  it("finalidade fora de 1/4 é recusada antes do certificado", () => {
+    // `finalidade` muda tpNF, finNFe, CFOP e pagamento — não é bloco opcional.
+    // O schema TS só aceita 1/4; o sidecar repete a régua para payload fora
+    // do app (ou lado Node antigo) não virar uma nota ambígua.
+    const src = fs.readFileSync(path.join(DIRETORIO, "ServicoNfe.php"), "utf8");
+    expect(src).toContain("extras.finalidade deve ser 1 (venda) ou 4 (devolução).");
+    expect(src).toMatch(/\(string\)\$finalidade !== '1' && \(string\)\$finalidade !== '4'/);
+  });
+
   it("nenhum literal do sidecar carrega a marca do fornecedor", () => {
     // Varre os VALORES (string entre aspas), não os comentários: o comentário
     // da correção do verProc cita a string antiga de propósito.
