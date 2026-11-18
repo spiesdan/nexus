@@ -65,9 +65,17 @@ export default async function PedidosPage({
   };
 
   const supabase = await createClient();
+  /*
+   * `count: "exact"` NA MESMA CONSULTA — a lista tem teto de 200 e ele precisa
+   * ser DITO. Medido em 18/11/2026: `.limit(200)` sem aviso; passando de 200 no
+   * período, o 201º simplesmente não existia para quem olhava a tela — mesma
+   * classe do F6 das telas fiscais, onde `RecorteDaLista` resolveu. O número
+   * vem do `count` da consulta que já roda (mesmos filtros), não de uma segunda
+   * pergunta que poderia divergir.
+   */
   let q = supabase
     .from("commercial_orders")
-    .select(COLUNAS_DO_PEDIDO)
+    .select(COLUNAS_DO_PEDIDO, { count: "exact" })
     .eq("organization_id", activeOrg.orgId);
   if (iniciais.status) q = q.eq("status", iniciais.status);
   if (iniciais.origem) q = q.eq("origem", iniciais.origem);
@@ -94,7 +102,7 @@ export default async function PedidosPage({
   // (`commercial_orders_org_numero_key`), então a ordem é total: não precisa
   // de desempate, e o pedido novo entra sempre no topo. O filtro de período
   // continua em `created_at` (o dia que o dono conta), mas ele não posiciona.
-  const { data, error } = await q.order("numero", { ascending: false }).limit(200);
+  const { data, error, count } = await q.order("numero", { ascending: false }).limit(200);
   // A lista vazia sem explicação já foi medida como F-28 (relatório offline):
   // quando a consulta falha, a tela mostrava "nenhum pedido" em vez de dizer
   // que não conseguiu carregar. O erro vai para o log e a tela recebe o sinal.
@@ -122,7 +130,10 @@ export default async function PedidosPage({
   const idsDosContatos = [
     ...new Set(pedidosDaPagina.map((p) => p.contact_id).filter((id): id is string => Boolean(id))),
   ];
-  const contatosPorId = new Map<string, { fantasia: string | null; display_name: string | null; name: string | null }>();
+  const contatosPorId = new Map<
+    string,
+    { fantasia: string | null; display_name: string | null; name: string | null }
+  >();
   if (idsDosContatos.length > 0) {
     const { data: contatos } = await supabase
       .from("contacts")
@@ -173,9 +184,7 @@ export default async function PedidosPage({
     .is("revoked_at", null)
     .neq("role", "viewer")
     .limit(50);
-  const idsVendedores = ((membros ?? []) as unknown as { user_id: string }[]).map(
-    (m) => m.user_id,
-  );
+  const idsVendedores = ((membros ?? []) as unknown as { user_id: string }[]).map((m) => m.user_id);
   const nomesVendedores: Record<string, string> = {};
   if (isServiceRoleConfigured() && idsVendedores.length > 0) {
     const admin = createAdminClient();
@@ -230,9 +239,7 @@ export default async function PedidosPage({
         .order("created_at", { ascending: false })
         .order("id", { ascending: true })
         .range(de, ate);
-      return ((data ?? []) as Array<{ vendedor_nome: string | null }>).map(
-        (p) => p.vendedor_nome,
-      );
+      return ((data ?? []) as Array<{ vendedor_nome: string | null }>).map((p) => p.vendedor_nome);
     },
   });
   if (vendedoresMercos.truncado) {
@@ -255,6 +262,7 @@ export default async function PedidosPage({
       inicial={iniciaisComEmitente as unknown as PedidoComercial[]}
       iniciais={iniciais}
       erroInicial={Boolean(error)}
+      totalNoPeriodo={typeof count === "number" ? count : null}
       vendedorNome={vendedorNome}
       podeCriar={podeCriar}
       podeExcluir={podeExcluir}

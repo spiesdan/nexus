@@ -7,6 +7,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyFilterResults, EmptyState } from "@/components/empty";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import {
   FilterActions,
@@ -235,6 +236,7 @@ export function PedidosClient({
   inicial,
   iniciais,
   erroInicial = false,
+  totalNoPeriodo = null,
   podeCriar,
   podeExcluir,
   podeImportar = false,
@@ -246,6 +248,14 @@ export function PedidosClient({
   iniciais: FiltrosIniciais;
   /** A consulta do servidor falhou: a lista vazia não é "não há pedidos". */
   erroInicial?: boolean;
+  /**
+   * Quantos pedidos existem no período (mesmos filtros), para o aviso de recorte.
+   *
+   * A lista carrega no máximo 200. Sem este número, o 201º pedido simplesmente
+   * não existe para quem olha a tela — e não há como saber se a lista acabou ou
+   * se foi cortada. `null` = não medido (não mostra o aviso).
+   */
+  totalNoPeriodo?: number | null;
   /**
    * Nome de quem o drill-down `?vendedor=<id>` está apontando.
    *
@@ -314,9 +324,7 @@ export function PedidosClient({
     if (vendedor?.mercos) return vendedor.nome;
     // Membro: o roster já tem o nome; o id curto é só o piso quando ele não veio.
     return (
-      vendedor?.nome ||
-      vendedorNome ||
-      (filtros.vendedorId ? filtros.vendedorId.slice(0, 8) : "")
+      vendedor?.nome || vendedorNome || (filtros.vendedorId ? filtros.vendedorId.slice(0, 8) : "")
     );
   }, [filtros.meus, filtros.vendedorId, vendedorDaSelecao, vendedorNome]);
   const [carregando, setCarregando] = React.useState(false);
@@ -725,8 +733,7 @@ export function PedidosClient({
   // Repetir o número é como as duas pontas divergem: um dia o teto sobe para 60
   // e a tela continua mandando 50, sem erro nenhum.
   const idsDoLoteImpresso = React.useMemo(
-    () =>
-      selecionados.length > 0 ? selecionados : idsDoLote(pedidos.map((x) => x.id).join(",")),
+    () => (selecionados.length > 0 ? selecionados : idsDoLote(pedidos.map((x) => x.id).join(","))),
     [selecionados, pedidos],
   );
 
@@ -969,52 +976,52 @@ export function PedidosClient({
               para fora da tela. No desktop ficam na mesma linha, como antes
               (`contents` dissolve o wrapper no layout do pai). */}
           <div className={avancadosAbertos ? "contents" : "hidden sm:contents"}>
-          <select
-            aria-label={t("Vendedor")}
-            value={filtros.meus ? "meus" : filtros.vendedorId || ""}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v === "meus") mudar({ meus: true, vendedorId: "" });
-              else if (v === "") mudar({ meus: false, vendedorId: "" });
-              else mudar({ meus: false, vendedorId: v });
-            }}
-            className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
-          >
-            <option value="">{t("Todos os vendedores")}</option>
-            <option value="meus">{textos.meus}</option>
-            {vendedores.map((v) => (
-              <option key={v.user_id} value={v.user_id}>
-                {v.nome || v.user_id.slice(0, 8)}
-              </option>
-            ))}
-            {filtros.vendedorId &&
-              !filtros.meus &&
-              !vendedores.some((v) => v.user_id === filtros.vendedorId) && (
-                <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
-              )}
-          </select>
+            <select
+              aria-label={t("Vendedor")}
+              value={filtros.meus ? "meus" : filtros.vendedorId || ""}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v === "meus") mudar({ meus: true, vendedorId: "" });
+                else if (v === "") mudar({ meus: false, vendedorId: "" });
+                else mudar({ meus: false, vendedorId: v });
+              }}
+              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+            >
+              <option value="">{t("Todos os vendedores")}</option>
+              <option value="meus">{textos.meus}</option>
+              {vendedores.map((v) => (
+                <option key={v.user_id} value={v.user_id}>
+                  {v.nome || v.user_id.slice(0, 8)}
+                </option>
+              ))}
+              {filtros.vendedorId &&
+                !filtros.meus &&
+                !vendedores.some((v) => v.user_id === filtros.vendedorId) && (
+                  <option value={filtros.vendedorId}>{rotuloDoVendedor}</option>
+                )}
+            </select>
 
-          <select
-            aria-label={t("Origem")}
-            value={filtros.origem}
-            onChange={(e) => mudar({ origem: e.target.value })}
-            className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
-          >
-            <option value="">{t("Todas as plataformas")}</option>
-            {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            <select
+              aria-label={t("Origem")}
+              value={filtros.origem}
+              onChange={(e) => mudar({ origem: e.target.value })}
+              className="h-9 cursor-pointer rounded-md border border-input bg-surface px-2 text-sm font-medium"
+            >
+              <option value="">{t("Todas as plataformas")}</option>
+              {Object.entries(ROTULO_DA_ORIGEM).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
 
-          {/*
+            {/*
             PERÍODO na mesma linha porque é filtro como os outros — e não dentro
             dos "avançados", porque o pedido mais comum desta tela é "os pedidos
             de hoje", e quem procura coisa comum dentro do que está marcado como
             avançado não encontra.
           */}
-          <FiltroPorPeriodo de={filtros.de} ate={filtros.ate} aoMudar={(patch) => mudar(patch)} />
+            <FiltroPorPeriodo de={filtros.de} ate={filtros.ate} aoMudar={(patch) => mudar(patch)} />
           </div>
 
           <Button
@@ -1066,7 +1073,10 @@ export function PedidosClient({
         {avancadosAbertos && (
           <div className="mt-3 flex flex-wrap items-end gap-3 border-t border-border pt-3">
             <div className="w-full space-y-1.5 sm:w-40">
-              <label className="block text-xs font-medium text-muted-foreground" htmlFor="f-condicao">
+              <label
+                className="block text-xs font-medium text-muted-foreground"
+                htmlFor="f-condicao"
+              >
                 {textos.condicao}
               </label>
               <Input
@@ -1154,6 +1164,14 @@ export function PedidosClient({
           </Button>
         </Card>
       )}
+
+      {!carregando && totalNoPeriodo !== null && totalNoPeriodo > pedidos.length ? (
+        <RecorteDaLista
+          mostrados={pedidos.length}
+          total={totalNoPeriodo}
+          descricao="pedidos no período"
+        />
+      ) : null}
 
       {carregando ? (
         <div className="space-y-2" aria-live="polite">
