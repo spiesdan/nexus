@@ -13,7 +13,7 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida (rodada 11) | `0201faaf` (`nexus/main`) | `git log --oneline -1 nexus/main` |
+| Commit de partida (rodada 12) | `8e65b527` (`nexus/main`; Sentinel v1.3 incluso) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) — a contagem de fragmentos é o que `pnpm release:conferir` disser; o PR é o corte vigente — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
@@ -54,7 +54,7 @@
 
 ### Regras de não-duplicação e dono de schema
 
-- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`request_hash`), **0318** D-01/D-02 (`nome_manual`), **0319** C (claims fiscais), **0320** A (`pg_temp` nas definers, #518 mergeado). **0321** é do Sentinel v1.1 (#528, mergeado); **0322 está reservada à credencial de dispositivo (#526, F)**; **0323 é do #439** (telefone E.164, renumerado três vezes: 0312→0320→0322→0323, porque cada merge da main tomou o número). O teste `tests/unit/migrations-numero-unico.test.ts` reprova número repetido — foi o defeito do #439 que o motivou. Próxima livre: **0324**.
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`request_hash`), **0318** D-01/D-02 (`nome_manual`), **0319** C (claims fiscais), **0320** A (`pg_temp` nas definers, #518 mergeado). Na `main` até **0325**: 0320 definers (#518), 0321 Sentinel v1.1 (#528), 0322 credencial de dispositivo (#526), 0323 telefone E.164 (#439, renumerado três vezes porque cada merge tomava o número), 0324 estoque sem movimento (Sentinel v1.2) e 0325 correção aprovada (Sentinel v1.3). O teste `tests/unit/migrations-numero-unico.test.ts` reprova número repetido — foi o defeito do #439 que o motivou. **Próxima livre: 0326.**
 - **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
 - **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
 - **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
@@ -387,3 +387,66 @@ produção. A execução real é decisão do dono, depois do relatório.
 Medir antes com `explain analyze` e **propor** índice; não criar migration sem
 essa medição. Próxima livre continua **0325** (reservada em potencial para o
 catálogo do Mercos).
+
+## 15. Fila nova — observabilidade das correções aprovadas (P1, 18/11/2026)
+
+> **Dono:** Agente **G**. Fecha o laço do 7º invariante da doutrina: a ação do
+> Sentinel não termina quando ela executa — termina quando o produto **sabe** o
+> que aconteceu com ela.
+>
+> Escolhida entre as três sugestões por **risco**: a v1.3 (`0325`) passou a
+> escrever (`job_queue.run_after`), e hoje não existe detector para o estado que
+> ela mesma cria. As outras duas (agrupamento de rejeição SEFAZ e carga de cron
+> com duas organizações) são medição/painel; esta é fechamento de ciclo.
+
+### Por que agora
+
+`fn_sentinel_corrigir_job` antecipa `run_after` de um job `watchdog` pendente e
+grava o antes/depois em `sentinel_occurrence_events.detalhe`
+(`reversivel: true`). A reversão (`fn_sentinel_reverter_job`) restaura **somente**
+se o job ainda estiver `pending` com o `run_after` que foi gravado — depois de
+reclamado, reverter seria mentira e a RPC devolve zero linhas. Ou seja: o produto
+já **sabe** que a correção pode deixar de ser reversível; o que falta é alguém
+dizer isso na tela.
+
+### Detector 1 — `operacao.correcao_sem_reversao` (sem decisão pendente)
+
+Para ocorrência em `corrigida` cuja última correção aplicada tem
+`detalhe.correcao = 'antecipar_job'` e `detalhe.reversivel = true`:
+
+- carregar o job (`detalhe.job_id`) e comparar com `detalhe.run_after_depois`;
+- se `status <> 'pending'` **ou** `run_after <> run_after_depois`, a reversão já
+  não é possível pelo CAS da própria RPC → abrir ocorrência com severidade
+  **média**, evidência (`job_id`, `status`, `run_after_atual`,
+  `run_after_esperado`, `ocorrencia_origem`), e ação sugerida "registre o
+  desfecho no histórico; reverter não é mais possível";
+- **não** abrir quando o job voltou a `pending` com o mesmo `run_after` (a
+  reversão continua possível) nem quando a ocorrência já está `encerrada`.
+
+Critério de prova: job reclamado/executado gera a ocorrência; job intocado
+**não** gera; reexecução não duplica (chave aberta por ocorrência de origem).
+
+### Detector 2 — `operacao.aprovacao_expirada` (regra já existe, não inventar TTL)
+
+`fn_sentinel_corrigir_job` recusa execução quando o `depois` do dry-run está
+fora de **±5 minutos** do agora — é a janela que o gestor revisou. Logo, uma
+ocorrência parada em `aprovada` cuja aprovação é mais velha que essa janela está
+**objetivamente** expirada: executá-la exigiria outro valor, que ninguém viu.
+
+- gatilho: `estado = 'aprovada'` e o evento que levou a `aprovada` mais antigo
+  que 5 minutos;
+- severidade **baixa** (não há dano; há decisão esquecida), ação "peça nova
+  prévia antes de aprovar";
+- a constante da janela vem de **um lugar só** (a mesma que a rota usa), não de
+  um `5` copiado.
+
+### Fora de escopo
+
+- Executar, reverter ou aprovar por conta própria (detector só observa).
+- Mudar a janela de 5 min: ela é da RPC; se o dono quiser outra, é decisão dele.
+- Painel novo: as ocorrências aparecem no painel existente.
+
+### Testes
+
+Casos positivos e negativos dos dois detectores com fixture de ocorrência +
+job; reexecução sem duplicata; RLS/tenant (a ocorrência de A não aparece em B).
