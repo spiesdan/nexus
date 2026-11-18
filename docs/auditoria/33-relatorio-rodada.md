@@ -117,82 +117,39 @@ pnpm test:shell                                  # kit de instalação
 A triagem de PR usou a API REST do GitHub (o `gh` não está instalado); os
 comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 
-## 7. O que falta para o DoD — item por item (18/11/2026)
+## 7. Quadro do DoD — estado, dono, aceite, evidência e o que falta
 
-> Sem "quase pronto": cada linha é uma entrega que o §13 do prompt mestre cobra e
-> que **não** está fechada. O que está fechado tem `[x]` na fila com prova.
+> **Este quadro é a fonte da verdade do que falta.** Ele é relido a cada rodada; item
+> sem dono é obrigação do coordenador criar um. Nada desaparece sem uma linha
+> dizendo por quê. `[x]` fechado · `[~]` parcial · `[!]` bloqueado/decisão · `[ ]`
+> não iniciado.
 
-### Módulos (fichas + estados)
+| Item | Estado | Dono | Critério de aceite | Evidência | O que falta (1 frase) |
+|---|---|---|---|---|---|
+| **Ficha 5.4** inbox/atendimento/campanhas | `[~]` | D | ficha + 7 estados com evidência | #563 (`aa4020a3`) | Outbox no inbox web: mensagem sobrevive a reload/rede sem duplicar no dreno |
+| **Ficha 5.6** pedidos/estoque/compras/expedição | `[~]` | D | ficha por subtela + estados | #571 (`f3e54867`) | Paginação de pedidos e subtelas de expedição, com o aceite escrito na ficha |
+| **Ficha 5.8** fiscal | `[~]` | D | ficha + estados da nota e listas | #572 (`0c239946`) | Fechar a ficha com a evidência de E2E da camada de navegador |
+| **Ficha 5.10/5.11** configurações/equipe/LGPD/admin | `[~]` | G | ficha + estados com evidência | #574 (`0405552a`) | Nenhuma pendência declarada; falta só a evidência de navegador |
+| **J6/J13/J14** | `[~]` | F | navegador real: sucesso, erro, recuperação | #570 (Vitest) | Camada de navegador — o F está nela agora |
+| **Sentinel v1.4** rejeição repetida | `[x]` | G | detector agrupado por cStat/emitente | #569 | — (fragmento reclassificado para `adicionado`) |
+| **Painel de rejeição por fornecedor** | `[ ]` | G | painel lê ocorrências por CNPJ/emitente, read-only | — | Não existe; é a próxima do G |
+| **`cadastro.endereco_com_lixo`** | `[x]` | G | detector por borda de palavra | #560, #564 | — |
+| **B-7 mobile** dreno + revogação | `[x]` | F | dreno 200; `401 token_revoked` com fila intacta | #565 | — |
+| **TalkBack** | `[!]` parcial | F/D | árvore + logcat no emulador | #576 | Só o acústico: texto falado, pronúncia pt-BR e anúncio dinâmico |
+| **`update.sh` fail-loud** | `[x]` | Orquestrador | aborta antes do `up -d` em DDL não-benigno | #568 | — |
+| **E2E completo** | `[~]` | F | veredito por spec (entra / fora com dono e data / morre) | workflow `FORA_DO_CI` | Matriz das 3 specs fora do CI, com bloqueio real de cada uma |
+| **Pareamento do catálogo** | `[!]` | D + Dono | release → deploy `nexus-mercos` → `--dry-run` → relatório aprovado | #559, #578 | Deploy da 1.58.0 (do dono, em curso) e o `--dry-run` |
+| **A11y nas telas restantes** | `[~]` | D | axe sem violação crítica nas telas cobertas | #491/#516/#531/#535 | Cobertura além das 10 telas do `axe-telas-principais` |
+| **iOS** | `[!]` **encerrado por decisão** | Dono | decisão registrada, sem item órfão | `29-capacidades.md` item 30 | — (fora de escopo; só volta com conta Apple + aparelho + distribuição por instalação) |
+| **Release 1.58.0** | `[x]` tag | Dono (deploy) | tag `v1.58.0` + imagens publicadas | `4c7cd633` | Deploy em curso pelo dono; verificar `to_regclass` depois |
 
-| Módulo | Estado | O que falta |
-|---|---|---|
-| 5.4 inbox/atendimento/campanhas | `[~]` | #563 (estado offline) em CI; falta ficha com evidência dos 7 estados e o recorte de campanhas |
-| 5.6 pedidos/estoque/compras/expedição | `[ ]` | ficha por subtela + estados; E caiu antes de começar |
-| 5.8 fiscal | `[~]` | telas cobertas por testes de rota; falta ficha visual/estados |
-| 5.10/5.11 configurações/equipe/LGPD/admin | `[~]` | equipe/tokens/admin com estados honestos (#507/#519); falta ficha e o recorte de LGPD |
-
-### Jornadas
-
-| Jornada | Estado | O que falta |
-|---|---|---|
-| J6 inbox | `[~]` | prova em Vitest (#517) e reenvio corrigido (#503); falta E2E de navegador |
-| J13 fiscal | `[~]` | prova em Vitest; falta E2E com nota em homologação (sem SEFAZ real) |
-| J14 LGPD | `[~]` | sem E2E; export/anonimização provados por unidade |
-
-### Sentinel
-
-| Item | Estado |
-|---|---|
-| v1.2/v1.3 (estoque sem movimento, correção aprovada, observabilidade) | `[x]` na 1.57.0 |
-| **v1.4** — timeout/erro de SEFAZ agrupado por código e emitente, com painel | `[ ]` — não iniciado |
-| `cadastro.endereco_com_lixo` | `[x]` (#560/#564) |
-
-### Mobile e acessibilidade
-
-| Item | Estado |
-|---|---|
-| B-7: dreno aceito e `401 token_revoked` com fila intacta | `[~]` — F no emulador; prova ainda não anexada |
-| **Leitor de tela em aparelho (TalkBack)** | `[!]` — exige dispositivo; nada foi executado |
-| iOS | `[!]` — fora de escopo por decisão (P3-01) |
-
-### Testes e operação
-
-| Item | Estado |
-|---|---|
-| E2E completo | `[~]` — PR roda smoke; critical na main; full noturno. 3 specs fora do CI por motivo escrito |
-| `update.sh` falhar alto em DDL | `[ ]` — **P0 da fila (§20)**, dono orquestrador |
-| Deploy da 1.58.0 | `[ ]` — depende do corte (não autorizado) |
-| Pareamento do catálogo em produção | `[ ]` — só depois de release + deploy do `nexus-mercos` + `--dry-run` aprovado |
-
-### O que **está** fechado (para não repetir)
+### O que está fechado (para não repetir)
 
 P0 de código inteiro (F-09, F-17 73/73, service role, financeiro, fiscal,
 estoque, deploy/restore, Sentinel v1), idempotência fiscal nas quatro rotas,
-nome de campanha, nome fantasia, catálogo do Mercos **em código**, e a release
-1.57.0 publicada. Produção roda 1.57.0 (deploy do dono), com sidecar da mesma
-versão.
+nome de campanha, nome fantasia, catálogo do Mercos **em código**, Sentinel
+v1.1–v1.4, fichas 5.4/5.6/5.8/5.10-5.11, B-7 e kit fail-loud.
 
-### Atualização de 18/11 (fim do dia) — o que mudou de verdade
-
-| Fato | Consequência |
-|---|---|
-| **1.57.0 em produção** (app/worker/scheduler/fiscal/mercos/ocr/rota), healthy, health 200 | a versão que roda hoje não é a do repositório de ontem; o programa passou a medir contra ela |
-| **Três defeitos de schema revelados pelo deploy**: devolução (finalidade 4) barrada pela 0315; nota cancelada contando como viva no trigger de `invoice_orders`; bloco da 0320 quebrando com `search_path` vazio | corrigidos no **#566** (0326/0327); baseline aplicado em produção com `ON_ERROR_STOP`: 0 erros; pedido 19560 voltou a ter 2 vínculos |
-| **`update.sh` seguia com schema pela metade** e dizia "healthy" | **#568**: para antes de trocar as imagens; escape explícito `NEXUS_SCHEMA_NAO_FATAL=1`; teste no kit |
-| **Fichas de módulo**: 5.4 (#563, estado offline), 5.6 (#571, erro de rede em português), 5.8 (#572, estados da nota/listas) | três das cinco lacunas fechadas; falta **5.10/5.11** (#574, G) |
-| **Jornadas** J6/J13/J14 | prova em Vitest (#517) e defeitos corrigidos; **E2E de navegador continua aberto** |
-| **Sentinel v1.4** (rejeição de SEFAZ agrupada) | entrou (`sentinel-rejeicao-repetida`); falta painel por fornecedor se o dono quiser |
-| **B-7 do mobile** | F medindo dreno aceito e `401 token_revoked` no emulador; prova ainda não anexada |
-
-### O que continua aberto — dono e critério de aceite
-
-| Item | Dono | Aceite |
-|---|---|---|
-| Ficha **5.10/5.11** | G (#574) | ficha + estados de configurações/equipe/LGPD/admin com evidência; sem tocar regra |
-| **J6/J13/J14 E2E** | F (depois da B-7) | navegador real: sucesso, erro e recuperação; nenhuma marcada "instável" sem causa |
-| **B-7** | F | dreno aceito (200) + `401 token_revoked` com fila intacta + repetição sem duplicar |
-| **TalkBack em aparelho** | Dono (dispositivo) | leitura das 3 telas de operação; hoje `[!]`, nada executado |
-| **Pareamento do catálogo** | D + Dono | release → deploy `nexus-mercos` → `--dry-run` → relatório aprovado → aplicar |
-| **E2E completo** | Coordenação | full noturno verde; 3 specs fora do CI com motivo escrito |
-| **Corte da 1.58.0** | Dono | os três critérios dele (5.10/5.11, smoke do F, fragmentos) |
-| **Deploy da 1.58.0** | Dono | plano do `35` §6.1, com `to_regclass` verde |
+**Produção:** 1.57.0 saudável com sidecar na mesma versão; **1.58.0 com tag
+publicada e deploy aprovado**, em curso pelo dono. O deploy é o único passo que
+este programa não executa.

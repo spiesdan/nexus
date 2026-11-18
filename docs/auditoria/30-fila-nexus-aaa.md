@@ -128,7 +128,7 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30 — ausente por decisão; **não iniciado**, sem `ios/` nem conta Apple | Dono | Decisão de produto + conta Apple | Só entra com decisão registrada e dispositivo |
+| **P3-01** | Capacitor iOS | `[!]` **encerrado por decisão** | `29-capacidades.md` item 30: **decisão do dono em 18/11/2026** — sem conta Apple, sem aparelho, assinatura gratuita de 7 dias, distribuição por instalação não escala, e **PWA é o caminho oficial no iPhone** | Dono | — | Encerrado. Só volta com **conta Apple + aparelho + decisão de distribuição por instalação**, as três juntas |
 | **P3-02** | Rate limit: produção não pode cair em fallback de memória em silêncio | `[x]` | #520 → `6daec49d`: fallback **declarado** (backend/motivo/desde) e `/api/v1/health` com check `rate_limit` que dá 503 em produção | A | — | Produção falha alto sem Upstash, ou fallback declarado |
 | **P3-03** | Limpar planos antigos que ensinam `db push` | `[x]` | #506: 7 planos ativos apontam `pnpm db:migrate`; gate novo; `plan/progress.md` preservado como diário histórico | Coordenador | — | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
 
