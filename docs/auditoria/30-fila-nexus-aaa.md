@@ -301,3 +301,43 @@ coordenador possa abrir sozinho sem furar o rodízio de 2 workers.
 
 O coordenador **não executa** o trabalho de worker: distribui, integra e cobra a
 prova. Frente pausada não recebe tarefa nova até abrir slot.
+
+## 13. Fila nova — catálogo do Mercos (P1, 18/11/2026)
+
+> **Dono:** Agente **D** (design trocou de lugar: a a11y de 9.6 fica para depois
+> desta fatia). **Nada de deploy e nada de escrita em produção nesta entrega** —
+> o coletor entra no código; a execução é aprovada pelo dono depois.
+> **Migration:** só se indispensável; próxima livre **0325** (0324 é do Sentinel v1.2).
+
+### O que o dono mediu (somente leitura, org `4bc721ce…`)
+
+| Medição | Número |
+|---|---|
+| Código `411` no catálogo local | **existe** (`TOALHINHA 5KG`, ativo, `origem=mercos`) e **2.010** itens de pedido apontam para ele |
+| Itens de pedido com `product_id IS NULL` | **616**, em **72** códigos |
+| Desses, casando por nome normalizado | **3** — e de forma ambígua (`806` e `8147` têm o mesmo nome "ESPONJA COM 4 UN") |
+| Causa raiz | `workers/mercos/coletar.mjs` navega só `/pedidos/`; o catálogo de `/produtos/` nunca é importado |
+
+Conclusão registrada: **pareamento automático por nome é perigoso** e não será
+feito sem confirmação.
+
+### Aceite (um PR)
+
+1. **Coletor de catálogo** em `workers/mercos/`: abre `/produtos/` com a mesma
+   sessão/storage state e os mesmos timeouts, pagina e extrai `codigo`, `nome`,
+   `preco`, `ativo` (+ `unidade`/`ncm` se a página entregar). Upsert em
+   `catalog_products` por `(organization_id, codigo)`; só atualiza nome/preço
+   quando a origem for Mercos; **nunca apaga**.
+2. **Relatório antes de aplicar** no `summary` da execução: `criados`,
+   `atualizados`, `divergentes` (mesmo código, nome diferente), `sem_codigo`.
+3. **Pareamento histórico**: para cada `commercial_order_items.product_id IS NULL`,
+   casar **por código**; nome só quando o código não existir **e** com
+   confirmação explícita (candidato ambíguo nunca pareia). Backup das linhas
+   afetadas + relatório final.
+4. **Testes**: parser de página com fixture HTML; upsert idempotente (duas
+   execuções não duplicam); casamento por código; nome ambíguo **não** pareia.
+
+### O que esta fatia não faz
+
+Emitir, sincronizar preço em pedido existente, apagar produto, ou rodar contra a
+produção. A execução real é decisão do dono, depois do relatório.
