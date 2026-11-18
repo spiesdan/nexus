@@ -291,10 +291,11 @@ fiscal/financeira real.
 
 ## 11. Onde retomar (pausa de 18/11/2026)
 
-- **#528** (`front/sentinel` @ `14dc3d0a`): v1.1 completa, `build-and-size`
-  verde; `verify`, `invariants` e `e2e` reenfileirados depois da renumeração
-  0320→0321 e ainda **pending** na fila do Actions. Mergear quando verdes; não
-  há mudança de código pendente.
+- **#528** (`front/sentinel` @ `14dc3d0a`): v1.1 completa. `build-and-size`,
+  `verify`, `invariants` e `e2e` **verdes** depois da renumeração 0320→0321.
+  Falta só `imagens-ok` (as 7 imagens Docker; 2 prontas, 1 rodando e 4 na fila
+  do Actions na pausa). Mergear quando `imagens-ok` ficar verde; não há mudança
+  de código pendente.
 - **`front/sentinel-prova`** (dois commits sobre o topo do #528): prova de rota
   de papéis (`tests/api/sentinel-permissoes.test.ts`), gestor + switch de kill
   switch no componente e catraca de somente leitura
