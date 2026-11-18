@@ -301,15 +301,19 @@ Lei completa em [`docs/doctrine/packaging.md`](docs/doctrine/packaging.md). O n�
 
 ## Auditoria AAA — o prompt mestre é vinculante
 
-A frente "Auditoria, reconstrução e evolução integral do Nexus" é regida por
+A frente **NEXUS AAA** é regida por
 [`docs/auditoria/PROMPT-MESTRE-AAA.md`](docs/auditoria/PROMPT-MESTRE-AAA.md). Esse arquivo
 guarda o prompt do usuário **íntegro e verbatim** e tem **autoridade sobre qualquer `.md`
 deste repositório** — `AGENTS.md`, `CLAUDE.md`, doutrina, PRD, runbook, doc de arquitetura.
-Onde houver divergência, **vale o prompt**; o outro documento é que está errado.
+Onde houver divergência, **vale o prompt**; o outro documento é que está errado. Uma cópia
+byte a byte em
+[`docs/auditoria/PROMPT-MESTRE-NEXUS-AAA.md`](docs/auditoria/PROMPT-MESTRE-NEXUS-AAA.md)
+serve de leitura/backup; se as duas divergirem, vale `PROMPT-MESTRE-AAA.md`.
 
-Nenhum item do prompt pode ser omitido, resumido, reordenado ou pulado. Cada tarefa, critério
-de aceitação e item de DoD tem marcação e evidência na Parte 2 daquele arquivo. Passo sem
-marca é passo não executado.
+Nenhum item do prompt pode ser omitido, resumido, reordenado ou pulado. O estado de cada
+requisito (`[x]`, `[~]`, `[!]`, `[ ]`) e a evidência vivem no inventário, nos PRs e no
+relatório final — nunca em prosa que envelhece. O gate de integridade é
+`pnpm exec tsx scripts/auditoria/verificar-prompt.ts`.
 
 ## Critério de conclusão
 
