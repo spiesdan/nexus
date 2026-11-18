@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import {
   Table,
   TableBody,
@@ -10,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { comoMoeda } from "@/lib/format/moeda";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { identificacaoDaEntrada } from "@/lib/schemas/fiscal-entrada";
 import { createClient } from "@/lib/supabase/server";
@@ -51,17 +53,19 @@ interface Item {
 export default async function ProdutosDasNotasPage() {
   const { org } = await contextoFiscal();
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count, error } = await supabase
     .from("fiscal_document_items")
     .select(
       "id, entrada_id, numero_item, codigo, descricao, ncm, cfop, unidade, quantidade, " +
         "valor_unitario_cents, valor_total_cents, icms_cents, ipi_cents, " +
         "fiscal_entradas!inner(chave, numero, serie, emitente_nome, dh_emi)",
+      { count: "exact" },
     )
     .eq("organization_id", org.orgId)
     .order("created_at", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "produtos", org.orgId);
   const itens = (data ?? []) as unknown as Item[];
 
   return (
@@ -79,6 +83,7 @@ export default async function ProdutosDasNotasPage() {
         }
       />
 
+      <RecorteDaLista mostrados={itens.length} total={count ?? null} descricao="itens" />
       {itens.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">
           Nenhum item normalizado ainda. Eles aparecem depois que o XML completo é baixado e a

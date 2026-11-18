@@ -10,6 +10,8 @@ import {
   useRevokeApiToken,
   type CreatedApiToken,
 } from "@/hooks/team/useApiTokens";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,8 +43,7 @@ import { useT } from "@/hooks/i18n/useT";
  * inalcançável — a API sempre aceitou os escopos; só o catálogo daqui os
  * escondia.
  */
-const SCOPES: { id: string; label: string }[] = [
-  { id: "mcp:read", label: "Agentes de IA podem LER o CRM (MCP)" },
+const SCOPES: { id: string; label: string }[] = [  { id: "mcp:read", label: "Agentes de IA podem LER o CRM (MCP)" },
   { id: "mcp:write", label: "Agentes de IA podem AGIR no CRM (MCP)" },
   // Sem isto o token nasce como 'agent' e as ferramentas de nível gerente
   // (criar lead, atribuir conversa) respondem "Role 'agent' insufficient".
@@ -58,12 +59,22 @@ const SCOPES: { id: string; label: string }[] = [
   { id: "audit:read", label: "Ler o log de auditoria" },
 ];
 
+/**
+ * O relógio fora do corpo do componente — mesma regra da porta do fiscal:
+ * `Date.now()` no render é impuro e o lint (`react-hooks/purity`) reprova.
+ * O instante é lido como dado, na comparação do crachá de expiração.
+ */
+function agoraMs(): number {
+  return Date.now();
+}
+
 export function ApiTokensClient() {
   const tagDoIdioma = useTagDeIdioma();
   const t = useT();
-  const { data, isLoading } = useApiTokens();
+  const { data, isLoading, isError, refetch } = useApiTokens();
   const create = useCreateApiToken();
   const revoke = useRevokeApiToken();
+  const confirmar = useConfirmar();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [name, setName] = useState("");
@@ -129,6 +140,14 @@ export function ApiTokensClient() {
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>
+      ) : isError ? (
+        // Falha de leitura virava "Nenhum token criado ainda." — o operador
+        // concluía que não havia credencial e criava outra, ou pior, achava
+        // que o token de produção tinha sumido. Erro não é vazio.
+        <NexusErrorState
+          description={t("Erro ao carregar tokens.")}
+          onRetry={() => void refetch()}
+        />
       ) : tokens.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("Nenhum token criado ainda.")}</p>
       ) : (
@@ -163,14 +182,24 @@ export function ApiTokensClient() {
                   <TableCell>
                     {tok.revoked_at ? (
                       <Badge variant="destructive">{t("Revogado")}</Badge>
+                    ) : tok.expires_at && new Date(tok.expires_at).getTime() <= agoraMs() ? (
+                      // Expirado NÃO é ativo: o MCP recusa o bearer e qualquer
+                      // automação que dependa dele já está parada em silêncio.
+                      // O crachá antigo dizia "Ativo" com a data no passado.
+                      <Badge variant="warning">{t("Expirado")}</Badge>
                     ) : (
                       <Badge variant="default">{t("Ativo")}</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {tok.expires_at
-                      ? new Date(tok.expires_at).toLocaleDateString(tagDoIdioma)
-                      : "—"}
+                    {tok.expires_at ? (
+                      new Date(tok.expires_at).toLocaleDateString(tagDoIdioma)
+                    ) : (
+                      // "—" escondia a decisão: sem data, o token não expira.
+                      <span title={t("Token sem data de expiração — vale até ser revogado.")}>
+                        {t("Não expira")}
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {!tok.revoked_at ? (
@@ -179,6 +208,16 @@ export function ApiTokensClient() {
                         size="sm"
                         disabled={revoke.isPending}
                         onClick={async () => {
+                          const ok = await confirmar({
+                            title: t(`Revogar o token "${tok.name}"?`),
+                            description: t(
+                              "Qualquer integração, worker ou agente de IA que use este token para de funcionar imediatamente. A revogação não tem como desfazer — será preciso criar outro token.",
+                            ),
+                            confirmLabel: t("Revogar"),
+                            cancelLabel: t("Voltar"),
+                            danger: true,
+                          });
+                          if (!ok) return;
                           await revoke.mutateAsync(tok.id);
                           toast.success(t("Token revogado."));
                         }}

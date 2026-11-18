@@ -222,3 +222,51 @@ describe("TeamMembersClient — números do membro (0296)", () => {
     );
   });
 });
+
+/**
+ * ESTADOS DE CARGA DA EQUIPE — erro com saída e vazio com próximo passo.
+ *
+ * A tela respondia erro com uma frase vermelha sem retry (só recarregar a
+ * página) e vazio com uma frase morta numa instalação nova, onde o dono ainda
+ * não convidou ninguém. São os dois estados em que a página de Equipe é a
+ * única porta para montar o time.
+ */
+describe("TeamMembersClient — estados de carga", () => {
+  it("erro mostra 'Tentar novamente' e o retry refaz a consulta", async () => {
+    vi.mocked(apiClient.get)
+      .mockRejectedValueOnce(new ApiError(500, "internal_error", undefined, "req-1", "falhou"))
+      .mockResolvedValue({ data: members() });
+
+    const user = userEvent.setup();
+    renderClient();
+
+    await user.click(await screen.findByRole("button", { name: "Tentar novamente" }));
+
+    await waitFor(() => expect(screen.getByText("agente@example.com")).toBeInTheDocument());
+    const chamadasDaEquipe = vi
+      .mocked(apiClient.get)
+      .mock.calls.filter(([url]) => url === "/api/v1/team");
+    expect(chamadasDaEquipe).toHaveLength(2);
+  });
+
+  it("equipe vazia leva o admin a convidar em vez de terminar numa frase", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: [] });
+
+    renderClient();
+
+    expect(await screen.findByText("Nenhum membro ativo.")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Convidar membros" })).toHaveAttribute(
+      "href",
+      "/app/team/invite",
+    );
+  });
+
+  it("equipe vazia de quem NÃO gerencia não oferece convite", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({ data: [] });
+
+    renderClient({ canManage: false });
+
+    expect(await screen.findByText("Nenhum membro ativo.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Convidar membros" })).toBeNull();
+  });
+});
