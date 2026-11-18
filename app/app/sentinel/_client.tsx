@@ -44,6 +44,7 @@ import { ALVOS_DE_GESTOR, TRANSICOES } from "@/lib/sentinel/estado";
 import {
   PESO_SEVERIDADE,
   type EstadoOcorrencia,
+  type Recomendacao,
   type Severidade,
 } from "@/lib/sentinel/tipos";
 import {
@@ -125,6 +126,38 @@ function duracao(ms: number | null): string {
   if (ms < 60_000) return `${(ms / 1_000).toFixed(1)} s`;
   return `${Math.round(ms / 60_000)} min`;
 }
+
+/** Ocorrências anteriores à v1.1 têm `{}`; não invente plano na tela. */
+function planoDe(ocorrencia: OcorrenciaSentinel): Recomendacao | null {
+  const bruto = ocorrencia.recomendacao;
+  if (!bruto || typeof bruto !== "object") return null;
+  const r = bruto as Partial<Recomendacao>;
+  if (typeof r.resumo !== "string" || !Array.isArray(r.passos) || r.passos.length === 0) {
+    return null;
+  }
+  return r as Recomendacao;
+}
+
+const ROTULO_RISCO: Record<Recomendacao["risco"], string> = {
+  baixo: "Risco baixo",
+  medio: "Risco médio",
+  alto: "Risco alto",
+};
+
+const ROTULO_REVERSIBILIDADE: Record<Recomendacao["reversibilidade"], string> = {
+  reversivel: "Reversível",
+  parcial: "Parcialmente reversível",
+  irreversivel: "Irreversível",
+};
+
+const VARIANTE_RISCO: Record<
+  Recomendacao["risco"],
+  "success" | "warning" | "error"
+> = {
+  baixo: "success",
+  medio: "warning",
+  alto: "error",
+};
 
 export function SentinelClient({
   ocorrencias,
@@ -540,6 +573,69 @@ export function SentinelClient({
                     <p className="text-text-muted">{detalhe.ocorrencia.causa_provavel}</p>
                   </section>
                 ) : null}
+
+                {(() => {
+                  const plano = planoDe(detalhe.ocorrencia);
+                  if (!plano) {
+                    return (
+                      <section>
+                        <h3 className="mb-1 font-medium text-text">Plano de correção</h3>
+                        <p className="text-text-muted">
+                          Sem plano registrado — ocorrência anterior à v1.1 ou regra sem
+                          recomendação. A evidência abaixo continua válida.
+                        </p>
+                      </section>
+                    );
+                  }
+                  return (
+                    <section className="rounded-lg border border-border bg-surface-elevated/50 p-4">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <h3 className="font-medium text-text">Plano de correção (revisável)</h3>
+                        <Badge variant={VARIANTE_RISCO[plano.risco]}>{ROTULO_RISCO[plano.risco]}</Badge>
+                        <Badge variant="neutral">{ROTULO_REVERSIBILIDADE[plano.reversibilidade]}</Badge>
+                        <Badge variant="info">Confiança {plano.confianca}</Badge>
+                        {plano.exige_aprovacao ? (
+                          <Badge variant="warning">Exige aprovação</Badge>
+                        ) : null}
+                      </div>
+
+                      <p className="text-sm text-text">{plano.resumo}</p>
+
+                      <h4 className="mt-3 text-xs font-medium uppercase tracking-wide text-text-muted">
+                        Passos
+                      </h4>
+                      <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-text-muted">
+                        {plano.passos.map((passo) => (
+                          <li key={passo}>{passo}</li>
+                        ))}
+                      </ol>
+
+                      {plano.campos_pendentes.length > 0 ? (
+                        <>
+                          <h4 className="mt-3 text-xs font-medium uppercase tracking-wide text-text-muted">
+                            Campos pendentes
+                          </h4>
+                          <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-text-muted">
+                            {plano.campos_pendentes.map((campo) => (
+                              <li key={campo}>{campo}</li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : null}
+
+                      {plano.limitacao ? (
+                        <p className="mt-3 rounded-md border border-warning-bg bg-warning-bg/30 p-2 text-xs text-text-muted">
+                          <strong className="text-text">Limitação:</strong> {plano.limitacao}
+                        </p>
+                      ) : null}
+
+                      <p className="mt-3 text-xs text-text-muted">
+                        Fontes: {plano.fonte.join(", ")}. Nada é executado automaticamente: aprovar
+                        registra a decisão; a correção continua manual nesta versão.
+                      </p>
+                    </section>
+                  );
+                })()}
 
                 <section>
                   <h3 className="mb-1 font-medium text-text">Evidência</h3>

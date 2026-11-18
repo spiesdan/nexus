@@ -9,9 +9,11 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  EstoqueRazao,
   ImportacaoMercos,
   JobDaFila,
   JobFiscal,
+  LeadAberto,
   NotaFiscal,
   Pedido,
   Produto,
@@ -199,6 +201,32 @@ export function duplicado(over: Partial<ClienteDuplicado> = {}): ClienteDuplicad
   };
 }
 
+export function estoqueRazao(over: Partial<EstoqueRazao> = {}): EstoqueRazao {
+  return {
+    product_id: "produto-1",
+    codigo: "SKU-1",
+    nome: "Produto",
+    quantidade: 10,
+    saldo_razao: 10,
+    diferenca: 0,
+    movimentos: 2,
+    criado_em: ha(7 * DIA),
+    ultimo_movimento: ha(HORA),
+    ...over,
+  };
+}
+
+export function leadAberto(over: Partial<LeadAberto> = {}): LeadAberto {
+  return {
+    id: "lead-1",
+    pipeline_id: "pipeline-1",
+    contact_id: "contato-1",
+    created_at: ha(HORA),
+    contatos: { phone_number: "+5511999998888", email_normalized: "ana@loja.test" },
+    ...over,
+  };
+}
+
 export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
   return {
     organizationId: "org-1",
@@ -209,7 +237,9 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     jobsFiscais: [],
     sincronizacoesFiscais: [],
     produtos: [],
+    estoqueRazao: [],
     recebiveis: [],
+    leadsAbertos: [],
     fila: [],
     webhooks: [],
     importacoesMercos: [],

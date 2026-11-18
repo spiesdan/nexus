@@ -93,6 +93,13 @@ export const REGRAS: readonly Regra[] = [
     detectar: operacao.estoqueNegativo,
   },
   {
+    id: "operacao.estoque_divergente",
+    categoria: "operacao",
+    descricao:
+      "Saldo cacheado difere do razão desde 0242 — hipótese de baixa confiança, confirme com contagem.",
+    detectar: operacao.estoqueDivergente,
+  },
+  {
     id: "operacao.pedido_total_incoerente",
     categoria: "operacao",
     descricao: "Total do pedido não é subtotal − desconto + frete.",
@@ -175,6 +182,13 @@ export const REGRAS: readonly Regra[] = [
     categoria: "operacao",
     descricao: "Mais de um cliente ativo com o mesmo e-mail normalizado.",
     detectar: operacao.clientesDuplicadosPorEmail,
+  },
+  {
+    id: "operacao.lead_duplicado",
+    categoria: "operacao",
+    descricao:
+      "Mais de um lead aberto no mesmo funil para o mesmo contato, telefone ou e-mail normalizado.",
+    detectar: operacao.leadsDuplicados,
   },
 ];
 

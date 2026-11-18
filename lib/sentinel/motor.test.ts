@@ -17,6 +17,22 @@ const ACHADO_BASE: Achado = {
   evidencia: {},
 };
 
+const PLANO_BASE = {
+  resumo: "Plano de teste utilizável pela tela.",
+  passos: ["Passo único"],
+  campos_pendentes: [],
+  risco: "baixo" as const,
+  reversibilidade: "reversivel" as const,
+  exige_aprovacao: false,
+  fonte: ["tabela_teste"],
+  limitacao: null,
+  confianca: "alta" as const,
+};
+
+function mapa(...ids: string[]): Record<string, () => typeof PLANO_BASE> {
+  return Object.fromEntries(ids.map((id) => [id, () => PLANO_BASE]));
+}
+
 describe("motor de detecção", () => {
   it("registry: ids únicos, todos com detector, e nenhuma regra lança em foto vazia", () => {
     const ids = REGRAS.map((r) => r.id);
@@ -46,7 +62,10 @@ describe("motor de detecção", () => {
       detectar: () => [{ ...ACHADO_BASE, regra: "regra.boa", severidade: "alta" }],
     };
 
-    const r = executarDetectores(snapshot(), { regras: [quebrada, boa] });
+    const r = executarDetectores(snapshot(), {
+      regras: [quebrada, boa],
+      recomendacoes: mapa("regra.boa"),
+    });
     expect(r.achados).toHaveLength(1);
     expect(r.regrasAvaliadas).toEqual(["regra.boa"]);
     expect(r.falhas).toEqual([{ regra: "regra.quebrada", motivo: "boom" }]);
@@ -59,7 +78,10 @@ describe("motor de detecção", () => {
       descricao: "devolve achado sem entidade",
       detectar: () => [{ ...ACHADO_BASE, regra: "regra.invalida", entidadeId: "" }],
     };
-    const r = executarDetectores(snapshot(), { regras: [invalida] });
+    const r = executarDetectores(snapshot(), {
+      regras: [invalida],
+      recomendacoes: mapa("regra.invalida"),
+    });
     expect(r.achados).toHaveLength(0);
     expect(r.regrasAvaliadas).toHaveLength(0);
     expect(primeiro(r.falhas).motivo).toContain("entidadeId");
@@ -75,9 +97,26 @@ describe("motor de detecção", () => {
         { ...ACHADO_BASE, regra: "regra.dup", severidade: "critica" },
       ],
     };
-    const r = executarDetectores(snapshot(), { regras: [duplicada] });
+    const r = executarDetectores(snapshot(), {
+      regras: [duplicada],
+      recomendacoes: mapa("regra.dup"),
+    });
     expect(r.achados).toHaveLength(1);
     expect(primeiro(r.achados).severidade).toBe("critica");
+    expect(primeiro(r.achados).recomendacao?.risco).toBe("baixo");
+  });
+
+  it("regra sem plano de correção reprova em vez de abrir ocorrência muda", () => {
+    const semPlano: Regra = {
+      id: "regra.sem_plano",
+      categoria: "operacao",
+      descricao: "detector válido, mas sem entrada em RECOMENDACOES",
+      detectar: () => [{ ...ACHADO_BASE, regra: "regra.sem_plano" }],
+    };
+    const r = executarDetectores(snapshot(), { regras: [semPlano], recomendacoes: {} });
+    expect(r.achados).toHaveLength(0);
+    expect(r.regrasAvaliadas).toHaveLength(0);
+    expect(primeiro(r.falhas).motivo).toContain("sem plano");
   });
 
   it("respeita o kill switch de regra por organização", () => {
@@ -110,7 +149,10 @@ describe("motor de detecção", () => {
         detectar: () => [{ ...ACHADO_BASE, regra: "regra.m_alta", severidade: "alta" }],
       },
     ];
-    const r = executarDetectores(snapshot(), { regras });
+    const r = executarDetectores(snapshot(), {
+      regras,
+      recomendacoes: mapa("regra.z_baixa", "regra.a_critica", "regra.m_alta"),
+    });
     expect(r.achados.map((a) => a.regra)).toEqual([
       "regra.a_critica",
       "regra.m_alta",

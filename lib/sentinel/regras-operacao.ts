@@ -16,6 +16,7 @@ import {
   idadeMs,
   maisVelhoQue,
   mascararEmail,
+  mascararTelefone,
   MINUTO_MS,
   textoOuNulo,
   ufValida,
@@ -46,6 +47,50 @@ export function estoqueNegativo(s: Snapshot): Achado[] {
         atualizado_em: p.updated_at,
       },
     }));
+}
+
+/**
+ * Divergência entre o saldo cacheado e o razão — com a limitação declarada.
+ *
+ * `inventory_movements` nasceu em 0242 e NÃO registra saldo de abertura. Por
+ * isso esta regra só olha produtos criados depois do razão existir, exige um
+ * piso de diferença e nasce com confiança BAIXA: a diferença pode ser estoque
+ * inicial. O plano manda contar fisicamente antes de qualquer ajuste; é
+ * exatamente o oposto de "corrigir o cache para bater".
+ */
+export function estoqueDivergente(s: Snapshot): Achado[] {
+  return s.estoqueRazao.flatMap((r) => {
+    const diferenca = r.diferenca;
+    const piso = Math.max(10, Math.round(0.1 * Math.max(Math.abs(r.quantidade), Math.abs(r.saldo_razao))));
+    if (Math.abs(diferenca) < piso) return [];
+
+    return [
+      {
+        regra: "operacao.estoque_divergente",
+        categoria: "operacao" as const,
+        entidadeTipo: "catalog_products",
+        entidadeId: r.product_id,
+        titulo: `${r.nome}: saldo (${r.quantidade}) difere do razão (${r.saldo_razao})`,
+        resumo:
+          "O saldo cacheado não é o que a soma das movimentações desde 0242 explica. Pode ser saldo inicial ou movimentação que não passou pelo razão.",
+        causaProvavel:
+          "Estoque inicial cadastrado antes do razão, UPDATE direto no saldo, movimentação perdida ou baixa em duplicidade.",
+        severidade: "baixa" as const,
+        href: "/app/estoque",
+        evidencia: {
+          codigo: r.codigo,
+          quantidade: r.quantidade,
+          saldo_razao: r.saldo_razao,
+          diferenca,
+          movimentos: r.movimentos,
+          criado_em: r.criado_em,
+          ultimo_movimento: r.ultimo_movimento,
+          confianca: "baixa",
+          limitacao: "Sem saldo de abertura no razão; confirmar com contagem física.",
+        },
+      },
+    ];
+  });
 }
 
 export function pedidosComTotalIncoerente(s: Snapshot): Achado[] {
@@ -512,6 +557,113 @@ export function clientesDuplicadosPorEmail(s: Snapshot): Achado[] {
       contatos: d.ids.slice(0, 20),
     },
   }));
+}
+
+/**
+ * Lead duplicado — a identidade vem do que o produto JÁ normaliza.
+ *
+ * Não existe coluna de e-mail/telefone no lead: a identidade mora no contato
+ * (`contacts.phone_number` E.164 + `email_normalized`). A regra usa, nesta
+ * ordem de confiança:
+ *   1. o mesmo `contact_id` no mesmo funil (alta);
+ *   2. o mesmo telefone normalizado em contatos diferentes (média);
+ *   3. o mesmo e-mail normalizado em contatos diferentes (média).
+ * O mesmo par de leads pode aparecer nas três chaves; a regra deduplica pelo
+ * conjunto de IDs e guarda a maior confiança. Lead sem contato fica de fora —
+ * não há identidade para comparar e inventar uma seria pior.
+ */
+export function leadsDuplicados(s: Snapshot): Achado[] {
+  type Grupo = {
+    pipeline: string;
+    identidade: "contato" | "telefone" | "email";
+    valor: string | null;
+    ids: Set<string>;
+    confianca: "alta" | "media";
+  };
+
+  const grupos = new Map<string, Grupo>();
+  const adicionar = (
+    chave: string,
+    grupo: Omit<Grupo, "ids">,
+    leadId: string,
+  ): void => {
+    const atual = grupos.get(chave) ?? { ...grupo, ids: new Set<string>() };
+    atual.ids.add(leadId);
+    grupos.set(chave, atual);
+  };
+
+  for (const lead of s.leadsAbertos) {
+    if (!lead.pipeline_id) continue;
+    if (lead.contact_id) {
+      adicionar(
+        `${lead.pipeline_id}|contato|${lead.contact_id}`,
+        { pipeline: lead.pipeline_id, identidade: "contato", valor: null, confianca: "alta" },
+        lead.id,
+      );
+    }
+    const telefone = lead.contatos?.phone_number?.replace(/\D/g, "") ?? "";
+    if (telefone.length >= 8) {
+      adicionar(
+        `${lead.pipeline_id}|telefone|${telefone}`,
+        { pipeline: lead.pipeline_id, identidade: "telefone", valor: telefone, confianca: "media" },
+        lead.id,
+      );
+    }
+    const email = lead.contatos?.email_normalized?.trim().toLowerCase() ?? "";
+    if (email) {
+      adicionar(
+        `${lead.pipeline_id}|email|${email}`,
+        { pipeline: lead.pipeline_id, identidade: "email", valor: email, confianca: "media" },
+        lead.id,
+      );
+    }
+  }
+
+  const porAssinatura = new Map<string, Grupo>();
+  for (const grupo of grupos.values()) {
+    if (grupo.ids.size < 2) continue;
+    const assinatura = [...grupo.ids].sort().join(",");
+    const existente = porAssinatura.get(assinatura);
+    if (!existente || (existente.confianca === "media" && grupo.confianca === "alta")) {
+      porAssinatura.set(assinatura, grupo);
+    }
+  }
+
+  return [...porAssinatura.entries()].map(([assinatura, grupo]) => {
+    const ids = [...grupo.ids].sort();
+    const identidade =
+      grupo.identidade === "contato"
+        ? "mesmo contato"
+        : grupo.identidade === "telefone"
+          ? "mesmo telefone normalizado"
+          : "mesmo e-mail normalizado";
+    return {
+      regra: "operacao.lead_duplicado",
+      categoria: "operacao" as const,
+      entidadeTipo: "crm_leads",
+      entidadeId: hashCurto(`leads:${grupo.pipeline}:${assinatura}`),
+      titulo: `${ids.length} leads abertos para o ${identidade}`,
+      resumo:
+        "Há mais de um card aberto para a mesma identidade no mesmo funil. O trabalho e o histórico ficam divididos.",
+      causaProvavel:
+        "Cadastro concorrente, captação repetida ou contato duplicado anterior à mescla.",
+      severidade: "media" as const,
+      href: "/app/kanban",
+      evidencia: {
+        pipeline_id: grupo.pipeline,
+        identidade: grupo.identidade,
+        confianca: grupo.confianca,
+        total: ids.length,
+        leads: ids.slice(0, 20),
+        ...(grupo.identidade === "telefone" && grupo.valor
+          ? { telefone_mascarado: mascararTelefone(grupo.valor) }
+          : {}),
+        ...(grupo.identidade === "email" && grupo.valor
+          ? { email_mascarado: mascararEmail(grupo.valor) }
+          : {}),
+      },
+    };
+  });
 }
 
 function lerCidades(c: CampanhaProspeccao): Array<{ cidade?: unknown; estado?: unknown }> {

@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (27)
+## 2. Regras implementadas (29)
 
 ### Fiscal (12)
 
@@ -45,6 +45,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
 | `operacao.estoque_negativo` | saldo < 0 com controle de estoque | alta |
+| `operacao.estoque_divergente` | saldo ≠ razão desde 0242; **hipótese** de baixa confiança | baixa |
 | `operacao.pedido_total_incoerente` | total ≠ subtotal − desconto + frete | alta |
 | `operacao.pedido_preso` | rascunho/em análise sem toque há > 7 dias | media |
 | `operacao.pedido_sem_cliente` | pedido avançado sem `contact_id` | media |
@@ -59,6 +60,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `campanha.cidade_invalida` | campanha ativa com cidade vazia/UF fora de 2 letras | media/alta |
 | `campanha.cidade_repetida` | mesma cidade repetida no recorte ativo | baixa |
 | `operacao.cliente_duplicado_email` | mesmo e-mail normalizado em 2+ clientes ativos | media |
+| `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
 
 **Falsos positivos evitados de propósito:**
 
@@ -66,10 +68,14 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   recorte geográfico), não erro — a regra não dispara;
 - contato tem índice único por telefone; a duplicidade real que sobra é por
   e-mail, e é essa que a view agregada detecta;
-- divergência de estoque **não** foi implementada: sem saldo de abertura no
-  razão, `SUM(movimentos) ≠ quantidade` acusaria todos os produtos anteriores à
-  migration 0242. Estoque negativo é determinístico; divergência exigiria uma
-  linha de base que o schema não tem.
+- divergência de estoque **é detectada como hipótese**: `inventory_movements`
+  não tem saldo de abertura, então a regra só olha produtos criados a partir da
+  0242, exige um piso de diferença e nasce com confiança baixa. O plano manda
+  contar fisicamente antes de ajustar; a limitação vai na evidência;
+- lead duplicado usa a identidade que o produto já normaliza — `contact_id`,
+  `phone_number` E.164 e `email_normalized` — com confiança alta para o mesmo
+  contato e média para telefone/e-mail entre contatos. Lead sem contato fica de
+  fora: não há identidade para comparar.
 
 ## 3. Ocorrência, agrupamento e idempotência
 
@@ -81,6 +87,9 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   cria cópia.
 - Quando o evento volta depois de fechado, nasce uma ocorrência `recorrente`,
   com `recorrencias` = quantas fechadas da mesma fingerprint já existiam.
+- O plano do Nível 1 é persistido em `recomendacao` junto da ocorrência; a
+  reexecução atualiza o plano da linha aberta, mas o histórico do que foi
+  recomendado antes continua no evento e nas linhas fechadas.
 - Rodada **truncada** (teto de coleta, teto de ocorrências ou falha de regra)
   **não** encerra ocorrências por ausência: lista incompleta não é prova.
 - O encerramento automático grava evento `auto_encerrada` com motivo
@@ -96,7 +105,10 @@ terminal ─> nova/recorrente (reabrir, gestor)
 ```
 
 - **Nível 0 — observar** (implementado): detectar, classificar, abrir ocorrência.
-- **Nível 1 — recomendar** (v1.1, não implementado): plano de correção revisável.
+- **Nível 1 — recomendar** (implementado na v1.1): cada ocorrência carrega um
+  plano revisável com passos, campos pendentes, risco da ação, reversibilidade,
+  fonte, limitação e confiança. O plano é persistido junto da ocorrência e
+  exibido no detalhe; **nada é executado**.
 - **Nível 2 — corrigir após aprovação** (v1.2, não implementado).
 - **Nível 3 — automação restrita** (não implementado; e emissão/pagamento/envio
   externo nunca serão nível 3).
@@ -132,7 +144,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
   transição e chama `fn_sentinel_aplicar_mudanca` com service role: a máquina de
   estados não é contornável com a anon key.
 - Coleta usa service role e filtra `organization_id` explicitamente em **todas**
-  as 13 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
+  as 15 consultas; o id vem do guard de cookie ou da agenda do cron, nunca do
   body.
 - Evidência não carrega conversa, documento, telefone ou e-mail completo. Erro
   de terceiro passa por `higienizar()` (e-mail → `[email]`, sequência de dígitos
@@ -148,14 +160,16 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | Path | O que |
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
-| `supabase/baseline.sql` (apêndice 0316) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linha da 0316 |
-| `lib/sentinel/tipos.ts` | contrato do snapshot/achado |
+| `supabase/migrations/20261121150000_0317_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
+| `supabase/baseline.sql` (apêndices 0316/0317) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0317 |
+| `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
-| `lib/sentinel/regras-operacao.ts` | 15 detectores de operação/financeiro/campanha |
+| `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
-| `lib/sentinel/coleta.ts` | 13 consultas com teto e filtro de org |
+| `lib/sentinel/coleta.ts` | 15 consultas com teto e filtro de org |
+| `lib/sentinel/recomendacoes.ts` | plano revisável por regra (Nível 1) |
 | `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
 | `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
@@ -163,49 +177,55 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `app/api/v1/sentinel/{occurrences,scan,settings}` | API |
 | `app/api/v1/cron/sentinel/route.ts` | cron (15 min) |
 | `app/app/sentinel/` | painel |
-| `docs/architecture/sentinel.architecture.json` | mapa (21 peças, 24 arestas) |
+| `docs/architecture/sentinel.architecture.json` | mapa (22 peças, 26 arestas) |
 | `tests/invariants/rls-isolation.test.ts` | seed + TABLES das 4 tabelas |
-| `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, estados, config |
+| `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção e cross-tenant |
+| `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis |
+| `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
 
 ```bash
-pnpm vitest run lib/sentinel      # 45 testes (positivo/negativo por regra)
-pnpm test:db                      # install+update do baseline, RLS, invariantes
-pnpm typecheck
-pnpm lint
+pnpm vitest run lib/sentinel                         # regras, planos, motor e estados
+pnpm test:db                                        # install+update, RLS, idempotência
+pnpm typecheck && pnpm lint && pnpm lint:channels && pnpm lint:role-rank
 pnpm test:unit
+E2E_PORT=3011 pnpm exec playwright test tests/e2e/sentinel-painel.spec.ts
 ```
 
 Resultados desta sessão ficam no relatório do PR. **Nada foi implantado** — sem
 deploy, sem escrita em produção/VPS, sem operação fiscal/financeira real.
 
-## 9. Limitações declaradas (v1)
+## 9. Limitações declaradas (v1.1)
 
-1. **Divergência de estoque** não é detectada (falta saldo de abertura no
-   razão); estoque negativo é.
-2. **Duplicidade de lead** não é detectada; contato duplicado por e-mail é
-   (telefone já tem índice único). Lead duplicado exige uma chave de negócio
-   que o schema não declara.
-3. **Campos sugeridos a partir de fonte confiável** (item fiscal do prompt)
-   pertencem ao v1.1 (recomendação). O v1 não sugere valor fiscal.
-4. **Não há correção automática nem aprovação de plano** — estados `aprovada`
-   existem para o v1.2, mas nenhuma ação é executada.
+1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
+   saldo de abertura e a comparação só vale para produtos criados a partir da
+   0242. Confirmação exige contagem física.
+2. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
+   contato não tem identidade normalizada — ficar de fora é decisão, não
+   omissão.
+3. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
+   v1.1 recomenda passos, não inventa valor fiscal.
+4. **Não há correção automática.** O plano é persistido e revisável; os estados
+   `aprovada`/`corrigida` registram a decisão humana, mas nada é executado pela
+   máquina.
 5. O cron processa **3 organizações por tick**; instalação com muitas orgs
    drena ao longo dos ticks (15 min cada).
 6. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
    fica de fora de propósito.
 7. O painel entrega 500 ocorrências por render; a API pagina até 200 por
    chamada. Acima disso, filtros são a forma de recorte.
+8. O plano é uma recomendação textual/determinística; não há simulação de
+   impacto nem execução assistida na v1.1.
 
 ## 10. Próximas fatias seguras
 
-1. v1.1 — plano de correção revisável, sem executar (texto + campos + risco).
+1. v1.2 — correção aprovada e reversível, sempre com antes/depois e aprovação
+   de gestor; nunca em nota, saldo, pagamento ou envio externo.
 2. Explicação por IA **opcional** sobre a evidência já sanitizada, com fallback
    imediato para o texto determinístico.
 3. Exposição no Meu Dia: uma ocorrência `acao_necessaria` vira item da rotina
    (hoje a porta é o ⌘K, porque a dobra do sidebar é medida).
-4. Detector de divergência de estoque **quando** houver saldo de abertura
-   (`inventory_movements` com tipo `abertura` ou snapshot mensal).
-5. Teste visual/E2E do painel em ambiente fresco (a doutrina de QA visual não
-   foi executada nesta sessão; é dívida declarada).
+4. Saldo de abertura explícito no razão (`abertura`/snapshot mensal) para elevar
+   a confiança da divergência de estoque.
+5. Ampliar o E2E visual para outras resoluções/dispositivos.

@@ -66,6 +66,37 @@ export const ESTADOS_TERMINAIS: readonly EstadoOcorrencia[] = [
 /** Evidência: JSON plano e mínimo. Nunca conversa, documento ou contato. */
 export type Evidencia = Record<string, string | number | boolean | null | string[] | number[]>;
 
+/**
+ * Nível 1 do Sentinel: recomendação REVISÁVEL, sem escrever no negócio.
+ *
+ * O plano é produzido pelo detector e persistido com a ocorrência para que o
+ * histórico mostre o que se recomendava naquele momento — não o que a regra
+ * recomenda hoje. Nenhum passo abaixo é executado pela máquina.
+ */
+export type RiscoDaAcao = "baixo" | "medio" | "alto";
+export type Reversibilidade = "reversivel" | "parcial" | "irreversivel";
+export type Confianca = "alta" | "media" | "baixa";
+
+export interface Recomendacao {
+  /** Uma frase: o que fazer para resolver, sem jargão. */
+  resumo: string;
+  /** Passos ordenados, revisáveis por uma pessoa. */
+  passos: string[];
+  /** O que ainda falta saber/decidir antes de agir. */
+  campos_pendentes: string[];
+  /** Risco DA AÇÃO recomendada (não da ocorrência). */
+  risco: RiscoDaAcao;
+  reversibilidade: Reversibilidade;
+  /** true = exige decisão de gestor antes de qualquer execução futura. */
+  exige_aprovacao: boolean;
+  /** Tabelas/fontes que sustentam o plano. */
+  fonte: string[];
+  /** Limitação honesta do diagnóstico, quando existe. */
+  limitacao: string | null;
+  /** Quanta confiança o plano merece, dado o detector. */
+  confianca: Confianca;
+}
+
 export interface Achado {
   /** Id estável da regra, vocabulário do registry (`fiscal.nota_rejeitada`). */
   regra: string;
@@ -81,6 +112,8 @@ export interface Achado {
   severidade: Severidade;
   href: string | null;
   evidencia: Evidencia;
+  /** Anexado pelo motor a partir do registry; ausente = regra sem plano (falha). */
+  recomendacao?: Recomendacao;
 }
 
 /**
@@ -237,6 +270,38 @@ export interface ClienteDuplicado {
 }
 
 /**
+ * Produto com movimentação e a soma do razão. A view só devolve linhas com
+ * `diferenca <> 0`; o detector decide o piso e a confiança.
+ *
+ * LIMITAÇÃO ESTRUTURAL: `inventory_movements` nasceu em 0242 e não guarda saldo
+ * de abertura. Por isso a view só considera produtos criados a partir dela e o
+ * detector trata a diferença como HIPÓTESE, nunca como prova.
+ */
+export interface EstoqueRazao {
+  product_id: string;
+  codigo: string;
+  nome: string;
+  quantidade: number;
+  saldo_razao: number;
+  diferenca: number;
+  movimentos: number;
+  criado_em: string;
+  ultimo_movimento: string;
+}
+
+/** Lead aberto com a identidade normalizada do contato (para duplicidade). */
+export interface LeadAberto {
+  id: string;
+  pipeline_id: string;
+  contact_id: string | null;
+  created_at: string;
+  contatos: {
+    phone_number: string | null;
+    email_normalized: string | null;
+  } | null;
+}
+
+/**
  * A fotografia de uma organização numa execução. `agoraMs` entra como dado
  * (não como `Date.now()` dentro das regras) para que o teste de tempo seja
  * determinístico e a mesma varredura seja reproduzível.
@@ -250,7 +315,9 @@ export interface Snapshot {
   jobsFiscais: JobFiscal[];
   sincronizacoesFiscais: SyncFiscal[];
   produtos: Produto[];
+  estoqueRazao: EstoqueRazao[];
   recebiveis: Recebivel[];
+  leadsAbertos: LeadAberto[];
   fila: JobDaFila[];
   webhooks: WebhookEvento[];
   importacoesMercos: ImportacaoMercos[];
@@ -278,7 +345,9 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     jobsFiscais: [],
     sincronizacoesFiscais: [],
     produtos: [],
+    estoqueRazao: [],
     recebiveis: [],
+    leadsAbertos: [],
     fila: [],
     webhooks: [],
     importacoesMercos: [],

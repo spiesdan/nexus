@@ -61,6 +61,13 @@ export function mascararEmail(email: string): string {
   return `${visivel}${"*".repeat(Math.min(4, Math.max(2, local.length - 1)))}@${dominio}`;
 }
 
+/** Telefone na evidência: DDD + final, sem o miolo. */
+export function mascararTelefone(telefone: string): string {
+  const digitos = telefone.replace(/\D/g, "");
+  if (digitos.length < 8) return "***";
+  return `${"*".repeat(Math.min(8, digitos.length - 4))}${digitos.slice(-4)}`;
+}
+
 /** Data UTC `YYYY-MM-DD`, para agrupar ocorrências por dia. */
 export function diaUtc(iso: string): string {
   const ms = Date.parse(iso);
