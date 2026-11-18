@@ -563,3 +563,41 @@ o dono (que sobe) e segue no que der para provar sem ele.
 4. Evidência: capturas/estado do banco local + o comando que reproduz.
 
 Fora de escopo: APK de release, iOS, produção.
+
+## 20. P0 novo — `update.sh` não pode seguir com DDL falhando
+
+> **Dono:** orquestrador (PR do dono). **Prioridade:** P0 (integridade de deploy).
+
+Medido em `hostgator-setup-kit/update.sh` (18/11/2026): a aplicação do schema roda
+`psql_run -f - 2>&1 || true` e, quando aparecem erros que não são os benignos de
+re-aplicação, o script **imprime aviso amarelo e continua**:
+
+```text
+⚠ Apareceram avisos no banco que NÃO são os esperados:
+  O app pode ainda funcionar. Se algo estiver errado, restaure o backup (restore.sh).
+```
+
+Consequência: schema pela metade, contêineres sobem e o `health` responde 200 —
+o `health` é probe interno e não sabe nada de schema. Foi exatamente o estado que
+o deploy da 1.57.0 encontrou (0320 quebrando com `search_path` vazio).
+
+**Aceite:** erro de DDL não-benigno **aborta antes do `up -d`**, com o motivo e
+o caminho do backup; erro benigno (`already exists`, …) continua seguindo.
+Teste em `tests/shell/` com baseline propositalmente inválido: o script sai ≠ 0 e
+**não** sobe contêiner. O `deploy.sh` já falha alto (`deploy-aplica-schema`) — o
+kit precisa da mesma régua.
+
+## 21. Pacote da 1.58.0 (não cortado — aguarda ordem do dono)
+
+| Item | Estado |
+|---|---|
+| Base | `nexus/main` (medir no corte: `git log --oneline -1`) |
+| Última tag | **`v1.57.0`** |
+| Entram (código) | **#566** (0326 devolução não concorre com a venda; 0327 definer com `search_path` vazio) e **#563** (estado offline do inbox, 5.4) |
+| Já na 1.57.0 | catálogo do Mercos, Sentinel v1.3 + observabilidade, nome fantasia, medição do scan, a11y do accent |
+| Fragmentos faltantes | **#566 precisa de `.changes/`** (correção de produção, `nada_mudou`/`corrigido`); #563 já traz o seu |
+| Número | **derivado** por `pnpm release:conferir` — não digitar |
+| Corte | `workflow_dispatch` do `release` → PR assinado pelo App → merge = tag |
+
+**Não cortar sem ordem.** O corte manual é recusado pelo gate (aconteceu na
+1.56.0); o caminho é o workflow.
