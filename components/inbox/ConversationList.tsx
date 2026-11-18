@@ -4,6 +4,7 @@ import { useT } from "@/hooks/i18n/useT";
 import type { InfiniteData, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { AvisoSemConexao } from "@/components/nexus-ui/feedback/AvisoSemConexao";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChannelSessions } from "@/hooks/channels/useChannelSessions";
 import { canaisDoInbox } from "@/lib/channels/visibilidade";
@@ -63,8 +64,7 @@ export function ConversationList({
   // o oposto do que a palavra promete — e o atendente leria prioridade onde
   // não há. O que a Fila promete continua visível e verdadeiro: há quanto tempo
   // cada conversa espera.
-  const isQueue =
-    filters.comando?.includes("aguardando") ?? filters.assigned_to === "unassigned";
+  const isQueue = filters.comando?.includes("aguardando") ?? filters.assigned_to === "unassigned";
   // Uma leitura por lista, compartilhada por todas as linhas (react-query dedupa
   // com o cabeçalho, que faz a mesma pergunta).
   const automaticoDaOrg = useAutomaticoAtivo();
@@ -175,15 +175,24 @@ export function ConversationList({
         ))}
         {q.hasNextPage && (
           <div className="flex justify-center p-3">
-            <Button
-              size="sm"
-              variant="outline"
-              className={`${BTN_REF} ${BTN_REF_SEC}`}
-              onClick={() => q.fetchNextPage()}
-              disabled={q.isFetchingNextPage}
-            >
-              {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
-            </Button>
+            {/* OFFLINE, A BUSCA FICA PAUSADA — e a lista tem de dizer isso.
+                O TanStack Query, no modo `online` (padrão), não dispara a
+                requisição sem rede: sem este ramo o botão continuava escrito
+                "Carregar mais" e o clique não fazia nada (a classe do V-42, que
+                já tinha sido corrigida nas outras listas paginadas). */}
+            {q.isPaused ? (
+              <AvisoSemConexao />
+            ) : (
+              <Button
+                size="sm"
+                variant="outline"
+                className={`${BTN_REF} ${BTN_REF_SEC}`}
+                onClick={() => q.fetchNextPage()}
+                disabled={q.isFetchingNextPage}
+              >
+                {q.isFetchingNextPage ? t("Carregando…") : t("Carregar mais")}
+              </Button>
+            )}
           </div>
         )}
       </div>
