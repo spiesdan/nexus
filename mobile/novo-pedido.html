@@ -18,22 +18,41 @@
 
       <section class="cartao" aria-label="Cliente">
         <h2>Cliente</h2>
-        <input id="busca-cliente" type="search" placeholder="Digite o nome…" autocomplete="off" />
+        <input
+          id="busca-cliente"
+          type="search"
+          placeholder="Digite o nome…"
+          aria-label="Buscar cliente"
+          autocomplete="off"
+        />
         <ul id="clientes" class="lista"></ul>
-        <p id="cliente-escolhido" class="escolhido">nenhum cliente escolhido</p>
+        <p id="cliente-escolhido" class="escolhido" role="status">nenhum cliente escolhido</p>
       </section>
 
       <section class="cartao" aria-label="Itens">
         <h2>Itens</h2>
-        <input id="busca-produto" type="search" placeholder="Digite o produto…" autocomplete="off" />
+        <input
+          id="busca-produto"
+          type="search"
+          placeholder="Digite o produto…"
+          aria-label="Buscar produto"
+          autocomplete="off"
+        />
         <ul id="produtos" class="lista"></ul>
         <ul id="itens" class="lista"></ul>
-        <p id="total" class="total">Total: R$ 0,00</p>
+        <p id="total" class="total" role="status">Total: R$ 0,00</p>
       </section>
 
       <section class="cartao" aria-label="Observação">
         <h2>Observação <span class="miudo">(opcional)</span></h2>
-        <input id="obs" type="text" maxlength="500" placeholder="Ex.: entregar após as 14h" autocomplete="off" />
+        <input
+          id="obs"
+          type="text"
+          maxlength="500"
+          placeholder="Ex.: entregar após as 14h"
+          aria-label="Observação (opcional)"
+          autocomplete="off"
+        />
       </section>
 
       <button id="btn-salvar" type="button" class="btn primario grande">Salvar na fila</button>
