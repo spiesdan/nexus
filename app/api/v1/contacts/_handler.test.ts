@@ -31,13 +31,14 @@ type Registro = {
   tabela: string;
   eq: Array<[string, unknown]>;
   is: Array<[string, unknown]>;
+  ilike: Array<[string, unknown]>;
   insert: Record<string, unknown> | null;
 };
 
 function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown[] } = {}) {
   const consultas: Registro[] = [];
   const criar = (tabela: string) => {
-    const r: Registro = { tabela, eq: [], is: [], insert: null };
+    const r: Registro = { tabela, eq: [], is: [], ilike: [], insert: null };
     consultas.push(r);
     const b: Record<string, unknown> = {
       select: () => b,
@@ -47,6 +48,10 @@ function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown
       },
       is: (c: string, v: unknown) => {
         r.is.push([c, v]);
+        return b;
+      },
+      ilike: (c: string, v: unknown) => {
+        r.ilike.push([c, v]);
         return b;
       },
       or: () => b,
@@ -101,5 +106,35 @@ describe("listContactsHandler", () => {
     expect(lista).toBeDefined();
     expect(lista!.is).toContainEqual(["is_merged_into", null]);
     expect(lista!.eq).toContainEqual(["is_anonymized", false]);
+  });
+});
+
+
+describe("listContactsHandler — filtro por cidade", () => {
+  it("manda ilike (case-insensitive) com o valor trimado e a organização explícita", async () => {
+    const { client, consultas } = stub({ linhas: [] });
+
+    await listContactsHandler(client as never, ctx, { cidade: "  Ribeirão Preto  " } as never);
+
+    const q = consultas.find((c) => c.tabela === "contacts");
+    expect(q?.eq).toContainEqual(["organization_id", ORG]);
+    expect(q?.ilike).toEqual([["cidade", "Ribeirão Preto"]]);
+  });
+
+  it("curinga do LIKE na cidade é escapado, não vira 'todos'", async () => {
+    // Uma cidade chamada "100%" (ou um valor manipulado na URL) não pode casar
+    // com a base inteira: `%` e `_` são operadores do ILIKE.
+    const { client, consultas } = stub({ linhas: [] });
+
+    await listContactsHandler(client as never, ctx, { cidade: "100%_oeste" } as never);
+
+    const q = consultas.find((c) => c.tabela === "contacts");
+    expect(q?.ilike).toEqual([["cidade", "100\\%\\_oeste"]]);
+  });
+
+  it("sem cidade, nenhum ilike é emitido", async () => {
+    const { client, consultas } = stub({ linhas: [] });
+    await listContactsHandler(client as never, ctx, {} as never);
+    expect(consultas.find((c) => c.tabela === "contacts")?.ilike).toEqual([]);
   });
 });

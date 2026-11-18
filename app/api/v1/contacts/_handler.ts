@@ -148,6 +148,13 @@ export async function listContactsHandler(
   }
   if (q.tag) query = query.contains("tags", [q.tag]);
   if (q.source) query = query.eq("source", q.source);
+  if (q.cidade) {
+    // Igualdade case-insensitive (ILIKE sem `%`) com o valor já trimado pelo
+    // schema. `%`, `_` e `\` são curingas do LIKE: escapar é o que impede uma
+    // cidade chamada "100%" de casar com toda a base.
+    const cidade = q.cidade.replace(/[\\%_]/g, (m) => `\\${m}`);
+    query = query.ilike("cidade", cidade);
+  }
 
   if (q.cursor) {
     const c = decodeCursor(q.cursor);

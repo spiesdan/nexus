@@ -110,6 +110,13 @@ export const contactListQuerySchema = z.object({
   search: z.string().optional(),
   tag: z.string().optional(),
   source: z.string().optional(),
+  /**
+   * Cidade do contato — igualdade CASE-INSENSITIVE, com trim. Não é busca
+   * parcial: o valor vem do seletor (`/api/v1/contacts/cidades`), então é o
+   * nome exato como está no banco. Acento continua significando algo: "sao
+   * paulo" não casa com "São Paulo" (documentado no teste).
+   */
+  cidade: z.string().trim().max(120).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   order_by: z.enum(CONTACT_ORDER_BY).default("last_activity_at"),
