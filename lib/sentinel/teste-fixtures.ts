@@ -9,6 +9,7 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  ContatoEndereco,
   CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
@@ -228,6 +229,17 @@ export function leadAberto(over: Partial<LeadAberto> = {}): LeadAberto {
   };
 }
 
+export function contatoEndereco(over: Partial<ContatoEndereco> = {}): ContatoEndereco {
+  return {
+    id: "contato-1",
+    logradouro: null,
+    complemento: null,
+    bairro: null,
+    cidade: null,
+    ...over,
+  };
+}
+
 export function correcaoSentinel(over: Partial<CorrecaoSentinel> = {}): CorrecaoSentinel {
   return {
     ocorrencia_id: "ocorrecao-1",
@@ -270,6 +282,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     campanhasVenda: [],
     clientesDuplicados: [],
     correcoes: [],
+    contatosEndereco: [],
     ...over,
   };
 }

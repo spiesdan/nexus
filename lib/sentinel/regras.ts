@@ -199,6 +199,13 @@ export const REGRAS: readonly Regra[] = [
     detectar: correcao.correcaoSemReversao,
   },
   {
+    id: "cadastro.endereco_com_lixo",
+    categoria: "operacao",
+    descricao:
+      "Cadastro com endereço em branco ou literal NULL/undefined/NaN, agrupado por organização.",
+    detectar: operacao.enderecoComLixo,
+  },
+  {
     id: "operacao.aprovacao_expirada",
     categoria: "operacao",
     descricao:

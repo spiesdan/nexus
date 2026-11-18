@@ -585,4 +585,23 @@ export const RECOMENDACOES: Record<string, Construtor> = {
           "A janela de 5 min é a mesma da RPC; o dry-run não é persistido, então a contagem começa na aprovação.",
       },
     ),
+
+  "cadastro.endereco_com_lixo": () =>
+    plano(
+      "Corrigir o endereço do cadastro — ou apagar o literal, se o dado não existe.",
+      [
+        "Abra o cadastro e confira o endereço real com o cliente.",
+        "Substitua o literal por vazio (sem dado) ou pelo endereço confirmado.",
+        "Se o endereço alimenta nota/entrega, confira cidade e UF depois de salvar.",
+      ],
+      ["endereço real", "quem confirmou"],
+      {
+        fonte: ["contacts"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        exigeAprovacao: false,
+        limitacao:
+          "O escritor histórico não está no código; completar o dado real é decisão humana.",
+      },
+    ),
 };

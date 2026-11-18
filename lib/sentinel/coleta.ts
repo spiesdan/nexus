@@ -17,6 +17,7 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  ContatoEndereco,
   CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
@@ -51,6 +52,7 @@ const TETO_DUPLICADOS = 200;
 // 100 mantém o `in (ids)` do PostgREST abaixo do limite de URL; se houver mais,
 // a coleta trunca e a rodada não encerra por ausência.
 const TETO_CORRECOES = 100;
+const TETO_CONTATOS_ENDERECO = 1_000;
 const TETO_EVENTOS_CORRECAO = 2_000;
 
 interface Coleta<T> {
@@ -130,6 +132,7 @@ export async function coletarSnapshot(
     campanhasProspeccao,
     campanhasVenda,
     clientesDuplicados,
+    contatosEndereco,
   ] = await Promise.all([
     coletar<NotaFiscal>(
       "notas",
@@ -313,6 +316,18 @@ export async function coletarSnapshot(
         .limit(TETO_DUPLICADOS + 1),
       TETO_DUPLICADOS,
     ),
+    coletar<ContatoEndereco>(
+      "contatos_endereco",
+      admin
+        .from("contacts")
+        .select("id, logradouro, complemento, bairro, cidade")
+        .eq("organization_id", organizationId)
+        .or(
+          "logradouro.not.is.null,complemento.not.is.null,bairro.not.is.null,cidade.not.is.null",
+        )
+        .limit(TETO_CONTATOS_ENDERECO + 1),
+      TETO_CONTATOS_ENDERECO,
+    ),
   ]);
 
   // ─── Observabilidade da correção aprovada (v1.3+) ───────────────────────
@@ -422,6 +437,7 @@ export async function coletarSnapshot(
     campanhasProspeccao,
     campanhasVenda,
     clientesDuplicados,
+    contatosEndereco,
     ocorrenciasCorrecao,
     eventosCorrecao,
     jobsCorrecao,
@@ -447,6 +463,7 @@ export async function coletarSnapshot(
       campanhasVenda: campanhasVenda.dados,
       clientesDuplicados: clientesDuplicados.dados,
       correcoes,
+      contatosEndereco: contatosEndereco.dados,
     },
     truncado: coletas.some((c) => c.truncado),
     falhas: coletas.map((c) => c.falha).filter((f): f is string => f !== null),

@@ -669,6 +669,63 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
   });
 }
 
+
+/**
+ * Cadastro com endereço em branco ou literal (`NULL`, `undefined`, `NaN`).
+ *
+ * Medido em produção: 84 cadastros históricos gravaram o texto do valor
+ * ausente no campo. O escritor que fazia isso não está mais no código; a regra
+ * observa o passado e impede que o futuro volte a passar despercebido. É UMA
+ * ocorrência por organização (a lista de ids é a evidência), sem despejar
+ * endereço — dado pessoal — na tela.
+ */
+const LITERAL_DE_AUSENCIA = /^(null|undefined|nan)$/i;
+const CAMPOS_DE_ENDERECO = ["logradouro", "complemento", "bairro", "cidade"] as const;
+
+function campoDeEnderecoLixo(valor: string | null): boolean {
+  if (typeof valor !== "string") return false;
+  const limpo = valor.trim();
+  return limpo === "" || LITERAL_DE_AUSENCIA.test(limpo);
+}
+
+export function enderecoComLixo(s: Snapshot): Achado[] {
+  const sujos = s.contatosEndereco.filter((c) =>
+    CAMPOS_DE_ENDERECO.some((campo) => campoDeEnderecoLixo(c[campo])),
+  );
+  if (sujos.length === 0) return [];
+
+  const campos: Record<string, number> = {};
+  for (const campo of CAMPOS_DE_ENDERECO) {
+    campos[campo] = sujos.filter((c) => campoDeEnderecoLixo(c[campo])).length;
+  }
+
+  return [
+    {
+      regra: "cadastro.endereco_com_lixo",
+      categoria: "operacao" as const,
+      entidadeTipo: "contacts",
+      entidadeId: hashCurto(`endereco-lixo:${s.organizationId}`),
+      titulo: `${sujos.length} cadastro(s) com endereço em branco ou literal`,
+      resumo:
+        "Há cadastros com `NULL`, `undefined`, `NaN` ou só espaços no endereço. Onde o dado deveria existir, a entrega/nota pode sair sem endereço.",
+      causaProvavel:
+        "Escrita histórica que gravou o texto do valor ausente; o escritor não está mais no código. É observação para o futuro.",
+      severidade: "media" as const,
+      href: "/app/contacts",
+      evidencia: {
+        total: sujos.length,
+        logradouro: campos.logradouro ?? 0,
+        complemento: campos.complemento ?? 0,
+        bairro: campos.bairro ?? 0,
+        cidade: campos.cidade ?? 0,
+        contatos: sujos.slice(0, 20).map((c) => c.id),
+        organizacao: s.organizationId,
+        limitacao: "Endereço é dado pessoal e não vai na evidência; abra o cadastro para corrigir.",
+      },
+    },
+  ];
+}
+
 function lerCidades(c: CampanhaProspeccao): Array<{ cidade?: unknown; estado?: unknown }> {
   if (!Array.isArray(c.cidades)) return [];
   return c.cidades.filter(

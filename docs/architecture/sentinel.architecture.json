@@ -81,7 +81,7 @@
       "col": 1,
       "type": "lib",
       "label": "lib/sentinel/coleta.ts",
-      "sublabel": "18 consultas com organization_id explícito e teto (inclui ocorrências/eventos/jobs da correção); falha isola e trunca"
+      "sublabel": "19 consultas com organization_id explícito e teto (correção e endereços); falha isola e trunca"
     },
     {
       "id": "entidades",
@@ -113,7 +113,7 @@
       "col": 1,
       "type": "lib",
       "label": "registry de regras",
-      "sublabel": "31 detectores fiscais, de operação, financeiro, campanha e observabilidade da correção"
+      "sublabel": "32 detectores fiscais, de operação, financeiro, campanha, observabilidade da correção e endereço"
     },
     {
       "id": "recomendacoes",
@@ -137,7 +137,7 @@
       "col": 3,
       "type": "lib",
       "label": "regras-operacao.ts",
-      "sublabel": "estoque (negativo e divergente, inclusive razão vazio), pedido, recebível, fila, webhook, Mercos, campanha, cliente e lead duplicados"
+      "sublabel": "estoque (negativo e divergente, inclusive razão vazio), pedido, recebível, fila, webhook, Mercos, campanha, cliente/lead duplicados e endereço com lixo"
     },
     {
       "id": "registrar",
