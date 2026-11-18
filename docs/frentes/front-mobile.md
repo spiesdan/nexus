@@ -110,6 +110,13 @@ O botão "Enviar agora" existia no HTML do shell e não fazia nada ao ser tocado
 defeito do F-MOB-1 em escala menor (peça visível sem ligação). Agora explica cada estado
 (sem fila, com recusado, sem sinal) ou abre o sistema, que é quem drena.
 
+### F-MOB-7 `[x]` — toque duplo em "Salvar na fila" enfileirava dois pedidos
+
+Cada clique gerava um UUID novo e enfileirava; a idempotência do servidor não cobre
+chaves diferentes — eram dois pedidos legítimos para ele, com `OFF-0001` e `OFF-0002`.
+Trava síncrona antes do primeiro `await` (botão `disabled` não emite o segundo clique), e
+falha de banco reabilita o botão com o motivo. Regressão coberta no e2e do shell.
+
 ### F-MOB-6 `[x]` — comentário do manifest negava o service worker
 
 `app/manifest.ts` dizia que service worker era "fase futura" enquanto `public/sw.js` já
@@ -159,7 +166,7 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
 | Comando | Resultado |
 |---|---|
 | `pnpm exec vitest run tests/unit/offline-outbox-sync.test.ts tests/unit/offline-catalogo.test.ts tests/unit/pedidos-offline.test.tsx tests/unit/service-worker-unico.test.ts tests/unit/pedido-chave-sincronizacao.test.ts tests/unit/layout-componentes-montados.test.ts` | ver §5.1 |
-| `pnpm exec playwright test -c playwright.mobile.config.ts` | 6/6 (Pixel 7 emulado, Chromium) |
+| `pnpm exec playwright test -c playwright.mobile.config.ts` | 7/7 (Pixel 7 emulado, Chromium) |
 | `pnpm exec eslint <arquivos alterados>` | 0 erro, 0 warning |
 | `pnpm exec tsc --noEmit` | ver §5.1 |
 | `pnpm test:unit` (suíte inteira) | ver §5.1 |
@@ -167,8 +174,8 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
 ### 5.1 Números (preenchidos na execução)
 
 <!-- medido em 2026-11-18, worktree aaa-front-mobile -->
-- unit offline + wiring: **40/40** em 6 arquivos.
-- e2e shell: **6/6**.
+- unit offline + wiring + faixa do sincronizador: **45/45** em 7 arquivos.
+- e2e shell: **7/7**.
 - typecheck/lint/suíte completa: registrados no PR desta frente (o comando não cabe em
   prosa que envelhece).
 
@@ -186,10 +193,10 @@ API/segurança, C muda o modelo de dados local. Por isso **não** foi implementa
    `app|components|lib|workers|hooks`). Precisa de decisão: o label do ícone e a URL só
    podem ser resolvidos em build/emparelhamento, não do banco. **Não alterado aqui** para
    não quebrar o APK de debug sem definir a origem da configuração.
-5. `[~]` `mobile/www/` (build do vite) está versionado apesar de `.gitignore` — toda
-   alteração no shell gera diff de assets com hash. Limpeza sugerida: `git rm -r --cached
-   mobile/www` (o CI já roda `pnpm mobile:build` antes de `cap sync`). Não feito nesta
-   fatia para não misturar com a correção de comportamento.
+5. `[x]` `mobile/www/` **não é mais versionado** (era, apesar do `.gitignore`): todo build
+   do shell virava diff de assets com hash. O `apk.yml` já roda `pnpm mobile:build` antes
+   de `cap sync`; quem clona precisa rodar o build uma vez. Verificado: `pnpm mobile:build`
+   continua gerando `mobile/www/` (agora ignorado).
 6. `[ ]` Notificação nativa (app fechado) não existe; o push web cobre o PWA, não o APK.
 7. `[ ]` Deep link (`tech.billhigiene.crm://`) declarado em `strings.xml` sem
    `intent-filter` — não abre nada.
