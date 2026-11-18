@@ -80,3 +80,38 @@ git diff nexus/main...HEAD -> 4 arquivos, +48/-0 (sem remoção de 0312)
 - **Sentinel usa 0313** no worktree dele; a `main` passará a ter 0313 (#464).
   A frente precisa renumerar para 0316+ ao rebasear — registrado aqui para não
   haver duas migrations com a mesma versão.
+
+## Rodada 2 — 18/11/2026 (integração e P0 fiscal)
+
+### Mergeado na `main`
+
+| PR | Commit | O que resolve |
+|---|---|---|
+| #453 | `e29ecf51` | F-17: prova comportamental em 39 tabelas do débito |
+| #464 | `f3ea10d6` | Índice 0313 da janela de mensagens (rebase corrigiu o baseline mutilado; sem perda de 0312) |
+| #466 | `f56c0228` | Rate limit em MFA e código de recuperação |
+| #475 | `470aac4e` | `29-capacidades.md`, runbook de operação e gate D3 |
+
+### Em PR
+
+| PR | Commit | O que resolve | Evidência local |
+|---|---|---|---|
+| #480 | `ffca9711` | P0-04: teto do recebível sob concorrência (0314) + MANIFEST sem `db push` | `test:db` 160/1497 verde; update do baseline exit 0 |
+| #482 | `cbfe15f2` | P0-02: 34 tabelas restantes de F-17; débito 34→**0** | 67 testes novos; completude 152 verdes |
+| #484 | `5f460276` | P0-05: uma nota viva por pedido (0315) | `test:db` 160/1497 verde |
+
+### Números de migration — estado e reserva
+
+| Versão | Arquivo | Estado |
+|---|---|---|
+| 0313 | `indice_janela_de_mensagens` | **na main** (#464) |
+| 0314 | `saldo_do_recebivel` | PR #480 |
+| 0315 | `nota_viva_por_pedido` | PR #484 |
+| 0316+ | livres | **Sentinel deve renumerar 0313→0316** ao rebasear; a 0313 já é da main |
+
+### O que essa rodada não prova
+
+- **Nada foi deployado.** PR mergeado ≠ release ≠ produção.
+- O `test:db` local do #484 rodou antes do rebase em `470aac4e`; o job `invariants` do CI prova o commit rebaseado.
+- A duplicata fiscal histórica (se existir) **não** é apagada por #484 — a trava fecha as novas; o Sentinel é quem detecta as antigas.
+- F-17 prova **leitura** cross-tenant; escrita continua coberta pelos testes de policy/rota de cada módulo.
