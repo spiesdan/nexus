@@ -24,6 +24,8 @@ import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 
 import { ok, fail } from "@/lib/api/wrappers";
+import { assertDestinoResolvidoSeguro } from "@/lib/automation/outbound-ip";
+import { assertSafeOutboundUrl } from "@/lib/automation/outbound-url";
 import { DEFAULT_CHANNEL_PROVIDER, getAdapter, type ChannelProvider } from "@/lib/channels";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
@@ -165,7 +167,30 @@ async function handle(req: NextRequest): Promise<Response> {
         continue;
       }
 
-      const img = await fetch(profilePictureURL);
+      // ANTI-SSRF: a URL vem do canal, não do nosso código. Sem o guard, um
+      // valor apontando para `169.254.169.254` ou para um serviço interno do
+      // compose faz o worker buscar metadata/rede privada e gravar o resultado
+      // num bucket que o tenant lê. O guard textual barra esquema/host; a
+      // resolução barra hostname público que resolve para IP interno, e o
+      // `redirect: manual` impede um 302 para dentro. Mesmo molde do
+      // `call_webhook` (lib/automation/actions/call-webhook.ts).
+      try {
+        assertSafeOutboundUrl(profilePictureURL);
+        await assertDestinoResolvidoSeguro(new URL(profilePictureURL).hostname);
+      } catch {
+        logger.warn("contact-avatars: URL de foto recusada pelo guard de saída", {
+          organization_id: c.organization_id,
+          contact_id: c.id,
+        });
+        await carimbar(null);
+        falhas++;
+        continue;
+      }
+
+      const img = await fetch(profilePictureURL, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(10_000),
+      });
       if (!img.ok) {
         await carimbar(null);
         falhas++;
