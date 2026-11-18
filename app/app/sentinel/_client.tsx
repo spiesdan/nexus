@@ -142,6 +142,7 @@ function planoDe(ocorrencia: OcorrenciaSentinel): Recomendacao | null {
   if (!Array.isArray(r.passos) || r.passos.length === 0) return null;
   if (!r.passos.every((p) => typeof p === "string")) return null;
   if (!Array.isArray(r.campos_pendentes)) return null;
+  if (!r.campos_pendentes.every((c) => typeof c === "string")) return null;
   if (!["baixo", "medio", "alto"].includes(r.risco as string)) return null;
   if (!["reversivel", "parcial", "irreversivel"].includes(r.reversibilidade as string)) {
     return null;
@@ -149,6 +150,7 @@ function planoDe(ocorrencia: OcorrenciaSentinel): Recomendacao | null {
   if (!["alta", "media", "baixa"].includes(r.confianca as string)) return null;
   if (typeof r.exige_aprovacao !== "boolean") return null;
   if (!Array.isArray(r.fonte) || r.fonte.length === 0) return null;
+  if (!r.fonte.every((f) => typeof f === "string")) return null;
   if (r.limitacao !== null && typeof r.limitacao !== "string") return null;
   return r as Recomendacao;
 }
