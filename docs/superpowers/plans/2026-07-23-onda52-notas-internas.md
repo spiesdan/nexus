@@ -81,7 +81,7 @@ create policy "conversation_notes_write" on conversation_notes
 
 - [ ] **Step 2: Apêndice idempotente no `baseline.sql`** — bloco rotulado `-- ---- notas internas de conversa (migration 00NN) ----` com o MESMO SQL.
 - [ ] **Step 3: MANIFEST** — linha descrevendo a tabela.
-- [ ] **Step 4: Aplicar e provar** (via `supabase db push --linked`; se o histórico reclamar, ver o workaround no relatório da 0062 em scratchpad). Prova:
+- [ ] **Step 4: Aplicar e provar** (via baseline — `pnpm db:migrate`; `db push` é proibido desde F-09=B). Prova:
 ```sql
 select tablename from pg_tables where tablename='conversation_notes';               -- 1
 select policyname from pg_policies where tablename='conversation_notes' order by 1;  -- 2 (select, write)

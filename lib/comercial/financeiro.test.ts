@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
 import {
   dividirParcelas,
   erroDePagamentoDoBanco,
+  gerarRecebiveis,
   prazosDaCondicao,
   situacaoDe,
   somarPagamentos,
@@ -77,5 +80,86 @@ describe("validarPagamento", () => {
 
   it("soma de pagamentos sustenta o saldo", () => {
     expect(somarPagamentos([{ valor_cents: 400 }, { valor_cents: 600 }])).toBe(1000);
+  });
+});
+
+/**
+ * O GERADOR É IDEMPOTENTE — a garantia que o D1 usa para chamar depois da
+ * autorização da NF-e sem duplicar.
+ *
+ * O dublê reproduz o banco em dois pontos: a leitura das parcelas existentes e
+ * a unique `(organization_id, order_id, parcela_n)` devolvendo 23505 para a
+ * parcela que outra requisição acabou de gravar.
+ */
+describe("gerarRecebiveis — retry e concorrência", () => {
+  function banco(over: { existentes?: number[]; conflitantes?: number[] } = {}) {
+    const inseridas: number[] = [];
+    const client = {
+      from: (tabela: string) => {
+        if (tabela !== "financial_receivables") throw new Error(`tabela inesperada: ${tabela}`);
+        let op: "select" | "insert" = "select";
+        let valores: { parcela_n: number } | null = null;
+        const q: Record<string, unknown> = {};
+        q.select = () => q;
+        q.eq = () => q;
+        q.insert = (v: { parcela_n: number }) => {
+          op = "insert";
+          valores = v;
+          return q;
+        };
+        q.single = () => {
+          const parcela = valores!.parcela_n;
+          if (over.conflitantes?.includes(parcela)) {
+            return Promise.resolve({
+              data: null,
+              error: { code: "23505", message: "duplicate key" },
+            });
+          }
+          inseridas.push(parcela);
+          return Promise.resolve({ data: { id: `rec-${parcela}` }, error: null });
+        };
+        q.then = (ok: (v: unknown) => unknown) => {
+          if (op === "select") {
+            return Promise.resolve({
+              data: (over.existentes ?? []).map((parcela_n) => ({ parcela_n })),
+              error: null,
+            }).then(ok);
+          }
+          return Promise.resolve({ data: null, error: null }).then(ok);
+        };
+        return q;
+      },
+    };
+    return { client: client as unknown as SupabaseClient, inseridas };
+  }
+
+  it("pula a parcela que já existe (retry do PATCH/NF não duplica)", async () => {
+    const { client, inseridas } = banco({ existentes: [1] });
+    const r = await gerarRecebiveis(client, {
+      orgId: "org-1",
+      orderId: "pedido-1",
+      contactId: "contato-1",
+      totalCents: 30000,
+      condicao: "30/60/90",
+      baseIso: "2026-11-01",
+      criadoPor: null,
+    });
+    expect(inseridas).toEqual([2, 3]);
+    expect(r).toMatchObject({ criados: 2, existentes: 1 });
+  });
+
+  it("23505 da corrida conta como existente em vez de estourar", async () => {
+    const { client, inseridas } = banco({ conflitantes: [2, 3] });
+    const r = await gerarRecebiveis(client, {
+      orgId: "org-1",
+      orderId: "pedido-1",
+      contactId: "contato-1",
+      totalCents: 30000,
+      condicao: "30/60/90",
+      baseIso: "2026-11-01",
+      criadoPor: null,
+    });
+    expect(inseridas).toEqual([1]);
+    expect(r).toMatchObject({ criados: 1, existentes: 2 });
   });
 });

@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, expect, it } from "vitest";
 
 import { MessageBubble } from "@/components/inbox/MessageBubble";
@@ -58,9 +59,24 @@ function msg(over: Partial<Message>): Message {
 
 const AGUARDANDO = "Aguardando confirmação do WhatsApp";
 
+/**
+ * A bolha de FALHA passou a ter uma ação ("Reenviar"), e a ação usa o cliente
+ * de queries do inbox. O provider aqui é o mesmo que a tela real monta; sem ele
+ * o caso de falha derrubava o render — e o teste mede o ack, não a ausência do
+ * provider.
+ */
+function montar(message: Message) {
+  const qc = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MessageBubble message={message} />
+    </QueryClientProvider>,
+  );
+}
+
 describe("MessageBubble — confirmação de envio", () => {
   it("aceite do transporte (ack 0) NÃO vira tique: mostra relógio", () => {
-    render(<MessageBubble message={msg({ status: "sending", ack: 0 })} />);
+    montar(msg({ status: "sending", ack: 0 }));
 
     expect(screen.getByLabelText(AGUARDANDO)).toBeInTheDocument();
     expect(screen.queryByLabelText("Enviada")).not.toBeInTheDocument();
@@ -69,38 +85,36 @@ describe("MessageBubble — confirmação de envio", () => {
   it("linha legada `sent` com ack 0 também não é envio", () => {
     // O status gravado no aceite continua no banco de quem já usava o produto.
     // Se a tela confiasse nele, o conserto só valeria para mensagens novas.
-    render(<MessageBubble message={msg({ status: "sent", ack: 0 })} />);
+    montar(msg({ status: "sent", ack: 0 }));
 
     expect(screen.getByLabelText(AGUARDANDO)).toBeInTheDocument();
     expect(screen.queryByLabelText("Enviada")).not.toBeInTheDocument();
   });
 
   it("ack 1 é o primeiro degrau que prova que saiu: um tique", () => {
-    render(<MessageBubble message={msg({ status: "sent", ack: 1 })} />);
+    montar(msg({ status: "sent", ack: 1 }));
 
     expect(screen.getByLabelText("Enviada")).toBeInTheDocument();
     expect(screen.queryByLabelText(AGUARDANDO)).not.toBeInTheDocument();
   });
 
   it("ack 2 é entregue e ack 3 é lida", () => {
-    const { unmount } = render(<MessageBubble message={msg({ status: "delivered", ack: 2 })} />);
+    const { unmount } = montar(msg({ status: "delivered", ack: 2 }));
     expect(screen.getByLabelText("Entregue")).toBeInTheDocument();
     unmount();
 
-    render(<MessageBubble message={msg({ status: "read", ack: 3 })} />);
+    montar(msg({ status: "read", ack: 3 }));
     expect(screen.getByLabelText("Lida")).toBeInTheDocument();
   });
 
   it("ack negativo é falha, com o motivo visível", () => {
-    render(
-      <MessageBubble
-        message={msg({
-          status: "failed",
-          ack: -1,
-          error_code: "whatsapp_ack_error",
-          error_message: "O WhatsApp recusou a entrega (ERROR): 463",
-        })}
-      />,
+    montar(
+      msg({
+        status: "failed",
+        ack: -1,
+        error_code: "whatsapp_ack_error",
+        error_message: "O WhatsApp recusou a entrega (ERROR): 463",
+      }),
     );
 
     expect(screen.getByText("Falhou")).toBeInTheDocument();
@@ -109,9 +123,7 @@ describe("MessageBubble — confirmação de envio", () => {
   });
 
   it("mensagem recebida não ganha indicador de envio", () => {
-    render(
-      <MessageBubble message={msg({ direction: "inbound", status: "delivered", ack: null })} />,
-    );
+    montar(msg({ direction: "inbound", status: "delivered", ack: null }));
 
     expect(screen.queryByLabelText(AGUARDANDO)).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Enviada")).not.toBeInTheDocument();

@@ -112,6 +112,40 @@ describe("sincronizarCatalogo", () => {
     expect(chamadas.filter((c) => c.sql.startsWith("DELETE"))).toEqual([]);
   });
 
+  it("200 SEM lista não apaga o catálogo — resposta vazia ≠ catálogo vazio", async () => {
+    // Um proxy/erro de shape que devolva 200 com `{}` era lido como "lista
+    // vazia": o DELETE rodava, o catálogo do aparelho zerava e a tela passava a
+    // exigir "abra o sistema com internet" no meio da rota. Servidor sem
+    // produto responde `data: []` — isso continua sendo catálogo vazio de
+    // verdade.
+    const { db, chamadas } = dbFake();
+    const { buscar } = buscarFake({
+      "/api/v1/products": ok({}),
+      "/api/v1/contacts": ok({ data: [], meta: { has_more: false } }),
+      "/api/v1/price-tables": ok({ data: [] }),
+    });
+
+    await expect(sincronizarCatalogo(db, buscar)).rejects.toThrow(
+      "produtos: resposta sem lista",
+    );
+    expect(chamadas.filter((c) => c.sql.startsWith("DELETE"))).toEqual([]);
+  });
+
+  it("catálogo legitimamente vazio (data: []) é aceito", async () => {
+    const { db } = dbFake();
+    const { buscar } = buscarFake({
+      "/api/v1/products": ok({ data: [] }),
+      "/api/v1/contacts": ok({ data: [], meta: { has_more: false } }),
+      "/api/v1/price-tables": ok({ data: [] }),
+    });
+
+    expect(await sincronizarCatalogo(db, buscar)).toEqual({
+      produtos: 0,
+      contatos: 0,
+      tabelas: 0,
+    });
+  });
+
   it("contatos paginam pelo cursor e param quando has_more é falso", async () => {
     const { db } = dbFake();
     const { buscar, urls } = buscarFake({

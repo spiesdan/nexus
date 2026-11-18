@@ -265,11 +265,13 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
   DoD) — a regra continua valendo, o que caiu foi a dívida.
 - `lib/auth/invite-token.ts` cai em `"dev-fallback"` como secret HMAC se nenhum secret existir
   (inalcançável em produção, porque `INTERNAL_SECRET` é obrigatório e derruba o boot).
-- **209 dos 416 handlers de `app/api/**` citam `createAdminClient`/`SUPABASE_SERVICE_ROLE` no próprio
-  arquivo** — sem gate automático para o filtro de `organization_id`. Escrevendo handler novo, o
-  filtro é responsabilidade sua. (A linha dizia "89 dos 169"; medido em 2026-11-15 com
-  `grep -rlE 'createAdminClient|SUPABASE_SERVICE_ROLE' app/api --include='route.ts' | wc -l`.
-  O número maior não é regressão: é a contagem certa de um repo que cresceu.)
+- **Handlers de `app/api/**` com service role**: não cite um total aqui — ele envelhece. Meça:
+  `node scripts/auditoria/inventario-service-role.mjs`. O instrumento imprime handlers de rota,
+  arquivos com service role (inclui `_handler`/`_shared`), cadeias `.from()` em tabela tenant-aware
+  e as que não filtram `organization_id` na própria cadeia. Nenhum gate automático prova o filtro;
+  `tests/unit/handlers-service-role-tem-guard.test.ts` cobra a porta de entrada e
+  `handlers-service-role-filtram-organizacao.test.ts` cobra a menção à organização — os dois são
+  **proteção parcial**. Escrevendo handler novo, o filtro e a autorização são sua responsabilidade.
 - Detalhes e prioridade: [`docs/harness-audit.md`](docs/harness-audit.md),
   [`docs/current-state.md`](docs/current-state.md) e [`docs/threat-model.md`](docs/threat-model.md).
 

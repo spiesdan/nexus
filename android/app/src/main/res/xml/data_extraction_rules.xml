@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  O QUE PODE SAIR DO APARELHO — E O QUE NÃO PODE.
+
+  O app guarda, em SQLite (`crm-offline`), a fila de pedidos E o catálogo de
+  clientes: nome, cidade e DOCUMENTO (CPF/CNPJ) de cada contato sincronizado.
+  Isso é dado pessoal no aparelho do vendedor, e o APK nasce com
+  `android:allowBackup="true"` no template do Capacitor — ou seja, o Android
+  subia o banco para o Google Drive do usuário sem ninguém decidir isso.
+
+  `allowBackup="false"` desliga o backup em nuvem, mas NÃO desliga a
+  transferência aparelho→aparelho no Android 12+ (targetSdk 36). Este arquivo
+  fecha as duas portas: o banco e as preferências (sessão local do shell) não
+  atravessam nem para a nuvem nem para outro aparelho.
+
+  Não há funcionalidade de backup no produto: nada aqui remove recurso do
+  usuário. Se um dia houver exportação, ela é explícita (e auditada), não
+  implícita no sistema operacional.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

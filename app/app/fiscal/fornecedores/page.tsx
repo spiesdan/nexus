@@ -1,4 +1,5 @@
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import {
   Table,
   TableBody,
@@ -8,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { comoMoeda } from "@/lib/format/moeda";
+import { exigirLeituraDeLista } from "@/lib/fiscal/erro-de-leitura";
 import { contextoFiscal } from "@/lib/fiscal/pagina";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import { createClient } from "@/lib/supabase/server";
@@ -38,16 +40,18 @@ export default async function FornecedoresPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count, error } = await supabase
     .from("suppliers")
     .select(
       "id, nome, cnpj, ie, email, telefone, total_notas, total_comprado_cents, ultima_nota_em",
+      { count: "exact" },
     )
     .eq("organization_id", org.orgId)
     .gt("total_notas", 0)
     .order("total_comprado_cents", { ascending: false })
     .limit(300);
 
+  exigirLeituraDeLista(error, "fornecedores", org.orgId);
   const linhas = (data ?? []) as unknown as Fornecedor[];
 
   return (
@@ -57,6 +61,7 @@ export default async function FornecedoresPage() {
         subtitle="Quem emitiu as NF-e contra o CNPJ, com IE, volume comprado e a última nota."
       />
 
+      <RecorteDaLista mostrados={linhas.length} total={count ?? null} descricao="fornecedores" />
       {linhas.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">
           Nenhum fornecedor com nota ainda. Eles aparecem aqui quando a primeira NF-e for

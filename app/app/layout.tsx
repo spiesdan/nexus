@@ -256,6 +256,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         */}
         {activeOrg?.motorista ? null : <ConexaoCaidaBanner caidas={conexoesCaidas} />}
         <RegistrarServiceWorker />
+        {/*
+          O DRENO DA FILA OFFLINE. Estava importado e NUNCA renderizado desde
+          o commit que o criou (aaff0b51): a fila do shell nunca subia sozinha.
+          O gate `ehNativo()` mora dentro do componente — no navegador ele
+          devolve `null` sem abrir banco.
+        */}
+        <SincronizadorOffline />
         {needsMfaGate ? (
           // Gate always mounted for MFA-required roles; it latches the blocking
           // decision client-side so the enroll Server Action's revalidation

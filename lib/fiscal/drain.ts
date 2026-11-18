@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { audit } from "@/lib/audit";
+import { gerarRecebiveis } from "@/lib/comercial/financeiro";
 import { logger } from "@/lib/logger";
 import type { ExtrasFiscais } from "@/lib/schemas/fiscal";
 import { subtotalDoItem } from "@/lib/schemas/pedidos";
@@ -628,6 +629,129 @@ export async function faturarPedidosDaNota(
   }
 }
 
+/**
+ * A NOTA AUTORIZADA FECHA O LAÇO FINANCEIRO (D1, decisão do dono 18/11/2026).
+ *
+ * Até aqui, o caminho da NF-e marcava o pedido `faturado` e parava: só o PATCH
+ * do pedido chamava `gerarRecebiveis`. O pedido faturado pela nota aparecia na
+ * conciliação como `pedido_sem_financeiro` até alguém clicar "Gerar
+ * financeiro" — e quem só emite nota nunca clica.
+ *
+ * A regra não muda: faturar gera os recebíveis. Ela passa a valer também para
+ * o fato que FATURA de verdade (a autorização da SEFAZ). O gerador é o MESMO
+ * do PATCH e é idempotente por `(organização, pedido, parcela)`: reexecutar
+ * depois de um crash não duplica; parcela já existente é pulada.
+ *
+ * A origem fica na auditoria (`origem: nfe_autorizada` + nota). Se o pedido já
+ * tinha recebíveis, `criados` é 0 e não há segunda linha de auditoria — retry
+ * do drain não vira ruído.
+ *
+ * Nunca lança: a nota já está autorizada e gravada; falha aqui não pode
+ * desfazer a história fiscal. O pedido continua faturado e a conciliação
+ * mostra o que faltou.
+ */
+export async function gerarRecebiveisDaNotaAutorizada(
+  admin: SupabaseClient,
+  nota: {
+    id: string;
+    organization_id: string;
+    order_id: string | null;
+    serie: string;
+    numero: number | null;
+  },
+): Promise<{ pedidos: number; criados: number }> {
+  const vazio = { pedidos: 0, criados: 0 };
+  try {
+    const ids = new Set<string>();
+    if (nota.order_id) ids.add(nota.order_id);
+    const { data: vinculos } = await admin
+      .from("invoice_orders")
+      .select("order_id")
+      .eq("invoice_id", nota.id)
+      .eq("organization_id", nota.organization_id);
+    for (const v of (vinculos ?? []) as unknown as { order_id: string }[]) {
+      ids.add(v.order_id);
+    }
+    if (ids.size === 0) return vazio;
+
+    // Todos os pedidos da nota que estão `faturado` — inclusive os que já
+    // estavam (o crash entre faturar e gerar é fechado na próxima execução).
+    const { data: pedidosDb, error } = await admin
+      .from("commercial_orders")
+      .select("id, numero, contact_id, total_cents, condicao_pagamento, created_at")
+      .eq("organization_id", nota.organization_id)
+      .in("id", [...ids])
+      .eq("status", "faturado");
+    if (error) {
+      logger.error("fiscal: não foi possível ler os pedidos para gerar recebíveis", {
+        invoice_id: nota.id,
+        organization_id: nota.organization_id,
+        erro: error.message.slice(0, 300),
+      });
+      return vazio;
+    }
+
+    const pedidos = (pedidosDb ?? []) as unknown as {
+      id: string;
+      numero: number;
+      contact_id: string | null;
+      total_cents: number;
+      condicao_pagamento: string | null;
+      created_at: string;
+    }[];
+
+    let criados = 0;
+    for (const pedido of pedidos) {
+      try {
+        const r = await gerarRecebiveis(admin, {
+          orgId: nota.organization_id,
+          orderId: pedido.id,
+          contactId: pedido.contact_id,
+          totalCents: Number(pedido.total_cents),
+          condicao: pedido.condicao_pagamento,
+          baseIso: pedido.created_at,
+          criadoPor: null,
+        });
+        if (r.criados > 0) {
+          criados += r.criados;
+          await audit({
+            organizationId: nota.organization_id,
+            actorUserId: null,
+            action: "financial_receivable.generated",
+            resourceType: "commercial_orders",
+            resourceId: pedido.id,
+            metadata: {
+              origem: "nfe_autorizada",
+              invoice_id: nota.id,
+              nota_serie: nota.serie,
+              nota_numero: nota.numero,
+              criados: r.criados,
+              existentes: r.existentes,
+            },
+          });
+        }
+      } catch (err) {
+        // Um pedido com falha não impede os outros: a nota é a mesma, o
+        // financeiro é por pedido.
+        logger.error("fiscal: recebíveis do pedido não gerados", {
+          invoice_id: nota.id,
+          organization_id: nota.organization_id,
+          order_id: pedido.id,
+          erro: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+    return { pedidos: pedidos.length, criados };
+  } catch (err) {
+    logger.error("fiscal: falha ao gerar recebíveis da nota autorizada", {
+      invoice_id: nota.id,
+      organization_id: nota.organization_id,
+      erro: err instanceof Error ? err.message : String(err),
+    });
+    return vazio;
+  }
+}
+
 async function finalizar(
   admin: SupabaseClient,
   job: JobFiscal,
@@ -756,6 +880,9 @@ async function finalizar(
   // pedido NÃO avança — a nota existe no fisco, mas o app ainda não a tem.
   if (status === "autorizada" && !erroDoRegistro) {
     await faturarPedidosDaNota(admin, nota);
+    // D1: faturar FECHA o laço financeiro. Mesmo gerador idempotente do PATCH;
+    // se o pedido já tinha recebíveis, não nasce outro.
+    await gerarRecebiveisDaNotaAutorizada(admin, nota);
   }
   await admin
     .from("fiscal_jobs")

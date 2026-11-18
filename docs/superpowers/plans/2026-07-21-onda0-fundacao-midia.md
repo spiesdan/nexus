@@ -65,7 +65,7 @@ Em `supabase/migrations/MANIFEST.md`, tabela "Applied", adicionar:
 
 - [ ] **Step 4: Aplicar e provar**
 
-Aplicar via `mcp__plugin_supabase_supabase__apply_migration` (ou `supabase db push`). Provar com SQL:
+Aplicar via `mcp__plugin_supabase_supabase__apply_migration` (nunca `db push`; o schema canônico é o baseline). Provar com SQL:
 
 ```sql
 select id, public, file_size_limit from storage.buckets where id = 'whatsapp-media';

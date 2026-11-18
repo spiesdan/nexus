@@ -848,7 +848,7 @@ it('duas sessões com o mesmo telefone na mesma org são rejeitadas', async () =
 
 ```bash
 psql "$DATABASE_URL" -c "select count(*) from channel_sessions"          # ANTES
-npx supabase db push
+pnpm db:migrate
 psql "$DATABASE_URL" -c "select provider, count(*) from channel_sessions group by 1"  # DEPOIS
 npm run test:db
 ```

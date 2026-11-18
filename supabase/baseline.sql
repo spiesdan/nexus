@@ -30262,7 +30262,7 @@ comment on index public.messages_org_created_idx is
 --
 -- O helper grava/compara SHA-256 em hex; como bytea, a string sem `\x` falhava
 -- no PostgREST e a idempotência não persistia. A conversão preserva as linhas.
--- =====================================================================-- ============================================================================
+-- ============================================================================
 do $mig$
 begin
   if exists (
@@ -30307,3 +30307,23 @@ $mig$;
 
 comment on column public.prospecting_campaigns.nome_manual is
   'D-02: true = nome editado pelo operador (nunca sobrescrever); false = gerado pelas cidades (0318).';
+-- 0319 — claims de operação fiscal (manifestar e cancelar).
+-- Ver supabase/migrations/20261122140000_0319_claims_fiscais.sql.
+--
+-- Manifestação de entrada e cancelamento de nota autorizada transmitiam antes
+-- de qualquer trava: dois cliques simultâneos geravam dois eventos na SEFAZ.
+-- As colunas de claim são preenchidas por UPDATE condicional
+-- (`claim IS NULL OR claim < now() - 5 min`) e liberadas no fim; a segunda
+-- transação reavalia o WHERE e recebe 0 linhas (409 na rota). Nenhum status
+-- muda durante o claim.
+-- ============================================================================
+alter table public.fiscal_entradas
+  add column if not exists manifestacao_em_andamento_em timestamptz;
+
+alter table public.invoices
+  add column if not exists cancelamento_em_andamento_em timestamptz;
+
+comment on column public.fiscal_entradas.manifestacao_em_andamento_em is
+  'Claim da transmissão de manifestação (0319). NULL = livre; preenchido = transmissão em curso. Passado 5 min, pode ser reivindicado de novo (processo morto).';
+comment on column public.invoices.cancelamento_em_andamento_em is
+  'Claim da transmissão de cancelamento (0319). NULL = livre; preenchido = transmissão em curso. Passado 5 min, pode ser reivindicado de novo (processo morto).';

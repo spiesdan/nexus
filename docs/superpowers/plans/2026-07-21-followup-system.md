@@ -190,7 +190,7 @@ revoke all on function fn_claim_due_followup_enrollments(int, int) from public, 
 ```
 
 - [ ] Escrever o arquivo acima; adicionar o MESMO conteúdo como apêndice `-- ---- followup flows (migration 0054) ----` no fim de `supabase/baseline.sql`; linha no MANIFEST.
-- [ ] Aplicar no banco dev (`supabase db push` ou MCP `apply_migration`); regenerar `lib/database.types.ts`.
+- [ ] Aplicar no banco dev pelo baseline (`pnpm db:migrate` ou MCP `apply_migration`); regenerar `lib/database.types.ts`. `db push` é proibido (F-09=B).
 - [ ] **Prova:** psql efêmero — `docker run` pgvector:pg17, aplicar baseline com `ON_ERROR_STOP=1` (fresh) e reaplicar sem a flag (update); `\dt followup*` lista as 4 tabelas nas duas execuções.
 - [ ] Commit `feat(followup): migration 0054 — flow versions/pointers/enrollments/events [onda 1]`.
 

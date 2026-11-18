@@ -175,6 +175,19 @@ describe("F-09 — o aviso está na doc de quem instala, nos três idiomas", () 
     ).not.toMatch(/replay the migrations|reaplicar as migrations|aplique as migrations em ordem/i);
   });
 
+  it("planos ativos não ensinam `supabase db push`", () => {
+    // P3-03: os planos em docs/superpowers/plans/ são receita para quem
+    // implementa. Instrução de `db push` ali é a mesma armadilha da doc de
+    // operação, um nível abaixo na hierarquia. Registros históricos
+    // (`plan/progress.md`) não entram: descrevem o que aconteceu, não o que
+    // fazer.
+    const dir = path.join(RAIZ, "docs/superpowers/plans");
+    const infratores = readdirSync(dir)
+      .filter((f) => f.endsWith(".md"))
+      .filter((f) => /supabase\s+db\s+push/i.test(readFileSync(path.join(dir, f), "utf8")));
+    expect(infratores, "plano ativo ensinando o caminho proibido (F-09=B)").toEqual([]);
+  });
+
   it("a estratégia de F-09 está escrita", () => {
     const caminho = path.join(RAIZ, "docs/auditoria/20-f09-estrategia.md");
     expect(existsSync(caminho), "20-f09-estrategia.md existe").toBe(true);
