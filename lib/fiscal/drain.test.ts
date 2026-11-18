@@ -1,13 +1,16 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
+vi.mock("@/lib/comercial/financeiro", () => ({ gerarRecebiveis: vi.fn() }));
 
 import { audit } from "@/lib/audit";
+import { gerarRecebiveis } from "@/lib/comercial/financeiro";
 
 import {
   autorizacaoPodeSubstituir,
   faturarPedidosDaNota,
+  gerarRecebiveisDaNotaAutorizada,
   notaPodeSerTransmitida,
   pedidoViraFaturado,
   processarJob,
@@ -200,5 +203,143 @@ describe("faturarPedidosDaNota", () => {
       resourceId: "pedido-1",
       metadata: { status_anterior: "aprovado", origem: "nfe_autorizada", nota_numero: 4642 },
     });
+  });
+});
+
+describe("gerarRecebiveisDaNotaAutorizada (D1)", () => {
+  function adminDe(
+    pedidos: Record<string, unknown>[],
+    opcoes: { erroPedidos?: boolean; vinculos?: { order_id: string }[] } = {},
+  ) {
+    const consultas: string[] = [];
+    const client = {
+      from: (tabela: string) => {
+        consultas.push(tabela);
+        const q: Record<string, unknown> = {};
+        for (const nome of ["select", "eq", "in"]) q[nome] = () => q;
+        q.then = (ok: (v: unknown) => unknown) => {
+          if (tabela === "invoice_orders") {
+            return Promise.resolve({
+              data: opcoes.vinculos ?? [{ order_id: "pedido-1" }],
+              error: null,
+            }).then(ok);
+          }
+          if (tabela === "commercial_orders") {
+            return Promise.resolve(
+              opcoes.erroPedidos
+                ? { data: null, error: { message: "leitura falhou" } }
+                : { data: pedidos, error: null },
+            ).then(ok);
+          }
+          return Promise.resolve({ data: null, error: null }).then(ok);
+        };
+        return q;
+      },
+    };
+    return { client: client as unknown as SupabaseClient, consultas };
+  }
+
+  const nota = {
+    id: "nota-1",
+    organization_id: "org-1",
+    order_id: "pedido-1",
+    serie: "1",
+    numero: 4642,
+  };
+
+  const pedido = {
+    id: "pedido-1",
+    numero: 19631,
+    contact_id: "contato-1",
+    total_cents: 100000,
+    condicao_pagamento: "30/60",
+    created_at: "2026-11-01T10:00:00.000Z",
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("gera pelo mesmo gerador do PATCH e audita a origem nfe_autorizada", async () => {
+    vi.mocked(gerarRecebiveis).mockResolvedValue({
+      criados: 2,
+      existentes: 0,
+      ids: ["rec-1", "rec-2"],
+    });
+    const { client } = adminDe([pedido]);
+
+    const r = await gerarRecebiveisDaNotaAutorizada(client, nota);
+
+    expect(r).toEqual({ pedidos: 1, criados: 2 });
+    expect(gerarRecebiveis).toHaveBeenCalledWith(client, {
+      orgId: "org-1",
+      orderId: "pedido-1",
+      contactId: "contato-1",
+      totalCents: 100000,
+      condicao: "30/60",
+      baseIso: "2026-11-01T10:00:00.000Z",
+      criadoPor: null,
+    });
+    expect(audit).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(audit).mock.calls[0]?.[0]).toMatchObject({
+      action: "financial_receivable.generated",
+      resourceId: "pedido-1",
+      metadata: {
+        origem: "nfe_autorizada",
+        invoice_id: "nota-1",
+        nota_numero: 4642,
+        criados: 2,
+      },
+    });
+  });
+
+  it("retry com recebíveis já existentes não cria nem audita de novo", async () => {
+    vi.mocked(gerarRecebiveis).mockResolvedValue({
+      criados: 0,
+      existentes: 2,
+      ids: [],
+    });
+    const { client } = adminDe([pedido]);
+
+    const r = await gerarRecebiveisDaNotaAutorizada(client, nota);
+
+    expect(r).toEqual({ pedidos: 1, criados: 0 });
+    expect(audit).not.toHaveBeenCalled();
+  });
+
+  it("nota agrupada gera para os pedidos secundários também", async () => {
+    vi.mocked(gerarRecebiveis).mockResolvedValue({ criados: 1, existentes: 0, ids: ["rec-2"] });
+    const { client } = adminDe([{ ...pedido, id: "pedido-2", numero: 2 }], {
+      vinculos: [{ order_id: "pedido-1" }, { order_id: "pedido-2" }],
+    });
+
+    const r = await gerarRecebiveisDaNotaAutorizada(client, nota);
+
+    expect(r).toEqual({ pedidos: 1, criados: 1 });
+    expect(vi.mocked(gerarRecebiveis).mock.calls[0]?.[1]).toMatchObject({ orderId: "pedido-2" });
+  });
+
+  it("falha de um pedido não derruba os outros nem lança (nota já é história fiscal)", async () => {
+    vi.mocked(gerarRecebiveis)
+      .mockRejectedValueOnce(new Error("insert falhou"))
+      .mockResolvedValueOnce({ criados: 1, existentes: 0, ids: ["rec-2"] });
+    const { client } = adminDe([
+      { ...pedido, id: "pedido-1" },
+      { ...pedido, id: "pedido-2", numero: 2 },
+    ], {
+      vinculos: [{ order_id: "pedido-1" }, { order_id: "pedido-2" }],
+    });
+
+    const r = await gerarRecebiveisDaNotaAutorizada(client, nota);
+
+    expect(r).toEqual({ pedidos: 2, criados: 1 });
+    expect(gerarRecebiveis).toHaveBeenCalledTimes(2);
+  });
+
+  it("falha de leitura dos pedidos devolve zero sem lançar", async () => {
+    const { client } = adminDe([], { erroPedidos: true });
+    const r = await gerarRecebiveisDaNotaAutorizada(client, nota);
+    expect(r).toEqual({ pedidos: 0, criados: 0 });
+    expect(gerarRecebiveis).not.toHaveBeenCalled();
   });
 });
