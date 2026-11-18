@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { sql } from "./gov-helpers";
+import { TABELAS_PROVADAS_AQUI } from "./f17-tabelas-provadas";
 import { TABLES } from "./rls-isolation.test";
 
 /**
@@ -209,6 +210,16 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "vê 0 linhas da org A, `writeCountAs` recusa escrita cross-org e " +
       "viewer não escreve nem na própria org (migration 0311).",
   },
+  // F-17 — 39 tabelas que estavam em DEBITO_CONHECIDO e ganharam prova
+  // comportamental real (JWT simulado + contagem cross-org + controle positivo)
+  // em rls-camadas-restantes-do-debito.test.ts. A lista vive em módulo próprio
+  // para os dois arquivos lerem a MESMA fonte.
+  ...TABELAS_PROVADAS_AQUI.map((tabela) => ({
+    tabela,
+    razao:
+      "tests/invariants/rls-camadas-restantes-do-debito.test.ts — admin da org D " +
+      "lê 0 linhas da org E e ≥1 da própria org, por tabela (F-17).",
+  })),
 ];
 
 /**
@@ -227,7 +238,6 @@ const RAZAO_DEBITO_CONHECIDO =
 const DEBITO_CONHECIDO: readonly Excecao[] = [
   "agent_case_events",
   "agent_cases",
-  "agent_inbox_items",
   "ai_agent_runs",
   "ai_agent_versions",
   "ai_agents",
@@ -237,66 +247,28 @@ const DEBITO_CONHECIDO: readonly Excecao[] = [
   "ai_invocations",
   "ai_knowledge_sources",
   "ai_knowledge_versions",
-  "ai_provider_credentials",
   "ai_purpose_bindings",
   "ai_router_members",
   "api_audit_log",
-  "api_tokens",
   "attendant_availability",
-  "before_send_traces",
   "calendar_oauth_nonces",
-  "channel_knobs",
-  "channel_session_health",
   "channel_session_warmup",
-  "channel_sessions",
   "conversation_assignment_events",
-  "conversation_notes",
   "crm_lead_activities",
   "crm_lead_links",
   "crm_lead_reactivations",
   "crm_lead_risk_states",
-  "crm_lead_scores",
-  "crm_pipelines",
-  "crm_stages",
-  "cron_jobs",
   "demanda_conversas",
   "demandas",
-  "disclosure_template_pointers",
-  "disclosure_template_versions",
   "event_log",
-  "flywheel_distiller_proposals",
-  "flywheel_judge_verdicts",
   "idempotency_keys",
   "incidents",
-  "job_queue",
-  "judge_alignment_pool",
-  "lead_checkpoints",
-  "lead_notes",
-  "lead_state",
-  "lead_state_transitions",
   "lgpd_requests",
-  "llm_calls",
   "merge_queue",
-  "message_templates",
-  "metrics",
   "nuvemshop_products",
   "orders",
   "org_memory_pointers",
-  "outbound_copies",
-  "pacing_ledger",
-  "playbook_pointers",
-  "playbook_versions",
-  "promise_table_pointers",
-  "promise_table_versions",
-  "reentry_knob_pointers",
-  "reentry_knob_versions",
-  "reentry_template_pointers",
-  "reentry_template_versions",
-  "send_ledger",
-  "skill_pointers",
-  "skill_versions",
   "storage_redaction_queue",
-  "tenant_integrations",
   "webhook_events_log",
 ].map((tabela) => ({ tabela, razao: RAZAO_DEBITO_CONHECIDO }));
 

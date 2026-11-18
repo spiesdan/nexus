@@ -289,6 +289,12 @@ cada arquivo num banco próprio (ordem embaralhada, sem colisão de fixture). Os
 
 **Leitura honesta:** das ~169 tabelas tenant-aware, **96 têm prova comportamental** de isolamento
 (73 + 23) e **73 são dívida conhecida** — RLS ligado, política presente, nenhum teste cross-tenant.
+
+> **Atualização de 17/11/2026 (F-17):** **39 das 73** saíram da dívida em
+> `tests/invariants/rls-camadas-restantes-do-debito.test.ts` — cada uma com JWT simulado do
+> admin de duas organizações, contagem cross-org **0** e controle positivo **≥1** (79 casos,
+> verdes com o `baseline.sql`). A lista do que falta caiu para **34** e continua em
+> `DEBITO_CONHECIDO`; a conta deste parágrafo é a fotografia de 16/11 e não é reescrita.
 O gate impede que a dívida cresça; não a resolve. Contar 305 políticas e chamar de segurança seria
 justamente o erro que a pergunta apontou.
 
@@ -418,7 +424,7 @@ não-local sem `--forcar`, e não usa `drop database`).
 | F-09a | P0 | `db:migrate` saía com sucesso sendo placeholder, e `deploy.sh` mascarava a falha com `\|\| true` | **corrigido** |
 | F-09b | P0 | `db:reset` = `supabase db reset` aplicava a cadeia quebrada (2 tabelas, 0 políticas) | **corrigido** (§6.1) |
 | F-16 | Média | contagem textual de RLS subestimava a cobertura (142 × 179) e produzia lista de 38 tabelas "sem RLS" que têm RLS | **corrigido** (gerador + este doc) |
-| F-17 | Média | 73 tabelas tenant-aware não têm prova comportamental de isolamento (`DEBITO_CONHECIDO`) | **aberto** (gate impede crescimento) |
+| F-17 | Média | 73 tabelas tenant-aware não tinham prova comportamental de isolamento (`DEBITO_CONHECIDO`); **39 provadas em 17/11/2026**, restam 34 | `[~]` — gate impede crescimento; falta o lote final |
 | F-18 | Baixa | `echo … && exit 0` em qualquer script `package.json` não tinha gate | **corrigido** (teste) |
 
 ## Reproduzir
