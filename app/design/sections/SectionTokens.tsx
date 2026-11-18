@@ -86,9 +86,9 @@ export function SectionTokens() {
         <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ textAlign: "left", color: "var(--ds-text-muted)", fontSize: 11, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              <th style={{ padding: "8px 0" }}>Token</th>
-              <th>Valor</th>
-              <th>Uso</th>
+              <th scope="col" style={{ padding: "8px 0" }}>Token</th>
+              <th scope="col">Valor</th>
+              <th scope="col">Uso</th>
             </tr>
           </thead>
           <tbody>

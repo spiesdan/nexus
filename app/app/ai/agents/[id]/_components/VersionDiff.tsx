@@ -130,9 +130,9 @@ export function VersionDiff({ versionA, versionB }: Props) {
           <Table className="text-xs">
             <thead>
               <tr className="text-left text-muted-foreground">
-                <th className="py-1 pr-3">{t("Campo")}</th>
-                <th className="py-1 pr-3">v{versionA.version_number}</th>
-                <th className="py-1">v{versionB.version_number}</th>
+                <th scope="col" className="py-1 pr-3">{t("Campo")}</th>
+                <th scope="col" className="py-1 pr-3">v{versionA.version_number}</th>
+                <th scope="col" className="py-1">v{versionB.version_number}</th>
               </tr>
             </thead>
             <tbody>

@@ -7,6 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,20 @@ export function TenantSwitcher() {
           disabled={isPending}
           className="gap-2"
           data-testid="tenant-switcher"
-          aria-label={t("Trocar de empresa")}
+          /*
+           * O NOME ACESSÍVEL DIZ ONDE A PESSOA ESTÁ, não só o que o botão faz.
+           *
+           * Era só "Trocar de empresa": quem tem duas organizações ouvia a AÇÃO
+           * e nunca o ESTADO — e o nome da empresa ativa aparecia apenas como
+           * texto visual (e escondido abaixo de `sm`, onde sobra só a inicial).
+           * Agora o rótulo compõe estado + ação; o texto visível continua o
+           * mesmo.
+           */
+          aria-label={
+            active?.name
+              ? `${t("Empresa atual")}: ${active.name}. ${t("Trocar de empresa")}`
+              : t("Trocar de empresa")
+          }
         >
           <span
             aria-hidden
@@ -46,14 +60,16 @@ export function TenantSwitcher() {
               bloco de ações para fora da largura de 390px. A inicial continua
               dizendo qual empresa está ativa, e o menu aberto mostra o nome
               inteiro. */}
-          <span className="hidden max-w-[160px] truncate sm:inline">{active?.name ?? "Selecionar org"}</span>
+          <span className="hidden max-w-[160px] truncate sm:inline">
+            {active?.name ?? "Selecionar org"}
+          </span>
           <CaretDown size={12} aria-hidden />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[240px] p-1.5">
-        <p className="px-2 pt-1 pb-1.5 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+        <DropdownMenuLabel className="px-2 pt-1 pb-1.5 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
           {t("Trocar de empresa")}
-        </p>
+        </DropdownMenuLabel>
         {user.organizations.map((org) => {
           const ativa = active?.orgId === org.organization_id;
           const inicial = [...(org.organization_name ?? "?")][0]?.toUpperCase();
@@ -74,7 +90,18 @@ export function TenantSwitcher() {
                 {inicial}
               </span>
               <span className="min-w-0 flex-1 truncate text-sm">{org.organization_name}</span>
-              {ativa && <Check size={14} aria-hidden className="shrink-0 text-accent-ink" />}
+              {ativa && (
+                <>
+                  {/*
+                    O check é `aria-hidden` e `aria-current` em `menuitem` tem
+                    suporte irregular entre leitores de tela. O texto recortado
+                    é o que garante que "qual está ativa" chegue — e ele é a
+                    mesma informação que o ícone carrega para quem vê.
+                  */}
+                  <span className="sr-only">, {t("atual")}</span>
+                  <Check size={14} aria-hidden className="shrink-0 text-accent-ink" />
+                </>
+              )}
             </DropdownMenuItem>
           );
         })}

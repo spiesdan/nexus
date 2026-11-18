@@ -154,14 +154,14 @@ export function ImprimirLoteClient({
             <table className="mt-3 w-full text-[13px]">
               <thead>
                 <tr className="border-b-2 border-foreground bg-muted/60 text-left print:bg-transparent">
-                  <th className="px-1 py-1 font-semibold">#</th>
-                  <th className="px-1 py-1 font-semibold">{t("Código")}</th>
-                  <th className="px-1 py-1 font-semibold">{t("Produto")}</th>
-                  <th className="px-1 py-1 text-right font-semibold">{t("Qtde.")}</th>
-                  <th className="px-1 py-1 text-center font-semibold">{t("Un.")}</th>
-                  <th className="px-1 py-1 text-right font-semibold">{t("Desc.")}</th>
-                  <th className="px-1 py-1 text-right font-semibold">{t("Preço líq.")}</th>
-                  <th className="px-1 py-1 text-right font-semibold">{t("Subtotal")}</th>
+                  <th scope="col" className="px-1 py-1 font-semibold">#</th>
+                  <th scope="col" className="px-1 py-1 font-semibold">{t("Código")}</th>
+                  <th scope="col" className="px-1 py-1 font-semibold">{t("Produto")}</th>
+                  <th scope="col" className="px-1 py-1 text-right font-semibold">{t("Qtde.")}</th>
+                  <th scope="col" className="px-1 py-1 text-center font-semibold">{t("Un.")}</th>
+                  <th scope="col" className="px-1 py-1 text-right font-semibold">{t("Desc.")}</th>
+                  <th scope="col" className="px-1 py-1 text-right font-semibold">{t("Preço líq.")}</th>
+                  <th scope="col" className="px-1 py-1 text-right font-semibold">{t("Subtotal")}</th>
                 </tr>
               </thead>
               <tbody>
