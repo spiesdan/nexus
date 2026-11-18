@@ -24,9 +24,11 @@ import {
   mapearColunas,
   normalizarCodigo,
   normalizarNome,
+  motivoDoVazio,
   planejarPareamento,
   planejarUpsert,
   precoParaCents,
+  rotasDoCatalogo,
 } from "../../workers/mercos/catalogo-logica.mjs";
 
 describe("cabeçalho manda nas colunas", () => {
@@ -65,7 +67,14 @@ describe("cabeçalho manda nas colunas", () => {
   it("o plano B do legado continua declarado", () => {
     // Se um dia a grade não tiver `<thead>` legível, é esta a posição usada —
     // e cada linha sai marcada com `cabecalho_lido: false`.
-    expect(COLUNAS_LEGADO).toEqual({ codigo: 2, nome: 3, ipi: 4, unidade: 5, comissao: 6, preco: 7 });
+    expect(COLUNAS_LEGADO).toEqual({
+      codigo: 2,
+      nome: 3,
+      ipi: 4,
+      unidade: 5,
+      comissao: 6,
+      preco: 7,
+    });
   });
 });
 
@@ -228,5 +237,49 @@ describe("normalização", () => {
     expect(chaveSemZeros("0411")).toBe("411");
     expect(chaveSemZeros("000")).toBe("0");
     expect(chaveSemZeros("A0411")).toBeNull();
+  });
+});
+
+/**
+ * A COLETA VAZIA NÃO É SUCESSO — e a rota do catálogo não é a que se supunha.
+ *
+ * Medido em produção em 18/11/2026, dentro do `crm-mercos-1`: o coletor pediu
+ * `/<empresa>/produtos/`, recebeu **404**, não achou `<table>`, gravou zero
+ * linhas e terminou `{"produtos_lidos":0,"paginas":0}` com **exit 0**. O
+ * relatório do dono dizia "catálogo vazio" — e o catálogo nunca foi lido.
+ *
+ * A rota real é `/industria/<empresa>/produtos/`. Estes testes vigiam as duas
+ * metades da correção: a candidata certa existe, e o vazio vira falha com
+ * motivo — separado por causa, porque a ação de quem lê o log é diferente.
+ */
+describe("rota do catálogo", () => {
+  it("a primeira candidata é a que o menu aponta de fato (industria)", () => {
+    expect(rotasDoCatalogo("338282")[0]).toBe("https://app.mercos.com/industria/338282/produtos/");
+  });
+
+  it("a rota antiga continua como rede, não como primeira tentativa", () => {
+    const rotas = rotasDoCatalogo("338282");
+    expect(rotas).toContain("https://app.mercos.com/338282/produtos/");
+    expect(rotas[0]).not.toBe("https://app.mercos.com/338282/produtos/");
+  });
+});
+
+describe("zero não é sucesso", () => {
+  it("nenhuma página lida é falha, com motivo próprio", () => {
+    expect(motivoDoVazio({ paginas: 0, produtosLidos: 0 })).toBe("nenhuma pagina lida");
+  });
+
+  it("página lida e zero linha utilizável é OUTRA falha", () => {
+    expect(motivoDoVazio({ paginas: 3, produtosLidos: 0 })).toBe(
+      "pagina lida, nenhuma linha utilizavel",
+    );
+  });
+
+  it("coleta com produto é `null` (não há o que falhar)", () => {
+    expect(motivoDoVazio({ paginas: 1, produtosLidos: 15 })).toBeNull();
+  });
+
+  it("número ausente não vira sucesso por acidente", () => {
+    expect(motivoDoVazio({ paginas: Number.NaN, produtosLidos: 10 })).toBe("nenhuma pagina lida");
   });
 });
