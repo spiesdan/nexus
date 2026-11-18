@@ -63,7 +63,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
 | `operacao.correcao_sem_reversao` | correção aplicada cujo job saiu de `pending`/do `run_after` gravado — reversão não é mais honesta | media |
 | `operacao.aprovacao_expirada` | ocorrência `aprovada` além da janela de 5 min do plano revisado | baixa |
-| `cadastro.endereco_com_lixo` | `contacts.logradouro/complemento/bairro/cidade` com `NULL`/`undefined`/`NaN` literais ou só espaços, agrupado por org | media |
+| `cadastro.endereco_com_lixo` | `contacts.logradouro/complemento/bairro/cidade` com `NULL`/`undefined`/`NaN` como **palavra** ou só espaços, agrupado por org; `RUA NULLS` não casa | media |
 
 **Falsos positivos evitados de propósito:**
 
@@ -361,7 +361,8 @@ fiscal/financeira real.
     antecipação) não entra, porque não há antes/depois para comparar.
 15. **`cadastro.endereco_com_lixo` é observação, não correção:** o escritor
     histórico não existe mais; o achado agrupa ids por organização e não leva
-    o endereço (dado pessoal) na evidência.
+    o endereço (dado pessoal) na evidência. A borda é de PALAVRA: `RUA NULL`
+    casa, `RUA NULLS` não. Medido no Supabase local após a limpeza: **0**.
 16. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
