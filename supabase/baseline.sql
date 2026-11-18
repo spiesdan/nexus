@@ -29524,6 +29524,60 @@ comment on function public.fn_sentinel_registrar_ocorrencia(
 ) is
   'Upsert idempotente de ocorrência + plano revisável + evento de histórico. Só service_role (runner).';
 
+-- ============================================================================
+-- 0324 — divergência de estoque também quando não há movimentação (left join).
+-- Ver supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql.
+-- ============================================================================
+
+create or replace view public.sentinel_estoque_razao
+with (security_invoker = true)
+as
+select
+  p.organization_id,
+  p.id as product_id,
+  p.codigo,
+  p.nome,
+  p.quantidade,
+  coalesce(
+    sum(
+      case
+        when m.tipo = 'entrada' then m.quantidade
+        when m.tipo = 'saida' then -m.quantidade
+        else m.quantidade
+      end
+    ),
+    0
+  )::bigint as saldo_razao,
+  (
+    p.quantidade - coalesce(
+      sum(
+        case
+          when m.tipo = 'entrada' then m.quantidade
+          when m.tipo = 'saida' then -m.quantidade
+          else m.quantidade
+        end
+      ),
+      0
+    )
+  )::bigint as diferenca,
+  count(m.id)::integer as movimentos,
+  p.created_at as criado_em,
+  max(m.created_at) as ultimo_movimento
+from public.catalog_products p
+left join public.inventory_movements m
+  on m.product_id = p.id
+ and m.organization_id = p.organization_id
+where p.controla_estoque = true
+  and p.created_at >= '2026-09-25T00:00:00.000Z'::timestamptz
+group by p.organization_id, p.id, p.codigo, p.nome, p.quantidade, p.created_at;
+
+revoke all on public.sentinel_estoque_razao from anon;
+grant select on public.sentinel_estoque_razao to authenticated;
+grant select on public.sentinel_estoque_razao to service_role;
+
+comment on view public.sentinel_estoque_razao is
+  'Saldo cacheado × soma de inventory_movements (0242+) por produto controlado, inclusive com zero movimentações (left join). SEM saldo de abertura: diferença é hipótese de baixa confiança, não prova.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

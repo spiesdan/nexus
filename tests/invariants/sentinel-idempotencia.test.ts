@@ -181,4 +181,43 @@ describe("Sentinel — idempotência, recorrência e retenção", () => {
       Number(sql(`select count(*) from public.sentinel_occurrences where organization_id = '${ORG_A}' and estado = 'investigando';`)),
     ).toBeGreaterThanOrEqual(1);
   });
+
+  it("retenção: 10 dias fica, 31 dias com janela 30 apaga e leva o histórico", () => {
+    const recente = registrar(
+      ORG_A,
+      RUN_A2,
+      "operacao.estoque_negativo|catalog_products|retencao",
+    );
+
+    sql(`
+      update public.sentinel_occurrences
+         set estado = 'corrigida',
+             encerrada_em = now() - interval '10 days',
+             updated_at = now() - interval '10 days'
+       where id = '${recente}';
+    `);
+
+    // Dentro da janela (e acima do piso): não apaga.
+    expect(Number(lastLine(sql(`select public.fn_sentinel_expurgar('${ORG_A}', 30);`)))).toBe(0);
+    expect(
+      Number(sql(`select count(*) from public.sentinel_occurrences where id = '${recente}';`)),
+    ).toBe(1);
+
+    // 31 dias com janela 30: apaga a ocorrência e o histórico em cascata.
+    sql(`
+      update public.sentinel_occurrences
+         set encerrada_em = now() - interval '31 days',
+             updated_at = now() - interval '31 days'
+       where id = '${recente}';
+    `);
+    expect(
+      Number(lastLine(sql(`select public.fn_sentinel_expurgar('${ORG_A}', 30);`))),
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      Number(sql(`select count(*) from public.sentinel_occurrences where id = '${recente}';`)),
+    ).toBe(0);
+    expect(
+      Number(sql(`select count(*) from public.sentinel_occurrence_events where occurrence_id = '${recente}';`)),
+    ).toBe(0);
+  });
 });

@@ -3,7 +3,15 @@ import { describe, expect, it } from "vitest";
 import { executarDetectores } from "./motor";
 import { REGRAS } from "./regras";
 import { fingerprint, snapshotVazio, type Achado, type Regra } from "./tipos";
-import { nota, primeiro, snapshot } from "./teste-fixtures";
+import {
+  leadAberto,
+  nota,
+  pedido,
+  primeiro,
+  produto,
+  recebivel,
+  snapshot,
+} from "./teste-fixtures";
 const ACHADO_BASE: Achado = {
   regra: "regra.a",
   categoria: "operacao",
@@ -117,6 +125,75 @@ describe("motor de detecção", () => {
     expect(r.achados).toHaveLength(0);
     expect(r.regrasAvaliadas).toHaveLength(0);
     expect(primeiro(r.falhas).motivo).toContain("sem plano");
+  });
+
+  it("orçamento de tempo trunca a rodada e não avalia as regras seguintes", () => {
+    const lenta: Regra = {
+      id: "regra.lenta",
+      categoria: "operacao",
+      descricao: "queima o orçamento de propósito",
+      detectar: () => {
+        const inicio = performance.now();
+        while (performance.now() - inicio < 40) {
+          // espera ocupada: simula detector patológico
+        }
+        return [];
+      },
+    };
+    const depois: Regra = {
+      id: "regra.depois",
+      categoria: "operacao",
+      descricao: "não pode rodar depois do estouro",
+      detectar: () => [{ ...ACHADO_BASE, regra: "regra.depois" }],
+    };
+
+    const r = executarDetectores(snapshot(), {
+      regras: [lenta, depois],
+      recomendacoes: mapa("regra.depois"),
+      orcamentoMs: 1,
+    });
+
+    expect(r.truncadoPorTempo).toBe(true);
+    expect(r.regrasAvaliadas).toEqual(["regra.lenta"]);
+    expect(r.regrasAvaliadas).not.toContain("regra.depois");
+    expect(r.achados).toHaveLength(0);
+  });
+
+  it("carga: 2k produtos + 2k pedidos + 2k recebíveis + 2k leads roda no orçamento", () => {
+    const grande = snapshot({
+      produtos: Array.from({ length: 2_000 }, (_, i) =>
+        produto({ id: `produto-${i}`, codigo: `SKU-${i}`, quantidade: i % 10 }),
+      ),
+      pedidos: Array.from({ length: 2_000 }, (_, i) =>
+        pedido({
+          id: `pedido-${i}`,
+          numero: i,
+          subtotal_cents: 10_000,
+          desconto_cents: 0,
+          frete_cents: 0,
+          total_cents: 10_000,
+          status: "rascunho",
+          updated_at: new Date().toISOString(),
+        }),
+      ),
+      recebiveis: Array.from({ length: 2_000 }, (_, i) =>
+        recebivel({ id: `recebivel-${i}`, order_id: `pedido-${i}`, vencimento: "2026-12-01" }),
+      ),
+      leadsAbertos: Array.from({ length: 2_000 }, (_, i) =>
+        leadAberto({
+          id: `lead-${i}`,
+          contact_id: `contato-${i}`,
+          contatos: { phone_number: `+5511999${String(i).padStart(5, "0")}`, email_normalized: `p${i}@loja.test` },
+        }),
+      ),
+    });
+
+    const r = executarDetectores(grande);
+    expect(r.truncadoPorTempo).toBe(false);
+    expect(r.regrasAvaliadas).toHaveLength(REGRAS.length);
+    // Teto folgado para máquina de CI carregada; o valor medido nesta máquina
+    // está no comentário de ORCAMENTO_DETECCAO_PADRAO_MS.
+    expect(r.tempoMs).toBeLessThan(2_000);
   });
 
   it("respeita o kill switch de regra por organização", () => {

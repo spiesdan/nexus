@@ -71,6 +71,25 @@ describe("detectores de operação — caso positivo e negativo", () => {
         }),
       ),
     ).toHaveLength(0);
+
+    // Produto sem NENHUMA movimentação: razão vazio ≠ saldo cacheado também é
+    // divergência (left join da 0324). `ultimo_movimento` é null.
+    const semMovimento = estoqueDivergente(
+      snapshot({
+        estoqueRazao: [
+          estoqueRazao({
+            quantidade: 100,
+            saldo_razao: 0,
+            diferenca: 100,
+            movimentos: 0,
+            ultimo_movimento: null,
+          }),
+        ],
+      }),
+    );
+    expect(semMovimento).toHaveLength(1);
+    expect(primeiro(semMovimento).evidencia.movimentos).toBe(0);
+    expect(primeiro(semMovimento).evidencia.ultimo_movimento).toBeNull();
   });
 
   it("lead duplicado: mesmo contato no mesmo funil dispara; funis diferentes não", () => {
@@ -143,6 +162,17 @@ describe("detectores de operação — caso positivo e negativo", () => {
     const email = primeiro(porEmail);
     expect(email.evidencia.identidade).toBe("email");
     expect(JSON.stringify(email.evidencia)).not.toContain("ana@loja.test");
+
+    // Lead sem contato fica de fora por decisão: não há identidade normalizada.
+    const semContato = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          leadAberto({ id: "l1", contact_id: null }),
+          leadAberto({ id: "l2", contact_id: null }),
+        ],
+      }),
+    );
+    expect(semContato).toHaveLength(0);
   });
 
   it("lead duplicado não conta duas vezes quando contato e e-mail dão a mesma assinatura", () => {

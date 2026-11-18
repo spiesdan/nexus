@@ -270,8 +270,10 @@ export interface ClienteDuplicado {
 }
 
 /**
- * Produto com movimentação e a soma do razão. A view só devolve linhas com
- * `diferenca <> 0`; o detector decide o piso e a confiança.
+ * Produto controlado e a soma do razão. A view devolve inclusive produto sem
+ * nenhuma movimentação (`movimentos = 0`, `ultimo_movimento = null`): razão
+ * vazio com saldo cacheado também é divergência. O detector decide o piso e a
+ * confiança.
  *
  * LIMITAÇÃO ESTRUTURAL: `inventory_movements` nasceu em 0242 e não guarda saldo
  * de abertura. Por isso a view só considera produtos criados a partir dela e o
@@ -286,7 +288,7 @@ export interface EstoqueRazao {
   diferenca: number;
   movimentos: number;
   criado_em: string;
-  ultimo_movimento: string;
+  ultimo_movimento: string | null;
 }
 
 /** Lead aberto com a identidade normalizada do contato (para duplicidade). */
