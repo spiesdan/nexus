@@ -13,7 +13,7 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida (rodada 10) | `9ede1d6b` (`nexus/main`; Sentinel v1.2 incluso) | `git log --oneline -1 nexus/main` |
+| Commit de partida (rodada 11) | `0201faaf` (`nexus/main`) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) — a contagem de fragmentos é o que `pnpm release:conferir` disser; o PR é o corte vigente — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
@@ -112,7 +112,8 @@ coordenador integra e roda os gates no código integrado.
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 + #516 → `99958a18` (accent como tinta nos dois temas); snapshots visuais em PR (#468, baselines macOS); D ativo em `front/shell-2` | D | Runner fixo p/ snapshots no CI | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
 | **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); #507/#510/#512/#515 (teto declarado em fiscal, faturamento, notas, estoque/compras); P1-06 de listas/tie-breaker em #521 (CI) | A / E / C | #521 verde + retomada de A | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
 | **P1-07** | Rate limit em MFA e recuperação de conta | `[x]` | #466 mergeado (`f56c0228`): teto em `verifyMfa` e `useRecoveryCode` com testes | B | — | Teto por IP e por identificador; teste de repetição; fallback documentado |
-| **P1-08** | Pacote da próxima release pronto para aprovação, sem publicar | `[x]` | [`35-pacote-de-release.md`](35-pacote-de-release.md): 1.56.0 derivada, 19 fragmentos, inventário 0313–0320, checklist e plano assinado | Coordenador | Aprovação humana p/ cortar | Número derivado por comando; inventário de schema; plano com rollback e critério de abortar |
+| **P1-08** | Pacote da release pronto para aprovação, sem publicar | `[x]` | [`35-pacote-de-release.md`](35-pacote-de-release.md); corte final pelo workflow (`release.yml`) no PR #548 | Coordenador | — | Número derivado por comando; inventário de schema; plano com rollback |
+| **P1-09** | Nome do cliente no pedido: **fantasia primeiro** | `[x]` | #550 → `01ab21ec`: resolvedor único `lib/contacts/nome-de-exibicao.ts`; escrita (criar/PATCH), lista resolve na leitura sem reescrever snapshot, busca e `aria-label`; 13 + 31 testes dirigidos | Coordenação | — | fantasia → razão social/nome → "Sem nome"; fantasia vazia cai; técnico não vira nome; render da busca com fantasia ≠ razão social |
 
 ## 5. Fila — P2 (identidade, shell, consistência)
 
