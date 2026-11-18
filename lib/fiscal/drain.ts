@@ -543,12 +543,98 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   return { saidas: "reagendado", destino: "em_emissao" };
 }
 
+/**
+ * O pedido que esperava a nota vira `faturado`?
+ *
+ * Só o **aprovado**: ele é o compromisso comercial que ainda não tem nota, e
+ * emitir a NF-e é justamente o passo que o leva a `faturado`. `concluido`,
+ * `expedido` e `entregue` já estão à frente — rebaixá-los para `faturado`
+ * apagaria o avanço da operação (e `faturado` não significa "entregue").
+ */
+export function pedidoViraFaturado(status: string): boolean {
+  return status === "aprovado";
+}
+
+/**
+ * Fecha o laço pedido ↔ nota: autorizada a NF-e, o pedido aprovado vira
+ * `faturado`.
+ *
+ * A atualização é CONDICIONAL (`status = 'aprovado'`): se alguém já avançou o
+ * pedido no meio da transmissão, o status mais novo vence. Vale para nota
+ * agrupada (`invoice_orders`) e para a nota de um pedido só (`invoices.order_id`).
+ * Nunca lança: a nota já está autorizada e o pedido não pode desfazer isso.
+ */
+export async function faturarPedidosDaNota(
+  admin: SupabaseClient,
+  nota: {
+    id: string;
+    organization_id: string;
+    order_id: string | null;
+    serie: string;
+    numero: number | null;
+  },
+): Promise<void> {
+  try {
+    const ids = new Set<string>();
+    if (nota.order_id) ids.add(nota.order_id);
+    const { data: vinculos } = await admin
+      .from("invoice_orders")
+      .select("order_id")
+      .eq("invoice_id", nota.id)
+      .eq("organization_id", nota.organization_id);
+    for (const v of (vinculos ?? []) as unknown as { order_id: string }[]) {
+      ids.add(v.order_id);
+    }
+    if (ids.size === 0) return;
+
+    const { data: atualizados, error } = await admin
+      .from("commercial_orders")
+      .update({ status: "faturado", updated_at: new Date().toISOString() })
+      .eq("organization_id", nota.organization_id)
+      .in("id", [...ids])
+      .eq("status", "aprovado")
+      .select("id, numero");
+    if (error) {
+      logger.error("fiscal: nota autorizada, mas o pedido não virou faturado", {
+        invoice_id: nota.id,
+        organization_id: nota.organization_id,
+        erro: error.message.slice(0, 300),
+      });
+      return;
+    }
+
+    for (const pedido of (atualizados ?? []) as unknown as { id: string; numero: number }[]) {
+      await audit({
+        organizationId: nota.organization_id,
+        actorUserId: null,
+        action: "commercial_order.updated",
+        resourceType: "commercial_orders",
+        resourceId: pedido.id,
+        metadata: {
+          status: "faturado",
+          status_anterior: "aprovado",
+          origem: "nfe_autorizada",
+          nota_serie: nota.serie,
+          nota_numero: nota.numero,
+        },
+      });
+    }
+  } catch (err) {
+    logger.error("fiscal: falha ao faturar o pedido depois da autorização", {
+      invoice_id: nota.id,
+      organization_id: nota.organization_id,
+      erro: err instanceof Error ? err.message : String(err),
+    });
+  }
+}
+
 async function finalizar(
   admin: SupabaseClient,
   job: JobFiscal,
   nota: {
     id: string;
     organization_id: string;
+    order_id: string | null;
     serie: string;
     numero: number | null;
     created_at: string;
@@ -664,6 +750,12 @@ async function finalizar(
         "NÃO REEMITA — o número já foi usado na SEFAZ.",
       xml: null,
     });
+  }
+  // A nota está autorizada E gravada: o pedido que esperava por ela deixa de
+  // ser "aprovado" e passa a "faturado". Se o registro da nota falhou, o
+  // pedido NÃO avança — a nota existe no fisco, mas o app ainda não a tem.
+  if (status === "autorizada" && !erroDoRegistro) {
+    await faturarPedidosDaNota(admin, nota);
   }
   await admin
     .from("fiscal_jobs")

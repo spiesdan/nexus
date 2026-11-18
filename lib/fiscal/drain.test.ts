@@ -1,9 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/audit", () => ({ audit: vi.fn() }));
+
+import { audit } from "@/lib/audit";
 
 import {
   autorizacaoPodeSubstituir,
+  faturarPedidosDaNota,
   notaPodeSerTransmitida,
+  pedidoViraFaturado,
   processarJob,
 } from "./drain";
 
@@ -124,5 +130,75 @@ describe("processarJob", () => {
     });
 
     expect(r).toEqual({ saidas: "ignorado", motivo: "nota fora de emissão" });
+  });
+});
+
+describe("pedido vira faturado quando a nota é autorizada", () => {
+  it("só o aprovado avança — os demais não regridem", () => {
+    expect(pedidoViraFaturado("aprovado")).toBe(true);
+    for (const status of [
+      "rascunho",
+      "em_analise",
+      "concluido",
+      "faturado",
+      "expedido",
+      "entregue",
+      "cancelado",
+    ]) {
+      expect(pedidoViraFaturado(status), status).toBe(false);
+    }
+  });
+});
+
+describe("faturarPedidosDaNota", () => {
+  it("atualiza só pedido aprovado para faturado e audita a origem", async () => {
+    const escritas: { tabela: string; valores: Record<string, unknown>; filtros: [string, unknown][] }[] = [];
+    const admin = {
+      from: (tabela: string) => {
+        const op = { tabela, valores: {} as Record<string, unknown>, filtros: [] as [string, unknown][] };
+        const alvo = {
+          select: () => alvo,
+          update: (valores: Record<string, unknown>) => {
+            op.valores = valores;
+            return alvo;
+          },
+          eq: (coluna: string, valor: unknown) => {
+            op.filtros.push([coluna, valor]);
+            return alvo;
+          },
+          in: (coluna: string, valor: unknown) => {
+            op.filtros.push([`in:${coluna}`, valor]);
+            return alvo;
+          },
+          then: (ok: (v: unknown) => unknown) => {
+            escritas.push(op);
+            const data =
+              tabela === "invoice_orders"
+                ? [{ order_id: "pedido-1" }]
+                : [{ id: "pedido-1", numero: 19631 }];
+            return Promise.resolve({ data, error: null }).then(ok);
+          },
+        };
+        return alvo;
+      },
+    } as unknown as SupabaseClient;
+
+    await faturarPedidosDaNota(admin, {
+      id: "nota-1",
+      organization_id: "org-1",
+      order_id: "pedido-1",
+      serie: "1",
+      numero: 4642,
+    });
+
+    const update = escritas.find((e) => e.tabela === "commercial_orders");
+    expect(update?.valores.status).toBe("faturado");
+    expect(update?.filtros).toContainEqual(["status", "aprovado"]);
+    expect(audit).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(audit).mock.calls[0]?.[0]).toMatchObject({
+      action: "commercial_order.updated",
+      resourceId: "pedido-1",
+      metadata: { status_anterior: "aprovado", origem: "nfe_autorizada", nota_numero: 4642 },
+    });
   });
 });
