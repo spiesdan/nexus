@@ -139,7 +139,7 @@ export function jobFila(over: Partial<JobDaFila> = {}): JobDaFila {
 export function webhook(over: Partial<WebhookEvento> = {}): WebhookEvento {
   return {
     id: "webhook-1",
-    provider: "waha",
+    provider: "teste",
     event_type: "message",
     status: "processed",
     attempts: 1,

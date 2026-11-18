@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { roleAtLeast } from "@/lib/auth/types";
 import { interpretarConfiguracao, sentinelLigadoNoAmbiente } from "@/lib/sentinel/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -54,8 +54,11 @@ export default async function SentinelPage() {
   ]);
 
   const papel = user.is_platform_admin
-    ? ROLE_RANK.admin
-    : ROLE_RANK[activeOrg.role];
+    ? { podeAgir: true, podeGerir: true }
+    : {
+        podeAgir: roleAtLeast(activeOrg.role, "agent"),
+        podeGerir: roleAtLeast(activeOrg.role, "manager"),
+      };
 
   return (
     <SentinelClient
@@ -66,8 +69,8 @@ export default async function SentinelPage() {
       )}
       linhaDeConfiguracaoExiste={Boolean(configuracao)}
       ambienteLigado={sentinelLigadoNoAmbiente()}
-      podeAgir={papel >= ROLE_RANK.agent}
-      podeGerir={papel >= ROLE_RANK.manager}
+      podeAgir={papel.podeAgir}
+      podeGerir={papel.podeGerir}
     />
   );
 }

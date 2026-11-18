@@ -13,7 +13,7 @@ import { z } from "zod";
 import { fail, ok } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { roleAtLeast } from "@/lib/auth/types";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { camposDaTransicao, validarTransicao, type ValidacaoTransicao } from "@/lib/sentinel/estado";
@@ -135,8 +135,7 @@ export async function PATCH(
     estado: EstadoOcorrencia;
     responsavel_user_id: string | null;
   };
-  const podeGerir =
-    authz.user.is_platform_admin || ROLE_RANK[authz.org.role] >= ROLE_RANK.manager;
+  const podeGerir = authz.user.is_platform_admin || roleAtLeast(authz.org.role, "manager");
 
   const validacao = validarTransicao({
     de: registro.estado,
