@@ -178,6 +178,22 @@ O pedido capturado no shell fica no SQLite nativo e o sistema nunca o vê. Isso 
 verificável por leitura de fonte e configuração (feito acima); **confirmar em aparelho é
 pendência** — não foi executado por falta de dispositivo.
 
+### Como confirmar em 3 minutos (pendência verificável, com aparelho)
+
+1. Instalar o APK debug (`apk.yml` → artifact), abrir o app, capturar um pedido offline.
+2. Tocar "Abrir o sistema" e, no desktop com o aparelho plugado, abrir
+   `chrome://inspect/#devices` → *inspect* na WebView do app.
+3. No console da página remota: `window.Capacitor?.isNativePlatform?.()`.
+   **Esperado pelo código atual:** `undefined` ou `false`. Se vier `true`, a ponte
+   atravessa a navegação e a minha leitura da fonte está errada — este é o teste que
+   decide.
+4. Se `false`, `await (await import('@capacitor/core')).Capacitor.getPlatform()` responde
+   `web` e o banco aberto é o do IndexedDB (`Application` → *IndexedDB* → `jeep-sqlite`),
+   **não** o SQLite nativo onde o shell gravou a fila.
+
+Para o backup (F-MOB-8): `adb shell dumpsys backup | grep -A2 tech.billhigiene.crm` não deve
+listar o app como elegível, e `adb backup` deve recusar.
+
 ### Opções (decisão do coordenador)
 
 | Opção | O que muda | Custo/risco |
