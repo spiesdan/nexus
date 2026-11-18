@@ -38,7 +38,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .select(LISTA)
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
-    .limit(100);
+    .order("id", { ascending: false }).limit(100);
 
   if (error) {
     logger.error("[automatic-sales.campaigns] falha ao listar campanhas", {

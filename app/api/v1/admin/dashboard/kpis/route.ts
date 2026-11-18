@@ -111,7 +111,7 @@ export async function GET(_req: NextRequest) {
         `status.in.(ban_suspected,disconnected_unexpected),and(status.eq.disconnected,updated_at.gt.${cutoff24h})`,
       )
       .order("updated_at", { ascending: false })
-      .limit(20),
+      .order("id", { ascending: false }).limit(20),
 
     // LGPD at risk with org name
     admin
@@ -127,7 +127,7 @@ export async function GET(_req: NextRequest) {
       .not("status", "in", "(completed,failed)")
       .lt("due_at", cutoff5d)
       .order("due_at", { ascending: true })
-      .limit(20),
+      .order("id").limit(20),
 
     // Orçamentos de IA — UMA leitura serve o KPI e os alertas.
     //
@@ -150,7 +150,7 @@ export async function GET(_req: NextRequest) {
         organizations!inner(display_name)
       `)
       .gt("monthly_limit_cents", 0)
-      .limit(2000),
+      .order("id").limit(2000),
 
     // Tenant pending overflow: conversations pending count per org > 50
     // Use a raw query via rpc or aggregate in JS
@@ -158,7 +158,7 @@ export async function GET(_req: NextRequest) {
       .from("conversations")
       .select("organization_id, organizations!inner(display_name)")
       .eq("status", "pending")
-      .limit(2000),
+      .order("id").limit(2000),
   ]);
 
   const alerts: AlertItem[] = [];

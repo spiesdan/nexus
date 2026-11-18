@@ -123,7 +123,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     porContato.set(p.contact_id, lista);
   }
 
-  // Só os contatos com pedido, em lotes de 100 (o `.limit(10000)` antigo
+  // Só os contatos com pedido, em lotes de 100 (o `.order("id").limit(10000)` antigo
   // estourava o teto de 1000 do PostgREST e a maioria das linhas saía sem
   // nome; e lote de 500 com ~19KB de URL morre com `fetch failed` após 8s —
   // medido: IN(500) falha, IN(200) passa em ~130ms, IN(100) com margem).

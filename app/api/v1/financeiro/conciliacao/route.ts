@@ -40,19 +40,19 @@ export async function GET(_req: NextRequest): Promise<Response> {
       .eq("organization_id", orgId)
       .in("status", ["faturado", "expedido", "entregue"])
       .order("created_at", { ascending: false })
-      .limit(2000),
+      .order("id", { ascending: false }).limit(2000),
     supabase
       .from("financial_receivables")
       .select("id, order_id, invoice_id, contact_id, valor_original_cents, status")
       .eq("organization_id", orgId)
       .neq("status", "cancelado")
-      .limit(5000),
+      .order("id", { ascending: false }).limit(5000),
     supabase
       .from("invoices")
       .select("id, order_id, numero, total_cents, status")
       .eq("organization_id", orgId)
       .eq("status", "autorizada")
-      .limit(2000),
+      .order("id", { ascending: false }).limit(2000),
   ]);
   if (pedidosRes.error || recRes.error || notasRes.error) {
     return fail("internal_error", "Erro ao ler base da conciliação.", 500, { requestId });

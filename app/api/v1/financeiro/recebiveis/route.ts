@@ -129,7 +129,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       ? supabase.from("commercial_orders").select("id, numero, cliente_nome").eq("organization_id", orgId).in("id", idsPedidos)
       : Promise.resolve({ data: [] as unknown[], error: null }),
     idsRec.length > 0
-      ? supabase.from("financial_payments").select("receivable_id, valor_cents").eq("organization_id", orgId).in("receivable_id", idsRec).limit(5000)
+      ? supabase.from("financial_payments").select("receivable_id, valor_cents").eq("organization_id", orgId).in("receivable_id", idsRec).order("id").limit(5000)
       : Promise.resolve({ data: [] as unknown[], error: null }),
   ]);
   if (contatos.error || pedidos.error || pagamentos.error) {

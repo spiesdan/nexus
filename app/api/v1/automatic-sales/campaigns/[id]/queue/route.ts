@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, { params }: Params): Promise<Respons
     .eq("organization_id", authz.org.orgId)
     .eq("campaign_id", id)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .order("id", { ascending: false }).limit(500);
   if (status !== null) q = q.eq("status", status);
 
   const { data, error } = await q;

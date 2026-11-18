@@ -41,7 +41,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .select("id, product_id, tipo, quantidade, origem, observacao, created_by, created_at")
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
-    .limit(500);
+    .order("id", { ascending: false }).limit(500);
   if (productId) q = q.eq("product_id", productId);
   if (tipo !== "" && ["entrada", "saida", "ajuste"].includes(tipo)) q = q.eq("tipo", tipo);
   const { data, error } = await q;

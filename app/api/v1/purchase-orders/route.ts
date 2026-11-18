@@ -42,7 +42,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .select("id, numero, supplier_id, status, observacoes, created_at, updated_at")
     .eq("organization_id", authz.org.orgId)
     .order("numero", { ascending: false })
-    .limit(200);
+    .order("id", { ascending: false }).limit(200);
   if (status !== "" && ["rascunho", "enviado", "recebido", "cancelado"].includes(status)) {
     q = q.eq("status", status);
   }

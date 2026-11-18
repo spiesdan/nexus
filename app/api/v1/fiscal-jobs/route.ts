@@ -25,7 +25,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     .select("id, invoice_id, tipo, status, tentativas, max_tentativas, ultimo_erro, proxima_tentativa, created_at")
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .order("id", { ascending: false }).limit(200);
   if (abertas) q = q.in("status", ["pendente", "processando", "erro"]);
 
   const { data: jobs, error } = await q;

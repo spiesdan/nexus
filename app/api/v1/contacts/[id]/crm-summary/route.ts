@@ -99,14 +99,14 @@ export async function GET(
       .eq("contact_id", contactId)
       .eq("organization_id", org.orgId)
       .order("updated_at", { ascending: false })
-      .limit(3),
+      .order("id", { ascending: false }).limit(3),
     supabase
       .from("orders")
       .select(ORDER_COLS)
       .eq("contact_id", contactId)
       .eq("organization_id", org.orgId)
       .order("created_at", { ascending: false })
-      .limit(3),
+      .order("id", { ascending: false }).limit(3),
     // 12 e não 5. A janela de 5 foi dimensionada quando a timeline não recebia
     // troca de comando: agora um atendimento normal (assumiu → transferiu →
     // liberou → voltou ao automático) gasta QUATRO linhas sozinho, e com 5 o
@@ -118,7 +118,7 @@ export async function GET(
       .eq("contact_id", contactId)
       .eq("organization_id", org.orgId)
       .order("performed_at", { ascending: false })
-      .limit(12),
+      .order("id", { ascending: false }).limit(12),
     // Só as ABERTAS: demanda encerrada é histórico e já vive na timeline. Da
     // mais antiga para a mais nova — quem espera há mais tempo aparece primeiro,
     // mesma régua do Radar, para as duas telas não contarem histórias
@@ -130,7 +130,7 @@ export async function GET(
       .eq("organization_id", org.orgId)
       .is("fechada_em", null)
       .order("aberta_em", { ascending: true })
-      .limit(5),
+      .order("id").limit(5),
   ]);
 
   // A falha SOBE. Engolir aqui devolveria lista vazia ao cliente e recriaria,

@@ -44,7 +44,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams): Promise<R
     .select(COLS)
     .eq("conversation_id", id)
     .eq("organization_id", org.orgId)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id")
+    // Teto declarado (P1-06): uma conversa longa não pode devolver histórico
+    // inteiro numa resposta. Paginar é evolução de tela (Agente E).
+    .limit(200);
   if (error) return fail("internal_error", "Erro ao listar notas.", 500, { requestId });
   return ok(data ?? [], { requestId });
 }

@@ -44,7 +44,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .eq("shipment_id", id)
       .eq("organization_id", authz.org.orgId)
       .order("versao", { ascending: false })
-      .limit(20),
+      .order("id", { ascending: false }).limit(20),
   ]);
 
   const versaoAtiva = (versoes ?? []).find((v) => v.ativa) ?? null;

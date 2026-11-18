@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
     .eq("organization_id", authz.org.orgId)
     .order("posicao")
     .order("nome")
-    .limit(500);
+    .order("id").limit(500);
 
   if (error) return fail("internal_error", "Erro ao listar as categorias.", 500, { requestId });
   return ok(data ?? [], { requestId });
