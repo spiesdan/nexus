@@ -483,5 +483,10 @@ pelos unit do offline (41/41); a correção foi provada no aparelho com o replay
 O harness segue em `tests/e2e-mobile/` (stub para o caminho rápido, `README` com `adb
 reverse` e semente) e a build **debug** libera cleartext só para `10.0.2.2`/`localhost`.
 
-**Ainda não provado:** troca do token em SQLite por Keystore/Keychain (plugin nativo) e a
-prova visual da B-5 (a tela de dispositivos foi exercitada pela rota, não por Playwright).
+**B-5 com prova visual (18/11/2026):** `/app/settings/devices` aberta por Playwright com sessão
+real (login + MFA de fixture) na instalação local: formulário (nome, vendedor, validade), tabela
+com prefixo `nod_…`, “visto por último”, prazo e estado **desconectado** do aparelho revogado no
+teste. Evidência: `docs/auditoria/evidencias/mobile-b5-2026-11-18/40-tela-dispositivos.png`.
+(Fotos em tema escuro, 1360×900; a página também foi exercitada pela rota na prova B-7.)
+
+**Ainda não provado:** troca do token em SQLite por Keystore/Keychain (plugin nativo).
