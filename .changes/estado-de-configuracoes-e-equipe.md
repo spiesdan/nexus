@@ -12,9 +12,9 @@ titulo: Erro de configuração diz qual campo; convite vencido tem estado própr
   quem é viewer/agent vê uma frase explicando, em vez de um erro de carregamento
   (403) na lista. A aba Atendimento continua com a mensagem de permissão que já
   existia.
-- **Convite vencido** deixa de parecer “Pendente”: a tabela distingue **Aceito /
-  Pendente / Expirado** usando a mesma janela de 24h do token, sem inventar um
-  segundo prazo.
+- **Convite vencido** deixa de parecer “Pendente”: a tabela distingue
+  **Aceito, Pendente e Expirado** usando a mesma janela de 24h do token, sem
+  inventar um segundo prazo.
 - **Detalhe LGPD** com erro de leitura ganha “Tentar novamente”, em vez de uma
   faixa vermelha sem saída.
 
