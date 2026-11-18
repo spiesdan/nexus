@@ -1,0 +1,48 @@
+F-32/D9 — backup e restore de uploads (docker real)
+quando:  2026-11-18T06:41:53Z
+commit:  5c9a59a6
+imagem:  alpine:3.20 (tar/sh) · Docker 29.8.2
+
+── 1. Projeto descartável e superfícies ─────────────────────────────────────────
+  ✓ bind com 3 fotos (1 em subdiretório) e volume com 2 arquivos
+product-images	bind	/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T//prova-uploads.dxXpBw/prova-uploads/fotos
+waha-media	volume	prova-uploads_waha-media
+  ✓ lista traz product-images
+  ✓ lista traz waha-media
+
+── 2. Backup ─────────────────────────────────────────
+✓ product-images: 4.0K → uploads-product-images-20261118-034153.tgz
+✓ waha-media: 4.0K → uploads-waha-media-20261118-034153.tgz
+  ✓ arquivo das fotos existe
+  ✓ arquivo da mídia existe
+  ✓ fotos: subdiretório entrou no tar
+  ✓ mídia: subdiretório entrou no tar
+
+── 3. Perda simulada ─────────────────────────────────────────
+  ✓ bind esvaziado; volume esvaziado
+
+── 4. Restore e conferência de CONTEÚDO ─────────────────────────────────────────
+
+▶ Restaurando product-images → bind /var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T//prova-uploads.dxXpBw/prova-uploads/fotos
+✓ product-images restaurado
+
+▶ Restaurando waha-media → volume prova-uploads_waha-media
+✓ waha-media restaurado
+  ✓ fotos restauradas: 3 arquivos
+  ✓ conteúdo da foto confere (foto-1)
+  ✓ conteúdo do subdiretório confere (foto-3)
+  ✓ mídia restaurada: 2 arquivos (/data/sub/y.ogg /data/x.ogg )
+  ✓ conteúdo da mídia confere (audio-1)
+
+── 5. Recusa de sobrescrita ─────────────────────────────────────────
+  ✓ destino com conteúdo recusa sem --substituir
+  ✓ e não apagou o arquivo que já estava lá
+
+── Veredito ─────────────────────────────────────────
+PASSOU — backup e restore preservaram conteúdo no bind e no volume, e a sobrescrita é explícita.
+
+O que esta prova NÃO cobre:
+  · Storage no Supabase Cloud (bucket é do provedor; cópia exige API do Storage)
+  · certificado A1 (excluído por decisão: credencial em claro)
+
+evidência: docs/auditoria/evidencias/f32/prova-20261118-034153.txt

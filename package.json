@@ -32,7 +32,7 @@
     "test:unit": "vitest run",
     "audit:run": "tsx --env-file=.env --env-file=.env.local scripts/auditoria/audit-run.ts",
     "test:db": "bash scripts/test-db.sh",
-    "test:shell": "bash tests/shell/update-guard.test.sh && bash tests/shell/dono-do-projeto.test.sh && bash tests/shell/scheduler-entrypoint.test.sh && bash tests/shell/deploy-build-local.test.sh && bash tests/shell/instalar-chromium.test.sh && bash tests/shell/deploy-aplica-schema.test.sh && bash hostgator-setup-kit/test-validators.sh",
+    "test:shell": "bash tests/shell/update-guard.test.sh && bash tests/shell/dono-do-projeto.test.sh && bash tests/shell/scheduler-entrypoint.test.sh && bash tests/shell/deploy-build-local.test.sh && bash tests/shell/instalar-chromium.test.sh && bash tests/shell/deploy-aplica-schema.test.sh && bash tests/shell/backup-uploads.test.sh && bash hostgator-setup-kit/test-validators.sh",
     "test:invariants": "bash scripts/test-db.sh",
     "lint:channels": "tsx scripts/lint-channels.ts",
     "lint:role-rank": "tsx scripts/lint-role-rank.ts",

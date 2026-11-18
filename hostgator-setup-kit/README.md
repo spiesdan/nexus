@@ -125,8 +125,9 @@ declare `REVERSE_PROXY=traefik` no `.env` — aí a escolha é sua e ele segue s
 |---|---|
 | `install.sh` | Instala tudo (idempotente) |
 | `update.sh` | Atualiza pra versão nova |
-| `backup.sh` | Backup do banco + sessões WhatsApp |
-| `restore.sh` | Restaura um backup |
+| `backup.sh` | Backup do banco + sessões WhatsApp + uploads (fotos, mídia, Storage próprio) |
+| `backup-uploads.sh` | Lista/backup/restore das superfícies de upload (usado pelos dois acima) |
+| `restore.sh` | Restaura um backup (banco e, com `--uploads`, os arquivos) |
 | `reset-password.sh` | Redefine senha de um usuário |
 | `reset-mfa.sh` | Remove o MFA de um usuário travado |
 | `healthcheck.sh` | Diagnóstico dos serviços |

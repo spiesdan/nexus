@@ -110,18 +110,43 @@ Grava em `backups/`:
 |---|---|---|
 | `db-<ts>.sql.gz` | `pg_dump` pela conexão de **schema** | recusa dump < 4 KiB (arquivo vazio) |
 | `waha-<ts>.tgz` | volume `waha-data` (sessões do WhatsApp) | — |
+| `uploads-product-images-<ts>.tgz` | fotos de produto em disco (bind do compose) | `.tgz` validado com `gzip -t` + `tar -tzf`; permissão `600` |
+| `uploads-waha-media-<ts>.tgz` | mídia do WhatsApp (volume `waha-media`) | idem |
+| `uploads-storage-<ts>.tgz` | buckets de um **Supabase próprio** (volume do `supabase/storage-api`) | idem |
 
 Rotação: mantém os **14 mais recentes** de cada tipo.
 
-**O que NÃO entra:** uploads do storage (avatares, fotos de produto, mídia de
-conversa). Isso é lacuna declarada de F-32 (ver `docs/auditoria/25-ensaio-de-restauracao.md`)
-e exige decisão de operação (qual caminho é a fonte por tipo de instalação).
+**Desde 18/11/2026 os uploads entram** (F-32/D9): antes, um restore "completo"
+devolvia linhas apontando para imagens que não existiam mais — a tela mostrava
+imagem quebrada sem erro no log. A lista de superfícies é uma só
+(`uploads_do_projeto`, em `_common.sh`), usada pelo backup **e** pelo restore.
+
+Decisões de operação, escritas porque são decisão:
+
+- **Supabase Cloud:** os buckets são do provedor. O backup avisa e não inventa
+  cópia — copiar bucket em Cloud exige a API do Storage com service role, não um
+  `tar` de volume. Se a instalação é Cloud, o backup de arquivo é
+  responsabilidade do plano contratado.
+- **Certificado A1 (`/srv/fiscal/certs`) NÃO entra:** é credencial. Um `.tgz` no
+  diretório de backups a guardaria em claro. Backup de certificado se faz
+  cifrado, fora deste fluxo.
+- **Superfície que falha derruba o backup (`exit 1`).** Backup parcial que se
+  apresenta como completo é pior que backup nenhum — a mesma regra do piso de
+  4 KiB do dump.
 
 ## 6. Restauração
 
 ```bash
-bash hostgator-setup-kit/restore.sh backups/db-<ts>.sql.gz
+bash hostgator-setup-kit/restore.sh backups/db-<ts>.sql.gz \
+     --uploads backups/uploads-product-images-<ts>.tgz
 ```
+
+Os uploads são **explícitos** (`--uploads`), e não automáticos: varrer o
+diretório atrás do `uploads-*` mais recente escolheria pelo nome, que pode ser de
+outra instalação. O restore dos arquivos **recusa destino com conteúdo** a menos
+que se acrescente `--substituir` — um backup de ontem aplicado sobre um volume
+que já recebeu mídia de hoje sobrescreveria arquivo NOVO com arquivo velho. Na
+recuperação de desastre (volume vazio) o restore funciona sem flag.
 
 Pede digitar `RESTAURAR`, restaura com `psql_run` (mesmo motivo do dump: dentro
 do container do banco) e, **desde 17/11/2026**, confere
@@ -157,7 +182,9 @@ escrito pelos testes (`pnpm test:shell` cobre isso).
 
 ## 9. O que este runbook não cobre (e está declarado)
 
-- **storage/uploads** no backup e o restore deles (F-32, decisão de operação);
+- **Storage no Supabase Cloud**: cópia de bucket é do provedor (API do Storage
+  com service role), não deste backup;
+- **certificado A1 no backup**: excluído por decisão (credencial em claro);
 - **restore → health com app real** (o ensaio mede o banco; o health do app é
   o passo 4, executado depois);
 - **rollback de schema** (migration reversível): o baseline é idempotente e

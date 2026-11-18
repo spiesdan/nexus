@@ -1028,3 +1028,83 @@ ensure_encryption_key() {
     && c_grn "✓ chave de cifra ativa no banco (segredos de webhook são guardados cifrados)" \
     || c_ylw "⚠ não consegui semear a chave de cifra no banco — segredos de webhook não poderão ser salvos até rodar update.sh de novo."
 }
+
+# ── Superfícies de UPLOAD (F-32/D9) ─────────────────────────────────────────
+#
+# O dump do banco não leva arquivo. As fotos de produto gravadas em DISCO, a
+# mídia do WhatsApp (volume `waha-media`) e os buckets do Storage de um Supabase
+# PRÓPRIO vivem fora do banco — perder o volume é perder o arquivo que a linha
+# do banco aponta, e a tela passa a mostrar imagem quebrada sem erro no log.
+#
+# O que esta função devolve é a lista canônica de superfícies, uma por linha:
+#
+#     <rótulo>\t<tipo>\t<fonte>
+#
+#   - `tipo=bind`   → `<fonte>` é um diretório do HOST (bind mount do compose);
+#   - `tipo=volume` → `<fonte>` é um volume Docker.
+#
+# Ela é a fonte única do backup E do restore: o restore descobre o destino pelo
+# RÓTULO do arquivo, então inventar um rótulo novo no backup sem acrescentá-lo
+# aqui faz o restore recusar em vez de gravar no lugar errado.
+#
+# O que NÃO entra, de propósito:
+#   - certificado A1 (`/srv/fiscal/certs`): é CREDENCIAL, e um `.tgz` no
+#     diretório de backups a guardaria em claro. Backup de certificado se faz
+#     cifrado, fora deste fluxo — ver docs/runbooks/operacao.md.
+#   - Storage no Supabase Cloud: o bucket é do provedor; copiá-lo exige a API
+#     do Storage e credencial de service role, não um `tar` de volume. Fica
+#     declarado no output do backup.
+uploads_do_projeto() {
+  local proj dir vol container
+  proj="$(nome_do_projeto_atual)"
+
+  # 1. Fotos de produto em DISCO (bind mount). O caminho vem do compose —
+  # duplicar o literal aqui faria os dois divergirem sem ninguém ver.
+  dir="$(dir_de_fotos_do_compose || true)"
+  if [ -n "$dir" ]; then
+    printf 'product-images\tbind\t%s\n' "$dir"
+  fi
+
+  # 2. Mídia do WhatsApp: volume nomeado do serviço `waha`.
+  vol="${proj}_waha-media"
+  if docker volume inspect "$vol" >/dev/null 2>&1; then
+    printf 'waha-media\tvolume\t%s\n' "$vol"
+  fi
+
+  # 3. Storage de um Supabase PRÓPRIO: o volume do container que roda
+  # `supabase/storage-api`. Descoberto pela imagem, não pelo nome do container
+  # — o stack self-host batiza os containers de formas diferentes.
+  container="$(docker ps --filter 'ancestor=supabase/storage-api' --format '{{.Names}}' 2>/dev/null | head -1 || true)"
+  if [ -n "$container" ]; then
+    while IFS= read -r vol; do
+      [ -n "$vol" ] && printf 'storage\tvolume\t%s\n' "$vol"
+    done < <(docker inspect -f '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{"\n"}}{{end}}{{end}}' "$container" 2>/dev/null | sort -u)
+  fi
+}
+
+# Um arquivo de backup de uploads: `uploads-<rótulo>-<AAAAMMDD-HHMMSS>.tgz`.
+# O rótulo pode conter hífen (product-images), então a âncora é o timestamp.
+rotulo_do_arquivo_de_uploads() {  # rotulo_do_arquivo_de_uploads <caminho>
+  local base
+  base="$(basename "$1")"
+  printf '%s' "$base" | sed -nE 's/^uploads-(.+)-[0-9]{8}-[0-9]{6}\.tgz$/\1/p'
+}
+
+# Verdadeiro quando o destino já tem conteúdo. `bind` olha o diretório; `volume`
+# entra num container só para listar (o host pode não ter acesso ao caminho
+# interno do volume).
+destino_tem_conteudo() {  # destino_tem_conteudo <tipo> <fonte>
+  local tipo="$1" fonte="$2"
+  case "$tipo" in
+    bind)
+      [ -d "$fonte" ] && [ -n "$(ls -A "$fonte" 2>/dev/null)" ]
+      ;;
+    volume)
+      local achou
+      achou="$(docker run --rm -v "$fonte:/data:ro" alpine:3.20 \
+        sh -c 'ls -A /data 2>/dev/null | head -1' 2>/dev/null || true)"
+      [ -n "$achou" ]
+      ;;
+    *) return 2 ;;
+  esac
+}
