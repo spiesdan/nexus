@@ -1,0 +1,195 @@
+{
+  "medido_em": "2026-11-18T11:52:21.385Z",
+  "pisos": {
+    "par": 0.075,
+    "simulado": 0.06,
+    "accent": 0.06,
+    "grafico": 3,
+    "iniciais": 4.5
+  },
+  "medidas": [
+    {
+      "tema": "claro",
+      "parMaisProximo": {
+        "a": "turquesa",
+        "b": "azul",
+        "deltaE": 0.079
+      },
+      "simuladoMaisProximo": {
+        "a": "violeta",
+        "b": "framboesa",
+        "deltaE": 0.068
+      },
+      "trilhaMaisProximaDoAccent": {
+        "nome": "índigo",
+        "deltaE": 0.148
+      },
+      "trilhas": [
+        {
+          "trilha": 1,
+          "nome": "telha",
+          "hex": "#974034",
+          "matiz": 30,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 6.78,
+          "iniciais": 6.78
+        },
+        {
+          "trilha": 2,
+          "nome": "âmbar",
+          "hex": "#ba7e2c",
+          "matiz": 70.4,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 3.44,
+          "iniciais": 5.07
+        },
+        {
+          "trilha": 3,
+          "nome": "oliva",
+          "hex": "#7f7000",
+          "matiz": 100,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 4.98,
+          "iniciais": 4.98
+        },
+        {
+          "trilha": 4,
+          "nome": "turquesa",
+          "hex": "#00918b",
+          "matiz": 189.6,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 3.87,
+          "iniciais": 4.5
+        },
+        {
+          "trilha": 5,
+          "nome": "azul",
+          "hex": "#3c99ba",
+          "matiz": 225.2,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 3.25,
+          "iniciais": 5.36
+        },
+        {
+          "trilha": 6,
+          "nome": "índigo",
+          "hex": "#316caa",
+          "matiz": 251.9,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 5.45,
+          "iniciais": 5.45
+        },
+        {
+          "trilha": 7,
+          "nome": "violeta",
+          "hex": "#613f84",
+          "matiz": 304.9,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 8.23,
+          "iniciais": 8.23
+        },
+        {
+          "trilha": 8,
+          "nome": "framboesa",
+          "hex": "#914a7b",
+          "matiz": 340.2,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 6.05,
+          "iniciais": 6.05
+        }
+      ]
+    },
+    {
+      "tema": "escuro",
+      "parMaisProximo": {
+        "a": "turquesa",
+        "b": "azul",
+        "deltaE": 0.082
+      },
+      "simuladoMaisProximo": {
+        "a": "violeta",
+        "b": "framboesa",
+        "deltaE": 0.065
+      },
+      "trilhaMaisProximaDoAccent": {
+        "nome": "violeta",
+        "deltaE": 0.065
+      },
+      "trilhas": [
+        {
+          "trilha": 1,
+          "nome": "telha",
+          "hex": "#c96d5f",
+          "matiz": 29.8,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 4.74,
+          "iniciais": 5.08
+        },
+        {
+          "trilha": 2,
+          "nome": "âmbar",
+          "hex": "#e2a356",
+          "matiz": 69.8,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 7.8,
+          "iniciais": 8.35
+        },
+        {
+          "trilha": 3,
+          "nome": "oliva",
+          "hex": "#daca68",
+          "matiz": 100.2,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 10.25,
+          "iniciais": 10.98
+        },
+        {
+          "trilha": 4,
+          "nome": "turquesa",
+          "hex": "#16aaa3",
+          "matiz": 189.5,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 5.93,
+          "iniciais": 6.36
+        },
+        {
+          "trilha": 5,
+          "nome": "azul",
+          "hex": "#3492b3",
+          "matiz": 225.4,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 4.79,
+          "iniciais": 5.14
+        },
+        {
+          "trilha": 6,
+          "nome": "índigo",
+          "hex": "#84beff",
+          "matiz": 252,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 8.76,
+          "iniciais": 9.38
+        },
+        {
+          "trilha": 7,
+          "nome": "violeta",
+          "hex": "#b390dc",
+          "matiz": 304.8,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 6.44,
+          "iniciais": 6.9
+        },
+        {
+          "trilha": 8,
+          "nome": "framboesa",
+          "hex": "#eb9cd1",
+          "matiz": 339.8,
+          "matizNaJanela": true,
+          "graficoSobreSuperficie": 8.28,
+          "iniciais": 8.88
+        }
+      ]
+    }
+  ],
+  "violacoes": []
+}
