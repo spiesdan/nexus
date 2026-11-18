@@ -29265,14 +29265,14 @@ grant execute on function public.fn_sentinel_aplicar_mudanca(
 
 
 -- ============================================================================
--- 0317 — SENTINEL v1.1: plano revisável + divergência de estoque (ver migration).
+-- 0318 — SENTINEL v1.1: plano revisável + divergência de estoque (ver migration).
 -- ============================================================================
 
 alter table public.sentinel_occurrences
   add column if not exists recomendacao jsonb not null default '{}'::jsonb;
 
 comment on column public.sentinel_occurrences.recomendacao is
-  'Plano de correção revisável do Nível 1 (0317): passos, pendências, risco, reversibilidade e fonte. Vazio em ocorrências anteriores à v1.1. Nunca executado pela máquina.';
+  'Plano de correção revisável do Nível 1 (0318): passos, pendências, risco, reversibilidade e fonte. Vazio em ocorrências anteriores à v1.1. Nunca executado pela máquina.';
 
 -- ─── Divergência de estoque: razão desde a 0242, sem inventar abertura ─────
 --

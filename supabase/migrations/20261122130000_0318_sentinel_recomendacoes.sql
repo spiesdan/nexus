@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0317 — SENTINEL v1.1: plano revisável + as duas evidências que faltavam.
+-- 0318 — SENTINEL v1.1: plano revisável + as duas evidências que faltavam.
 --
 -- 1. `sentinel_occurrences.recomendacao`: o Nível 1 do Sentinel. Cada detector
 --    passa a produzir um plano (passos, pendências, risco, reversibilidade,
@@ -21,7 +21,7 @@ alter table public.sentinel_occurrences
   add column if not exists recomendacao jsonb not null default '{}'::jsonb;
 
 comment on column public.sentinel_occurrences.recomendacao is
-  'Plano de correção revisável do Nível 1 (0317): passos, pendências, risco, reversibilidade e fonte. Vazio em ocorrências anteriores à v1.1. Nunca executado pela máquina.';
+  'Plano de correção revisável do Nível 1 (0318): passos, pendências, risco, reversibilidade e fonte. Vazio em ocorrências anteriores à v1.1. Nunca executado pela máquina.';
 
 -- ─── Divergência de estoque: razão desde a 0242, sem inventar abertura ─────
 --
