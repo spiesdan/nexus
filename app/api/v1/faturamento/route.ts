@@ -60,8 +60,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { data: pedidos, error: erroPedidos } = await q;
   if (erroPedidos) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
   // Teto de 2.000: não corta em silêncio — o log diz que a janela pedida veio
-  // truncada. A tela ainda não mostra isso (paginação é o F-30).
-  if ((pedidos ?? []).length === 2000) {
+  // truncada e a tela recebe o sinal para dizer que os totais são de uma amostra.
+  const truncada = (pedidos ?? []).length === 2000;
+  if (truncada) {
     logger.warn("[faturamento] janela truncada em 2.000 pedidos", {
       organization_id: authz.org.orgId,
       de,
@@ -104,5 +105,5 @@ export async function GET(req: NextRequest): Promise<Response> {
     };
   });
 
-  return ok(linhas, { requestId });
+  return ok(linhas, { requestId, meta: { amostra_parcial: truncada, teto: 2000 } });
 }
