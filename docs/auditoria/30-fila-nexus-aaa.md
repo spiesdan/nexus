@@ -530,3 +530,36 @@ evidência é visual/estado, não reescrita de comportamento. Se um estado revel
 defeito real, vira item de fila com dono — não conserto silencioso no mesmo PR.
 A alternativa (P1-01, J6/J13/J14 por teste de rota) fica registrada como
 próxima, caso o D prefira jornada a módulo.
+
+## 19. Delegação — F no B-7 do mobile (a única prova que falta do offline)
+
+O #558 (filtro por cidade) entrou (`bafb3d40`) e o F está livre. Pelo **risco
+real**, o F pega a prova que ainda não existe: o **dreno aceito de verdade** e o
+**`401 token_revoked` com a fila intacta**, contra servidor, no emulador. Hoje só
+há a prova do lado da falha (stub) e a B-5 visual.
+
+### Ambiente (resolvido pelo dono, documentado para não se perder no restart)
+
+- emulador com **`-gpu off`** — o backend gráfico causava SIGSEGV (`139` =
+  gráfico; `137` = OOM);
+- app com o código do F em `http://10.0.2.2:3022` contra **Supabase local**
+  (`127.0.0.1:54321`), login fixture `e2e-admin@nexus.test` / `E2E!Test1234`;
+- kit do F em `.tmp-b7/`: `credencial.mjs`, `semear.sh`,
+  `parear/capturar/drenar/revogado.yaml`, `revogar.mjs`.
+
+### Regra dura
+
+**Nada aponta para produção** — só Supabase local. Se o emulador cair, o F avisa
+o dono (que sobe) e segue no que der para provar sem ele.
+
+### Aceite
+
+1. **Dreno aceito**: fila capturada no aparelho sobe e o servidor **aceita**
+   (200), com o item saindo da fila local e o pedido aparecendo no banco local.
+2. **Revogação**: com o token revogado, o dreno recebe **401 `token_revoked`** e a
+   **fila local permanece intacta** (nada perdido, nada duplicado ao reparear).
+3. **Repetição**: drenar duas vezes não duplica pedido (idempotência provada no
+   caminho real, não só no stub).
+4. Evidência: capturas/estado do banco local + o comando que reproduz.
+
+Fora de escopo: APK de release, iOS, produção.
