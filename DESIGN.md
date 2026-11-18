@@ -22,6 +22,7 @@ divergência fica escrita aqui com o número que a decidiu:
 | Lavanda `#918df6` no botão principal | **`--color-lavender` = `#918df6`** (papel decorativo: ícone, tag) e **`--color-accent` = `#7e77f0`** no claro / **`#a4a5ff`** no escuro (grau 600 e 400 da rampa, papel funcional) | `#918df6` dá **2,86:1** contra o branco e reprova o piso de componente (3:1). O grau 600 dá 3,63:1 e o texto sobre ele é Carbon (4,80:1); branco sobre o 600 daria 4,0:1 e reprovaria o piso de texto. No escuro o accent sobe para o 400, que é o degrau legível sobre `#151515` |
 | OpenRunde | **Inter** (`next/font`, `--font-inter`) | OpenRunde não existe no Google Fonts; Inter é a primeira alternativa listada pela própria referência |
 | Raios 6/10/14 (prompt AAA) | **4/8/12/16/24/pill** | escala do produto, aplicada em todo componente; trocá-la muda todo canto de uma vez — decisão do dono, registrada em `docs/auditoria/11-auditoria-visual.md` §3 |
+| Hairline `#e8e8e8` em tudo | **duas bordas**: divisória `--color-border` = `#e7e9ee` (1,21:1) e **campo** `--color-border-control` = `#848c98` no claro / `#747a82` no escuro (3,39 / 3,93:1) | WCAG 2.2 AA 1.4.11 pede 3:1 para a borda que IDENTIFICA o controle — a divisória não identifica nada. Continua **1px**: o "hairline" é a espessura, não a invisibilidade |
 
 ## Tokens — Colors
 

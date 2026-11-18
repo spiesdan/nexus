@@ -1848,7 +1848,7 @@ números que o prompt fixa (3.2 a 3.12).
 
 | Item do prompt | Exigência | Medido | Situação |
 | --- | --- | --- | --- |
-| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **127** · `[data-theme="light"]` **79** · `[data-theme="dark"]` **90**. Não são conjuntos iguais e não devem ser: o escuro sobrescreve 90 chaves, e o espelho claro redeclara exatamente essas 90 **menos as 11 da rampa accent** (79) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
+| 3.2 / 3.3 tokens claro e escuro | os dois temas com o mesmo conjunto | `:root` **129** · `[data-theme="light"]` **81** · `[data-theme="dark"]` **92** (18/11: +2 com `--color-border-control`). Não são conjuntos iguais e não devem ser: o escuro sobrescreve 92 chaves, e o espelho claro redeclara exatamente essas 92 **menos as 11 da rampa accent** (81) — a igualdade é cobrada por `tests/unit/branding-tema-claro-escopavel.test.ts` | **ok, com medição corrigida** (ver V-53) |
 | 3.7 tipografia própria | fonte do produto, não do sistema | `--font-sans`/`--font-mono` começam em `var(--font-inter)`/`var(--font-mono)` (next/font) | **ok** |
 | 3.8 escala tipográfica | curta | 12, 13, 14, 16, 18, 20, 24, 36, 48, 60 px em `DESIGN.md` | **ok** |
 | 3.9 espaçamento base 4 | múltiplos de 4 | `--space-*`: **0, 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96, 128** | **ok** |
@@ -2323,7 +2323,7 @@ dívida está declarada aqui em vez de silenciada.
 se distinga do fundo passa a reprovar — 18/26 pares viraram 22/32, e o número que sobe é papel
 novo entrando na conta.
 
-### V-55 · Média · A borda do campo de formulário tem 1,21:1 — **DECISÃO PENDENTE**
+### V-55 · Média · A borda do campo de formulário tem 1,21:1 — **CORRIGIDO (decisão do dono, 18/11)**
 
 WCAG 2.2 **1.4.11 (contraste de conteúdo não textual, AA)** pede **3:1** para a informação
 visual que identifica um componente de interface. Medido nos três primitivos
@@ -2339,11 +2339,26 @@ Ou seja: um campo em repouso é identificado por uma hairline de 1,2:1. `border-
 não chega lá. Para passar, a borda do CONTROLE precisa de um tom próprio — em torno de `#8a8a8a`
 no claro (3,22:1 sobre o fundo do campo) e `#7a7a7a` no escuro.
 
-**Por que não foi corrigido nesta rodada:** o `DESIGN.md` declara a identidade como "hairline
-borders, subtle surface tinting, minimal elevation" (referência Visitors). Trocar a borda de
-todo campo de 1,2:1 para 3:1 não é ajuste de token escondido — é mudança visível em **todo**
-formulário do produto, e a escolha entre identidade e 1.4.11 é do dono. A correção está pronta e
-é pequena (token `--color-border-control` por tema + a classe nos três primitivos), se aprovada.
+**O dono decidiu (18/11/2026): corrigir, mantendo 1px.** "1,21:1 não é hairline sutil, é borda
+invisível" — e o hairline do `DESIGN.md` é a ESPESSURA, não a invisibilidade. A correção separa
+dois papéis que estavam no mesmo token:
+
+| Token | Claro | Escuro | Papel |
+| --- | --- | --- | --- |
+| `--color-border` | `#e7e9ee` (1,21:1) | `#313131` (1,31:1) | **divisória** entre blocos — não identifica controle, não precisa passar 1.4.11 |
+| `--color-border-control` **(novo)** | `#848c98` — **3,39** / 3,17 / 3,25 | `#747a82` — **3,93** / 4,22 / 3,49 | **borda de campo**, o que a 1.4.11 cobra |
+
+A hierarquia dos estados continua crescendo, como o dono pediu: repouso ~3,4 → hover
+`accent-600` (3,63 claro / 4,69 escuro) → foco `accent-ink` (**5,56 / 7,63**) + anel de 2px.
+
+Aplicado em um lugar só para os ~20 campos que usam o primitivo (`Input`, `Textarea`, `Select`
+via o alias `--input`, que passou a apontar para o token novo) e nos 7 campos escritos à mão
+(agenda, cadastro de horários, busca global). O valor é **literal**, não vem da rampa: a função
+dele é ser legível, e a marca do revendedor não deve poder torná-lo invisível.
+
+Gate: `tests/unit/borda-de-campo-passa-3-para-1.test.ts` — mede o token nos dois temas, exige que
+foco > hover > repouso e **vigia a divisória para continuar abaixo de 3:1** (se alguém "consertar"
+a divisória também, a hierarquia visual do produto muda sem ninguém pedir).
 
 **O que já está certo:** o indicador de foco do campo usa accent-600 e passa o piso de 3:1 nos
 dois temas; o estado de erro usa `border-error`; e os alvos de toque dos botões têm 44 px abaixo
