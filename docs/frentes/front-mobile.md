@@ -110,6 +110,13 @@ O botão "Enviar agora" existia no HTML do shell e não fazia nada ao ser tocado
 defeito do F-MOB-1 em escala menor (peça visível sem ligação). Agora explica cada estado
 (sem fila, com recusado, sem sinal) ou abre o sistema, que é quem drena.
 
+### F-MOB-10 `[x]` — PR que muda `android/**` não compilava o APK
+
+O `paths:` do `apk.yml` listava `mobile/**`, `lib/offline/**` e `capacitor.config.ts`. Uma
+edição no `AndroidManifest.xml` (permissão, backup, deep link) passava em PR **sem nunca
+ser compilada** — o único artefato que o vendedor instala ficava com o manifest antigo.
+Incluídos `android/**`, `tests/e2e/mobile-*.spec.ts` e `playwright.mobile.config.ts`.
+
 ### F-MOB-9 `[x]` — 200 sem lista apagava o catálogo do aparelho
 
 `baixarProdutos`/`baixarContatos`/`baixarTabelas` liam `corpo.data ?? []`. Uma resposta 200
