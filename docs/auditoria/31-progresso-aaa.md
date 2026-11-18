@@ -115,3 +115,29 @@ git diff nexus/main...HEAD -> 4 arquivos, +48/-0 (sem remoção de 0312)
 - O `test:db` local do #484 rodou antes do rebase em `470aac4e`; o job `invariants` do CI prova o commit rebaseado.
 - A duplicata fiscal histórica (se existir) **não** é apagada por #484 — a trava fecha as novas; o Sentinel é quem detecta as antigas.
 - F-17 prova **leitura** cross-tenant; escrita continua coberta pelos testes de policy/rota de cada módulo.
+
+## Rodada 3 — 18/11/2026 (decisões + frentes)
+
+### Decisões do dono executadas
+
+| Decisão | Entrega | Estado |
+|---|---|---|
+| **D-01/D-02** nome de campanha | #498: gerador puro (1/2–4/5+, dedupe case-insensitive, pt-BR, teto 80 em palavra), `nome_manual` (0318), wizard com "Voltar ao nome automático", API/persistência | PR |
+| **D-03** idempotência fiscal | #499: reivindicação forte, replay com `Idempotency-Replayed`, 409 de payload, 0317 (`request_hash` text) | PR |
+
+### Frentes novas (worktrees isolados)
+
+| Frente | Branch | Escopo | Não toca |
+|---|---|---|---|
+| E — módulos/jornadas | `front/modulos` | 5.4, 5.6, 5.8 (UI), 5.10/5.11 | tokens/design, schema/migrations |
+| F — mobile/offline | `front/mobile` | PWA/Capacitor, fila/retry/conflito | regra de negócio do servidor; promessa de dispositivo |
+| D — design | `front/design-tinta` | tokens, contraste, a11y, shell | lógica fiscal/financeira/autorização |
+| C — fiscal | `front/fiscal` | cancelamento×drain, importação, recuperação, conciliação | idempotência (helper do Coordenador) |
+| A — MCP/backup | `f17/papel-e-volume` | guarda no handler, backup/restore | schema sem coordenação |
+| G — Sentinel | `front/sentinel` | v1.1 recomendações | escrita fiscal/financeira |
+
+**Dono de schema:** Coordenador. Reservas: 0317 (D-03) e 0318 (D-01/D-02). D/E/F não criam migration; pedem com requisito e aceite.
+
+### #490
+
+O `verify` vermelho era instrumento: o teste `contato-audit-from-to` usava um fake de Supabase com `.eq` não encadeável, e o handler passou a filtrar `id` + `organization_id`. Fake corrigido, CI verde, **mergeado** (`ac0d5e12`).
