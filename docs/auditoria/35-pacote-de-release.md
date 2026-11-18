@@ -12,7 +12,7 @@
 
 | Estado | Valor | Como foi medido |
 |---|---|---|
-| Código | `nexus/main` @ `3b1ad7b8` | `git log --oneline -1 nexus/main` |
+| Código | `nexus/main` @ `9ede1d6b` | `git log --oneline -1 nexus/main` |
 | PR de release | **#537** — `release/1.56.0`, CI rodando, **não mergeado** | API de PRs do GitHub |
 | Release | última tag `v1.55.0`; **nenhuma tag nova** | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Deploy | **nenhum**; produção intocada por este programa | — |
@@ -58,7 +58,11 @@ mobile/offline de #514 estão no código, mas a ponte SQLite↔remoto no APK ain
 não existe (P1-04 `[!]`). Fragmento de capacidade nova ali prometeria algo que
 não chega ao aparelho; fica para quando a ponte entrar.
 
-## 4. Inventário de migrations 0313–0323
+## 4. Inventário de migrations 0313–0324
+
+> Recorte medido em `9ede1d6b`. A **fonte** é `supabase/migrations/MANIFEST.md`; esta
+tabela existe para o revisor do deploy ver o que muda de schema sem abrir 300
++ arquivos. Migration nova depois deste corte entra na tabela no próximo recorte.
 
 Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 `install.sh`/`update.sh`/`deploy.sh` aplicam — nunca a cadeia).
@@ -75,7 +79,8 @@ Todas são **apêndice idempotente** no `supabase/baseline.sql` (é o que
 | 0320 | `20261123130000_0320_search_path_dos_definer.sql` | `pg_temp` no `search_path` das definers | dirigido pelo catálogo | não |
 | 0321 | `20261123140000_0321_sentinel_recomendacoes.sql` | recomendações do Sentinel | `add column if not exists` | não |
 | 0322 | `20261123150000_0322_credencial_de_dispositivo_offline.sql` | `offline_devices` + policies | `create table if not exists` | não |
-| 0323 | `20261123160000_0323_telefone_fixo_e164.sql` (#439) | `create or replace fn_upsert_wa_contact` | `create or replace` | não — entrou antes do corte final |
+| 0323 | `20261123160000_0323_telefone_fixo_e164.sql` | `create or replace fn_upsert_wa_contact` | `create or replace` | não |
+| 0324 | `20261123170000_0324_sentinel_estoque_sem_movimento.sql` | detector do Sentinel | `create or replace` | não |
 
 Nenhuma migration destrutiva, nenhum `drop`. O caminho de update é o mesmo do
 install: o baseline inteiro, reaplicado.
@@ -124,7 +129,7 @@ Deploy (decisão humana separada; ver §6):
 |---|---|
 | Versão-alvo | `v1.56.0` (derivada; a tag só existe depois do merge do PR de release) |
 | Commit-alvo | o merge do PR de release na `main` (preencher no corte; não invente sha) |
-| Mudança de schema | **0313–0323** já na `main` (0322 = `offline_devices`, tabela nova) |
+| Mudança de schema | **0313–0324** já na `main` (0322 = `offline_devices`, tabela nova) |
 | Exige ação do operador | **não** (`update.sh` aplica o baseline) |
 | Janela sugerida | fora do horário de atendimento do WhatsApp da empresa — atualização reinicia a app |
 | Rollback (imagem) | voltar as **três** imagens no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` — o `update.sh` grava as três na mesma versão) e `up -d` com **os dois** `-f` |
