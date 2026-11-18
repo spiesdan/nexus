@@ -81,4 +81,4 @@ export function verifyInviteToken(token: string): InvitePayload | null {
   return payload;
 }
 
-export const INVITE_TTL_SECONDS = 60 * 60 * 24; // 24h
+export { INVITE_TTL_SECONDS } from "./invite-ttl";

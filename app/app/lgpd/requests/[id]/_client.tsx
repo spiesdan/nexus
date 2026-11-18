@@ -49,7 +49,7 @@ const STATUS_VARIANT: Record<
 export function LgpdRequestDetail({ id }: Props) {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const { data, isLoading, error } = useLgpdRequest(id);
+  const { data, isLoading, error, refetch } = useLgpdRequest(id);
 
   if (isLoading) {
     return (
@@ -65,8 +65,11 @@ export function LgpdRequestDetail({ id }: Props) {
 
   if (error || !data) {
     return (
-      <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-        {t("Falha ao carregar solicitação.")}
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <span>{t("Falha ao carregar solicitação.")}</span>
+        <Button size="sm" variant="outline" onClick={() => void refetch()}>
+          {t("Tentar novamente")}
+        </Button>
       </div>
     );
   }

@@ -270,3 +270,26 @@ describe("TeamMembersClient — estados de carga", () => {
     expect(screen.queryByRole("link", { name: "Convidar membros" })).toBeNull();
   });
 });
+
+describe("TeamMembersClient — estado do convite", () => {
+  it("convite de mais de 24h aparece como Expirado, não Pendente", async () => {
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (url === "/api/v1/channel-sessions") return { data: [] } as never;
+      return {
+        data: [
+          {
+            ...members()[0]!,
+            user_id: AGENT_ID,
+            accepted_at: null,
+            invited_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString(),
+            email: "velho@example.com",
+            full_name: "Convidado Antigo",
+          },
+        ],
+      } as never;
+    });
+    renderClient();
+    expect(await screen.findByText("Expirado")).toBeInTheDocument();
+    expect(screen.queryByText("Pendente")).not.toBeInTheDocument();
+  });
+});
