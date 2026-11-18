@@ -2561,3 +2561,52 @@ versão de agente e a galeria — declaram também.
 
 Gate: `tests/unit/tabela-cabecalho-declara-coluna.test.tsx` — renderiza o primitivo (coluna e
 linha) e varre todo `app/`/`components/` atrás de `<th>` sem `scope`.
+
+### V-64 · Alta · No tema claro, quem pintava a página era a camada de terceiro — **CORRIGIDO**
+
+Medido no navegador em 18/11/2026 (dev server, Playwright, `getComputedStyle`), com o tema claro
+forçado antes do primeiro paint:
+
+| | o produto diz (`globals.css`) | o navegador pintava |
+| --- | --- | --- |
+| fundo (`--color-bg`) | `#f6f7f9` | **`#f1f1f4`** |
+| divisória (`--color-border`) | `#e7e9ee` | **`#e4e4e9`** |
+| texto (`--color-text`) | `#181925` | **`#0d0d12`** |
+
+A causa é de cascata, não de token errado: `app/uimaxxing.css` (biblioteca vendorizada, importada
+no topo do `globals.css`) declara `:root[data-theme="light"]` — especificidade **(0,2,0)** — e ele
+VENCE o `[data-theme="light"]` **(0,1,0)** do produto. No escuro o empate de especificidade é
+resolvido pela ordem (o `globals.css` vem depois) e o produto ganhava; **no claro, não.**
+
+Somava-se a isso a regra `body { background: var(--color-bg); color: var(--color-fg) }`, sem layer:
+ela vence as utilities do Tailwind (que vivem em `@layer utilities`), inclusive o `bg-bg` que o
+`app/layout.tsx` aplica. Eram duas fontes para o mesmo pixel — e a que ganhava era a que ninguém
+audita.
+
+**Correção:** os quatro tokens duplicados (`bg`, `surface`, `border`, `border-strong`) saíram da
+camada de terceiro, e `--color-fg` passou a apontar para `var(--color-text)`. O resto da paleta
+própria dela (`stage`, `frame`, `well`, `sunk`, `raised`, `chip`, `hairline`, `fg-secondary`,
+`fg-muted`) fica — são tokens que só ela usa.
+
+Depois, medido de novo no navegador:
+
+| | escuro | claro |
+| --- | --- | --- |
+| fundo do `body` | `#151515` ✓ | `#f6f7f9` ✓ |
+| texto do `body` | `#f4f4f4` ✓ | `#181925` ✓ |
+| divisória | `#313131` ✓ | `#e7e9ee` ✓ |
+| borda de campo | `#747a82` ✓ | `#848c98` ✓ |
+
+**Contraste nas telas públicas, nos dois temas** (`contraste.mjs`, que agora mede os dois e aceita
+`--rotas`): `/login` 8 textos, `/signup` 9, `/403` 4, `/500` 3 — **0 de 24 abaixo de AA**, nos dois
+temas. Capturas em `capturas/{login,signup}_{dark,light}_{1440,390}.png`, com o JSON
+`capturas/captura-publica.json` (título, `h1`, overflow e contagem de textos por captura).
+
+O artefato `capturas/contraste.json` **passou a mesclar** execuções por `rota|tema` em vez de
+sobrescrever: uma rodada parcial de 4 rotas apagava as 8 anteriores — o defeito V-33, que já tinha
+sido corrigido no instrumento de captura e continuava neste.
+
+**O que não foi medido:** as telas autenticadas (`/app/**`). O Supabase local está parado nesta
+rodada, então elas redirecionam para `/login` — e medir o login oito vezes com oito nomes seria o
+tipo de número que parece cobertura e não é. As capturas saíram em `next dev`, então trazem os dois
+selos do Next (canto inferior): são indicadores de desenvolvimento, não do produto.

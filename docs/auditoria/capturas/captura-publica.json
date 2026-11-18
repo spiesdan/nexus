@@ -1,0 +1,102 @@
+{
+  "geradoEm": "2026-11-18T13:56:37.047Z",
+  "base": "http://localhost:3021",
+  "registros": [
+    {
+      "rota": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "login_dark_1440.png",
+      "titulo": "Entrar · NEXUS",
+      "h1": [
+        "Entrar"
+      ],
+      "overflowX": 0,
+      "textos": 10
+    },
+    {
+      "rota": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "login_dark_390.png",
+      "titulo": "Entrar · NEXUS",
+      "h1": [
+        "Entrar"
+      ],
+      "overflowX": 0,
+      "textos": 10
+    },
+    {
+      "rota": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "login_light_1440.png",
+      "titulo": "Entrar · NEXUS",
+      "h1": [
+        "Entrar"
+      ],
+      "overflowX": 0,
+      "textos": 10
+    },
+    {
+      "rota": "/login",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "login_light_390.png",
+      "titulo": "Entrar · NEXUS",
+      "h1": [
+        "Entrar"
+      ],
+      "overflowX": 0,
+      "textos": 10
+    },
+    {
+      "rota": "/signup",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "signup_dark_1440.png",
+      "titulo": "Criar conta · NEXUS",
+      "h1": [
+        "Criar conta"
+      ],
+      "overflowX": 0,
+      "textos": 11
+    },
+    {
+      "rota": "/signup",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "signup_dark_390.png",
+      "titulo": "Criar conta · NEXUS",
+      "h1": [
+        "Criar conta"
+      ],
+      "overflowX": 0,
+      "textos": 11
+    },
+    {
+      "rota": "/signup",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "signup_light_1440.png",
+      "titulo": "Criar conta · NEXUS",
+      "h1": [
+        "Criar conta"
+      ],
+      "overflowX": 0,
+      "textos": 11
+    },
+    {
+      "rota": "/signup",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "signup_light_390.png",
+      "titulo": "Criar conta · NEXUS",
+      "h1": [
+        "Criar conta"
+      ],
+      "overflowX": 0,
+      "textos": 11
+    }
+  ]
+}

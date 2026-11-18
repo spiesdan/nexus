@@ -1,39 +1,52 @@
 {
-  "geradoEm": "2026-11-17T03:53:01.995Z",
-  "base": "http://localhost:3011",
+  "geradoEm": "2026-11-18T13:58:08.276Z",
+  "base": "http://localhost:3021",
   "resultados": [
+    {
+      "rota": "/403",
+      "tema": "dark",
+      "medida": {
+        "medidos": 4,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/403",
+      "tema": "light",
+      "medida": {
+        "medidos": 4,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/500",
+      "tema": "dark",
+      "medida": {
+        "medidos": 3,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/500",
+      "tema": "light",
+      "medida": {
+        "medidos": 3,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
     {
       "rota": "/app",
       "medida": {
         "medidos": 150,
         "naoMedidosPorImagem": 27,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/app/pedidos",
-      "medida": {
-        "medidos": 94,
-        "naoMedidosPorImagem": 262,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/app/contacts",
-      "medida": {
-        "medidos": 122,
-        "naoMedidosPorImagem": 0,
-        "reprovados": 0,
-        "piores": []
-      }
-    },
-    {
-      "rota": "/app/kanban",
-      "medida": {
-        "medidos": 42,
-        "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
       }
@@ -48,9 +61,9 @@
       }
     },
     {
-      "rota": "/app/settings/tenant",
+      "rota": "/app/contacts",
       "medida": {
-        "medidos": 61,
+        "medidos": 122,
         "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
@@ -66,9 +79,67 @@
       }
     },
     {
+      "rota": "/app/kanban",
+      "medida": {
+        "medidos": 42,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/pedidos",
+      "medida": {
+        "medidos": 94,
+        "naoMedidosPorImagem": 262,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "medida": {
+        "medidos": 61,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
       "rota": "/login",
+      "tema": "dark",
       "medida": {
         "medidos": 8,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/login",
+      "tema": "light",
+      "medida": {
+        "medidos": 8,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/signup",
+      "tema": "dark",
+      "medida": {
+        "medidos": 9,
+        "naoMedidosPorImagem": 0,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/signup",
+      "tema": "light",
+      "medida": {
+        "medidos": 9,
         "naoMedidosPorImagem": 0,
         "reprovados": 0,
         "piores": []
