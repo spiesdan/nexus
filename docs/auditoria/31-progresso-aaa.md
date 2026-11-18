@@ -187,3 +187,55 @@ A fila P0 está **fechada em código**. O que resta são P1/P2/P3 nas frentes C/
 - **#471** (P1-9, `014ccef3`): flywheel não paga duas vezes pelo mesmo turno — `not exists` no lote + advisory lock por turno, com unlock no `finally` (o `release` do pool não fecha a conexão; lock esquecido ficaria preso).
 - **#498** segue mergeado (`5a499313`) e o conteúdo na main; não foi fechado.
 - P0 de código fechado; P1 avança em J6/fiscal/mobile; PRs antigos `dirty` serão triados com os donos.
+
+## Rodada 8 — 18/11/2026 (integração, triagem e pacote de release)
+
+### Regra de operação nova
+
+O dono fixou **2 workers + 1 coordenador** simultâneos (a máquina chegou a load
+153). Ativos: **D (design)** e **G (Sentinel)**. A, E, F e H ficam **pausados**
+com ponto de retomada escrito na fila (§0). O coordenador não abre trabalho novo
+nessas frentes — só integra o que já estava em PR.
+
+### Mergeado na `main`
+
+| PR | Commit | O que resolve |
+|---|---|---|
+| #515 | `099df0a7` | catálogo do estoque/compras deixa de esconder produto (P1-06) |
+| #519 | `850996a7` | admin: falha de leitura não vira "Nenhum…" nas 5 listas |
+| #517 | `22450d60` | J6/J13/J14 provadas em Vitest, sem navegador (P1-01) |
+| #522 | `232c5fbf` | ficha do Agente E fechada |
+| #455 | `532f3bc3` | dependabot: 48 updates minor/patch |
+| #163/#164/#166 | `94f575f3` | actions do `apk.yml` na versão atual |
+
+### Rebase + renumeração (não é merge ainda)
+
+- **#439** — telefone fixo → E.164. O PR criava a migration **0312**, que a main
+  já usa para a trilha de IA; renumerada para **0320** (`20261122150000`), com o
+  apêndice do baseline concatenado depois de 0319 (antes da varredura anon, porque
+  a migration **cria função**). Invariante próprio preservado.
+- **#476** (fontes locais), **#477** (MIT), **#457/#465/#472** (docs), **#468**
+  (baselines visuais): rebase sobre `014ccef3`+, descartando só o hunk do prompt
+  mestre antigo — o #478 substituiu aquele arquivo, então atualizar as tabelas
+  dele não tem alvo.
+
+### Triagem
+
+24 PRs avaliados; 3 fechados com motivo (#7, #168, #169), #307 bloqueado por
+decisão de marca, #518/#520/#521 esperam a retomada de A. Detalhe por PR em
+[`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
+
+### Pacote de release
+
+[`35-pacote-de-release.md`](35-pacote-de-release.md): **1.56.0** derivada por
+`pnpm release:conferir` (19 fragmentos, nenhum `exige_acao`), inventário de
+schema 0313–0320, checklist de corte e plano de deploy assinado. **Nenhuma tag,
+nenhuma imagem publicada por este programa, nenhum deploy.**
+
+### O que esta rodada não prova
+
+- O `test:db` não rodou nesta máquina nesta rodada (limite de recurso); a prova
+  de instalação/update do baseline com a **0320** é o job `invariants` do CI do
+  #439.
+- `e2e` continua cobrindo smoke em PR — os baselines visuais (#468) rodam local.
+- Nenhuma frente pausada avançou; pausa não é conclusão.

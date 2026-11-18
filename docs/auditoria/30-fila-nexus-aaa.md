@@ -13,28 +13,48 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida | `014ccef3` (base `nexus/main`; merges até #471) | `git log --oneline -1` |
+| Commit de partida (rodada 8) | `232c5fbf` (`nexus/main`; merges até #522) | `git log --oneline -1 nexus/main` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
-| Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags nexus` |
+| Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
+| Próxima release | **1.56.0** (derivada dos fragmentos, não digitada) — pacote em [`35-pacote-de-release.md`](35-pacote-de-release.md) | `pnpm release:conferir` |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
 | Runtime local | macOS (darwin), Node `v22.20.0`, pnpm `9.15.9`, Docker `29.8.2` | `node -v`, `pnpm -v`, `docker info` |
 | Gates | `pnpm gov:verify` = typecheck + lint + lint:channels + lint:role-rank + test:unit; `test:db` exige Docker; `test:e2e` exige app + banco | `package.json` |
 
 ### Frentes e donos
 
-| Frente | Worktree / branch | Dono | Escopo |
-|---|---|---|---|
-| Coordenação | `…/aaa-programa` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, D-01/D-02/D-03, arquitetura |
-| Banco e segurança | `…/aaa-front-db` · `f17/papel-e-volume` | Agente A | MCP/guarda no handler, backup/restore, F-17, service role |
-| Fiscal/financeiro | `…/aaa-front-fiscal` · `front/fiscal` | Agente C | cancelamento×drain, importação de entrada, recuperação de nota, conciliação |
-| Design system | `…/aaa-front-design` · `front/design-tinta` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio |
-| Módulos e jornadas | `…/aaa-front-modulos` · `front/modulos` | Agente E | 5.4 (inbox/campanhas), 5.6 (pedidos), 5.8 (fiscal/UI), 5.10/5.11 (config/admin) — **não** toca tokens/design nem schema/migrations |
-| Mobile/offline | `…/aaa-front-mobile` · `front/mobile` | Agente F | PWA/Capacitor/offline, fila/retry/conflito, estado de sincronização — **não** declara dispositivo não testado |
-| Sentinel | `…/aaa-front-sentinel` · `front/sentinel` | Agente G | Sentinel v1 (na main) e v1.1 (recomendações, sem escrita fiscal) |
+> **Regra de operação do dono (18/11/2026):** no máximo **2 workers + 1 coordenador**
+> simultâneos. A máquina chegou a load 153 e agentes morreram por falta de recurso.
+> **Ativos nesta rodada: D (design) e G (Sentinel).** A, E, F e H estão **pausados**
+> e voltam em rodízio — nenhum trabalho novo é aberto neles; o que está em PR
+> segue a triagem do §11.
+
+| Frente | Worktree / branch | Dono | Escopo | Estado |
+|---|---|---|---|---|
+| Coordenação | `…/opencode/aaa-programa-2` · `programa/nexus-aaa` | Coordenador | fila, integração, gates, D-01/D-02/D-03, pacote de release | ativo |
+| Banco e segurança | `…/aaa-front-db` · `rate/fallback-declarado` | Agente A | SECURITY DEFINER/`pg_temp`, rate limit P3-02, listas P1-06 | **pausado** (#518/#520/#521 aguardam retomada) |
+| Fiscal/financeiro | `…/aaa-front-fiscal` · `front/fiscal` | Agente C | cancelamento×drain, importação de entrada, recuperação de nota, conciliação | sem PR aberto; retomada quando houver vaga |
+| Design system | `…/aaa-front-shell` · `front/shell-2` | Agente D | tokens, contraste, a11y, shell, temas — **não** toca regra de negócio | **ativo** |
+| Módulos e jornadas | `…/aaa-front-modulos` · `front/modulos` | Agente E | 5.4 (inbox/campanhas), 5.6 (pedidos), 5.8 (fiscal/UI), 5.10/5.11 (config/admin) | **pausado** (#515/#519/#522 mergeados) |
+| Mobile/offline | `…/aaa-front-mobile` · `front/mobile` | Agente F | PWA/Capacitor/offline, fila/retry/conflito, estado de sincronização | **pausado** (P1-04 `[!]` por dispositivo) |
+| Sentinel | `…/opencode/aaa-front-sentinel` · `front/sentinel` | Agente G | Sentinel v1 (na main) e v1.1 (recomendações, sem escrita fiscal) | **ativo** |
+| Jornadas/DOD | `…/aaa-front-jornadas` · `front/jornadas` | Agente H | J6/J13/J14 e `34-prova-de-dod.md` | **pausado** (#517 mergeado: prova em Vitest) |
+
+**Ponto de retomada por frente pausada** (para não recomeçar do zero):
+
+- **A**: #518 (`hardening/definer-search-path`, migration **0320** no branch — precisa
+  renumerar para **0321** se #439 mergear primeiro) e #520/#521 têm `verify` vermelho
+  ou pendente; a saúde ficou dependente de `getUpstash()` no teste.
+- **E**: `front/modulos` está 2 commits à frente/7 atrás; #515/#519/#522 entraram por PR
+  próprios. O próximo lote é 5.11 (config/admin) — sem migration.
+- **F**: a ponte SQLite↔remoto no APK é a decisão aberta (opção B: credencial de
+  dispositivo + dreno pelo shell); depende de dispositivo.
+- **H**: #517 provou J6/J13/J14 em Vitest, sem navegador. A prova de dispositivo/E2E
+  de J14 (LGPD) continua `[~]`.
 
 ### Regras de não-duplicação e dono de schema
 
-- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`idempotency_keys.request_hash`), **0318** D-01/D-02 (`prospecting_campaigns.nome_manual`), **0319** C (claims de manifestação/cancelamento). Próxima livre: **0320**.
+- **Schema/migration**: dono é o **Coordenador** (ou quem ele nomear no item). Agentes D/E/F **não** criam migration nem alteram `baseline.sql`/`MANIFEST.md`; pedem ao Coordenador com requisito, tabela e aceite. Usadas: **0317** D-03 (`idempotency_keys.request_hash`), **0318** D-01/D-02 (`prospecting_campaigns.nome_manual`), **0319** C (claims de manifestação/cancelamento). **0320 reservada ao #439** (telefone fixo E.164, renumerada de 0312 no rebase); o branch do #518 ainda diz 0320 → **renumerar para 0321** na retomada. Próxima livre depois disso: **0322**.
 - **Tokens/design**: dono é **D**. Nenhuma outra frente altera `app/globals.css`, tokens, tipografia, shell ou componentes globais.
 - **Nome de campanha (D-01/D-02)**: dono é o **Coordenador**. E não edita `lib/prospeccao/nome-da-campanha.ts`, o wizard de campanha nem a API de campanhas.
 - **Idempotência fiscal (D-03)**: dona é a fatia do **Coordenador** em `lib/api/idempotencia.ts` + rotas `invoices`/`fiscal-inutilizacoes`. C atua em cancelamento/drain/importação; se precisar do mesmo contrato, importa o helper, não copia.
@@ -52,13 +72,13 @@ coordenador integra e roda os gates no código integrado.
 | Relato anterior | Estado no checkout | Evidência | Divergência registrada |
 |---|---|---|---|
 | **F-09** — cadeia de 292 migrations não reproduz o schema; `db push` perigoso | **Fechado por decisão (B)**: `baseline.sql` é o caminho canônico; cadeia é histórico morto; gate impede reintrodução | `docs/auditoria/20-f09-estrategia.md`; PR #451 mergeado em `7385b9ad`; `scripts/db/aplicar-schema.sh`; `tests/unit/db-migrate-nao-e-placeholder.test.ts`, `db-reset-aplica-baseline.test.ts` | O relato dizia "aberto". A decisão e o gate chegaram depois da auditoria (17–18/11). |
-| **F-17** — 73 tabelas tenant-aware sem prova comportamental | **Parcial**: 39 fechadas (PR #453), **34 restantes** em `DEBITO_CONHECIDO` | `tests/invariants/rls-completude-varredura.test.ts`; `tests/invariants/f17-tabelas-provadas.ts` | O relato dizia 73. A prova de 39 está em PR, não em `main` até o merge. |
-| **Service role** — "89 de 169 handlers" (AGENTS.md) | **244** handlers de `app/api/**` citam `createAdminClient`/`SUPABASE_SERVICE_ROLE`; **52** não citam `organization_id`/`orgId`; 14 exceções nomeadas no gate | `tests/unit/handlers-service-role-filtram-organizacao.test.ts`; `grep -rln createAdminClient app/api` | AGENTS.md está velho (169 handlers). O total do inventário é **418** handlers em `app/api`; a contagem real de service role é 244. |
-| **Idempotência financeira** | **Parcial**: recebimento em `financeiro/recebiveis/[id]/pagamentos` honra `Idempotency-Key`; recebível avulso tem PR #456 aberto; baixas usam unique + upsert | `lib/comercial/financeiro.ts`; `app/api/v1/financeiro/recebiveis/[id]/pagamentos/route.ts`; `app/api/v1/titulos/baixas/route.ts` | Não há prova de teto sob **concorrência** com chaves diferentes (ver P0-04). |
-| **Fiscal** | `#473` mergeado (nota autorizada marca pedido faturado); `#438` aberto (devolução/IE/`<entrega>`); achados F2–F7 da auditoria abertos | `git log`; `docs/auditoria/17-modulos-5.4-5.11.md`; `app/api/v1/invoices/route.ts` | Emissão não usa `Idempotency-Key` e a trava "um pedido, uma nota viva" é leitura seguida de insert (corrida possível — P0-05). |
-| **Mobile/offline** | Capacitor **Android** existe (`android/`, `mobile/`); **iOS ausente** por decisão; outbox de entregas parcial | `docs/auditoria/29-capacidades.md` (itens 23–24, 30); `docs/auditoria/08-mobile-offline.md` | J16 segue bloqueada por emulador/dispositivo; viewport de navegador não é prova de APK. |
-| **PRs** | Abertos no início: #478 (prompt mestre), #477, #476, #475, #472, #471, #468, #466, #465, #464, #457, #456, #453, #439, #438, #307, dependabot | `gh pr list` | #451 foi mergeado nesta rodada; #453 precisou de rebase (conflito de doc). |
-| **Releases** | Última tag `v1.55.0`; nenhuma `v2` | `git ls-remote --tags nexus` | Nenhum deploy foi executado por este programa. |
+| **F-17** — 73 tabelas tenant-aware sem prova comportamental | **Fechado**: débito **0**; 73 tabelas com prova nos 4 eixos (SELECT/UPDATE/DELETE/INSERT) | #453 + #482 (`93109bff`) + #486 (`2e95f74f`); `tests/invariants/rls-completude-varredura.test.ts` | O relato dizia 73 sem prova; hoje o débito é vazio e o gate reprova tabela nova sem prova. |
+| **Service role** — "89 de 169 handlers" (AGENTS.md) | **244** handlers citam `createAdminClient`/`SUPABASE_SERVICE_ROLE`; revisão dos 100 encadeamentos de maior risco feita, vazamento real corrigido | #483 → `dd515696`; `scripts/auditoria/inventario-service-role.mjs` | O número do AGENTS.md foi trocado pelo instrumento (#506); a revisão cobre os casos de dinheiro/PII, não os 244 individualmente. |
+| **Idempotência financeira** | **Fechado em código**: teto do recebível é trigger (0314); recebível avulso honra `Idempotency-Key` (#456); recebíveis da NF-e idempotentes (#508) | `7a498f9d`; `615de767`; `66b2dd1d` | — |
+| **Fiscal** | `#438` **mergeado** (devolução/IE/`<entrega>`); claims de manifestação/cancelamento (0319); recebíveis automáticos da NF-e; idempotência nas 4 rotas externas | `9c755b37`; `74875102`; `66b2dd1d`; `3141a483`/`97132fb8` | Achados F2–F7 que restam são de UX fiscal (ver P1-02). |
+| **Mobile/offline** | Capacitor **Android** existe; **iOS ausente** por decisão; sincronizador offline montado (#514), **ponte SQLite↔remoto ainda não existe** | `docs/auditoria/29-capacidades.md`; #514 (`13fefad3`) | A ponte é decisão aberta (opção B); viewport não é prova de APK. |
+| **PRs** | Triagem completa desta rodada no **§11**: 12 mergeados, 3 fechados com motivo, 2 aguardando CI, 3 bloqueados por decisão/frente pausada | API de PRs do GitHub (script local) | `gh` não está instalado nesta máquina; a triagem usou a API REST com o token do `hosts.yml` (nunca impresso). |
+| **Releases** | Última tag `v1.55.0`; **1.56.0 derivada** e empacotada, **não cortada** | `git ls-remote --tags --refs nexus`; `pnpm release:conferir` | Nenhum deploy foi executado por este programa. |
 
 ## 2. Estados
 
@@ -85,20 +105,21 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | E abriu #503 (reenvio de mensagem falha, J6); C fechou #494/#495/#497 e #496 (fiscal); J14 segue sem E2E | E / C / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
-| **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | C mergeou #494 (importação de entrada), #495 (recuperação de nota), #497 (relatório C1B) e #496 (cancelamento × drain); #438 (devolução/IE) segue aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
+| **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | #517 mergeado (`f96a6975`): J6/J13/J14 provadas em Vitest **sem navegador** (10 arquivos, +1.621); #503 fechou o reenvio de mensagem (J6) | H (pausado) / C | Ambiente E2E p/ prova de navegador | Falhas reproduzidas, corrigidas e reexecutadas; o que falta é a prova E2E, não a regra |
+| **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[x]` | #438 → `9c755b37` + guarda do sidecar (`2084e4e3`,`d94eaf2c`); teste de regressão por rejeição (176/442/904) | C | — | PR verde com teste de regressão; regra preservada; sem emissão real |
 | **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[x]` | #498 → `5a499313`: gerador + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
-| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | #514 mergeado: sincronizador montado, retomada de `enviando`, retry/backoff, anti-duplo-toque, backup APK sem PII; 58 unit + 7 e2e emulados | F | **Ponte SQLite shell↔remoto no APK** (decisão A/B/C) + dispositivo real | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
-| **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 mergeado (tema claro: 2,85:1 corrigido + gate); #468 aberto (snapshots); D segue em `front/design-tinta` | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
-| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); E/C: #503, #507, #508/#509/#510 e #512 (grade de notas declara o teto de 200) | A / E / C | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
+| **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | #514 mergeado (`13fefad3`): sincronizador montado, retomada de `enviando`, retry/backoff, anti-duplo-toque, backup APK sem PII; 58 unit + 7 e2e emulados | F (pausado) | **Ponte SQLite shell↔remoto no APK** (decisão A/B/C) + dispositivo real | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
+| **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 + #516 → `99958a18` (accent como tinta nos dois temas); snapshots visuais em PR (#468, baselines macOS); D ativo em `front/shell-2` | D | Runner fixo p/ snapshots no CI | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
+| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); #507/#510/#512/#515 (teto declarado em fiscal, faturamento, notas, estoque/compras); P1-06 de listas/tie-breaker em #521 (CI) | A / E / C | #521 verde + retomada de A | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
 | **P1-07** | Rate limit em MFA e recuperação de conta | `[x]` | #466 mergeado (`f56c0228`): teto em `verifyMfa` e `useRecoveryCode` com testes | B | — | Teto por IP e por identificador; teste de repetição; fallback documentado |
+| **P1-08** | Pacote da próxima release pronto para aprovação, sem publicar | `[x]` | [`35-pacote-de-release.md`](35-pacote-de-release.md): 1.56.0 derivada, 19 fragmentos, inventário 0313–0320, checklist e plano assinado | Coordenador | Aprovação humana p/ cortar | Número derivado por comando; inventário de schema; plano com rollback e critério de abortar |
 
 ## 5. Fila — P2 (identidade, shell, consistência)
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P2-01** | Fonte única de tokens, temas claro/escuro, contraste composto | `[~]` | `DESIGN.md`; #491 (tema claro a11y); D em `front/design-tinta` | D | — | Tokens consumidos pelo produto; contraste calculado sobre cor final; desvios registrados |
-| **P2-02** | Shell: sidebar, topbar, busca, notificações, seletor de organização, breadcrumbs | `[~]` | D em `front/design-tinta`; E não toca shell (regra de frente) | D | P2-01 | Hierarquia uniforme; navegação por teclado; mobile não é desktop comprimido |
+| **P2-01** | Fonte única de tokens, temas claro/escuro, contraste composto | `[~]` | `DESIGN.md`; #491 (tema claro a11y); #516 → `99958a18` (accent como tinta: dois papéis, dois tokens) | D (ativo) | — | Tokens consumidos pelo produto; contraste calculado sobre cor final; desvios registrados |
+| **P2-02** | Shell: sidebar, topbar, busca, notificações, seletor de organização, breadcrumbs | `[~]` | D ativo em `front/shell-2` (+1 commit: breadcrumb, central de avisos, gate de link morto); E não toca shell | D | P2-01 | Hierarquia uniforme; navegação por teclado; mobile não é desktop comprimido |
 | **P2-03** | Capabilities classificadas nos 7 estados (D3) | `[x]` | #475 mergeado (`470aac4e`): `29-capacidades.md` + gate `capacidades-classificadas.test.ts` | Coordenador | — | Toda capacidade com estado, evidência e lacuna nomeada; gate verde |
 | **P2-04** | Documentação de estado do produto sem número envelhecido | `[x]` | #506: `AGENTS.md` aponta `scripts/auditoria/inventario-service-role.mjs`; dois gates nomeados como proteção parcial | Coordenador | — | Onde a afirmação vira comando, vira comando; nenhum total sem fonte |
 
@@ -107,7 +128,7 @@ coordenador integra e roda os gates no código integrado.
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
 | **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30: ausente por decisão | Dono | Decisão de produto | Só entra com decisão registrada e dispositivo |
-| **P3-02** | Substituir fallback em memória do rate limit por Redis obrigatório em produção | `[~]` | `AGENTS.md` (limitação conhecida) | B | — | Produção falha alto sem Upstash, ou fallback declarado |
+| **P3-02** | Substituir fallback em memória do rate limit por Redis obrigatório em produção | `[~]` | #520 (`rate/fallback-declarado`): fallback declarado e saúde 503 em produção — CI pendente | A (pausado) | Retomada de A | Produção falha alto sem Upstash, ou fallback declarado |
 | **P3-03** | Limpar planos antigos que ensinam `db push` | `[x]` | #506: 7 planos ativos apontam `pnpm db:migrate`; gate novo; `plan/progress.md` preservado como diário histórico | Coordenador | — | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
 
 ## 7. Itens bloqueados por decisão humana / dispositivo / credencial
@@ -117,6 +138,9 @@ coordenador integra e roda os gates no código integrado.
 | P3-01 iOS | Não há `ios/` nem `@capacitor/ios` | Decisão de escopo e conta Apple | Dono |
 | P1-04 prova em dispositivo | Sem emulador/APK nesta máquina | Dispositivo Android ou emulador | Dono |
 | P0-07 Sentinel em produção | Depende de deploy e agenda | Aprovação de release | Dono |
+| **#307 crédito do DANFE** | Default `"By nexus"` no PDF que chega ao cliente final | Decidir: sem crédito por padrão **ou** crédito vindo da marca resolvida (`platform_branding`/`APP_NAME`) | Dono |
+| **Corte da 1.56.0** | Pacote pronto, tag não criada | Aprovar o merge do PR de release (`35-pacote-de-release.md` §6) | Dono |
+| **Retomada de A/E/F/H** | Limite de 2 workers simultâneos | Vaga no rodízio (D e G ativos) | Dono |
 | Emissão real de NF-e / pagamento | Proibido pelo prompt | Nunca neste programa | — |
 
 ## 8. Gates e definição de pronto
@@ -183,4 +207,61 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | #514 mobile sync (F) | `13fefad3` | 58 unit + 7 e2e emulados; ponte declarada |
 | 18/11/2026 | #512 notas declaram teto (E) | `fcac5757` | P1-06 |
 | 18/11/2026 | #471 flywheel claim (P1-9) | `014ccef3` | advisory lock + `not exists`; teste de invariante 4 casos |
+| 18/11/2026 | #515 catálogo completo (E) | `099df0a7` | estoque/compras; P1-06 |
+| 18/11/2026 | #519 admin não confunde erro com vazio (E) | `850996a7` | 5 listas + teste de componente |
+| 18/11/2026 | dependabot: 48 updates minor/patch | #455 → `532f3bc3` | CI 5/5 (verify, invariants, e2e, build-and-size, imagens-ok) |
+| 18/11/2026 | dependabot actions no `apk.yml` | #163/#164/#166 → `94f575f3` | CI 5/5; `apk-debug` verde |
+| 18/11/2026 | #517 J6/J13/J14 em Vitest | `22450d60` | 10 arquivos, +1.621 linhas; P1-01 |
+| 18/11/2026 | #522 ficha do Agente E fechada | `232c5fbf` | docs |
+| 18/11/2026 | #439 telefone fixo E.164 — migration **0320** (era 0312) | PR (rebase pendente de CI) | baseline + MANIFEST + invariante; renumeração registrada |
+| 18/11/2026 | Triagem dos PRs antigos (§11) | 24 avaliados | 3 fechados com motivo; #307 `[!]` por marca |
+| 18/11/2026 | Pacote da release 1.56.0 | [`35-pacote-de-release.md`](35-pacote-de-release.md) | `pnpm release:conferir` → 19 fragmentos; **tag não criada** |
 | 18/11/2026 | Sentinel v1 na main | #489 → `f644b21c` | 68 unit + 184 invariantes; CI 5/5; instalação/update verdes |
+
+## 11. Triagem dos PRs abertos (rodada 8, `nexus/main` = `232c5fbf`)
+
+> `gh` não existe nesta máquina. A triagem usou a API REST do GitHub com o token
+> já presente em `~/.config/gh/hosts.yml` (nunca impresso) e `git worktree` para
+> rebase. Critério: **verde nos 5 checks obrigatórios + mergeável** → merge;
+> **conflito** → rebase local e reexecução do CI; **vermelho** → conserto no
+> próprio PR quando era doc/renumeração, senão registra o motivo.
+
+### 11.1 Mergeados
+
+| PR | O que entrou | Como |
+|---|---|---|
+| #515 | catálogo do estoque/compras não esconde produto | já verde |
+| #519 | admin não confunde erro com vazio | já verde |
+| #517 | J6/J13/J14 em Vitest (H, pausado) | já verde |
+| #522 | ficha do Agente E fechada (E, pausado) | já verde |
+| #455 | 48 updates minor/patch (dependabot) | já verde; `package.json` só com patch/minor |
+| #163/#164/#166 | actions `upload-artifact@v7`, `pnpm/action-setup@v6`, `setup-node@v7` no `apk.yml` | já verde |
+| #457 | CORS/CSRF/SSRF/upload medidos (8.1/8.2) | rebase: hunk do prompt mestre antigo descartado (o prompt foi substituído pelo #478) |
+| #465 | triagem de produção 17/11 (só leitura) | idem |
+| #472 | referências de produto e contexto (P1–P7, C4–C12) | idem |
+| #477 | README diz MIT; marca fora da licença (C12) | idem |
+| #476 | `next/font/local` com WOFF2 versionados (C10) | idem; sem colisão com D (`front/shell-2` não toca fontes/layout) |
+| #468 | 14 baselines visuais (9.5) | idem; spec em `FORA_DO_CI` com motivo (baseline tem sufixo de plataforma) e lista `critical/full` intocada |
+| #439 | telefone fixo → E.164; **migration 0320** | rebase + renumeração 0312→0320 (0312 já era da trilha de IA) e apêndice do baseline concatenado com 0314–0319 |
+| #13/#165 | `actions/cache@v6`, `actions/checkout@v7` (último arquivo) | rebase; aguardam CI |
+
+### 11.2 Fechados com motivo (registrado no PR)
+
+| PR | Motivo |
+|---|---|
+| #7 | 102 arquivos/+18.965 desde 24/09, `verify` e `e2e` vermelhos; criaria um segundo design system concorrente ao que a main já tem (#491/#516) |
+| #168 | bump **major** (js-yaml 4→5) com `verify` vermelho; exige plano de migração |
+| #169 | bump **major** do Sentry (10→11) com 6 checks vermelhos; exige migração junto do Next 16 |
+
+### 11.3 Bloqueados / aguardando (dono e retomada)
+
+| PR | Estado | Dono | O que falta |
+|---|---|---|---|
+| #307 | `[!]` decisão de marca | Dono | default `"By nexus"` no DANFE viola a doutrina de marca; escolher "sem crédito" ou "marca resolvida"; depois rebase + `imagens-ok` |
+| #518 | `verify` vermelho (`health/route.test.ts`: Upstash recebe host sem esquema) | A (pausado) | consertar o teste/env; **renumerar 0320→0321** |
+| #520 | CI pendente | A (pausado) | retomada de A (P3-02) |
+| #521 | `verify` pendente | A (pausado) | retomada de A (P1-06: tie-breaker e teto) |
+
+Nenhum PR de P0 ficou aberto. O que resta em P1/P2 depende de decisão humana,
+de dispositivo ou da retomada de uma frente pausada — não de trabalho que o
+coordenador possa abrir sozinho sem furar o rodízio de 2 workers.

@@ -1,9 +1,10 @@
-# 33 — Relatório da rodada (18/11/2026)
+# 33 — Relatório da rodada (18/11/2026, rodada 8)
 
-> Fecha a rodada iniciada com o prompt mestre novo (#478). A fila é
-> [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md); o progresso por marco é
-> [`31-progresso-aaa.md`](31-progresso-aaa.md); a análise fiscal é
-> [`32-analise-fiscal-aaa.md`](32-analise-fiscal-aaa.md).
+> Substitui o relatório anterior, que descrevia a rodada 1 e já estava vencido em
+> três pontos (P1-03/P0-08 abertos, nenhum Sentinel, PRs antigos sem triagem).
+> A fila é [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md); o progresso por marco é
+> [`31-progresso-aaa.md`](31-progresso-aaa.md); o pacote de release é
+> [`35-pacote-de-release.md`](35-pacote-de-release.md).
 
 ## 1. Baseline
 
@@ -11,119 +12,99 @@
 |---|---|
 | Repositório | `spiesdan/nexus` (único remote) |
 | Branch do programa | `programa/nexus-aaa` |
-| Base | `nexus/main` (a cada merge; a fila registra o commit de cada item) |
+| Base | `nexus/main` @ `232c5fbf` (merges até #522) |
 | Versão publicada | `v1.55.0` |
+| Próxima release | `1.56.0` derivada, **não cortada** |
 | Produção | reportada em 1.55.0; **não verificada e não tocada** |
-| Ambiente | macOS, Node 22.20.0, pnpm 9.15.9, Docker 29.8.2 |
+| Ambiente | macOS, Node 22.20.0, pnpm 9.15.9 |
+| Regra de operação | **2 workers + 1 coordenador**; ativos D e G |
 
-## 2. O que foi mergeado na `main`
+## 2. O que foi feito nesta rodada
 
-| PR | Commit | Requisito | Prova |
-|---|---|---|---|
-| #478 | `126f4bb3` | Prompt mestre novo é a lei | CI 5/5 |
-| #451 | `7385b9ad` | F-09-B com catraca (`db push` proibido) | CI 5/5 |
-| #453 | `e29ecf51` | F-17: 39 tabelas provadas | CI 5/5 |
-| #481 | `4a9bddc2` | F-09 provado por execução: install, update, ACL, reset, restore | `prova-f09.sh` + evidências |
-| #464 | `f3ea10d6` | Índice 0313 da janela de mensagens | medição 25–54 ms → 5,7–19 ms |
-| #466 | `f56c0228` | Rate limit em MFA e recuperação | testes |
-| #475 | `470aac4e` | `29-capacidades.md`, runbook e gate D3 | gate verde |
-| #480 | `7a498f9d` | **P0-04** teto do recebível sob concorrência | `test:db` 160/1497; CI 5/5 |
-| #482 | `93109bff` | **P0-02** F-17: débito 34→0 | 67 testes + completude 152 |
-| #483 | `dd515696` | **P0-03** service role revisado; vazamento de envio corrigido | 210 handlers/100 cadeias; teste cross-org |
-| #484 | `f691dc06` | **P0-05** uma nota viva por pedido | `test:db` 160/1497; CI 5/5 |
-| #485 | `239efd32` | **P0-09** recebimento de compra com CAS | 5 casos + CI 5/5 |
-| #486 | `2e95f74f` | F-17 nos 4 eixos (SELECT/UPDATE/DELETE/INSERT) | 367 testes |
-| #456 | `615de767` | Recebível avulso honra `Idempotency-Key` | testes de rota |
+### 2.1 Integração (`nexus/main`)
 
-## 3. Em PR ao encerrar a rodada
-
-Nenhum PR de P0 ficou aberto. O **#489** (Sentinel v1) foi mergeado em
-`f644b21c` com CI 5/5; o #487 foi fechado em favor dele por colisão de versão.
-
-O #487 foi fechado em favor do #489 porque a 0315 já era da nota-viva (#484);
-a integração renumerou para 0316 e reconstruiu o baseline como `main + bloco 0316`.
-
-## 4. Achados novos desta rodada
-
-1. **Teto do recebível furado sob concorrência** (P0-04) — corrigido em #480.
-2. **Duas notas vivas para o mesmo pedido** (P0-05) — corrigido em #484.
-3. **Recebimento de compra somando estoque duas vezes** (P0-09) — corrigido em #485.
-4. **Envio de mensagem atravessando organização** (P0-03) — encontrado na revisão
-   dos 100 encadeamentos com service role; corrigido em #483 com prova
-   cross-org e controle positivo.
-5. **MANIFEST mandava reaplicar a cadeia via `db push`** — corrigido e coberto
-   por gate (#480).
-6. **Rebase do #464 tinha apagado o bloco 0312 do baseline** — reconstruído a
-   partir da `main` + apêndice 0313; update com `ON_ERROR_STOP=1` exit 0.
-7. **Duas implementações de F-17** (nossa #482/#486 e a da frente A, #479/#488)
-   — a mais forte foi integrada (#486, 4 eixos); as duplicatas foram fechadas
-   com referência.
-
-## 5. Decisões pendentes (não inventadas)
-
-| ID | Decisão | Opções | Recomendação |
-|---|---|---|---|
-| D-01 | Regra do nome automático de campanha por cidade | lista literal / primeira + contagem / prefixo | lista literal, ordenada, corte em 120 |
-| D-02 | Comportamento ao editar o nome manualmente | desliga automático / sobrescreve / campo separado | desliga até "usar nome sugerido" |
-| D-03 | Idempotência fiscal (`Idempotency-Key`) | devolver recurso original / 409 | devolver original (como o financeiro) |
-
-## 5.1 Follow-ups abertos (não bloqueiam P0)
-
-| Item | Estado | Observação |
-|---|---|---|
-| #490 — guarda de organização no `_handler` do MCP | CI vermelho | o teste `contato-audit-from-to` usa um fake de Supabase com `.eq` não encadeável; a correção é no fake (ou no handler), não no produto. Fora do P0 fechado. |
-| #471/#468/#472/#457/#465/#476/#477/#439/#438 | abertos | P1/P2/P3 e auditoria; não foram integrados nesta rodada. |
-
-## 6. Bloqueios reais
-
-| Item | Bloqueio |
+| PR | O que entrou |
 |---|---|
-| P1-03 campanha por cidade | D-01/D-02 |
-| P0-08 idempotência fiscal | D-03 |
-| P1-04 mobile/offline em dispositivo | sem APK/emulador nesta máquina |
-| P3-01 iOS | ausente por decisão; exige conta Apple e escopo |
-| Deploy/release | proibido nesta rodada; nenhuma escrita em produção |
+| #515 | catálogo do estoque/compras não esconde produto |
+| #519 | admin não confunde erro de leitura com lista vazia |
+| #517 | J6/J13/J14 provadas em Vitest (H, pausado) |
+| #522 | ficha do Agente E fechada (E, pausado) |
+| #455 | 48 updates minor/patch do dependabot |
+| #163/#164/#166 | actions do `apk.yml` na versão corrente |
 
-## 7. O que **não** está pronto (honestidade do DoD)
+### 2.2 Rebase e renumeração
 
-O programa AAA **não** terminou. Esta rodada fechou os P0 de código que estavam
-ao alcance (F-09, F-17, service role, financeiro, fiscal, estoque, deploy/restore)
-e entregou o Sentinel v1 em PR. Continuam abertos, no mínimo:
+**#439** (telefone fixo E.164) criava a migration **0312**, já usada pela trilha
+de IA. Renumerada para **0320**; o apêndice do baseline foi concatenado depois da
+0319 e **antes da varredura anon** (a migration cria função — a ordem não é
+cosmética). MANIFEST e comentário atualizados no mesmo commit.
 
-- **P1**: jornadas J6/J13/J14 com falhas; fiscal F1–F7 (confirmações,
-  idempotência, retry, paginação); campanhas por cidade; mobile/offline em
-  dispositivo; a11y nas telas restantes; rate limit em crons/MCP.
-- **P2**: design system aplicado ao produto, shell/navegação, consistência de
-  módulos, QA visual das telas.
-- **P3**: iOS, Redis obrigatório, limpeza de planos antigos.
+**#476/#477/#457/#465/#472/#468** foram rebaseados; o único conflito era o
+`PROMPT-MESTRE-AAA.md` antigo, que o #478 substituiu — o hunk foi descartado e o
+conteúdo útil (documento novo em `docs/auditoria/`) preservado.
 
-Nenhuma tela foi redesenhada nesta rodada, nenhum módulo foi reauditado por
-completo, e o Sentinel não foi implantado. Chamar isso de "Nexus AAA" seria
-contrariar o §13 do prompt mestre.
+### 2.3 Triagem dos PRs antigos
 
-## 8. Como reproduzir a evidência
+24 PRs avaliados. 3 fechados com motivo escrito (#7 segundo design system;
+#168/#169 bumps major com CI vermelho). **#307** ficou `[!]`: o default
+`"By nexus"` no rodapé do DANFE alcança o cliente final e viola a doutrina de
+marca — a decisão (sem crédito × marca resolvida) é do dono. #518/#520/#521
+esperam a retomada de A; #518 precisa renumerar 0320→0321.
 
-```bash
-# gates de código
-pnpm typecheck && pnpm lint && pnpm test:unit
+### 2.4 Pacote de release
 
-# banco (Docker): install + update + invariantes
-pnpm test:db
+- Número **1.56.0** derivado (`pnpm release:conferir` → `1.55.0 + minor`),
+  19 fragmentos, **nenhum `exige_acao`**.
+- 7 fragmentos novos escritos para mudanças mergeadas que estavam sem eco
+  (#507, #508, #509, #510, #512, #515, #519). Sem eles, a tela de atualização do
+  dono da VPS mentiria por omissão.
+- Inventário 0313–0320, checklist de corte, plano de deploy com rollback e
+  critério de abortar.
 
-# F-09 por execução (Postgres descartável)
-bash scripts/auditoria/prova-f09.sh
+## 3. Achados e decisões
 
-# Sentinel (na branch integracao/sentinel)
-pnpm exec vitest run lib/sentinel
-```
+| Item | Estado |
+|---|---|
+| PR #439 usava número de migration já ocupado (0312) | corrigido por renumeração; o gate de numeração não pegou porque o PR nunca mergeou |
+| PRs de doc rebaseados contra o prompt mestre antigo | conflito era estrutural (#478 trocou o arquivo); descartar o hunk foi a resolução correta, não perda de conteúdo |
+| `gh` não existe nesta máquina | triagem pela API REST com token do `hosts.yml`; registrado para a próxima rodada não perder tempo |
+| #307 tem nome de produto no PDF | `[!]` decisão de marca — não é bug de código |
+| Frentes A/E/F/H pausadas | pausa não é conclusão; cada uma tem ponto de retomada na fila |
 
-## 9. Estado por ambiente
+## 4. O que **não** está pronto (honestidade do DoD)
+
+O programa **não** terminou. Fechado em código: todos os P0 (F-09, F-17 73/73,
+service role, financeiro, fiscal, estoque, deploy/restore, Sentinel v1).
+Continuam abertos:
+
+- **P1**: J14 LGPD sem prova de navegador; a11y nas telas restantes; snapshots
+  visuais fora do CI (baseline por plataforma); mobile/offline em dispositivo;
+  listas/tie-breaker (#521).
+- **P2**: design system aplicado ao produto (D em andamento), shell/navegação,
+  QA visual das telas.
+- **P3**: iOS, Redis obrigatório (#520), limpeza de planos antigos (feita).
+- **Release**: pacote pronto, **tag não criada**, deploy não executado.
+
+## 5. Estado por ambiente
 
 | Ambiente | Estado |
 |---|---|
-| Código | mergeado na `main` até `f644b21c` (Sentinel v1 incluso) |
-| PR | nenhum P0 aberto; #489 mergeado |
-| Release | **nenhuma** tag nova nesta rodada; última `v1.55.0` |
+| Código | `nexus/main` @ `232c5fbf` + PRs de rebase aguardando CI |
+| PR | 15 abertos (9 aguardando CI, 1 bloqueado por marca, 3 de frente pausada, 2 dependabot) |
+| Release | **nenhuma** tag nova; última `v1.55.0`; 1.56.0 empacotada |
 | Deploy | **nenhum**; produção intocada |
 | Banco remoto | **nenhuma** migration aplicada |
 | NF-e / pagamento | **nenhuma** operação real |
+
+## 6. Como reproduzir
+
+```bash
+git log --oneline -1 nexus/main                 # baseline
+pnpm release:conferir                            # número derivado (não escreve)
+pnpm gov:verify                                  # typecheck + lint + test:unit
+pnpm test:db                                     # baseline install+update (Docker)
+pnpm test:shell                                  # kit de instalação
+```
+
+A triagem de PR usou a API REST do GitHub (o `gh` não está instalado); os
+comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
