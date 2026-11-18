@@ -21,7 +21,7 @@
  */
 
 import type { Db } from "./outbox";
-import type { SQLiteDBConnection } from "@capacitor-community/sqlite";
+import type { SQLiteConnection, SQLiteDBConnection } from "@capacitor-community/sqlite";
 import { COLUNA_DA_RESERVA, SCHEMA_DA_FILA } from "./outbox";
 import { SCHEMA_DO_CATALOGO } from "./catalogo";
 
@@ -33,6 +33,39 @@ let pronta: Promise<Db> | null = null;
 export function banco(): Promise<Db> {
   if (!pronta) pronta = abrir();
   return pronta;
+}
+
+/**
+ * A PÁGINA NOVA HERDA O BANCO QUE JÁ EXISTE — não morre tentando criar outro.
+ *
+ * `isConnection` e `retrieveConnection` do plugin vivem no dicionário do
+ * contexto JS, não no lado nativo: ao sair da home para "Novo pedido" a
+ * navegação troca o contexto, o dicionário nasce vazio e o nativo continua com
+ * `crm-offline` aberto. O `createConnection` então lança
+ * `Connection crm-offline already exists` — e, como no Android não existe
+ * `retrieveConnection` nativo (`not implemented on android`, medido via CDP no
+ * emulador), não há o que recuperar.
+ *
+ * O caminho certo é fechar a conexão órfã e reabrir: é o MESMO arquivo em
+ * disco, então nada se perde. Antes deste ajuste o throw matava `abrir()`, e a
+ * tela de captura ficava MUDA — digitar cliente não listava nada, digitar
+ * produto não listava nada, nenhum aviso. Medido no emulador Android 36
+ * (Pixel 7) com o APK de debug: três toques, nenhuma lista.
+ *
+ * O banco local é UM por aparelho, não um por página.
+ */
+async function criarOuRecuperar(sqlite: SQLiteConnection): Promise<SQLiteDBConnection> {
+  const abrirAgora = () =>
+    sqlite.createConnection(NOME_DO_BANCO, false, "no-encryption", 1, false);
+
+  try {
+    return await abrirAgora();
+  } catch (e) {
+    if (!/already exists/i.test(String(e))) throw e;
+    // Órfã da página anterior. Fechar não apaga dado; só libera o nome.
+    await sqlite.closeConnection(NOME_DO_BANCO, false).catch(() => undefined);
+    return await abrirAgora();
+  }
 }
 
 async function abrir(): Promise<Db> {
@@ -53,12 +86,19 @@ async function abrir(): Promise<Db> {
     await sqlite.initWebStore();
   }
 
-  const existe = await sqlite.isConnection(NOME_DO_BANCO, false);
+  const existe = await sqlite.isConnection(NOME_DO_BANCO, false).catch(() => ({ result: false }));
   const conn: SQLiteDBConnection = existe.result
     ? await sqlite.retrieveConnection(NOME_DO_BANCO, false)
-    : await sqlite.createConnection(NOME_DO_BANCO, false, "no-encryption", 1, false);
+    : await criarOuRecuperar(sqlite);
 
-  await conn.open();
+  // `open()` numa conexão que o contexto anterior já abriu responde
+  // "already open". Não é erro: a conexão nativa é a mesma, e é justamente o
+  // que queremos reaproveitar.
+  try {
+    await conn.open();
+  } catch (e) {
+    if (!/already open/i.test(String(e))) throw e;
+  }
   // O schema é idempotente (`IF NOT EXISTS` em tudo): abrir duas vezes, em
   // dois contextos, não quebra nada. `execute` aqui é DDL sem parâmetros.
   await conn.execute(SCHEMA_DA_FILA);
