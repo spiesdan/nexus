@@ -8,6 +8,92 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.57.0] — 2026-11-18
+
+### Adicionado
+
+- **Mercos: catálogo de produtos coletado e itens históricos ligados por código** O worker só lia `/pedidos/`. Produto que nunca apareceu em pedido nunca entrava
+  no catálogo — e o item dele ficava sem `product_id`, sem NCM e sem unidade na
+  emissão. Medido em produção: **616 itens** sem vínculo em **72 códigos**.
+
+  Agora existe coleta de `/produtos/` (com as colunas mapeadas pelo cabeçalho, não
+  por posição), importação por `(organização, código)` em dry-run por padrão, e um
+  relatório com **criados / atualizados / divergentes / sem código**. Produto que já
+  existe com nome diferente do ERP tem o preço atualizado e o **nome preservado** —
+  os dois nomes aparecem no relatório.
+
+  Os itens históricos são religados **só por código exato**. Candidatos por nome e
+  por código com zeros à esquerda são apenas relatados: dos 616 itens, 3 casariam
+  por nome, e de forma ambígua (dois "ESPONJA COM 4 UN", códigos 806 e 8147).
+  Escolher um deles no chute seria escolher o NCM errado.
+
+  Runbook: `docs/runbooks/mercos-catalogo.md`. Nada foi executado contra produção.
+
+- **Sentinel corrige um job de manutenção — só com sua aprovação e com reversão** Quando um job de manutenção (`watchdog`) fica pendente e atrasado, o Sentinel
+  agora mostra um plano de correção e deixa o gestor **simular** o antes/depois,
+  marcar que revisou e só então executar. A execução antecipa o job para agora,
+  registra quem aprovou e guarda o antes/depois no histórico.
+
+  A correção é deliberadamente estreita: não toca nota, saldo, pagamento,
+  recebível, pedido, campanha nem job de atendimento (que pode enviar mensagem ao
+  cliente). Se o job for reclamado pelo worker antes da reversão, o sistema
+  recusa em vez de fingir que desfez. Nada acontece sem aprovação humana e sem a
+  confirmação explícita do plano simulado.
+
+### Corrigido
+
+- **O nome do cliente no pedido passa a ser o nome fantasia** Na tela de Pedidos, na busca de cliente e no cadastro feito na hora de criar o
+  pedido, o nome exibido era a razão social (`display_name`/`name`). Quem conhece
+  o cliente pelo nome comercial — o caso de quase toda loja — procurava por um
+  nome que a tela não mostrava.
+
+  O nome fantasia passa a vir primeiro; sem fantasia, vale a razão social (PJ) ou o
+  nome (PF), e sem nada a tela diz "Sem nome". A regra é uma só, aplicada na
+  escrita do pedido, na lista e na busca.
+
+  Pedido antigo também passa a mostrar a fantasia: a lista resolve o nome do
+  cadastro vinculado **na leitura**, sem reescrever o nome gravado no pedido — o
+  snapshot continua sendo o que foi impresso no dia.
+
+- **A varredura do Sentinel foi medida com 50 mil pedidos e 200 mil mensagens** O orçamento de detecção da varredura foi exercitado com volume realista: 50 mil
+  pedidos e 200 mil mensagens no banco local. O scan completo levou 1,1 s; a fase
+  de detecção, 37 ms para as 29 regras. Forçando o teto a zero no mesmo snapshot,
+  a rodada truncou e nenhuma regra foi avaliada — lista incompleta não encerra
+  ocorrência por ausência.
+
+  O teto de produção continua em 8 s, muito acima do medido. A medição é
+  reproduzível por `scripts/medir-sentinel-carga.ts`, que só roda em loopback e
+  exige confirmação explícita.
+
+- **Sentinel avisa quando uma correção aprovada ficou sem reversão ou com aprovação vencida** Duas situações que a tela de correção não conseguia mostrar sozinha agora viram
+  ocorrência:
+
+  - **Correção sem reversão:** a antecipação foi aplicada, mas o job saiu do
+    estado que a reversão exigia (o worker reclamou, o horário mudou ou o job foi
+    removido). Reverter seria mentira; o Sentinel registra o fato para alguém
+    conferir o resultado.
+  - **Aprovação vencida:** a ocorrência está aprovada além da janela de 5 min do
+    plano revisado. A execução exige nova simulação e confirmação; o alerta pede
+    a revalidação.
+
+  Nenhum dos dois executam, revertem ou aprovam: são observação. A correção
+  continua sendo o caminho manual aprovado da versão anterior.
+
+- **Texto sobre o accent volta a ser legível no escuro — e o admin ganha o atalho de conteúdo** Duas correções de acessibilidade, as duas medidas no navegador.
+
+  **O texto sobre o accent herdava a cor errada.** A classe `text-accent-fg` não existia — o token
+  estava declarado no CSS, mas faltava na ponte que gera os utilitários. No tema claro o texto
+  herdado era escuro por acaso e passava; no escuro, texto claro sobre accent claro dava **2,03:1**.
+  O chip do dia selecionado na agenda era o texto menos legível da tela. Agora passa, e um gate
+  impede que qualquer token declarado fique sem utilitário.
+
+  **A casca do painel da plataforma não tinha "Pular para o conteúdo".** O primeiro Tab em `/admin`
+  caía em "Sair pra app pessoal"; quem usa teclado atravessava a navegação inteira em toda tela. O
+  atalho agora existe, igual ao do app.
+
+  Junto: a rolagem suave pedida por código passa a respeitar a preferência de movimento reduzido
+  (eram oito pontos), e diálogo/menu ganharam teste de foco preso, `Esc` e retorno ao gatilho.
+
 ## [1.56.0] — 2026-11-18
 
 ### Adicionado
@@ -7880,7 +7966,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.56.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.57.0...HEAD
+[1.57.0]: https://github.com/spiesdan/nexus/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/spiesdan/nexus/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/spiesdan/nexus/compare/v1.54.0...v1.55.0
 [1.54.0]: https://github.com/spiesdan/nexus/compare/v1.53.0...v1.54.0
