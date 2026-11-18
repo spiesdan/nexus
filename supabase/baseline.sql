@@ -30161,3 +30161,42 @@ comment on column public.fiscal_entradas.manifestacao_em_andamento_em is
   'Claim da transmissão de manifestação (0319). NULL = livre; preenchido = transmissão em curso. Passado 5 min, pode ser reivindicado de novo (processo morto).';
 comment on column public.invoices.cancelamento_em_andamento_em is
   'Claim da transmissão de cancelamento (0319). NULL = livre; preenchido = transmissão em curso. Passado 5 min, pode ser reivindicado de novo (processo morto).';
+
+-- ============================================================================
+-- 0320 — toda SECURITY DEFINER de public fixa `pg_temp` no search_path.
+-- Ver supabase/migrations/20261123130000_0320_search_path_dos_definer.sql.
+--
+-- O Postgres procura primeiro no schema temporário quando `pg_temp` NÃO está
+-- listado: uma definer que referencia tabela sem qualificar schema lê o objeto
+-- temporário DE QUEM CHAMOU, com privilégio de dono. Medido em 18/11/2026:
+-- 42 das 62 definers de public estavam nessa forma. O bloco ADICIONA `pg_temp`
+-- ao fim do caminho que cada uma já tinha — não troca o caminho existente,
+-- então quem listava `private`/`extensions` continua listando.
+-- ============================================================================
+do $mig_definer_search_path$
+declare
+  f record;
+begin
+  for f in
+    select p.oid::regprocedure::text as assinatura,
+           (select split_part(c, '=', 2)
+              from unnest(coalesce(p.proconfig, '{}')) c
+             where c like 'search_path=%'
+             limit 1) as caminho
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.prosecdef
+       and not exists (
+         select 1 from unnest(coalesce(p.proconfig, '{}')) c
+          where c like 'search_path=%pg_temp%'
+       )
+  loop
+    execute format(
+      'alter function %s set search_path = %s, pg_temp',
+      f.assinatura,
+      coalesce(f.caminho, 'public')
+    );
+  end loop;
+end
+$mig_definer_search_path$;
