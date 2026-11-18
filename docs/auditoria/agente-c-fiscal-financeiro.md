@@ -5,8 +5,9 @@
 > 18/11/2026. Nenhuma operação fiscal real, pagamento ou cobrança foi executada;
 > nenhum acesso a produção.
 >
-> PRs: **#494** (importação de entrada), **#495** (recuperação de nota travada),
-> **#496** (cancelamento × drain).
+> PRs: **#494** (importação de entrada), **#500** (corrida do produto novo da
+> entrada), **#495** (recuperação de nota travada), **#496** (cancelamento ×
+> drain).
 
 ## 1. Reconciliação com o que já estava merged
 
@@ -52,6 +53,24 @@ mesma classe do P0 #485 (recebimento de compra), em outra porta.
 **Provas:** `lib/fiscal/importacao-da-entrada.test.ts` (4 desfechos do CAS) e
 `app/api/v1/fiscal-entradas/[id]/importar/route.test.ts` (reivindicação antes da
 primeira escrita; perdedor não move estoque e recebe 409).
+
+### C1b — Produto novo da entrada perdia a quantidade na corrida de código
+
+**Onde:** mesma rota de importação (`#500`).
+
+**Defeito medido:** o item sem produto no catálogo é inserido por `codigo`. Duas
+notas com o mesmo código novo importadas ao mesmo tempo: o INSERT do segundo
+perde na unique `(organization_id, codigo)`, `novoId` fica nulo e a rota seguia
+sem vincular o item e sem somar a quantidade — o estoque daquela nota
+desaparecia em silêncio (perda, não duplicidade).
+
+**Correção:** no `23505`, relê o vencedor pelo código e soma a quantidade desta
+nota por `ajustarEstoque` (CAS), preservando a do vencedor; se nem criar nem
+achar, a resposta leva aviso e o log registra o código. O vínculo do item passa
+a ser gravado nesse caminho também.
+
+**Provas:** caso novo em `route.test.ts` (consulta nula → INSERT `23505` →
+releitura 10 → estoque 12 + vínculo); 10 testes verdes entre rota e helper.
 
 ### C2 — Recuperação de nota travada em `em_emissao` não existia
 
