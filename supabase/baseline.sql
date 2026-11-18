@@ -30338,7 +30338,8 @@ comment on column public.invoices.cancelamento_em_andamento_em is
 -- 42 das 62 definers de public estavam nessa forma. O bloco ADICIONA `pg_temp`
 -- ao fim do caminho que cada uma já tinha — não troca o caminho existente,
 -- então quem listava `private`/`extensions` continua listando.
--- =====================================================================do $mig_definer_search_path$
+-- ============================================================================
+do $mig_definer_search_path$
 declare
   f record;
 begin
@@ -30365,7 +30366,7 @@ begin
   end loop;
 end
 $mig_definer_search_path$;
-=======
+
 -- 0321 — credencial de dispositivo do shell offline.
 -- Ver supabase/migrations/20261123140000_0321_credencial_de_dispositivo_offline.sql.
 --
