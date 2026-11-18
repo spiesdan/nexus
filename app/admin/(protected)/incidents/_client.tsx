@@ -18,6 +18,7 @@ import {
   type IncidentStatus,
   type IncidentSeverity,
 } from "@/hooks/useAdminIncidents";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -39,7 +40,7 @@ export function IncidentsClient() {
     status: "open",
   });
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useAdminIncidents(filters);
 
   const rows = data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -112,6 +113,11 @@ export function IncidentsClient() {
       {/* Table */}
       {isLoading ? (
         <IncidentsTableSkeleton />
+      ) : isError ? (
+        <NexusErrorState
+          description={t("Erro ao carregar os incidentes.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <IncidentsTable
           data={rows}

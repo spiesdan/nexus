@@ -21,6 +21,7 @@ import {
   LgpdRequestsTable,
   LgpdRequestsTableSkeleton,
 } from "@/components/admin/lgpd/LgpdRequestsTable";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -30,7 +31,7 @@ export function LgpdAdminClient() {
   const t = useT();
   const [filters, setFilters] = useState<AdminLgpdFilters>({});
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useAdminLGPDRequests(filters);
 
   const rows = data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -136,6 +137,11 @@ export function LgpdAdminClient() {
       {/* Table */}
       {isLoading ? (
         <LgpdRequestsTableSkeleton />
+      ) : isError ? (
+        <NexusErrorState
+          description={t("Erro ao carregar as solicitações LGPD.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <LgpdRequestsTable
           data={rows}

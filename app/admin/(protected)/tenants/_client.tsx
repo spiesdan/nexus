@@ -9,6 +9,7 @@ import {
   TenantsTableSkeleton,
 } from "@/components/admin/tenants/TenantsTable";
 import { useAdminTenants, type AdminTenantsFilters } from "@/hooks/useAdminTenants";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { useT } from "@/hooks/i18n/useT";
 
@@ -16,7 +17,7 @@ export function TenantsClient() {
   const t = useT();
   const [filters, setFilters] = useState<AdminTenantsFilters>({});
 
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
+  const { data, isLoading, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
     useAdminTenants(filters);
 
   const rows = data?.pages.flatMap((p) => p.data ?? []) ?? [];
@@ -47,6 +48,11 @@ export function TenantsClient() {
       {/* Table */}
       {isLoading ? (
         <TenantsTableSkeleton />
+      ) : isError ? (
+        <NexusErrorState
+          description={t("Erro ao carregar os tenants.")}
+          onRetry={() => void refetch()}
+        />
       ) : (
         <TenantsTable
           data={rows}
