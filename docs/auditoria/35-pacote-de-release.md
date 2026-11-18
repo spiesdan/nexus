@@ -122,13 +122,13 @@ Deploy (decisão humana separada; ver §6):
 | Mudança de schema | 0313–0319 já na `main`; **0320 só se #439 mergear** |
 | Exige ação do operador | **não** (`update.sh` aplica o baseline) |
 | Janela sugerida | fora do horário de atendimento do WhatsApp da empresa — atualização reinicia a app |
-| Rollback (imagem) | `APP_IMAGE`/tag anterior no `.env` + `up -d` com **os dois** `-f` |
+| Rollback (imagem) | voltar as **três** imagens no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, `SCHEDULER_IMAGE` — o `update.sh` grava as três na mesma versão) e `up -d` com **os dois** `-f` |
 | Rollback (banco) | **forward-only** para 0317 (tipo de `request_hash`); as demais são aditivas |
 | Contenção se o site responder 404 | labels do Traefik: refazer `up -d` com `docker-compose.prod.yml` **e** `docker-compose.traefik.yml` |
 
 Passos, na ordem do [`runbook`](../runbooks/deploy.md):
 
-1. **Antes**: `bash hostgator-setup-kit/backup.sh` (banco + uploads) e conferir que o arquivo não está vazio.
+1. **Antes**: conferir espaço em disco e que o backup anterior existe. O `update.sh` chama `backup.sh` sozinho antes de aplicar schema (`--skip-backup` existe e **não** deve ser usado aqui); para uploads/Storage, rode também `bash hostgator-setup-kit/backup-uploads.sh` (F-32).
 2. `bash hostgator-setup-kit/update.sh` — puxa a tag publicada, aplica `supabase/baseline.sql` e falha alto se faltar objeto.
 3. **Depois** (as duas verificações do runbook, não só `healthy`):
    - `docker inspect "$(docker compose -f docker-compose.prod.yml ps -q app)" --format '{{.Config.Labels}}' | grep -o 'traefik.enable:[^ ]*'` → `traefik.enable:true`
