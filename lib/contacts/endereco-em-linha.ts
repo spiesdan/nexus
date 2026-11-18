@@ -33,7 +33,7 @@ export interface EnderecoEstruturado {
   cep?: string | null;
 }
 
-function limpo(v: string | null | undefined): string {
+export function limparTextoDoEndereco(v: string | null | undefined): string {
   // "NULL" literal do export do WP/Mercos ("RUA BRASIL, 183, NULL"). É ausência
   // disfarçada de texto, e ia para a tela, o romaneio e o mapa: medido em 87
   // cadastros desta instalação (51 na rua, 36 no bairro).
@@ -51,19 +51,19 @@ function limpo(v: string | null | undefined): string {
  */
 export function enderecoEmLinha(e: EnderecoEstruturado | null | undefined): string {
   if (!e) return "";
-  const numero = limpo(e.numero_end);
+  const numero = limparTextoDoEndereco(e.numero_end);
   // O WP importava "rua + número" colados no logradouro E o número separado
   // ("RUA X, 65" + numero_end "65" → "65, 65"). O sufixo repetido sai.
-  let rua = limpo(e.logradouro);
+  let rua = limparTextoDoEndereco(e.logradouro);
   if (rua && numero) {
     const esc = numero.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     rua = rua.replace(new RegExp(`[\\s,\\-]+${esc}$`, "i"), "").trim();
   }
-  const compl = limpo(e.complemento);
-  const bairro = limpo(e.bairro);
-  const cidade = limpo(e.cidade);
-  const uf = limpo(e.uf).toUpperCase();
-  const cep = limpo(e.cep);
+  const compl = limparTextoDoEndereco(e.complemento);
+  const bairro = limparTextoDoEndereco(e.bairro);
+  const cidade = limparTextoDoEndereco(e.cidade);
+  const uf = limparTextoDoEndereco(e.uf).toUpperCase();
+  const cep = limparTextoDoEndereco(e.cep);
 
   const primeira = [rua + (numero ? `, ${numero}` : ""), compl].filter(Boolean).join(" — ");
   const municipio = [cidade, uf].filter(Boolean).join("/");
@@ -83,16 +83,16 @@ export function enderecoEmLinha(e: EnderecoEstruturado | null | undefined): stri
  */
 export function enderecoDaRua(e: EnderecoEstruturado | null | undefined): string {
   if (!e) return "";
-  const segmentos = limpo(e.logradouro)
+  const segmentos = limparTextoDoEndereco(e.logradouro)
     .split(",")
-    .map((parte) => limpo(parte))
+    .map((parte) => limparTextoDoEndereco(parte))
     .filter(Boolean);
   const jaTem = (valor: string) =>
     segmentos.some((segmento) => segmento.toLowerCase() === valor.toLowerCase());
 
-  const numero = limpo(e.numero_end);
+  const numero = limparTextoDoEndereco(e.numero_end);
   if (numero && !jaTem(numero)) segmentos.push(numero);
-  const complemento = limpo(e.complemento);
+  const complemento = limparTextoDoEndereco(e.complemento);
   if (complemento && !jaTem(complemento)) segmentos.push(complemento);
 
   return segmentos.join(" ");
@@ -110,16 +110,16 @@ export function cidadeSemEstado(
   cidade: string | null | undefined,
   uf: string | null | undefined,
 ): string {
-  const texto = limpo(cidade);
+  const texto = limparTextoDoEndereco(cidade);
   if (!texto) return texto;
   const corte = texto.lastIndexOf(",");
   if (corte < 0) return texto;
 
-  const sufixo = limpo(texto.slice(corte + 1)).toLowerCase();
+  const sufixo = limparTextoDoEndereco(texto.slice(corte + 1)).toLowerCase();
   const nome = (nomeDoEstado(uf) ?? "").toLowerCase();
-  const sigla = limpo(uf).toLowerCase();
+  const sigla = limparTextoDoEndereco(uf).toLowerCase();
   if (sufixo !== "" && (sufixo === nome || sufixo === sigla)) {
-    return limpo(texto.slice(0, corte));
+    return limparTextoDoEndereco(texto.slice(0, corte));
   }
   return texto;
 }
