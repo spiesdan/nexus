@@ -1,6 +1,6 @@
 "use client";
 
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { useT } from "@/hooks/i18n/useT";
 
