@@ -9,6 +9,14 @@ test.setTimeout(120_000);
 /**
  * AXE NAS TELAS DE OPERAÇÃO — o gate que faltava.
  *
+ * ─── 9.6 (17/11/2026): 10 telas e WCAG 2.2 ─────────────────────────────────
+ *
+ * O conjunto passou a incluir `/app/ai` e `/app/expedicao` — as duas telas de
+ * operação que faltavam — e as tags subiram para WCAG 2.0/2.1 **e 2.2** AA.
+ * A régua nova achou violação real de 2.5.8 (alvo de toque) no gráfico de
+ * vendas: botões de 15–20 px com 19,2 px de espaço seguro. Corrigidos no
+ * componente (`crm-sales-chart.tsx`), não mascarados com `disableRules`.
+ *
  * ─── O QUE ELE PEGOU NA PRIMEIRA RODADA (17/11/2026) ───────────────────────
  *
  *   - `/app/contacts`: `aria-sort` no `<button>` da coluna (o atributo é de
@@ -33,13 +41,26 @@ const TELAS = [
   "/app/financeiro",
   "/app/notas",
   "/app/settings",
+  // 9.6 — as duas que faltavam do conjunto de operação. `/app/ai` é o painel
+  // de IA; `/app/expedicao` é a carga/mapa, com os controles mais densos.
+  "/app/ai",
+  "/app/expedicao",
 ];
+
+/**
+ * WCAG 2.2 (AA) além de 2.0/2.1.
+ *
+ * `wcag22aa` existe no axe-core usado pelo repo e cobre os critérios novos que
+ * dá para testar automaticamente (alvo de toque, foco não obscurecido). Rodar
+ * só 2.0/2.1 deixava a régua que o prompt pede pela metade.
+ */
+const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 test.describe("acessibilidade (axe, wcag2a/2aa)", () => {
   test("login não tem violação séria/crítica", async ({ page }) => {
     await page.goto("/login");
     const { violations } = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa"])
+      .withTags(TAGS)
       .analyze();
     const bloqueantes = violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""));
     expect(bloqueantes, JSON.stringify(bloqueantes, null, 2)).toEqual([]);
@@ -51,7 +72,7 @@ test.describe("acessibilidade (axe, wcag2a/2aa)", () => {
       await page.goto(tela);
       await page.waitForTimeout(1500);
       const { violations } = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa"])
+        .withTags(TAGS)
         .analyze();
       const bloqueantes = violations.filter((v) => ["serious", "critical"].includes(v.impact ?? ""));
       expect(bloqueantes, JSON.stringify(bloqueantes, null, 2)).toEqual([]);

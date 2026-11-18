@@ -256,7 +256,12 @@ function Legenda({
       title={desabilitada ? motivo : undefined}
       aria-pressed={!ausente}
       className={cn(
-        "interactive -mx-1 flex items-center gap-1.5 rounded-sm px-1 hover:bg-white/[0.06]",
+        // Alvo de toque de 24×24 (WCAG 2.2, 2.5.8): o texto tem 11px e, sem
+        // altura mínima, o botão ficava com 16,5px e 21px de espaço seguro —
+        // reprovado como `target-offset` no axe. `min-h-6`/`min-w-6` fecham a
+        // altura e a largura; tirar o `-mx-1` devolve o espaçamento entre
+        // vizinhos que a margem negativa comia.
+        "interactive flex min-h-6 min-w-6 items-center gap-1.5 rounded-sm px-1.5 py-0.5 hover:bg-white/[0.06]",
         ausente && "opacity-40",
         desabilitada && "cursor-not-allowed hover:bg-transparent",
       )}
@@ -597,14 +602,14 @@ export function CrmSalesChart({
         <div className="min-w-0 rounded-xl border border-border fill-well p-4">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-0.5" data-testid="seletor-de-mes">
+              <div className="flex items-center gap-1.5" data-testid="seletor-de-mes">
                 <button
                   type="button"
                   aria-label={t("Mês anterior")}
                   title={t("Mês anterior")}
                   onClick={() => navegarMes(-1)}
                   disabled={carregando}
-                  className="interactive rounded-sm p-1 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
+                  className="interactive min-h-6 min-w-6 rounded-sm p-1.5 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <CaretLeft size={12} weight="bold" />
                 </button>
@@ -620,7 +625,7 @@ export function CrmSalesChart({
                   title={t("Próximo mês")}
                   disabled={proximoBloqueado || carregando}
                   onClick={() => navegarMes(1)}
-                  className="interactive rounded-sm p-1 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
+                  className="interactive min-h-6 min-w-6 rounded-sm p-1.5 text-text-muted hover:bg-white/[0.06] hover:text-fg disabled:cursor-not-allowed disabled:opacity-35"
                 >
                   <CaretRight size={12} weight="bold" />
                 </button>
@@ -636,7 +641,7 @@ export function CrmSalesChart({
                   type="button"
                   onClick={() => setRange(r)}
                   className={cn(
-                    "interactive rounded-sm px-1.5 py-0.5 text-[11px] leading-none hover:bg-white/[0.06]",
+                    "interactive min-h-6 min-w-6 rounded-sm px-2 py-1 text-[11px] leading-none hover:bg-white/[0.06]",
                     r === range ? "font-medium text-fg" : "text-text-muted",
                   )}
                 >
