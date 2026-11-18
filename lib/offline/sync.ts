@@ -74,6 +74,13 @@ export async function drenarFila(
   db: Db,
   buscar: FetchDoSync,
   agora: () => string = () => new Date().toISOString(),
+  /**
+   * Rota que recebe o pedido. `/api/v1/commercial-orders` (sessão por cookie)
+   * é o caminho do sistema; o shell do aparelho usa `/api/v1/device/orders`
+   * (bearer do dispositivo), com a MESMA regra de negócio e a MESMA chave de
+   * sincronização no servidor.
+   */
+  caminhoDoPedido: string = "/api/v1/commercial-orders",
 ): Promise<ResultadoDoDreno> {
   // Antes de montar a fila: linha presa em `enviando` (o app morreu no POST)
   // volta a `pendente`. Sem isto ela nunca aparece em `filaPendente` e o
@@ -98,7 +105,7 @@ export async function drenarFila(
     let resposta: { status: number; corpo: () => Promise<unknown> };
     try {
       resposta = await comTempoLimite(
-        buscar("/api/v1/commercial-orders", {
+        buscar(caminhoDoPedido, {
           method: "POST",
           body: JSON.stringify({ ...item.payload, chave_sincronizacao: item.uuid }),
         }),
