@@ -230,14 +230,29 @@ if [ -f supabase/baseline.sql ]; then
   unexpected="$(printf '%s\n' "$raw" | grep -iE 'ERROR|FATAL' | grep -viE "$benign" || true)"
 
   if [ -n "$unexpected" ]; then
-    c_ylw "⚠ Apareceram avisos no banco que NÃO são os esperados:"
+    c_ylw "⚠ O banco recusou parte do schema:"
     printf '%s\n' "$unexpected" | head -20
-    c_ylw "  O app pode ainda funcionar. Se algo estiver errado, restaure o backup (restore.sh)."
     case "$unexpected" in
       *permission\ denied*|*must\ be\ owner*|*permissão\ negada*)
         c_ylw "  Os erros são de PERMISSÃO: a conexão do .env não é o dono do banco. Num Supabase"
         c_ylw "  próprio, declare SUPABASE_DB_ADMIN_URL no .env — é ela que roda o schema." ;;
     esac
+    # ── FALHA ALTO ──────────────────────────────────────────────────────
+    # Medido em 18/11/2026, no deploy da 1.57.0: um erro de DDL no meio do
+    # baseline (devolução tratada como nota duplicada) foi listado aqui e o
+    # script SEGUIU. Resultado: contêineres `healthy` na versão nova, app
+    # respondendo 200, e uma tabela (`offline_devices`) que simplesmente não
+    # existia — o sintoma apareceria só quando alguém usasse o recurso.
+    #
+    # Schema incompleto não é aviso: é deploy pela metade. Aqui o script para
+    # ANTES de trocar as imagens, então o que está no ar continua sendo a
+    # versão anterior — inteira. A saída explícita é NEXUS_SCHEMA_NAO_FATAL=1,
+    # para quem já sabe o que está fazendo e prefere subir mesmo assim.
+    if [ "${NEXUS_SCHEMA_NAO_FATAL:-0}" = "1" ]; then
+      c_ylw "  Seguindo por NEXUS_SCHEMA_NAO_FATAL=1: o schema pode estar INCOMPLETO."
+    else
+      die "Atualização interrompida: o banco recusou parte do schema (acima). Nada foi apagado e as imagens NÃO foram trocadas — o que está no ar continua na versão anterior. Corrija o erro e rode de novo; se for intencional, use NEXUS_SCHEMA_NAO_FATAL=1."
+    fi
   else
     c_grn "✓ banco atualizado (e conversas reorganizadas, se havia bagunça)."
   fi
