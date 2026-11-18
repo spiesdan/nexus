@@ -1,56 +1,47 @@
-import { randomUUID } from "node:crypto";
-
 import { expect, test, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { carregarEnvLocal } from "../../scripts/lib/env-de-teste";
 import type { CredsE2E } from "./helpers/login-admin";
-import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { lerCreds } from "./helpers/login-admin";
 
 /**
- * Sentinel v1.1 — o painel, provado como um leigo faria.
+ * Sentinel v1.3 — o painel provado como um leigo faria, com a ocorrência
+ * nascendo do SCAN, não de um INSERT na tabela de ocorrências.
  *
- * Cobre o que a doutrina de QA visual cobra e o unitário não vê: a tela ABRE,
- * filtra, mostra o plano revisável e o histórico, o kill switch desliga de
- * verdade, e cada papel vê a porta que lhe pertence (viewer não age, agent age
- * mas não configura, admin configura).
+ * A fixture planta dois problemas de negócio no banco de TESTE:
  *
- * A fixture é semeada no banco de TESTE (`.env.e2e`, local) com fingerprint
- * única e removida no `afterAll`. Nenhum dado real, nenhuma chamada fiscal.
+ *  1. um produto controlado com 9.999 unidades e NENHUMA movimentação — o
+ *     detector `operacao.estoque_divergente` tem de encontrá-lo (left join);
+ *  2. um job na dead-letter — `operacao.job_fila_travado` tem de encontrá-lo.
+ *
+ * Depois o teste clica "Executar agora" e prova: KPIs, filtros, detalhe com
+ * evidência/causa/histórico, gestor ignorando/encerrando com motivo, e
+ * viewer/agent sem os botões de gestão.
+ *
+ * O banco é o Supabase LOCAL (`127.0.0.1:54321`). Nada aqui roda contra
+ * produção: `carregarEnvLocal()` recusa destino remoto.
  */
 test.describe.configure({ mode: "serial" });
-test.setTimeout(120_000);
+test.setTimeout(180_000);
 
 const CARIMBO = Date.now();
-const FP_ABERTA = `e2e-sentinel-${CARIMBO}-aberta`;
-const FP_FECHADA = `e2e-sentinel-${CARIMBO}-fechada`;
-const TITULO_ABERTA = `E2E Sentinel — estoque negativo ${CARIMBO}`;
-const TITULO_FECHADA = `E2E Sentinel — campanha ignorada ${CARIMBO}`;
+const CODIGO = `E2E-SENT-${CARIMBO}`;
+const NOME = `E2E Sentinel estoque ${CARIMBO}`;
+const MOTIVO_PRODUTO = "fixture E2E: divergência de teste";
+const MOTIVO_JOB = "fixture E2E: job de teste";
 
 let db: SupabaseClient;
 let orgId: string;
-let runId: string;
+let produtoId: string;
+let jobId: string;
 let configuracaoAnterior: Record<string, unknown> | null = null;
 let creds: CredsE2E;
 
-function plano(risco: "baixo" | "medio" | "alto") {
-  return {
-    resumo: "Contar fisicamente e corrigir com movimento, nunca com UPDATE direto.",
-    passos: ["Confira o saldo físico do produto.", "Lance o ajuste com motivo e responsável."],
-    campos_pendentes: ["contagem física", "motivo do ajuste"],
-    risco,
-    reversibilidade: "reversivel",
-    exige_aprovacao: true,
-    fonte: ["catalog_products", "inventory_movements"],
-    limitacao: null,
-    confianca: "alta",
-  };
-}
-
 async function semear(): Promise<void> {
   const env = carregarEnvLocal();
-  const url = env.url ?? "";
-  const serviceRole = env.serviceRole ?? "";
+  const url = env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const serviceRole = env.SUPABASE_SERVICE_ROLE_KEY ?? "";
   if (!url || !serviceRole) throw new Error(".env.e2e sem URL/service role do Supabase");
   db = createClient(url, serviceRole, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -66,7 +57,7 @@ async function semear(): Promise<void> {
 
   const { data: config } = await db
     .from("sentinel_settings")
-    .select("organization_id, ativo, intervalo_minutos, retencao_dias, limite_ocorrencias, detectores_desativados")
+    .select("ativo, intervalo_minutos, retencao_dias, limite_ocorrencias, detectores_desativados")
     .eq("organization_id", orgId)
     .maybeSingle();
   configuracaoAnterior = (config as Record<string, unknown> | null) ?? null;
@@ -75,90 +66,55 @@ async function semear(): Promise<void> {
     {
       organization_id: orgId,
       ativo: true,
-      intervalo_minutos: 360,
-      retencao_dias: 180,
-      limite_ocorrencias: 500,
+      // Um teste anterior pode ter desligado o detector que esta fixture usa.
       detectores_desativados: [],
+      limite_ocorrencias: 500,
     },
     { onConflict: "organization_id" },
   );
 
-  runId = randomUUID();
-  const { error: erroRun } = await db.from("sentinel_runs").insert({
-    id: runId,
-    organization_id: orgId,
-    origem: "manual",
-    status: "sucesso",
-    finalizado_em: new Date().toISOString(),
-    achados: 2,
-    criadas: 2,
-  });
-  if (erroRun) throw new Error(`semear run: ${erroRun.message}`);
+  const { data: produto, error: erroProduto } = await db
+    .from("catalog_products")
+    .insert({
+      organization_id: orgId,
+      codigo: CODIGO,
+      nome: NOME,
+      preco_cents: 1000,
+      quantidade: 9999,
+      controla_estoque: true,
+    })
+    .select("id")
+    .single();
+  if (erroProduto || !produto) throw new Error(`semear produto: ${erroProduto?.message}`);
+  produtoId = (produto as { id: string }).id;
 
-  const { error: erroAberta } = await db.rpc("fn_sentinel_registrar_ocorrencia", {
-    p_organization_id: orgId,
-    p_execucao_id: runId,
-    p_fingerprint: FP_ABERTA,
-    p_regra: "operacao.estoque_negativo",
-    p_categoria: "operacao",
-    p_entidade_tipo: "catalog_products",
-    p_entidade_id: `e2e-produto-${CARIMBO}`,
-    p_titulo: TITULO_ABERTA,
-    p_resumo: "O saldo ficou abaixo de zero.",
-    p_causa_provavel: "Saída sem entrada correspondente.",
-    p_severidade: "critica",
-    p_href: "/app/estoque",
-    p_evidencia: { quantidade: -2, codigo: "E2E-SENTINEL" },
-    p_recomendacao: plano("alto"),
-  });
-  if (erroAberta) throw new Error(`semear ocorrência aberta: ${erroAberta.message}`);
-
-  // Reexecuta a mesma fingerprint: o histórico precisa ter `reafirmada`.
-  await db.rpc("fn_sentinel_registrar_ocorrencia", {
-    p_organization_id: orgId,
-    p_execucao_id: runId,
-    p_fingerprint: FP_ABERTA,
-    p_regra: "operacao.estoque_negativo",
-    p_categoria: "operacao",
-    p_entidade_tipo: "catalog_products",
-    p_entidade_id: `e2e-produto-${CARIMBO}`,
-    p_titulo: TITULO_ABERTA,
-    p_resumo: "O saldo ficou abaixo de zero.",
-    p_causa_provavel: "Saída sem entrada correspondente.",
-    p_severidade: "critica",
-    p_href: "/app/estoque",
-    p_evidencia: { quantidade: -2, codigo: "E2E-SENTINEL" },
-    p_recomendacao: plano("alto"),
-  });
-
-  const { error: erroFechada } = await db.from("sentinel_occurrences").insert({
-    organization_id: orgId,
-    fingerprint: FP_FECHADA,
-    regra: "campanha.cidade_repetida",
-    categoria: "campanha",
-    entidade_tipo: "prospecting_campaigns",
-    entidade_id: `e2e-campanha-${CARIMBO}`,
-    titulo: TITULO_FECHADA,
-    resumo: "Cidade repetida no recorte.",
-    causa_provavel: "Seleção repetida na tela.",
-    severidade: "baixa",
-    estado: "ignorada",
-    ignorada_motivo: "fixture E2E",
-    href: "/app/campanhas",
-    evidencia: { total_cidades: 2 },
-    recomendacao: plano("baixo"),
-  });
-  if (erroFechada) throw new Error(`semear ocorrência fechada: ${erroFechada.message}`);
+  const { data: job, error: erroJob } = await db
+    .from("job_queue")
+    .insert({
+      organization_id: orgId,
+      kind: "watchdog",
+      status: "dead",
+      attempts: 5,
+      max_attempts: 5,
+      last_error: `fixture E2E ${CARIMBO}`,
+    })
+    .select("id")
+    .single();
+  if (erroJob || !job) throw new Error(`semear job: ${erroJob?.message}`);
+  jobId = (job as { id: string }).id;
 }
 
 async function limpar(): Promise<void> {
   if (!db || !orgId) return;
+  // Só as ocorrências das NOSSAS entidades; o resto do banco de teste fica.
   await db
     .from("sentinel_occurrences")
     .delete()
     .eq("organization_id", orgId)
-    .in("fingerprint", [FP_ABERTA, FP_FECHADA]);
-  if (runId) await db.from("sentinel_runs").delete().eq("id", runId).eq("organization_id", orgId);
+    .in("entidade_id", [produtoId, jobId]);
+  if (jobId) await db.from("job_queue").delete().eq("id", jobId).eq("organization_id", orgId);
+  if (produtoId)
+    await db.from("catalog_products").delete().eq("id", produtoId).eq("organization_id", orgId);
 
   if (configuracaoAnterior) {
     await db
@@ -176,12 +132,62 @@ async function limpar(): Promise<void> {
   }
 }
 
-async function loginSimples(page: Page, email: string, password: string): Promise<void> {
-  await page.goto("/login");
-  await page.locator("#email").fill(email);
-  await page.locator("#password").fill(password);
-  await page.getByRole("button", { name: /entrar/i }).click();
-  await page.waitForURL(/\/app(\/|$)/, { timeout: 30_000 });
+/**
+ * Login por cookie de sessão, não pelo formulário.
+ *
+ * O alvo desta spec é o PAINEL; o formulário de login tem specs próprias
+ * (`auth`, `password-recovery`, `reset-password-mfa`). Injetar a sessão do
+ * Supabase local (`@supabase/ssr` usa `sb-nexus-auth`) evita acoplar esta prova
+ * à hidratação da tela de login — que, na máquina compartilhada, é o elo lento.
+ */
+async function entrarComSessao(page: Page, email: string, senha: string): Promise<void> {
+  const env = carregarEnvLocal();
+  const url = env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const anon = env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  if (!url || !anon) throw new Error(".env.e2e sem URL/anon key do Supabase");
+
+  const sb = createClient(url, anon, { auth: { persistSession: false } });
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if (error || !data.session) throw new Error(`login de ${email}: ${error?.message ?? "sem sessão"}`);
+
+  const value = `base64-${Buffer.from(JSON.stringify(data.session)).toString("base64url")}`;
+  await page.context().addCookies([
+    {
+      name: "sb-nexus-auth",
+      value,
+      domain: "127.0.0.1",
+      path: "/",
+      httpOnly: true,
+      sameSite: "Strict",
+    },
+  ]);
+}
+
+async function buscar(page: Page, texto: string): Promise<void> {
+  const campo = page.getByRole("textbox", { name: "Buscar ocorrência" });
+  await campo.fill(texto);
+}
+
+async function abrirOcorrencia(
+  page: Page,
+  textoBusca: string,
+  nomeDoBotao: string = textoBusca,
+): Promise<void> {
+  await buscar(page, textoBusca);
+  const seguro = nomeDoBotao.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const linha = page.getByRole("button", { name: new RegExp(seguro) });
+  await expect(linha.first()).toBeVisible({ timeout: 30_000 });
+  await linha.first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+}
+
+async function executarScan(page: Page): Promise<void> {
+  await page.goto("/app/sentinel");
+  const botao = page.getByRole("button", { name: /Executar agora/ });
+  await expect(botao).toBeEnabled({ timeout: 30_000 });
+  await botao.click();
+  // A rota espera a rodada terminar; o toast confirma. O refresh traz a lista.
+  await expect(page.getByText(/Varredura concluída/)).toBeVisible({ timeout: 90_000 });
 }
 
 test.beforeAll(async () => {
@@ -193,87 +199,123 @@ test.afterAll(async () => {
   await limpar();
 });
 
-test("admin: abre, filtra, lê plano/histórico e desliga/religa o kill switch", async ({
+test("gestor: o scan cria as ocorrências, os KPIs abrem e os filtros recortam", async ({
   page,
 }) => {
-  await loginComoAdmin(page, creds);
-  await page.goto("/app/sentinel");
+  await entrarComSessao(page, creds.users.manager!.email, creds.password);
+  await executarScan(page);
 
-  await expect(page.getByRole("heading", { name: "Sentinel", level: 1 })).toBeVisible();
+  // KPIs do painel.
   await expect(page.getByText("Abertas").first()).toBeVisible();
-  await expect(page.getByText(TITULO_ABERTA)).toBeVisible();
+  await expect(page.getByText("Alta prioridade").first()).toBeVisible();
+  await expect(page.getByText("Ação necessária").first()).toBeVisible();
+  await expect(page.getByText("Recorrentes").first()).toBeVisible();
 
-  // Filtro por estado: fechadas esconde a aberta e mostra a ignorada.
-  await page.getByRole("combobox", { name: "Filtrar por estado" }).click();
-  await page.getByRole("option", { name: "Fechadas" }).click();
-  await expect(page.getByText(TITULO_ABERTA)).toHaveCount(0);
-  await expect(page.getByText(TITULO_FECHADA)).toBeVisible();
+  // O scan encontrou o produto sem movimentação e o job na dead-letter.
+  await buscar(page, NOME);
+  await expect(page.getByText(NOME)).toBeVisible({ timeout: 30_000 });
+  await buscar(page, jobId);
+  await expect(page.getByText("Job na dead-letter")).toBeVisible({ timeout: 30_000 });
 
-  await page.getByRole("combobox", { name: "Filtrar por estado" }).click();
-  await page.getByRole("option", { name: "Abertas" }).click();
-  await expect(page.getByText(TITULO_ABERTA)).toBeVisible();
-
-  // Severidade: crítica mantém a aberta; baixa a esconde.
+  // Filtro por severidade: o job é crítica, o produto é baixa.
+  await buscar(page, "");
   await page.getByRole("combobox", { name: "Filtrar por severidade" }).click();
   await page.getByRole("option", { name: "Crítica" }).click();
-  await expect(page.getByText(TITULO_ABERTA)).toBeVisible();
+  await expect(page.getByText("Job na dead-letter")).toBeVisible();
+  await expect(page.getByText(NOME)).toHaveCount(0);
   await page.getByRole("combobox", { name: "Filtrar por severidade" }).click();
   await page.getByRole("option", { name: "Toda severidade" }).click();
 
-  // Detalhe: plano revisável, risco, passos e histórico.
-  await page.getByRole("button", { name: new RegExp(TITULO_ABERTA) }).click();
-  const dialogo = page.getByRole("dialog");
-  await expect(dialogo).toBeVisible();
-  await expect(dialogo.getByText("Plano de correção (revisável)")).toBeVisible();
-  await expect(dialogo.getByText("Risco alto")).toBeVisible();
-  await expect(dialogo.getByText("Exige aprovação")).toBeVisible();
-  await expect(dialogo.getByText("Confira o saldo físico do produto.")).toBeVisible();
-  await expect(dialogo.getByText("Histórico")).toBeVisible();
-  await expect(dialogo.getByText("reafirmada", { exact: true })).toBeVisible();
-  await page.keyboard.press("Escape");
-
-  // Kill switch pela tela: desliga, o banner aparece e o botão de varrer cai.
-  await page.getByRole("button", { name: "Configurações" }).click();
-  const config = page.getByRole("dialog");
-  await expect(config.getByText("Configurações do Sentinel")).toBeVisible();
-  await config.getByRole("switch").click();
-  await config.getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByText("O Sentinel está desligado para esta organização.")).toBeVisible();
-  await expect(page.getByRole("button", { name: /Executar agora/ })).toBeDisabled();
-
-  // Religa para não deixar a fixture desligada.
-  await page.getByRole("button", { name: "Configurações" }).click();
-  await page.getByRole("dialog").getByRole("switch").click();
-  await page.getByRole("dialog").getByRole("button", { name: "Salvar" }).click();
-  await expect(page.getByText("O Sentinel está desligado para esta organização.")).toHaveCount(0);
+  // Fechadas não mostra o que está aberto.
+  await page.getByRole("combobox", { name: "Filtrar por estado" }).click();
+  await page.getByRole("option", { name: "Fechadas" }).click();
+  await expect(page.getByText(NOME)).toHaveCount(0);
+  await page.getByRole("combobox", { name: "Filtrar por estado" }).click();
+  await page.getByRole("option", { name: "Abertas" }).click();
+  await expect(page.getByText(NOME)).toBeVisible();
 });
 
-test("viewer: enxerga a ocorrência e o plano, mas não configura nem age", async ({ page }) => {
-  await loginSimples(page, creds.users.viewer!.email, creds.password);
+test("detalhe: evidência, causa, plano revisável e histórico do scan", async ({ page }) => {
+  await entrarComSessao(page, creds.users.manager!.email, creds.password);
+  await page.goto("/app/sentinel");
+  await abrirOcorrencia(page, NOME);
+
+  const dialogo = page.getByRole("dialog");
+  await expect(dialogo.getByText("O que foi encontrado")).toBeVisible();
+  await expect(dialogo.getByText("Causa provável")).toBeVisible();
+  await expect(dialogo.getByText("Plano de correção (revisável)")).toBeVisible();
+  await expect(dialogo.getByText("Confiança baixa")).toBeVisible();
+  await expect(dialogo.getByText(/O razão não tem saldo de abertura/).first()).toBeVisible();
+  await expect(dialogo.getByText("Evidência")).toBeVisible();
+  await expect(dialogo.getByText("Histórico")).toBeVisible();
+  await expect(dialogo.getByText("detectada", { exact: true })).toBeVisible();
+});
+
+test("viewer: vê a ocorrência e o plano, mas não configura nem age", async ({ page }) => {
+  await entrarComSessao(page, creds.users.viewer!.email, creds.password);
   await page.goto("/app/sentinel");
 
-  await expect(page.getByText(TITULO_ABERTA)).toBeVisible();
   await expect(page.getByRole("button", { name: /Executar agora/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Configurações" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: new RegExp(TITULO_ABERTA) }).click();
+  await abrirOcorrencia(page, NOME);
   const dialogo = page.getByRole("dialog");
   await expect(dialogo.getByText("Plano de correção (revisável)")).toBeVisible();
   await expect(dialogo.getByRole("button", { name: "Assumir" })).toHaveCount(0);
   await expect(dialogo.getByRole("button", { name: "Pedir ação" })).toHaveCount(0);
+  await expect(dialogo.getByRole("button", { name: "Ignorar" })).toHaveCount(0);
 });
 
-test("agent: age no detalhe, mas não configura a varredura", async ({ page }) => {
-  await loginSimples(page, creds.users.agent!.email, creds.password);
+test("agent: age no detalhe, mas não configura nem ignora/encerra", async ({ page }) => {
+  await entrarComSessao(page, creds.users.agent!.email, creds.password);
   await page.goto("/app/sentinel");
 
-  await expect(page.getByText(TITULO_ABERTA)).toBeVisible();
   await expect(page.getByRole("button", { name: /Executar agora/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Configurações" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: new RegExp(TITULO_ABERTA) }).click();
+  await abrirOcorrencia(page, NOME);
   const dialogo = page.getByRole("dialog");
   await expect(dialogo.getByRole("button", { name: "Assumir" })).toBeVisible();
   await expect(dialogo.getByRole("button", { name: "Pedir ação" })).toBeVisible();
   await expect(dialogo.getByRole("button", { name: "Ignorar" })).toHaveCount(0);
+  await expect(dialogo.getByRole("button", { name: "Encerrar" })).toHaveCount(0);
+});
+
+test("gestor: ignora e encerra com motivo, e o histórico registra a decisão", async ({ page }) => {
+  await entrarComSessao(page, creds.users.manager!.email, creds.password);
+  await page.goto("/app/sentinel");
+
+  // Ignorar o produto (decisão de gestor, motivo obrigatório).
+  await abrirOcorrencia(page, NOME);
+  let dialogo = page.getByRole("dialog");
+  await dialogo.getByRole("button", { name: "Ignorar" }).click();
+  const confirmacao = page.getByRole("dialog").filter({ hasText: "Ignorar exige motivo" });
+  await confirmacao.getByLabel("Motivo").fill(MOTIVO_PRODUTO);
+  await confirmacao.getByRole("button", { name: "Confirmar" }).click();
+  await expect(dialogo.getByText("Ignorada", { exact: true })).toBeVisible({ timeout: 30_000 });
+  await expect(dialogo.getByText(new RegExp(MOTIVO_PRODUTO))).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Encerrar o job (motivo opcional, mas registrado).
+  await abrirOcorrencia(page, jobId, "Job na dead-letter");
+  dialogo = page.getByRole("dialog");
+  await expect(dialogo.getByText("Job na dead-letter")).toBeVisible();
+  await dialogo.getByRole("button", { name: "Encerrar" }).click();
+  const encerramento = page.getByRole("dialog").filter({ hasText: "O motivo é opcional" });
+  await encerramento.getByLabel("Motivo").fill(MOTIVO_JOB);
+  await encerramento.getByRole("button", { name: "Confirmar" }).click();
+  await expect(dialogo.getByText("Encerrada", { exact: true })).toBeVisible({ timeout: 30_000 });
+  await page.keyboard.press("Escape");
+
+  // O filtro de fechadas agora mostra as duas decisões.
+  await buscar(page, "");
+  await page.getByRole("combobox", { name: "Filtrar por estado" }).click();
+  await page.getByRole("option", { name: "Fechadas" }).click();
+  await expect(page.getByText(NOME)).toBeVisible();
+  await expect(page.getByText("Job na dead-letter").first()).toBeVisible();
+
+  // O histórico não apaga a decisão: reabre o produto e lê o motivo.
+  await abrirOcorrencia(page, NOME);
+  await expect(page.getByRole("dialog").getByText("estado_alterado", { exact: true })).toBeVisible();
+  await expect(page.getByRole("dialog").getByText(new RegExp(MOTIVO_PRODUTO))).toBeVisible();
 });

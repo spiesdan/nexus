@@ -630,6 +630,9 @@ export const AUDIT_ACTIONS = [
   "sentinel.run",
   "sentinel.occurrence_state",
   "sentinel.settings_changed",
+  /** Nível 2 restrito (0325): antes/depois de uma correção de job aprovada. */
+  "sentinel.correction_applied",
+  "sentinel.correction_reverted",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */

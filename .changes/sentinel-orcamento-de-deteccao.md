@@ -10,6 +10,8 @@ rodada é marcada como truncada e o Sentinel **não** encerra ocorrências por
 ausência — lista incompleta não é prova.
 
 O tempo medido fica no histórico da execução (não em coluna nova) e no log
-estruturado. Medição desta entrega: 29 detectores sobre 2 mil produtos, 2 mil
-pedidos, 2 mil recebíveis e 2 mil leads levam 7 ms nesta máquina; o teto padrão
-é de 8 s, folga para o cron de 15 minutos.
+estruturado. Medição desta entrega: 29 detectores sobre 2 mil de cada entidade
+levam 7 ms; com 50 mil pedidos e 200 mil mensagens, o scan completo levou 1,1 s
+e a detecção 37 ms. Forçando o orçamento a 0 ms no mesmo snapshot, a rodada
+truncou e nenhuma regra foi avaliada — o teto de 8 s protege o cron de 15
+minutos sem depender de o volume caber na memória.

@@ -1,8 +1,8 @@
-# Frente `front/sentinel` — Nexus Sentinel v1.2
+# Frente `front/sentinel` — Nexus Sentinel v1.3
 
-> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v12`
-> Baseline desta fatia: `nexus/main` @ `81a26f45` (o v1.1 entrou em `2116db86` e a prova em `05570d11`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
-> Escopo: **v1 + v1.1 + v1.2 somente leitura** — detectar, classificar, abrir ocorrência, propor plano revisável e medir a rodada. Nenhuma correção autônoma.
+> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v13`
+> Baseline desta fatia: `nexus/main` @ `9ede1d6b` (v1.1 em `2116db86`, prova em `05570d11`, v1.2 em `9ede1d6b`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Escopo: **v1 + v1.1 + v1.2 + v1.3** — observar, recomendar, medir a rodada e executar **uma** correção de manutenção após aprovação humana, com antes/depois e reversão honesta.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
 
@@ -112,7 +112,7 @@ terminal ─> nova/recorrente (reabrir, gestor)
   plano revisável com passos, campos pendentes, risco da ação, reversibilidade,
   fonte, limitação e confiança. O plano é persistido junto da ocorrência e
   exibido no detalhe; **nada é executado**.
-- **Nível 2 — corrigir após aprovação** (v1.3, não implementado).
+- **Nível 2 — corrigir após aprovação** (v1.3, restrito): **um** caso — antecipar job `watchdog` pendente e atrasado. Dry-run obrigatório, hash do plano, CAS no `run_after`, antes/depois no histórico, reversão só enquanto o worker não reclamou. Nota, saldo, pagamento, recebível, campanha e job de atendimento continuam fora.
 - **Nível 3 — automação restrita** (não implementado; e emissão/pagamento/envio
   externo nunca serão nível 3).
 
@@ -134,7 +134,8 @@ transação.
 | Organizações por tick do cron | 3 (drena nos ticks seguintes) |
 | Retenção | `retencao_dias` (default 180, piso 30 no corpo da função); rodadas terminais saem em 90 dias fixos |
 | Concorrência | índice único parcial em `sentinel_runs (organization_id)` para `status='executando'`; execução órfã > 30 min vira `erro` |
-| Trilha | `sentinel_occurrence_events` (append-only) + `api_audit_log` (`sentinel.run`, `sentinel.occurrence_state`, `sentinel.settings_changed`) |
+| Trilha | `sentinel_occurrence_events` (append-only) + `api_audit_log` (`sentinel.run`, `sentinel.occurrence_state`, `sentinel.settings_changed`, `sentinel.correction_applied`, `sentinel.correction_reverted`) |
+| Correção aprovada | Só `operacao.job_fila_travado` + `job_queue` + `watchdog`/`pending`/atrasado; `manager+`, ocorrência `aprovada`, dry-run + confirmação, hash e CAS; reversão só com job ainda `pending` no valor gravado |
 
 Rodada vazia **não** audita — o próprio `sentinel_runs` é o registro de que o
 cron rodou. Rodada com achado, encerramento ou falha audita.
@@ -166,8 +167,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
 | `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
 | `supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
-| `supabase/baseline.sql` (apêndices 0316/0321/0324) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324 |
+| `supabase/migrations/20261123180000_0325_sentinel_correcao_aprovada.sql` | Nível 2 restrito: antecipar/reverter job watchdog com CAS |
+| `supabase/baseline.sql` (apêndices 0316/0321/0324/0325) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
@@ -179,10 +181,12 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
 | `lib/sentinel/config.ts` | defaults, kill switch, "devida?" |
+| `lib/sentinel/correcao.ts` / `correcao-constantes.ts` | elegibilidade pura, hash do plano e allowlist do único caso corrigível |
+| `app/api/v1/sentinel/occurrences/[id]/correcao/**` | simular, executar e reverter (manager+) |
 | `app/api/v1/sentinel/{occurrences,scan,settings}` | API |
 | `app/api/v1/cron/sentinel/route.ts` | cron (15 min) |
 | `app/app/sentinel/` | painel |
-| `docs/architecture/sentinel.architecture.json` | mapa (22 peças, 26 arestas) |
+| `docs/architecture/sentinel.architecture.json` | mapa (23 peças, 31 arestas) |
 | `tests/invariants/rls-isolation.test.ts` | seed + TABLES das 4 tabelas |
 | `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção (10 dias fica, 31 apaga) e cross-tenant |
 | `tests/invariants/sentinel-estoque-razao.test.ts` | left join, `ultimo_movimento` null e `security_invoker` entre orgs |
@@ -190,6 +194,10 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
 | `tests/api/sentinel-permissoes.test.ts` | régua de papel no fio: agent assume/pede ação; gestor ignora/encerra; platform admin; motivo obrigatório |
 | `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
+| `tests/invariants/sentinel-correcao.test.ts` | RPC 0325: antecipa, reverte, recusa running/flywheel/outra org |
+| `tests/api/sentinel-correcao.test.ts` | simular/executar/reverter: papel, aprovação, hash, audit |
+| `tests/unit/sentinel-correcao-tela.test.tsx` | executar só após confirmação explícita; reverter |
+| `scripts/medir-sentinel-carga.ts` | 50k pedidos + 200k mensagens, scan medido e orçamento forçado |
 | `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
@@ -224,6 +232,48 @@ pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
 #   zero erros
 ```
 
+### v1.3 — correção aprovada, carga e E2E
+
+```bash
+pnpm exec vitest run lib/sentinel tests/api/sentinel-correcao.test.ts \
+  tests/unit/sentinel-correcao-tela.test.tsx
+#   correção: elegibilidade/hash, 12 testes de rota e 3 de tela
+
+# O test:db completo estourou 25 min sob carga nesta máquina; o invariante novo
+# rodou no MESMO container/molde do baseline já aplicado:
+TEST_DB_CONTAINER=<container> TEST_DB_TEMPLATE=inv_baseline \
+  pnpm exec vitest run --config vitest.db.config.ts \
+  tests/invariants/sentinel-correcao.test.ts
+#   4 testes verdes: antecipa, reverte, recusa running/flywheel/outra org
+
+set -a; . ./.env.e2e; set +a
+SENTINEL_CARGA_OK=1 pnpm exec tsx scripts/medir-sentinel-carga.ts
+#   seed 50k pedidos + 200k mensagens: 7.759 ms
+#   scan completo: 1.125 ms | detecção: 37 ms | 29 regras | truncado pela coleta
+#   orçamento forçado 0 ms: truncado_por_tempo=true, 0 regras avaliadas
+#   detecção normal no mesmo snapshot: 1 ms, 29 regras
+```
+
+O E2E foi reescrito para semear **dados de negócio** (produto sem movimentação
+e job na dead-letter) e criar as ocorrências pelo próprio `Executar agora`, sem
+INSERT manual em `sentinel_occurrences`. Rodou **localmente e passou 5/5 em
+8,9 s** contra um build de produção na 3023:
+
+```bash
+pnpm e2e:env                 # .env.e2e local (127.0.0.1:54321)
+pnpm e2e:build               # build de produção com o env local
+pnpm exec next start -p 3023 # o app de dev não hidratava sob a carga da máquina
+E2E_BASE_URL=http://127.0.0.1:3023 \
+  pnpm exec playwright test tests/e2e/sentinel-painel.spec.ts
+# 5 passed (8.9s): scan/KPIs/filtros, detalhe, viewer, agent, gestor ignora/encerra
+```
+
+O login desta spec é por cookie de sessão (`sb-nexus-auth`), não pelo formulário:
+o formulário tem specs próprias (`auth`, `password-recovery`, `reset-password-mfa`)
+e acoplá-lo aqui só adicionaria a hidratação da tela de login à prova do painel.
+As migrations 0324/0325 foram aplicadas no Supabase local antes da execução; no
+CI, o `critical`/`full` usa o baseline completo.
+
 **E2E de navegador não rodou nesta máquina**: o worktree não tem `.env.e2e` e a
 spec do painel continua no `e2e` `critical`/`full` da main. A prova de tela é
 componente + rota (PR #538, mergeado) e a de banco é o `test:db` acima.
@@ -231,7 +281,7 @@ componente + rota (PR #538, mergeado) e a de banco é o `test:db` acima.
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
-## 9. Limitações declaradas (v1.2)
+## 9. Limitações declaradas (v1.3)
 
 1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
    saldo de abertura e a comparação só vale para produtos criados a partir da
@@ -257,7 +307,13 @@ fiscal/financeira real.
    patológica, não contra uma única regra que bloqueie a CPU para sempre.
 10. **E2E de navegador pendente nesta máquina** (sem `.env.e2e`): a prova de
     banco veio de `pnpm test:db`; a de tela é componente + rota (PR da prova).
-11. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+11. **A correção do Nível 2 é deliberadamente estreita:** só job `watchdog`
+    `pending` atrasado; job de atendimento (envio externo), `running`/`dead`,
+    nota, saldo, pagamento, recebível, pedido e campanha são recusa dura. Os
+    demais casos exigem uma fatia própria com antes/depois comprovado.
+12. **Reversão honesta ou nenhuma:** se o worker reclamou o job, a RPC devolve
+    zero linhas e a tela responde 409; não existe "desfiz" que não desfez.
+13. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
     estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
@@ -265,8 +321,8 @@ fiscal/financeira real.
 
 ## 10. Próximas fatias seguras
 
-1. v1.3 — correção aprovada e reversível, sempre com antes/depois e aprovação
-   de gestor; nunca em nota, saldo, pagamento ou envio externo.
+1. v1.4 — ampliar a correção aprovada para outros casos **com antes/depois
+   honesto**, um por vez; nunca em nota, saldo, pagamento ou envio externo.
 2. Explicação por IA **opcional** sobre a evidência já sanitizada, com fallback
    imediato para o texto determinístico.
 3. Exposição no Meu Dia: uma ocorrência `acao_necessaria` vira item da rotina
@@ -275,14 +331,12 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (v1.2, 18/11/2026)
+## 11. Onde retomar (v1.3, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-v12`, PR #541): 0324 (left join), orçamento de
-  detecção (8 s; 7 ms medidos com 2k de cada entidade), retenção medida dos dois
-  lados (10 dias fica, 31 apaga) e a guarda de lead sem contato no detector.
-- **Prova** (`front/sentinel-prova`, #538, mergeada em `05570d11`): papéis na
-  rota, kill switch na tela e catraca de somente leitura.
-- **E2E do painel**: continua sem execução local; estreia no `critical` da main.
-- **Próxima de produto**: v1.3 — correção aprovada e reversível, com
-  antes/depois e aprovação de gestor; nunca em nota, saldo, pagamento ou envio
-  externo.
+- **Esta fatia** (`front/sentinel-v13`): 0325 (correção aprovada de job
+  watchdog), rotas de simular/executar/reverter, tela com confirmação explícita,
+  invariante de banco e medição de carga (50k/200k).
+- **E2E do painel**: spec reescrita para ocorrência nascer do scan; falta rodar
+  no CI (o app local não hidratou sob a carga da máquina).
+- **Próxima de produto**: v1.4 — outro caso de correção com reversão honesta,
+  um por vez; nunca em nota, saldo, pagamento ou envio externo.
