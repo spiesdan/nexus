@@ -47,6 +47,7 @@ export function nota(over: Partial<NotaFiscal> = {}): NotaFiscal {
     erro: null,
     sefaz_cstat: null,
     sefaz_xmotivo: null,
+    extras_fiscais: null,
     created_at: ha(HORA),
     updated_at: ha(HORA),
     ...over,

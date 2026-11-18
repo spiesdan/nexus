@@ -158,12 +158,34 @@ export function notasAutorizadasSemChave(s: Snapshot): Achado[] {
     }));
 }
 
+
+/**
+ * Finalidade fiscal da nota, com a MESMA regra da 0326 no banco:
+ * `coalesce(nullif(extras_fiscais->>'finalidade','')::int, 1)`.
+ * 4 = devolução; devolução não concorre com a venda e não é duplicidade.
+ */
+function finalidadeDaNota(n: NotaFiscal): number {
+  const bruto = n.extras_fiscais?.finalidade;
+  if (typeof bruto === "number" && Number.isFinite(bruto)) return bruto;
+  if (typeof bruto === "string" && bruto.trim() !== "") {
+    const parsed = Number(bruto);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return 1;
+}
+
 export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
   // Um pedido pode estar ligado à nota como principal (`invoices.order_id`) ou
   // como secundário (`invoice_orders`, 0294). Contar só o principal deixaria a
   // duplicidade de um agrupamento passar — que é exatamente o caso em que duas
   // notas vivas transmitem o mesmo pedido à SEFAZ.
-  const ativas = new Map(s.notas.filter((n) => NOTA_ATIVA.has(n.status)).map((n) => [n.id, n]));
+  // Devolução (finalidade 4) é a segunda nota por natureza — a 0326 já ensinou
+  // isso ao banco; o detector tem de ignorá-la dos DOIS lados.
+  const ativas = new Map(
+    s.notas
+      .filter((n) => NOTA_ATIVA.has(n.status) && finalidadeDaNota(n) !== 4)
+      .map((n) => [n.id, n]),
+  );
   const pedidosPorNota = new Map<string, Set<string>>();
 
   for (const n of ativas.values()) {
@@ -207,6 +229,7 @@ export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
           total_notas: notas.length,
           notas: notas.map((n) => `${n.id}:${n.status}:${n.serie}/${n.numero ?? "s/n"}`),
           valores_cents: notas.map((n) => n.total_cents),
+          finalidades: notas.map(finalidadeDaNota),
         },
       };
     });
