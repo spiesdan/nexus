@@ -293,7 +293,7 @@ const SEED = `
 
       insert into public.idempotency_keys
         (organization_id, key, endpoint, request_hash, status_code, response_body)
-        values (v_org, 'chave-' || v_tag, '/probe', '\\x00'::bytea, 200, '{}'::jsonb);
+        values (v_org, 'chave-' || v_tag, '/probe', 'probe-' || v_tag, 200, '{}'::jsonb);
 
       insert into public.incidents (organization_id, type, severity)
         values (v_org, 'probe', 'info');
