@@ -220,7 +220,7 @@ export function EvolutionGaps({
               {l.href && (
                 <Link
                   href={l.href}
-                  className="mt-2 inline-block text-sm font-medium text-accent underline underline-offset-4"
+                  className="mt-2 inline-block text-sm font-medium text-accent-ink underline underline-offset-4"
                 >
                   {l.cta}
                 </Link>

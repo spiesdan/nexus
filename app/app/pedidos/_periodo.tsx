@@ -95,7 +95,7 @@ export function FiltroPorPeriodo({
             key={a.rotulo}
             type="button"
             onClick={() => aoMudar(a.dias())}
-            className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-accent hover:underline"
+            className="rounded-md px-1.5 py-0.5 text-xs font-semibold text-accent-ink hover:underline"
           >
             {a.rotulo}
           </button>

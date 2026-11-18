@@ -38,7 +38,7 @@ export function TenantSwitcher() {
         >
           <span
             aria-hidden
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent"
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent-ink"
           >
             {[...(active?.name ?? "?")][0]?.toUpperCase()}
           </span>
@@ -69,12 +69,12 @@ export function TenantSwitcher() {
             >
               <span
                 aria-hidden
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent-ink"
               >
                 {inicial}
               </span>
               <span className="min-w-0 flex-1 truncate text-sm">{org.organization_name}</span>
-              {ativa && <Check size={14} aria-hidden className="shrink-0 text-accent" />}
+              {ativa && <Check size={14} aria-hidden className="shrink-0 text-accent-ink" />}
             </DropdownMenuItem>
           );
         })}

@@ -76,7 +76,7 @@ export default async function NotasPage({
 
   const supabase = await createClient();
   const [
-    { data: notas },
+    { data: notas, count: totalNotas },
     { data: entradas },
     { data: pagaveis },
     { data: faturados },
@@ -87,7 +87,7 @@ export default async function NotasPage({
   ] = await Promise.all([
     supabase
       .from("invoices")
-      .select(COLUNAS_DA_NOTA)
+      .select(COLUNAS_DA_NOTA, { count: "exact" })
       .eq("organization_id", activeOrg.orgId)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -571,6 +571,7 @@ export default async function NotasPage({
         <TabsContent value="notas" className="mt-4">
           <GradeNotas
             inicial={(notas ?? []) as unknown as NotaFiscal[]}
+            totalNotas={totalNotas ?? null}
             pessoas={pessoas}
             operacaoPadrao={
               (config as unknown as { natureza_operacao?: string } | null)?.natureza_operacao ?? ""

@@ -132,7 +132,20 @@ o `cMun`/IBGE. Sem ele o sidecar recusa antes de abrir o certificado.
 | `transporte` | `<transp>` (`modFrete`, default `9`), `<transp/transporta>` se houver transportador, `<transp/vol>` se houver volumes |
 | `cobranca` | `<pag>` + `<pag/detPag>` (`tPag`, `indPag`, `vPag`) e, com `parcelas > 1`, `<cobr/dup>` |
 | `adicionais` | `<infAdic>` — `infCpl` até 5000, `infAdFisco` até 2000 caracteres |
-| `entrega` | `<dest>/<enderDest>` (endereço do destinatário) e `<entrega>` (TLocal); obrigatório na NF-e |
+| `entrega` | `<dest>/<enderDest>` (endereço do destinatário); obrigatório na NF-e. O grupo `<entrega>` **não** é emitido (ver abaixo) |
+| `finalidade` / `ref_nfe` | NF-e de devolução: `finalidade: 4` → `finNFe=4`, `tpNF=0`, `<NFref><refNFe>` com a chave da venda original, CFOP de entrada (`5102 → 1202`) e `tPag=90` com `vPag=0.00` |
+
+`ref_nfe` é a chave de 44 dígitos da nota devolvida. Sem ela o sidecar recusa
+(`VALIDACAO`) em vez de emitir uma devolução sem referência — a SEFAZ rejeita as
+duas formas, com **327** (CFOP) e **904** (valor de pagamento) já medidas em
+16/11/2026. A devolução não tem pagamento: o dinheiro volta, não entra.
+
+**`<entrega>` não é emitido.** O contrato tem um endereço só: `extras.entrega`
+alimenta `<dest>/<enderDest>`. Emitir também o grupo `<entrega>` (G01)
+repetia o mesmo endereço e, para cliente sem IE cadastrada, a SEFAZ cobrava a
+IE do local de entrega (**176**) — sem haver o que informar. O grupo é para
+local de entrega diferente do destinatário, que este contrato ainda não
+expressa.
 
 Pontos de contrato que **não** estão no pedido e por isso são INFERIDO (marcados
 assim no código):

@@ -648,7 +648,7 @@ export function ModoMotorista({
                   {parada.fone && (
                     <a
                       href={`tel:${parada.fone.replace(/[^\d+]/g, "")}`}
-                      className="inline-block font-medium text-accent underline underline-offset-4"
+                      className="inline-block font-medium text-accent-ink underline underline-offset-4"
                     >
                       {parada.fone}
                     </a>
@@ -928,12 +928,12 @@ export function ModoMotorista({
       {proxima ? (
         <Card className="overflow-hidden p-0">
           <header className="flex items-center justify-between gap-2 border-b border-border bg-accent-soft px-4 py-2">
-            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent uppercase">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent-ink uppercase">
               {t("Próxima entrega")} · {t("parada")}{" "}
               {rota.paradas.findIndex((p) => p.chave === proxima.chave) + 1} {t("de")}{" "}
               {rota.paradas.length}
             </p>
-            <span className="shrink-0 text-[11px] font-medium text-accent tabular-nums">
+            <span className="shrink-0 text-[11px] font-medium text-accent-ink tabular-nums">
               {proxima.pedidos.length}{" "}
               {proxima.pedidos.length === 1 ? t("pedido") : t("pedidos")}
             </span>
@@ -965,7 +965,7 @@ export function ModoMotorista({
               {proxima.fone && (
                 <a
                   href={`tel:${proxima.fone.replace(/[^\d+]/g, "")}`}
-                  className="mt-1 inline-block text-sm font-medium text-accent underline underline-offset-4"
+                  className="mt-1 inline-block text-sm font-medium text-accent-ink underline underline-offset-4"
                 >
                   {proxima.fone}
                 </a>
@@ -1284,7 +1284,7 @@ export function ModoMotorista({
             className="w-full px-1 text-left"
             aria-label={t("Abrir detalhes desta entrega")}
           >
-            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent uppercase">
+            <p className="text-[10px] font-semibold tracking-[0.14em] text-accent-ink uppercase">
               {t("Próxima entrega")} · {t("parada")} {ordemDaProxima} {t("de")}{" "}
               {rota.paradas.length}
             </p>
@@ -1300,7 +1300,7 @@ export function ModoMotorista({
               <p className="mt-1 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>
             )}
             {distanciaProximaM != null && (
-              <p className="mt-1 text-xs font-medium text-accent tabular-nums">
+              <p className="mt-1 text-xs font-medium text-accent-ink tabular-nums">
                 {t("a")} {formatarDistancia(distanciaProximaM)}
               </p>
             )}
@@ -1419,7 +1419,7 @@ export function ModoMotorista({
           <button
             type="button"
             onClick={() => setFolhaAberta((v) => !v)}
-            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-accent"
+            className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium text-accent-ink"
             aria-expanded={folhaAberta}
           >
             {folhaAberta ? t("Fechar") : t("Roteiro")}

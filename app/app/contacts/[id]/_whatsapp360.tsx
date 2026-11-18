@@ -42,7 +42,7 @@ export function WhatsappDoContato({
             <p className="mt-0.5 truncate text-sm text-muted-foreground">{preview}</p>
           ) : null}
           {conversa.unread > 0 ? (
-            <p className="mt-0.5 text-xs font-medium text-accent-700">
+            <p className="mt-0.5 text-xs font-medium text-accent-ink">
               {conversa.unread} {t("mensagem(ns) sem ler")}
             </p>
           ) : null}

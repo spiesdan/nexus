@@ -102,7 +102,7 @@ export function KnowledgeSourceCard({
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Icon className="h-5 w-5 shrink-0 text-accent" aria-hidden />
+            <Icon className="h-5 w-5 shrink-0 text-accent-ink" aria-hidden />
             <CardTitle className="text-base">{source.name}</CardTitle>
           </div>
           <SourceStatusBadge source={source} />

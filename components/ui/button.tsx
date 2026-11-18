@@ -39,13 +39,17 @@ const buttonVariants = cva(
         default:
           "bg-accent text-accent-foreground hover:bg-accent-hover shadow-xs",
         secondary:
-          "bg-surface text-text border border-border hover:border-accent hover:text-accent",
+          "bg-surface text-text border border-border hover:border-accent hover:text-accent-ink",
         outline:
-          "bg-transparent text-text border border-border hover:border-accent hover:text-accent",
+          "bg-transparent text-text border border-border hover:border-accent hover:text-accent-ink",
         ghost:
-          "bg-transparent text-text-muted hover:bg-accent-soft hover:text-accent",
+          "bg-transparent text-text-muted hover:bg-accent-soft hover:text-accent-ink",
         destructive:
-          "bg-error text-white hover:brightness-95 shadow-xs",
+          // `text-white` era fixo e reprovava no ESCURO: branco sobre o
+          // `--color-error` do tema escuro (#c87263) dá **3,48:1**. O token
+          // `--destructive-foreground` já resolve o lado certo em cada tema
+          // (branco no claro, `#151515` no escuro, 5,02:1).
+          "bg-error text-destructive-foreground hover:brightness-95 shadow-xs",
         link:
           "bg-transparent text-text underline-offset-4 hover:underline h-auto p-0",
       },

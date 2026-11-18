@@ -379,7 +379,7 @@ export function FechamentoCarga({
                             aria-label={`${t("Conferido")}: ${numeroDoPedido(p.numero)}`}
                           />
                         </TableCell>
-                        <TableCell className="hidden font-semibold text-accent tabular-nums md:table-cell">
+                        <TableCell className="hidden font-semibold text-accent-ink tabular-nums md:table-cell">
                           {p.sequencia}
                         </TableCell>
                         <TableCell className="tabular-nums whitespace-nowrap">

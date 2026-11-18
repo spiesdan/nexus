@@ -84,7 +84,7 @@ export function NavHub({
                 <Link key={item.href} href={item.href} prefetch={false} className="block">
                   <Card className="hover-raise flex h-full gap-3 p-4 transition-colors hover:border-border-strong">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft">
-                      <Icon size={20} weight="regular" aria-hidden className="text-accent" />
+                      <Icon size={20} weight="regular" aria-hidden className="text-accent-ink" />
                     </span>
                     <div>
                       <h3 className="text-sm font-medium text-text">

@@ -2279,3 +2279,72 @@ da linha (`^...` com flag `m`), o mesmo cuidado que o teste já tinha.
 É a **sexta** vez nesta auditoria em que o defeito estava na régua (F-20, F-21, V-10, V-26, V-33,
 esta). A regra que fica: antes de publicar um número que absolve o produto, provar que a régua
 olhou para o lado certo.
+
+### V-54 · Alta · No tema claro, o accent usado como TEXTO dava 3,63:1 — e 3,06:1 no selo — **CORRIGIDO**
+
+A V-52 mostrou que o tema claro nunca era medido. Procurando a mesma classe de defeito nos
+tokens (não só na tela), o accent apareceu em **dois papéis com um token só**:
+
+| Papel | Par medido | Claro | Escuro |
+| --- | --- | --- | --- |
+| **preenchimento** (`bg-accent`) + texto Carbon | `#181925` sobre `#7e77f0` | **4,80:1** ✓ | 7,81:1 ✓ |
+| **tinta** (`text-accent`) sobre `--color-surface` | `#7e77f0` sobre `#ffffff` | **3,63:1** ✗ | 7,63:1 ✓ |
+| tinta sobre `--color-bg` | `#7e77f0` sobre `#f6f7f9` | **3,39:1** ✗ | 8,18:1 ✓ |
+| tinta sobre `--color-accent-soft` (`Badge` default) | `#7e77f0` sobre `#e9eaff` | **3,06:1** ✗ | 5,65:1 ✓ |
+
+Piso AA de texto normal: 4,5:1. Eram **140 usos** de `text-accent` — links com sublinhado
+("Ver detalhes", "Atual"), aba ativa, o selo padrão, ícones. No escuro tudo passava; de novo o
+defeito existia de um lado só.
+
+**Por que não bastava escurecer `--color-accent`:** ele é o preenchimento do botão primário, com
+texto Carbon. Escurecer o fill derruba esse par (o Carbon sobre um 700 daria ~3,1:1). São dois
+papéis, e agora são dois tokens:
+
+| Token | Claro | Escuro | Medidas |
+| --- | --- | --- | --- |
+| `--color-accent-ink` | `var(--color-accent-700)` = `#625db8` | `var(--color-accent-400)` = `#a4a5ff` | 5,56 / 5,19 / 5,33 sobre surface/bg/elevada · **4,68 sobre o soft** · escuro 7,63 e 5,65 |
+| `--destructive-foreground` | `#ffffff` (5,63:1 sobre `#a94a3c`) | **`#151515`** (5,02:1 sobre `#c87263`) | — |
+
+Os valores são **paradas da rampa** (`var(--color-accent-NNN)`), não hex fixos: a marca do
+revendedor reescreve a rampa inteira em `lib/branding/css.ts` e a tinta acompanha.
+
+**Segundo defeito, encontrado no caminho:** `Button variant="destructive"` e o
+`NexusConfirmDialog` pintavam `bg-error text-white` com branco **fixo** — no escuro, branco sobre
+`#c87263` dá **3,48:1**. O token `--destructive-foreground` já existia e já declarava o lado
+escuro certo; era o componente que não o usava (o contador do sino, 10 px, usava e estava certo).
+
+**A régua que fica:** `tests/unit/tinta-do-accent-passa-aa.test.ts` mede os tokens (tinta × quatro
+fundos, nos dois temas; e o par do destrutivo) e reprova qualquer `text-accent` novo fora de
+`app/app/fiscal/**` — a única pasta que esta rodada não tocou, por acordo de frentes, e cuja
+dívida está declarada aqui em vez de silenciada.
+
+**Efeito na régua da marca:** o token novo entra na conta de contraste da derivação
+(`lib/branding/regua-do-produto.ts`, regenerado), então uma semente de revendedor cuja tinta não
+se distinga do fundo passa a reprovar — 18/26 pares viraram 22/32, e o número que sobe é papel
+novo entrando na conta.
+
+### V-55 · Média · A borda do campo de formulário tem 1,21:1 — **DECISÃO PENDENTE**
+
+WCAG 2.2 **1.4.11 (contraste de conteúdo não textual, AA)** pede **3:1** para a informação
+visual que identifica um componente de interface. Medido nos três primitivos
+(`components/ui/input.tsx:11`, `textarea.tsx:12`, `select.tsx:22`), que usam `border-border`:
+
+| Par | Claro | Escuro |
+| --- | --- | --- |
+| borda (`--color-border`) sobre a superfície atrás do campo | **1,21:1** | **1,31:1** |
+| preenchimento do campo (`bg-bg`) sobre a superfície | 1,07:1 | 1,07:1 |
+| `--color-border-strong` (o degrau acima, usado no hover) | 1,40:1 | 1,70:1 |
+
+Ou seja: um campo em repouso é identificado por uma hairline de 1,2:1. `border-strong` também
+não chega lá. Para passar, a borda do CONTROLE precisa de um tom próprio — em torno de `#8a8a8a`
+no claro (3,22:1 sobre o fundo do campo) e `#7a7a7a` no escuro.
+
+**Por que não foi corrigido nesta rodada:** o `DESIGN.md` declara a identidade como "hairline
+borders, subtle surface tinting, minimal elevation" (referência Visitors). Trocar a borda de
+todo campo de 1,2:1 para 3:1 não é ajuste de token escondido — é mudança visível em **todo**
+formulário do produto, e a escolha entre identidade e 1.4.11 é do dono. A correção está pronta e
+é pequena (token `--color-border-control` por tema + a classe nos três primitivos), se aprovada.
+
+**O que já está certo:** o indicador de foco do campo usa accent-600 e passa o piso de 3:1 nos
+dois temas; o estado de erro usa `border-error`; e os alvos de toque dos botões têm 44 px abaixo
+de `lg`.

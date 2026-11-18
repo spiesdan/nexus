@@ -57,7 +57,7 @@ export function SourcesTab() {
       <div className="flex justify-center pt-10">
         <Card className="hover-raise max-w-md">
           <CardHeader className="items-center text-center">
-            <PlugsConnected className="mb-2 h-10 w-10 text-accent" />
+            <PlugsConnected className="mb-2 h-10 w-10 text-accent-ink" />
             <CardTitle>{t("Conecte sua landing page em 2 minutos")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-center">

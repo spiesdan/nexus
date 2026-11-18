@@ -203,7 +203,7 @@ export function UserDetailClient({ id }: UserDetailClientProps) {
                       <div className="flex flex-col gap-0.5">
                         <Link
                           href={`/admin/tenants/${m.organization_id}`}
-                          className="text-sm font-medium text-accent hover:underline"
+                          className="text-sm font-medium text-accent-ink hover:underline"
                         >
                           {m.tenant_name ?? m.organization_id}
                         </Link>

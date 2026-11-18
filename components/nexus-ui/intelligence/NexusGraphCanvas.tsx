@@ -66,7 +66,7 @@ function NoNexus({ data, selected }: { data: RFData; selected?: boolean }) {
         </p>
       ) : null}
       {n.inferred ? (
-        <p className="mt-1 text-[10px] font-medium tracking-wider text-accent-700 uppercase">
+        <p className="mt-1 text-[10px] font-medium tracking-wider text-accent-ink uppercase">
           {t("Derivado · ver fonte")}
         </p>
       ) : null}

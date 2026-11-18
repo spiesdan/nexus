@@ -100,7 +100,7 @@ export function CapturaDetail({ captura, onOpenChange }: Props) {
 
           <section>
             <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-text">
-              <IdentificationCard className="h-4 w-4 text-accent" /> {t("O que o formulário trouxe")}
+              <IdentificationCard className="h-4 w-4 text-accent-ink" /> {t("O que o formulário trouxe")}
             </h3>
             <dl className="divide-y divide-border rounded-sm border border-border px-3 py-1">
               <Linha rotulo={t("Nome")}>{captura.captured_name ?? "—"}</Linha>
@@ -121,14 +121,14 @@ export function CapturaDetail({ captura, onOpenChange }: Props) {
 
           <section>
             <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-text">
-              <Clock className="h-4 w-4 text-accent" /> {t("Quando")}
+              <Clock className="h-4 w-4 text-accent-ink" /> {t("Quando")}
             </h3>
             <p className="text-sm text-text">{dataHoraCompleta(captura.received_at, tagDoIdioma)}</p>
           </section>
 
           <section>
             <h3 className="mb-2 flex items-center gap-2 text-sm font-medium text-text">
-              <Globe className="h-4 w-4 text-accent" /> {t("De onde veio")}
+              <Globe className="h-4 w-4 text-accent-ink" /> {t("De onde veio")}
             </h3>
             <dl className="divide-y divide-border rounded-sm border border-border px-3 py-1">
               <Linha rotulo={t("Página")}>{captura.origin ?? t("não informada")}</Linha>

@@ -1584,7 +1584,7 @@ export function Roteirizador({
                       {t(
                         "Nenhum veículo na frota. Sem placa e capacidade cadastradas, a carga continua saindo num veículo só.",
                       )}{" "}
-                      <Link href="/app/frota" className="text-accent underline underline-offset-2">
+                      <Link href="/app/frota" className="text-accent-ink underline underline-offset-2">
                         {t("Cadastrar frota")}
                       </Link>
                     </p>
