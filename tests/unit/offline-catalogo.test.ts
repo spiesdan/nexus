@@ -20,6 +20,7 @@ import { describe, expect, it } from "vitest";
 import {
   carimboDoCatalogo,
   sincronizarCatalogo,
+  sincronizarCatalogoDoDispositivo,
   type ContatoEmCache,
   type ProdutoEmCache,
 } from "@/lib/offline/catalogo";
@@ -181,6 +182,79 @@ describe("sincronizarCatalogo", () => {
 
     expect(pagina).toBe(20);
     expect(r.contatos).toBe(20);
+  });
+});
+
+describe("catálogo do aparelho (token)", () => {
+  it("acumula as páginas e grava UMA vez no fim", async () => {
+    const { db, chamadas } = dbFake();
+    const { buscar, urls } = buscarFake({
+      "/api/v1/device/catalog": ok({
+        data: {
+          produtos: [PRODUTO],
+          contatos: [CONTATO],
+          tabelas: [{ id: "t1", nome: "Padrão", desconto_pct: 5, itens: [] }],
+        },
+        meta: { has_more: true, cursor: "pagina-2" },
+      }),
+      "/api/v1/device/catalog?cursor=pagina-2": ok({
+        data: { contatos: [{ ...CONTATO, id: "c2", nome: "João" }] },
+        meta: { has_more: false, cursor: null },
+      }),
+    });
+
+    const r = await sincronizarCatalogoDoDispositivo(db, buscar);
+
+    expect(urls).toHaveLength(2);
+    expect(r).toEqual({ produtos: 1, contatos: 2, tabelas: 1 });
+    // Troca, não mescla: um DELETE por tabela, no fim do download inteiro.
+    expect(chamadas.filter((c) => c.sql.startsWith("DELETE"))).toHaveLength(3);
+  });
+
+  it("página seguinte sem produtos é normal (só contatos)", async () => {
+    // O servidor manda produtos/tabelas só na primeira; exigir de novo na
+    // segunda quebraria o sync no meio de uma base grande.
+    const { db } = dbFake();
+    const { buscar } = buscarFake({
+      "/api/v1/device/catalog": ok({
+        data: { produtos: [], contatos: [], tabelas: [] },
+        meta: { has_more: true, cursor: "p2" },
+      }),
+      "/api/v1/device/catalog?cursor=p2": ok({
+        data: { contatos: [CONTATO] },
+        meta: { has_more: false },
+      }),
+    });
+    expect(await sincronizarCatalogoDoDispositivo(db, buscar)).toEqual({
+      produtos: 0,
+      contatos: 1,
+      tabelas: 0,
+    });
+  });
+
+  it("resposta sem lista NÃO apaga o catálogo antigo", async () => {
+    const { db, chamadas } = dbFake();
+    const { buscar } = buscarFake({
+      "/api/v1/device/catalog": ok({ data: {} }),
+    });
+    await expect(sincronizarCatalogoDoDispositivo(db, buscar)).rejects.toThrow(
+      "resposta sem lista",
+    );
+    expect(chamadas.filter((c) => c.sql.startsWith("DELETE"))).toEqual([]);
+  });
+
+  it("primeira página sem produtos/tabelas também não apaga", async () => {
+    const { db, chamadas } = dbFake();
+    const { buscar } = buscarFake({
+      "/api/v1/device/catalog": ok({
+        data: { contatos: [CONTATO] },
+        meta: { has_more: false },
+      }),
+    });
+    await expect(sincronizarCatalogoDoDispositivo(db, buscar)).rejects.toThrow(
+      "primeira página sem produtos",
+    );
+    expect(chamadas.filter((c) => c.sql.startsWith("DELETE"))).toEqual([]);
   });
 });
 

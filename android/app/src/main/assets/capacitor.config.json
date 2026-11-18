@@ -1,6 +1,6 @@
 {
 	"appId": "tech.billhigiene.crm",
-	"appName": "Bill Higiene",
+	"appName": "Pedidos offline",
 	"webDir": "mobile/www",
 	"backgroundColor": "#0f172a",
 	"android": {

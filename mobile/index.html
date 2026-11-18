@@ -3,7 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Bill Higiene — Pedidos offline</title>
+    <!--
+      Título NEUTRO de propósito: este shell é empacotado UMA vez e pareado com
+      qualquer instalação (white-label). O nome da empresa aparece no cabeçalho
+      depois do pareamento (`#titulo`), vindo do /device/me.
+    -->
+    <title>Pedidos offline</title>
     <link rel="stylesheet" href="./src/estilo.css" />
   </head>
   <body>
@@ -12,9 +17,35 @@
     <jeep-sqlite style="display:none" aria-hidden="true"></jeep-sqlite>
     <main class="tela">
       <header class="topo">
-        <h1>Bill Higiene</h1>
+        <h1 id="titulo">Pedidos offline</h1>
         <p id="sinal" class="sinal" role="status">verificando sinal…</p>
+        <!--
+          O aviso fica no TOPO, não no fim da página. Medido no emulador em
+          18/11/2026: com a fila cheia, "Sem conexão com o sistema" nascia
+          abaixo do botão "Enviar agora" e o vendedor não via nada — a falha
+          existia na tela e não existia para quem olhava.
+        -->
+        <p id="aviso" class="aviso" role="status"></p>
       </header>
+
+      <section class="cartao" aria-label="Pareamento do aparelho">
+        <h2>Aparelho <span id="aparelho-estado" class="conta"></span></h2>
+        <p id="aparelho-texto" class="miudo">verificando…</p>
+        <label for="codigo" class="miudo">Código de pareamento</label>
+        <input
+          id="codigo"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Cole o código começando com NEXUS1."
+        />
+        <button id="btn-parear" type="button" class="btn primario grande">Parear aparelho</button>
+        <button id="btn-desconectar" type="button" class="btn secundario grande" style="display:none">
+          Desconectar este aparelho
+        </button>
+      </section>
 
       <section class="cartao" aria-label="Pedidos para enviar">
         <h2>Fila de envio <span id="conta-fila" class="conta"></span></h2>
@@ -33,7 +64,6 @@
         <button id="btn-sistema" type="button" class="btn secundario">Abrir o sistema</button>
         <button id="btn-enviar" type="button" class="btn secundario">Enviar agora</button>
       </nav>
-      <p id="aviso" class="aviso" role="status"></p>
     </main>
     <script type="module" src="./src/shell.ts"></script>
   </body>

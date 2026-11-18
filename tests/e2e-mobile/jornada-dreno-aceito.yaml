@@ -1,0 +1,19 @@
+appId: tech.billhigiene.crm
+---
+# DRENO ACEITO no aparelho, contra o stub local (NUNCA produção).
+# Pré-condição:
+#   node tests/e2e-mobile/stub-device-api.mjs          (aceita)
+#   adb reverse tcp:8787 tcp:8787
+#   banco semeado com credencial url=http://10.0.2.2:8787 e 1 pedido pendente
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 15000
+# O dreno roda na abertura (com sinal). A fila fica vazia e o aviso mostra o
+# número DEFINITIVO que o servidor atribuiu.
+- extendedWaitUntil:
+    visible: ".*1 pedido\\(s\\) enviado\\(s\\).*nº 1234.*"
+    timeout: 60000
+- assertVisible: "Nenhum pedido esperando"
+- assertNotVisible: "OFF-0001"
+- takeScreenshot: "20-dreno-aceito-fila-vazia"
