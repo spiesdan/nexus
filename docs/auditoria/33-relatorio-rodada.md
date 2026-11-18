@@ -138,7 +138,8 @@ comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 | **TalkBack** | `[!]` parcial | F/D | árvore + logcat no emulador | #576 | Só o acústico: texto falado, pronúncia pt-BR e anúncio dinâmico |
 | **`update.sh` fail-loud** | `[x]` | Orquestrador | aborta antes do `up -d` em DDL não-benigno | #568 | — |
 | **E2E completo** | `[~]` | F | veredito por spec (entra / fora com dono e data / morre) | workflow `FORA_DO_CI` | Matriz das 3 specs fora do CI, com bloqueio real de cada uma |
-| **Pareamento do catálogo** | `[!]` | D + Dono | release → deploy `nexus-mercos` → `--dry-run` → relatório aprovado | #559, #578 | Deploy da 1.58.0 (do dono, em curso) e o `--dry-run` |
+| **Coletor do catálogo lê zero em produção** | `[!]` **crítico** | D | DOM real de `/produtos/` + parser/rota corretos + fail-loud com 0 páginas + 1 coleta real com `produtos_lidos > 0` (sem escrever) | log do `crm-mercos-1` em 1.58.0 (`cabecalho: []`, `paginas: 0`) | O parser não vê `<table>`/`<thead>`: medir a página e corrigir; hoje termina com código 0 |
+| **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #559, #578 | Depende do coletor acima e do deploy da 1.58.0 (em curso) |
 | **A11y nas telas restantes** | `[~]` | D | axe sem violação crítica nas telas cobertas | #491/#516/#531/#535 | Cobertura além das 10 telas do `axe-telas-principais` |
 | **iOS** | `[!]` **encerrado por decisão** | Dono | decisão registrada, sem item órfão | `29-capacidades.md` item 30 | — (fora de escopo; só volta com conta Apple + aparelho + distribuição por instalação) |
 | **Release 1.58.0** | `[x]` tag | Dono (deploy) | tag `v1.58.0` + imagens publicadas | `4c7cd633` | Deploy em curso pelo dono; verificar `to_regclass` depois |

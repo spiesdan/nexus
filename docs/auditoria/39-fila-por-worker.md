@@ -11,24 +11,27 @@
 
 ## D — design/módulos
 
-- **agora:** *axe nas telas que a régua não cobre* — rodar `axe-telas-principais`
-  nas telas de operação ainda fora do recorte (começar por **estoque, compras,
-  expedição/romaneio, faturamento e sentinel**), sem violação crítica WCAG 2.2
-  AA; o que aparecer vira correção no mesmo PR ou item de fila com dono.
-  Aceite: cada tela com resultado registrado (violações = 0 ou exceção escrita) e
-  o recorte do instrumento atualizado.
-- **próximo:** *ordenação anunciada nas tabelas* — onde há coluna ordenável sem
-  `aria-sort`, o cabeçalho passa a declarar a direção e a mudança é anunciada;
-  sem mudar a ordem por padrão. Aceite: `aria-sort` nos cabeçalhos ordenáveis das
-  listas de pedidos, produtos e notas + teste de componente.
-- **depois:** *estados das subtelas de expedição (ficha 5.6b)* — vazio,
-  carregando, erro, permissão e retry em carga, rota e romaneio, com evidência de
-  captura; nenhuma regra de negócio tocada. Aceite: cada subtela com os estados
-  provados e a ficha 5.6b marcada.
+- **agora (prioridade, passa na frente):** *coletor de catálogo lê zero produto
+  em produção* — `mercos-produtos` faz login, não acha `<table>` nem `<thead>` e
+  termina `produtos_lidos: 0, paginas: 0` com **código 0**. Aceite: (a) capturar
+  o **DOM real** de `/produtos/` autenticado dentro do container (HTML ou a lista
+  de seletores que casam); (b) corrigir rota e/ou parser para o que a página
+  realmente é, ou registrar a estrutura e implementar o caminho certo; (c)
+  **falhar alto** com 0 páginas (exit ≠ 0 e evento `sem_paginas`), porque coletor
+  que "dá certo" com zero produto é o mesmo defeito silencioso que estamos
+  caçando; (d) provar com **uma** coleta real em produção `produtos_lidos > 0`,
+  sem escrever no banco (o coletor só grava JSONL).
+- **próximo:** *axe nas telas fora da régua* — estoque, compras,
+  expedição/romaneio, faturamento e sentinel com WCAG 2.2 AA; sem violação
+  crítica, e o recorte do instrumento atualizado. Aceite: resultado por tela
+  registrado (0 violações ou exceção escrita).
+- **depois:** *`aria-sort` nas tabelas ordenáveis* — direção declarada e mudança
+  anunciada em pedidos, produtos e notas; teste de componente. Aceite: cabeçalho
+  ordenável com `aria-sort` correto e ordem padrão inalterada.
 
-> Histórico: os três itens anteriores (outbox do inbox web, paginação de pedidos e
-> ficha 5.6b) fecharam no **#581** — fila reposta pelo coordenador, como manda a
-> regra.
+> Histórico: outbox do inbox web, paginação de pedidos e ficha 5.6b fecharam no
+> **#581**. O coletor do catálogo é o caminho crítico do pedido do dono e foi
+> promovido à frente do axe.
 
 ## F — mobile/jornadas/qualidade
 
