@@ -141,3 +141,16 @@ git diff nexus/main...HEAD -> 4 arquivos, +48/-0 (sem remoção de 0312)
 ### #490
 
 O `verify` vermelho era instrumento: o teste `contato-audit-from-to` usava um fake de Supabase com `.eq` não encadeável, e o handler passou a filtrar `id` + `organization_id`. Fake corrigido, CI verde, **mergeado** (`ac0d5e12`).
+
+## Rodada 4 — 18/11/2026 (merge das decisões)
+
+| Item | Commit | Evidência |
+|---|---|---|
+| **D-03** idempotência fiscal (#499) | `3141a483` | 9 testes de helper/rota; 434 invariantes; CI 14/14 |
+| **D-01/D-02** nome de campanha (#498) | `5a499313` | 11 testes do gerador/decisão + 2 de schema; install+update combinados (0317+0318) exit 0 |
+| **P2-04** AGENTS.md | #506 | número trocado pelo instrumento `inventario-service-role.mjs`; gates nomeados |
+| **P3-03** planos | #506 | 7 planos sem `db push`; gate reprova plano ativo; histórico preservado |
+
+Conflito previsto e resolvido no #498: o baseline e o MANIFEST receberam **os dois** apêndices (0317 e 0318), sem renumerar — a numeração não colidiu. O update sobre banco com 0317 já aplicado rodou com `ON_ERROR_STOP=1` e exit 0.
+
+A fila P0 está **fechada em código**. O que resta são P1/P2/P3 nas frentes C/D/E/F/G/A ou dependentes de dispositivo.
