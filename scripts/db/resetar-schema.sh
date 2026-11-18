@@ -124,11 +124,18 @@ create schema public;
 
 -- ACL e DEFAULT ACL de um projeto Supabase, restabelecidos ANTES do baseline.
 -- A ordem importa: o baseline só emite `alter default privileges` na linha
--- ~3960, depois de criar dezenas de funções — sem estas linhas, elas nasceriam
--- sem EXECUTE para anon e o reset não reproduziria o banco do cliente.
+-- ~4900, depois de criar as tabelas do corpo — sem estas linhas, as funções
+-- criadas no CORPO nasceriam sem EXECUTE para anon e o reset não reproduziria o
+-- banco do cliente.
+--
+-- FUNÇÕES apenas. Tabelas e sequências NÃO entram aqui, e a ausência é medida:
+-- com `grant all on tables to anon` ANTES do baseline, toda tabela criada herda
+-- o grant e o `revoke` explícito do dump deixa de ser o que decide. Resultado
+-- medido em 2026-11-18 (scripts/auditoria/prova-f09.sh, seção 5): o reset
+-- concedia `anon` em `ai_agent_runs` — tabela em que o baseline concede SÓ a
+-- `authenticated`/`service_role` de propósito. Dev ficava mais aberto que a
+-- instalação. O ACL canônico é o que o baseline emite, tabela por tabela.
 grant usage on schema public to anon, authenticated, service_role;
-alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 alter default privileges in schema public revoke execute on functions from public;
 
