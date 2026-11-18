@@ -11,6 +11,7 @@ import { CitationButton } from "@/components/ai/CitationButton";
 import { WA } from "@/components/inbox/whatsapp-theme";
 import { MediaRenderer } from "@/components/inbox/media/MediaRenderer";
 import { ContactCard } from "@/components/inbox/media/ContactCard";
+import { BotaoReenviar } from "@/components/inbox/BotaoReenviar";
 import { templateMediaDoMetadata } from "@/lib/messaging/template-media";
 import { extractCitations, isAiGeneratedMessage } from "@/lib/ai/citations/types";
 
@@ -247,6 +248,7 @@ export function MessageBubble({ message, debugCitations, onResponder, citada }: 
               </Tooltip>
             </TooltipProvider>
           )}
+          {isFailed && <BotaoReenviar message={message} />}
         </div>
       </div>
       {onResponder && !isOutbound && (
