@@ -37,7 +37,7 @@ export function NexusAiBriefing({
       className={cn("rounded-lg border border-border bg-surface p-4 shadow-xs", className)}
     >
       <header className="mb-3 flex items-center gap-2">
-        <Sparkles size={16} aria-hidden className="text-accent" />
+        <Sparkles size={16} aria-hidden className="text-accent-ink" />
         <h2 className="text-sm font-semibold text-text">{titulo}</h2>
       </header>
       {insights.length === 0 ? (
@@ -86,7 +86,7 @@ export function NexusAiSuggestion({
   const t = useT();
   return (
     <div className={cn("rounded-lg border border-accent-200 bg-accent-50 p-3 text-sm", className)}>
-      <p className="flex items-center gap-1.5 text-xs font-medium text-accent-700">
+      <p className="flex items-center gap-1.5 text-xs font-medium text-accent-ink">
         <Sparkles size={12} aria-hidden />
         {t("Sugestão da IA")}
         {sourceLabel ? <span className="font-normal">· {sourceLabel}</span> : null}

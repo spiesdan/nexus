@@ -102,19 +102,20 @@ describe("extrairRegua — os pares saem do globals.css, nunca de lista à mão"
       "--color-accent",
       "--color-accent-fg",
       "--color-accent-hover",
+      "--color-accent-ink",
       "--ring",
       "::selection/color",
       ":focus-visible/outline",
     ]);
-    expect(REGUA.escuro.papeis).toHaveLength(6);
+    expect(REGUA.escuro.papeis).toHaveLength(7);
 
     expect(superficiesDoTema(REGUA.claro, REGUA.rampaDoProduto, 0)).toHaveLength(4);
     // 6 no escuro e não 4: o `-soft` translúcido compõe sobre CADA base, e as três
     // razões diferem (4,99 · 4,59 · 4,02). Medir uma só escolheria a mais folgada.
     expect(superficiesDoTema(REGUA.escuro, REGUA.rampaDoProduto, 0)).toHaveLength(6);
 
-    expect(medirPares(REGUA.claro, REGUA.rampaDoProduto, 0)).toHaveLength(18);
-    expect(medirPares(REGUA.escuro, REGUA.rampaDoProduto, 0)).toHaveLength(26);
+    expect(medirPares(REGUA.claro, REGUA.rampaDoProduto, 0)).toHaveLength(22);
+    expect(medirPares(REGUA.escuro, REGUA.rampaDoProduto, 0)).toHaveLength(32);
   });
 
   it("reproduz as razões medidas à mão no design system", () => {

@@ -74,7 +74,7 @@ function LinhaCliente({
       <div className="min-w-0">
         <Link
           href={`/app/contacts/${row.contact_id}`}
-          className="truncate text-sm font-medium text-text hover:text-accent"
+          className="truncate text-sm font-medium text-text hover:text-accent-ink"
         >
           {row.nome}
         </Link>

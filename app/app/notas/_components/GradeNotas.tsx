@@ -516,7 +516,7 @@ export function GradeNotas({
               className={cn(
                 "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition",
                 filtroStatus === c.valor
-                  ? "border-accent-600/50 bg-accent-soft text-accent"
+                  ? "border-accent-600/50 bg-accent-soft text-accent-ink"
                   : "border-border text-muted-foreground hover:border-border-strong hover:text-text",
               )}
             >

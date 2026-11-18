@@ -88,7 +88,7 @@ export function RulesTab() {
       <div className="flex justify-center pt-10">
         <Card className="hover-raise max-w-md">
           <CardHeader className="items-center text-center">
-            <Robot className="mb-2 h-10 w-10 text-accent" />
+            <Robot className="mb-2 h-10 w-10 text-accent-ink" />
             <CardTitle>{t("Crie sua primeira automação")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-center">

@@ -588,7 +588,7 @@ export function ProdutosClient({
         className="mt-1 flex items-start gap-1 text-[11px] leading-4 text-muted-foreground"
         data-testid={teste}
       >
-        <span className="rounded-md bg-muted px-1.5 py-0.5 font-medium text-accent">
+        <span className="rounded-md bg-muted px-1.5 py-0.5 font-medium text-accent-ink">
           {t("Sugerido")}
         </span>
         <span className="min-w-0 break-words">{sugestao.descricao ?? sugestao.ncm}</span>
@@ -1245,7 +1245,7 @@ export function ProdutosClient({
                         >
                           <Star
                             className={`h-4 w-4 ${
-                              p.destaque ? "fill-current text-accent" : "text-muted-foreground"
+                              p.destaque ? "fill-current text-accent-ink" : "text-muted-foreground"
                             }`}
                           />
                         </button>

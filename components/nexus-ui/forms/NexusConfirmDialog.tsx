@@ -135,7 +135,13 @@ export function NexusConfirmDialog({
               e.preventDefault();
               void confirmar();
             }}
-            className={danger ? "bg-error text-white hover:brightness-95" : undefined}
+            className={
+              danger
+                ? // Branco fixo reprovava no escuro (3,48:1 sobre #c87263); o token
+                  // escolhe o lado certo por tema.
+                  "bg-error text-destructive-foreground hover:brightness-95"
+                : undefined
+            }
           >
             {busy ? (busyLabel ?? t("Aguarde…")) : (confirmLabel ?? t("Excluir"))}
           </AlertDialogAction>

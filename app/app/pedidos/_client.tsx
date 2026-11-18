@@ -1238,7 +1238,7 @@ export function PedidosClient({
                                   "PED-1 Aprovado CLIENTE R$…". */}
                               <Link
                                 href={`/app/pedidos/${p.id}`}
-                                className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent after:absolute after:inset-0 after:content-['']"
+                                className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent-ink after:absolute after:inset-0 after:content-['']"
                               >
                                 {numeroDoPedido(p.numero)}
                               </Link>

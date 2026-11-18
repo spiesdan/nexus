@@ -226,7 +226,7 @@ export function CustomerSelector({
             href="/app/contacts"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-accent underline underline-offset-4"
+            className="text-sm text-accent-ink underline underline-offset-4"
           >
             {t("Listar todos os clientes")}
           </Link>

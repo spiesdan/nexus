@@ -56,7 +56,7 @@ export function SeloDeAutoria({
       href="/app/audit"
       className={cn(
         "inline-flex w-fit items-center gap-1 rounded-sm text-xs underline-offset-2 hover:underline",
-        doAgente ? "font-medium text-accent" : "text-muted-foreground",
+        doAgente ? "font-medium text-accent-ink" : "text-muted-foreground",
         className,
       )}
       data-autoria={kind ?? "desconhecida"}

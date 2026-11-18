@@ -132,7 +132,7 @@ export function TimelineView({ contactId, types }: Props) {
                         OwnerBadge no card — forma, nunca cor. */}
                     <div
                       className={cn(
-                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-accent",
+                        "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center text-accent-ink",
                         forma === "filled" && "rounded-full bg-accent-soft",
                         forma === "ring" && "rounded-full border border-accent bg-surface ring-1 ring-inset ring-accent/40",
                         // Sistema, automação ou autor não registrado: o mesmo

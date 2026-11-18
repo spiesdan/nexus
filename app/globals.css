@@ -98,6 +98,26 @@
   --color-accent-fg: #181925;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
+  /* ─── O accent como TINTA é mais escuro que o accent como PREENCHIMENTO ───
+   *
+   * Todo `text-accent` do produto pinta o accent como cor de TEXTO, e no tema
+   * claro `--color-accent` (#7e77f0) dá **3,63:1** sobre o branco e **3,06:1**
+   * sobre `--color-accent-soft` — abaixo do piso AA de 4,5. Medido em
+   * 18/11/2026 nos 140 usos de `text-accent` (link "Ver detalhes", aba ativa,
+   * `Badge` default). No escuro o mesmo token passa (7,63:1), e é por isso que
+   * o defeito só existia de um lado.
+   *
+   * A saída não é escurecer `--color-accent`: ele é o PREENCHIMENTO do botão
+   * primário, cujo texto é Carbon (4,80:1 sobre o 600). Escurecer o fill
+   * derrubaria esse par. São dois papéis diferentes e agora têm dois tokens —
+   * o 700 (#625db8) como tinta no claro: 5,56 sobre surface, 5,19 sobre bg,
+   * 5,33 sobre a elevada, **4,68 sobre o soft**. O escuro usa o 400, que já é
+   * o accent funcional de lá.
+   *
+   * Os dois valores são PARADAS DA RAMPA (`var(--color-accent-NNN)`), não hex
+   * fixos: a marca do revendedor reescreve a rampa inteira
+   * (`lib/branding/css.ts`), e a tinta acompanha. */
+  --color-accent-ink: var(--color-accent-700);
 
   /* Tons categoria do DESIGN.md — constantes decorativas, iguais nos temas.
      Lavanda aqui (#918df6) é a COR DA REFERÊNCIA (círculos de ícone, tags),
@@ -328,6 +348,9 @@
   --color-accent-fg: #181925;
   --color-accent-soft: var(--color-accent-100);
   --color-accent-hover: var(--color-accent-700);
+  /* Espelho do `:root` — a tinta do accent no claro é o grau 700 (o comentário
+     com as medidas está no primeiro bloco). */
+  --color-accent-ink: var(--color-accent-700);
 
   /* Tons categoria do DESIGN.md — constantes decorativas, iguais nos temas.
      Lavanda aqui (#918df6) é a COR DA REFERÊNCIA (círculos de ícone, tags),
@@ -466,6 +489,9 @@
   --color-accent-fg: #151515;
   --color-accent-soft: rgba(164, 165, 255, 0.16);
   --color-accent-hover: var(--color-accent-300);
+  /* No escuro a tinta do accent é o MESMO grau do preenchimento (400): sobre
+     `#1c1c1c` ele dá 7,63:1, e sobre o soft escuro 5,65:1. */
+  --color-accent-ink: var(--color-accent-400);
 
   /* Tons categoria do DESIGN.md (constantes — mesmos valores do claro). */
   --color-lavender: #918df6;
@@ -535,7 +561,12 @@
   --muted-foreground: var(--color-text-muted);
   --accent-foreground: var(--color-accent-fg);
   --destructive: var(--color-error);
-  --destructive-foreground: #ffffff;
+  /* Branco sobre o `--color-error` do escuro (#c87263) dá **3,48:1** e reprova
+     AA em texto normal — o `Button variant="destructive"` e o contador do sino
+     (10 px) usam este par. `#151515` sobre o mesmo vermelho dá **5,02:1** e é o
+     mesmo foreground que o accent do escuro já usa. No claro o branco continua
+     certo (5,63:1 sobre #a94a3c). */
+  --destructive-foreground: #151515;
   --border: var(--color-border);
   --input: var(--color-border);
   --ring: var(--color-accent-400);
@@ -595,6 +626,7 @@
   --color-accent-foreground: var(--color-accent-fg);
   --color-accent-soft: var(--color-accent-soft);
   --color-accent-hover: var(--color-accent-hover);
+  --color-accent-ink: var(--color-accent-ink);
   --color-accent-50: var(--color-accent-50);
   --color-accent-100: var(--color-accent-100);
   --color-accent-200: var(--color-accent-200);
@@ -664,7 +696,7 @@
   --color-secondary: var(--color-surface-elevated);
   --color-secondary-foreground: var(--color-text);
   --color-destructive: var(--color-error);
-  --color-destructive-foreground: #ffffff;
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-muted: var(--color-surface-elevated);
   --color-muted-foreground: var(--color-text-muted);
   --color-popover: var(--color-surface);

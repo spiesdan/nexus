@@ -352,7 +352,7 @@ export function PainelRecuperacao({
                       {t("Original")}: {dest.enderecoOriginal ?? t("sem endereço")}
                     </p>
                     {dest.sugestao?.endereco && (
-                      <p className="mt-0.5 line-clamp-2 text-[11px] text-accent">
+                      <p className="mt-0.5 line-clamp-2 text-[11px] text-accent-ink">
                         {t("Sugerido")}: {dest.sugestao.endereco}
                       </p>
                     )}
