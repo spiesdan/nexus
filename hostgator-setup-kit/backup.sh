@@ -49,8 +49,37 @@ docker run --rm -v "${proj}_waha-data:/data:ro" -v "$BACKUP_DIR:/out" alpine:3.2
   && c_grn "✓ sessões WhatsApp salvas" \
   || c_ylw "⚠ não achei o volume waha-data (nome pode variar). Ajuste manualmente se necessário."
 
+# ── Uploads: fotos em disco, mídia do WhatsApp e Storage próprio (F-32/D9) ──
+#
+# O dump do banco não leva arquivo. Sem este passo, um restore "completo"
+# devolve linhas apontando para imagens que não existem mais — e a tela mostra
+# imagem quebrada sem erro no log. `backup-uploads.sh` lista as superfícies do
+# projeto (`uploads_do_projeto`, em _common.sh) e não aceita backup parcial
+# como completo: se uma superfície falhar, este script sai 1.
+step "Uploads (fotos, mídia do WhatsApp, Storage próprio) → $BACKUP_DIR/uploads-*-$ts.tgz"
+if bash "$(dirname "$0")/backup-uploads.sh" --backup "$BACKUP_DIR" "$ts"; then
+  c_grn "✓ uploads copiados"
+else
+  c_red "✗ BACKUP INCOMPLETO: os uploads NÃO foram copiados por inteiro."
+  c_red "✗ O banco está salvo, mas arquivos referenciados por ele podem faltar no restore."
+  exit 1
+fi
+
 # Retenção: mantém os 14 mais recentes de cada tipo.
+#
+# Sem `xargs -r`: é opção GNU, e no macOS o `xargs` do BSD recusa ("illegal
+# option -- r"). Como o `_common.sh` liga `pipefail`, a recusa derrubava o
+# backup ANTES de limpar — medido pelo `tests/shell/backup-uploads.test.sh`
+# (16 arquivos, retenção não rodava). `xargs rm -f` sem entrada roda `rm -f`
+# sem argumento, que é no-op: mesma semântica, portátil.
 step "Limpando backups antigos (mantém 14)"
-ls -1t "$BACKUP_DIR"/db-*.sql.gz 2>/dev/null | tail -n +15 | xargs -r rm -f
-ls -1t "$BACKUP_DIR"/waha-*.tgz 2>/dev/null | tail -n +15 | xargs -r rm -f
+ls -1t "$BACKUP_DIR"/db-*.sql.gz 2>/dev/null | tail -n +15 | xargs rm -f
+ls -1t "$BACKUP_DIR"/waha-*.tgz 2>/dev/null | tail -n +15 | xargs rm -f
+# Rótulo por rótulo, não `uploads-*` de uma vez: o glob mistura fotos, mídia e
+# storage, e "14 de cada tipo" viraria "14 no total" — o volume de mídia
+# expulsaria o backup das fotos.
+for rotulo in $(ls -1 "$BACKUP_DIR"/uploads-*.tgz 2>/dev/null \
+                  | sed -nE 's#.*/uploads-(.+)-[0-9]{8}-[0-9]{6}\.tgz#\1#p' | sort -u); do
+  ls -1t "$BACKUP_DIR"/uploads-"$rotulo"-*.tgz 2>/dev/null | tail -n +15 | xargs rm -f
+done
 c_grn "✓ backup concluído em $BACKUP_DIR"
