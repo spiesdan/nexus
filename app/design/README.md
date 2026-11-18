@@ -56,8 +56,11 @@ Inter / Geist / Space Grotesk **proibidos** por saturação em training data.
 ## Arquitetura
 
 - `lib/tokens.ts` — única source-of-truth para cores, fontes, densidade, motion.
-- `lib/fonts.ts` — todas as fontes carregadas via `next/font/google` no boot do
-  `_design/layout.tsx` (escopo isolado). Variáveis CSS expostas globalmente.
+- `lib/fonts.ts` — todas as fontes carregadas via `next/font/local` (arquivos em
+  `public/fonts/`, com a licença OFL ao lado) no boot do `_design/layout.tsx`
+  (escopo isolado). Variáveis CSS expostas globalmente. O showcase **não** pode
+  depender de rede: `next/font/google` baixava as fontes no build e derrubava a
+  instalação offline (C10).
 - `lib/variant-context.tsx` — Context React + `setProperty` em `:root` para
   injetar tokens. Hidrata de `localStorage`.
 - `showcase.css` — todos os estilos do showcase prefixados `.ds-*`. Não interfere
