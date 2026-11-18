@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0315 — NEXUS SENTINEL: ocorrências, histórico e o estado de cada varredura.
+-- 0316 — NEXUS SENTINEL: ocorrências, histórico e o estado de cada varredura.
 --
 -- O Sentinel v1 é SOMENTE LEITURA sobre as entidades de negócio. Ele não emite
 -- nota, não altera saldo, não paga e não envia mensagem: o que ele grava são
