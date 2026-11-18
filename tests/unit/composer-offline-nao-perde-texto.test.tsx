@@ -103,8 +103,13 @@ describe("composer sem conexão", () => {
     const campo = compor("Bom dia");
     fireEvent.click(screen.getByRole("button", { name: "Enviar" }));
 
-    expect(enviar).toHaveBeenCalledTimes(1);
-    expect(enviar.mock.calls[0][0]).toMatchObject({ conversation_id: "c1", body: "Bom dia" });
+    // `toHaveBeenCalledWith` em vez de indexar `mock.calls[0][0]`: o índice é
+    // possivelmente `undefined` para o `noUncheckedIndexedAccess`, e a asserção
+    // que importa (com QUAIS dados o envio foi chamado) fica a mesma.
+    expect(enviar).toHaveBeenCalledWith(
+      expect.objectContaining({ conversation_id: "c1", body: "Bom dia" }),
+      expect.anything(),
+    );
     expect(campo.value).toBe("");
   });
 });
