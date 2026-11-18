@@ -471,6 +471,16 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     group: "operacao",
   },
   {
+    // Sentinel (0313): saúde do produto em ocorrências. SEM sidebar pelo mesmo
+    // motivo da Frota — a dobra é medida e Operação já tem três portas. A porta
+    // é o ⌘K (que lê deste registro) e o deep link de cada ocorrência.
+    href: "/app/sentinel",
+    label: "Sentinel",
+    description: "Inconsistências de fiscal, operação, financeiro e campanha com evidência e causa.",
+    icon: ShieldCheck,
+    group: "operacao",
+  },
+  {
     // Campanha: o trabalho de falar com a base. Duas subtelas — a campanha por
     // região (cliente que já comprou nas cidades escolhidas, por número não
     // oficial) e a prospecção B2B (empresa nova por região/categoria). Uma
