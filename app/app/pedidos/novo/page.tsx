@@ -47,7 +47,7 @@ export default async function NovoPedidoPage() {
         .limit(2000),
       supabase
         .from("contacts")
-        .select("id, display_name, name, phone_number, email")
+        .select("id, fantasia, display_name, name, phone_number, email")
         .eq("organization_id", activeOrg.orgId)
         .eq("is_anonymized", false)
         .order("display_name")
