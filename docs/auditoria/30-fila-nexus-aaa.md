@@ -17,7 +17,7 @@
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags --refs nexus 'refs/tags/v*'` |
 | Próxima release | **1.56.0** cortada em PR [#537](https://github.com/spiesdan/nexus/pull/537) — a contagem de fragmentos é o que `pnpm release:conferir` disser; o PR é o corte vigente — **aguardando aprovação humana**, sem tag | `pnpm release:conferir` + PR |
-| Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
+| Produção | **estado misto, informado pelo dono em 18/11**: `app`/`worker`/`scheduler` em **1.55.0**; **sidecar fiscal em 1.56.0** (subido para liberar a NF-e 4656). Tag `v1.56.0` publicada; **deploy completo pendente de aprovação**. Não verificado por este programa (sem acesso) | relato do dono |
 | Runtime local | macOS (darwin), Node `v22.20.0`, pnpm `9.15.9`, Docker `29.8.2` | `node -v`, `pnpm -v`, `docker info` |
 | Gates | `pnpm gov:verify` = typecheck + lint + lint:channels + lint:role-rank + test:unit; `test:db` exige Docker; `test:e2e` exige app + banco | `package.json` |
 
