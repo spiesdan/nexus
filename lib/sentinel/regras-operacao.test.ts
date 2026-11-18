@@ -73,7 +73,7 @@ describe("detectores de operação — caso positivo e negativo", () => {
     ).toHaveLength(0);
 
     // Produto sem NENHUMA movimentação: razão vazio ≠ saldo cacheado também é
-    // divergência (left join da 0323). `ultimo_movimento` é null.
+    // divergência (left join da 0324). `ultimo_movimento` é null.
     const semMovimento = estoqueDivergente(
       snapshot({
         estoqueRazao: [

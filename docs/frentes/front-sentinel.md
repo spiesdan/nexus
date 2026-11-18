@@ -166,8 +166,8 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
 | `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
 | `supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
-| `supabase/baseline.sql` (apêndices 0316/0321/0323) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0323 |
+| `supabase/baseline.sql` (apêndices 0316/0321/0324) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
@@ -277,7 +277,7 @@ fiscal/financeira real.
 
 ## 11. Onde retomar (v1.2, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-v12`, PR #541): 0323 (left join), orçamento de
+- **Esta fatia** (`front/sentinel-v12`, PR #541): 0324 (left join), orçamento de
   detecção (8 s; 7 ms medidos com 2k de cada entidade), retenção medida dos dois
   lados (10 dias fica, 31 apaga) e a guarda de lead sem contato no detector.
 - **Prova** (`front/sentinel-prova`, #538, mergeada em `05570d11`): papéis na
