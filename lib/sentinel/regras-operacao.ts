@@ -728,6 +728,57 @@ export function enderecoComLixo(s: Snapshot): Achado[] {
   ];
 }
 
+
+/**
+ * Conversa assumida (claim) sem mensagem há dias — a "conversa presa".
+ *
+ * O claim não tem TTL no produto: `status='claimed'` + `assigned_at` fica para
+ * sempre. Se a pessoa saiu de férias, mudou de setor ou só esqueceu, a conversa
+ * some da fila sem ninguém ver. O limiar é DECLARADO: 7 dias sem mensagem
+ * (ou desde o claim, quando nunca houve mensagem). Liberar o claim é reversível
+ * enquanto ninguém assumir de novo.
+ */
+export const LIMIAR_CLAIM_PARADO_DIAS = 7;
+const LIMIAR_CLAIM_PARADO_MS = LIMIAR_CLAIM_PARADO_DIAS * DIA_MS;
+
+export function conversasComClaimParado(s: Snapshot): Achado[] {
+  return s.conversasParadas.flatMap((c) => {
+    if (c.status !== "claimed" || !c.assigned_to_user_id || !c.assigned_at) return [];
+    const assumidaEm = Date.parse(c.assigned_at);
+    if (!Number.isFinite(assumidaEm) || s.agoraMs - assumidaEm < LIMIAR_CLAIM_PARADO_MS) return [];
+
+    const ultima = c.last_message_at ? Date.parse(c.last_message_at) : null;
+    if (ultima !== null && Number.isFinite(ultima) && s.agoraMs - ultima < LIMIAR_CLAIM_PARADO_MS) {
+      return [];
+    }
+
+    const dias = Math.floor((s.agoraMs - assumidaEm) / DIA_MS);
+    return [
+      {
+        regra: "operacao.conversa_claim_parado",
+        categoria: "operacao" as const,
+        entidadeTipo: "conversations",
+        entidadeId: c.id,
+        titulo: `Conversa assumida há ${dias} dias sem mensagem`,
+        resumo:
+          "A conversa está com um responsável, mas ninguém fala nela há dias. Ela não aparece na fila e pode ficar esquecida.",
+        causaProvavel:
+          "Claim sem TTL: férias, mudança de setor, afastamento ou simples esquecimento do responsável.",
+        severidade: "media" as const,
+        href: "/app/inbox",
+        evidencia: {
+          conversa_id: c.id,
+          atendente_id: c.assigned_to_user_id,
+          assumida_em: c.assigned_at,
+          ultima_mensagem_em: c.last_message_at,
+          dias_parada: dias,
+          limiar_dias: LIMIAR_CLAIM_PARADO_DIAS,
+        },
+      },
+    ];
+  });
+}
+
 function lerCidades(c: CampanhaProspeccao): Array<{ cidade?: unknown; estado?: unknown }> {
   if (!Array.isArray(c.cidades)) return [];
   return c.cidades.filter(

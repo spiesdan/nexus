@@ -11,7 +11,7 @@
  */
 import { createHash } from "node:crypto";
 
-import { CORRECAO_JOB } from "./correcao-constantes";
+import { CORRECAO_CONVERSA, CORRECAO_JOB } from "./correcao-constantes";
 
 export interface JobCorrigivel {
   id: string;
@@ -95,6 +95,81 @@ export function planejarAntecipacao(
       depois: { run_after: depois },
       hash: hashDaCorrecao(job.id, job.run_after, depois),
       resumo: "Antecipar o job de manutenção pendente para agora.",
+      risco: "baixo",
+      reversibilidade: "reversivel",
+    },
+  };
+}
+
+export interface ConversaCorrigivel {
+  id: string;
+  organization_id: string;
+  status: string;
+  assigned_to_user_id: string | null;
+  assigned_at: string | null;
+  last_message_at: string | null;
+}
+
+export interface PlanoLiberacaoConversa {
+  conversaId: string;
+  antes: { atendente_id: string; assigned_at: string };
+  depois: { status: "open"; atendente_id: null; assigned_at: null };
+  hash: string;
+  resumo: string;
+  risco: "baixo";
+  reversibilidade: "reversivel";
+}
+
+export type ResultadoPlanoConversa =
+  | { elegivel: true; plano: PlanoLiberacaoConversa }
+  | { elegivel: false; motivo: string };
+
+/**
+ * Liberar claim de conversa parada. `agoraIso` é argumento para o teste; o
+ * `antes` é o texto EXATO do banco (assigned_at com microssegundos), porque o
+ * CAS da RPC compara o valor.
+ */
+export function planejarLiberacaoConversa(
+  conversa: ConversaCorrigivel | null,
+  agoraIso: string,
+): ResultadoPlanoConversa {
+  if (!conversa) return { elegivel: false, motivo: "Conversa não encontrada nesta organização." };
+  if (conversa.status !== "claimed") {
+    return { elegivel: false, motivo: `A conversa está \`${conversa.status}\`; só claim ativo é liberável.` };
+  }
+  if (!conversa.assigned_to_user_id || !conversa.assigned_at) {
+    return { elegivel: false, motivo: "A conversa não tem responsável/claim para liberar." };
+  }
+  const assumidaEm = Date.parse(conversa.assigned_at);
+  const agoraMs = Date.parse(agoraIso);
+  if (!Number.isFinite(assumidaEm) || !Number.isFinite(agoraMs)) {
+    return { elegivel: false, motivo: "Data do claim ilegível; não há como garantir o antes/depois." };
+  }
+  if (agoraMs - assumidaEm < CORRECAO_CONVERSA.atrasoMinimoMs) {
+    return { elegivel: false, motivo: "O claim não está parado o bastante (piso de 7 dias)." };
+  }
+  if (conversa.last_message_at) {
+    const ultima = Date.parse(conversa.last_message_at);
+    if (Number.isFinite(ultima) && agoraMs - ultima < CORRECAO_CONVERSA.atrasoMinimoMs) {
+      return { elegivel: false, motivo: "Há mensagem recente; a conversa não está esquecida." };
+    }
+  }
+
+  return {
+    elegivel: true,
+    plano: {
+      conversaId: conversa.id,
+      antes: {
+        atendente_id: conversa.assigned_to_user_id,
+        assigned_at: conversa.assigned_at,
+      },
+      depois: { status: "open", atendente_id: null, assigned_at: null },
+      hash: hashDaCorrecao(
+        conversa.id,
+        `${conversa.assigned_to_user_id}|${conversa.assigned_at}`,
+        "open",
+      ),
+      resumo: "Devolver a conversa para a fila, sem responsável.",
       risco: "baixo",
       reversibilidade: "reversivel",
     },

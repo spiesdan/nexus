@@ -351,6 +351,15 @@ export interface ContatoEndereco {
   cidade: string | null;
 }
 
+/** Conversa assumida (claim) sem mensagem há dias — o caso corrigível de v1.5. */
+export interface ConversaParada {
+  id: string;
+  status: string;
+  assigned_to_user_id: string | null;
+  assigned_at: string | null;
+  last_message_at: string | null;
+}
+
 export interface Snapshot {
   organizationId: string;
   agoraMs: number;
@@ -371,6 +380,7 @@ export interface Snapshot {
   clientesDuplicados: ClienteDuplicado[];
   correcoes: CorrecaoSentinel[];
   contatosEndereco: ContatoEndereco[];
+  conversasParadas: ConversaParada[];
 }
 
 /** Metadados da regra no registry — a tela lê daqui a explicação. */
@@ -403,5 +413,6 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     clientesDuplicados: [],
     correcoes: [],
     contatosEndereco: [],
+    conversasParadas: [],
   };
 }

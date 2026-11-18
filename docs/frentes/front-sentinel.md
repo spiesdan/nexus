@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (33)
+## 2. Regras implementadas (34)
 
 ### Fiscal (12)
 
@@ -41,7 +41,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.job_retry_excessivo` | 3+ tentativas na mesma nota | media |
 | `fiscal.sincronizacao_falhou` | sync fiscal com erro/bloqueio nas últimas 24 h (agrupada por dia) | media/alta |
 
-### Operação, financeiro e campanha (20)
+### Operação, financeiro e campanha (21)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
@@ -64,6 +64,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
 | `operacao.correcao_sem_reversao` | correção aplicada cujo job saiu de `pending`/do `run_after` gravado — reversão não é mais honesta | media |
 | `operacao.aprovacao_expirada` | ocorrência `aprovada` além da janela de 5 min do plano revisado | baixa |
+| `operacao.conversa_claim_parado` | conversa `claimed` há 7+ dias sem mensagem — some da fila sem ninguém ver | media |
 | `cadastro.endereco_com_lixo` | `contacts.logradouro/complemento/bairro/cidade` com `NULL`/`undefined`/`NaN` como **palavra** ou só espaços, agrupado por org; `RUA NULLS` não casa | media |
 
 **Falsos positivos evitados de propósito:**
@@ -173,11 +174,12 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
 | `supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
 | `supabase/migrations/20261123180000_0325_sentinel_correcao_aprovada.sql` | Nível 2 restrito: antecipar/reverter job watchdog com CAS |
+| `supabase/migrations/20261123210000_0328_sentinel_liberar_conversa.sql` | segundo caso: liberar/reverter claim de conversa com CAS |
 | `supabase/baseline.sql` (apêndices 0316/0321/0324/0325) | o que o self-host aplica |
 | `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 13 detectores fiscais |
-| `lib/sentinel/regras-operacao.ts` | 18 detectores de operação/financeiro/campanha (inclui endereço com lixo) |
+| `lib/sentinel/regras-operacao.ts` | 19 detectores de operação/financeiro/campanha (inclui endereço com lixo e claim parado) |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
 | `lib/sentinel/coleta.ts` | 19 consultas com teto e filtro de org (inclui correção e endereços) |
@@ -188,7 +190,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
 | `lib/sentinel/config.ts` | defaults, kill switch, "devida?" |
 | `lib/sentinel/correcao.ts` / `correcao-constantes.ts` | elegibilidade pura, hash do plano e allowlist do único caso corrigível |
-| `app/api/v1/sentinel/occurrences/[id]/correcao/**` | simular, executar e reverter (manager+) |
+| `app/api/v1/sentinel/occurrences/[id]/correcao/**` | simular, executar e reverter job (manager+) |
+| `app/api/v1/sentinel/occurrences/[id]/correcao/conversa/**` | simular, executar e reverter claim de conversa (manager+, motivo) |
+| `app/app/sentinel/_correcao_conversa.tsx` | tela do segundo caso: antes/depois, motivo, confirmação e reversão |
 | `app/api/v1/sentinel/{occurrences,scan,settings}` | API |
 | `app/api/v1/cron/sentinel/route.ts` | cron (15 min) |
 | `app/app/sentinel/` | painel |
@@ -201,6 +205,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `tests/api/sentinel-permissoes.test.ts` | régua de papel no fio: agent assume/pede ação; gestor ignora/encerra; platform admin; motivo obrigatório |
 | `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/invariants/sentinel-correcao.test.ts` | RPC 0325: antecipa, reverte, recusa running/flywheel/outra org |
+| `tests/invariants/sentinel-conversa-correcao.test.ts` | RPC 0328: libera, reverte, não rouba claim de outro, recusa org/regra/motivo |
+| `tests/api/sentinel-conversa-correcao.test.ts` | rota: manager, motivo, hash, CAS, alvo proibido |
+| `tests/unit/sentinel-correcao-conversa-tela.test.tsx` | simular → motivo+confirmação → liberar; reverter |
 | `lib/sentinel/regras-correcao.test.ts` | observabilidade: CAS de reversão e janela de 5 min, com negativos |
 | `lib/sentinel/regras-operacao.test.ts` | endereço com literal/espaço: UMA ocorrência por org, sem PII |
 | `tests/api/sentinel-correcao.test.ts` | simular/executar/reverter: papel, aprovação, hash, audit |
@@ -353,10 +360,30 @@ ocorrência aberta com motivo `nao_detectada_na_execucao` — o histórico fica.
 rodada estiver truncada (coleta/regra), o encerramento não acontece por desenho;
 a próxima rodada limpa fecha.
 
+### v1.5 — segundo caso de correção: conversa parada
+
+```bash
+pnpm exec vitest run tests/api/sentinel-conversa-correcao.test.ts \
+  tests/unit/sentinel-correcao-conversa-tela.test.tsx \
+  lib/sentinel/regras-operacao.test.ts lib/sentinel/correcao.test.ts
+#   rota 8, tela 3, regras 22, planos 7 (inclui claim 6/10 dias)
+
+pnpm test:db
+#   175 arquivos, 2323 testes verdes | 1 esperado | 1 pulado
+#   o invariante 0328 libera, reverte e recusa claim de outro agente/motivo vazio
+```
+
+O **webhook em dead-letter foi recusado**: `webhook_events_log` é arquivo
+forense, não fila de trabalho — mudar `dead` para `pending` não faz ninguém
+processar, e reenviar o HTTP é ação externa que pode tocar nota/financeiro, sem
+reversão honesta. O caso escolhido foi o claim de conversa parada (7 dias sem
+mensagem), que devolve a conversa para a fila e só reverte enquanto ninguém
+assumiu.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
-## 9. Limitações declaradas (v1.3 + observabilidade)
+## 9. Limitações declaradas (v1.3 + observabilidade + conversa)
 
 1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
    saldo de abertura e a comparação só vale para produtos criados a partir da
@@ -388,7 +415,11 @@ fiscal/financeira real.
     demais casos exigem uma fatia própria com antes/depois comprovado.
 12. **Reversão honesta ou nenhuma:** se o worker reclamou o job, a RPC devolve
     zero linhas e a tela responde 409; não existe "desfiz" que não desfez.
-13. **`operacao.aprovacao_expirada` conta da aprovação, não do dry-run:** o
+13. **O segundo caso corrigível é só claim de conversa parado:** 7 dias sem
+    mensagem, `claimed`. Libera para a fila; não envia mensagem, não mexe em
+    nota/pagamento/recebível/campanha. Reverter só vale enquanto ninguém
+    assumiu — se outro agente assumiu, 409.
+14. **`operacao.aprovacao_expirada` conta da aprovação, não do dry-run:** o
     dry-run não é persistido; a janela de 5 min da RPC é aplicada à aprovação.
     Um gestor que simulou de novo sem executar ainda pode ver o alerta — ele
     pede revalidação, não bloqueia nada.
@@ -420,10 +451,10 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (v1.4, 18/11/2026)
+## 11. Onde retomar (v1.5, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-v14`): `fiscal.rejeicao_repetida`, sem
-  migration (a 0215 já tem `sefaz_cstat`/`sefaz_xmotivo`). Agrupa por
-  organização + cStat + série + dia UTC, limiar 3, janela de 24h.
+- **Esta fatia** (`front/sentinel-correcao2`): 0328, liberar claim de conversa
+  parada; detector `operacao.conversa_claim_parado`; motivo obrigatório; CAS e
+  reversão honesta. Sem tocar em webhook (arquivo forense, não fila).
 - **Próxima de produto**: outro caso de correção com reversão honesta, um por
   vez; nunca em nota, saldo, pagamento ou envio externo.

@@ -206,6 +206,13 @@ export const REGRAS: readonly Regra[] = [
     detectar: correcao.correcaoSemReversao,
   },
   {
+    id: "operacao.conversa_claim_parado",
+    categoria: "operacao",
+    descricao:
+      "Conversa assumida (claim) sem mensagem há 7+ dias — some da fila sem ninguém ver.",
+    detectar: operacao.conversasComClaimParado,
+  },
+  {
     id: "cadastro.endereco_com_lixo",
     categoria: "operacao",
     descricao:
