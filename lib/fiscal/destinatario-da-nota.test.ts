@@ -86,6 +86,28 @@ describe("montarDestinatario", () => {
     });
   });
 
+  it("o 'NULL' literal do import não chega ao TLocal nem ao <entrega>", () => {
+    // Medido em produção em 18/11/2026: o cadastro da BRASNILE (CNPJ
+    // 78549615000169) tinha `logradouro = "RODOVIA SC 303, S/N, NULL"` — o
+    // export do Mercos/WP escreve a ausência como texto. A NF-e 4655 mandou
+    // esse "NULL" como rua do destinatário; a 4656 (depois da limpeza) saiu
+    // limpa. O que não pode voltar: o literal viajar para a SEFAZ.
+    const comNull: ContatoFiscal = {
+      ...WANDERLEI,
+      logradouro: "RODOVIA SC 303, S/N, NULL",
+      bairro: "PARQUE INDUSTRIAL NULL",
+      complemento: "NULL",
+    };
+    const d = montarDestinatario(
+      { cliente_nome: "BRASNILE INDUSTRIAL LTDA", cliente_documento: null },
+      comNull,
+    );
+    expect(d.entrega?.logradouro).toBe("RODOVIA SC 303, S/N");
+    expect(d.entrega?.bairro).toBe("PARQUE INDUSTRIAL");
+    expect(d.entrega?.complemento).toBeUndefined();
+    expect(JSON.stringify(d)).not.toMatch(/NULL/);
+  });
+
   it("UF vazio com o estado por extenso na cidade fecha o TLocal sem pedir ajuste", () => {
     // O cadastro do Mercos escrevia "Mafra, Santa Catarina" com o `uf` estruturado
     // vazio — a mesma cadeia do PED-19447: o município resolvia, mas o `uf` vazio

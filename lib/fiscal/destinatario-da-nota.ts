@@ -19,6 +19,7 @@
  * completar na tela.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { limparTextoDoEndereco } from "@/lib/contacts/endereco-em-linha";
 
 import type { AjusteDoDestinatario, ExtrasFiscais } from "@/lib/schemas/fiscal";
 
@@ -176,9 +177,9 @@ export function montarDestinatario(
   const { ie, indicador: indicador_ie } = indicadorIe(c?.ie);
 
   const faltando: string[] = [];
-  const logradouro = texto(c?.logradouro);
-  const numero = texto(c?.numero_end);
-  const bairro = texto(c?.bairro);
+  const logradouro = limparTextoDoEndereco(c?.logradouro);
+  const numero = limparTextoDoEndereco(c?.numero_end);
+  const bairro = limparTextoDoEndereco(c?.bairro);
   const ufBruto = texto(c?.uf).toUpperCase();
   const municipio = municipioIbge(c?.cidade, c?.uf);
   // O cadastro às vezes deixa o `uf` estruturado vazio e escreve o estado por
@@ -200,7 +201,7 @@ export function montarDestinatario(
   // mandaria endereço pela metade para a SEFAZ, então o campo é NOMEADO para
   // quem emite corrigir no cadastro.
   const cep = (c?.cep ?? "").replace(/\D/g, "");
-  const complemento = texto(c?.complemento);
+  const complemento = limparTextoDoEndereco(c?.complemento);
   for (const [rotulo, valor] of [
     ["logradouro", logradouro],
     ["número do endereço", numero],
