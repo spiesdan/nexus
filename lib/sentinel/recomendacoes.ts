@@ -604,4 +604,25 @@ export const RECOMENDACOES: Record<string, Construtor> = {
           "O escritor histórico não está no código; completar o dado real é decisão humana.",
       },
     ),
+
+  "fiscal.rejeicao_repetida": (achado) =>
+    plano(
+      "Corrigir o cadastro/configuração do emitente antes de reemitir em lote.",
+      [
+        "Leia a mensagem do cStat na evidência e confira o cadastro do emitente/série.",
+        "Corrija o campo apontado (certificado, IE, CFOP, NCM, série) em uma nota de teste.",
+        "Só então reenfileire as notas rejeitadas, acompanhando o job.",
+        "Se o cStat for de indisponibilidade, aguarde e não reenvie em massa.",
+      ],
+      ["causa do cStat", "campo corrigido", "nota de teste autorizada"],
+      {
+        fonte: ["invoices", "fiscal_events", "fiscal_jobs"],
+        risco: "alto",
+        reversibilidade: "parcial",
+        limitacao:
+          "Reemitir em lote sem corrigir a causa multiplica a rejeição; o limiar é " +
+          String(achado.evidencia.limiar ?? 3) +
+          " na janela.",
+      },
+    ),
 };

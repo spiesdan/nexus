@@ -21,13 +21,14 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (32)
+## 2. Regras implementadas (33)
 
 ### Fiscal (12)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
 | `fiscal.nota_rejeitada` | `invoices.status ∈ {denegada, erro}` | alta |
+| `fiscal.rejeicao_repetida` | 3+ notas com o mesmo `sefaz_cstat` de rejeição na mesma série/emitente em 24h (dia UTC) | alta |
 | `fiscal.nota_em_emissao_travada` | `em_emissao` há > 30 min | alta |
 | `fiscal.nota_pendente_antiga` | `pendente` criada há > 24 h | media |
 | `fiscal.nota_sem_vinculo` | autorizada com `order_id` nulo | media |
@@ -175,7 +176,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/baseline.sql` (apêndices 0316/0321/0324/0325) | o que o self-host aplica |
 | `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
-| `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
+| `lib/sentinel/regras-fiscal.ts` | 13 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 18 detectores de operação/financeiro/campanha (inclui endereço com lixo) |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
@@ -317,6 +318,24 @@ Contexto medido: 84 cadastros históricos em produção. O escritor que gravava 
 literal não está mais no código; a regra observa o passado e impede regressão
 silenciosa no futuro.
 
+### v1.4 — rejeição de SEFAZ repetida
+
+```bash
+pnpm exec vitest run lib/sentinel/regras-fiscal.test.ts
+#   18 verdes: 3 do mesmo cStat/série abrem com limiar 3; 2 não; cStat de
+#   sucesso não; 25h atrás não; séries diferentes são grupos; duas orgs, uma
+#   cada; fingerprint estável com a contagem crescendo de 3 para 4.
+
+# coleta real contra o Supabase local:
+# 3 notas cStat 539/série P<ts> → 1 achado (total 3, primeiro 900000,
+# último 900002); 4ª nota → MESMO fingerprint e total 4.
+```
+
+Limiar declarado em `LIMIAR_REJEICAO_REPETIDA = 3`; janela deslizante de 24h,
+agrupada pelo dia UTC da rejeição. O grupo é `organization_id + sefaz_cstat +
+série + dia`; a fingerprint é estável, então reexecutar atualiza a mesma
+ocorrência e o histórico mostra a contagem crescendo. Sem escrita em `invoices`.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
@@ -363,7 +382,10 @@ fiscal/financeira real.
     histórico não existe mais; o achado agrupa ids por organização e não leva
     o endereço (dado pessoal) na evidência. A borda é de PALAVRA: `RUA NULL`
     casa, `RUA NULLS` não. Medido no Supabase local após a limpeza: **0**.
-16. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+16. **`fiscal.rejeicao_repetida` conta o dia UTC, não uma janela móvel de 24h
+    a cada scan:** a janela de coleta é de 24h, mas o grupo é o dia da rejeição;
+    é o que mantém a fingerprint estável e evita ocorrência nova a cada rodada.
+17. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
     estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
@@ -381,14 +403,10 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (observabilidade + P2, 18/11/2026)
+## 11. Onde retomar (v1.4, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-obs`): `operacao.correcao_sem_reversao`,
-  `operacao.aprovacao_expirada` e `cadastro.endereco_com_lixo`, sem migration
-  nova (a 0325 já tem os dados da correção). Coleta lê ocorrências/eventos do
-  Sentinel, job atual e endereços; nenhuma escrita.
-- **Endereço com lixo**: 84 cadastros históricos medidos; o escritor não está
-  no código. A regra agrupa por organização e não expõe o endereço.
-- **E2E do painel**: já coberto na v1.3; o CI roda no `critical`/`full`.
-- **Próxima de produto**: v1.4 — outro caso de correção com reversão honesta,
-  um por vez; nunca em nota, saldo, pagamento ou envio externo.
+- **Esta fatia** (`front/sentinel-v14`): `fiscal.rejeicao_repetida`, sem
+  migration (a 0215 já tem `sefaz_cstat`/`sefaz_xmotivo`). Agrupa por
+  organização + cStat + série + dia UTC, limiar 3, janela de 24h.
+- **Próxima de produto**: outro caso de correção com reversão honesta, um por
+  vez; nunca em nota, saldo, pagamento ou envio externo.

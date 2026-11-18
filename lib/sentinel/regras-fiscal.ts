@@ -57,7 +57,9 @@ export function notasRejeitadas(s: Snapshot): Achado[] {
 
 export function notasTravadasEmEmissao(s: Snapshot): Achado[] {
   return s.notas
-    .filter((n) => n.status === "em_emissao" && maisVelhoQue(n.updated_at, s.agoraMs, 30 * MINUTO_MS))
+    .filter(
+      (n) => n.status === "em_emissao" && maisVelhoQue(n.updated_at, s.agoraMs, 30 * MINUTO_MS),
+    )
     .map((n) => ({
       regra: "fiscal.nota_em_emissao_travada",
       categoria: "fiscal" as const,
@@ -388,8 +390,7 @@ export function jobsFiscaisComRetryExcessivo(s: Snapshot): Achado[] {
 export function sincronizacaoFiscalComFalha(s: Snapshot): Achado[] {
   const recentes = s.sincronizacoesFiscais.filter(
     (l) =>
-      ["erro", "bloqueado"].includes(l.resultado) &&
-      idadeMs(l.iniciado_em, s.agoraMs) <= DIA_MS,
+      ["erro", "bloqueado"].includes(l.resultado) && idadeMs(l.iniciado_em, s.agoraMs) <= DIA_MS,
   );
   if (recentes.length === 0) return [];
 
@@ -424,4 +425,79 @@ export function sincronizacaoFiscalComFalha(s: Snapshot): Achado[] {
       execucoes: linhas.slice(0, 10).map((l) => l.id),
     },
   }));
+}
+
+// ─── Rejeição repetida por emitente/série (v1.4) ──────────────────────────
+//
+// A nota rejeitada uma a uma já é `fiscal.nota_rejeitada`. O que dói é o
+// padrão: o mesmo cStat batendo na mesma série no mesmo dia. Um cStat repetido
+// aponta cadastro/configuração do emitente — não azar. O limiar é DECLARADO e
+// vai na evidência; não existe "muitas".
+const CSTAS_DE_SUCESSO = new Set(["100", "101", "135", "150", "151"]);
+export const LIMIAR_REJEICAO_REPETIDA = 3;
+/** Janela deslizante de 24h, agrupada pelo dia UTC da rejeição. */
+export const JANELA_REJEICAO_REPETIDA_MS = DIA_MS;
+
+export function rejeicoesRepetidas(s: Snapshot): Achado[] {
+  const inicio = s.agoraMs - JANELA_REJEICAO_REPETIDA_MS;
+  const grupos = new Map<string, NotaFiscal[]>();
+
+  for (const n of s.notas) {
+    const cstat = n.sefaz_cstat?.trim() ?? "";
+    if (cstat === "" || CSTAS_DE_SUCESSO.has(cstat)) continue;
+    const quando = Date.parse(n.updated_at);
+    if (!Number.isFinite(quando) || quando < inicio || quando > s.agoraMs) continue;
+    const serie = n.serie?.trim() || "—";
+    const dia = diaUtc(n.updated_at);
+    const chave = `${cstat}\u0000${serie}\u0000${dia}`;
+    grupos.set(chave, [...(grupos.get(chave) ?? []), n]);
+  }
+
+  return [...grupos.entries()]
+    .filter(([, notas]) => notas.length >= LIMIAR_REJEICAO_REPETIDA)
+    .map(([chave, notas]) => {
+      const [cstat = "", serie = "", dia = ""] = chave.split("\u0000");
+      const numeros = notas
+        .map((n) => n.numero)
+        .filter((n): n is number => typeof n === "number")
+        .sort((a, b) => a - b);
+      const mensagens = [
+        ...new Set(
+          notas.map((n) => higienizar(n.sefaz_xmotivo)).filter((m): m is string => m !== null),
+        ),
+      ].slice(0, 5);
+      const mensagem = mensagens[0] ?? higienizar(notas[0]?.erro);
+      const atualizadoAte =
+        notas
+          .map((n) => n.updated_at)
+          .sort()
+          .at(-1) ?? null;
+
+      return {
+        regra: "fiscal.rejeicao_repetida",
+        categoria: "fiscal" as const,
+        entidadeTipo: "invoices",
+        entidadeId: hashCurto(`rejeicao:${s.organizationId}:${cstat}:${serie}:${dia}`),
+        titulo: `SEFAZ rejeitou ${notas.length} notas da série ${serie} com cStat ${cstat}`,
+        resumo: `O mesmo cStat ${cstat} apareceu ${notas.length} vezes na série ${serie} em ${dia}. Isso aponta cadastro/configuração do emitente, não azar.`,
+        causaProvavel:
+          "Cadastro do emitente, série, certificado ou regra fiscal inconsistente. A mensagem do cStat na evidência nomeia o motivo.",
+        severidade: "alta" as const,
+        href: "/app/notas",
+        evidencia: {
+          cstat,
+          serie,
+          total: notas.length,
+          limiar: LIMIAR_REJEICAO_REPETIDA,
+          janela_dias: 1,
+          janela_dia: dia,
+          primeiro_numero: numeros[0] ?? null,
+          ultimo_numero: numeros.at(-1) ?? null,
+          notas: numeros.slice(0, 20),
+          mensagem: corta(mensagem),
+          mensagens,
+          atualizado_ate: atualizadoAte,
+        },
+      };
+    });
 }
