@@ -96,7 +96,7 @@ Não há **nenhum** limite de tentativa em:
 cobre todo o surface público de uma vez) + limite por identificador nas rotas de auth
 (por e-mail no login, não só por IP — IP rotativo é trivial). Custo baixo, a infra já existe.
 
-### T2 — Fallback in-memory do rate limit anula o limite que existe 🟠 CONFIRMADO
+### T2 — Fallback in-memory do rate limit anula o limite que existe 🟢 MITIGADO (18/11/2026)
 
 `lib/ai/dispatcher/rate-limit.ts:23` — sem `UPSTASH_REDIS_REST_URL`/`_TOKEN` o contador cai
 para um `Map` em memória do processo. Consequências:
@@ -106,9 +106,13 @@ para um `Map` em memória do processo. Consequências:
 - Multi-instância ou multi-worker ⇒ limite por processo, não por tenant.
 - O único sinal é um `logger.warn` uma vez por processo. Um operador de PME não vai ver.
 
-O stack de produção do kit inclui `serverless-redis-http` + Redis local (visto em
-`docker-compose.prod.yml`), o que resolve — **A CONFIRMAR** se o `install.sh` garante que
-essas duas vars ficam populadas em toda instalação.
+**Mitigação aplicada em 18/11/2026:** a transição para memória virou estado
+consultável (`rateLimitBackend`), o log é `error` em produção (uma vez por
+transição) e `/api/v1/health` acusa **503** enquanto o limitador estiver em
+memória em produção (`degraded`/200 em dev — `pnpm dev` sem Redis continua
+subindo). O stack do kit continua incluindo `serverless-redis-http` + Redis
+local; o que mudou é que a degradação deixou de ser silenciosa. Ver
+`docs/auditoria/p3-02-rate-limit-declarado.md`.
 
 ### T3 — 89 handlers com service role, sem gate de escrita 🟠 CONFIRMADO (contagem)
 

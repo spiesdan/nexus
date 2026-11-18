@@ -256,7 +256,7 @@ Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
   `grep -rln 'authRateLimited\|checkRateLimit(' app lib --include='*.ts' --include='*.tsx'`.
   Esta linha dizia "existe em 2 pontos; login e signup estão sem" — era o estado anterior à
   issue #64, e o `docs/threat-model.md` ainda carrega a versão velha, com nota de reauditoria.
-- Fallback do rate limit é **em memória** — sem Upstash configurado o limite é por processo.
+- Fallback do rate limit é **em memória** e **declarado**: sem Redis alcançável o contador é por processo, o log da transição é `error` em produção e `/api/v1/health` responde **503** (`rate_limit.backend = memoria`) em produção e `degraded` em dev. Ver `docs/auditoria/p3-02-rate-limit-declarado.md`.
 - `Idempotency-Key` implementado em **1** rota, apesar de o contrato prometer nos POSTs de criação.
 - **`.env.example` está completo** — medido em 2026-08-14: das 45 chaves de `lib/env.ts`, a
   única ausente é `NODE_ENV`, que não é configuração do operador. Esta linha dizia que faltavam
