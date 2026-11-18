@@ -1,5 +1,5 @@
 -- ============================================================================
--- 0320 — CREDENCIAL DE DISPOSITIVO OFFLINE: o shell deixa de depender do
+-- 0322 — CREDENCIAL DE DISPOSITIVO OFFLINE: o shell deixa de depender do
 --        cookie que ele nunca teve.
 --
 -- ─── O DEFEITO QUE ISTO RESOLVE ─────────────────────────────────────────────
@@ -89,7 +89,7 @@ create table if not exists public.offline_devices (
 );
 
 comment on table public.offline_devices is
-  'Credencial de dispositivo do shell offline (0320). Token `nod_` guardado só como sha256; escopo offline:pedidos:write/offline:catalogo:read; expiração obrigatória. Autentica apenas /api/v1/device/*.';
+  'Credencial de dispositivo do shell offline (0322). Token `nod_` guardado só como sha256; escopo offline:pedidos:write/offline:catalogo:read; expiração obrigatória. Autentica apenas /api/v1/device/*.';
 
 comment on column public.offline_devices.user_id is
   'Pessoa a quem o aparelho pertence — o vendedor que assina o pedido no sync. Não é necessariamente quem gerou o código.';

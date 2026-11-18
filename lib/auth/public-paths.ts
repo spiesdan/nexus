@@ -18,7 +18,7 @@ export const PUBLIC_PATHS: RegExp[] = [
   // Heartbeat do agente do host (bearer INTERNAL_SECRET/INTERNAL_CRON_SECRET,
   // checado dentro da própria rota) — sem cookie de sessão, igual /cron/.
   /^\/api\/v1\/system\/agent$/,
-  // CREDENCIAL DE APARELHO (0320). O shell do APK não tem cookie de sessão: ele
+  // CREDENCIAL DE APARELHO (0322). O shell do APK não tem cookie de sessão: ele
   // autentica com Bearer `nod_...` conferido DENTRO da rota (hash no banco,
   // escopo, expiração, revogação). Sem esta linha o proxy responde 401 antes de
   // a rota existir — mesmo modo de falha do callback do Google (v1.8.0).
