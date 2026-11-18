@@ -11,19 +11,24 @@
 
 ## D — design/módulos
 
-- **agora:** *Outbox no inbox web* (pendência da ficha 5.4) — mensagem
-  enfileirada sobrevive a reload e a queda de rede; drenar duas vezes não
-  duplica; o estado (pendente/enviando/falhou/tentando) aparece na bolha.
-  Aceite: teste de componente + prova de que o texto não é limpo antes do
-  resultado, e nenhum envio duplicado no dreno.
-- **próximo:** *Pedidos — paginação com teto declarado* (ficha 5.6) — lista
-  pagina com ordem determinística (`numero` desc) e diz "mostrando X de Y"; sem
-  esconder pedido antigo. Aceite: teste de rota (cursor/limite) + componente com
-  o aviso, sem contar amostra como total.
-- **depois:** *Expedição — subtelas com estados* (ficha 5.6) — ficha das
-  subtelas (carga, rota, romaneio) com vazio/carregando/erro/permissão/retry e
-  evidência de captura. Aceite: cada subtela com o estado provado; sem tocar
-  regra de negócio.
+- **agora:** *axe nas telas que a régua não cobre* — rodar `axe-telas-principais`
+  nas telas de operação ainda fora do recorte (começar por **estoque, compras,
+  expedição/romaneio, faturamento e sentinel**), sem violação crítica WCAG 2.2
+  AA; o que aparecer vira correção no mesmo PR ou item de fila com dono.
+  Aceite: cada tela com resultado registrado (violações = 0 ou exceção escrita) e
+  o recorte do instrumento atualizado.
+- **próximo:** *ordenação anunciada nas tabelas* — onde há coluna ordenável sem
+  `aria-sort`, o cabeçalho passa a declarar a direção e a mudança é anunciada;
+  sem mudar a ordem por padrão. Aceite: `aria-sort` nos cabeçalhos ordenáveis das
+  listas de pedidos, produtos e notas + teste de componente.
+- **depois:** *estados das subtelas de expedição (ficha 5.6b)* — vazio,
+  carregando, erro, permissão e retry em carga, rota e romaneio, com evidência de
+  captura; nenhuma regra de negócio tocada. Aceite: cada subtela com os estados
+  provados e a ficha 5.6b marcada.
+
+> Histórico: os três itens anteriores (outbox do inbox web, paginação de pedidos e
+> ficha 5.6b) fecharam no **#581** — fila reposta pelo coordenador, como manda a
+> regra.
 
 ## F — mobile/jornadas/qualidade
 
