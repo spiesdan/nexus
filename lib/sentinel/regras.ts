@@ -5,6 +5,7 @@
  * explicação e o teste cobre cada item. Regra nova entra com id estável e uma
  * função pura; nada de `if` espalhado pelo runner.
  */
+import * as correcao from "./regras-correcao";
 import * as fiscal from "./regras-fiscal";
 import * as operacao from "./regras-operacao";
 import type { Regra } from "./tipos";
@@ -189,6 +190,20 @@ export const REGRAS: readonly Regra[] = [
     descricao:
       "Mais de um lead aberto no mesmo funil para o mesmo contato, telefone ou e-mail normalizado.",
     detectar: operacao.leadsDuplicados,
+  },
+  {
+    id: "operacao.correcao_sem_reversao",
+    categoria: "operacao",
+    descricao:
+      "Correção aprovada cujo job saiu do estado/valor que a reversão exigia — reverter agora seria mentira.",
+    detectar: correcao.correcaoSemReversao,
+  },
+  {
+    id: "operacao.aprovacao_expirada",
+    categoria: "operacao",
+    descricao:
+      "Ocorrência aprovada além da janela de 5 min do plano revisado; executar exige nova simulação.",
+    detectar: correcao.aprovacaoExpirada,
   },
 ];
 

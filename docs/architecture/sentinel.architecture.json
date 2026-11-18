@@ -81,7 +81,7 @@
       "col": 1,
       "type": "lib",
       "label": "lib/sentinel/coleta.ts",
-      "sublabel": "15 consultas com organization_id explícito e teto; falha isola e trunca"
+      "sublabel": "18 consultas com organization_id explícito e teto (inclui ocorrências/eventos/jobs da correção); falha isola e trunca"
     },
     {
       "id": "entidades",
@@ -113,7 +113,7 @@
       "col": 1,
       "type": "lib",
       "label": "registry de regras",
-      "sublabel": "29 detectores fiscais, de operação, financeiro e campanha"
+      "sublabel": "31 detectores fiscais, de operação, financeiro, campanha e observabilidade da correção"
     },
     {
       "id": "recomendacoes",

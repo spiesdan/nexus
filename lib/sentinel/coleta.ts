@@ -17,6 +17,7 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  CorrecaoSentinel,
   EstoqueRazao,
   ImportacaoMercos,
   JobDaFila,
@@ -47,6 +48,10 @@ const TETO_WEBHOOKS = 500;
 const TETO_MERCOS = 100;
 const TETO_CAMPANHAS = 300;
 const TETO_DUPLICADOS = 200;
+// 100 mantém o `in (ids)` do PostgREST abaixo do limite de URL; se houver mais,
+// a coleta trunca e a rodada não encerra por ausência.
+const TETO_CORRECOES = 100;
+const TETO_EVENTOS_CORRECAO = 2_000;
 
 interface Coleta<T> {
   dados: T[];
@@ -73,6 +78,27 @@ async function coletar<T>(
     const motivo = erro instanceof Error ? erro.message : String(erro);
     return { dados: [], truncado: true, falha: `${nome}: ${motivo.slice(0, 200)}` };
   }
+}
+
+interface OcorrenciaCorrecao {
+  id: string;
+  estado: "aprovada" | "corrigida";
+  entidade_id: string;
+}
+
+interface EventoCorrecao {
+  occurrence_id: string;
+  tipo: string;
+  estado_novo: string | null;
+  detalhe: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface JobCorrecao {
+  id: string;
+  kind: string;
+  status: string;
+  run_after: string;
 }
 
 export interface ResultadoColeta {
@@ -289,6 +315,97 @@ export async function coletarSnapshot(
     ),
   ]);
 
+  // ─── Observabilidade da correção aprovada (v1.3+) ───────────────────────
+  //
+  // O Sentinel lê as PRÓPRIAS ocorrências/eventos e o job ATUAL para observar
+  // dois fatos que a tela não mostra sozinha: a reversão ainda é honesta? a
+  // aprovação ainda está dentro da janela de 5 min? Nada aqui escreve.
+  const ocorrenciasCorrecao = await coletar<OcorrenciaCorrecao>(
+    "correcoes",
+    admin
+      .from("sentinel_occurrences")
+      .select("id, estado, entidade_id")
+      .eq("organization_id", organizationId)
+      .eq("regra", "operacao.job_fila_travado")
+      .in("estado", ["aprovada", "corrigida"])
+      .order("updated_at", { ascending: false })
+      .limit(TETO_CORRECOES + 1),
+    TETO_CORRECOES,
+  );
+
+  const ocorrenciaIds = ocorrenciasCorrecao.dados.map((o) => o.id);
+  const jobIds = [...new Set(ocorrenciasCorrecao.dados.map((o) => o.entidade_id))].filter(
+    (id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id),
+  );
+  const vazio = <T,>(): Coleta<T> => ({ dados: [], truncado: false, falha: null });
+
+  const [eventosCorrecao, jobsCorrecao] =
+    ocorrenciaIds.length === 0
+      ? [vazio<EventoCorrecao>(), vazio<JobCorrecao>()]
+      : await Promise.all([
+          coletar<EventoCorrecao>(
+            "eventos_correcao",
+            admin
+              .from("sentinel_occurrence_events")
+              .select("occurrence_id, tipo, estado_novo, detalhe, created_at")
+              .eq("organization_id", organizationId)
+              .in("occurrence_id", ocorrenciaIds)
+              .in("tipo", ["nota", "estado_alterado"])
+              .order("created_at", { ascending: false })
+              .limit(TETO_EVENTOS_CORRECAO + 1),
+            TETO_EVENTOS_CORRECAO,
+          ),
+          jobIds.length === 0
+            ? vazio<JobCorrecao>()
+            : coletar<JobCorrecao>(
+                "jobs_correcao",
+                admin
+                  .from("job_queue")
+                  .select("id, kind, status, run_after")
+                  .eq("organization_id", organizationId)
+                  .in("id", jobIds)
+                  .limit(TETO_CORRECOES + 1),
+                TETO_CORRECOES,
+              ),
+        ]);
+
+  const eventosPorOcorrencia = new Map<string, EventoCorrecao[]>();
+  for (const evento of eventosCorrecao.dados) {
+    const lista = eventosPorOcorrencia.get(evento.occurrence_id) ?? [];
+    lista.push(evento);
+    eventosPorOcorrencia.set(evento.occurrence_id, lista);
+  }
+  const jobsPorId = new Map(jobsCorrecao.dados.map((j) => [j.id, j]));
+
+  const correcoes: CorrecaoSentinel[] = ocorrenciasCorrecao.dados.map((o) => {
+    const eventos = eventosPorOcorrencia.get(o.id) ?? [];
+    const aprovacao = eventos.find(
+      (e) => e.tipo === "estado_alterado" && e.estado_novo === "aprovada",
+    );
+    const nota = eventos.find(
+      (e) => e.tipo === "nota" && e.detalhe?.correcao === "antecipar_job",
+    );
+    const job = jobsPorId.get(o.entidade_id);
+    return {
+      ocorrencia_id: o.id,
+      estado: o.estado,
+      job_id: o.entidade_id,
+      aprovada_em: aprovacao?.created_at ?? null,
+      correcao:
+        nota && nota.detalhe
+          ? {
+              job_id: String(nota.detalhe.job_id ?? ""),
+              run_after_antes: String(nota.detalhe.run_after_antes ?? ""),
+              run_after_depois: String(nota.detalhe.run_after_depois ?? ""),
+              executada_em: nota.created_at,
+            }
+          : null,
+      job: job
+        ? { id: job.id, kind: job.kind, status: job.status, run_after: job.run_after }
+        : null,
+    };
+  });
+
   const coletas = [
     notas,
     notasPedidos,
@@ -305,6 +422,9 @@ export async function coletarSnapshot(
     campanhasProspeccao,
     campanhasVenda,
     clientesDuplicados,
+    ocorrenciasCorrecao,
+    eventosCorrecao,
+    jobsCorrecao,
   ];
 
   return {
@@ -326,6 +446,7 @@ export async function coletarSnapshot(
       campanhasProspeccao: campanhasProspeccao.dados,
       campanhasVenda: campanhasVenda.dados,
       clientesDuplicados: clientesDuplicados.dados,
+      correcoes,
     },
     truncado: coletas.some((c) => c.truncado),
     falhas: coletas.map((c) => c.falha).filter((f): f is string => f !== null),
