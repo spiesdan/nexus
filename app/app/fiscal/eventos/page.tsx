@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import {
   Table,
@@ -55,11 +56,12 @@ export default async function EventosPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("fiscal_document_events")
     .select(
       "id, entrada_id, chave, nsu, tipo, tp_evento, descricao, protocolo, dh_evento, created_at, " +
         "fiscal_entradas(numero, serie, emitente_nome)",
+      { count: "exact" },
     )
     .eq("organization_id", org.orgId)
     .order("dh_evento", { ascending: false, nullsFirst: false })
@@ -73,6 +75,8 @@ export default async function EventosPage() {
         title="Cancelamentos e eventos"
         subtitle="Cancelamentos, cartas de correção e manifestações recebidas pela distribuição DF-e."
       />
+
+      <RecorteDaLista mostrados={eventos.length} total={count ?? null} descricao="eventos" />
 
       {eventos.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">

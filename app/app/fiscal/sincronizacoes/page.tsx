@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import {
   Table,
   TableBody,
@@ -53,11 +54,12 @@ export default async function SincronizacoesPage() {
   const { org, podeOperar, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("fiscal_sync_logs")
     .select(
       "id, origem, iniciado_em, finalizado_em, nsu_inicial, nsu_final, max_nsu, " +
         "docs_encontrados, docs_importados, docs_erro, resultado, cstat, mensagem, request_id",
+      { count: "exact" },
     )
     .eq("organization_id", org.orgId)
     .order("iniciado_em", { ascending: false })
@@ -73,6 +75,7 @@ export default async function SincronizacoesPage() {
         actions={podeOperar ? <BotaoSincronizar /> : undefined}
       />
 
+      <RecorteDaLista mostrados={logs.length} total={count ?? null} descricao="execuções" />
       {logs.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">
           Nenhuma sincronização executada ainda. O botão acima faz a primeira; depois disso, o cron

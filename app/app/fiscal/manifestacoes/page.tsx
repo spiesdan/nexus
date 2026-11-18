@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
+import { RecorteDaLista } from "@/components/fiscal/RecorteDaLista";
 import {
   Table,
   TableBody,
@@ -49,11 +50,12 @@ export default async function ManifestacoesPage() {
   const { org, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("fiscal_manifestations")
     .select(
       "id, entrada_id, evento, justificativa, protocolo, cstat, resultado, mensagem, created_at, " +
         "fiscal_entradas(chave, numero, serie, emitente_nome)",
+      { count: "exact" },
     )
     .eq("organization_id", org.orgId)
     .order("created_at", { ascending: false })
@@ -68,6 +70,11 @@ export default async function ManifestacoesPage() {
         subtitle="Ciência, confirmação, desconhecimento e não realizada — com protocolo e retorno da SEFAZ."
       />
 
+      <RecorteDaLista
+        mostrados={linhas.length}
+        total={count ?? null}
+        descricao="manifestações"
+      />
       {linhas.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">
           Nenhuma manifestação enviada ainda. Abra uma nota em Pendentes de Conferência e declare a

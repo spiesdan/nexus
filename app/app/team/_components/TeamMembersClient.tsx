@@ -49,6 +49,9 @@ import { type Role } from "@/lib/schemas/team";
 import { DotsThree } from "@/lib/ui/icons";
 import { SetorCell } from "./SetorCell";
 import { NomeCell } from "./NomeCell";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
+import { UsersThree } from "@/lib/ui/icons";
 
 interface Props {
   currentUserId: string;
@@ -58,7 +61,7 @@ interface Props {
 export function TeamMembersClient({ currentUserId, canManage }: Props) {
   const tagDoIdioma = useTagDeIdioma();
   const t = useT();
-  const { data, isLoading, isError } = useTeamMembers();
+  const { data, isLoading, isError, refetch } = useTeamMembers();
   const changeRole = useChangeRole();
   const revoke = useRevokeMember();
   const motorista = useMotoristaMember();
@@ -82,11 +85,29 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
     return <p className="text-sm text-muted-foreground">{t("Carregando…")}</p>;
   }
   if (isError) {
-    return <p className="text-sm text-destructive">{t("Erro ao carregar membros.")}</p>;
+    // Erro com saída. Era uma frase vermelha sem retry: a única forma de tentar
+    // de novo era recarregar a página inteira, e o motivo do erro não aparecia.
+    return (
+      <NexusErrorState
+        description={t("Erro ao carregar membros.")}
+        onRetry={() => void refetch()}
+      />
+    );
   }
   const members = data?.data ?? [];
   if (members.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("Nenhum membro ativo.")}</p>;
+    // Vazio com o próximo passo. "Nenhum membro ativo." num sistema recém
+    // instalado é uma tela sem saída para quem precisa montar a equipe.
+    return (
+      <NexusEmptyState
+        icon={UsersThree}
+        headline={t("Nenhum membro ativo.")}
+        subcopy={t("Convide quem atende com você e defina o papel de cada pessoa.")}
+        {...(canManage
+          ? { primary: { label: t("Convidar membros"), href: "/app/team/invite" } }
+          : {})}
+      />
+    );
   }
 
   const canaisDaOrgLista = canaisDaOrg ?? [];
