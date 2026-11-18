@@ -1,0 +1,21 @@
+appId: tech.billhigiene.crm
+---
+# TOKEN REVOGADO no aparelho: 401 token_revoked, estado visível e FILA INTACTA.
+# Pré-condição:
+#   REVOKED=1 node tests/e2e-mobile/stub-device-api.mjs
+#   adb reverse tcp:8787 tcp:8787
+#   banco semeado com credencial url=http://10.0.2.2:8787 e 1 pedido pendente
+- launchApp:
+    clearState: false
+- waitForAnimationToEnd:
+    timeout: 15000
+# O /device/me responde 401 token_revoked; a tela nomeia o estado, não engole.
+- extendedWaitUntil:
+    visible: ".*não está mais autorizado.*pareie de novo.*"
+    timeout: 60000
+- assertVisible:
+    text: ".*\\(1\\).*"
+- assertVisible: "OFF-0001"
+- assertVisible:
+    text: ".*expirado.*|.*desconectado pelo sistema.*"
+- takeScreenshot: "21-token-revogado-fila-intacta"

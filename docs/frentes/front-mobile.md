@@ -315,7 +315,7 @@ domínio, e abandonar o SQLite (C) jogaria fora a captura offline que já existe
 
 | Peça | Arquivo |
 |---|---|
-| Tabela + RLS + índices + trigger | `supabase/migrations/20261123160000_0322_credencial_de_dispositivo_offline.sql` |
+| Tabela + RLS + índices + trigger | `supabase/migrations/20261123150000_0322_credencial_de_dispositivo_offline.sql` |
 | Apêndice idempotente | fim de `supabase/baseline.sql` |
 | Linha do MANIFEST | `supabase/migrations/MANIFEST.md` (0322) |
 | Auth do bearer (hash, expiração, revogação, escopo, papel ao vivo, rate limit, `last_seen`) | `lib/auth/device-token.ts` |
