@@ -490,3 +490,25 @@ teste. Evidência: `docs/auditoria/evidencias/mobile-b5-2026-11-18/40-tela-dispo
 (Fotos em tema escuro, 1360×900; a página também foi exercitada pela rota na prova B-7.)
 
 **Ainda não provado:** troca do token em SQLite por Keystore/Keychain (plugin nativo).
+### 9.8 Segunda rodada B-7 — AVD recriado, `-gpu off` (18/11/2026)
+
+O emulador anterior morria com **SIGSEGV (139)** por causa do backend gráfico
+(`swiftshader_indirect`). Com `-gpu off -memory 2048`, AVD recriado, a rodada inteira passou:
+
+| Passo | Resultado |
+|---|---|
+| parear código `NEXUS1.…` (servidor real em `10.0.2.2:3022`) | `pareado`, “E2E Test Org” |
+| 2 pedidos capturados em modo avião | `(2)`, `OFF-0001`/`OFF-0002` |
+| rede de volta + abrir o app | “2 pedido(s) enviado(s) — nº **67, 68**”; fila zerada na MESMA tela (correção do §9.7) |
+| banco do servidor | exatamente **2** ordens novas, `chave_sincronizacao` = UUIDs da fila (`b943…`→67, `a36c…`→68), sem duplicata |
+| credencial revogada na rota real + 1 pedido novo (`OFF-0003`) | `401 token_revoked` visível (“não está mais autorizado… pareie de novo”) e fila **intacta** (`pendente`, 1 tentativa) |
+| banco do servidor depois da revogação | continua com **2** ordens — o pedido não vazou nem duplicou |
+
+Evidências: `docs/auditoria/evidencias/mobile-b7-2026-11-18-r2/` (4 capturas: pareado,
+2 pedidos, drenado, revogado com fila intacta).
+
+**Observação cosmética (não bloqueia):** a linha da fila guarda
+`ultimo_erro = "sessão expirada — abra o sistema e entre de novo"`, que é o texto do caminho
+por cookie. Para o aparelho o correto seria “credencial recusada — pareie de novo”. A tela do
+shell mostra a mensagem certa; o texto só apareceria se a linha virasse `rejeitado`. Fica
+como ajuste de mensagem compartilhada em `drenarFila` (parâmetro), sem mudança de regra.
