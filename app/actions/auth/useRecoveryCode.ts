@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { safeNext } from "@/lib/auth/safe-next";
 import { z } from "zod";
 
+import { AUTH_LIMITS, authRateLimited } from "@/lib/auth/rate-limit";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit, isServiceRoleConfigured } from "@/lib/audit";
 import { hashRecoveryCode } from "@/lib/auth/recovery-codes";
@@ -43,6 +44,15 @@ export async function useRecoveryCode(
     code: rawInput.code?.trim().toUpperCase(),
   });
   if (!parsed.success) {
+    await delay(200);
+    return { ok: false, error: "invalid_or_used" };
+  }
+
+  // Teto por identificador (hash do e-mail) E por IP. Sem ele, o espaço de 8
+  // caracteres alfanuméricos é varável por ataque distribuído, e o código
+  // queimado no acerto dá acesso à conta. A resposta é a MESMA de código
+  // inválido: nunca revela se o e-mail existe nem que houve bloqueio.
+  if (await authRateLimited("recovery_code", parsed.data.email, AUTH_LIMITS.recovery_code)) {
     await delay(200);
     return { ok: false, error: "invalid_or_used" };
   }
