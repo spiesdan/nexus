@@ -334,6 +334,12 @@ export const campanhaCreateSchema = z.object({
   // limite de 120 cortava o nome que a própria tela gera (a lista de cidades
   // vira nome) e não protegia nada — a coluna é `text`.
   nome: z.string().trim().min(2),
+  /**
+   * D-02: o nome veio de edição manual? `true` desliga o gerador por cidades
+   * para sempre — o app nunca sobrescreve um nome escolhido pelo operador.
+   * `false`/ausente = nome automático, regenerado quando as cidades mudam.
+   */
+  nome_manual: z.boolean().optional(),
   objetivo: z.string().trim().max(300).nullable().optional(),
   categorias: z.array(z.string().trim().min(2).max(80)).min(1).max(CATEGORIAS_MAX),
   cidades: z
@@ -419,6 +425,8 @@ export const campanhaDeRecuperacaoSchema = z
   .object({
     // Sem teto de caracteres — a mesma régua de `campanhaCreateSchema`.
     nome: z.string().trim().min(2),
+    /** Recuperação não tem cidades: o nome é sempre do operador. */
+    nome_manual: z.boolean().optional(),
     objetivo: z.string().trim().max(300).nullable().optional(),
     /** A lista fechada da prévia de inativos (o radar é a mesma fonte). */
     contato_ids: z.array(z.string().uuid()).min(1).max(10_000),
@@ -525,6 +533,8 @@ export const campanhaPorRegiaoSchema = z
   .object({
     // Sem teto de caracteres — a mesma régua de `campanhaCreateSchema`.
     nome: z.string().trim().min(2),
+    /** Nome manual? `false` = gerado pelas cidades; `true` = nunca sobrescrever. */
+    nome_manual: z.boolean().optional(),
     objetivo: z.string().trim().max(300).nullable().optional(),
     cidades: cidadesDaRegiaoSchema,
     session_id: z.string().uuid(),

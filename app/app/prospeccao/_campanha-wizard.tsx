@@ -44,6 +44,10 @@ import { renderTemplateBody } from "@/lib/channels/meta/render-template";
 import { ehSlotDeMidia, valorDeMidiaAceito } from "@/lib/channels/templates/midia";
 import { interpolateTemplate } from "@/lib/inbox/template-vars";
 import { interpolarValoresDoTemplate } from "@/lib/prospeccao/mensagem-da-campanha";
+import {
+  gerarNomeDaCampanha,
+  nomeSugeridoSeAutomatico,
+} from "@/lib/prospeccao/nome-da-campanha";
 import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import { comoMoeda } from "@/lib/format/moeda";
@@ -203,6 +207,11 @@ export function CampanhaWizard({
   const [passo, setPasso] = React.useState(0);
   const [alcancado, setAlcancado] = React.useState(0);
   const [nome, setNome] = React.useState("");
+  /**
+   * D-02: `true` = o operador digitou o nome; o gerador por cidades não toca
+   * mais nele até "Voltar ao nome automático". `false` = nome automático.
+   */
+  const [nomeManual, setNomeManual] = React.useState(false);
   const [fonte, setFonte] = React.useState<"base" | "busca" | "ambas">("base");
 
   // ── Audiência ────────────────────────────────────────────────────────────
@@ -225,6 +234,22 @@ export function CampanhaWizard({
   const [cidadesSelecionadas, setCidadesSelecionadas] = React.useState<CidadeAlvo[]>([]);
   const [cidadeManual, setCidadeManual] = React.useState("");
   const [ufManual, setUfManual] = React.useState("");
+
+  // D-01: a seleção de cidades gera o nome — mas só enquanto o nome é
+  // automático. Editar o campo desliga o gerador (D-02), e o botão abaixo do
+  // input devolve o controle.
+  React.useEffect(() => {
+    const sugerido = nomeSugeridoSeAutomatico({
+      nomeManual,
+      publico: publicoAlvo,
+      cidades: cidadesSelecionadas,
+    });
+    // Sincronização derivada da seleção: o nome É um campo controlado pelo
+    // usuário, mas o modo automático precisa refletir a seleção. O efeito é a
+    // única forma de manter os dois sem duplicar a lógica em cada toggle.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (sugerido !== null) setNome(sugerido);
+  }, [cidadesSelecionadas, nomeManual, publicoAlvo]);
 
   // ── Categorias ───────────────────────────────────────────────────────────
   const [buscaCategoria, setBuscaCategoria] = React.useState("");
@@ -1024,6 +1049,7 @@ export function CampanhaWizard({
           "/api/v1/prospecting/campaigns/recuperacao",
           {
             nome: nome.trim(),
+            nome_manual: true,
             contato_ids: contatosElegiveis.map((l) => l.contact_id),
             ...(modoEfetivo === "template" && modelo
               ? {
@@ -1054,6 +1080,7 @@ export function CampanhaWizard({
         "/api/v1/prospecting/campaigns",
         {
           nome: nome.trim(),
+          nome_manual: nomeManual,
           categorias: categoriasMarcadas,
           cidades: cidadesSelecionadas,
           fonte_publico: fonte,
@@ -1150,13 +1177,37 @@ export function CampanhaWizard({
                 <Input
                   id="wiz-nome"
                   value={nome}
-                  onChange={(e) => setNome(e.target.value)}
+                  onChange={(e) => {
+                    setNome(e.target.value);
+                    setNomeManual(true);
+                  }}
                   placeholder={
                     publicoAlvo === "inativos"
                       ? t("Recuperação — clientes sem compra há 90 dias")
                       : t("Oficinas — Norte SC")
                   }
                 />
+                {publicoAlvo === "empresas" ? (
+                  <p className="text-xs text-muted-foreground">
+                    {nomeManual
+                      ? t("Nome manual — o gerador por cidades não vai sobrescrever.")
+                      : t("Nome gerado pelas cidades selecionadas.")}
+                  </p>
+                ) : null}
+                {nomeManual && publicoAlvo === "empresas" ? (
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-xs"
+                    onClick={() => {
+                      setNomeManual(false);
+                      setNome(gerarNomeDaCampanha(cidadesSelecionadas));
+                    }}
+                  >
+                    {t("Voltar ao nome automático")}
+                  </Button>
+                ) : null}
               </div>
 
               {publicoAlvo === "inativos" ? (
