@@ -164,7 +164,7 @@ create policy "automation_rule_runs_select" on public.automation_rule_runs
 
 - [ ] **Step 2: Aplicar a migration no banco de dev**
 
-Use o MCP do Supabase: `mcp__plugin_supabase_supabase__apply_migration` com o nome `0038_webhooks_automation` e o SQL acima (ou `supabase db push` se preferir a CLI). Capture o output.
+Use o MCP do Supabase: `mcp__plugin_supabase_supabase__apply_migration` com o nome `0038_webhooks_automation` e o SQL acima (não use `db push`: aplique pelo baseline com `pnpm db:migrate`). Capture o output.
 Expected: sucesso sem erro; `select count(*) from webhook_sources` retorna 0.
 
 - [ ] **Step 3: Apêndice no baseline.sql**

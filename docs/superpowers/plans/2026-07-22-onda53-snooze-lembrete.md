@@ -69,7 +69,7 @@
 
 - [ ] **Step 3: MANIFEST** — `| 0061 | ..._0061_conversation_snooze | Colunas snooze_* em conversations + kind snooze_expired em agent_inbox_items (Onda 5.3). |`
 
-- [ ] **Step 4: Aplicar e provar** (via CLI Supabase linkada — `supabase db push` como na 0060):
+- [ ] **Step 4: Aplicar e provar** (via baseline — `pnpm db:migrate`; `db push` é proibido desde F-09=B):
   ```sql
   select column_name from information_schema.columns where table_name='conversations' and column_name like 'snooze%';  -- 3 linhas
   select pg_get_constraintdef(oid) from pg_constraint where conname='agent_inbox_items_kind_check';  -- contém snooze_expired
