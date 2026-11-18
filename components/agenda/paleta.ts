@@ -28,6 +28,23 @@ export function corDaTrilha(trilha: TrilhaDeCor): string {
 }
 
 /**
+ * A FRENTE da trilha — a cor do texto que se pinta EM CIMA dela (as iniciais do
+ * avatar).
+ *
+ * Existe porque "cor de pessoa" passou a incluir trilhas escuras no tema claro
+ * (telha, oliva, violeta) e uma só frente não serve: Carbon sobre a telha dava
+ * 3,2:1, abaixo do piso AA. Branco ou Carbon é escolhido por trilha e por tema,
+ * medido em `tests/unit/trilhas-da-agenda-se-separam.test.ts` — nenhum par fica
+ * abaixo de 4,5:1.
+ *
+ * Como `corDaTrilha`, devolve a VARIÁVEL, nunca o hex: o valor mora no CSS e o
+ * tema decide qual vale naquele ponto da árvore.
+ */
+export function frenteDaTrilha(trilha: TrilhaDeCor): string {
+  return `var(--agenda-pessoa-${trilha}-fg)`;
+}
+
+/**
  * Fundo do bloco, derivado da própria cor da trilha em vez de declarado à parte.
  *
  * `color-mix` sobre `--color-surface` (e não sobre `transparent`) porque o bloco

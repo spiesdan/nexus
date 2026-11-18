@@ -50,6 +50,8 @@ export const TRANSVERSAIS: Record<string, string> = {
   "rbac-roles": "régua de papel (owner/manager/agent) que atravessa tudo",
   smoke: "fumaça do produto",
   "axe-telas-principais": "acessibilidade (axe) nas 8 telas de operação — vale para todas",
+  "visual-snapshots":
+    "baseline visual (login + 4 telas, desktop/celular, escuro/claro) — transversal; roda local, baselines por plataforma",
   "campanhas-tela": "contrato de subtela (Campanha/Prospecção) e persistência da escolha — F-27",
   "meu-dia-alertas": "alertas do Meu Dia (transversal ao painel)",
   "sentinel-painel": "saúde do produto — ocorrências, plano revisável e kill switch atravessam todas as jornadas",

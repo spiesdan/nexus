@@ -1,72 +1,92 @@
-import {
-  Bricolage_Grotesque,
-  Plus_Jakarta_Sans,
-  Fraunces,
-  Manrope,
-  Atkinson_Hyperlegible,
-  Source_Serif_4,
-  IBM_Plex_Sans,
-  IBM_Plex_Mono,
-  JetBrains_Mono,
-} from "next/font/google";
+import localFont from "next/font/local";
 
-// Note: next/font requires module-level constants; we expose all 4 pair vars
-// at once. CSS swaps via --font-display / --font-body / --font-mono picker.
+/**
+ * Tipografias do SHOWCASE `/design`.
+ *
+ * ─── Por que local, e não `next/font/google` (C10, 18/11/2026) ──────────────
+ *
+ * A página `/design` exibe pares tipográficos para avaliação, e usava nove
+ * famílias via `next/font/google`. Esse import **baixa a fonte durante o
+ * `build`**: numa VPS sem saída para o Google o build do produto inteiro morre
+ * — inclusive o de quem só queria a instalação padrão. O showcase é uma tela
+ * de avaliação; não pode ser o motivo de o produto não compilar offline.
+ *
+ * Os arquivos (subset `latin`, que cobre o português) estão em `public/fonts/`,
+ * com o texto da licença OFL de cada família ao lado. `next/font/local` os
+ * processa no build sem tocar a rede.
+ *
+ * `next/font` exige constantes de módulo: cada família exporta `.variable`, e
+ * o CSS do showcase troca o par por `--font-display`/`--font-body`/`--font-mono`.
+ */
 
-export const bricolage = Bricolage_Grotesque({
-  subsets: ["latin"],
+export const bricolage = localFont({
+  src: "../../../public/fonts/bricolage-grotesque-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-bricolage",
 });
 
-export const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+export const jakarta = localFont({
+  src: "../../../public/fonts/plus-jakarta-sans-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-jakarta",
 });
 
-export const fraunces = Fraunces({
-  subsets: ["latin"],
+export const fraunces = localFont({
+  src: "../../../public/fonts/fraunces-latin-full-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-fraunces",
-  axes: ["SOFT", "WONK", "opsz"],
 });
 
-export const manrope = Manrope({
-  subsets: ["latin"],
+export const manrope = localFont({
+  src: "../../../public/fonts/manrope-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-manrope",
 });
 
-export const atkinson = Atkinson_Hyperlegible({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+export const atkinson = localFont({
+  src: [
+    { path: "../../../public/fonts/atkinson-hyperlegible-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../../../public/fonts/atkinson-hyperlegible-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-atkinson",
 });
 
-export const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
+export const sourceSerif = localFont({
+  src: "../../../public/fonts/source-serif-4-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-source-serif",
 });
 
-export const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+export const plexSans = localFont({
+  src: [
+    { path: "../../../public/fonts/ibm-plex-sans-latin-300-normal.woff2", weight: "300", style: "normal" },
+    { path: "../../../public/fonts/ibm-plex-sans-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../../../public/fonts/ibm-plex-sans-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../../../public/fonts/ibm-plex-sans-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "../../../public/fonts/ibm-plex-sans-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-plex-sans",
 });
 
-export const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+export const plexMono = localFont({
+  src: [
+    { path: "../../../public/fonts/ibm-plex-mono-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../../../public/fonts/ibm-plex-mono-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
   display: "swap",
   variable: "--font-plex-mono",
 });
 
-export const jetbrains = JetBrains_Mono({
-  subsets: ["latin"],
+export const jetbrains = localFont({
+  src: "../../../public/fonts/jetbrains-mono-latin-wght-normal.woff2",
+  weight: "100 900",
   display: "swap",
   variable: "--font-jetbrains",
 });
