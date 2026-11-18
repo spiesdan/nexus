@@ -108,3 +108,25 @@ registrada.
 - **Fora de escopo por decisão**: reescrever as 10 fundações (caminhos A/C). ❌
 
 F-09 fecha como `[x]` **por decisão**, não por reescrever histórico.
+
+## 6. A prova executada (18/11/2026)
+
+A decisão acima dizia *o que* é o caminho. Faltava provar que ele funciona ponta a
+ponta — e foi isso que `scripts/auditoria/prova-f09.sh` passou a executar:
+
+| Prova | Resultado medido |
+|---|---|
+| Nenhum executável aplica a cadeia (scripts/CI/kit/Docker/compose) | 0 invocações |
+| Instalação em banco vazio (`ON_ERROR_STOP=1`) | 179 tabelas · 179 com RLS · 300 políticas · 288 funções · 104 triggers |
+| Atualização sobre dados (o que o `update.sh` faz) | 0 linha perdida; objetos idênticos |
+| ACL instalação × atualização (5.400 linhas) | `diff` vazio |
+| `db:reset` reproduz a instalação | mesmos objetos · **ACL idêntico** |
+| Restore ponta a ponta | PASSOU (inclui isolamento pós-restore) |
+
+**Defeito achado pela prova**: o `db:reset` concedia `anon` em tabelas onde o dump
+concede só `authenticated`/`service_role` (ex.: `ai_agent_runs`), porque estabelecia
+DEFAULT ACL de **tabelas** antes de aplicar o baseline. Corrigido: o reset agora
+restabelece apenas o DEFAULT ACL de funções, e o ACL canônico é o que o baseline
+emite por tabela. Detalhe, diff e limites em
+[`f09-prova-de-caminho-unico.md`](f09-prova-de-caminho-unico.md).
+

@@ -1,0 +1,63 @@
+F-09 — prova do caminho único (baseline.sql)
+quando:    2026-11-18T03:58:42Z
+commit:    924dbb6b (f09/prova-de-caminho-unico)
+imagem:    pgvector/pgvector:pg15
+baseline:  29359 linhas · sha256 3312d39c9042a84523ecb90c044e6695436f5aa01351996979a8572a4603aa6e
+preâmbulo: sha256 0cc7ce48a6aa5899ee7c56d5d1b5fcad5027c855ecb0892aa298e8bd74c9a435
+
+── 1. Nenhum executável do repositório aplica a cadeia ─────────────────────────────────────────
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/db/aplicar-schema.sh:8:#   "db:migrate": "echo 'TODO: wire supabase db push or pg-migrate' && exit 0"
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/db/aplicar-schema.sh:15:# POR QUE NÃO `supabase db push`. A cadeia de 292 migrations NÃO reproduz o
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/db/resetar-schema.sh:8:#   "db:reset": "supabase db reset"
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/db/resetar-schema.sh:10:# e o `supabase db reset` aplica `supabase/migrations/` — a mesma cadeia que
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/deploy.sh:59:#      docs/auditoria/12-migrations-e-rls.md) — `supabase db push` seria pior,
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/auditoria/prova-f09.sh:14:#      chamar `supabase db push` / `db reset` / `migration up`.
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/auditoria/replay-migrations.sh:7:#   1. O caminho de MIGRATIONS (o que `supabase db push` / `supabase db reset`
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/auditoria/replay-migrations.sh:15:# Por que isso importa: `package.json` declara `db:reset` = `supabase db reset` e
+/private/var/folders/b0/b2b3tmh516gggs75bg_r8sk40000gn/T/aaa-front-db/scripts/auditoria/replay-migrations.sh:183:# `--single-transaction` reproduz o `supabase db push`: migration que falha não
+  ✗ executável do repositório chama a cadeia de migrations (ver linhas acima)
+  ✓ hostgator-setup-kit/install.sh aplica baseline.sql
+  ✓ hostgator-setup-kit/update.sh aplica baseline.sql
+
+── 2. Container descartável ─────────────────────────────────────────
+  PostgreSQL 15.19 (Debian 15.19-1.pgdg12+2) on 
+  ✓ postgres pronto
+  porta publicada: 58968
+
+── 3. INSTALAÇÃO (banco vazio, ON_ERROR_STOP=1) ─────────────────────────────────────────
+  ✓ preâmbulo aplicado
+  ✓ baseline aplicado (install)
+  objetos: funcoes=288 politicas=300 rls=179 tabelas=179 tipos=181 triggers=104
+  linhas de ACL: 5400
+  ✓ 179 tabelas, todas com RLS
+
+── 4. ATUALIZAÇÃO sobre dados (o que o update.sh faz) ─────────────────────────────────────────
+  linhas antes (orgs/contatos/mensagens/pedidos/recebíveis): 2/2/2/2/2
+  ✓ baseline re-aplicado sobre dados, ON_ERROR_STOP=1, exit 0
+  ✓ dado sobreviveu ao update: 2/2/2/2/2
+  ✓ objetos idênticos após update: funcoes=288 politicas=300 rls=179 tabelas=179 tipos=181 triggers=104
+  ✓ ACL idêntico após update (tabelas + funções + default acl)
+  ✓ authenticated lê public.contacts
+  ✓ authenticated executa fn_user_org_ids()
+  ✓ anon NÃO executa fn_user_org_ids() (policy helper não é RPC pública)
+  ✓ isolamento pós-update: A lê 0 mensagem de B
+  ✓ controle positivo pós-update: A lê 1 da própria org
+
+── 5. db:reset reproduz o mesmo schema (banco próprio, destrutivo) ─────────────────────────────────────────
+  ✓ db:reset (resetar-schema.sh) exit 0
+  ✓ reset reproduz os mesmos objetos: funcoes=288 politicas=300 rls=179 tabelas=179 tipos=181 triggers=104
+  ✓ ACL do reset idêntico ao do install
+  ✓ --verificar sem SUPABASE_DB_URL sai diferente de 0 (não é verde por acidente)
+
+── 6. RESTORE (backup → apagar → restaurar → conferir) ─────────────────────────────────────────
+  pulado por PROVA_F09_SEM_RESTORE=1
+
+── Veredito ─────────────────────────────────────────
+FALHOU — 1 verificação(ões).
+
+O que esta prova NÃO cobre (e onde está):
+  · restauração de uploads/storage: lacuna declarada em 25-ensaio-de-restauracao.md §3
+  · update com a cadeia histórica: PROIBIDO por decisão (20-f09-estrategia.md §4)
+  · aplicação do baseline em banco Supabase gerenciado: só o caminho psql é exercitado
+
+evidência: docs/auditoria/evidencias/f09/prova-20261118-005842.txt
