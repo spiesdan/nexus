@@ -67,6 +67,13 @@ a integração renumerou para 0316 e reconstruiu o baseline como `main + bloco 0
 | D-02 | Comportamento ao editar o nome manualmente | desliga automático / sobrescreve / campo separado | desliga até "usar nome sugerido" |
 | D-03 | Idempotência fiscal (`Idempotency-Key`) | devolver recurso original / 409 | devolver original (como o financeiro) |
 
+## 5.1 Follow-ups abertos (não bloqueiam P0)
+
+| Item | Estado | Observação |
+|---|---|---|
+| #490 — guarda de organização no `_handler` do MCP | CI vermelho | o teste `contato-audit-from-to` usa um fake de Supabase com `.eq` não encadeável; a correção é no fake (ou no handler), não no produto. Fora do P0 fechado. |
+| #471/#468/#472/#457/#465/#476/#477/#439/#438 | abertos | P1/P2/P3 e auditoria; não foram integrados nesta rodada. |
+
 ## 6. Bloqueios reais
 
 | Item | Bloqueio |
