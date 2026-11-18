@@ -72,7 +72,7 @@ coordenador integra e roda os gates no código integrado.
 |---|---|---|---|---|---|---|
 | **P1-01** | Jornadas críticas sem falha: J6 inbox (7/9), J13 fiscal (3/4), J14 LGPD (2/4) | `[~]` | `docs/auditoria/29-capacidades.md` | E / H | Ambiente E2E | Falhas reproduzidas, corrigidas e reexecutadas; nenhuma marcada "instável" sem causa |
 | **P1-02** | Fiscal: devolução de venda, IE do destinatário e `<entrega>` duplicado | `[~]` | PR #438 aberto | C | Revisão fiscal | PR verde com teste de regressão; regra existente preservada; sem emissão real |
-| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[ ]` | §8 do prompt mestre; nenhum gerador encontrado no código | E / Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
+| **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[!]` | §8 do prompt mestre; não existe gerador no código; o wizard exige nome manual (`_campanha-wizard.tsx:696`) | E / Coordenador | **Decisão de produto sobre a regra do nome** (opções abaixo) | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
 | **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | Capacidades 23–24; `docs/auditoria/08-mobile-offline.md` | F | APK/emulador | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | `#469` mergeado (axe em 10 telas); `#468` aberto (snapshots) | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
 | **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | `#458` (teto nas listas); `#464` aberto com `invariants` vermelho | A / E | Corrigir #464 | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
@@ -125,7 +125,17 @@ pnpm test:e2e:smoke                               # UI/jornada (app + banco)
 pnpm test:shell                                   # kit de instalação/deploy
 ```
 
-## 9. Registro de execução
+## 9. Decisões pendentes (o agente não inventa)
+
+| ID | Decisão | Opções medidas | Impacto | Quem decide |
+|---|---|---|---|---|
+| D-01 | Regra do nome automático de campanha por cidade (P1-03) | (a) lista literal: `Bituruna, Cruz Machado, União da Vitória`; (b) primeira + contagem: `Bituruna +2 cidades`; (c) prefixo fixo: `Prospecção — Bituruna, ...` | Nome é o que o operador vê na lista; define duplicata, tamanho máximo (hoje 120) e como voltar ao automático depois de editar | Dono |
+| D-02 | Comportamento do nome ao editar manualmente (P1-03) | (a) edição manual desliga o automático até "Usar nome sugerido"; (b) edição manual é sobrescrita a cada mudança de cidade; (c) campo separado "sugestão" ao lado | (b) apaga trabalho do operador — o prompt proíbe apagar em silêncio. Recomendação: (a) | Dono |
+| D-03 | Idempotência das rotas fiscais (P0-08): repetir com a mesma `Idempotency-Key` devolve a nota/job original ou 409? | (a) devolver o recurso original (200, como o financeiro); (b) 409 nomeando a nota existente | (a) é retry seguro de verdade; (b) é honesto mas obriga o cliente a tratar | Dono |
+
+Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção recomendada.
+
+## 10. Registro de execução
 
 | Data | Marco | Commit/PR | Evidência |
 |---|---|---|---|
