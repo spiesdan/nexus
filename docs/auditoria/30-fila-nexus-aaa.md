@@ -13,7 +13,7 @@
 |---|---|---|
 | Repositório | `spiesdan/nexus` (único remote) | `git remote -v` |
 | Branch do programa | `programa/nexus-aaa` | `git status -sb` |
-| Commit de partida | `13fefad3` (base `nexus/main`; merges até #514) | `git log --oneline -1` |
+| Commit de partida | `014ccef3` (base `nexus/main`; merges até #471) | `git log --oneline -1` |
 | Working tree | limpo no início (nenhuma alteração preexistente a preservar) | `git status --porcelain` |
 | Versão publicada | **1.55.0** — tag `v1.55.0`; `package.json` segue `0.1.0` de propósito | `git ls-remote --tags nexus` |
 | Produção | reportada em 1.55.0 pelo operador; **não verificada por este programa** (sem acesso) | relato do dono |
@@ -90,7 +90,7 @@ coordenador integra e roda os gates no código integrado.
 | **P1-03** | Campanhas nomeadas pelas cidades (determinístico, edição manual preservada) | `[x]` | #498 → `5a499313`: gerador + `nome_manual` (0318) + wizard/API; 11 testes do gerador/decisão, 2 de schema; install+update verdes | Coordenador | — | Nome gerado de 1..N cidades, ordenado, sem duplicata; nome manual não é apagado; UI + API + persistência com teste |
 | **P1-04** | Mobile/offline: fila idempotente, conflito, retomada e estado visível | `[~]` | #514 mergeado: sincronizador montado, retomada de `enviando`, retry/backoff, anti-duplo-toque, backup APK sem PII; 58 unit + 7 e2e emulados | F | **Ponte SQLite shell↔remoto no APK** (decisão A/B/C) + dispositivo real | Matriz de dispositivos; retry não duplica; estado de sincronização na tela; limitações declaradas |
 | **P1-05** | Acessibilidade WCAG 2.2 AA nas telas restantes | `[~]` | #491 mergeado (tema claro: 2,85:1 corrigido + gate); #468 aberto (snapshots); D segue em `front/design-tinta` | D | — | axe sem violação crítica nas telas cobertas; teclado/foco/movimento reduzido provados |
-| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); E/C mergearam #507 (teto declarado), #510 (amostra de faturamento), #508/#509 (claims fiscais) e #503 | A / E / C | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
+| **P1-06** | Índices e paginação: listas sem `limit` silencioso e ordenação estável | `[~]` | #464 (índice 0313); E/C: #503, #507, #508/#509/#510 e #512 (grade de notas declara o teto de 200) | A / E / C | — | Nenhuma lista esconde item sem "há mais"; plano de consulta usa índice; `test:db` verde |
 | **P1-07** | Rate limit em MFA e recuperação de conta | `[x]` | #466 mergeado (`f56c0228`): teto em `verifyMfa` e `useRecoveryCode` com testes | B | — | Teto por IP e por identificador; teste de repetição; fallback documentado |
 
 ## 5. Fila — P2 (identidade, shell, consistência)
@@ -181,4 +181,6 @@ Enquanto a decisão não vem, o item fica `[!]` e a fila registra a opção reco
 | 18/11/2026 | #503 inbox reenvio (E) | `e9302c58` | P1-01/J6 |
 | 18/11/2026 | #507/#508/#509/#510/#513 (E/C) | main `8359ac66` | módulos, claims fiscais, faturamento |
 | 18/11/2026 | #514 mobile sync (F) | `13fefad3` | 58 unit + 7 e2e emulados; ponte declarada |
+| 18/11/2026 | #512 notas declaram teto (E) | `fcac5757` | P1-06 |
+| 18/11/2026 | #471 flywheel claim (P1-9) | `014ccef3` | advisory lock + `not exists`; teste de invariante 4 casos |
 | 18/11/2026 | Sentinel v1 na main | #489 → `f644b21c` | 68 unit + 184 invariantes; CI 5/5; instalação/update verdes |

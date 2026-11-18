@@ -179,3 +179,11 @@ A fila P0 está **fechada em código**. O que resta são P1/P2/P3 nas frentes C/
 **#498 (D-01/D-02) está mergeado** em `5a499313` — não sumiu; o conteúdo (`lib/prospeccao/nome-da-campanha.ts` e a migration 0318) está na `main`.
 
 **P0 em código: fechado.** P1 avança em J6 (E), fiscal (C) e mobile (F); P2-04/P3-03 na main. Próxima migration livre: **0320**.
+
+
+## Rodada 7 — 18/11/2026 (main `014ccef3`)
+
+- **#512** (E, `fcac5757`): a grade de notas declara o teto de 200 em vez de esconder nota antiga.
+- **#471** (P1-9, `014ccef3`): flywheel não paga duas vezes pelo mesmo turno — `not exists` no lote + advisory lock por turno, com unlock no `finally` (o `release` do pool não fecha a conexão; lock esquecido ficaria preso).
+- **#498** segue mergeado (`5a499313`) e o conteúdo na main; não foi fechado.
+- P0 de código fechado; P1 avança em J6/fiscal/mobile; PRs antigos `dirty` serão triados com os donos.
