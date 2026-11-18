@@ -1,6 +1,6 @@
 ---
-impacto: nada_mudou
-secao: corrigido
+impacto: capacidade_nova
+secao: adicionado
 titulo: Sentinel enxerga o padrão de rejeição da SEFAZ, não só a nota uma a uma
 ---
 
