@@ -1,6 +1,6 @@
 ---
-impacto: nada_mudou
-secao: corrigido
+impacto: capacidade_nova
+secao: adicionado
 titulo: Sentinel encontra cadastro com endereço gravado como "NULL", "undefined" ou "NaN"
 ---
 
