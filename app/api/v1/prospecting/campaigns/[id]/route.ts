@@ -35,7 +35,7 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string }> };
 
 const COLUNAS =
-  "id, nome, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
+  "id, nome, nome_manual, objetivo, categorias, cidades, status, recorrencia_dias, ultima_execucao_at, " +
   "created_at, fonte_publico, publico, prospect_ids, contato_ids, mensagens, mensagem_tipo, " +
   "template_name, template_language, template_contract_hash, template_values, templates_por_categoria, " +
   "espaco_ms, limite_diario, data_inicio, data_fim, janelas, agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, " +

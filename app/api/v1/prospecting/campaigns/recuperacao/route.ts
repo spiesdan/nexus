@@ -97,6 +97,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     .insert({
       organization_id: authz.org.orgId,
       nome: parsed.data.nome,
+      // Recuperação não tem cidades: o nome é escolha do operador, por definição.
+      nome_manual: parsed.data.nome_manual ?? true,
       objetivo: parsed.data.objetivo ?? null,
       // A audiência de contatos não tem recorte geográfico nem categoria: as
       // duas colunas existem para a garimpagem e ficam vazias de propósito.

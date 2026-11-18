@@ -134,6 +134,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     .insert({
       organization_id: authz.org.orgId,
       nome: parsed.data.nome,
+      nome_manual: parsed.data.nome_manual ?? false,
       objetivo: parsed.data.objetivo ?? null,
       // A audiência é a CIDADE + histórico de compra: não há categoria na
       // garimpagem. `cidades` fica preenchida porque é o recorte que o operador
