@@ -585,6 +585,19 @@ export function DetalheDoPedido({
    * atalho.
    */
   async function concluir() {
+    // Concluir COMPROMETE a venda (o servidor aplica teto de desconto e alçada)
+    // e não tem volta: o status só avança para faturamento/expedição. Era um
+    // clique sem confirmação — o mesmo ato que a aprovação pede alçada, feito
+    // sem o operador ler o que estava fechando.
+    const ok = await confirmar({
+      title: t("Concluir este pedido?"),
+      description: t(
+        "A venda é fechada agora. Depois disso o pedido só avança para faturamento, expedição ou cancelamento — não volta para orçamento ou aprovação.",
+      ),
+      confirmLabel: t("Concluir"),
+      cancelLabel: t("Voltar"),
+    });
+    if (!ok) return;
     try {
       await apiClient.patch(`/api/v1/commercial-orders/${pedido.id}`, { status: "concluido" });
       toast.success(t("Pedido concluído."));
@@ -597,6 +610,32 @@ export function DetalheDoPedido({
   async function avancar() {
     const proximo = PROXIMO_STATUS[pedido.status as StatusDoPedido];
     if (!proximo) return;
+    // Os dois avanços que NÃO têm volta pedem confirmação com a consequência:
+    // faturar sai de "aprovado" e só segue adiante; entregar é o último estado.
+    // Aprovar e expedir continuam em um clique — são o caminho do dia a dia e
+    // o servidor já recusa o que não cabe (alçada, NF, carga).
+    const consequencia =
+      proximo === "faturado"
+        ? {
+            title: t("Faturar este pedido?"),
+            description: t(
+              "O status passa a Faturado e não volta para Aprovado — daqui só segue para expedição, entrega ou cancelamento. A nota fiscal é emitida em Notas, não aqui.",
+            ),
+            confirmLabel: t("Faturar"),
+          }
+        : proximo === "entregue"
+          ? {
+              title: t("Marcar este pedido como entregue?"),
+              description: t(
+                "Entregue é o último estado do pedido — não há etapa seguinte. Devolução é um fluxo da Expedição, não uma mudança de status.",
+              ),
+              confirmLabel: t("Marcar entregue"),
+            }
+          : null;
+    if (consequencia) {
+      const ok = await confirmar({ ...consequencia, cancelLabel: t("Voltar") });
+      if (!ok) return;
+    }
     try {
       await apiClient.patch(`/api/v1/commercial-orders/${pedido.id}`, { status: proximo });
       toast.success("Status atualizado");
