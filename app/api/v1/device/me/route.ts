@@ -29,8 +29,11 @@ export async function GET(req: NextRequest): Promise<Response> {
   const d = auth.dispositivo;
 
   const admin = createAdminClient();
+  // A organização vem do TOKEN do aparelho (fonte confiável), nunca do body —
+  // e o nome fica explícito porque é ele que o service role está filtrando.
+  const orgId = d.organizationId;
   const [{ data: org }, usuario] = await Promise.all([
-    admin.from("organizations").select("display_name").eq("id", d.organizationId).maybeSingle(),
+    admin.from("organizations").select("display_name").eq("id", orgId).maybeSingle(),
     admin.auth.admin.getUserById(d.userId),
   ]);
 
@@ -39,7 +42,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       id: d.id,
       nome: d.nome,
       organizacao: {
-        id: d.organizationId,
+        id: orgId,
         nome: (org as { display_name?: string | null } | null)?.display_name ?? null,
       },
       usuario: {

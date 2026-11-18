@@ -6,6 +6,14 @@ import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
@@ -213,40 +221,40 @@ export function DevicesClient({ inicial }: { inicial: AparelhoOffline[] }) {
         </div>
       </form>
 
-      <section className="overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
-          <thead className="bg-surface text-left text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2">Aparelho</th>
-              <th className="px-3 py-2">Prefixo</th>
-              <th className="px-3 py-2">Visto por último</th>
-              <th className="px-3 py-2">Expira</th>
-              <th className="px-3 py-2">Estado</th>
-              <th className="px-3 py-2" />
-            </tr>
-          </thead>
-          <tbody>
+      <section className="rounded-xl border border-border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Aparelho</TableHead>
+              <TableHead>Prefixo</TableHead>
+              <TableHead>Visto por último</TableHead>
+              <TableHead>Expira</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead />
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {aparelhos.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+              <TableRow>
+                <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
                   Nenhum aparelho pareado. Gere um código acima.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               aparelhos.map((a) => {
                 const revogado = a.revoked_at != null;
                 const expirado = Date.parse(a.expires_at) <= agoraMs();
                 return (
-                  <tr key={a.id} className="border-t border-border">
-                    <td className="px-3 py-2 font-medium">{a.nome}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{a.token_prefix}</td>
-                    <td className="px-3 py-2 text-muted-foreground">
+                  <TableRow key={a.id}>
+                    <TableCell className="font-medium">{a.nome}</TableCell>
+                    <TableCell className="font-mono text-xs">{a.token_prefix}</TableCell>
+                    <TableCell className="text-muted-foreground">
                       {a.last_seen_at ? new Date(a.last_seen_at).toLocaleString(tag) : "nunca"}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
                       {new Date(a.expires_at).toLocaleDateString(tag)}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       {revogado ? (
                         <Badge variant="secondary">desconectado</Badge>
                       ) : expirado ? (
@@ -254,20 +262,20 @@ export function DevicesClient({ inicial }: { inicial: AparelhoOffline[] }) {
                       ) : (
                         <Badge>ativo</Badge>
                       )}
-                    </td>
-                    <td className="px-3 py-2 text-right">
+                    </TableCell>
+                    <TableCell className="text-right">
                       {!revogado ? (
                         <Button type="button" variant="outline" onClick={() => void revogar(a)}>
                           Desconectar
                         </Button>
                       ) : null}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </section>
     </div>
   );

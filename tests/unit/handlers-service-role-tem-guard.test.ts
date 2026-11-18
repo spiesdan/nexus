@@ -17,7 +17,10 @@
  *     → superfície de cron e de atualizador, sem cookie, com segredo próprio;
  *   - `webhook_secret` / `verifyInboundSignature` / `path_token` / HMAC → webhook
  *     cujo segredo resolve UM tenant (o padrão do repo: token opaco por fonte);
- *   - `user.is_platform_admin` → tela de plataforma.
+ *   - `user.is_platform_admin` → tela de plataforma;
+ *   - `autenticarDispositivo` → Bearer `nod_` do aparelho offline (0322):
+ *     hash no banco, escopo fechado, expiração/revogação e papel lido ao vivo,
+ *     provado por tests/invariants/offline-devices-rls.test.ts.
  *
  * O que reprova: handler com service role e **nenhuma** dessas marcas. É o
  * esquecimento de classe — a rota nova que lê dados de todos os tenants porque
@@ -44,6 +47,7 @@ const GUARDAS: ReadonlyArray<readonly [string, RegExp]> = [
   ["segredo de cron/interno", /INTERNAL_CRON_SECRET|INTERNAL_SECRET|CRON_SECRET|timingSafeEqual/],
   ["webhook com segredo/token próprio", /webhook_secret|WEBHOOK_SECRET|verifyInboundSignature|verifySignature|path_token|HMAC/i],
   ["escopo de token de API (MCP/API)", /requiresScope|requireScope/],
+  ["credencial de dispositivo offline (Bearer nod_)", /autenticarDispositivo\s*\(/],
 ];
 
 /**
