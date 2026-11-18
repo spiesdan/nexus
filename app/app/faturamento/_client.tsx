@@ -37,6 +37,10 @@ export function FaturamentoClient({
   const [linhas, setLinhas] = React.useState<LinhaFaturamento[]>([]);
   const [carregando, setCarregando] = React.useState(true);
   const [falhou, setFalhou] = React.useState(false);
+  // Teto de 2.000 da rota: se a janela veio truncada, os KPIs são da amostra.
+  // Antes o servidor só registrava no log e a tela somava a amostra como se
+  // fosse o período inteiro (A10).
+  const [amostraParcial, setAmostraParcial] = React.useState(false);
 
   async function carregar(d: string, a: string) {
     setCarregando(true);
@@ -45,10 +49,12 @@ export function FaturamentoClient({
       const qs = new URLSearchParams();
       if (d) qs.set("de", d);
       if (a) qs.set("ate", a);
-      const corpo = await apiClient.get<{ data: LinhaFaturamento[] }>(
-        `/api/v1/faturamento${qs.toString() ? `?${qs}` : ""}`,
-      );
+      const corpo = await apiClient.get<{
+        data: LinhaFaturamento[];
+        meta?: { amostra_parcial?: boolean };
+      }>(`/api/v1/faturamento${qs.toString() ? `?${qs}` : ""}`);
       setLinhas(corpo.data ?? []);
+      setAmostraParcial(Boolean(corpo.meta?.amostra_parcial));
     } catch (e) {
       showApiError(e);
       setFalhou(true);
@@ -60,10 +66,13 @@ export function FaturamentoClient({
   React.useEffect(() => {
     let vivo = true;
     apiClient
-      .get<{ data: LinhaFaturamento[] }>("/api/v1/faturamento")
+      .get<{ data: LinhaFaturamento[]; meta?: { amostra_parcial?: boolean } }>(
+        "/api/v1/faturamento",
+      )
       .then((corpo) => {
         if (!vivo) return;
         setLinhas(corpo.data ?? []);
+        setAmostraParcial(Boolean(corpo.meta?.amostra_parcial));
         setCarregando(false);
       })
       .catch((e: unknown) => {
@@ -148,6 +157,17 @@ export function FaturamentoClient({
           />
         </label>
       </div>
+
+      {amostraParcial && (
+        <p
+          role="status"
+          className="rounded-lg border border-warning/40 bg-warning-bg px-3.5 py-2.5 text-sm text-warning-fg"
+        >
+          {t(
+            "O período pedido tem mais de 2.000 pedidos faturados. Os totais e a lista abaixo são desta amostra — refine o período para fechar o número.",
+          )}
+        </p>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Card className="hover-raise p-4">
