@@ -178,3 +178,23 @@ stack em operação, não o WAHA isolado — e a folga existe justamente porque 
 parcela por sessão não é conhecida com precisão.
 
 Ao terminar, feche o ciclo — merge na `main` e volte a VPS pra imagem oficial.
+
+## O que o `scripts/deploy.sh` faz com o schema
+
+O deploy aplica o **`supabase/baseline.sql`** antes de subir os contêineres —
+o mesmo arquivo (idempotente) que o `install.sh` e o `update.sh` usam, pela
+conexão de schema (`SUPABASE_DB_ADMIN_URL`, com `SUPABASE_DB_URL` como piso).
+Não é `supabase db push`: a cadeia de migrations não reproduz o schema
+(ver `docs/auditoria/12-migrations-e-rls.md`), e aplicá-la marcaria migrations
+como aplicadas num banco parcial.
+
+Depois de aplicar, o script **verifica** objetos que o app usa na primeira tela
+(`organizations`, `messages`, `conversations`, `contacts`, `commercial_orders`,
+`financial_receivables`, `llm_calls`). Se faltar algum, ou se o `psql` responder
+um erro que não seja o ruído esperado de re-aplicação (`already exists`…), o
+deploy **para antes do `up -d`** — imagem nova não sobe contra banco sem schema.
+
+Consequência prática para quem opera: o deploy pode ser repetido sem medo (o
+baseline é idempotente), e ele falha alto e cedo quando a conexão do `.env` não
+é o dono do banco. O gate é `tests/shell/deploy-aplica-schema.test.sh`
+(roda no `pnpm test:shell`).
