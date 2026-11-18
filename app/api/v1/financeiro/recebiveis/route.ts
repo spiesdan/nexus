@@ -12,10 +12,16 @@ import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
+import {
+  gravarRespostaIdempotente,
+  hashDaRequisicao,
+  lerRespostaIdempotente,
+} from "@/lib/api/idempotencia";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { situacaoDe } from "@/lib/comercial/financeiro";
 import { recebiveisQuerySchema, recebivelCreateSchema, COLUNAS_DO_RECEBIVEL } from "@/lib/schemas/financeiro";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -175,7 +181,17 @@ export async function POST(req: NextRequest): Promise<Response> {
   const authz = await requireRole("manager", { requestId, resource: "financial_receivables" });
   if (!authz.ok) return authz.response;
 
-  const parsed = recebivelCreateSchema.safeParse(await req.json().catch(() => null));
+  // O corpo é lido como TEXTO: o hash da idempotência tem de descrever o que o
+  // cliente mandou, não o objeto depois de normalizado pelo Zod.
+  const texto = await req.text().catch(() => "");
+  let bruto: unknown = null;
+  try {
+    bruto = texto === "" ? null : JSON.parse(texto);
+  } catch {
+    return fail("validation_failed", "Body JSON inválido.", 400, { requestId });
+  }
+
+  const parsed = recebivelCreateSchema.safeParse(bruto);
   if (!parsed.success) {
     return fail("validation_failed", "Dados inválidos.", 422, {
       requestId,
@@ -184,6 +200,36 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
   const e = parsed.data;
   const supabase = await createClient();
+
+  // Idempotência: criar recebível é caro e repetível por retry (timeout do
+  // celular, F5, duplo clique). Sem a chave, o mesmo POST virava duas dívidas.
+  const chave = req.headers.get("Idempotency-Key")?.trim() || null;
+  const endpoint = "POST /api/v1/financeiro/recebiveis";
+  const admin = createAdminClient();
+  const requestHash = chave ? hashDaRequisicao(bruto) : null;
+  if (chave && requestHash) {
+    const leitura = await lerRespostaIdempotente(admin, {
+      orgId: authz.org.orgId,
+      endpoint,
+      chave,
+      requestHash,
+    });
+    if (leitura.estado === "conflito") {
+      return fail(
+        "conflict",
+        "Idempotency-Key já usada com outro corpo — gere uma chave nova.",
+        409,
+        { requestId },
+      );
+    }
+    if (leitura.estado === "replay") {
+      return ok(leitura.resposta.body, {
+        requestId,
+        status: leitura.resposta.status === 201 ? 201 : 200,
+        headers: { "Idempotent-Replayed": "true" },
+      });
+    }
+  }
 
   const { data: contato } = await supabase
     .from("contacts")
@@ -227,5 +273,15 @@ export async function POST(req: NextRequest): Promise<Response> {
     resourceId: (data as unknown as { id: string }[])[0]?.id ?? null,
     requestId,
   });
-  return ok({ ids: (data as unknown as { id: string }[]).map((r) => r.id) }, { requestId, status: 201 });
+  const resposta = { ids: (data as unknown as { id: string }[]).map((r) => r.id) };
+  if (chave && requestHash) {
+    await gravarRespostaIdempotente(admin, {
+      orgId: authz.org.orgId,
+      endpoint,
+      chave,
+      requestHash,
+      resposta: { status: 201, body: resposta },
+    });
+  }
+  return ok(resposta, { requestId, status: 201 });
 }
