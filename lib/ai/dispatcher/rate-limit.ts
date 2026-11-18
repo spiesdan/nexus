@@ -97,7 +97,19 @@ function getRedis(): Redis | null {
   // indisponibilidade do Redis para a latência do login. Falhe rápido e caia
   // para a memória. Medido: com URL morta, duas chamadas somavam ~8s numa
   // requisição de recuperação de senha, estourando o timeout da tela.
-  _redis = new Redis({ url, token, retry: false });
+  //
+  // O construtor do SDK valida a URL e LANÇA (`UrlError`) quando o `.env` traz
+  // um host sem esquema — exatamente o erro de instalação catalogado. Deixar o
+  // throw escapar derrubava a rota inteira: a sonda de saúde do rate limit
+  // (`/api/v1/health`) respondia 500 em vez de dizer "memória". Configuração
+  // errada de Redis não pode ser capaz de derrubar o healthcheck; ela é mais
+  // um motivo para o fallback declarado.
+  try {
+    _redis = new Redis({ url, token, retry: false });
+  } catch (err) {
+    declararFallback(err instanceof Error ? err.message : String(err));
+    return null;
+  }
   return _redis;
 }
 
