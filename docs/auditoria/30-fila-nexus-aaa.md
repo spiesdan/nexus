@@ -301,3 +301,88 @@ coordenador possa abrir sozinho sem furar o rodízio de 2 workers.
 
 O coordenador **não executa** o trabalho de worker: distribui, integra e cobra a
 prova. Frente pausada não recebe tarefa nova até abrir slot.
+
+## 13. Fila nova — catálogo do Mercos (P1, 18/11/2026)
+
+> **Dono:** Agente **D** (design trocou de lugar: a a11y de 9.6 fica para depois
+> desta fatia). **Nada de deploy e nada de escrita em produção nesta entrega** —
+> o coletor entra no código; a execução é aprovada pelo dono depois.
+> **Migration:** só se indispensável; próxima livre **0325** (0324 é do Sentinel v1.2).
+
+### O que o dono mediu (somente leitura, org `4bc721ce…`)
+
+| Medição | Número |
+|---|---|
+| Código `411` no catálogo local | **existe** (`TOALHINHA 5KG`, ativo, `origem=mercos`) e **2.010** itens de pedido apontam para ele |
+| Itens de pedido com `product_id IS NULL` | **616**, em **72** códigos |
+| Desses, casando por nome normalizado | **3** — e de forma ambígua (`806` e `8147` têm o mesmo nome "ESPONJA COM 4 UN") |
+| Causa raiz | `workers/mercos/coletar.mjs` navega só `/pedidos/`; o catálogo de `/produtos/` nunca é importado |
+
+Conclusão registrada: **pareamento automático por nome é perigoso** e não será
+feito sem confirmação.
+
+### Aceite (um PR)
+
+1. **Coletor de catálogo** em `workers/mercos/`: abre `/produtos/` com a mesma
+   sessão/storage state e os mesmos timeouts, pagina e extrai `codigo`, `nome`,
+   `preco`, `ativo` (+ `unidade`/`ncm` se a página entregar). Upsert em
+   `catalog_products` por `(organization_id, codigo)`; só atualiza nome/preço
+   quando a origem for Mercos; **nunca apaga**.
+2. **Relatório antes de aplicar** no `summary` da execução: `criados`,
+   `atualizados`, `divergentes` (mesmo código, nome diferente), `sem_codigo`.
+3. **Pareamento histórico**: para cada `commercial_order_items.product_id IS NULL`,
+   casar **por código**; nome só quando o código não existir **e** com
+   confirmação explícita (candidato ambíguo nunca pareia). Backup das linhas
+   afetadas + relatório final.
+4. **Testes**: parser de página com fixture HTML; upsert idempotente (duas
+   execuções não duplicam); casamento por código; nome ambíguo **não** pareia.
+
+### O que esta fatia não faz
+
+Emitir, sincronizar preço em pedido existente, apagar produto, ou rodar contra a
+produção. A execução real é decisão do dono, depois do relatório.
+
+## 14. Fila nova — filtro por cidade em Clientes (P1, 18/11/2026)
+
+> **Dono:** Agente **F** (a fatia B-6 dos invariantes de dispositivo fica para
+> depois desta). **Sem deploy, sem migration** (`contacts.cidade` já serve).
+
+### Pedido do dono
+
+> "Quero um filtro para buscar por cidade em clientes, para mostrar todos os
+> clientes daquela cidade, coloque ao lado do tag, e que apareça todas as cidades
+> dos clientes que têm cadastro em ordem alfabética para selecionar, não apenas
+> digitar."
+
+### Onde entra (mapeado)
+
+- `app/app/contacts/_client.tsx`: `FilterBar` → `FilterPrimary`; o select de
+  **Cidade** entra **imediatamente depois do `Tag`**, antes de Origem/Por página.
+- Estado: `cidade` junto de `tag`/`source`/`limit`, no `filters` memoizado que
+  alimenta `useContactList(filters)`.
+- `hooks/contacts/useContactList.ts`: `URLSearchParams` ganha `cidade`.
+- `app/api/v1/contacts/route.ts` (linhas ~39–45) lê o parâmetro; filtro no
+  servidor (nunca sobre a página carregada).
+
+### Aceite
+
+1. **Servidor**: `cidade` no GET, comparação **case-insensitive com trim**
+   (`ilike` sobre `trim(cidade)` ou equivalente), sempre com
+   `organization_id` explícito.
+2. **Lista de cidades**: `GET /api/v1/contacts/cidades` — distintas da
+   organização, sem vazias, deduplicadas por `lower(trim(cidade))`, exibindo o
+   casing da primeira ocorrência, **ordem alfabética pt-BR**. RLS + org; teste
+   cross-tenant (a lista de A não contém cidade de B). Não pode depender da
+   página carregada.
+3. **UI**: `FilterSelect id="filtro-cidade"`, `label="Cidade"`,
+   `allLabel="Todas as cidades"`, chip removível e `Limpar filtros` limpando a
+   cidade. Lista vazia não pode quebrar o select.
+4. **Contagem `Cidade (32)`** só se vier da mesma consulta (nada de N+1).
+5. **Testes**: API com acento/caixa diferentes; lista ordenada, deduplicada e sem
+   vazias; cross-tenant zero; componente lista e aplica ao selecionar.
+
+### Se a base for grande
+
+Medir antes com `explain analyze` e **propor** índice; não criar migration sem
+essa medição. Próxima livre continua **0325** (reservada em potencial para o
+catálogo do Mercos).
