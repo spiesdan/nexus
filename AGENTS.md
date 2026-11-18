@@ -82,7 +82,7 @@ pelo dono da VPS. Como o número é decidido: [`docs/doctrine/versionamento.md`]
 
 | Path | O quê |
 |---|---|
-| `app/api/v1/` | **414** route handlers sob `app/api/v1/` · **416** em `app/api/**` · **418** contando os 2 fora dele (`/auth/confirm`, `/icone-512`). Medido em 2026-11-15: `find app/api/v1 -name route.ts \| wc -l` e `find app -name route.ts \| wc -l`. A linha anterior dizia "166 … 169", errada por ~2,5× |
+| `app/api/v1/` | route handlers REST (versionado por path). Conte em vez de citar: `find app/api/v1 -name route.ts \| wc -l` (**421** em 2026-11-18) e `find app/api -name route.ts \| wc -l` (**424**). A linha anterior dizia "166 … 169", errada por ~2,5× |
 | `app/api/internal/`, `app/api/mcp/`, `app/api/v1/cron/` | superfícies não-cookie (secret/bearer próprio) |
 | `app/app/` | UI autenticada do tenant · `app/admin/` UI de plataforma |
 | `app/actions/` | Server Actions (auth, onboarding, team, settings) |
@@ -118,15 +118,17 @@ mudança toca schema, RLS ou UI, `gov:verify` verde **não** é prova — rode `
 **O que o CI cobre.** `.github/workflows/ci.yml`: `verify` = typecheck + lint + test:unit;
 `invariants` = `pnpm test:db` (isolamento RLS + invariantes de governança contra Postgres
 efêmero pg15). `.github/workflows/perf.yml`: `build-and-size` = `pnpm build`.
-`.github/workflows/e2e.yml` roda **88 das 90 specs** Playwright contra um Supabase local de
-verdade com o `baseline.sql` aplicado — o mesmo banco que o self-hoster tem. **É check
+`.github/workflows/e2e.yml` roda as specs Playwright contra um Supabase local de
+verdade com o `baseline.sql` aplicado — o mesmo banco que o self-hoster tem —, **exceto as
+declaradas em `FORA_DO_CI`** (o workflow é a fonte; não cite o total). **É check
 obrigatório desde 2026-08-08.** A suíte de cada evento é escolhida pelo env `SUITE` do job:
 `pull_request` = **smoke**, `push` na main = **critical**, `schedule` noturno e
-`workflow_dispatch` = **full** (as 88, em duas invocações). Ou seja, **`e2e` verde em PR
+`workflow_dispatch` = **full** (em duas invocações). Ou seja, **`e2e` verde em PR
 prova o smoke, não a suíte inteira** — a hierarquia smoke ⊆ critical ⊆ full e a fidelidade
 do full às listas `SPECS_PARTE_*` são cobradas por `tests/unit/e2e-suices-aderentes.test.ts`.
-As **duas** de fora são `vps-fresh-onboarding` (WAHA + Redis +
-Resend + Nuvemshop; é a P0 da doutrina de QA) e `inbox-tempo-real` (o caso com chave precisa de
+As de fora hoje estão em `FORA_DO_CI` com o motivo escrito ao lado: `vps-fresh-onboarding`
+(WAHA + Redis + Resend + Nuvemshop; é a P0 da doutrina de QA), `inbox-tempo-real` (o caso com
+chave precisa de
 conta Google de teste com consentimento pré-aprovado; sem ela o job pendura no login — motivo
 medido no bloco `FORA_DO_CI`) — ou seja, `e2e` verde não prova a jornada de
 instalação fresca. `followup-journey`, `webhooks` e `capacidades-do-agente` estiveram fora e
@@ -225,38 +227,38 @@ Chromium abre → reprova listando libs faltando), com teste em
 
 
 
-Medido em 2026-08-14 @ `741c4ec8`, com o comando ao lado de cada número:
+Medido em 2026-11-18 @ `232c5fbf`. **Os números saíram de propósito** — conte, não cite:
 
-- **257** arquivos de teste unitário em `tests/unit/` (`git ls-files 'tests/unit/*.test.ts' 'tests/unit/*.test.tsx' | wc -l`). O repo tem **491** arquivos `*.test.ts(x)` no total (`git ls-files '*.test.ts' '*.test.tsx' | wc -l`) — a diferença vive junto ao código, fora de `tests/`, e também roda em `test:unit`.
+- Arquivos de teste unitário em `tests/unit/`: `git ls-files 'tests/unit/*.test.ts' 'tests/unit/*.test.tsx' | wc -l`. O total do repo: `git ls-files '*.test.ts' '*.test.tsx' | wc -l` — a diferença vive junto ao código, fora de `tests/`, e também roda em `test:unit`.
 - Arquivos de invariante de banco em `tests/invariants/` — RLS/isolamento cross-tenant, RBAC,
   governança (G1–G6). Excluídos do `test:unit` de propósito; rodam via `pnpm test:db` **e no job
   `invariants` do CI**. Quantos: `git ls-files 'tests/invariants/*.test.ts' | wc -l`.
-- Specs Playwright em `tests/e2e/`, **todas no CI menos duas** (via `e2e.yml`, **obrigatório**). As
-  duas de fora são `vps-fresh-onboarding` (dependência de serviço externo —
-  WAHA/Redis/Resend/Nuvemshop; ver issue #63) e `inbox-tempo-real` (conta Google de teste;
-  motivo em `FORA_DO_CI`). Quantas: `ls tests/e2e/*.spec.ts | wc -l`.
+- Specs Playwright em `tests/e2e/`: `ls tests/e2e/*.spec.ts | wc -l`. Quais ficam fora do CI:
+  os nomes em `FORA_DO_CI`, dentro de `.github/workflows/e2e.yml`, cada um com o motivo escrito.
 
-> **Os dois números saíram daqui, e é decisão, não descuido.** Estavam em 102 e 46/45 quando o
-> medido era 114 e 51/50 — envelheceram porque toda entrega que acrescenta um teste os falsifica,
-> e nenhum gate lê prosa. Onde a afirmação pode virar comando, ela vira: comando não envelhece.
+> **Os números saíram daqui de propósito.** Estavam em 102 e 46/45 quando o
+> medido era 114 e 51/50, e voltaram a envelhecer (hoje o comando acima mede 685 e 1.225) —
+> nenhum gate lê prosa. Onde a afirmação pode virar comando, ela vira: comando não envelhece.
 > O que continua vigiado por gate é o que importa — `tests/unit/e2e-cobertura-completa.test.ts`
 > reprova toda spec nova que não esteja em `SPECS_PARTE_*` ou em `FORA_DO_CI` com motivo escrito.
 
 ## Limitações conhecidas (estado em 2026-07-29, contra `origin/main` @ 789dfa6)
 
-- **2 das 90 specs E2E seguem fora do CI** (`vps-fresh-onboarding` e `inbox-tempo-real`), e o
+- **As specs de `FORA_DO_CI` seguem fora do CI** (hoje `vps-fresh-onboarding`,
+  `inbox-tempo-real` e `mobile-offline`; a lista e o motivo moram no workflow), e o
   `e2e` **é** check
   obrigatório desde 2026-08-08. Ou seja: um PR que quebre o `e2e` não entra — mas a jornada de
   instalação fresca, que é o produto que se vende, continua sem gate. Se você mexeu nela, a
   prova é sua. *(Corrigido em 2026-08-14; a redação anterior — "4 das 32, não-obrigatório" —
-  mudava a régua de qualquer triagem que a lesse. Recontado em 2026-09-27 no passo 7.)*
+  mudava a régua de qualquer triagem que a lesse. Recontado em 2026-11-18, sem número: a lista
+  é do workflow.)*
 - Rate limit HTTP: `lib/auth/rate-limit.ts` cobre **login, signup, recuperação de senha e
   aceite de convite** (contando por IP **e** por identificador hasheado); `checkRateLimit` cobre
   o webhook de captação e o dispatcher de IA. **Crons e MCP seguem sem.** Meça antes de agir:
   `grep -rln 'authRateLimited\|checkRateLimit(' app lib --include='*.ts' --include='*.tsx'`.
   Esta linha dizia "existe em 2 pontos; login e signup estão sem" — era o estado anterior à
   issue #64, e o `docs/threat-model.md` ainda carrega a versão velha, com nota de reauditoria.
-- Fallback do rate limit é **em memória** — sem Upstash configurado o limite é por processo.
+- Fallback do rate limit é **em memória** e **declarado**: sem Redis alcançável o contador é por processo, o log da transição é `error` em produção e `/api/v1/health` responde **503** (`rate_limit.backend = memoria`) em produção e `degraded` em dev. Ver `docs/auditoria/p3-02-rate-limit-declarado.md`.
 - `Idempotency-Key` implementado em **1** rota, apesar de o contrato prometer nos POSTs de criação.
 - **`.env.example` está completo** — medido em 2026-08-14: das 45 chaves de `lib/env.ts`, a
   única ausente é `NODE_ENV`, que não é configuração do operador. Esta linha dizia que faltavam

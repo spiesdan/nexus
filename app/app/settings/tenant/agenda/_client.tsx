@@ -163,7 +163,7 @@ export function TiposDeAgendamentoClient({
                   value={rascunho.name}
                   onChange={(e) => setRascunho((r) => ({ ...r, name: e.target.value }))}
                   placeholder={t("Retorno")}
-                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus:border-border-strong"
+                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs font-medium text-text-muted">
@@ -172,7 +172,7 @@ export function TiposDeAgendamentoClient({
                   data-testid="novo-tipo-categoria"
                   value={rascunho.category}
                   onChange={(e) => setRascunho((r) => ({ ...r, category: e.target.value }))}
-                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus:border-border-strong"
+                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
                 >
                   {CATEGORIAS.map((c) => (
                     <option key={c.valor} value={c.valor}>
@@ -192,7 +192,7 @@ export function TiposDeAgendamentoClient({
                   onChange={(e) =>
                     setRascunho((r) => ({ ...r, duration_minutes: Number(e.target.value) }))
                   }
-                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus:border-border-strong"
+                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs font-medium text-text-muted">
@@ -201,7 +201,7 @@ export function TiposDeAgendamentoClient({
                   data-testid="novo-tipo-local"
                   value={rascunho.location_kind}
                   onChange={(e) => setRascunho((r) => ({ ...r, location_kind: e.target.value }))}
-                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus:border-border-strong"
+                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
                 >
                   {LOCAIS.map((l) => (
                     <option key={l.valor} value={l.valor}>
@@ -222,7 +222,7 @@ export function TiposDeAgendamentoClient({
                   onChange={(e) =>
                     setRascunho((r) => ({ ...r, default_owner_user_id: e.target.value }))
                   }
-                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus:border-border-strong"
+                  className="rounded-lg border border-border bg-surface-elevated p-2 text-sm text-text outline-hidden focus-visible:border-accent-600 focus-visible:ring-2 focus-visible:ring-accent-soft"
                 >
                   <option value="">{t("Definir depois")}</option>
                   {pessoas.map((p) => (
@@ -251,8 +251,13 @@ export function TiposDeAgendamentoClient({
 
       <ul className="flex flex-col gap-2" data-testid="lista-de-tipos">
         {tiposIniciais.length === 0 ? (
-          <li data-testid="sem-tipos" className="rounded-lg border border-border bg-surface p-4 text-sm text-text-muted">
-            {t("Nenhum tipo de agendamento ainda. Crie o primeiro para que a Agenda tenha o que oferecer.")}
+          <li
+            data-testid="sem-tipos"
+            className="rounded-lg border border-border bg-surface p-4 text-sm text-text-muted"
+          >
+            {t(
+              "Nenhum tipo de agendamento ainda. Crie o primeiro para que a Agenda tenha o que oferecer.",
+            )}
           </li>
         ) : null}
         {tiposIniciais.map((tipo) => (
@@ -266,8 +271,12 @@ export function TiposDeAgendamentoClient({
               <span className="rounded-full border border-border px-2 py-0.5 text-[11px] text-text-muted">
                 {rotuloDe(CATEGORIAS, tipo.category)}
               </span>
-              <span className="text-xs tabular-nums text-text-muted">{tipo.duration_minutes} min</span>
-              <span className="text-xs text-text-muted">{rotuloDe(LOCAIS, tipo.location_kind)}</span>
+              <span className="text-xs text-text-muted tabular-nums">
+                {tipo.duration_minutes} min
+              </span>
+              <span className="text-xs text-text-muted">
+                {rotuloDe(LOCAIS, tipo.location_kind)}
+              </span>
               {!tipo.default_owner_user_id ? (
                 // O aviso existe porque o sintoma é MUDO: sem dono, a tela de
                 // marcar simplesmente não mostra horário, sem dizer por quê.
@@ -296,7 +305,9 @@ export function TiposDeAgendamentoClient({
                   </span>
                 )
               ) : null}
-              {!tipo.is_active ? <span className="text-xs text-text-subtle">{t("desativado")}</span> : null}
+              {!tipo.is_active ? (
+                <span className="text-xs text-text-subtle">{t("desativado")}</span>
+              ) : null}
               {podeEditar ? (
                 <span className="ml-auto flex gap-1">
                   <Button
@@ -330,7 +341,11 @@ export function TiposDeAgendamentoClient({
                       disabled={salvando}
                       onClick={() =>
                         void comErro(
-                          () => apiClient.patch("/api/v1/agenda/tipos", { id: tipo.id, is_active: true } as never),
+                          () =>
+                            apiClient.patch("/api/v1/agenda/tipos", {
+                              id: tipo.id,
+                              is_active: true,
+                            } as never),
                           "Tipo reativado.",
                         )
                       }
@@ -355,7 +370,9 @@ export function TiposDeAgendamentoClient({
                         id: tipo.id,
                         name: String(dados.get("name") ?? "").trim(),
                         category: String(dados.get("category") ?? tipo.category),
-                        duration_minutes: Number(dados.get("duration_minutes") ?? tipo.duration_minutes),
+                        duration_minutes: Number(
+                          dados.get("duration_minutes") ?? tipo.duration_minutes,
+                        ),
                         // `|| null`, e NÃO omitir quando vazio.
                         //
                         // A tela oferece `<option value="">{t("Sem responsável")}</option>`
@@ -415,7 +432,12 @@ export function TiposDeAgendamentoClient({
                   </select>
                 </label>
                 <div className="flex justify-end sm:col-span-3">
-                  <Button type="submit" size="sm" data-testid={`salvar-${tipo.id}`} disabled={salvando}>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    data-testid={`salvar-${tipo.id}`}
+                    disabled={salvando}
+                  >
                     {salvando ? t("Salvando…") : t("Salvar")}
                   </Button>
                 </div>

@@ -2348,3 +2348,67 @@ formulário do produto, e a escolha entre identidade e 1.4.11 é do dono. A corr
 **O que já está certo:** o indicador de foco do campo usa accent-600 e passa o piso de 3:1 nos
 dois temas; o estado de erro usa `border-error`; e os alvos de toque dos botões têm 44 px abaixo
 de `lg`.
+
+## Casca e navegação — o que a leitura do código achou (18/11/2026)
+
+As medições de casca (4.3/4.7) já existiam; esta rodada leu os componentes do shell procurando o
+que **medição de presença** não vê: caminho oferecido que não existe e mudança de estado que não é
+anunciada.
+
+### V-56 · Média · A trilha oferecia um link sem destino (`href="#"`) — **CORRIGIDO**
+
+`components/shell/Breadcrumb.tsx` monta as migalhas a partir do registro de navegação. Segmento
+que o registro **não** conhece (rota da allowlist legada, tela nova ainda não registrada) entra
+com rótulo humanizado e sem `href` — e o render fazia `<Link href={m.href ?? "#"}>`.
+
+| O que a pessoa vê | O que acontece |
+| --- | --- |
+| "Pedidos › **Foo** › Bar" | "Foo" parece link, recebe foco no Tab e, ao ser ativado, leva ao topo da página |
+
+Não quebra nada e por isso nunca apareceu em captura: é um alvo a mais no caminho de quem usa
+teclado, sem destino nenhum. Corrigido na semântica — migalha sem destino é `<span>`, não âncora.
+Gate: `tests/unit/trilha-sem-link-morto.test.tsx` renderiza a trilha numa rota de três segmentos
+fora do registro e reprova qualquer `a[href="#"]`, além de exigir que o nível intermediário seja
+`SPAN` e o último carregue `aria-current="page"`.
+
+### V-57 · Média · O sino mudava de número em silêncio para leitor de tela — **CORRIGIDO**
+
+O total de avisos vive num `<span>` dentro do botão, e o `aria-label` do botão ("Central de avisos
+— 3 em aberto") só é lido quando o foco passa por ele. Quem está digitando no inbox recebia um
+aviso novo e **não ouvia nada**: o número mudava na tela.
+
+Corrigido com uma região viva (`role="status" aria-live="polite"`, `sr-only`) que anuncia o novo
+total. As duas regras que evitam o efeito contrário — ruído constante treina a pessoa a ignorar o
+anúncio — estão no código e no teste:
+
+1. a **carga inicial não é novidade** (só entra em vigor depois do primeiro carregamento);
+2. **só o aumento anuncia**; recontagem que cai é ajuste de estado, não alerta.
+
+Gate: `tests/unit/central-de-avisos-anuncia.test.tsx` (4 casos: carga inicial silenciosa, aviso
+novo anunciado, queda silenciosa, nome acessível do sino preservado).
+
+**O que continua não medido, e por quê:** a captura de tela desta fatia não foi feita. O ambiente
+derrubou o runtime seis vezes na rodada anterior (build de produção interrompido duas vezes, dev
+server uma) e a nova regra de operação proíbe build/suíte por rotina. A prova aqui é de componente
+— render + árvore de acessibilidade —, e os dois testes falham se a correção for revertida.
+
+### V-58 · Média · Seis campos sinalizavam foco com uma borda 1,21 → 1,40 — **CORRIGIDO**
+
+Varredura de todo `outline-hidden`/`outline-none` em `app/` e `components/` (21 ocorrências).
+A maioria é legítima: item de menu usa `focus:bg-accent` como indicador, e o contêiner de rolagem
+da casca suprime o anel de propósito. Três casos não eram:
+
+| Onde | Antes | Efeito |
+| --- | --- | --- |
+| `app/app/agenda/_client.tsx` (motivo da remarcação) e 5 campos de `settings/tenant/agenda` | `focus:border-border-strong` | a borda vai de **1,21:1** para **1,40:1** — existe, não se vê |
+| `app/app/busca/_client.tsx` (busca global) | `outline-hidden` no `<input>`, sem nada no contêiner | campo focado sem indicador nenhum |
+| `components/shell/CommandPalette.tsx` | idem | idem |
+
+Corrigido com o foco canônico do produto (borda accent + `ring-2 ring-accent-soft`) nos seis
+campos, e `focus-within` nos dois contêineres de busca (o input é transparente dentro deles — o
+anel tem de morar na caixa que a pessoa vê).
+
+**O que fica de fora, com motivo:** itens de menu (`dropdown-menu`, `select`, `popover`) sinalizam
+foco por fundo, que é o padrão do Radix e passa o piso de 3:1 (`bg-accent-soft` com texto
+`accent-ink`); e `AppShell` suprime o anel no contêiner de rolagem, que não é foco de controle.
+O método é a varredura, não a lista: `grep -rn "outline-hidden\|outline-none" app components`.

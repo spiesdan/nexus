@@ -14,17 +14,81 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
 let _redis: Redis | null = null;
-let _fallbackWarned = false;
+
+/**
+ * ESTADO DO FALLBACK, DECLARADO — não silencioso.
+ *
+ * O contador em memória é por PROCESSO: com duas réplicas, o teto efetivo dobra;
+ * com Redis configurado e inalcançável, o produto continua aceitando login com
+ * um limite que o operador acredita ser compartilhado. O `warn` antigo saía uma
+ * vez e sumia no log — quem não estava lendo naquele segundo nunca soube.
+ *
+ * Aqui a transição vira estado consultável (`rateLimitBackend`) e vai para a
+ * superfície de saúde: em produção, o healthcheck responde 503 enquanto o
+ * limitador estiver em memória (ver `app/api/v1/health/route.ts`). O app NÃO
+ * derruba no boot por Redis fora do ar — uma queda transitória do Redis viraria
+ * indisponibilidade total do CRM, pior que o modo degradado. Falha alto é o
+ * healthcheck, não o crash.
+ */
+let _fallbackAtivo = false;
+let _fallbackMotivo: string | null = null;
+let _fallbackDesde: string | null = null;
+
+export interface SaudeDoRateLimit {
+  backend: "redis" | "memoria";
+  motivo: string | null;
+  desde: string | null;
+}
+
+export function rateLimitBackend(): SaudeDoRateLimit {
+  return {
+    backend: _fallbackAtivo ? "memoria" : "redis",
+    motivo: _fallbackMotivo,
+    desde: _fallbackDesde,
+  };
+}
+
+/**
+ * Em produção, "o limitador está em memória" é `down`; em dev/teste é
+ * `degraded` — `pnpm dev` sem Redis precisa continuar subindo (é o ambiente).
+ * O healthcheck em produção já responde 503 com `down`.
+ */
+export function statusDeSaudeDoRateLimit(
+  redisRespondeu: boolean,
+  ambiente: string | undefined = process.env.NODE_ENV,
+): "ok" | "degraded" | "down" {
+  if (redisRespondeu) return "ok";
+  return ambiente === "production" ? "down" : "degraded";
+}
+
+function declararFallback(motivo: string): void {
+  if (_fallbackAtivo) return; // uma vez por transição, não por requisição
+  _fallbackAtivo = true;
+  _fallbackMotivo = motivo;
+  _fallbackDesde = new Date().toISOString();
+  const log = process.env.NODE_ENV === "production" ? logger.error : logger.warn;
+  log("[ai-dispatcher.rate-limit] FALLBACK EM MEMÓRIA — limite por processo, não compartilhado", {
+    motivo,
+    desde: _fallbackDesde,
+    consequencia:
+      "com mais de uma réplica o teto efetivo multiplica; em produção o healthcheck acusa 503",
+  });
+}
+
+function declararRedisDeVolta(): void {
+  if (!_fallbackAtivo) return;
+  _fallbackAtivo = false;
+  _fallbackMotivo = null;
+  _fallbackDesde = null;
+  logger.info("[ai-dispatcher.rate-limit] Redis voltou — limite compartilhado de novo");
+}
 
 function getRedis(): Redis | null {
   if (_redis) return _redis;
   const url = env.UPSTASH_REDIS_REST_URL;
   const token = env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
-    if (!_fallbackWarned) {
-      logger.warn("[ai-dispatcher.rate-limit] Redis missing — using in-memory fallback (not safe for multi-instance)");
-      _fallbackWarned = true;
-    }
+    declararFallback("nao_configurado");
     return null;
   }
   // `retry: false`: com Redis inalcançável (URL errada, rede caída), o default
@@ -33,7 +97,19 @@ function getRedis(): Redis | null {
   // indisponibilidade do Redis para a latência do login. Falhe rápido e caia
   // para a memória. Medido: com URL morta, duas chamadas somavam ~8s numa
   // requisição de recuperação de senha, estourando o timeout da tela.
-  _redis = new Redis({ url, token, retry: false });
+  //
+  // O construtor do SDK valida a URL e LANÇA (`UrlError`) quando o `.env` traz
+  // um host sem esquema — exatamente o erro de instalação catalogado. Deixar o
+  // throw escapar derrubava a rota inteira: a sonda de saúde do rate limit
+  // (`/api/v1/health`) respondia 500 em vez de dizer "memória". Configuração
+  // errada de Redis não pode ser capaz de derrubar o healthcheck; ela é mais
+  // um motivo para o fallback declarado.
+  try {
+    _redis = new Redis({ url, token, retry: false });
+  } catch (err) {
+    declararFallback(err instanceof Error ? err.message : String(err));
+    return null;
+  }
   return _redis;
 }
 
@@ -127,8 +203,10 @@ export async function checkRateLimit(
       if (count === 1) {
         await redis.expire(key, windowSec);
       }
+      declararRedisDeVolta();
     } catch (err) {
-      logger.warn("[ai-dispatcher.rate-limit] redis incr failed; falling back to in-memory", {
+      declararFallback(err instanceof Error ? err.message : String(err));
+      logger.warn("[ai-dispatcher.rate-limit] redis incr falhou; usando memória", {
         error: err instanceof Error ? err.message : String(err),
         bucket,
       });
@@ -203,7 +281,8 @@ export async function peekRateLimit(bucket: string, windowSec: number): Promise<
     // em `_memBuckets` no ramo de fallback, então `emMemoria()` devolve 0 e o
     // `max` é no-op.
     return Math.max(noRedis, emMemoria());
-  } catch {
+  } catch (err) {
+    declararFallback(err instanceof Error ? err.message : String(err));
     return emMemoria();
   }
 }

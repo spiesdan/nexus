@@ -25,6 +25,7 @@ import { timingSafeEqual } from "node:crypto";
 import { type NextRequest } from "next/server";
 import { ok } from "@/lib/api/wrappers";
 
+import { checkRateLimit, rateLimitBackend, statusDeSaudeDoRateLimit } from "@/lib/ai/dispatcher/rate-limit";
 import { env } from "@/lib/env";
 import { alvoDe, classificarFalhaDeAlcance, type FalhaDeAlcance } from "@/lib/net/alcance";
 
@@ -38,7 +39,8 @@ type MotivoDeFalha =
   | FalhaDeAlcance
   | "credencial_recusada"
   | "resposta_inesperada"
-  | "nao_configurado";
+  | "nao_configurado"
+  | "fallback_em_memoria";
 
 type Check = {
   status: CheckStatus;
@@ -47,6 +49,8 @@ type Check = {
   reason?: MotivoDeFalha;
   /** Protocolo + host + porta que tentamos. Só com `?verbose=1` autenticado. */
   target?: string;
+  /** Onde o contador de rate limit está AGORA: Redis compartilhado ou memória do processo. */
+  backend?: "redis" | "memoria";
 };
 
 const TIMEOUT_MS = 3_000;
@@ -137,6 +141,36 @@ async function checkRedis(): Promise<Check> {
       target: alvoDe(url),
     };
   }
+}
+
+/**
+ * O RATE LIMIT É UM CHECK PRÓPRIO — não um sinônimo de "Redis respondeu".
+ *
+ * `redis: ok` prova PING. Não prova o `INCR` que o limitador usa, e não prova que
+ * o módulo está de fato no caminho compartilhado: existe estado parcial conhecido
+ * (MISCONF recusa escrita e atende leitura) em que o PING passa e o contador cai
+ * para a memória — o mesmo estado que já derrubou o teto por conta (issue #185).
+ *
+ * Por isso a sonda chama `checkRateLimit`, o MESMO caminho do produto, e lê o
+ * estado que ele declarou. Em produção, memória = `down` (health 503); em dev,
+ * `degraded` (200) — `pnpm dev` sem Redis precisa subir.
+ */
+async function checkRateLimitSaude(): Promise<Check> {
+  const t0 = Date.now();
+  // Teto absurdo de propósito: a sonda não pode ser barrada por ela mesma.
+  await checkRateLimit("health:rate-limit-probe", 1_000_000, 60);
+  const saude = rateLimitBackend();
+  const status = statusDeSaudeDoRateLimit(saude.backend === "redis");
+  if (status === "ok") {
+    return { status, latency_ms: Date.now() - t0, backend: "redis" };
+  }
+  return {
+    status,
+    latency_ms: Date.now() - t0,
+    backend: "memoria",
+    reason: "fallback_em_memoria",
+    error: saude.motivo ?? "redis_indisponivel",
+  };
 }
 
 async function checkWaha(): Promise<Check> {
@@ -233,15 +267,21 @@ function semAlvo(check: Check): Check {
 }
 
 export async function GET(req: NextRequest) {
-  const [supabase, redis, waha] = await Promise.all([
+  const [supabase, redis, rateLimit, waha] = await Promise.all([
     checkSupabase(),
     checkRedis(),
+    checkRateLimitSaude(),
     checkWaha(),
   ]);
 
   const verboso = req.nextUrl.searchParams.get("verbose") === "1" && segredoInternoConfere(req);
   const filtrar = verboso ? (c: Check) => c : semAlvo;
-  const checks = { supabase: filtrar(supabase), redis: filtrar(redis), waha: filtrar(waha) };
+  const checks = {
+    supabase: filtrar(supabase),
+    redis: filtrar(redis),
+    rate_limit: filtrar(rateLimit),
+    waha: filtrar(waha),
+  };
 
   const anyDown = Object.values(checks).some((c) => c.status === "down");
   const anyDegraded = Object.values(checks).some((c) => c.status === "degraded");
