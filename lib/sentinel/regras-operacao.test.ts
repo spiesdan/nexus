@@ -4,6 +4,7 @@ import {
   campanhasComCidadeInvalida,
   campanhasComCidadeRepetida,
   clientesDuplicadosPorEmail,
+  enderecoComLixo,
   estoqueDivergente,
   estoqueNegativo,
   importacaoMercosFalhou,
@@ -22,6 +23,7 @@ import {
 import {
   campanhaProspeccao,
   campanhaVenda,
+  contatoEndereco,
   duplicado,
   estoqueRazao,
   ha,
@@ -457,5 +459,43 @@ describe("detectores de operação — caso positivo e negativo", () => {
     expect(achado.regra).toBe("operacao.cliente_duplicado_email");
     expect(String(achado.evidencia.email_mascarado)).toBe("a**@loja.test");
     expect(JSON.stringify(achado.evidencia)).not.toContain("ana@loja.test");
+  });
+
+  it("endereço com literal de ausência vira UMA ocorrência por org, sem PII", () => {
+    const achado = primeiro(
+      enderecoComLixo(
+        snapshot({
+          contatosEndereco: [
+            contatoEndereco({ id: "c1", logradouro: "NULL" }),
+            contatoEndereco({ id: "c2", complemento: " undefined " }),
+            contatoEndereco({ id: "c3", bairro: "NaN", cidade: "   " }),
+            contatoEndereco({ id: "c4" }), // tudo null de verdade: não é lixo
+            contatoEndereco({ id: "c5", logradouro: "Rua das Flores", cidade: "Curitiba" }),
+          ],
+        }),
+      ),
+    );
+    expect(achado.regra).toBe("cadastro.endereco_com_lixo");
+    expect(achado.severidade).toBe("media");
+    expect(achado.evidencia.total).toBe(3);
+    expect(achado.evidencia.logradouro).toBe(1);
+    expect(achado.evidencia.complemento).toBe(1);
+    expect(achado.evidencia.bairro).toBe(1);
+    expect(achado.evidencia.cidade).toBe(1);
+    expect(achado.evidencia.contatos).toEqual(["c1", "c2", "c3"]);
+    expect(JSON.stringify(achado.evidencia)).not.toContain("Rua das Flores");
+  });
+
+  it("endereço válido ou null real não dispara", () => {
+    expect(
+      enderecoComLixo(
+        snapshot({
+          contatosEndereco: [
+            contatoEndereco({ logradouro: "Rua A", cidade: "Curitiba" }),
+            contatoEndereco({ id: "c2", logradouro: null, cidade: "Curitiba" }),
+          ],
+        }),
+      ),
+    ).toHaveLength(0);
   });
 });

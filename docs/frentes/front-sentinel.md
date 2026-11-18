@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (31)
+## 2. Regras implementadas (32)
 
 ### Fiscal (12)
 
@@ -40,7 +40,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.job_retry_excessivo` | 3+ tentativas na mesma nota | media |
 | `fiscal.sincronizacao_falhou` | sync fiscal com erro/bloqueio nas últimas 24 h (agrupada por dia) | media/alta |
 
-### Operação, financeiro e campanha (19)
+### Operação, financeiro e campanha (20)
 
 | Regra | Dispara quando | Severidade |
 |---|---|---|
@@ -63,6 +63,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `operacao.lead_duplicado` | 2+ leads abertos no mesmo funil para o mesmo contato/telefone/e-mail normalizado | media |
 | `operacao.correcao_sem_reversao` | correção aplicada cujo job saiu de `pending`/do `run_after` gravado — reversão não é mais honesta | media |
 | `operacao.aprovacao_expirada` | ocorrência `aprovada` além da janela de 5 min do plano revisado | baixa |
+| `cadastro.endereco_com_lixo` | `contacts.logradouro/complemento/bairro/cidade` com `NULL`/`undefined`/`NaN` literais ou só espaços, agrupado por org | media |
 
 **Falsos positivos evitados de propósito:**
 
@@ -175,10 +176,10 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
-| `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
+| `lib/sentinel/regras-operacao.ts` | 18 detectores de operação/financeiro/campanha (inclui endereço com lixo) |
 | `lib/sentinel/regras.ts` | registry (fonte única dos ids) |
 | `lib/sentinel/motor.ts` | execução isolada, dedup, ordenação |
-| `lib/sentinel/coleta.ts` | 18 consultas com teto e filtro de org (inclui ocorrências/eventos/jobs da correção) |
+| `lib/sentinel/coleta.ts` | 19 consultas com teto e filtro de org (inclui correção e endereços) |
 | `lib/sentinel/recomendacoes.ts` | plano revisável por regra (Nível 1) |
 | `lib/sentinel/regras-correcao.ts` | observa reversão honesta e aprovação vencida — sem executar nada |
 | `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
@@ -200,6 +201,7 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/invariants/sentinel-correcao.test.ts` | RPC 0325: antecipa, reverte, recusa running/flywheel/outra org |
 | `lib/sentinel/regras-correcao.test.ts` | observabilidade: CAS de reversão e janela de 5 min, com negativos |
+| `lib/sentinel/regras-operacao.test.ts` | endereço com literal/espaço: UMA ocorrência por org, sem PII |
 | `tests/api/sentinel-correcao.test.ts` | simular/executar/reverter: papel, aprovação, hash, audit |
 | `tests/unit/sentinel-correcao-tela.test.tsx` | executar só após confirmação explícita; reverter |
 | `scripts/medir-sentinel-carga.ts` | 50k pedidos + 200k mensagens, scan medido e orçamento forçado |
@@ -299,6 +301,22 @@ Os dois detectores são **somente leitura**: leem as ocorrências/eventos do
 próprio Sentinel e o `job_queue` atual. Não executam, não revertem e não
 aprovam; a correção continua sendo da rota de Nível 2.
 
+### P2 — endereço com lixo
+
+```bash
+pnpm exec vitest run lib/sentinel/regras-operacao.test.ts
+#   21 testes verdes; os dois novos cobrem literal (NULL/undefined/NaN),
+#   só espaços, null real (não dispara) e agrupamento por org sem PII
+
+# coleta real contra o Supabase local: contato com logradouro "NULL" e cidade
+# "  " → contatosEndereco inclui o id e enderecoComLixo devolve 1 achado
+pnpm exec tsx scripts/probe-endereco.ts
+```
+
+Contexto medido: 84 cadastros históricos em produção. O escritor que gravava o
+literal não está mais no código; a regra observa o passado e impede regressão
+silenciosa no futuro.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
@@ -341,7 +359,10 @@ fiscal/financeira real.
 14. **`operacao.correcao_sem_reversao` só enxerga correções de job watchdog
     feitas pela 0325.** Correção manual de estado (`corrigida` sem evento de
     antecipação) não entra, porque não há antes/depois para comparar.
-15. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
+15. **`cadastro.endereco_com_lixo` é observação, não correção:** o escritor
+    histórico não existe mais; o achado agrupa ids por organização e não leva
+    o endereço (dado pessoal) na evidência.
+16. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
     estoque que esta versão acrescenta é a divergência saldo × razão. Remover a
@@ -359,15 +380,14 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (observabilidade, 18/11/2026)
+## 11. Onde retomar (observabilidade + P2, 18/11/2026)
 
-- **Esta fatia** (`front/sentinel-obs`): `operacao.correcao_sem_reversao` e
-  `operacao.aprovacao_expirada`, sem migration nova (a 0325 já tem os dados).
-  Coleta lê ocorrências/eventos do Sentinel + job atual; nenhuma escrita.
-- **Próxima da fila P2**: `cadastro.endereco_com_lixo` — `contacts` com
-  `logradouro/complemento/bairro/cidade` em `NULL`/`undefined`/`NaN` literais ou
-  só espaços, agrupado por organização com id de evidência. Observação: o
-  escritor não está vivo no código; 84 cadastros históricos medidos.
+- **Esta fatia** (`front/sentinel-obs`): `operacao.correcao_sem_reversao`,
+  `operacao.aprovacao_expirada` e `cadastro.endereco_com_lixo`, sem migration
+  nova (a 0325 já tem os dados da correção). Coleta lê ocorrências/eventos do
+  Sentinel, job atual e endereços; nenhuma escrita.
+- **Endereço com lixo**: 84 cadastros históricos medidos; o escritor não está
+  no código. A regra agrupa por organização e não expõe o endereço.
 - **E2E do painel**: já coberto na v1.3; o CI roda no `critical`/`full`.
 - **Próxima de produto**: v1.4 — outro caso de correção com reversão honesta,
   um por vez; nunca em nota, saldo, pagamento ou envio externo.

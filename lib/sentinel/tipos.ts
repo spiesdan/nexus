@@ -336,6 +336,15 @@ export interface CorrecaoSentinel {
   } | null;
 }
 
+/** Contato com os quatro campos de endereço, para achar lixo histórico. */
+export interface ContatoEndereco {
+  id: string;
+  logradouro: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string | null;
+}
+
 export interface Snapshot {
   organizationId: string;
   agoraMs: number;
@@ -355,6 +364,7 @@ export interface Snapshot {
   campanhasVenda: CampanhaVenda[];
   clientesDuplicados: ClienteDuplicado[];
   correcoes: CorrecaoSentinel[];
+  contatosEndereco: ContatoEndereco[];
 }
 
 /** Metadados da regra no registry — a tela lê daqui a explicação. */
@@ -386,5 +396,6 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     campanhasVenda: [],
     clientesDuplicados: [],
     correcoes: [],
+    contatosEndereco: [],
   };
 }
