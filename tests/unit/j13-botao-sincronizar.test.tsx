@@ -120,4 +120,28 @@ describe("BotaoSincronizar", () => {
     resolver?.(resposta());
     await waitFor(() => expect(nexusToast.success).toHaveBeenCalled(), { timeout: 5_000 });
   });
+
+  it("depois de uma falha, tentar de novo funciona — retry não fica travado", async () => {
+    // O primeiro clique leva 502 (SEFAZ inalcançável); o operador tenta de
+    // novo quando a rede volta. O botão precisa voltar a habilitar e o segundo
+    // clique precisa valer — senão a tela vira um "erro" sem saída.
+    vi.mocked(apiClient.post)
+      .mockRejectedValueOnce(new Error("502: SEFAZ inalcançável"))
+      .mockResolvedValueOnce(resposta({ novas: 1 }));
+
+    render(<BotaoSincronizar />);
+    fireEvent.click(screen.getByRole("button", { name: "Sincronizar agora" }));
+
+    await waitFor(() => expect(showApiError).toHaveBeenCalledTimes(1), { timeout: 5_000 });
+    const botao = screen.getByRole("button", { name: "Sincronizar agora" });
+    expect(botao).toHaveProperty("disabled", false);
+
+    fireEvent.click(botao);
+    await waitFor(
+      () => expect(nexusToast.success).toHaveBeenCalledWith("1 nova(s), 0 atualizada(s), 0 erro(s)."),
+      { timeout: 5_000 },
+    );
+    expect(apiClient.post).toHaveBeenCalledTimes(2);
+    expect(mocks.refresh).toHaveBeenCalledTimes(1);
+  });
 });

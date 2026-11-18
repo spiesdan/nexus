@@ -225,12 +225,18 @@ exercitadas.
 vazio claro e sem stack trace, a fila com posição e a atribuição, e a resposta citando
 mensagem. As abas espelham o comando do automático.
 
-**O que fica descoberto.** **Encerrar** ("Fechar esta conversa?", com confirmação) e
-**arquivar** têm botão em `components/inbox/ConversationHeader.tsx` e nenhum spec que clique
-neles; nenhum dos 100 specs procura por `encerrar`/`arquivar` no inbox. "Encaminhar" é exercitado
-como _transferir_ (`[id]/transfer`), que é a mesma rota. Os dois testes de resposta citando
-estão `skip` — o motivo está escrito no arquivo e precisa ser lido antes de tratar como
-cobertura.
+**O que fica descoberto.** "Encaminhar" é exercitado como _transferir_ (`[id]/transfer`), que é
+a mesma rota. Os dois testes de resposta citando estão `skip` — o motivo está escrito no arquivo
+e precisa ser lido antes de tratar como cobertura.
+
+**Prova em Vitest (P1-01, sem navegador).** As lacunas de **encerrar** e **arquivar** foram
+fechadas na camada que decide o estado, não no clique: `tests/unit/inbox-fechar-e-arquivar-rotas.test.ts`
+(fechar: grava `closed`, solta o silêncio do episódio, audita; 404; 500; permissão antes da
+escrita; `viewer` barrado — arquivar em lote: confirmação obrigatória, fila vazia sem update,
+contagem real, 500, `manager`) e `tests/unit/inbox-fechar-pela-tela.test.tsx` (o botão abre a
+confirmação; confirmar chama a mutação certa; cancelar não fecha; já encerrada não oferece de
+novo) + `tests/unit/inbox-fechar-hook.test.tsx` (falha → erro visível + invalidação das duas
+chaves, o que é o retry da lista). Commit desta atualização.
 
 ### J7 · Transferir conversa entre IA e pessoa, com contexto, controle e auditoria
 
@@ -371,10 +377,18 @@ honesto sem emissor** — a tela não finge que emitiu. O módulo de notas prova
 subtelas** do fiscal abrem com sessão real, que a porta do sidebar é `/app/fiscal` e que nota
 inexistente cai em 404 — ou seja, cobre a **porta** de cada subtela, não o estado de cada uma.
 
-**O que fica descoberto.** "Tratamento de falhas de sincronização" é exatamente o que a tela
-`sincronizacoes` deveria provar, e não há spec que force uma falha de sincronização e verifique a
-recuperação pela tela. A suíte `tests/fiscal` existe e não foi executada aqui — isso está dito,
-não escondido.
+**O que fica descoberto.** A suíte `tests/fiscal` existe e não foi executada aqui — isso está
+dito, não escondido. E o E2E ainda não força a falha: a recuperação é provada abaixo por rota e
+componente, não por navegador.
+
+**Prova em Vitest (P1-01, sem navegador).** `tests/unit/j13-fiscal-falha-de-sincronizacao.test.ts`
+cobre o resultado da sincronização: 200 com novas/atualizadas, 409 de lock concorrente, 422 de
+configuração ausente, **502 quando a SEFAZ está inalcançável** (nunca 200 vazio), falha parcial
+preservando o que entrou, 656 com a próxima tentativa, permissão; o histórico mostra a falha com
+`cStat` e mensagem, lista vazia ≠ erro, filtro de resultado na organização ativa e 500 em erro do
+banco. `tests/unit/j13-botao-sincronizar.test.tsx` prova o botão: sucesso diz o que veio, 656
+avisa a hora, falha → erro visível (não toast verde), duplo clique bloqueado e **retry depois da
+falha** volta a funcionar. Commit desta atualização.
 
 ### J14 · Importar/exportar dados, LGPD, solicitações e trilha de auditoria
 
@@ -398,17 +412,31 @@ Quatro telas de LGPD (`/app/lgpd/requests`, `/app/lgpd/requests/[id]`,
 citam `/app/lgpd/requests` **como rota a visitar** numa varredura de 1280/390, o que prova que a
 tela abre — não que a solicitação nasce, é aprovada, pré-visualizada e anonimizada.
 
-**O que fica descoberto.** Esta é a **maior lacuna** da Fase 2, e é medida, não suposta:
+**O que fica descoberto (depois da prova em Vitest de P1-01).** Continua sem prova **de tela** —
+o que existe agora é prova de rota/componente, declarada:
 
-- **import/export**: 14 rotas e 6 telas com botão (`products`, `kanban`, `notas`, `pedidos`,
-  `expedicao/nova`, `audit`) e **zero** teste de ponta a ponta. O caminho de arquivo inválido,
-  de cabeçalho errado e de importação parcial não é exercitado em lugar nenhum;
-- **LGPD**: o ciclo solicitação → aprovação → prévia → anonimização, que é o produto vendido
-  como LGPD nativa, não tem prova de tela;
-- **auditoria**: a tela tem filtros e exportação e o spec de auditoria só verifica que ela abre.
+- **import/export**: `tests/unit/j14-importacao-contatos.test.ts` prova a importação de contatos
+  (sem arquivo, formato errado, cabeçalho sem identificador, caminho feliz com `organization_id`
+  da sessão + `contact.created` + auditoria, **importação parcial** com a linha inválida
+  nomeada, todas inválidas, permissão). As outras 13 rotas de importação e os botões das 6 telas
+  seguem sem prova;
+- **LGPD**: `tests/unit/j14-lgpd-ciclo.test.ts` (lista, aprovação com `Idempotency-Key` e
+  justificativa, replay, 409/404/403/500, prévia com máscara e CPF nunca no payload),
+  `tests/unit/j14-lgpd-aprovar-pela-tela.test.tsx` (estado do botão e falha visível) e
+  `tests/unit/j14-lgpd-anonimizar.test.ts` (cascata de anonimização, idempotência
+  `already_anonymized`, 404, guard na organização DO CONTATO, 422, 500). O ciclo
+  solicitação → aprovação → prévia → anonimização está provado por rota; a tela do DPO não foi
+  aberta por navegador;
+- **auditoria**: `tests/unit/j14-auditoria-export.test.ts` prova o CSV (cabeçalho, escape de
+  vírgula/aspas/quebra de linha, vazio ≠ erro, filtros + organização, `viewer` barrado, 422 e
+  500). Os filtros da tela continuam sem prova de navegador.
 
 Duas rotas de importação não têm chamador fora da API — `contacts/import` e `ai/skills/import`.
 São API pública sem superfície: funcionam, e ninguém as alcança pela tela.
+
+**Resumo para P1-01:** J6 e J13 passam a ter prova das lacunas nomeadas na camada de rota e
+componente; J14 cobre o ciclo LGPD completo, a exportação da trilha e uma importação (contatos)
+com erro e parcial. O que continua aberto é **UI por navegador** e as demais importações.
 
 ### J15 · Atualizar, configurar integração, revisar erro e recuperar o serviço
 
