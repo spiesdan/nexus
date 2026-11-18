@@ -493,3 +493,40 @@ vazia também não — só o literal e o "só espaços".
 Positivo para cada token e para "só espaços"; negativo para `null`, `""` e
 endereço legítimo; reexecução não duplica (chave aberta por organização+regra);
 cross-tenant zero.
+
+## 17. Catálogo do Mercos — ordem de execução (não pareou nada ainda)
+
+O coletor do #559 é **código de worker**, e worker roda na imagem `nexus-mercos`.
+A produção está em **1.55.0** (app/worker/scheduler); o coletor **não existe lá**.
+Portanto a ordem é esta, e ninguém deve ler "mergeado" como "pareado":
+
+1. **Entrar na próxima release** (corte pelo workflow `release`; tag nova).
+2. **Deploy da imagem `nexus-mercos`** na VPS — ato humano, ver `35-pacote-de-release.md`.
+3. **`--dry-run` em produção**: o coletor lê `/produtos/` e devolve o relatório
+   (`criados`, `atualizados`, `divergentes`, `sem_codigo`, itens casáveis por
+   código) **sem escrever**.
+4. **Relatório para o dono aprovar** — inclusive a contagem de itens históricos
+   que casariam por código (616 itens/72 códigos medidos em 18/11).
+5. **Só então** o pareamento é aplicado, com backup das linhas afetadas.
+
+Enquanto 3–5 não acontecerem, `product_id IS NULL` continua igual e o 411
+continua com os 2.010 itens que já tinha.
+
+## 18. Delegação — D nos módulos (a lacuna mais antiga)
+
+O Agente E caiu no meio e não voltou: **5.4, 5.6, 5.8, 5.10/5.11 não têm ficha
+fechada**. O D tem os instrumentos de captura e a régua de estados, então pega
+essa lacuna **por módulo**, começando pelo de maior uso:
+
+| Ordem | Módulo | Entrega por PR |
+|---|---|---|
+| 1 | **5.4** inbox/atendimento/campanhas | ficha + estados com evidência (vazio, carregando, erro, permissão, retry) |
+| 2 | **5.6** pedidos/estoque/compras/expedição | idem |
+| 3 | **5.8** fiscal | idem |
+| 4 | **5.10/5.11** configurações/equipe/LGPD/admin | idem |
+
+Limites: **não toca regra de negócio** (fiscal, financeiro, autorização); a
+evidência é visual/estado, não reescrita de comportamento. Se um estado revelar
+defeito real, vira item de fila com dono — não conserto silencioso no mesmo PR.
+A alternativa (P1-01, J6/J13/J14 por teste de rota) fica registrada como
+próxima, caso o D prefira jornada a módulo.
