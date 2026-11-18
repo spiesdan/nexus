@@ -175,7 +175,10 @@ export function SincronizadorOffline(): React.ReactElement | null {
       } catch {
         // Banco ainda não abriu ou o aparelho negou o SQLite: a faixa continua
         // com o último estado conhecido. Engolir aqui é melhor do que derrubar
-        // o layout inteiro por causa do sincronizador.
+        // o layout inteiro por causa do sincronizador — mas NÃO desistir: uma
+        // abertura que falhou agora pode abrir no próximo ciclo, e sem o retry
+        // a fila esperaria o próximo cold start. O backoff sobe até 5 min.
+        restantes = 1;
       } finally {
         rodando = false;
         if (cancelado) return;
