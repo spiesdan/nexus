@@ -13,6 +13,7 @@ import { randomUUID } from "node:crypto";
 import { type NextRequest } from "next/server";
 
 import { audit } from "@/lib/audit";
+import { hashDaRequisicao, reservarIdempotencia } from "@/lib/api/idempotencia";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { transmitirInutilizacaoRegistrada, type InutilizacaoLinha } from "@/lib/fiscal/transmissao";
@@ -21,7 +22,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const dynamic = "force-dynamic";
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const requestId = randomUUID();
@@ -30,6 +31,42 @@ export async function POST(
 
   const { id } = await params;
   const admin = createAdminClient();
+
+  // D-03 — retransmissão é efeito externo: mesma chave devolve a MESMA
+  // resposta; chave reusada com outro id é 409. Sem header, nada muda.
+  const chave = req.headers.get("Idempotency-Key")?.trim() || null;
+  let reserva: Awaited<ReturnType<typeof reservarIdempotencia>> | null = null;
+  if (chave) {
+    reserva = await reservarIdempotencia(admin, {
+      orgId: authz.org.orgId,
+      endpoint: "POST /api/v1/fiscal-inutilizacoes/[id]/retransmitir",
+      chave,
+      requestHash: hashDaRequisicao({ id }),
+    });
+    if (reserva.estado === "replay") {
+      return ok(reserva.resposta.body, {
+        requestId,
+        status: 200,
+        headers: { "Idempotency-Replayed": "true" },
+      });
+    }
+    if (reserva.estado === "conflito") {
+      return fail("idempotency_conflict", "Esta Idempotency-Key já foi usada com outra faixa.", 409, { requestId });
+    }
+    if (reserva.estado === "em_andamento") {
+      return fail("idempotency_in_progress", "A retransmissão com esta chave ainda está em andamento.", 409, { requestId });
+    }
+    if (reserva.estado === "erro") {
+      return fail("internal_error", "Não foi possível reservar a chave de idempotência.", 500, { requestId });
+    }
+  }
+
+  /** Qualquer falha depois da reivindicação libera a chave para retry. */
+  const falhar = async (...args: Parameters<typeof fail>): Promise<Response> => {
+    if (reserva?.estado === "livre") await reserva.abortar();
+    return fail(...args);
+  };
+
   const { data: linha } = await admin
     .from("fiscal_inutilizacoes")
     .select("id, serie, numero_inicial, numero_final, motivo, status")
@@ -37,9 +74,9 @@ export async function POST(
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
   const atual = linha as Pick<InutilizacaoLinha, "id" | "serie" | "numero_inicial" | "numero_final" | "motivo" | "status"> | null;
-  if (!atual) return fail("not_found", "Inutilização não encontrada.", 404, { requestId });
+  if (!atual) return falhar("not_found", "Inutilização não encontrada.", 404, { requestId });
   if (atual.status === "transmitida") {
-    return fail("state_conflict", "Faixa já transmitida à SEFAZ — não se retransmite.", 409, { requestId });
+    return falhar("state_conflict", "Faixa já transmitida à SEFAZ — não se retransmite.", 409, { requestId });
   }
 
   const { linha: final, motivo } = await transmitirInutilizacaoRegistrada(authz.org.orgId, atual.id, {
@@ -60,6 +97,8 @@ export async function POST(
     requestId,
   });
 
-  if (!final) return fail("internal_error", "Erro ao gravar o retorno da SEFAZ.", 500, { requestId });
-  return ok({ ...final, ...(motivo ? { motivo_transmissao: motivo } : {}) }, { requestId });
+  if (!final) return falhar("internal_error", "Erro ao gravar o retorno da SEFAZ.", 500, { requestId });
+  const resposta = { ...final, ...(motivo ? { motivo_transmissao: motivo } : {}) };
+  if (reserva?.estado === "livre") await reserva.finalizar({ status: 200, body: resposta });
+  return ok(resposta, { requestId });
 }
