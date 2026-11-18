@@ -1,8 +1,8 @@
-# Frente `front/sentinel` — Nexus Sentinel v1.1
+# Frente `front/sentinel` — Nexus Sentinel v1.2
 
-> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel`
-> Baseline desta fatia: `nexus/main` @ `014ccef3` (merge feito no worktree; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
-> Escopo: **v1 + v1.1 somente leitura** — detectar, classificar, abrir ocorrência e propor um plano revisável. Nenhuma correção autônoma.
+> Worktree: `/private/var/folders/.../T/opencode/aaa-front-sentinel` · branch `front/sentinel-v12`
+> Baseline desta fatia: `nexus/main` @ `f8699f7e` (o v1.1 entrou em `2116db86`; a `main` anda — reconfira com `git rev-parse nexus/main` antes do PR)
+> Escopo: **v1 + v1.1 + v1.2 somente leitura** — detectar, classificar, abrir ocorrência, propor plano revisável e medir a rodada. Nenhuma correção autônoma.
 
 ## 1. O que o Sentinel é (e o que deliberadamente não é)
 
@@ -70,8 +70,10 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
   e-mail, e é essa que a view agregada detecta;
 - divergência de estoque **é detectada como hipótese**: `inventory_movements`
   não tem saldo de abertura, então a regra só olha produtos criados a partir da
-  0242, exige um piso de diferença e nasce com confiança baixa. O plano manda
-  contar fisicamente antes de ajustar; a limitação vai na evidência;
+  0242, exige um piso de diferença e nasce com confiança baixa. A 0323 passou a
+  incluir produto **sem nenhuma movimentação** (razão vazio × saldo cacheado);
+  o plano manda contar fisicamente antes de ajustar e a limitação vai na
+  evidência;
 - lead duplicado usa a identidade que o produto já normaliza — `contact_id`,
   `phone_number` E.164 e `email_normalized` — com confiança alta para o mesmo
   contato e média para telefone/e-mail entre contatos. Lead sem contato fica de
@@ -110,7 +112,7 @@ terminal ─> nova/recorrente (reabrir, gestor)
   plano revisável com passos, campos pendentes, risco da ação, reversibilidade,
   fonte, limitação e confiança. O plano é persistido junto da ocorrência e
   exibido no detalhe; **nada é executado**.
-- **Nível 2 — corrigir após aprovação** (v1.2, não implementado).
+- **Nível 2 — corrigir após aprovação** (v1.3, não implementado).
 - **Nível 3 — automação restrita** (não implementado; e emissão/pagamento/envio
   externo nunca serão nível 3).
 
@@ -127,6 +129,7 @@ transação.
 | Kill switch por organização | `sentinel_settings.ativo` (tela Configurações › Sentinel) |
 | Cadência | `intervalo_minutos` (default 360; piso 15) |
 | Teto de ocorrências por execução | `limite_ocorrencias` (default 500; 50–2000) |
+| Orçamento da detecção | `ORCAMENTO_DETECCAO_PADRAO_MS` = 8 s (29 regras em 7 ms medidos); estouro trunca a rodada e impede encerramento por ausência |
 | Teto de coleta | 500 notas/pedidos/jobs, 1000 recebíveis, 500 fila/webhooks; cada consulta pede teto+1 |
 | Organizações por tick do cron | 3 (drena nos ticks seguintes) |
 | Retenção | `retencao_dias` (default 180, piso 30 no corpo da função); rodadas terminais saem em 90 dias fixos |
@@ -162,8 +165,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 |---|---|
 | `supabase/migrations/20261121140000_0316_sentinel_ocorrencias.sql` | schema, RLS, funções, view |
 | `supabase/migrations/20261123140000_0321_sentinel_recomendacoes.sql` | plano revisável + `sentinel_estoque_razao` |
-| `supabase/baseline.sql` (apêndices 0316/0321) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321 |
+| `supabase/migrations/20261123160000_0323_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
+| `supabase/baseline.sql` (apêndices 0316/0321/0323) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0323 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 12 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 17 detectores de operação/financeiro/campanha |
@@ -180,78 +184,67 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `app/app/sentinel/` | painel |
 | `docs/architecture/sentinel.architecture.json` | mapa (22 peças, 26 arestas) |
 | `tests/invariants/rls-isolation.test.ts` | seed + TABLES das 4 tabelas |
-| `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção e cross-tenant |
+| `tests/invariants/sentinel-idempotencia.test.ts` | upsert, recorrência, retenção (10 dias fica, 31 apaga) e cross-tenant |
+| `tests/invariants/sentinel-estoque-razao.test.ts` | left join, `ultimo_movimento` null e `security_invoker` entre orgs |
 | `tests/e2e/sentinel-painel.spec.ts` | painel: filtros, plano, histórico, kill switch e papéis (roda no CI `critical`/`full`) |
 | `tests/unit/sentinel-painel-revisavel.test.tsx` | prova de componente do painel quando o E2E não é executável (ver §8) |
 | `tests/unit` (via `lib/sentinel/*.test.ts`) | positivos/negativos, motor, planos, estados, config |
 
 ## 8. Prova executada
 
-Nesta sessão (v1.1, após o merge com `nexus/main`), rodando **dirigido** — não a
-suíte completa:
+Nesta sessão (v1.2), rodando **dirigido** — não a suíte completa:
 
 ```bash
 pnpm exec vitest run lib/sentinel
-#   7 arquivos, 55 testes verdes
+#   7 arquivos, 57 testes verdes (inclui orçamento de detecção e o detector
+#   de estoque com zero movimentações)
 
-pnpm exec vitest run tests/unit/sentinel-painel-revisavel.test.tsx
-#   1 arquivo, 7 testes verdes (lista, filtro, busca, detalhe+plano, histórico,
-#   kill switch, ocorrência antiga sem plano, viewer/agent/gestor)
+pnpm test:db
+#   170 arquivos, 2300 testes verdes | 1 esperado | 1 pulado
+#   install+update do baseline, RLS, retenção (10 dias fica, 31 apaga) e a
+#   view left join com/sem movimentação entre duas organizações
 
-pnpm exec vitest run tests/unit/e2e-suices-aderentes.test.ts tests/unit/e2e-cobertura-completa.test.ts
-#   2 arquivos, 10 testes verdes (o spec do painel entra em critical/full)
+pnpm exec vitest run tests/unit/migrations-numero-unico.test.ts   tests/unit/manifest-x-migrations.test.ts   tests/unit/kind-check-migration-x-baseline.test.ts   tests/unit/baseline-reaplicavel.test.ts   tests/unit/varredura-anon-e-o-ultimo-bloco.test.ts
+#   5 arquivos, 21 testes verdes
 
-pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel \
-  tests/e2e/sentinel-painel.spec.ts tests/unit/sentinel-painel-revisavel.test.tsx \
-  tests/invariants/sentinel-idempotencia.test.ts
-#   sem saída (zero erros)
-
-pnpm typecheck
-#   zerado
+pnpm typecheck   # zerado
+pnpm exec eslint lib/sentinel app/app/sentinel app/api/v1/sentinel
+#   zero erros
 ```
 
-**O E2E do painel NÃO foi executado nesta máquina, e o motivo é de ambiente, não
-de código:** o daemon do Docker está desligado (`Cannot connect to the Docker
-daemon`) e este worktree novo não tem `.env.e2e`/Supabase local — sem banco não
-há login nem seed. O spec `tests/e2e/sentinel-painel.spec.ts` continua versionado
-e vai rodar no job `e2e` (suítes `critical` e `full`) quando houver Docker. A
-prova de comportamento desta sessão é o teste de componente acima, que exercita
-a mesma tela com fixture determinística. `pnpm test:db` também depende de Docker
-e igualmente não rodou aqui; a migration 0321 e o apêndice do baseline foram
-revisados, mas a prova de banco é a do CI (`invariants`).
+**E2E de navegador não rodou nesta máquina**: o worktree não tem `.env.e2e` e a
+spec do painel continua no `e2e` `critical`/`full` da main. A prova de tela desta
+fatia é componente + rota (PR da prova) e a de banco é o `test:db` acima.
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
-## 9. Limitações declaradas (v1.1)
+## 9. Limitações declaradas (v1.2)
 
 1. **Divergência de estoque** é hipótese de confiança baixa: o razão não tem
    saldo de abertura e a comparação só vale para produtos criados a partir da
    0242. Confirmação exige contagem física.
-2. A view `sentinel_estoque_razao` usa **inner join** com
-   `inventory_movements`: produto controlado criado após a 0242 que nunca teve
-   movimentação **não entra** na comparação, mesmo com saldo cacheado. É
-   omissão conhecida (poderia ser `left join`), mantida nesta versão porque a
-   prova de banco exigiria Docker; o caminho de evolução é o item 5 de §10.
-3. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
+2. **Duplicidade de lead** só compara leads com contato vinculado. Lead sem
    contato não tem identidade normalizada — ficar de fora é decisão, não
    omissão.
-4. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
-   v1.1 recomenda passos, não inventa valor fiscal.
-5. **Não há correção automática.** O plano é persistido e revisável; os estados
+3. **Campos fiscais sugeridos a partir de fonte confiável** continuam fora: a
+   v1.2 recomenda passos, não inventa valor fiscal.
+4. **Não há correção automática.** O plano é persistido e revisável; os estados
    `aprovada`/`corrigida` registram a decisão humana, mas nada é executado pela
    máquina.
-6. O cron processa **3 organizações por tick**; instalação com muitas orgs
+5. O cron processa **3 organizações por tick**; instalação com muitas orgs
    drena ao longo dos ticks (15 min cada).
-7. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
+6. A view de e-mail duplicado olha `email_normalized`; e-mail vazio/anonimizado
    fica de fora de propósito.
-8. O painel entrega 500 ocorrências por render; a API pagina até 200 por
+7. O painel entrega 500 ocorrências por render; a API pagina até 200 por
    chamada. Acima disso, filtros são a forma de recorte.
-9. O plano é uma recomendação textual/determinística; não há simulação de
-   impacto nem execução assistida na v1.1.
-10. **Prova de banco e E2E pendentes nesta máquina** (Docker desligado, sem
-    `.env.e2e`): o merge não é declarado "verde em tudo" até `invariants` e
-    `e2e` rodarem no CI.
+8. O plano é uma recomendação textual/determinística; não há simulação de
+   impacto nem execução assistida na v1.2.
+9. O orçamento de detecção é checado **entre** regras: uma regra já iniciada
+   termina; o que não começa é a seguinte. O teto protege contra regra
+   patológica, não contra uma única regra que bloqueie a CPU para sempre.
+10. **E2E de navegador pendente nesta máquina** (sem `.env.e2e`): a prova de
+    banco veio de `pnpm test:db`; a de tela é componente + rota (PR da prova).
 11. **`operacao.estoque_negativo` é defensivo, não operante:** a constraint
     `catalog_products_quantidade_nao_negativa` impede saldo negativo em escrita
     normal, então a regra herdada da v1 não dispara na base atual. A regra de
@@ -260,7 +253,7 @@ fiscal/financeira real.
 
 ## 10. Próximas fatias seguras
 
-1. v1.2 — correção aprovada e reversível, sempre com antes/depois e aprovação
+1. v1.3 — correção aprovada e reversível, sempre com antes/depois e aprovação
    de gestor; nunca em nota, saldo, pagamento ou envio externo.
 2. Explicação por IA **opcional** sobre a evidência já sanitizada, com fallback
    imediato para o texto determinístico.
@@ -268,7 +261,16 @@ fiscal/financeira real.
    (hoje a porta é o ⌘K, porque a dobra do sidebar é medida).
 4. Saldo de abertura explícito no razão (`abertura`/snapshot mensal) para elevar
    a confiança da divergência de estoque.
-5. Trocar o `inner join` de `sentinel_estoque_razao` por `left join` (produto
-   sem movimentação também é divergência) **com** a prova de `test:db` que
-   valide as duas linhas e o `null` de `ultimo_movimento`.
-6. Ampliar o E2E visual para outras resoluções/dispositivos.
+5. Ampliar o E2E visual para outras resoluções/dispositivos.
+
+## 11. Onde retomar (v1.2, 18/11/2026)
+
+- **Esta fatia** (`front/sentinel-v12`): 0323 (left join), orçamento de detecção
+  (8 s; 7 ms medidos com 2k de cada entidade), retenção medida dos dois lados
+  (10 dias fica, 31 apaga) e a guarda de lead sem contato no detector.
+- **PR da prova** (`front/sentinel-prova`, #538): papéis na rota, kill switch na
+  tela e catraca de somente leitura. Não depende desta fatia para mergear.
+- **E2E do painel**: continua sem execução local; estreia no `critical` da main.
+- **Próxima de produto**: v1.3 — correção aprovada e reversível, com
+  antes/depois e aprovação de gestor; nunca em nota, saldo, pagamento ou envio
+  externo.

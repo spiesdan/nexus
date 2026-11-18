@@ -19,11 +19,31 @@ export interface FalhaDeRegra {
   motivo: string;
 }
 
+/**
+ * Orçamento de detecção por rodada.
+ *
+ * O cron roda a cada 15 min; a detecção é in-memory e hoje leva dezenas de ms
+ * num snapshot cheio. O teto existe para uma regra patológica (ou um snapshot
+ * anormalmente grande) não segurar a rodada: ao estourar, as regras restantes
+ * NÃO são avaliadas e a rodada vira truncada — logo, não encerra ocorrências
+ * por ausência. Medido nesta máquina (18/11/2026) com 2k produtos + 2k pedidos
+ * + 2k recebíveis + 2k leads: **7 ms** para as 29 regras (`motor.test.ts`);
+ * o default de 8 s é folga de três ordens de grandeza.
+ *
+ * É um teto de TEMPO, não de contagem: o registry tem 29 detectores fixos e
+ * contar regras não protegeria contra uma regra lenta.
+ */
+export const ORCAMENTO_DETECCAO_PADRAO_MS = 8_000;
+
 export interface ResultadoDeteccao {
   achados: Achado[];
   /** Regras que rodaram até o fim — só elas podem encerrar ocorrências ausentes. */
   regrasAvaliadas: string[];
   falhas: FalhaDeRegra[];
+  /** Tempo total da fase de detecção (sem coleta/persistência). */
+  tempoMs: number;
+  /** true = o orçamento acabou e regras ficaram de fora (rodada não é prova). */
+  truncadoPorTempo: boolean;
 }
 
 export interface OpcoesDeteccao {
@@ -33,6 +53,8 @@ export interface OpcoesDeteccao {
   regras?: typeof REGRAS;
   /** Injeção para teste; default = RECOMENDACOES. */
   recomendacoes?: Record<string, (achado: Achado) => Recomendacao>;
+  /** Teto de tempo da detecção; default = ORCAMENTO_DETECCAO_PADRAO_MS. */
+  orcamentoMs?: number;
 }
 
 const CAMPOS_TEXTO = ["regra", "entidadeTipo", "entidadeId", "titulo", "resumo", "causaProvavel"] as const;
@@ -73,12 +95,22 @@ export function executarDetectores(
   const desativados = new Set(opcoes.desativados ?? []);
   const regras = opcoes.regras ?? REGRAS;
   const recomendacoes = opcoes.recomendacoes ?? RECOMENDACOES;
+  const orcamento = opcoes.orcamentoMs ?? ORCAMENTO_DETECCAO_PADRAO_MS;
   const porFingerprint = new Map<string, Achado>();
   const regrasAvaliadas: string[] = [];
   const falhas: FalhaDeRegra[] = [];
+  const inicio = performance.now();
+  let truncadoPorTempo = false;
 
   for (const regra of regras) {
     if (desativados.has(regra.id)) continue;
+
+    // Checado ANTES de cada regra: uma regra já iniciada termina (não há como
+    // interromper CPU síncrona); o que não acontece é começar a próxima.
+    if (performance.now() - inicio > orcamento) {
+      truncadoPorTempo = true;
+      break;
+    }
 
     try {
       const achados = regra.detectar(snapshot);
@@ -132,5 +164,11 @@ export function executarDetectores(
     return a.entidadeId.localeCompare(b.entidadeId);
   });
 
-  return { achados, regrasAvaliadas, falhas };
+  return {
+    achados,
+    regrasAvaliadas,
+    falhas,
+    tempoMs: Math.round(performance.now() - inicio),
+    truncadoPorTempo,
+  };
 }

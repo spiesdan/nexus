@@ -150,7 +150,17 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
 
     const acimaDoTeto = deteccao.achados.length > config.limiteOcorrencias;
     const achados = deteccao.achados.slice(0, config.limiteOcorrencias);
-    const truncado = coleta.truncado || acimaDoTeto || deteccao.falhas.length > 0;
+    const truncado =
+      coleta.truncado || acimaDoTeto || deteccao.falhas.length > 0 || deteccao.truncadoPorTempo;
+
+    // Medição observável sem coluna nova: o `detalhe` de `sentinel_runs` já é
+    // jsonb, e o log estruturado atende quem opera o cron.
+    logger.info("sentinel.detection", {
+      organizationId,
+      regrasAvaliadas: deteccao.regrasAvaliadas.length,
+      tempoMs: deteccao.tempoMs,
+      truncadoPorTempo: deteccao.truncadoPorTempo,
+    });
 
     let criadas = 0;
     let reafirmadas = 0;
@@ -212,7 +222,10 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
       });
     }
 
-    const status: StatusExecucao = erros > 0 || deteccao.falhas.length > 0 ? "parcial" : "sucesso";
+    const status: StatusExecucao =
+      erros > 0 || deteccao.falhas.length > 0 || deteccao.truncadoPorTempo
+        ? "parcial"
+        : "sucesso";
     const duracaoMs = Math.max(0, Date.now() - inicio);
 
     await admin
@@ -231,6 +244,9 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
           falhas: falhas.slice(0, 30),
           regras_desativadas: config.detectoresDesativados,
           limite: config.limiteOcorrencias,
+          deteccao_ms: deteccao.tempoMs,
+          regras_avaliadas: deteccao.regrasAvaliadas.length,
+          deteccao_truncada_por_tempo: deteccao.truncadoPorTempo,
         },
       })
       .eq("id", execucaoId)

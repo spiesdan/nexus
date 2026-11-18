@@ -87,7 +87,7 @@
       "col": 0,
       "type": "lib",
       "label": "lib/sentinel/motor.ts",
-      "sublabel": "regra que lança não derruba as outras; dedup por fingerprint; ordem determinística"
+      "sublabel": "regra que lança não derruba as outras; dedup por fingerprint; ordem determinística; orçamento de 8 s (estouro trunca e não encerra por ausência)"
     },
     {
       "id": "regras",
@@ -119,7 +119,7 @@
       "col": 3,
       "type": "lib",
       "label": "regras-operacao.ts",
-      "sublabel": "estoque (negativo e divergente), pedido, recebível, fila, webhook, Mercos, campanha, cliente e lead duplicados"
+      "sublabel": "estoque (negativo e divergente, inclusive razão vazio), pedido, recebível, fila, webhook, Mercos, campanha, cliente e lead duplicados"
     },
     {
       "id": "registrar",

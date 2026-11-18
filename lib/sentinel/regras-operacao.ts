@@ -594,13 +594,16 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
 
   for (const lead of s.leadsAbertos) {
     if (!lead.pipeline_id) continue;
-    if (lead.contact_id) {
-      adicionar(
-        `${lead.pipeline_id}|contato|${lead.contact_id}`,
-        { pipeline: lead.pipeline_id, identidade: "contato", valor: null, confianca: "alta" },
-        lead.id,
-      );
-    }
+    // Lead sem contato não tem identidade que o produto normalize. A coleta já
+    // filtra `contact_id is not null`; a guarda aqui impede que uma mudança na
+    // consulta reintroduza a comparação por engano.
+    if (!lead.contact_id) continue;
+
+    adicionar(
+      `${lead.pipeline_id}|contato|${lead.contact_id}`,
+      { pipeline: lead.pipeline_id, identidade: "contato", valor: null, confianca: "alta" },
+      lead.id,
+    );
     const telefone = lead.contatos?.phone_number?.replace(/\D/g, "") ?? "";
     if (telefone.length >= 8) {
       adicionar(
