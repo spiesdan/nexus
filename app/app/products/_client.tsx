@@ -26,6 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import { apiClient } from "@/lib/api/client";
 import type { CandidatoDeNcm } from "@/lib/catalogo/sugerir-ncm";
@@ -206,7 +207,6 @@ function doRascunho(
   };
 }
 
-
 /** "70,00 %" — ou "---", como o Mercos mostra quando não há valor. */
 function comoPorcentagem(n: number | null): string {
   if (n == null) return "---";
@@ -221,13 +221,7 @@ function comoPorcentagem(n: number | null): string {
  * reenviamos a lista completa. É a diferença entre "adicionar" e "substituir
  * tudo por um item".
  */
-function AdicionarATabela({
-  produto,
-  tabelas,
-}: {
-  produto: Produto;
-  tabelas: TabelaDePreco[];
-}) {
+function AdicionarATabela({ produto, tabelas }: { produto: Produto; tabelas: TabelaDePreco[] }) {
   const t = useT();
   const [aberto, setAberto] = React.useState(false);
   const [salvando, setSalvando] = React.useState<string | null>(null);
@@ -262,7 +256,10 @@ function AdicionarATabela({
 
   if (tabelas.length === 0) {
     return (
-      <span className="text-xs text-muted-foreground" title={t("Nenhuma tabela de preço cadastrada")}>
+      <span
+        className="text-xs text-muted-foreground"
+        title={t("Nenhuma tabela de preço cadastrada")}
+      >
         +
       </span>
     );
@@ -1112,9 +1109,7 @@ export function ProdutosClient({
             data-testid="sem-fotos-vazio"
           >
             <p className="font-medium">{t("Nenhum produto sem foto")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("Todo o catálogo tem imagem.")}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("Todo o catálogo tem imagem.")}</p>
           </div>
         ) : (
           <div
@@ -1128,6 +1123,12 @@ export function ProdutosClient({
       ) : (
         <div className="overflow-x-auto rounded-lg border" data-testid="lista-produtos">
           <Table>
+            {/* Ordem fixa do servidor (ativo desc, nome asc). Sem `aria-sort`
+                porque as colunas não ordenam ao clique — a legenda diz a ordem
+                que existe, e não promete uma interação que não há. */}
+            <TableCaption className="sr-only">
+              {t("Produtos, ativos primeiro e depois por nome.")}
+            </TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-10">
@@ -1152,7 +1153,11 @@ export function ProdutosClient({
               {filtrados.map((p) => {
                 const vitrine = precoDeVitrine(p, hoje);
                 return (
-                  <TableRow key={p.id} className="even:bg-muted/30" data-testid={`produto-${p.codigo}`}>
+                  <TableRow
+                    key={p.id}
+                    className="even:bg-muted/30"
+                    data-testid={`produto-${p.codigo}`}
+                  >
                     {/* O olho do Mercos: clicado, ativa/inativa o produto. */}
                     <TableCell className="align-middle">
                       <button
@@ -1186,7 +1191,7 @@ export function ProdutosClient({
                           onClick={() => abrirEdicao(p)}
                           data-testid={`editar-${p.codigo}`}
                           title={t("Abrir a ficha do produto")}
-                          className={`min-w-0 break-words text-left underline-offset-2 hover:underline disabled:no-underline ${
+                          className={`min-w-0 text-left break-words underline-offset-2 hover:underline disabled:no-underline ${
                             p.ativo ? "" : "text-muted-foreground line-through"
                           }`}
                         >
@@ -1214,11 +1219,13 @@ export function ProdutosClient({
                     <TableCell className="hidden whitespace-nowrap tabular-nums xl:table-cell">
                       {comoPorcentagem(p.ipi_pct)}
                     </TableCell>
-                    <TableCell className="hidden whitespace-nowrap xl:table-cell">{p.unidade ?? "---"}</TableCell>
+                    <TableCell className="hidden whitespace-nowrap xl:table-cell">
+                      {p.unidade ?? "---"}
+                    </TableCell>
                     <TableCell className="hidden whitespace-nowrap tabular-nums xl:table-cell">
                       {comoPorcentagem(p.comissao_pct)}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-right tabular-nums">
+                    <TableCell className="text-right whitespace-nowrap tabular-nums">
                       {vitrine.emPromocao ? (
                         <span className="mr-1 text-xs text-muted-foreground line-through">
                           {comoMoeda(p.preco_cents, p.moeda)}
