@@ -14,8 +14,8 @@ test.setTimeout(300_000);
  *
  * - **cliente**: contato criado pela API (a criação não é o que se testa) e
  *   ESCOLHIDO pelo autocomplete da tela (`#busca-cliente`);
- * - **produtos**: busca `#busca-produto` + clique no destaque (Enter faz o
- *   mesmo);
+ * - **produtos**: busca `#busca-produto` + clique na opção do `listbox`
+ *   (Enter faz o mesmo quando o resultado é inequívoco);
  * - **desconto**: `Desconto (%)` nos totais da seção Produtos — 3% fica DENTRO do teto
  *   da política (`desconto_max_vendedor_pct`, default 5%), então o pedido
  *   nasce `aprovado`;
@@ -31,8 +31,8 @@ test.setTimeout(300_000);
  *   barra do rodapé) → toast `Pedido criado: PED-…` + redirect para
  *   `/app/pedidos`, ficha aberta pelo card da lista.
  *
- * Guardas de ambiente: o autosave (`localStorage["pedido-rascunho"]`) é
- * limpo no início — um rascunho deixado por outra execução restauraria itens
+ * Guardas de ambiente: o autosave (`localStorage["pedido-rascunho:<org>:<user>"]`)
+ * é limpo no início — um rascunho deixado por outra execução restauraria itens
  * alheios no passo Cliente; produto nasce com `controla_estoque: false` porque
  * estoque não é o que esta jornada mede.
  */
@@ -41,7 +41,13 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   const cliente = `Cliente Jornada Venda ${carimbo}`;
   const codigo = `JV${carimbo}`;
 
-  await page.addInitScript(() => window.localStorage.removeItem("pedido-rascunho"));
+  // A chave do rascunho é escopada por organização+usuário (`chaveDoRascunho`);
+  // limpar só a chave legada não limpava nada.
+  await page.addInitScript(() => {
+    for (const k of Object.keys(window.localStorage)) {
+      if (k.startsWith("pedido-rascunho")) window.localStorage.removeItem(k);
+    }
+  });
   await loginComoAdmin(page, lerCreds());
 
   // Pré-condições pela API: produto e contato. A jornada sob teste começa na
@@ -75,7 +81,9 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   // 2. Seção Produtos — busca por código, destaque clicado, item na lista.
   // A página é única: a seção já está visível, não há "Continuar".
   await page.locator("#busca-produto").fill(codigo);
-  await page.getByRole("button", { name: new RegExp(codigo) }).click();
+  // A lista de resultados é um `listbox` com `option` (a busca é combobox):
+  // um `button` aqui significaria que a semântica de combobox se perdeu.
+  await page.getByRole("option", { name: new RegExp(codigo) }).click();
   // O stepper do item tem 3 elementos com o label "Quantidade" (o input e os
   // dois botões ±) — o que prova item adicionado é o input de quantidade.
   await expect(page.getByRole("spinbutton", { name: "Quantidade" })).toBeVisible();

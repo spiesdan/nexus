@@ -174,7 +174,7 @@ export default async function NovoPedidoPage({
         usarClienteDoLink: t("Usar o cliente do link"),
         continuarRascunho: t("Continuar o rascunho"),
         produtos: t("Produtos"),
-        buscarProduto: t("Buscar produto, código ou EAN… (/ foca)"),
+        buscarProduto: t("Buscar produto, código ou EAN"),
         subtotal: t("Subtotal"),
         desconto: t("Desconto"),
         frete: t("Frete"),
