@@ -30169,6 +30169,66 @@ grant execute on function public.fn_sentinel_reverter_liberacao_conversa(uuid, u
 comment on function public.fn_sentinel_reverter_liberacao_conversa(uuid, uuid, uuid) is
   'Reverte a liberação SOMENTE se ninguém assumiu (open, sem responsável); senão zero linhas. Só service_role.';
 
+
+-- ============================================================================
+-- 0329 — organização suspensa não alimenta o Sentinel (encerra com motivo).
+-- Ver supabase/migrations/20261123220000_0329_sentinel_org_suspensa.sql.
+-- ============================================================================
+
+create or replace function public.fn_sentinel_encerrar_org_suspensa(
+  p_organization_id uuid,
+  p_execucao_id uuid
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $fn$
+declare
+  v_total integer;
+begin
+  with alvo as (
+    select o.id, o.estado
+      from public.sentinel_occurrences o
+     where o.organization_id = p_organization_id
+       and o.estado in ('nova', 'investigando', 'acao_necessaria', 'aprovada', 'recorrente')
+       for update
+  ), fechadas as (
+    update public.sentinel_occurrences o
+       set estado = 'encerrada',
+           encerrada_em = now(),
+           motivo_encerramento = 'organizacao_suspensa',
+           updated_at = now()
+      from alvo a
+     where o.id = a.id
+    returning o.id
+  ), eventos as (
+    insert into public.sentinel_occurrence_events (
+      organization_id, occurrence_id, tipo, estado_anterior, estado_novo, origem, detalhe
+    )
+    select p_organization_id, a.id, 'auto_encerrada', a.estado, 'encerrada', 'sistema',
+           jsonb_build_object(
+             'execucao_id', p_execucao_id,
+             'motivo', 'organizacao_suspensa'
+           )
+      from alvo a
+      join fechadas f on f.id = a.id
+    returning 1
+  )
+  select count(*)::integer into v_total from fechadas;
+
+  return v_total;
+end;
+$fn$;
+
+revoke execute on function public.fn_sentinel_encerrar_org_suspensa(uuid, uuid)
+  from public, anon, authenticated;
+grant execute on function public.fn_sentinel_encerrar_org_suspensa(uuid, uuid)
+  to service_role;
+
+comment on function public.fn_sentinel_encerrar_org_suspensa(uuid, uuid) is
+  'Encerra ocorrências ABERTAS de organização suspensa com motivo organizacao_suspensa, preservando linha e histórico. Sem coleta e sem detecção.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
