@@ -336,11 +336,7 @@ export function ChatThread({ conversationId, onResponder }: Props) {
      * contêiner mais o `role="status"` dizem.
      */
     return (
-      <div
-        {...sinalDoCanal}
-        aria-busy="true"
-        className={`flex h-full flex-col ${WA.chatBg}`}
-      >
+      <div {...sinalDoCanal} aria-busy="true" className={`flex h-full flex-col ${WA.chatBg}`}>
         <p role="status" className="sr-only">
           {t("Carregando mensagens…")}
         </p>

@@ -40,7 +40,10 @@ async function entrar(page: Page): Promise<void> {
   for (let tentativa = 1; tentativa <= 4; tentativa++) {
     await page.locator("#email").fill(CREDS.users.manager.email, { timeout: 120_000 });
     await page.locator("#password").fill(CREDS.password, { timeout: 120_000 });
-    await page.getByRole("button", { name: /entrar/i }).first().click();
+    await page
+      .getByRole("button", { name: /entrar/i })
+      .first()
+      .click();
     try {
       await page.waitForURL(/\/app\//, { timeout: 40_000 });
       return;
@@ -63,18 +66,15 @@ interface Medida {
 }
 
 async function medir(page: Page, tela: string, tema: string): Promise<Medida> {
-  const overflow = await page.evaluate(
-    () =>
-      Math.max(
-        0,
-        document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      ),
+  const overflow = await page.evaluate(() =>
+    Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
   );
 
   const cabecalho = (await page.evaluate(`(() => {
-    var h = document.querySelector('h2');
+    var marca = document.querySelector('[data-testid="comando-da-conversa"]');
+    var pai = marca ? marca.closest('div.flex.flex-wrap') : null;
+    var h = pai ? pai.querySelector('h2') : null;
     if (!h) return null;
-    var pai = h.closest('div.flex.flex-wrap');
     var selo = pai ? pai.querySelector('span[class*="rounded-full"]') : null;
     function px(el) { return el ? getComputedStyle(el).fontSize + '/' + getComputedStyle(el).fontWeight : 'n/a'; }
     return {
@@ -88,8 +88,8 @@ async function medir(page: Page, tela: string, tema: string): Promise<Medida> {
   // `aria-label` das AÇÕES do cabeçalho — pedido explícito da tarefa. Botão sem
   // nome acessível é um alvo que o leitor de tela anuncia como "botão".
   const acoes = (await page.evaluate(`(() => {
-    var h = document.querySelector('h2');
-    var pai = h ? h.closest('div.flex.flex-wrap') : null;
+    var marca = document.querySelector('[data-testid="comando-da-conversa"]');
+    var pai = marca ? marca.closest('div.flex.flex-wrap') : null;
     if (!pai) return [];
     var barra = pai.children[1];
     if (!barra) return [];
@@ -110,8 +110,8 @@ async function medir(page: Page, tela: string, tema: string): Promise<Medida> {
     foco = await page.evaluate(() => {
       const el = document.activeElement as HTMLElement | null;
       if (!el || el.tagName !== "BUTTON") return null;
-      const h2 = document.querySelector("h2");
-      const cabecalho = h2 ? h2.closest("div.flex.flex-wrap") : null;
+      const marca = document.querySelector('[data-testid="comando-da-conversa"]');
+      const cabecalho = marca ? marca.closest("div.flex.flex-wrap") : null;
       if (!cabecalho || !cabecalho.contains(el)) return null;
       const s = getComputedStyle(el);
       return {
