@@ -8,7 +8,9 @@ import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";import {
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,6 +35,12 @@ import {
   tonalidadeStatusCompra,
 } from "@/lib/comercial/rotulo-status-compra";
 import { comoMoeda } from "@/lib/format/moeda";
+import { mensagemDeErro } from "@/lib/ui/erros";
+import {
+  linhasParaReceber,
+  problemaDaQuantidade,
+  restanteDoItem,
+} from "@/lib/compras/quantidade-digitada";
 import { Package } from "@/lib/ui/icons";
 
 type Item = {
@@ -59,7 +67,7 @@ type Pedido = {
 
 type Fornecedor = { id: string; nome: string };
 
-type Acao = "enviar" | "cancelar" | "receber";
+type Acao = "enviar" | "cancelar";
 
 const VARIANTE: Record<string, React.ComponentProps<typeof Badge>["variant"]> = {
   cinza: "neutral",
@@ -71,18 +79,14 @@ const VARIANTE: Record<string, React.ComponentProps<typeof Badge>["variant"]> = 
 const CONFIRMA: Record<Acao, { titulo: string; descricao: string; botao: string }> = {
   enviar: {
     titulo: "Enviar este pedido?",
-    descricao: "O pedido sai de rascunho e passa a valer para o fornecedor. Depois disso ele só pode ser cancelado ou recebido.",
+    descricao:
+      "O pedido sai de rascunho e passa a valer para o fornecedor. Depois disso ele só pode ser cancelado ou recebido.",
     botao: "Enviar pedido",
   },
   cancelar: {
     titulo: "Cancelar este pedido?",
     descricao: "O pedido é cancelado. Itens já recebidos (se houver) não são desfeitos por aqui.",
     botao: "Cancelar pedido",
-  },
-  receber: {
-    titulo: "Receber tudo no estoque?",
-    descricao: "Cada item pendente vira uma entrada de estoque (origem compra). O pedido fica recebido quando tudo entrar.",
-    botao: "Receber tudo",
   },
 };
 
@@ -122,21 +126,78 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
       .catch(() => undefined);
   }, [carregar]);
 
+  /**
+   * RECEBER ITEM A ITEM — o operador digita o que chegou.
+   *
+   * A rota já aceitava `{ itens: [{ item_id, quantidade }] }` desde o começo
+   * (default = o restante), mas a tela só sabia "receber tudo": quem recebia 3
+   * de 10 não tinha onde escrever 3. Aqui a quantidade vira campo, com o
+   * restante como padrão — e o que está digitado NÃO se perde quando o envio
+   * falha (o erro fica acima do rodapé, com o mesmo texto).
+   */
+  const [recebendo, setRecebendo] = React.useState(false);
+  const [quantidades, setQuantidades] = React.useState<Record<string, string>>({});
+  const [erroRecebimento, setErroRecebimento] = React.useState<string | null>(null);
+
+  const restanteDe = (i: Item) => restanteDoItem({ ...i, recebidoQtd: i.recebido_qtd });
+  const problemaDoCampo = (i: Item) => problemaDaQuantidade(quantidades[i.id], restanteDe(i));
+  const linhas = () =>
+    pedido
+      ? linhasParaReceber(
+          pedido.itens.map((i) => ({
+            id: i.id,
+            quantidade: i.quantidade,
+            recebidoQtd: i.recebido_qtd,
+          })),
+          quantidades,
+        )
+      : [];
+  const totalADigitar = linhas().reduce((s, l) => s + l.quantidade, 0);
+  const temProblema = pedido ? pedido.itens.some((i) => problemaDoCampo(i) !== null) : false;
+
+  function abrirRecebimento() {
+    if (!pedido) return;
+    setQuantidades(Object.fromEntries(pedido.itens.map((i) => [i.id, String(restanteDe(i))])));
+    setErroRecebimento(null);
+    setRecebendo(true);
+  }
+
+  async function receberDigitado() {
+    if (temProblema) return;
+    const itens = linhas();
+    if (itens.length === 0) {
+      setErroRecebimento("Digite ao menos uma quantidade maior que zero.");
+      return;
+    }
+    setSubmetendo(true);
+    setErroRecebimento(null);
+    try {
+      await apiClient.post<{ data: { itens_recebidos: number; completo: boolean } }>(
+        `/api/v1/purchase-orders/${encodeURIComponent(id)}/receber`,
+        { itens },
+      );
+      nexusToast.success("Recebimento registrado no estoque.");
+      setRecebendo(false);
+      setQuantidades({});
+      await carregar();
+    } catch (e) {
+      // Sem toast: o erro tem lugar na tela, e o que foi digitado fica.
+      setErroRecebimento(mensagemDeErro(e, "Não foi possível registrar o recebimento."));
+    } finally {
+      setSubmetendo(false);
+    }
+  }
+
   async function executar(a: Acao) {
     setSubmetendo(true);
     try {
-      if (a === "receber") {
-        await apiClient.post<{ data: { itens_recebidos: number; completo: boolean } }>(
-          `/api/v1/purchase-orders/${encodeURIComponent(id)}/receber`,
-          {},
-        );
-        nexusToast.success("Recebimento registrado no estoque.");
-      } else {
-        await apiClient.patch(`/api/v1/purchase-orders/${encodeURIComponent(id)}`, {
-          status: a === "enviar" ? "enviado" : "cancelado",
-        });
-        nexusToast.success(a === "enviar" ? "Pedido enviado." : "Pedido cancelado.");
-      }
+      // Receber saiu daqui: virou campo por item (`receberDigitado`). Um só
+      // caminho para a mesma ação — antes havia dois, e o do diálogo recebia
+      // tudo sem o operador ver quanto.
+      await apiClient.patch(`/api/v1/purchase-orders/${encodeURIComponent(id)}`, {
+        status: a === "enviar" ? "enviado" : "cancelado",
+      });
+      nexusToast.success(a === "enviar" ? "Pedido enviado." : "Pedido cancelado.");
       setAcao(null);
       await carregar();
     } catch (e) {
@@ -209,8 +270,8 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
               {pedido.status === "rascunho" ? (
                 <Button onClick={() => setAcao("enviar")}>Enviar ao fornecedor</Button>
               ) : null}
-              {pedido.status === "enviado" ? (
-                <Button onClick={() => setAcao("receber")}>
+              {pedido.status === "enviado" && !recebendo ? (
+                <Button onClick={abrirRecebimento}>
                   <Package className="mr-2 h-4 w-4" /> Receber no estoque
                 </Button>
               ) : null}
@@ -223,7 +284,13 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
       />
 
       <div className="flex flex-wrap items-center gap-3">
-        <Badge variant={VARIANTE[ehStatusCompra(pedido.status) ? tonalidadeStatusCompra(pedido.status) : "cinza"]}>
+        <Badge
+          variant={
+            VARIANTE[
+              ehStatusCompra(pedido.status) ? tonalidadeStatusCompra(pedido.status) : "cinza"
+            ]
+          }
+        >
           {rotuloStatusCompra(pedido.status)}
         </Badge>
         <span className="text-sm text-text-muted">
@@ -261,23 +328,123 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
                 <TableCell>{i.produto_nome}</TableCell>
                 <TableCell className="text-right">{i.quantidade}</TableCell>
                 <TableCell className="text-right">
-                  <span className={i.recebido_qtd >= i.quantidade ? "text-success-fg" : "text-text-muted"}>
+                  <span
+                    className={
+                      i.recebido_qtd >= i.quantidade ? "text-success-fg" : "text-text-muted"
+                    }
+                  >
                     {i.recebido_qtd}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">{comoMoeda(i.custo_unit_cents, "BRL")}</TableCell>
-                <TableCell className="text-right font-medium">{comoMoeda(i.subtotal_cents, "BRL")}</TableCell>
+                <TableCell className="text-right font-medium">
+                  {comoMoeda(i.subtotal_cents, "BRL")}
+                </TableCell>
               </TableRow>
             ))}
             <TableRow>
               <TableCell colSpan={5} className="text-right text-sm text-text-muted">
                 Total
               </TableCell>
-              <TableCell className="text-right font-semibold">{comoMoeda(totalCents, "BRL")}</TableCell>
+              <TableCell className="text-right font-semibold">
+                {comoMoeda(totalCents, "BRL")}
+              </TableCell>
             </TableRow>
           </TableBody>
         </Table>
       </div>
+
+      {recebendo ? (
+        <section
+          aria-label="Receber no estoque"
+          className="space-y-3 rounded-2xl border border-border bg-surface p-4"
+        >
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 className="text-base font-medium text-text">Receber no estoque</h2>
+              <p className="text-sm text-text-muted">
+                Digite quanto chegou de cada item. O que ficar em zero não entra.
+              </p>
+            </div>
+            <p role="status" aria-live="polite" className="text-sm text-text-muted">
+              <span className="font-medium text-text tabular-nums">{totalADigitar}</span>{" "}
+              {totalADigitar === 1 ? "unidade" : "unidades"} para receber
+            </p>
+          </div>
+
+          <ul className="divide-y divide-border rounded-xl border border-border">
+            {pedido.itens
+              .filter((i) => restanteDe(i) > 0)
+              .map((i) => {
+                const problema = problemaDoCampo(i);
+                const idCampo = `receber-${i.id}`;
+                return (
+                  <li key={i.id} className="flex flex-wrap items-center gap-3 px-3 py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <label htmlFor={idCampo} className="block truncate text-sm font-medium">
+                        {i.produto_nome}
+                      </label>
+                      <p className="text-xs text-text-muted">
+                        {i.produto_codigo || "—"} · restante {restanteDe(i)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id={idCampo}
+                        type="number"
+                        inputMode="numeric"
+                        min={0}
+                        max={restanteDe(i)}
+                        step={1}
+                        value={quantidades[i.id] ?? String(restanteDe(i))}
+                        onChange={(e) => setQuantidades((q) => ({ ...q, [i.id]: e.target.value }))}
+                        aria-invalid={problema ? true : undefined}
+                        aria-describedby={problema ? `${idCampo}-erro` : undefined}
+                        className="w-24 text-right tabular-nums"
+                      />
+                      {problema ? (
+                        <p id={`${idCampo}-erro`} role="alert" className="text-xs text-error-fg">
+                          {problema}
+                        </p>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+          </ul>
+
+          {erroRecebimento ? (
+            <p
+              role="alert"
+              data-testid="erro-recebimento"
+              className="rounded-lg border border-error/40 bg-error-bg px-3 py-2 text-sm text-error-fg"
+            >
+              {erroRecebimento}
+            </p>
+          ) : null}
+
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRecebendo(false);
+                setQuantidades({});
+                setErroRecebimento(null);
+              }}
+              disabled={submetendo}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => void receberDigitado()}
+              disabled={submetendo || temProblema}
+              data-testid="confirmar-recebimento"
+            >
+              {submetendo ? "Registrando…" : "Confirmar recebimento"}
+            </Button>
+          </div>
+        </section>
+      ) : null}
 
       <Dialog open={acao !== null} onOpenChange={(v) => !v && setAcao(null)}>
         <DialogContent>
