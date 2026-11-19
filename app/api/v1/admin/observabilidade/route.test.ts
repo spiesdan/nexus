@@ -1,0 +1,108 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/auth/requirePlatformAdmin", () => ({ requirePlatformAdmin: vi.fn() }));
+vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
+
+import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+import { GET } from "./route";
+
+function builder(result: unknown) {
+  const q: Record<string, unknown> = {};
+  for (const metodo of ["select", "is", "eq", "limit", "order"]) q[metodo] = () => q;
+  q.maybeSingle = async () => result;
+  q.then = (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
+    Promise.resolve(result).then(ok, falha);
+  return q;
+}
+
+const from = vi.fn();
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.mocked(requirePlatformAdmin).mockResolvedValue({} as never);
+});
+
+function montar(
+  orgs: Array<{ id: string }>,
+  settings: Array<Record<string, unknown>>,
+) {
+  from.mockImplementation((tabela: string) =>
+    builder(tabela === "organizations" ? { data: orgs, error: null } : { data: settings, error: null }),
+  );
+  vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+}
+
+async function corpo(res: Response) {
+  return (await res.json()) as {
+    data: {
+      slos: Array<{
+        id: string;
+        valor: number | null;
+        estado: string;
+        detalhe?: Record<string, unknown>;
+      }>;
+    };
+    error?: { code: string };
+  };
+}
+
+describe("GET /api/v1/admin/observabilidade", () => {
+  it("sem platform admin é 403 e não toca o banco", async () => {
+    vi.mocked(requirePlatformAdmin).mockRejectedValue(new Error("redirect"));
+    const res = await GET();
+    expect(res.status).toBe(403);
+    expect(from).not.toHaveBeenCalled();
+  });
+
+  it("sem série histórica, disponibilidade e latência dizem isso — não zero", async () => {
+    montar([], []);
+    const res = await GET();
+    expect(res.status).toBe(200);
+
+    const { slos } = (await corpo(res)).data;
+    expect(slos).toHaveLength(3);
+    for (const id of ["disponibilidade", "latencia"]) {
+      const slo = slos.find((s) => s.id === id);
+      expect(slo).toMatchObject({ valor: null, estado: "sem_historico" });
+    }
+  });
+
+  it("frescor do Sentinel mede orgs ativas e ignora desativada/suspensa", async () => {
+    montar(
+      [{ id: "org-fresca" }, { id: "org-atrasada" }],
+      [
+        {
+          organization_id: "org-fresca",
+          ativo: true,
+          intervalo_minutos: 360,
+          ultima_execucao_em: new Date().toISOString(),
+        },
+        {
+          organization_id: "org-atrasada",
+          ativo: true,
+          intervalo_minutos: 360,
+          ultima_execucao_em: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      ],
+    );
+
+    const res = await GET();
+    const slo = (await corpo(res)).data.slos.find((s) => s.id === "frescor_sentinel");
+    expect(slo).toMatchObject({
+      valor: 50,
+      estado: "estourado",
+      detalhe: { orgs_em_dia: 1, orgs_ativas: 2 },
+    });
+  });
+
+  it("erro de leitura vira 500, não painel vazio", async () => {
+    from.mockImplementation((tabela: string) =>
+      builder(tabela === "organizations" ? { data: null, error: { message: "db" } } : { data: [], error: null }),
+    );
+    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+    const res = await GET();
+    expect(res.status).toBe(500);
+  });
+});

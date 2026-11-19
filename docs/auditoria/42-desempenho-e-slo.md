@@ -155,6 +155,29 @@ dito.
 
 ---
 
+## 3.1 O SLO virou tela (19/11/2026)
+
+O SLO deixou de morar só neste documento: `/admin/observabilidade` (plataforma,
+`platform_admin`, leitura apenas) mostra os três cartões — disponibilidade,
+latência e frescor do Sentinel — com fórmula, janela, alvo, valor atual e
+estado (`ok` / `em risco` / `estourado` / `sem histórico`).
+
+**Fonte dos números, sem invenção:**
+
+- **Frescor do Sentinel:** calculado agora de `organizations` (ativas, não
+  suspensas) + `sentinel_settings.ultima_execucao_em` e `intervalo_minutos`.
+  É o único dos três com série consultável hoje.
+- **Disponibilidade e latência:** a tela diz **“sem histórico ainda”**. A fonte
+  é o log estruturado `api.5xx` (criado nesta linha) e a duração das rotas, mas
+  nenhum dos dois é persistido em tabela consultável; mostrar `0%` ou `0 ms`
+  seria mentira, não saúde. O que falta é a série: persistir os eventos/durações
+  e só então ligar o valor. O doc 42 §2 tem a medição local, que não é série de
+  produção.
+
+O cartão de disponibilidade usa o alvo de 99,5% e o de latência 800 ms p95 —
+os mesmos propostos acima. O estado “em risco” é a faixa de 2 pontos abaixo do
+alvo; abaixo dela, “estourado”. Nada aqui é SLA de cliente.
+
 ## 4. Erros e recuperação (o que o produto faz hoje)
 
 ### 5xx
