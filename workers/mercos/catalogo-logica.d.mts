@@ -76,6 +76,8 @@ export interface ProdutoExistente {
   unidade?: string | null;
   imagem_url?: string | null;
   ativo?: boolean | null;
+  /** Origem já gravada no banco; o upsert preserva (não sobrescreve com 'mercos'). */
+  origem?: string | null;
 }
 
 /** O mínimo que o upsert precisa — `foto`/`bruto` são do coletor, não da decisão. */

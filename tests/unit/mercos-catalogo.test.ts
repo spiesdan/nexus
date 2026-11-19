@@ -440,7 +440,20 @@ describe("origem em toda linha do upsert", () => {
     const { montarLinhasDeUpsert } = await import("../../workers/mercos/catalogo-logica.mjs");
     const criados = [{ codigo: "1", nome: "NOVO", preco_cents: 100, unidade: "UN", ativo_erp: true }];
     const atualizados = [{ codigo: "2", nome: "EXISTENTE", preco_cents: 200, unidade: "UN", ativo_erp: true }];
-    const existentes = new Map([["2", { codigo: "2", ativo: true, origem: "odivix", unidade: "CX", imagem_url: null }]]);
+    const existentes = new Map([
+      [
+        "2",
+        {
+          id: "produto-2",
+          codigo: "2",
+          nome: "EXISTENTE",
+          ativo: true,
+          origem: "odivix",
+          unidade: "CX",
+          imagem_url: null,
+        },
+      ],
+    ]);
 
     const linhas = montarLinhasDeUpsert("org", criados, atualizados, existentes);
 
@@ -449,7 +462,7 @@ describe("origem em toda linha do upsert", () => {
       expect(linha.origem, `linha ${linha.codigo} sem origem`).toBeTruthy();
     }
     // Atualização preserva a origem do banco; criação nasce como mercos.
-    expect(linhas[0].origem).toBe("mercos");
-    expect(linhas[1].origem).toBe("odivix");
+    expect(linhas[0]!.origem).toBe("mercos");
+    expect(linhas[1]!.origem).toBe("odivix");
   });
 });
