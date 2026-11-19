@@ -190,3 +190,26 @@ comando; **uma sessão por worker** (checar `opencode session list` antes de abr
 - Resultado da matriz entra em `43-criador-de-pedidos.md` §9; itens E.2/E.4/E.5/
   E.8/E.9/E.10 passam de “codificado” para “provado” ou ficam declarados com o
   motivo medido.
+
+## Regra permanente — uma fatia, um PR (19/11/2026)
+
+O F abriu **11 PRs em 30 minutos** (#625–#635) para a mesma frente, quase todos
+com `verify` vermelho por empilhamento. Efeitos medidos: fila de CI (já gargalo)
+queimada, conflito multiplicado e o corte da release pegaria metade.
+
+**Regra, sem exceção:**
+
+1. **Uma fatia = um PR.** A fatia é o que cabe numa sessão de revisão.
+2. Quem precisar de um **terceiro** PR para a mesma frente **para e consolida**:
+   escolhe a branch mais completa, rebase na `main`, traz o resto por
+   cherry-pick, roda os gates e deixa **um** PR.
+3. **PR empilhado** só com **dependência explícita** no corpo (`depende de #X`),
+   e o autor é responsável por rebasear quando o de baixo entrar.
+4. PRs substituídos são **fechados com motivo** (`consolidado em #X`) — não
+   abandonados abertos.
+5. **Release não abre com 10+ PRs abertos**: primeiro consolida, depois corta.
+
+**Estado da consolidação do F:** 11 abertos (#625–#635) + #624; instruído a
+consolidar em um e fechar os demais com motivo.
+
+**#623** (G, `/admin/observabilidade`): PR legítimo, 5 checks rodando — segue.
