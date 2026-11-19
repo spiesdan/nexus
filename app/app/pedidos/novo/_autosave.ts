@@ -13,6 +13,25 @@ export interface RascunhoSalvo {
   dados: Record<string, unknown>;
 }
 
+/**
+ * O rascunho salvo é de OUTRO cliente que o link da ficha mandou?
+ *
+ * O link `/app/pedidos/novo?contato=<id>` chega com um cliente escolhido. Se o
+ * localStorage tem uma venda em andamento de outro cliente (ou avulsa), aplicar
+ * uma das duas em silêncio é errado: restaurar troca o cliente que a pessoa
+ * acabou de escolher; descartar perde a venda. Quem decide é a tela.
+ *
+ * Rascunho sem `contatoId` (versão antiga ou cliente avulso) também conflita:
+ * ele tem dono desconhecido, e o link tem um dono explícito.
+ */
+export function rascunhoDeOutroCliente(
+  rascunho: { contatoId?: string | null } | null | undefined,
+  contatoDoLink: string | null | undefined,
+): boolean {
+  if (!contatoDoLink || !rascunho) return false;
+  return (rascunho.contatoId ?? null) !== contatoDoLink;
+}
+
 export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, ativo: boolean) {
   const [salvoEm, setSalvoEm] = React.useState<number | null>(null);
   const [restaurou, setRestaurou] = React.useState(false);

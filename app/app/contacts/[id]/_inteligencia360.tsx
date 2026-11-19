@@ -4,6 +4,7 @@ import { ROTULO_RECOMPRA } from "@/lib/comercial/radar-compras";
 import { recomendar } from "@/lib/ai/sales-brain/recommend";
 import { comoMoeda } from "@/lib/format/moeda";
 import { useT } from "@/hooks/i18n/useT";
+import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
 import { NexusAiBriefing, type NexusInsight } from "@/components/nexus-ui/ai/NexusAi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useResumo360 } from "./_resumo360";
@@ -36,7 +37,7 @@ export function InteligenciaDoContato({ contactId }: { contactId: string }) {
     if (rec) {
       const destino =
         rec.proxima_acao === "criar_pedido"
-          ? "/app/pedidos/novo"
+          ? linkDoNovoPedido(contactId)
           : rec.proxima_acao === "ver_cliente"
             ? null
             : "/app/inbox";
@@ -79,7 +80,7 @@ export function InteligenciaDoContato({ contactId }: { contactId: string }) {
         text: `${t("Passou do intervalo mediano de compra")} (${h.intervalo_mediano_dias} ${t("dias")}) — ${t("boa hora para sugerir recompra")}.`,
         actionLabel: t("Criar pedido"),
         onAction: () => {
-          window.location.href = "/app/pedidos/novo";
+          window.location.href = linkDoNovoPedido(contactId);
         },
       });
     }

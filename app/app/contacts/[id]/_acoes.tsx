@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { apiClient } from "@/lib/api/client";
+import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
 import { useT } from "@/hooks/i18n/useT";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 
@@ -53,7 +54,7 @@ export function ProximasAcoes({
       <h2 className="text-sm font-semibold text-text">{t("Próximas ações")}</h2>
       <div className="grid gap-2">
         <Button asChild variant="primary" size="sm">
-          <Link href="/app/pedidos/novo">{t("Criar pedido")}</Link>
+          <Link href={linkDoNovoPedido(contactId)}>{t("Criar pedido")}</Link>
         </Button>
         {conversaId ? (
           <Button asChild variant="outline" size="sm">
