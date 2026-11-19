@@ -220,8 +220,8 @@ A execução do corte e do deploy é ato humano.
 |---|---|
 | Base | `nexus/main` no dia do corte (`git log --oneline -1`) |
 | Última tag | **`v1.58.0`** (`4c7cd633`) |
-| Entram (mergeados) | **#581** pendências 5.4/5.6 · **#583** axe 14 rotas + ordem anunciada · **#584** devolução não é duplicidade no Sentinel · **#585** coletor do Mercos com rota real e fail-loud · **#586** regressão local (smoke 32/32, critical 75/75) + spec no CI |
-| Entram se fecharem antes | filtro de cidade em Clientes (F) · **#582** claim de conversa parada (G) |
+| Entram (mergeados) | **#581** pendências 5.4/5.6 · **#583** axe 14 rotas + ordem anunciada · **#584** devolução não é duplicidade no Sentinel · **#585** coletor do Mercos com rota real e fail-loud · **#586** regressão local (smoke 32/32, critical 75/75) + spec no CI · **#587** filtro de cidade via IBGE · **#590** liberar claim preserva histórico · **#591** retenção/LGPD do Sentinel · **#580** quadro do DoD |
+| Entram se fecharem antes | **#592** modo `--todos` do catálogo (D) · **#589** matriz das specs fora do CI (F) |
 | Fragmentos na `main` | 4 (`axe-telas-e-ordem-das-listas`, `mercos-catalogo-rota-e-falha`, `nota-duplicada-ignora-devolucao`, `pendencias-5-4-e-5-6`) |
 | Fragmentos que faltarão | um para a cidade (F traz no PR) e um para o #582, se ele entrar |
 | Número | **derivado** por `pnpm release:conferir` — não digitar |
