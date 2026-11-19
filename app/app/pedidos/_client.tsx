@@ -1287,8 +1287,18 @@ export function PedidosClient({
                             {/* O dia já é o título do grupo (HOJE, ONTEM…):
                                 repetir a data em cada linha é ruído. Fica o
                                 emissor, que o grupo não diz. */}
+                            {/* O dia já é o título do grupo (HOJE, ONTEM…),
+                                então a data sai da linha — mas QUEM EMITIU fica:
+                                é por ele que o operador sabe de quem é o pedido
+                                (`tests/unit/pedidos-emissao`). O separador vem
+                                junto: sem ele o cartão lê "Daniel" solto, ao
+                                lado do total, e some o vínculo com a linha. */}
                             <p className="max-w-44 truncate text-xs text-text-subtle">
-                              {emissor || <span className="tabular-nums">{diaCurto}</span>}
+                              {emissor ? (
+                                <span>· {emissor}</span>
+                              ) : (
+                                <span className="tabular-nums">{diaCurto}</span>
+                              )}
                             </p>
                           </div>
                         </div>
