@@ -430,7 +430,11 @@ O orçamento de 8 s **não** era o gargalo: a detecção levava 65 ms. O corte e
 escuro não era opção; os valores novos foram medidos:
 
 - `TETO_PEDIDOS` 500 → **2.000**; `TETO_ESTOQUE_RAZAO` 500 → **2.000**;
-  `TETO_PRODUTOS` 200 → **2.000**; `TETO_CONTATOS_ENDERECO` 1.000 → **15.000**.
+  `TETO_PRODUTOS` 200 → **1.000**; `TETO_CONTATOS_ENDERECO` 1.000 → **15.000**.
+  `TETO_PRODUTOS` **não** foi o gargalo medido (a coleta de produtos só lê
+  `controla_estoque = true and quantidade < 0`; os 1,2k produtos da fixture não
+  entram nessa consulta) — 1.000 é o valor que o código tem, não um número
+  apresentado como medido.
 - Com os tetos novos, o mesmo volume: coleta **4,2 s**, detecção **262 ms**,
   `truncados = []` — total abaixo dos 8 s, sem aumento de orçamento.
 - Regras mais lentas (ms): `operacao.lead_duplicado` 25,1;
@@ -530,7 +534,7 @@ fiscal/financeira real.
 
 - **Esta fatia** (`sentinel/encerrar-por-regra`): encerramento por regra
   avaliada; `regrasNaoAvaliadas`/`temposPorRegra` no detalhe; tetos de coleta
-  medidos (pedidos 2.000, estoque 2.000, produtos 2.000, contatos 15.000) para
+  medidos (pedidos 2.000, estoque 2.000, produtos 1.000, contatos 15.000) para
   o volume real não truncar. Sem migration.
 - **Próxima**: medir `contatos_endereco`/`leads` em produção e, se a coleta
   voltar a truncar, decidir entre teto maior ou agregação SQL — com número, não
