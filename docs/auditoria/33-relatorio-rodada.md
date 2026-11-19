@@ -219,3 +219,15 @@ dump pré-deploy cobre o resto.
 próprio: **46 códigos / 422 itens** dependem do **#588** (importador grava
 descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambíguos**
 (decisão humana produto a produto).
+
+### Atualização 19/11 — deploy 1.60.0 e fim do `[!]` do catálogo
+
+| Item | Estado | Evidência |
+|---|---|---|
+| Deploy **1.60.0** | `[x]` | `update.sh --to v1.60.0`; 7 containers; `/health` `version 1.60.0`; checks supabase/redis/rate_limit/waha; `/login` 200 |
+| `origem` no **artefato oficial** (sem cópia manual) | `[x]` | imagem 1.60.0: coleta 847/57 páginas; dry-run `criados 0 · atualizados 622 · divergentes 34 · sem código 210`, sem erro |
+| Importação depende de cópia manual | `[x]` **fechado** | idem |
+| `[!]` do catálogo | `[x]` **fechado** | item 6/`40` |
+| **#640** (inbox thread, D) | `[~]` | aberto; merge quando o CI fechar (congelamento acabou) |
+| Matriz E do F na 1.60.0 | `[~]` | reexecutar `criador-de-pedidos-matriz.spec.ts` no build oficial e registrar §9 |
+| Sentinel: encerrar devolução na próxima varredura | `[~]` | confirmar `nao_detectada_na_execucao` na varredura de 6h; se não, é bug |
