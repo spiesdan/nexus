@@ -61,7 +61,7 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | 2.21 | Numeração do pedido | **EXISTE** | `fn_proximo_numero_pedido` (0209), por org |
 | 2.22 | Idempotência / clique duplo | **CORRIGIDO nesta rodada** | `chave_sincronizacao` por editor, persistida no rascunho; guarda síncrona em `comEnvio`; o atalho passa pela mesma porta |
 | 2.23 | Retry depois de timeout | **EXISTE com a chave** | `apiClient` **não repete POST** (`lib/api/client.ts:191-205`); o retry manual reusa a mesma chave e o servidor devolve `ja_existia` |
-| 2.24 | Autosave / restauração | **EXISTE com limite** | `_autosave.ts` (2 s) e restauração na montagem; só restaura se houver **itens** (cliente sozinho não persiste) |
+| 2.24 | Autosave / restauração | **CORRIGIDO nesta rodada** | `_autosave.ts` (2 s) e `aplicarRascunho` devolve **todos** os campos editáveis: desconto R$ e %, frete, tabela, endereço, transportadora, rastreio, contato no cliente, observações e obs. interna. Prova: teste “autosave restaura TODOS os campos”. Ainda só restaura se houver **itens** (cliente sozinho não persiste) |
 | 2.25 | Rascunho de outro cliente × link | **CORRIGIDO nesta rodada** | diálogo “usar o cliente do link × continuar o rascunho”; autosave desligado até a decisão |
 | 2.26 | Proteção de navegação | **FALTA** | não há `beforeunload`/bloqueio de rota; a mitigação é o autosave |
 | 2.27 | Revisão antes de finalizar | **EXISTE (leitura)** | `previaAberta` (`_editor.tsx:1132`); a prévia fecha e o estado permanece |
@@ -96,7 +96,15 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
    invisível.
    *Prova:* `tests/unit/criador-pedido-busca-produto.test.tsx` (1 caso: acha o
    produto remoto e não mostra o inativo).
-5. **Retry não duplica** — o editor passou a enviar `chave_sincronizacao` (UUID
+5. **Desconto (e mais cinco campos) sumiam ao voltar** — o autosave gravava
+   `descontoTexto`, `descontoPctTexto`, `freteTexto`, `tabelaId`, `endereco` e
+   `obsInterna`, mas a restauração não os devolvia (achado do estudo do D). A
+   varredura campo a campo fechou a classe; o percentual normaliza vírgula para
+   ponto porque o input é `type=number`. UI efêmera (`previaAberta`, `iaAberta`,
+   `enviando`) e dados buscados (`últimos preços`, histórico) **não** entram de
+   propósito; não há campo sensível no editor.
+   *Prova:* “autosave restaura TODOS os campos editáveis” (11º caso do arquivo).
+6. **Retry não duplica** — o editor passou a enviar `chave_sincronizacao` (UUID
    por editor, **persistido no rascunho**): timeout + retry (ou reload + retry)
    devolve o pedido existente (`ja_existia`) em vez de criar outro.
    *Prova:* “Cmd/Ctrl+Enter duas vezes” (1 POST) e “depois de um erro, o retry

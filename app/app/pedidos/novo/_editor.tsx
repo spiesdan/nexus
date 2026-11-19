@@ -67,9 +67,15 @@ interface RascunhoDoPedido {
   formaPagamento?: FormaDePagamento | "";
   exigeNf?: boolean;
   observacoes: string;
+  obsInterna?: string;
+  endereco?: string;
   transportadora?: string;
   rastreamento?: string;
   contatoNoCliente?: string;
+  tabelaId?: string;
+  descontoTexto?: string;
+  descontoPctTexto?: string;
+  freteTexto?: string;
 }
 
 interface TextosBase {
@@ -419,9 +425,22 @@ export function OrderEditor({
     setFormaPagamento(s.formaPagamento ?? "");
     setExigeNf(s.exigeNf ?? false);
     setObservacoes(s.observacoes ?? "");
+    // TODO campo editável que entra no autosave volta aqui. O desconto era o
+    // caso medido pelo design (salvava e não voltava); a varredura achou mais
+    // cinco com a mesma falha: obsInterna, endereco, tabelaId, descontoTexto,
+    // descontoPctTexto e freteTexto.
+    setObsInterna(s.obsInterna ?? "");
+    setEndereco(s.endereco ?? "");
     setTransportadora(s.transportadora ?? "");
     setRastreamento(s.rastreamento ?? "");
     setContatoNoCliente(s.contatoNoCliente ?? "");
+    setTabelaId(s.tabelaId ?? "");
+    setDescontoTexto(s.descontoTexto ?? "");
+    // Input `type=number` só aceita ponto. Um rascunho antigo/colado com vírgula
+    // seria rejeitado pelo browser e o campo voltaria vazio — normalizar aqui é
+    // o que faz o desconto percentual voltar de fato.
+    setDescontoPctTexto((s.descontoPctTexto ?? "").replace(",", "."));
+    setFreteTexto(s.freteTexto ?? "");
     nexusToast.info(textos.rascunhoRestaurado);
   }
 

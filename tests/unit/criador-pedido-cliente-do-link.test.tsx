@@ -236,6 +236,79 @@ describe("o botão da ficha leva o cliente na URL", () => {
   });
 });
 
+describe("autosave restaura TODOS os campos editáveis", () => {
+  it("desconto (% e R$), frete, tabela, detalhes e observações voltam iguais", async () => {
+    const get = vi.mocked(apiClient.get);
+    get.mockImplementation((url: string) => {
+      if (url.startsWith("/api/v1/price-tables/")) {
+        return Promise.resolve({ itens: [] }) as never;
+      }
+      return Promise.resolve({ data: [] }) as never;
+    });
+    window.localStorage.setItem(
+      "pedido-rascunho",
+      JSON.stringify({
+        salvoEm: Date.now(),
+        dados: {
+          chavePedido: "chave-fixa",
+          contatoId: BILL.id,
+          clienteNome: "Bill Higiene",
+          linhas: [LINHA],
+          condicao: "30 dias",
+          formaPagamento: "agendado_30",
+          exigeNf: true,
+          observacoes: "Obs do cliente",
+          obsInterna: "Só equipe",
+          endereco: "Rua A, 10",
+          transportadora: "Transportes X",
+          rastreamento: "BR123",
+          contatoNoCliente: "João",
+          tabelaId: "tab-1",
+          descontoTexto: "15,00",
+          descontoPctTexto: "3,5",
+          freteTexto: "25,00",
+        },
+      }),
+    );
+
+    render(
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+      >
+        <OrderEditor
+          produtos={[] as Produto[]}
+          contatos={[BILL, OUTRO]}
+          contatoInicial={null}
+          tabelas={[{ id: "tab-1", nome: "Tabela Ouro", desconto_pct: 0 }]}
+          verMargem={false}
+          comissaoPct={null}
+          nomeOrganizacao="Org de teste"
+          nomeVendedor="Vendedor"
+          textos={TEXTO}
+        />
+      </QueryClientProvider>,
+    );
+
+    const valor = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
+    expect(valor("desconto")).toBe("15,00");
+    // O input é `type=number`: vírgula no rascunho é normalizada para ponto.
+    expect(valor("desconto-pct")).toBe("3.5");
+    expect(valor("frete")).toBe("25,00");
+    expect(valor("condicao")).toBe("30 dias");
+    expect(valor("obs")).toBe("Obs do cliente");
+    expect(valor("obs-interna")).toBe("Só equipe");
+    expect(valor("endereco")).toBe("Rua A, 10");
+    expect(valor("transportadora")).toBe("Transportes X");
+    expect(valor("rastreamento")).toBe("BR123");
+    expect(valor("contato-no-cliente")).toBe("João");
+    expect((document.getElementById("forma-pagamento") as HTMLSelectElement).value).toBe(
+      "agendado_30",
+    );
+    expect(screen.getByText("Tabela Ouro")).toBeTruthy();
+    expect((document.getElementById("exige-nf") as HTMLInputElement).checked).toBe(true);
+  });
+});
+
 describe("clique duplo e retry não duplicam o pedido", () => {
   it("Cmd/Ctrl+Enter duas vezes no mesmo envio chama o POST uma vez", async () => {
     const post = vi.mocked(apiClient.post);
