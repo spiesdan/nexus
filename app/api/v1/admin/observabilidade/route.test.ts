@@ -8,12 +8,27 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 import { GET } from "./route";
 
-function builder(result: unknown) {
+type Intervalo = { de: number; ate: number };
+type Resultado = { data: unknown[] | null; error: { message: string } | null };
+type Fonte = Resultado | ((intervalo: Intervalo) => Resultado);
+
+/** O builder falso honra `range(de, ate)`: sem isso o teste não enxerga
+ *  paginação — devolveria a mesma página em loop, ou passaria sem provar nada. */
+function builder(fonte: Fonte) {
   const q: Record<string, unknown> = {};
+  let de = 0;
+  let ate = Number.POSITIVE_INFINITY;
   for (const metodo of ["select", "is", "eq", "limit", "order"]) q[metodo] = () => q;
-  q.maybeSingle = async () => result;
+  q.range = (novoDe: number, novoAte: number) => {
+    de = novoDe;
+    ate = novoAte;
+    return q;
+  };
+  const resolver = (intervalo: Intervalo) =>
+    typeof fonte === "function" ? fonte(intervalo) : fonte;
+  q.maybeSingle = async () => resolver({ de: 0, ate: Number.POSITIVE_INFINITY });
   q.then = (ok: (v: unknown) => unknown, falha?: (e: unknown) => unknown) =>
-    Promise.resolve(result).then(ok, falha);
+    Promise.resolve(resolver({ de, ate })).then(ok, falha);
   return q;
 }
 
@@ -28,9 +43,11 @@ function montar(
   orgs: Array<{ id: string }>,
   settings: Array<Record<string, unknown>>,
 ) {
-  from.mockImplementation((tabela: string) =>
-    builder(tabela === "organizations" ? { data: orgs, error: null } : { data: settings, error: null }),
-  );
+  from.mockImplementation((tabela: string) => {
+    const linhas =
+      tabela === "organizations" ? (orgs as unknown[]) : (settings as unknown[]);
+    return builder(({ de, ate }) => ({ data: linhas.slice(de, ate + 1), error: null }));
+  });
   vi.mocked(createAdminClient).mockReturnValue({ from } as never);
 }
 
@@ -94,6 +111,19 @@ describe("GET /api/v1/admin/observabilidade", () => {
       valor: 50,
       estado: "estourado",
       detalhe: { orgs_em_dia: 1, orgs_ativas: 2 },
+    });
+  });
+
+  it("passa do teto de 1.000 do PostgREST sem truncar em silêncio", async () => {
+    // `max_rows = 1000` corta `.limit(5_000)` sem erro. O denominador do SLO
+    // não pode virar "o tamanho da página".
+    const orgs = Array.from({ length: 1_001 }, (_, i) => ({ id: `org-${i}` }));
+    montar(orgs, []);
+
+    const res = await GET();
+    const slo = (await corpo(res)).data.slos.find((s) => s.id === "frescor_sentinel");
+    expect(slo).toMatchObject({
+      detalhe: { orgs_ativas: 1_001, amostra_truncada: false },
     });
   });
 

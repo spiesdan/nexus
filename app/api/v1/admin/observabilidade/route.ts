@@ -18,10 +18,42 @@ interface Slo {
   valor: number | null;
   estado: EstadoSlo;
   nota: string;
-  detalhe?: Record<string, number | string | null>;
+  detalhe?: Record<string, number | string | boolean | null>;
 }
 
 const PADRAO_INTERVALO_MIN = 360;
+
+/**
+ * O PostgREST corta em `max_rows` (supabase/config.toml: 1000): um
+ * `.limit(5_000)` não devolve 5.000 — devolve 1.000, sem erro e sem aviso.
+ * Num SLO isso é mentira silenciosa: o denominador vira a página, não a
+ * instalação, e uma org arquivada que nunca mais roda o Sentinel some da
+ * conta em vez de aparecer atrasada. Lemos por `range` até a página vir
+ * curta; `MAX_PAGINAS` é só a guarda de sanidade, e se ela for atingida a
+ * tela DIZ que amostrou.
+ */
+const TAMANHO_DA_PAGINA = 1_000;
+const MAX_PAGINAS = 50;
+
+type ErroDeLeitura = { message: string };
+
+async function lerTodasAsPaginas<T>(
+  montar: (
+    de: number,
+    ate: number,
+  ) => PromiseLike<{ data: T[] | null; error: ErroDeLeitura | null }>,
+): Promise<{ dados: T[]; erro: ErroDeLeitura | null; truncada: boolean }> {
+  const dados: T[] = [];
+  for (let pagina = 0; pagina < MAX_PAGINAS; pagina += 1) {
+    const de = pagina * TAMANHO_DA_PAGINA;
+    const { data, error } = await montar(de, de + TAMANHO_DA_PAGINA - 1);
+    if (error) return { dados, erro: error, truncada: false };
+    const linhas = data ?? [];
+    dados.push(...linhas);
+    if (linhas.length < TAMANHO_DA_PAGINA) return { dados, erro: null, truncada: false };
+  }
+  return { dados, erro: null, truncada: true };
+}
 
 function estadoPorValor(
   valor: number,
@@ -54,43 +86,50 @@ export async function GET(): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const [{ data: orgs, error: erroOrgs }, { data: settings, error: erroSettings }] =
-    await Promise.all([
+  const [orgsRes, settingsRes] = await Promise.all([
+    lerTodasAsPaginas<{ id: string }>((de, ate) =>
       admin
         .from("organizations")
         .select("id")
         .eq("status", "active")
         .is("suspended_at", null)
-        .limit(5_000),
+        // Ordem estável: paginar sem `order` pode repetir/pular linha.
+        .order("id")
+        .range(de, ate),
+    ),
+    lerTodasAsPaginas<{
+      organization_id: string;
+      ativo: boolean | null;
+      intervalo_minutos: number | null;
+      ultima_execucao_em: string | null;
+    }>((de, ate) =>
       admin
         .from("sentinel_settings")
         .select("organization_id, ativo, intervalo_minutos, ultima_execucao_em")
-        .limit(5_000),
-    ]);
+        .order("organization_id")
+        .range(de, ate),
+    ),
+  ]);
 
-  if (erroOrgs) {
+  if (orgsRes.erro) {
     return fail("internal_error", "Não foi possível ler as organizações.", 500, { requestId });
   }
-  if (erroSettings) {
+  if (settingsRes.erro) {
     return fail("internal_error", "Não foi possível ler a configuração do Sentinel.", 500, {
       requestId,
     });
   }
 
-  const porOrg = new Map(
-    ((settings ?? []) as Array<{
-      organization_id: string;
-      ativo: boolean | null;
-      intervalo_minutos: number | null;
-      ultima_execucao_em: string | null;
-    }>).map((linha) => [linha.organization_id, linha]),
-  );
+  const orgs = orgsRes.dados;
+  const settings = settingsRes.dados;
+
+  const porOrg = new Map(settings.map((linha) => [linha.organization_id, linha]));
 
   const agoraMs = Date.now();
   let total = 0;
   let emDia = 0;
   let piorAtrasoMin = 0;
-  for (const org of (orgs ?? []) as Array<{ id: string }>) {
+  for (const org of orgs) {
     const config = porOrg.get(org.id);
     if (config?.ativo === false) continue;
     total += 1;
@@ -156,6 +195,8 @@ export async function GET(): Promise<Response> {
         orgs_em_dia: emDia,
         orgs_ativas: total,
         pior_atraso_min: Number.isFinite(piorAtrasoMin) ? piorAtrasoMin : null,
+        // Se a guarda de paginação bata, o número é amostra — e a tela diz.
+        amostra_truncada: orgsRes.truncada || settingsRes.truncada,
       },
     },
   ];
