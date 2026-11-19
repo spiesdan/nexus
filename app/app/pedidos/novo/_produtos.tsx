@@ -103,6 +103,9 @@ export function ProductSearch({
   // por trecho deixa UM produto na lista; sem esta mensagem, o Enter "não faz
   // nada" e o vendedor acha que a busca travou (ou pior, clica no produto).
   const [codigoInexistente, setCodigoInexistente] = React.useState(false);
+  // O termo da vez, para a resposta atrasada do servidor não acusar "código não
+  // encontrado" de um código que a pessoa já trocou (o await não é instantâneo).
+  const termoDaVez = React.useRef("");
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -246,12 +249,15 @@ export function ProductSearch({
       // escolha humana.
       void buscarExatoNoServidor(termo).then((p) => {
         if (p) adicionar(p);
-        else if (veioDeLeitor) setCodigoInexistente(true);
+        // Só acusa o código que ainda está na tela: a resposta pode chegar
+        // depois de a pessoa digitar outra coisa.
+        else if (veioDeLeitor && termoDaVez.current.trim() === termo) setCodigoInexistente(true);
       });
     } else if (e.key === "Escape") {
       setBusca("");
       setAmbiguo(false);
       setNavegou(false);
+      setCodigoInexistente(false);
       (e.target as HTMLInputElement).blur();
     }
   }
@@ -267,6 +273,7 @@ export function ProductSearch({
         value={busca}
         onChange={(e) => {
           setBusca(e.target.value);
+          termoDaVez.current = e.target.value;
           setAmbiguo(false);
           setNavegou(false);
           setCodigoInexistente(false);
