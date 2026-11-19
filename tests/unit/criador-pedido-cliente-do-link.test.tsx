@@ -152,7 +152,7 @@ function rascunho(dados: { contatoId: string | null; clienteNome: string; chaveP
   );
 }
 
-function montar(contatoInicial?: string | null, escopo = ESCOPO) {
+function montar(contatoInicial?: string | null, escopo = ESCOPO, verMargem = false) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
@@ -161,7 +161,7 @@ function montar(contatoInicial?: string | null, escopo = ESCOPO) {
         contatos={[BILL, OUTRO]}
         contatoInicial={contatoInicial}
         tabelas={[]}
-        verMargem={false}
+        verMargem={verMargem}
         comissaoPct={null}
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
@@ -571,6 +571,77 @@ describe("rascunho não vaza entre organização/usuário (B.7/E.7)", () => {
     montar(null);
 
     expect(campoCliente().value).toBe("Bill Higiene");
+  });
+});
+
+describe("E.3 — preço de tabela × override manual", () => {
+  function rascunhoComTabela() {
+    window.localStorage.setItem(
+      CHAVE,
+      JSON.stringify({
+        salvoEm: Date.now(),
+        dados: {
+          contatoId: BILL.id,
+          clienteNome: "Bill Higiene",
+          linhas: [
+            {
+              ...LINHA,
+              precoTexto: "80,00",
+              origemPreco: "manual",
+            },
+          ],
+          condicao: "",
+          observacoes: "",
+          obsInterna: "",
+          endereco: "",
+          transportadora: "",
+          rastreamento: "",
+          contatoNoCliente: "",
+          tabelaId: "tab-1",
+          descontoTexto: "",
+          descontoPctTexto: "",
+          freteTexto: "",
+        },
+      }),
+    );
+  }
+
+  it("gerente com preço manual envia ignorar_preco (flag próprio)", async () => {
+    const get = vi.mocked(apiClient.get);
+    get.mockImplementation((url: string) => {
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      return Promise.resolve({ data: [] }) as never;
+    });
+    const post = vi.mocked(apiClient.post);
+    post.mockReset().mockResolvedValue({ data: { id: "pedido-1", numero: 1 } });
+    rascunhoComTabela();
+
+    montar(null, ESCOPO, true);
+    fireEvent.click(screen.getByTestId("gerar-pedido"));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+
+    expect(post.mock.calls[0]?.[1]).toMatchObject({
+      price_table_id: "tab-1",
+      ignorar_preco: true,
+    });
+  });
+
+  it("sem permissão de margem, não manda o flag (o servidor vai recusar o preço fora da tabela)", async () => {
+    const get = vi.mocked(apiClient.get);
+    get.mockImplementation((url: string) => {
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      return Promise.resolve({ data: [] }) as never;
+    });
+    const post = vi.mocked(apiClient.post);
+    post.mockReset().mockResolvedValue({ data: { id: "pedido-1", numero: 1 } });
+    rascunhoComTabela();
+
+    montar(null, ESCOPO, false);
+    fireEvent.click(screen.getByTestId("gerar-pedido"));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+
+    expect(post.mock.calls[0]?.[1]).not.toHaveProperty("ignorar_preco");
+    expect(post.mock.calls[0]?.[1]).toMatchObject({ price_table_id: "tab-1" });
   });
 });
 
