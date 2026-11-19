@@ -778,3 +778,62 @@ que a escolha **permanece** 2 s depois — o teste que o F-27 pedia no nível da
 é vista; `toHaveURL(new RegExp(...))` escapa da extração; e tela alcançada só por clique com
 `toHaveURL` genérico pode cair em "sem menção" (candidatas: `/admin/users/:id` e
 `/admin/incidents/:id`).
+
+---
+
+## 4. Regressão de navegador no local — smoke e critical (18/11/2026)
+
+> Ambiente: worktree limpo a partir da `main`, app de produção (`next start`) em `localhost:3001`,
+> **Supabase local** (`127.0.0.1:54321`) e seeds do `e2e.yml`. Nada aponta para produção.
+> Redis/WAHA/Google não estão no ar: o rate limit cai em memória (log de fallback) e as specs que
+> dependem desses serviços seguem fora do recorte (as mesmas que o CI já declara).
+
+| Suíte | Resultado |
+|---|---|
+| `smoke` (`tests/e2e/suites/smoke.txt`) | **32 passed**, 0 failed (6,1 min) |
+| `critical` (`critical.txt`) | **75 passed**, 0 failed (15,9 min) — depois das correções abaixo |
+
+### 4.1 Defeitos de produto corrigidos (não eram só teste)
+
+1. **Acessibilidade do shell (axe `label-content-name-mismatch`).** O botão de busca e o menu do
+   usuário tinham `aria-label` que não continha o texto visível (`Buscar...`/`⌘K`, iniciais).
+   `SearchTrigger` passou a mostrar "Buscar" e o atalho é desenhado por CSS
+   (`content: attr(data-atalho)`), fora do texto que a regra mede; `UserMenu` inclui as iniciais no
+   nome acessível. Provado por `rbac-roles.spec` (dois casos) e pelos unit
+   `topbar-busca`/`atalho-de-busca-anunciado`.
+2. **PATCH de contato com documento duplicado respondia 500.** O índice único
+   `contacts_org_cnpj_key` virava `internal_error`; agora é **409 `contato_duplicado`**, a mesma
+   tradução do create. Teste novo em `app/api/v1/contacts/_handler.test.ts`.
+
+### 4.2 Specs ajustadas ao produto desta onda
+
+- **Confirmações novas do design**: "Faturar pedido", "Emitir nota", "Sair para rota" e "Entregue"
+  passaram a abrir diálogo de impacto. As jornadas 4/5/6 agora confirmam o diálogo
+  (`Financeiro`, `Fiscal`, `Expedição`).
+- **Fixtures únicas por execução**: CNPJ da jornada fiscal (calculado com dígitos verificadores) e
+  placa da expedição deixaram de ser fixos — a segunda rodada numa base local colidia com a
+  primeira (contato/CNPJ e carga ainda aberta).
+- **Recompra**: o selo de atraso era `+8` fixo; passou a `+Nd` (o número depende do relógio).
+- **Sentinel**: a sessão injetada era cookie de `127.0.0.1`, mas o app roda em `localhost` — hosts
+  diferentes; agora registra nos dois.
+- **Funis**: a lista local acumula fixtures; a prova de reordenação lê a ordem do **servidor**
+  (`GET /api/v1/pipelines`) antes de recarregar a tela, e a recusa de arquivamento aceita
+  `único|padrão` (com o funil de demonstração "CRM Vivo" sempre ativo, `único` não é alcançável
+  no Supabase local).
+
+### 4.3 Prova de UI que faltava (J6, J13, J14)
+
+`tests/e2e/jornadas-ui-p1-01.spec.ts` roda no navegador contra o servidor local:
+
+| Jornada | O que a tela prova |
+|---|---|
+| **J6** | abrir a conversa, clicar "Fechar", confirmar no diálogo e ver o selo **Fechada**; o botão some |
+| **J13** | 502 interceptado no `POST /fiscal-entradas` → erro visível e botão reabilitado → **segundo clique sincroniza** ("1 nova(s)…") |
+| **J14** | aprovar a solicitação de LGPD com justificativa → toast e status **Processando**; **exportar** a trilha e baixar o CSV com o cabeçalho esperado |
+
+Evidências: `docs/auditoria/evidencias/jornadas-ui-2026-11-18/` (4 capturas + o CSV exportado).
+A anonimização em si não tem botão na tela (é rota/worker) — a prova dela é
+`tests/unit/j14-lgpd-anonimizar.test.ts`; a tela prova o passo que a dispara.
+
+**Limitações declaradas:** nada foi executado em produção; WAHA/Redis/Google não participam
+destas specs; APK/iOS seguem fora deste recorte.

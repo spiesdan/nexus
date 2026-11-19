@@ -52,7 +52,9 @@ test("recompra atrasada aparece com atraso e link para os pedidos", async ({ pag
   // selo no DOM — sem o filtro por visível, o `.first()` casa a option e o
   // teste cobra um elemento escondido. O que importa é o selo APARECER no card.
   await expect(page.getByText(/recompra atrasada/i).filter({ visible: true }).first()).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText(/\+8/i).first()).toBeVisible({ timeout: 20_000 });
+  // O número de dias depende do relógio (a fixture é "última compra há 30d"),
+  // então o selo é medido pela FORMA "+Nd", não por um 8 fixo que envelhece.
+  await expect(page.getByText(/\+\d+d?/i).first()).toBeVisible({ timeout: 20_000 });
 
   const verPedidos = page.getByRole("link", { name: /ver pedidos/i }).first();
   await expect(verPedidos).toBeVisible({ timeout: 20_000 });

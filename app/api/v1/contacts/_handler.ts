@@ -591,6 +591,19 @@ export async function patchContactHandler(
     .maybeSingle();
 
   if (updErr) {
+    // Conflito dos índices únicos da organização (documento/telefone/e-mail) é
+    // 409 com código próprio — a MESMA tradução do create. Antes virava 500
+    // "internal_error": editar um contato para um CNPJ já usado dizia que o
+    // sistema quebrou, e quem tentou não sabia que o dado era de outro contato.
+    if (updErr.code === "23505") {
+      throw new ApiError(
+        409,
+        "contato_duplicado",
+        undefined,
+        ctx.requestId,
+        "Já existe um contato com esse documento, telefone ou e-mail nesta organização.",
+      );
+    }
     throw new ApiError(500, "internal_error", undefined, ctx.requestId, updErr.message);
   }
   if (!updated) {

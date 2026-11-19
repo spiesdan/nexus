@@ -36,6 +36,33 @@ test.setTimeout(300_000);
  * não importa aqui: a assinatura é conferida contra a SEFAZ, e esta jornada
  * para no estado honesto de "sem emissor" muito antes disso.
  */
+/**
+ * CNPJ válido e ÚNICO por execução.
+ *
+ * O journey usava `11222333000181` fixo. Numa base local reaproveitada, a
+ * segunda rodada colidia com o contato da primeira (`contacts_org_cnpj_key`) e
+ * a jornada morria no PATCH de cadastro. No CI o banco nasce limpo, então o
+ * defeito só aparecia em quem roda duas vezes — que é exatamente o caso desta
+ * prova. Os dois dígitos verificadores são calculados de verdade: a validação
+ * da rota não aceita número inventado.
+ */
+function cnpjDoCarimbo(carimbo: number): string {
+  const base = String(carimbo).slice(-12).padStart(12, "0");
+  const digito = (numeros: number[]): number => {
+    const pesos =
+      numeros.length === 12
+        ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const soma = numeros.reduce((s, n, i) => s + n * pesos[i]!, 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const n = [...base].map(Number);
+  const d1 = digito(n);
+  const d2 = digito([...n, d1]);
+  return `${base}${d1}${d2}`;
+}
+
 function pfxDeTeste(): { name: string; mimeType: string; buffer: Buffer } {
   return {
     name: "e2e.pfx",
@@ -69,7 +96,7 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   const cadastro = await page.request.patch(`/api/v1/contacts/${contatoId}`, {
     data: {
       tipo_pessoa: "J",
-      cnpj: "11222333000181",
+      cnpj: cnpjDoCarimbo(carimbo),
       ie: "123456789",
       logradouro: "Rua das Nacoes",
       numero_end: "1000",
@@ -89,6 +116,7 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
     timeout: 20_000,
   });
   await page.getByRole("button", { name: "Faturar pedido" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Faturar" }).click();
   await expect(page.getByText("Faturado", { exact: true }).first()).toBeVisible({
     timeout: 20_000,
   });
@@ -169,6 +197,8 @@ test("jornada 6 (fiscal) — faturar, configurar emitente e emitir cai no estado
   await page.waitForTimeout(1_500);
   await page.locator("#pedido-nota").selectOption(pedido.id);
   await page.getByRole("button", { name: "Emitir nota", exact: true }).click();
+  // Emitir NF-e é irreversível e agora tem confirmação com cliente/valor.
+  await page.getByRole("alertdialog").getByRole("button", { name: "Emitir NF-e" }).click();
   await expect(
     page
       .locator("[data-sonner-toast]")

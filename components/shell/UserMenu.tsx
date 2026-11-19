@@ -41,7 +41,10 @@ export function UserMenu() {
             variant="ghost"
             size="icon"
             className="rounded-full"
-            aria-label={t("Menu do usuário")}
+            /* O nome acessível inclui as iniciais visíveis: sem isso o axe
+               reprova em `label-content-name-mismatch` (texto na tela que não
+               faz parte do nome do botão). */
+            aria-label={`${t("Menu do usuário")} — ${initials(user.full_name, user.email)}`}
             title={user.full_name ?? user.email}
           >
             <Avatar className="h-8 w-8">

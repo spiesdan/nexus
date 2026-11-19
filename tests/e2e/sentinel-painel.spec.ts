@@ -151,16 +151,19 @@ async function entrarComSessao(page: Page, email: string, senha: string): Promis
   if (error || !data.session) throw new Error(`login de ${email}: ${error?.message ?? "sem sessão"}`);
 
   const value = `base64-${Buffer.from(JSON.stringify(data.session)).toString("base64url")}`;
-  await page.context().addCookies([
-    {
+  // O app é servido em `localhost` (baseURL do Playwright). Cookie de
+  // `127.0.0.1` não viaja para `localhost` — são hosts diferentes — e a tela
+  // caía no login. Registrar nos dois mantém a spec correta em qualquer um.
+  await page.context().addCookies(
+    ["localhost", "127.0.0.1"].map((domain) => ({
       name: "sb-nexus-auth",
       value,
-      domain: "127.0.0.1",
+      domain,
       path: "/",
       httpOnly: true,
-      sameSite: "Strict",
-    },
-  ]);
+      sameSite: "Strict" as const,
+    })),
+  );
 }
 
 async function buscar(page: Page, texto: string): Promise<void> {
