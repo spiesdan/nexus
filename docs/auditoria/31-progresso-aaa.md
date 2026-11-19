@@ -320,9 +320,9 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: estudo C do criador de pedidos (medição, sem tocar arquivos do F) · próximo: aplicar desenho após o F · depois: design em expedição
-F — agora: criador de pedidos — bug ?contato= + auditoria funcional (dono de _editor/_cliente/_itens) · próximo: testes de regressão do fluxo · depois: benchmark
-G — agora: #608 (SLO) + #600 (reativação) · próximo: remedição do Sentinel · depois: proposta do 2º caso reversível
+D — agora: aguardando liberação do F (estudo C fechado) · próximo: coluna persistente + barra fixa · depois: expedição (#607)
+F — agora: #609 + descontoTexto no rascunho (dono dos arquivos) · próximo: regressão do fluxo · depois: benchmark
+G — agora: #608 (SLO) + #600 (reativação) · próximo: remedição do Sentinel · depois: 2º caso reversível
 ```
 
 

@@ -11,30 +11,26 @@
 
 ## D — design/módulos
 
-- **agora:** *estudo C do criador de pedidos (somente medição)* — wizard de 5
-  etapas × tela única com resumo persistente: medir cliques, tempo, erro, teclado
-  e viewport **no estado atual**, sem tocar `_editor/_cliente/_itens` (são do F
-  nesta rodada). Aceite: comparativo com números e recomendação.
-- **próximo:** *aplicar o desenho vencedor* — só depois que o F fechar a fatia
-  funcional e avisar; arquivos liberados na ordem. Aceite: fluxo com o desenho
-  aprovado, estados e captura antes/depois.
-- **depois:** *design em expedição (retomar)* — #607 em revisão; seguir nas
-  subtelas restantes. Aceite: uma tela por PR com captura.
+- **agora:** *aguardando liberação* — estudo C fechado (#610): página única
+  mantida; a próxima fatia é **coluna persistente no desktop + barra fixa no
+  celular**. **Não editar** `_editor/_cliente/_itens` até o F avisar.
+- **próximo:** *coluna + barra fixa no criador* — total visível 6/6 no desktop,
+  rolagem do celular sem piorar, `/` e 320 px preservados. Aceite: os mesmos
+  números do estudo + captura antes/depois.
+- **depois:** *design em expedição (retomar #607)* — subtelas restantes.
+
+> Ambiente: o `next dev` da 3021 foi derrubado ao fim da medição; Chromium não
+> ficou de pé.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora (topo, P0):** *criador de pedidos — funcional* — fechar o bug do botão
-  "Criar pedido" (`?contato=` lido no servidor, cliente preenchido), com teste; e
-  a auditoria funcional (validação, crédito, permissão, offline) no mesmo PR ou em
-  PRs pequenos. **Dono dos arquivos `_editor/_cliente/_itens` nesta rodada.**
-  Aceite: bug reproduzido e corrigido com prova; riscos nomeados.
+- **agora (topo, P0):** *criador de pedidos — funcional* — #609 (botão do perfil
+  abre o editor com o cliente) e o **defeito herdado do rascunho**:
+  `descontoTexto` é salvo e não volta na restauração. Aceite: ambos com teste;
+  avisar o coordenador ao fechar para liberar os arquivos ao D.
 - **próximo:** *testes de regressão do fluxo* — criar, editar item, salvar,
-  retomar; offline sem perder texto. Aceite: testes dirigidos verdes.
-- **depois:** *benchmark D* — tempo/cliques do fluxo contra o estado anterior.
-  Aceite: números com método.
-
-> #606/#601 (jornada no CI) seguem em revisão; ao entrarem, não competem com esta
-> fatia.
+  retomar, offline sem perder texto. Aceite: testes dirigidos verdes.
+- **depois:** *benchmark D* — tempo/cliques contra o estado anterior.
 
 ## G — Sentinel
 

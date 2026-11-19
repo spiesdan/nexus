@@ -693,3 +693,36 @@ do dono.
 3. **Desenho** com estudo comparativo medido e decisão registrada (não "achismo"):
    cliques e tempo por tarefa, teclado, viewport e erro.
 4. **Testes** de regressão do fluxo completo (criar, editar item, salvar, retomar).
+
+## 27. Criador de pedidos — decisão tomada (estudo C, 19/11/2026)
+
+> O estudo **derrubou a premissa**: não existe wizard de 5 etapas. O editor é
+> **página única com 4 seções numeradas**, e o código registra a decisão
+> ("nada de passo escondendo campo"); a revisão é a prévia (modal).
+
+### O que foi medido (#610)
+
+| Alternativa | Cliques | Teclas | Tempo desktop | Tempo celular |
+|---|---|---|---|---|
+| Hoje (página única) | 7 | 34 | base | base |
+| **Resumo em coluna persistente** | **7** | **34** | **−10,6%** | −2,5% |
+
+- ganho real é **visão**, não velocidade: total visível em **6/6** momentos no
+  desktop (hoje **1/6**);
+- no celular o protótipo **piora** (2.171 px de rolagem) → a peça que falta é
+  **barra fixa** com total + "Gerar";
+- sem regressão: `/` foca busca, 320 px sem overflow, autosave grava item e
+  desconto, offline grava, resumo com `aria-label`;
+- **defeito herdado**: o rascunho salva `descontoTexto` e a restauração não
+  devolve — encaminhado ao F.
+
+### Decisão
+
+1. **Manter página única.** Wizard não volta: a decisão de design já estava no
+   código e a medição confirma que o ganho não está em esconder campo.
+2. **Próxima fatia do D** (depois que o F liberar `_editor.tsx`/`_cliente.tsx`/
+   `_itens.tsx`): **coluna persistente no desktop** + **barra fixa no celular**
+   (total + Gerar), com os mesmos números como aceite (total visível 6/6 no
+   desktop; rolagem do celular não pode piorar).
+3. **Serialização:** o F avisa ao fechar a fatia funcional; só então o D entra
+   nesses arquivos. Até lá, o D mede e prepara — sem editar.
