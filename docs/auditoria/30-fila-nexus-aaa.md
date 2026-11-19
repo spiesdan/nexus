@@ -661,3 +661,82 @@ do dono.
 > nem consumir cota de IA/WhatsApp da instalação. Efeito colateral registrado: o
 > Sentinel deixa de varrer essas organizações (esperado) e qualquer prova que
 > dependesse delas passa a valer só em ambiente local.
+
+## 26. Frente prioritária — CRIADOR DE PEDIDOS (`/app/pedidos/novo`)
+
+> **Prioridade:** topo, junto dos P0. É a tela de maior uso comercial e a que
+> concentra o bug relatado pelo dono.
+
+### Donos e escopo
+
+| Dono | Escopo | Estado |
+|---|---|---|
+| **F (funcional)** | auditoria A (funcional), riscos B, benchmark D, testes E; **começou pelo bug**: "Criar pedido" no perfil do cliente não leva o cliente (`_acoes.tsx:56`, `_inteligencia360.tsx:39/:82` sem `?contato=`, `novo/page.tsx` não lê `searchParams`) | em execução |
+| **D (desenho/UX)** | estudo C: **wizard de 5 etapas × tela única com resumo persistente**, com evidência (cliques, tempo, erro, teclado, viewport) | **serializado** atrás do F |
+
+### Regra de convivência (a tela é a mesma)
+
+- `_editor.tsx`, `_cliente.tsx` e `_itens.tsx` são **do F nesta rodada**. O D só
+  entra nesses arquivos **depois** que o F fechar a fatia e avisar.
+- Precisa dos dois no mesmo arquivo? O coordenador **serializa**: quem termina
+  primeiro, o outro começa. Nada de edição concorrente.
+- Enquanto espera, o D mede o **estado atual** (cliques/tempo/teclado/viewport) e
+  prepara o desenho — sem tocar nos arquivos do F.
+- Nada de build duplicado, Playwright órfão ou emulador esquecido.
+
+### Aceite da frente
+
+1. **Bug fechado**: do perfil do cliente, "Criar pedido" abre o criador **com o
+   cliente preenchido** (`?contato=` lido no servidor), com teste de rota/componente.
+2. **Auditoria funcional** com riscos nomeados (validação, limite, crédito,
+   permissão, offline) e o que foi corrigido.
+3. **Desenho** com estudo comparativo medido e decisão registrada (não "achismo"):
+   cliques e tempo por tarefa, teclado, viewport e erro.
+4. **Testes** de regressão do fluxo completo (criar, editar item, salvar, retomar).
+
+## 27. Criador de pedidos — decisão tomada (estudo C, 19/11/2026)
+
+> O estudo **derrubou a premissa**: não existe wizard de 5 etapas. O editor é
+> **página única com 4 seções numeradas**, e o código registra a decisão
+> ("nada de passo escondendo campo"); a revisão é a prévia (modal).
+
+### O que foi medido (#610)
+
+| Alternativa | Cliques | Teclas | Tempo desktop | Tempo celular |
+|---|---|---|---|---|
+| Hoje (página única) | 7 | 34 | base | base |
+| **Resumo em coluna persistente** | **7** | **34** | **−10,6%** | −2,5% |
+
+- ganho real é **visão**, não velocidade: total visível em **6/6** momentos no
+  desktop (hoje **1/6**);
+- no celular o protótipo **piora** (2.171 px de rolagem) → a peça que falta é
+  **barra fixa** com total + "Gerar";
+- sem regressão: `/` foca busca, 320 px sem overflow, autosave grava item e
+  desconto, offline grava, resumo com `aria-label`;
+- **defeito herdado**: o rascunho salva `descontoTexto` e a restauração não
+  devolve — encaminhado ao F.
+
+### Decisão
+
+1. **Manter página única.** Wizard não volta: a decisão de design já estava no
+   código e a medição confirma que o ganho não está em esconder campo.
+2. **Próxima fatia do D** (depois que o F liberar `_editor.tsx`/`_cliente.tsx`/
+   `_itens.tsx`): **coluna persistente no desktop** + **barra fixa no celular**
+   (total + Gerar), com os mesmos números como aceite (total visível 6/6 no
+   desktop; rolagem do celular não pode piorar).
+3. **Serialização:** o F avisa ao fechar a fatia funcional; só então o D entra
+   nesses arquivos. Até lá, o D mede e prepara — sem editar.
+
+## 28. Criador de pedidos — cinco decisões do dono (cada uma desbloqueia uma fatia)
+
+| # | Decisão | Por que é do dono | O que desbloqueia se decidida | Estado |
+|---|---|---|---|---|
+| 1 | **Reserva/baixa atômica de estoque** ao salvar o pedido | muda compromisso de estoque (regra comercial) | B.10 deixa de ser só aviso: reserva ou baixa com CAS e conciliação | pendente |
+| 2 | **Reprecificação ao trocar a tabela de preço** | preço de item já lançado é decisão comercial | troca de tabela com regra explícita (recalcula? preserva manual?) | pendente |
+| 3 | **UI de `ignorar_estoque`/`ignorar_credito`** | expor override a manager na tela é política | hoje só a API/MCP; a tela não oferece o poder | pendente |
+| 4 | **Fração/granel na quantidade** | schema é inteiro; vender a granel é regra de produto | quantidade decimal + unidade/múltiplo com arredondamento definido | pendente |
+| 5 | **Fallback de rascunho entre organizações/usuários** | rascunho de outra org/usuário pular para a própria vs. descartar | comportamento de retomada (hoje: não retoma; falta a regra escrita) | pendente |
+
+**Dono de todas: Dono.** Enquanto a decisão não vem, o código não inventa: B.10 diz
+"não há reserva", a troca de tabela preserva o comportamento atual, o override
+continua só na API, quantidade é inteira e rascunho de outra org não é retomado.

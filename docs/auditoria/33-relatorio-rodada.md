@@ -139,14 +139,16 @@ comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 | **`update.sh` fail-loud** | `[x]` | Orquestrador | aborta antes do `up -d` em DDL não-benigno | #568 | — |
 | **E2E completo** | `[~]` | F | veredito por spec (entra / fora com dono e data / morre) | workflow `FORA_DO_CI` | Matriz das 3 specs fora do CI, com bloqueio real de cada uma |
 | **Coletor do catálogo lê zero em produção** | `[x]` | D | DOM real + parser/rota corretos + fail-loud com 0 páginas + coleta real | **#585**: rota real `/industria/…` (o `/produtos/` dava 404), 601 produtos lidos, exit 1 quando não há página | — |
-| **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #585 (coleta real) | Depende da decisão dos inativos (§25) e de um `--dry-run` aprovado |
+| **Pareamento do catálogo** | `[x]` | D + Dono | 616 → 194 por código, 0 desativados | produção 19/11: 847 lidos, 55 criados, 567 atualizados | — |
+| **Restante do pareamento** | `[!]` | Dono + D | 422 itens / 46 códigos e 9 ambíguos | **#588** aberto (descrição em `produto_codigo`) | Depende do #588 e da decisão humana dos 9 ambíguos |
 | **A11y fora do recorte** | `[x]` | D | axe WCAG 2.2 AA, 0 violações críticas | **#583**: 14 rotas + `<h1>` da cabine + ordem anunciada | — |
-| **Sentinel — claim de conversa parada** | `[~]` | G | liberar claim com motivo, sem perder histórico | **#582** (aberto) | PR em revisão |
+| **Sentinel — claim de conversa parada** | `[x]` | G | liberar claim com motivo, sem perder histórico | **#590** (mergeado) | — |
 | **Falso positivo da devolução no Sentinel** | `[x]` | G | devolução finalidade 4 não é duplicidade | **#584** | — |
 | **Regressão local 1.58.0** | `[~]` | F | smoke + critical no commit da tag, com log | **#586** (aberto): smoke 32/32, critical 75/75, 2 defeitos reais | PR em revisão |
 | **A11y nas telas restantes** | `[~]` | D | axe sem violação crítica nas telas cobertas | #491/#516/#531/#535 | Cobertura além das 10 telas do `axe-telas-principais` |
 | **iOS** | `[!]` **encerrado por decisão** | Dono | decisão registrada, sem item órfão | `29-capacidades.md` item 30 | — (fora de escopo; só volta com conta Apple + aparelho + distribuição por instalação) |
-| **Release 1.58.0** | `[x]` tag | Dono (deploy) | tag `v1.58.0` + imagens publicadas | `4c7cd633` | Deploy em curso pelo dono; verificar `to_regclass` depois |
+| **Release 1.58.0** | `[x]` tag + deploy | Dono | tag + imagens + deploy verificado | `4c7cd633` | — |
+| **Release 1.59.0** | `[x]` tag + deploy **verificado** | Dono | 7 containers em 1.59.0, `/health` `version 1.59.0`, checks ok, `fn_sentinel_encerrar_org_suspensa` presente | tag `v1.59.0`, commit `ccadd516`, 19/11/2026 | — |
 
 ### O que está fechado (para não repetir)
 
@@ -158,3 +160,62 @@ v1.1–v1.4, fichas 5.4/5.6/5.8/5.10-5.11, B-7 e kit fail-loud.
 **Produção:** 1.57.0 saudável com sidecar na mesma versão; **1.58.0 com tag
 publicada e deploy aprovado**, em curso pelo dono. O deploy é o único passo que
 este programa não executa.
+
+## 8. Mapa dos sete pontos do Prompt Mestre reenviado (19/11/2026)
+
+> Estados com evidência (PR/commit). Onde não há prova, é `[ ]`.
+
+| # | Ponto cobrado | Estado | Dono | Evidência | O que falta (1 frase) |
+|---|---|---|---|---|---|
+| 1 | **Design/UI aplicado página por página** ("medir a11y não é redesign") | `[~]` | D | #583 (axe 14 rotas + ordem), #535/#531/#524/#525/#529 (shell/a11y) | Aplicar identidade nas subtelas restantes, começando por **expedição** (carga/rota/romaneio) |
+| 2 | **Cobertura reconciliada** de rotas/subtelas/abas/modais/drawers/estados/jornadas | `[~]` | F | #589 (matriz das 3 specs fora do CI); `09-telas-estados`, `09b-subtelas` | Matriz única em `41-cobertura-reconciliada.md` com contagem por comando e exceções |
+| 3 | **Mobile por ambiente** (web ≠ emulador ≠ Android real ≠ iOS) | `[~]` | F/D | web #514; emulador B-7 #565; Android real **nunca**; iOS decisão | Android real é `[!]` com motivo; iOS `[!]` encerrado por decisão |
+| 4 | **Módulos 5.x** sem parcial escondido | `[~]` | D/G | fichas #563, #571, #572, #574, #581 | Fechar as pendências declaradas nas fichas (outbox, paginação, subtelas) |
+| 5 | **Sentinel** com números (FP, reais, dedup, isolamento, retenção, observabilidade, correções) | `[~]` | G | 23 ocorrências · 20 de `E2E Test Org` · #584 (FP devolução) · #590 (claim) · #591 (retenção) · #596 (suspensa) | Depois de #596, remedir a distribuição e provar dedup/isolamento com número |
+| 6 | **Desempenho/observabilidade** (bundle, SLI/SLO, erros, recuperação, carga, latência) com baseline e método | `[ ]` | G | nenhum SLI/SLO medido | `42-desempenho-e-slo.md`: baseline medido, método e alvo justificado |
+| 7 | **Mercos**: dry-run + relatório; escrita só com autorização | `[~]` | D + Dono | #585 (coletor real, fail-loud), #594 (`--todos`, pendente) | `--aplicar` só depois da decisão dos inativos e do coletor em produção |
+
+**Fonte única de auditoria de produção:** [`40-auditoria-de-acoes-em-producao.md`](40-auditoria-de-acoes-em-producao.md)
+(PR #597 do dono). Este programa **não** registra ação de produção em outro
+lugar — a fila aponta para lá.
+
+
+### Atualização 19/11 — deploy 1.59.0 verificado
+
+| Fato | Evidência |
+|---|---|
+| **1.59.0 em produção** — app/worker/scheduler/fiscal/mercos/ocr/rota, `/health` com `version 1.59.0`, todos os checks ok | tag **`v1.59.0`**, commit **`ccadd516`**, 19/11/2026 (verificação do dono) |
+| `public.fn_sentinel_encerrar_org_suspensa` presente no banco | idem (verificação pós-deploy) |
+| **Mercos autorizado** — coleta `--todos`, `catalogo.mjs --aplicar` e `parear-itens.mjs --aplicar` | autorização textual do dono, 19/11; registro em `40-auditoria-de-acoes-em-producao.md` item 7 |
+
+
+### Atualização 19/11 — frente do criador de pedidos
+
+| Item | Estado | Evidência |
+|---|---|---|
+| Bug "Criar pedido" do perfil não levava o cliente | `[x]` | **#609** (`?contato=` lido no servidor) |
+| Riscos **B.7** revisão, **B.9** valores, **B.10** estoque, **B.12** preço/aprovação, **B.14** quantidade, **B.15** autosave | `[x]` | **#615** (prova de componente por risco) |
+| Coluna persistente no desktop | `[~]` | **#613** em revisão; falta a **barra fixa no celular** |
+| Três experimentos de bundle revertidos | `[x]` | **#614/#616/#617**; conclusão em [`44-inbox-103-experimentos.md`](44-inbox-103-experimentos.md): micro-splitting não paga (−4 KB, +2 KB, +1 KB), resta arquitetura |
+| 1.59.1 publicada, não deployada | `[!]` | aguarda autorização por versão do dono |
+| Cinco decisões comerciais abertas | `[!]` | fila §28 (reserva, reprecificação, UI de override, fração/granel, fallback de rascunho) |
+
+### Atualização 19/11 — catálogo do Mercos aplicado em produção
+
+| Medida | Número |
+|---|---|
+| Coleta `--todos` | **847 produtos**, 57 páginas, total do ERP 847 (`/tmp/mercos/produtos-todos.jsonl`) |
+| Catálogo `--aplicar` | lidos 847 · **criados 55** (todos inativos) · **atualizados 567** · divergentes 34 · sem código 210 · **gravados 622** |
+| Pareamento `--aplicar` | itens sem produto **616 → 194 pareados por código**; restantes **422**; 46 códigos ainda sem produto; 2 candidatos por nome e 9 ambíguos **não aplicados** (só relatados) |
+| Catálogo depois | **1.196 produtos** (1.139 ativos, 57 inativos), **799** com `origem='mercos'` |
+
+**Execução:** código da `main` copiado para `/app/_fix` no container (a imagem é
+**1.59.0**; o `origem` no upsert entra oficialmente na próxima release). Data:
+**19/11/2026**. Reversão: os 55 criados têm `origem='mercos'` e `created_at` do dia
+(desativar, nunca apagar); o pareamento é `product_id` com a lista no relatório;
+dump pré-deploy cobre o resto.
+
+**Estado no quadro:** *pareamento do catálogo* `[x]`. O **restante** vira item
+próprio: **46 códigos / 422 itens** dependem do **#588** (importador grava
+descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambíguos**
+(decisão humana produto a produto).
