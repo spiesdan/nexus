@@ -156,3 +156,77 @@ com **uma** mudança: o resumo sai de dentro da seção de produtos e vira colun
 `lg:sticky`. Nenhum arquivo de `novo/` é tocado, e o autosave usa a **mesma**
 chave (`pedido-rascunho`) — rascunho de uma tela aparece na outra, o que é
 esperado num experimento.
+
+---
+
+# Aplicação (19/11/2026, sobre o #615) — coluna no desktop, barra no celular
+
+Aplicado em `app/app/pedidos/novo/_editor.tsx` depois das mudanças do F no #615
+(prévia completa, quatro estados de estoque, aviso de teto e banner de falha ao
+salvar). Mesma régua: 3 execuções, 1440/390, cliques/teclas/tempo/erros.
+
+**O "antes" foi remedido na MESMA base (#615)** — comparar com o número do
+estudo original (que era de outra base) inflaria o ganho.
+
+## Antes × depois
+
+| Config | Cliques | Teclas | Antes (#615) | Depois | Erros |
+| --- | --- | --- | --- | --- | --- |
+| desktop 1440 | 7 | 34 | 4.721 ms | **4.502 ms** (−4,6%) | 0 |
+| celular 390 | 7 | 34 | 4.570 ms | **4.671 ms** (+2,2%) | 0 |
+
+**Total à vista (6 momentos do fluxo):**
+
+| | antes (#615) | depois |
+| --- | --- | --- |
+| desktop | **1/6** | **6/6** (coluna `lg:sticky`, topo em 104 px) |
+| celular | **6/6** (barra do F) | **6/6** |
+
+## O que a aplicação fez — e o que ela NÃO precisou fazer
+
+1. **Desktop:** a raiz passa de `max-w-4xl` (coluna única) para grade 12 com
+   conteúdo em 8 e o `OrderSummary` em `lg:sticky` na coluna 4. O resumo sai de
+   dentro de Produtos, onde ficava 1.200–1.400 px abaixo da dobra.
+2. **Celular:** a barra fixa **já existia** desde o #609. A primeira tentativa
+   desta fatia criou uma segunda e o clique caía na de cima — foi removida. A
+   barra dele ficou só no celular (`lg:hidden`), com `env(safe-area-inset-bottom)`
+   por `style` (o gate do item 10-11 recusa `pb-[max(...)]`).
+3. **A ação primária do cabeçalho saiu do celular** (`hidden … lg:inline-flex`):
+   com a barra, dois "Gerar pedido" na mesma dobra é duplicidade.
+4. **O resumo ficou sempre no DOM** (coluna no desktop, bloco ao fim no celular):
+   ele carrega os campos de **desconto e frete** — escondê-lo no celular apagava
+   a edição, e foi a medição que pegou (o fluxo quebrou no `#desconto`).
+
+## Convivência com o que o #615 trouxe
+
+| Item | Verificação |
+| --- | --- |
+| Banner de falha ao salvar (`role="alert"`, `rascunho-nao-salvo`) | aparece com `localStorage.setItem` lançando; **não sobrepõe** a barra (retângulos disjuntos: banner no topo do fluxo) |
+| Aviso de teto antes de gerar | segue dentro do resumo, agora na coluna — visível em 6/6 no desktop |
+| Prévia completa | abre por "Visualizar": `role="dialog"`, título "Prévia do pedido", com cliente + item + endereço, 415 px, sem rolagem interna |
+| `custo_cents` / margem | intocado: `margemPct` continua `null` sem `verMargem` (`_editor.tsx:523`) |
+| `chave_sincronizacao` + `beforeunload` | intocados: a barra chama o mesmo `comEnvio("aprovado")` |
+
+## Não pode regredir — verificado depois da aplicação
+
+| Item | Resultado |
+| --- | --- |
+| Atalho `/` foca a busca | ✓ `busca-produto` |
+| 320 px sem overflow | ✓ 0 |
+| Autosave grava item **e** desconto | ✓ |
+| Autosave **restaura** o desconto | ✓ volta `"7"` |
+| Offline continua gravando | ✓ grava `"13"` com `setOffline(true)` |
+| Resumo com nome acessível | ✓ `aside[aria-label="Resumo do pedido"]` |
+
+## Veredito (mantido)
+
+**Desktop: coluna persistente vence** — 6/6 contra 1/6 e 4,6% menos tempo, sem
+custo em cliques. **Celular: a barra fixa já resolvia** (6/6 desde o #609); o
+ganho desta fatia no celular é a barra ser única e o resumo continuar editável.
+Segue do desenho anterior: a **prévia** como revisão (agora mais completa, do F),
+a ordem das seções e as ações no cabeçalho (≥lg).
+
+## Pendência observada (decisão do F)
+
+A barra do celular aparece **com 0 itens** ("0 itens · 0 un · R$ 0,00 · Gerar
+pedido"). Não escondi: é comportamento dele e a medição não foi feita para isso.

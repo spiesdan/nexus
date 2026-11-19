@@ -131,8 +131,13 @@ async function rodar(estado, largura) {
     await desconto.type("5", { delay: 25 });
     await p.waitForTimeout(150);
 
-    // 4. finalizar
-    await p.locator('[data-testid="gerar-pedido"]').first().click();
+    // 4. finalizar — desktop: cabeçalho; celular: barra fixa do rodapé.
+    const noCabecalho = p.locator('[data-testid="gerar-pedido"]');
+    if (await noCabecalho.isVisible().catch(() => false)) {
+      await noCabecalho.click();
+    } else {
+      await p.locator('[data-testid="gerar-pedido-barra"]').click();
+    }
 
     // Sucesso = saiu da tela de criação (lista ou detalhe).
     await p.waitForURL((u) => !u.pathname.startsWith(ROTA), { timeout: 60000 });

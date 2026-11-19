@@ -365,8 +365,7 @@ export function OrderEditor({
   // Autosave (§31). Fica DESLIGADO enquanto há um rascunho divergente por
   // decidir: o primeiro debounce (2 s) gravaria o pedido vazio por cima do
   // rascunho do outro cliente antes de a pessoa escolher.
-  const [conflitoDeRascunho, setConflitoDeRascunho] =
-    React.useState<RascunhoDoPedido | null>(null);
+  const [conflitoDeRascunho, setConflitoDeRascunho] = React.useState<RascunhoDoPedido | null>(null);
   const { salvoEm, carregar, limpar, falhaAoSalvar } = useAutosaveDraft(
     "pedido-rascunho",
     {
@@ -714,483 +713,509 @@ export function OrderEditor({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 p-4 pb-28 sm:p-6 lg:pb-6">
-      <NexusPageHeader
-        title={textos.titulo}
-        subtitle={
-          linhas.length > 0 && salvoEm
-            ? `${textos.subtitulo} · ${t("salvo")} ${haQuantoTempo(salvoEm) ?? ""}`
-            : textos.subtitulo
-        }
-        actions={
-          // QUATRO ações, não cinco. "Enviar por e-mail" e "Enviar por
-          // WhatsApp" viraram um menu: são a mesma decisão (gravar e abrir o
-          // canal) e, lado a lado com "Gerar pedido", davam cinco botões do
-          // mesmo peso — o primário deixava de ser o único roxo da dobra.
-          <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-            <Button
-              className="w-full sm:w-auto"
-              onClick={() => void comEnvio("aprovado")}
-              disabled={enviando}
-              data-testid="gerar-pedido"
-            >
-              {enviando ? t("Gerando…") : textos.finalizar}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setPreviaAberta(true)}
-              className="flex-1 sm:flex-none"
-            >
-              <Eye size={16} className="mr-1.5" /> {t("Visualizar")}
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={enviando} className="flex-1 sm:flex-none">
-                  {t("Enviar")} <CaretDown size={14} className="ml-1.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  disabled={enviando || !listaDeContatos.find((c) => c.id === contatoId)?.email}
-                  onSelect={() => void comEnvio("rascunho", "email")}
-                >
-                  {t("Enviar por e-mail")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
+    <div className="mx-auto w-full max-w-7xl p-4 pb-28 sm:p-6 lg:pb-6">
+      <div className="grid gap-5 lg:grid-cols-12">
+        <div className="min-w-0 space-y-5 lg:col-span-8">
+          <NexusPageHeader
+            title={textos.titulo}
+            subtitle={
+              linhas.length > 0 && salvoEm
+                ? `${textos.subtitulo} · ${t("salvo")} ${haQuantoTempo(salvoEm) ?? ""}`
+                : textos.subtitulo
+            }
+            actions={
+              // QUATRO ações, não cinco. "Enviar por e-mail" e "Enviar por
+              // WhatsApp" viraram um menu: são a mesma decisão (gravar e abrir o
+              // canal) e, lado a lado com "Gerar pedido", davam cinco botões do
+              // mesmo peso — o primário deixava de ser o único roxo da dobra.
+              <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+                {/* No celular quem carrega a ação é a barra fixa: dois "Gerar pedido"
+                visíveis ao mesmo tempo é duplicidade, não atalho. */}
+                <Button
+                  className="hidden w-full sm:w-auto lg:inline-flex"
+                  onClick={() => void comEnvio("aprovado")}
                   disabled={enviando}
-                  onSelect={() => void comEnvio("rascunho", "whatsapp")}
+                  data-testid="gerar-pedido"
                 >
-                  {t("Enviar por WhatsApp")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="flex-1 sm:flex-none">
-                  {t("Mais opções")} <CaretDown size={14} className="ml-1.5" />
+                  {enviando ? t("Gerando…") : textos.finalizar}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  disabled={enviando}
-                  onSelect={() => void comEnvio("rascunho")}
-                  data-testid="salvar-rascunho"
+                <Button
+                  variant="outline"
+                  onClick={() => setPreviaAberta(true)}
+                  className="flex-1 sm:flex-none"
                 >
-                  {textos.salvarRascunho}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setPreviaAberta(true)}>
-                  {t("Prévia do pedido")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        }
-      />
+                  <Eye size={16} className="mr-1.5" /> {t("Visualizar")}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" disabled={enviando} className="flex-1 sm:flex-none">
+                      {t("Enviar")} <CaretDown size={14} className="ml-1.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      disabled={enviando || !listaDeContatos.find((c) => c.id === contatoId)?.email}
+                      onSelect={() => void comEnvio("rascunho", "email")}
+                    >
+                      {t("Enviar por e-mail")}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={enviando}
+                      onSelect={() => void comEnvio("rascunho", "whatsapp")}
+                    >
+                      {t("Enviar por WhatsApp")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex-1 sm:flex-none">
+                      {t("Mais opções")} <CaretDown size={14} className="ml-1.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      disabled={enviando}
+                      onSelect={() => void comEnvio("rascunho")}
+                      data-testid="salvar-rascunho"
+                    >
+                      {textos.salvarRascunho}
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => setPreviaAberta(true)}>
+                      {t("Prévia do pedido")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            }
+          />
 
-      {falhaAoSalvar ? (
-        <p
-          role="alert"
-          data-testid="rascunho-nao-salvo"
-          className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg"
-        >
-          {t(
-            "Não foi possível salvar o rascunho neste navegador (modo privado ou armazenamento cheio). Você pode continuar e gerar o pedido, mas não feche a aba antes disso.",
-          )}
-        </p>
-      ) : null}
+          {falhaAoSalvar ? (
+            <p
+              role="alert"
+              data-testid="rascunho-nao-salvo"
+              className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg"
+            >
+              {t(
+                "Não foi possível salvar o rascunho neste navegador (modo privado ou armazenamento cheio). Você pode continuar e gerar o pedido, mas não feche a aba antes disso.",
+              )}
+            </p>
+          ) : null}
 
-      {/* O cartão do topo do Mercos: número e pill do status. O número só
+          {/* O cartão do topo do Mercos: número e pill do status. O número só
           existe depois do "Gerar pedido" — mostrá-lo aqui exigiria criar o
           rascunho no instante em que a tela abre, e é exatamente isso que
           enche a base de pedido fantasma de quem abriu, olhou e desistiu. */}
-      <Card className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
-        <p className="text-[13px] font-medium">
-          <span className="text-muted-foreground">#</span> {t("novo")}
-        </p>
-        <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
-          {t("Rascunho")}
-        </span>
-      </Card>
+          <Card className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
+            <p className="text-[13px] font-medium">
+              <span className="text-muted-foreground">#</span> {t("novo")}
+            </p>
+            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-medium text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+              {t("Rascunho")}
+            </span>
+          </Card>
 
-      {/* 1 · CLIENTE — o mesmo autocomplete com cadastro inline de antes. */}
-      <section id="secao-cliente" aria-label={t("Cliente")} className="space-y-2">
-        <TituloDaSecao numero={1}>{t("CLIENTE")}</TituloDaSecao>
-        <Card className="p-4">
-          <CustomerSelector
-            contatos={listaDeContatos}
-            contatoId={contatoId}
-            clienteNome={clienteNome}
-            aoEscolher={(id, nome) => {
-              setContatoId(id);
-              setClienteNome(nome);
-            }}
-            aoCriarNovo={() => setNovoClienteAberto(true)}
-            textos={{
-              cliente: textos.cliente,
-              buscarCliente: textos.buscarCliente,
-              clienteAvulso: textos.clienteAvulso,
-            }}
-          />
-        </Card>
-      </section>
+          {/* 1 · CLIENTE — o mesmo autocomplete com cadastro inline de antes. */}
+          <section id="secao-cliente" aria-label={t("Cliente")} className="space-y-2">
+            <TituloDaSecao numero={1}>{t("CLIENTE")}</TituloDaSecao>
+            <Card className="p-4">
+              <CustomerSelector
+                contatos={listaDeContatos}
+                contatoId={contatoId}
+                clienteNome={clienteNome}
+                aoEscolher={(id, nome) => {
+                  setContatoId(id);
+                  setClienteNome(nome);
+                }}
+                aoCriarNovo={() => setNovoClienteAberto(true)}
+                textos={{
+                  cliente: textos.cliente,
+                  buscarCliente: textos.buscarCliente,
+                  clienteAvulso: textos.clienteAvulso,
+                }}
+              />
+            </Card>
+          </section>
 
-      {/* Cadastro de cliente sem sair do pedido. Ao criar, o contato entra na
+          {/* Cadastro de cliente sem sair do pedido. Ao criar, o contato entra na
           lista local E já fica escolhido: quem digitou o nome acabou de digitar
           quer ele selecionado, não quer procurá-lo de novo. */}
-      <NewContactDialog
-        open={novoClienteAberto}
-        onOpenChange={setNovoClienteAberto}
-        onCreated={(c) => {
-          const novo: ContatoOpcao = {
-            id: c.id,
-            // O cadastro inline pode nascer com fantasia; o seletor a usa como
-            // nome principal (regra de 18/11/2026).
-            fantasia: (c as { fantasia?: string | null }).fantasia ?? null,
-            name: c.name,
-            display_name: c.display_name,
-            phone_number: c.phone_number,
-            email: c.email,
-          };
-          setListaDeContatos((prev) =>
-            prev.some((p) => p.id === novo.id) ? prev : [...prev, novo],
-          );
-          setContatoId(novo.id);
-          setClienteNome(rotuloDoContato(novo, t));
-        }}
-      />
+          <NewContactDialog
+            open={novoClienteAberto}
+            onOpenChange={setNovoClienteAberto}
+            onCreated={(c) => {
+              const novo: ContatoOpcao = {
+                id: c.id,
+                // O cadastro inline pode nascer com fantasia; o seletor a usa como
+                // nome principal (regra de 18/11/2026).
+                fantasia: (c as { fantasia?: string | null }).fantasia ?? null,
+                name: c.name,
+                display_name: c.display_name,
+                phone_number: c.phone_number,
+                email: c.email,
+              };
+              setListaDeContatos((prev) =>
+                prev.some((p) => p.id === novo.id) ? prev : [...prev, novo],
+              );
+              setContatoId(novo.id);
+              setClienteNome(rotuloDoContato(novo, t));
+            }}
+          />
 
-      {/* 2 · REPRESENTADA — quem emite. Só leitura: não é escolha do vendedor. */}
-      <section aria-label={t("Representada")} className="space-y-2">
-        <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
-        <Card className="space-y-1 p-4">
-          <p className="text-sm">
-            <span className="font-medium text-accent-ink">{nomeOrganizacao || "—"}</span>
-            {(() => {
-              const linha = [representada?.razaoSocial, representada?.cnpj]
-                .filter((v): v is string => Boolean(v && v.trim()))
-                .join(" - ");
-              return linha ? <span className="text-muted-foreground"> - {linha}</span> : null;
-            })()}
-          </p>
-          {representada?.telefone && (
-            <p className="text-sm text-muted-foreground">{representada.telefone}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            {t("O pedido sai em nome desta empresa.")}
-          </p>
-        </Card>
-      </section>
+          {/* 2 · REPRESENTADA — quem emite. Só leitura: não é escolha do vendedor. */}
+          <section aria-label={t("Representada")} className="space-y-2">
+            <TituloDaSecao numero={2}>{t("REPRESENTADA")}</TituloDaSecao>
+            <Card className="space-y-1 p-4">
+              <p className="text-sm">
+                <span className="font-medium text-accent-ink">{nomeOrganizacao || "—"}</span>
+                {(() => {
+                  const linha = [representada?.razaoSocial, representada?.cnpj]
+                    .filter((v): v is string => Boolean(v && v.trim()))
+                    .join(" - ");
+                  return linha ? <span className="text-muted-foreground"> - {linha}</span> : null;
+                })()}
+              </p>
+              {representada?.telefone && (
+                <p className="text-sm text-muted-foreground">{representada.telefone}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {t("O pedido sai em nome desta empresa.")}
+              </p>
+            </Card>
+          </section>
 
-      {/* 3 · PRODUTOS */}
-      <section id="secao-produtos" aria-label={t("Produtos")} className="space-y-3">
-        <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
+          {/* 3 · PRODUTOS */}
+          <section id="secao-produtos" aria-label={t("Produtos")} className="space-y-3">
+            <TituloDaSecao numero={3}>{t("PRODUTOS")}</TituloDaSecao>
 
-        {/* Tabela, busca e itens vivem no MESMO cartão. Antes a seção 3 era a
+            {/* Tabela, busca e itens vivem no MESMO cartão. Antes a seção 3 era a
             única das quatro sem moldura: os campos flutuavam soltos entre o
             cartão da representada e o resumo, e a página trocava de gramática
             no meio. */}
-        <Card className="space-y-3 p-4">
-          <div className="flex flex-wrap items-end gap-2">
-            <div className="min-w-[200px] flex-1 space-y-1.5">
-              <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
-              <Select
-                value={tabelaId || "__nenhuma"}
-                onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
-              >
-                <SelectTrigger id="tabela" className="w-full">
-                  <SelectValue placeholder={textos.semTabela} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
-                  {tabelas.map((tb) => (
-                    <SelectItem key={tb.id} value={tb.id}>
-                      {tb.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="shrink-0"
-              onClick={() => setIaAberta(true)}
-              data-testid="adicionar-com-ia"
-            >
-              <Sparkle size={16} className="mr-1.5" />
-              {t("Adicionar com IA")}
-            </Button>
-          </div>
-
-          <ProductSearch
-            produtos={produtos}
-            tabela={tabela}
-            ultimosPrecos={ultimos}
-            inputRef={buscaRef}
-            aoAdicionar={(p, q) => {
-              const prod = porId.get(p.id);
-              if (prod) adicionar(prod, q);
-            }}
-            textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
-          />
-
-          <OrderItems
-            linhas={linhas}
-            aoMudar={mudarLinha}
-            aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
-          />
-          {linhas.length > 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">
-              {t("O saldo é conferido ao gerar o pedido; não há reserva de estoque.")}
-            </p>
-          ) : null}
-        </Card>
-
-        <AfinsNoPedido
-          carrinho={linhas.map((l) => l.product_id)}
-          contatoId={contatoId}
-          porId={porId}
-          aoAdicionar={adicionar}
-        />
-
-        {relacionados.length > 0 && (
-          <div className="rounded-2xl border p-3">
-            <p className="mb-2 text-sm font-medium">{textos.relacionados}</p>
-            <div className="flex flex-wrap gap-2">
-              {relacionados.map((p) => (
-                <Button key={p.id} size="sm" variant="outline" onClick={() => adicionar(p, 1)}>
-                  + {p.nome}
+            <Card className="space-y-3 p-4">
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="min-w-[200px] flex-1 space-y-1.5">
+                  <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
+                  <Select
+                    value={tabelaId || "__nenhuma"}
+                    onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+                  >
+                    <SelectTrigger id="tabela" className="w-full">
+                      <SelectValue placeholder={textos.semTabela} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__nenhuma">{textos.semTabela}</SelectItem>
+                      {tabelas.map((tb) => (
+                        <SelectItem key={tb.id} value={tb.id}>
+                          {tb.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0"
+                  onClick={() => setIaAberta(true)}
+                  data-testid="adicionar-com-ia"
+                >
+                  <Sparkle size={16} className="mr-1.5" />
+                  {t("Adicionar com IA")}
                 </Button>
-              ))}
-            </div>
-          </div>
-        )}
+              </div>
 
-        {reposicoes.map((r) => (
-          <div
-            key={r.id}
-            className="flex items-center justify-between gap-2 rounded-2xl border p-3 text-sm"
-          >
-            <p>
-              💡 {r.nome} · {r.qtd} un · {t("a cada")} ~{r.dias} {t("dias")}? ({t("há")} {r.dias}{" "}
-              {t("dias")})
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                const p = porId.get(r.id);
-                if (p) adicionar(p, r.qtd);
-              }}
-            >
-              {textos.adicionar}
-            </Button>
-          </div>
-        ))}
+              <ProductSearch
+                produtos={produtos}
+                tabela={tabela}
+                ultimosPrecos={ultimos}
+                inputRef={buscaRef}
+                aoAdicionar={(p, q) => {
+                  const prod = porId.get(p.id);
+                  if (prod) adicionar(prod, q);
+                }}
+                textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
+              />
 
-        {historicoItens.length > 0 && (
-          <details className="rounded-2xl border p-3 text-sm">
-            <summary className="cursor-pointer font-medium">{textos.historico}</summary>
-            <ul className="mt-2 space-y-1 text-muted-foreground">
-              {historicoItens.slice(0, 8).map((h, i) => (
-                <li key={i}>
-                  {h.produto_nome} · {h.quantidade} un
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
+              <OrderItems
+                linhas={linhas}
+                aoMudar={mudarLinha}
+                aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
+              />
+              {linhas.length > 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {t("O saldo é conferido ao gerar o pedido; não há reserva de estoque.")}
+                </p>
+              ) : null}
+            </Card>
 
-        {/* Os totais ficam DENTRO de Produtos, como a faixa do Mercos
+            <AfinsNoPedido
+              carrinho={linhas.map((l) => l.product_id)}
+              contatoId={contatoId}
+              porId={porId}
+              aoAdicionar={adicionar}
+            />
+
+            {relacionados.length > 0 && (
+              <div className="rounded-2xl border p-3">
+                <p className="mb-2 text-sm font-medium">{textos.relacionados}</p>
+                <div className="flex flex-wrap gap-2">
+                  {relacionados.map((p) => (
+                    <Button key={p.id} size="sm" variant="outline" onClick={() => adicionar(p, 1)}>
+                      + {p.nome}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {reposicoes.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between gap-2 rounded-2xl border p-3 text-sm"
+              >
+                <p>
+                  💡 {r.nome} · {r.qtd} un · {t("a cada")} ~{r.dias} {t("dias")}? ({t("há")}{" "}
+                  {r.dias} {t("dias")})
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const p = porId.get(r.id);
+                    if (p) adicionar(p, r.qtd);
+                  }}
+                >
+                  {textos.adicionar}
+                </Button>
+              </div>
+            ))}
+
+            {historicoItens.length > 0 && (
+              <details className="rounded-2xl border p-3 text-sm">
+                <summary className="cursor-pointer font-medium">{textos.historico}</summary>
+                <ul className="mt-2 space-y-1 text-muted-foreground">
+                  {historicoItens.slice(0, 8).map((h, i) => (
+                    <li key={i}>
+                      {h.produto_nome} · {h.quantidade} un
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
+            {/* Os totais ficam DENTRO de Produtos, como a faixa do Mercos
             (Itens no pedido · Quantidade total · Valor total). Os botões de
             ação saíram daqui: com a página inteira visível, eles pertencem ao
             cabeçalho e à barra do rodapé, não ao meio da tela. */}
-        <OrderSummary
-          totais={{
-            subtotal,
-            descontoCents: descontoCents + descontoPctCents,
-            freteCents,
-            total,
-            qtdItens: linhas.length,
-            qtdUnidades,
-            margemPct,
-            comissaoCents,
-            parcelas: calcularParcelas(total, condicao),
-            aprovacaoNecessaria,
-          }}
-          descontoMaxPct={descontoMaxVendedorPct}
-          descontoTexto={descontoTexto}
-          aoDesconto={setDescontoTexto}
-          descontoPctTexto={descontoPctTexto}
-          aoDescontoPct={setDescontoPctTexto}
-          freteTexto={freteTexto}
-          aoFrete={setFreteTexto}
-          enviando={enviando}
-          aoSalvar={() => void comEnvio("rascunho")}
-          aoFinalizar={() => void comEnvio("aprovado")}
-          mostrarAcoes={false}
-          textos={{
-            subtotal: textos.subtotal,
-            desconto: textos.desconto,
-            frete: textos.frete,
-            total: textos.total,
-            salvarRascunho: textos.salvarRascunho,
-            finalizar: textos.finalizar,
-            margem: textos.margem,
-            comissao: textos.comissao,
-            aguardandoAprovacao: textos.aguardandoAprovacao,
-            descontoTotal: t("Desconto total"),
-            descontosSomam: t("R$ e % somam"),
-            tetoDesconto: t("Teto de desconto do vendedor"),
-            revisar: textos.revisar,
-            itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
-          }}
-        />
-      </section>
+          </section>
 
-      {/* 4 · DETALHES DO PEDIDO — os campos que o Mercos deixa aqui. */}
-      <section aria-label={t("Detalhes do pedido")} className="space-y-2">
-        <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
-        <Card className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
-          {/* Os campos que o Mercos mostra como leitura: número (que ainda
+          {/* 4 · DETALHES DO PEDIDO — os campos que o Mercos deixa aqui. */}
+          <section aria-label={t("Detalhes do pedido")} className="space-y-2">
+            <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
+            <Card className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+              {/* Os campos que o Mercos mostra como leitura: número (que ainda
               não existe), data da emissão (hoje) e vendedor (quem está
               logado). São leitura porque não são decisão de quem vende. */}
-          <div className="space-y-1">
-            <span className="text-sm text-muted-foreground">{t("Nº do pedido")}</span>
-            <p className="text-sm font-medium">{t("novo")}</p>
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm text-muted-foreground">{t("Data da emissão")}</span>
-            <p className="text-sm font-medium">{hoje ?? "—"}</p>
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm text-muted-foreground">{t("Vendedor")}</span>
-            <p className="text-sm font-medium">{nomeVendedor || "—"}</p>
-          </div>
-          <div className="space-y-1">
-            <span className="text-sm text-muted-foreground">{t("Valor do frete")}</span>
-            <p className="text-sm font-medium tabular-nums">
-              {freteCents > 0 ? comoMoeda(freteCents, "BRL") : "—"}
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="condicao">{textos.condicao}</Label>
-            <Input
-              id="condicao"
-              value={condicao}
-              onChange={(e) => setCondicao(e.target.value)}
-              placeholder="30/60/90 dias"
-            />
-          </div>
-          {/* ─── FORMA DE PAGAMENTO + NF ──────────────────────────────────────
-           *
-           * A caixa de NF fica ao lado do prazo, e não numa tela separada, por
-           * um motivo concreto: quem marca "é com nota" está decidindo quando o
-           * dinheiro entra. São a mesma decisão.
-           *
-           * E o aviso de prazo dependente da nota é o que impede o erro que o
-           * campo sozinho permitiria: marcar 30 dias e ver uma data de
-           * vencimento que ainda não existe. A tela diz que a data nasce com a
-           * emissão — que é verdade, e é o que `vencimentoDoRecebimento`
-           * devolve para `aguardando_nf`.
-           */}
-          <div className="space-y-1.5">
-            <Label htmlFor="forma-pagamento">{textos.formaPagamento}</Label>
-            <select
-              id="forma-pagamento"
-              className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
-              value={formaPagamento}
-              onChange={(e) => setFormaPagamento(e.target.value as FormaDePagamento | "")}
-            >
-              <option value="">{textos.prazoLivre}</option>
-              {(Object.keys(FORMA_DE_PAGAMENTO_LABEL) as FormaDePagamento[]).map((f) => (
-                <option key={f} value={f}>
-                  {FORMA_DE_PAGAMENTO_LABEL[f]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <span className="text-sm font-medium text-foreground">{textos.exigeNf}</span>
-            <label
-              htmlFor="exige-nf"
-              className="flex h-10 cursor-pointer items-center gap-2.5 rounded-md border border-border bg-background px-3 text-sm"
-            >
-              <input
-                id="exige-nf"
-                type="checkbox"
-                checked={exigeNf}
-                onChange={(e) => setExigeNf(e.target.checked)}
-                className="h-4 w-4 rounded-sm border-border accent-primary"
-              />
-              <span>{textos.exigeNfOpcao}</span>
-            </label>
-            {formaPagamento !== "" && formaPagamento !== "a_vista" && !exigeNf && (
-              <p className="text-xs text-muted-foreground">{textos.prazoPrecisaNf}</p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="transportadora">{textos.transportadora}</Label>
-            <Input
-              id="transportadora"
-              value={transportadora}
-              onChange={(e) => setTransportadora(e.target.value)}
-            />
-          </div>
-          {/* 0276 — os dois campos do Mercos que não existiam: o código que a
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">{t("Nº do pedido")}</span>
+                <p className="text-sm font-medium">{t("novo")}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">{t("Data da emissão")}</span>
+                <p className="text-sm font-medium">{hoje ?? "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">{t("Vendedor")}</span>
+                <p className="text-sm font-medium">{nomeVendedor || "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-sm text-muted-foreground">{t("Valor do frete")}</span>
+                <p className="text-sm font-medium tabular-nums">
+                  {freteCents > 0 ? comoMoeda(freteCents, "BRL") : "—"}
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="condicao">{textos.condicao}</Label>
+                <Input
+                  id="condicao"
+                  value={condicao}
+                  onChange={(e) => setCondicao(e.target.value)}
+                  placeholder="30/60/90 dias"
+                />
+              </div>
+              {/* ─── FORMA DE PAGAMENTO + NF ──────────────────────────────────────
+               *
+               * A caixa de NF fica ao lado do prazo, e não numa tela separada, por
+               * um motivo concreto: quem marca "é com nota" está decidindo quando o
+               * dinheiro entra. São a mesma decisão.
+               *
+               * E o aviso de prazo dependente da nota é o que impede o erro que o
+               * campo sozinho permitiria: marcar 30 dias e ver uma data de
+               * vencimento que ainda não existe. A tela diz que a data nasce com a
+               * emissão — que é verdade, e é o que `vencimentoDoRecebimento`
+               * devolve para `aguardando_nf`.
+               */}
+              <div className="space-y-1.5">
+                <Label htmlFor="forma-pagamento">{textos.formaPagamento}</Label>
+                <select
+                  id="forma-pagamento"
+                  className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                  value={formaPagamento}
+                  onChange={(e) => setFormaPagamento(e.target.value as FormaDePagamento | "")}
+                >
+                  <option value="">{textos.prazoLivre}</option>
+                  {(Object.keys(FORMA_DE_PAGAMENTO_LABEL) as FormaDePagamento[]).map((f) => (
+                    <option key={f} value={f}>
+                      {FORMA_DE_PAGAMENTO_LABEL[f]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <span className="text-sm font-medium text-foreground">{textos.exigeNf}</span>
+                <label
+                  htmlFor="exige-nf"
+                  className="flex h-10 cursor-pointer items-center gap-2.5 rounded-md border border-border bg-background px-3 text-sm"
+                >
+                  <input
+                    id="exige-nf"
+                    type="checkbox"
+                    checked={exigeNf}
+                    onChange={(e) => setExigeNf(e.target.checked)}
+                    className="h-4 w-4 rounded-sm border-border accent-primary"
+                  />
+                  <span>{textos.exigeNfOpcao}</span>
+                </label>
+                {formaPagamento !== "" && formaPagamento !== "a_vista" && !exigeNf && (
+                  <p className="text-xs text-muted-foreground">{textos.prazoPrecisaNf}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="transportadora">{textos.transportadora}</Label>
+                <Input
+                  id="transportadora"
+                  value={transportadora}
+                  onChange={(e) => setTransportadora(e.target.value)}
+                />
+              </div>
+              {/* 0276 — os dois campos do Mercos que não existiam: o código que a
               transportadora devolve e a pessoa que pediu do lado do cliente. */}
-          <div className="space-y-1.5">
-            <Label htmlFor="rastreamento">{t("Rastreamento")}</Label>
-            <Input
-              id="rastreamento"
-              value={rastreamento}
-              onChange={(e) => setRastreamento(e.target.value)}
-              placeholder={t("Código de rastreio da transportadora")}
+              <div className="space-y-1.5">
+                <Label htmlFor="rastreamento">{t("Rastreamento")}</Label>
+                <Input
+                  id="rastreamento"
+                  value={rastreamento}
+                  onChange={(e) => setRastreamento(e.target.value)}
+                  placeholder={t("Código de rastreio da transportadora")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="contato-no-cliente">{t("Contato no cliente")}</Label>
+                <Input
+                  id="contato-no-cliente"
+                  value={contatoNoCliente}
+                  onChange={(e) => setContatoNoCliente(e.target.value)}
+                  placeholder={t("Quem fez o pedido")}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="endereco">{textos.endereco}</Label>
+                <Input
+                  id="endereco"
+                  value={endereco}
+                  onChange={(e) => setEndereco(e.target.value)}
+                  placeholder={textos.enderecoExemplo}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="obs">{textos.observacoes}</Label>
+                <Input
+                  id="obs"
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="obs-interna">{textos.obsInterna}</Label>
+                <Input
+                  id="obs-interna"
+                  value={obsInterna}
+                  onChange={(e) => setObsInterna(e.target.value)}
+                />
+              </div>
+            </Card>
+          </section>
+        </div>
+
+        {/* O RESUMO PERSISTENTE — estudo C: no desktop ele fica a 1.200–1.400 px
+            da dobra e o vendedor rola para ver o total. Aqui vira coluna que
+            acompanha a rolagem; no celular é bloco ao fim do fluxo (os campos de
+            desconto e frete moram nele) e a barra fixa garante total + ação. */}
+        <aside className="lg:col-span-4" aria-label={t("Resumo do pedido")}>
+          <div className="lg:sticky lg:top-4">
+            <OrderSummary
+              totais={{
+                subtotal,
+                descontoCents: descontoCents + descontoPctCents,
+                freteCents,
+                total,
+                qtdItens: linhas.length,
+                qtdUnidades,
+                margemPct,
+                comissaoCents,
+                parcelas: calcularParcelas(total, condicao),
+                aprovacaoNecessaria,
+              }}
+              descontoMaxPct={descontoMaxVendedorPct}
+              descontoTexto={descontoTexto}
+              aoDesconto={setDescontoTexto}
+              descontoPctTexto={descontoPctTexto}
+              aoDescontoPct={setDescontoPctTexto}
+              freteTexto={freteTexto}
+              aoFrete={setFreteTexto}
+              enviando={enviando}
+              aoSalvar={() => void comEnvio("rascunho")}
+              aoFinalizar={() => void comEnvio("aprovado")}
+              mostrarAcoes={false}
+              textos={{
+                subtotal: textos.subtotal,
+                desconto: textos.desconto,
+                frete: textos.frete,
+                total: textos.total,
+                salvarRascunho: textos.salvarRascunho,
+                finalizar: textos.finalizar,
+                margem: textos.margem,
+                comissao: textos.comissao,
+                aguardandoAprovacao: textos.aguardandoAprovacao,
+                descontoTotal: t("Desconto total"),
+                descontosSomam: t("R$ e % somam"),
+                tetoDesconto: t("Teto de desconto do vendedor"),
+                revisar: textos.revisar,
+                itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
+              }}
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="contato-no-cliente">{t("Contato no cliente")}</Label>
-            <Input
-              id="contato-no-cliente"
-              value={contatoNoCliente}
-              onChange={(e) => setContatoNoCliente(e.target.value)}
-              placeholder={t("Quem fez o pedido")}
-            />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="endereco">{textos.endereco}</Label>
-            <Input
-              id="endereco"
-              value={endereco}
-              onChange={(e) => setEndereco(e.target.value)}
-              placeholder={textos.enderecoExemplo}
-            />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="obs">{textos.observacoes}</Label>
-            <Input id="obs" value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="obs-interna">{textos.obsInterna}</Label>
-            <Input
-              id="obs-interna"
-              value={obsInterna}
-              onChange={(e) => setObsInterna(e.target.value)}
-            />
-          </div>
-        </Card>
-      </section>
+        </aside>
+      </div>
 
       {/* A barra de ação do Mercos, no rodapé: no celular ela fica fixa, porque
           "Gerar pedido" não pode exigir rolar quatro seções de volta. */}
-      <div className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-background p-3 lg:static lg:rounded-xl lg:border lg:bg-card">
+      <div
+        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-background px-4 pt-2.5 pb-2.5 lg:hidden"
+        style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
+      >
         <p className="text-sm text-muted-foreground">
           {linhas.length} {t("itens")} · {qtdUnidades} un
         </p>
         <div className="flex items-center gap-3">
           <p className="text-lg font-semibold tabular-nums">{comoMoeda(total, "BRL")}</p>
-          <Button onClick={() => void comEnvio("aprovado")} disabled={enviando}>
+          <Button
+            onClick={() => void comEnvio("aprovado")}
+            disabled={enviando}
+            data-testid="gerar-pedido-barra"
+          >
             {enviando ? t("Gerando…") : textos.finalizar}
           </Button>
         </div>
@@ -1311,7 +1336,10 @@ export function OrderEditor({
               </p>
             ) : null}
             {aprovacaoNecessaria ? (
-              <p role="alert" className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-warning-fg">
+              <p
+                role="alert"
+                className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-warning-fg"
+              >
                 ⚠ {textos.aguardandoAprovacao}
               </p>
             ) : null}
