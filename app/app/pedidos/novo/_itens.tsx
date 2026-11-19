@@ -61,7 +61,7 @@ export function OrderItems({
               {t("remover")}
             </button>
           </div>
-          <div className="mt-2 grid grid-cols-4 items-end gap-2">
+          <div className="mt-2 grid grid-cols-2 items-end gap-2 sm:grid-cols-4">
             <div>
               <Label>{t("Qtd")}</Label>
               <NexusQuantityStepper

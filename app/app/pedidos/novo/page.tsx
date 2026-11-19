@@ -141,6 +141,9 @@ export default async function NovoPedidoPage({
         telefone: (organizacao as unknown as { phone?: string | null } | null)?.phone ?? null,
       }}
       nomeVendedor={user.full_name ?? user.email}
+      // O rascunho local é da PESSOA na ORGANIZAÇÃO: um balcão compartilhado
+      // não pode devolver a venda de outra vendedora nem a de outro tenant.
+      donoDoRascunho={{ orgId: activeOrg.orgId, userId: user.id }}
       textos={{
         titulo: t("Novo pedido"),
         subtitulo: t("Busque o cliente, adicione os produtos e finalize."),

@@ -44,24 +44,24 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | 2.4 | Homônimos | **PARCIAL** | a opção mostra nome + telefone (`_cliente.tsx:194-197`), sem documento/razão social; o desempate é manual |
 | 2.5 | Catálogo grande | **CORRIGIDO nesta rodada** | busca remota em `/api/v1/products?busca=&limite=12` somada à lista local; inativo não entra (`_produtos.tsx`). Prova: `tests/unit/criador-pedido-busca-produto.test.tsx` |
 | 2.6 | Busca por código/nome/marca | **EXISTE** | `_produtos.tsx:60-72` (exato primeiro, depois trecho) |
-| 2.7 | Busca por EAN/SKU/scanner | **FALTA** | `lib/schemas/produtos.ts` não tem coluna EAN/SKU; `COLUNAS_DO_PRODUTO` só traz `codigo`, `nome`, `marca` |
+| 2.7 | Busca por EAN/SKU/scanner | **CORRIGIDO (matriz E)** | EAN mora em `codigo` (identidade única da org; DIRC recusa uma segunda). O `Enter` agora só lança código **exato** ou resultado **único**; a rota devolve a linha exata na frente do `limit=12`. Provas: `tests/unit/criador-busca-scanner.test.tsx`, `tests/unit/products-busca-codigo-exato.test.ts` |
 | 2.8 | Quantidade inteira | **EXISTE** | `itemCreateSchema.quantidade: int().min(1)`; steppers em `_itens.tsx` |
 | 2.9 | Quantidade fracionária / venda a granel | **PARCIAL / DEPENDE DE REGRA** | o schema só aceita inteiro (`int().min(1)`) e a tela agora trunca (não deixa digitar 1,5 e descobrir no fim); `unidade` aparece e `multiplo` é informado. Não há regra escrita de fração nem validação de múltiplo |
 | 2.10 | Tabela de preço no add | **EXISTE** | `page.tsx` carrega tabelas; `_produtos.tsx` aplica `precoEfetivo`; servidor recalcula (`criar-pedido.ts:217-230`) |
-| 2.11 | Troca de tabela depois de adicionar itens | **INCOMPLETO** | `onValueChange` só troca `tabelaId`; os itens mantêm o preço antigo e a linha agora mostra a origem (“preço da tabela”), mas não há reprecificação automática — o servidor recusa fora da tabela (422) |
+| 2.11 | Troca de tabela depois de adicionar itens | **CORRIGIDO (matriz E)** | a troca reprecifica os itens (override > desconto da tabela > base) e preserva o preço **manual**. Prova: `tests/unit/criador-tabela-credito-parcelas.test.tsx` |
 | 2.12 | Preço manual / negociado | **EXISTE com alçada e agora visível** | cada linha diz “preço base/tabela/manual”; editar o preço marca manual. Servidor: preço diferente do efetivo só passa com `podeIgnorar` (manager+) — `criar-pedido.ts:222-230` |
 | 2.13 | Desconto por item e geral (% × R$) | **EXISTE e agora explícito** | resumo mostra “Desconto total” com “R$ e % somam”, o valor combinado e o teto; servidor soma R$ + % e recusa desconto > subtotal (`criar-pedido.ts:262-269`) |
 | 2.14 | Teto de desconto e aprovação | **EXISTE e agora avisa antes** | a página passa `desconto_max_vendedor_pct` (default 5) e o editor calcula a consequência antes do POST; acima do teto → `em_analise` (`criar-pedido.ts:272-283`); aprovação é manager+ (`[id]/route.ts:191`) |
 | 2.15 | Margem visível | **EXISTE para manager+ e custo mascarado** | `verMargem` (page) → `_resumo`; `custoSomenteParaQuemVeMargem` zera `custo_cents` antes da fronteira servidor→cliente. Prova: `tests/unit/criador-pedido-cliente-do-link.test.tsx` |
-| 2.16 | Crédito | **EXISTE** | rascunho não barra; compromisso acima do limite recusa 422 (`lib/comercial/credito.ts`; `criar-pedido.ts:285-305`) |
+| 2.16 | Crédito | **EXISTE e avisa ANTES (matriz E)** | rascunho não barra; compromisso acima do limite recusa 422 (`lib/comercial/credito.ts`; `criar-pedido.ts:285-305`); a tela faz a mesma conta (`em aberto + este pedido`) com a mesma lista de status e avisa antes do clique. Provas: `criador-tabela-credito-parcelas.test.tsx`, `commercial-orders-credito-gate.test.ts` |
 | 2.17 | Estoque: pré-checagem e exibição | **EXISTE** | servidor: `criar-pedido.ts:233-247`; tela: quatro estados (conhecido, sem saldo, insuficiente, não controlado) + “não há reserva”. Prova: `tests/unit/criador-itens-estoque-unidade.test.tsx` |
 | 2.18 | Estoque: reserva | **FALTA / DEPENDE DE REGRA** | não há reserva; a baixa ocorre no commit do pedido. Duas vendas simultâneas passam na pré-checagem; uma baixa pode falhar |
 | 2.19 | Estoque: falha da baixa depois do insert | **INCOMPLETO** | o pedido e os itens já foram gravados; a falha da baixa só é logada (`criar-pedido.ts`, bloco “baixa de estoque não aplicada”). Não há transação única nem rollback |
-| 2.20 | Override de estoque/crédito | **EXISTE na API, FALTA na tela** | `ignorar_estoque`/`ignorar_credito` no schema e na rota; `grep` no editor: nenhum uso |
+| 2.20 | Override de estoque/crédito | **EXISTE na API (gate provado), FALTA na tela** | `ignorar_estoque`/`ignorar_credito` no schema e na rota; o gate manager é provado em `tests/unit/commercial-orders-credito-gate.test.ts` (agent 422 sem escrita; manager passa). Botão para o gerente segue como decisão de produto |
 | 2.21 | Numeração do pedido | **EXISTE** | `fn_proximo_numero_pedido` (0209), por org |
 | 2.22 | Idempotência / clique duplo | **CORRIGIDO nesta rodada** | `chave_sincronizacao` por editor, persistida no rascunho; guarda síncrona em `comEnvio`; o atalho passa pela mesma porta |
 | 2.23 | Retry depois de timeout | **EXISTE com a chave** | `apiClient` **não repete POST** (`lib/api/client.ts:191-205`); o retry manual reusa a mesma chave e o servidor devolve `ja_existia` |
-| 2.24 | Autosave / restauração | **CORRIGIDO nesta rodada (inclusive falha)** | `_autosave.ts` (2 s) e `aplicarRascunho` devolve **todos** os campos editáveis: desconto R$ e %, frete, tabela, endereço, transportadora, rastreio, contato no cliente, observações e obs. interna. Prova: teste “autosave restaura TODOS os campos”. Restaura também o cliente escolhido **sem itens** (quando não há link). Com link de outro cliente sem itens, o link vence |
+| 2.24 | Autosave / restauração | **CORRIGIDO e escopado por org+usuário (matriz E)** | a chave é `pedido-rascunho:<org>:<user>` (`chaveDoRascunho`): rascunho de outra pessoa/tenant não é retomado. Prova: `tests/unit/criador-rascunho-escopo.test.tsx`. Também nesta rodada (inclusive falha): `_autosave.ts` (2 s) e `aplicarRascunho` devolve **todos** os campos editáveis: desconto R$ e %, frete, tabela, endereço, transportadora, rastreio, contato no cliente, observações e obs. interna. Prova: teste “autosave restaura TODOS os campos”. Restaura também o cliente escolhido **sem itens** (quando não há link). Com link de outro cliente sem itens, o link vence |
 | 2.25 | Rascunho de outro cliente × link | **CORRIGIDO nesta rodada** | diálogo “usar o cliente do link × continuar o rascunho”; autosave desligado até a decisão |
 | 2.26 | Proteção de navegação | **CORRIGIDO nesta rodada** | `beforeunload` pede confirmação quando há itens; sem itens não incomoda. Navegação SPA entre telas continua sem bloqueio (o autosave cobre o conteúdo) |
 | 2.27 | Revisão antes de finalizar | **CORRIGIDO nesta rodada** | a prévia agora mostra cliente, condição, forma de pagamento, NF, endereço, itens (unidade, preço unitário, desconto por item, subtotal), subtotal, descontos R$ e %, frete, total, parcelas, observações e a consequência na aprovação. Prova: “revisão antes de finalizar (B.7)” |
@@ -74,7 +74,7 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | 2.34 | Lead → orçamento | **PARCIAL** | `rascunho` = “Em orçamento”; há link público (`/orcamento`) e envio por WhatsApp. A criação a partir de um lead **não** é automática |
 | 2.35 | Permissões | **EXISTE** | criar = `agent+`; override/desconto/acima do teto = `manager+`; viewer não abre |
 | 2.36 | Multimoeda | **FALTA** | `moeda` no schema (default BRL), sem seletor na tela; não há cotação nem regra escrita |
-| 2.37 | Mobile / teclado / leitor de tela | **PARCIAL** | layout 70/30 + barra sticky; atalhos e labels existem, mas não há prova E2E dedicada ao criador |
+| 2.37 | Mobile / teclado / leitor de tela | **CORRIGIDO (matriz E)** | busca como combobox/listbox com `aria-selected`; resumo é `role=region` nomeada; desconto/frete com nome acessível; barra e grade quebram linha (320 px). Provas: `tests/unit/criador-acessivel.test.tsx` (jsdom) e `tests/e2e/criador-pedido-acessivel-320.spec.ts` (mede `scrollWidth` em 320, roda no smoke) |
 
 ## 3. Corrigido nesta rodada (com prova)
 
@@ -266,3 +266,43 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 ```
 
 `tsc` da fatia: 0. ESLint: 0 erros (1 warning pré-existente em `setHoje`).
+
+## 9. Matriz E — os dez cenários, com prova e defeito
+
+> Medido em 19/11/2026 sobre `nexus/main` @ `9fce82fa`. Cada linha nomeia o
+> arquivo de prova; nenhum cenário ficou "coberto por inspeção".
+
+| # | Cenário | Estado | Prova |
+|---|---|---|---|
+| 1 | EAN/SKU/scanner: código casa produto; EAN inexistente não inventa; SKU ambíguo não escolhe sozinho | **DEFEITO CORRIGIDO** — o `Enter` lançava o primeiro da lista | `tests/unit/criador-busca-scanner.test.tsx`, `tests/unit/products-busca-codigo-exato.test.ts` |
+| 2 | Escala: 600 produtos e 600 contatos; busca responde; catálogo não vai inteiro | **OK + MEDIDO** (rajada, teto de 8 linhas, 1 consulta remota, lote de 2.000/500) | `tests/unit/criador-escala-busca.test.tsx` |
+| 3 | Tabela/override reflete nos itens; preço manual marcado e preservado | **DEFEITO CORRIGIDO** — trocar a tabela não reprecificava | `tests/unit/criador-tabela-credito-parcelas.test.tsx` |
+| 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **OK** (a ausência de reserva é dita na tela e no doc) | `criador-tabela-credito-parcelas.test.tsx`, `criador-itens-estoque-unidade.test.tsx` |
+| 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **DEFEITO CORRIGIDO** (tela) + gate do servidor provado | `criador-tabela-credito-parcelas.test.tsx`, `tests/unit/commercial-orders-credito-gate.test.ts` |
+| 6 | Quantidade inteira (B.14); parcelas somam o total; fração/granel não quebra | **OK** (fração segue **DEPENDE DE REGRA**) | `criador-tabela-credito-parcelas.test.tsx` |
+| 7 | Rascunho entre org/usuário não é retomado; `descontoTexto` volta | **DEFEITO CORRIGIDO** — chave única do navegador | `tests/unit/criador-rascunho-escopo.test.tsx` |
+| 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **OK, provado na rota** (mesmo pedido, mesmos itens, sem número queimado) | `tests/unit/commercial-orders-timeout-retry.test.ts` |
+| 9 | Reconciliação: itens/parcelas somam no banco de teste | **OK** (Postgres efêmero com o `baseline.sql`) | `tests/invariants/pedido-reconciliacao.test.ts` |
+| 10 | 320 px sem overflow; foco por teclado; `aria-label` do resumo e da busca | **DEFEITO CORRIGIDO** (campos sem nome, barra/grade vazando) | `tests/unit/criador-acessivel.test.tsx` + `tests/e2e/criador-pedido-acessivel-320.spec.ts` |
+
+**Defeitos encontrados e corrigidos nesta fatia** (todos com o "antes" medido):
+
+1. `ProductSearch`: `Enter` lançava `filtrados[destaque]` — o primeiro da lista —
+   com qualquer termo. EAN inexistente podia virar item; busca de três letras
+   vendia o primeiro resultado.
+2. `GET /api/v1/products?busca=`: o produto do código exato podia ficar fora do
+   `limit=12` (ordenação por nome), e a tela dizia "nenhum produto encontrado"
+   para um produto existente.
+3. Troca de tabela de preço: os itens mantinham o preço antigo; o 422 só vinha
+   no fim.
+4. Crédito: a tela alertava apenas sobre o saldo já em aberto — o pedido novo
+   que estourava o limite não era previsto.
+5. Rascunho: chave única por navegador (`pedido-rascunho`) — vazamento entre
+   usuários e entre organizações no mesmo browser.
+6. Acessibilidade: campos de desconto (R$/%) e frete sem nome acessível; a busca
+   anunciada como "Produtos" e sem `listbox`/`aria-selected`; barra de ação e
+   grade do item vazando em 320 px.
+
+**O que continua como decisão (não inventado):** reserva de estoque, baixa
+atômica com o pedido, regra de fração/granel e de múltiplo, botão de override de
+estoque/crédito para o gerente, e modalidade/previsão de frete na tela.

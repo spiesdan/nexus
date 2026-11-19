@@ -75,12 +75,19 @@ export function OrderSummary({
     descontosSomam: string;
     tetoDesconto: string;
     revisar: string;
+    /** Nome acessível da região do resumo (o leitor de tela pula por ela). */
+    resumoDoPedido: string;
     itensUnidades: (itens: number, un: number) => string;
   };
 }) {
   return (
     <>
-      <Card className="space-y-3 p-4 lg:sticky lg:top-4" id="resumo">
+      <Card
+        className="space-y-3 p-4 lg:sticky lg:top-4"
+        id="resumo"
+        role="region"
+        aria-label={textos.resumoDoPedido}
+      >
         {totais.aprovacaoNecessaria && (
           <p
             role="alert"
@@ -99,6 +106,7 @@ export function OrderSummary({
             <dd>
               <Input
                 id="desconto"
+                aria-label={`${textos.desconto} (R$)`}
                 className="w-28 text-right"
                 value={descontoTexto}
                 onChange={(e) => aoDesconto(e.target.value)}
@@ -113,6 +121,7 @@ export function OrderSummary({
                   e é ele que liga o campo ao rótulo para o leitor de tela. */}
               <Input
                 id="desconto-pct"
+                aria-label={`${textos.desconto} (%)`}
                 className="w-28 text-right"
                 type="number"
                 min={0}
@@ -128,6 +137,7 @@ export function OrderSummary({
             <dd>
               <Input
                 id="frete"
+                aria-label={`${textos.frete} (R$)`}
                 className="w-28 text-right"
                 value={freteTexto}
                 onChange={(e) => aoFrete(e.target.value)}
@@ -189,11 +199,13 @@ export function OrderSummary({
       {/* Barra mobile (§41): o resumo viaja com o vendedor. */}
       {mostrarAcoes ? (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-background p-3 lg:hidden">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <p className="text-sm text-muted-foreground">
               {textos.itensUnidades(totais.qtdItens, totais.qtdUnidades)}
             </p>
-            <p className="text-lg font-semibold tabular-nums">{comoMoeda(totais.total, "BRL")}</p>
+            <p className="whitespace-nowrap text-lg font-semibold tabular-nums">
+              {comoMoeda(totais.total, "BRL")}
+            </p>
             <Button size="sm" onClick={() => rolarPara(document.getElementById("resumo"))}>
               {textos.revisar}
             </Button>

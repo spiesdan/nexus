@@ -30,6 +30,7 @@ confirmar-dado-do-contato.spec.ts
 contato-salva-email.spec.ts
 conversa-vira-lead.spec.ts
 credenciais-de-ia.spec.ts
+criador-pedido-acessivel-320.spec.ts
 degradacao-silenciosa.spec.ts
 distribuicao-atendimento.spec.ts
 entrada-do-endereco.spec.ts
