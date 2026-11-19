@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/auth/AuthProvider";
@@ -27,8 +27,9 @@ import { InboxKeyboardShortcuts } from "./InboxKeyboardShortcuts";
 import { ShortcutsHelpDialog } from "./ShortcutsHelpDialog";
 import { OpenConversationProvider } from "@/hooks/notifications/OpenConversationContext";
 // ADR-05: ícone de feature sai do mapa canônico, nunca do pacote direto.
-import { CaretLeft, IdentificationCard } from "@/lib/ui/icons";
+import { CaretLeft, ChatsCircle, IdentificationCard } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
@@ -108,6 +109,25 @@ const FILTER_TABS: InboxTab[] = ["unassigned", "mine", "all", "closed", "ai"];
  */
 function parseFilterParam(v: string | null): InboxTab {
   return v && FILTER_TABS.includes(v as InboxTab) ? (v as InboxTab) : "unassigned";
+}
+
+/**
+ * UMA TECLA, DESENHADA COMO TECLA.
+ *
+ * Os atalhos do inbox existem (`InboxKeyboardShortcuts`: j/k, r, a, e, ?) e a
+ * ÚNICA porta para descobri-los era apertar `?` — que ninguém aperta sem saber
+ * que existe. Desenhar as teclas no estado vazio é o mesmo que os menus do
+ * produto já fazem: mostrar o atalho onde a pessoa está parada.
+ *
+ * `border` + `bg-muted` nos tokens do tema, nunca um `kbd` de biblioteca: um
+ * terceiro jeito de desenhar tecla no produto seria a divergência de amanhã.
+ */
+function Atalho({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-text">
+      {children}
+    </kbd>
+  );
 }
 
 interface InboxLayoutProps {
@@ -509,12 +529,59 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
               />
             </>
           ) : selectionNotFound ? (
-            <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-              {t("Conversa não encontrada ou fora do seu acesso.")}
+            /*
+              PERMISSÃO, DITA COMO PERMISSÃO.
+              A frase certa já existia, mas morava num `<div>` centrado, sem
+              ícone, sem título e sem saída: no celular a única saída era o
+              "Conversas" da barra de cima, fácil de não ver; no desktop a tela
+              ficava num cinza que parece defeito de carregamento. O mesmo
+              `NexusErrorState` que as outras telas usam para "sem acesso" — com
+              a ação que devolve a lista — faz o estado dizer o que é e o que dá
+              para fazer.
+            */
+            <div className="flex h-full items-center justify-center p-6">
+              <NexusErrorState
+                variant="denied"
+                title={t("Conversa fora do seu acesso")}
+                description={t(
+                  "Ela pode ter sido arquivada, excluída ou estar em outro escopo de atendimento.",
+                )}
+                onRetry={() => handleSelect(null)}
+                retryLabel={t("Voltar para as conversas")}
+                className="max-w-md"
+              />
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              {t("Selecione uma conversa")}
+            /*
+              O CANVAS VAZIO DO DESKTOP — a tela que o atendente vê ao abrir o
+              Inbox sem conversa escolhida. Era a frase "Selecione uma
+              conversa" solta no meio de um retângulo branco: não dizia o que
+              fazer nem que os atalhos de teclado existem (eles existem desde a
+              onda de produtividade, e a única porta para descobri-los era o
+              `?`). Ícone, frase e as teclas dão o mesmo recado sem custar
+              clique.
+            */
+            <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+              <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <ChatsCircle size={24} weight="duotone" aria-hidden />
+              </div>
+              {/* Texto EXATO mantido: `invite-lifecycle` e `rbac-roles` provam
+                  esta tela por ele. */}
+              <h3 className="text-base font-semibold text-text">{t("Selecione uma conversa")}</h3>
+              <p className="max-w-xs text-sm text-muted-foreground">
+                {t("Escolha uma conversa na lista para ler o histórico e responder.")}
+              </p>
+              <p className="mt-2 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+                <Atalho>J</Atalho>
+                <Atalho>K</Atalho>
+                <span>{t("navegam")}</span>
+                <span aria-hidden>·</span>
+                <Atalho>R</Atalho>
+                <span>{t("responde")}</span>
+                <span aria-hidden>·</span>
+                <Atalho>?</Atalho>
+                <span>{t("atalhos")}</span>
+              </p>
             </div>
           )}
         </div>
