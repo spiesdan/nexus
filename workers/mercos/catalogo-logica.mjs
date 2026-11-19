@@ -153,6 +153,44 @@ export function rotasDoCatalogo(empresa) {
 }
 
 /**
+ * AS VISÕES DA GRADE — medidas na página real, dentro do `crm-mercos-1`.
+ *
+ * O parâmetro **não** é `situacao` (era o chute): a paginação da própria grade
+ * devolve `?p=1&status=1&nome_codigo=`, e os valores observados em 19/11/2026
+ * foram:
+ *
+ *   status=1 -> "Exibir produtos ativos"    (15/15 linhas com `visibility`)
+ *   status=2 -> "Exibir produtos inativos"  (15/15 linhas com `visibility_off`)
+ *   status=0 -> "Exibir todos os produtos"  (mistura ativos e inativos; o mesmo
+ *               código pode aparecer duas vezes — ex.: 875 ALCOOL PERFUMADO 5 L,
+ *               uma linha ativa e outra inativa, são registros distintos no ERP)
+ *
+ * Isso importa: `?situacao=inativos` devolve a MESMA grade de ativos (o
+ * parâmetro é ignorado pelo servidor), então quem confiasse nele mediria
+ * inativos = 0 e concluiria que não há nenhum.
+ */
+export const VISOES_DO_CATALOGO = Object.freeze([
+  Object.freeze({ situacao: "ativos", status: "1", ativo: true }),
+  Object.freeze({ situacao: "inativos", status: "2", ativo: false }),
+]);
+
+/** Default continua só ativos; `--todos` acrescenta a visão de inativos. */
+export function visoesDoCatalogo(todos = false) {
+  return todos ? VISOES_DO_CATALOGO.map((v) => ({ ...v })) : [{ ...VISOES_DO_CATALOGO[0] }];
+}
+
+/**
+ * A URL da grade com o filtro de situação, preservando a rota descoberta no
+ * menu. `p=1` é explícito porque é o parâmetro que a própria paginação usa.
+ */
+export function urlComStatus(rota, status) {
+  const url = new URL(rota);
+  url.searchParams.set("status", String(status));
+  url.searchParams.set("p", "1");
+  return url.href;
+}
+
+/**
  * ZERO NÃO É SUCESSO — o motivo, ou `null` quando a coleta valeu.
  *
  * `paginas === 0` = nem abriu a grade (rota errada, sessão caída, seletor
@@ -182,7 +220,8 @@ export const COLUNAS_LEGADO = Object.freeze({
  *
  * Divergente é a linha que EXISTE e não dá para importar com segurança —
  * sem nome, com preço ilegível, ou com código repetido dentro do próprio lote
- * (o ERP não deveria repetir, e se repetir a última vence: o relatório avisa).
+ * (o ERP não deveria repetir; se repetir, com o mesmo status vale a última, mas
+ * o registro ATIVO vence o inativo — o relatório avisa qual venceu).
  */
 export function classificarLinhas(linhas) {
   const validas = [];
@@ -212,6 +251,9 @@ export function classificarLinhas(linhas) {
       codigo,
       nome: String(linha.nome).trim().slice(0, 300),
       preco_cents,
+      // Linha sem o marcador é ativa: é o contrato do modo default (só ativos)
+      // e o das coletas antigas, que não tinham a visão de inativos.
+      ativo: linha?.ativo !== false,
       unidade: normalizarCodigo(linha?.unidade),
       foto: normalizarCodigo(linha?.foto),
       bruto: linha ?? null,
@@ -219,13 +261,21 @@ export function classificarLinhas(linhas) {
 
     const anterior = vistos.get(codigo);
     if (anterior !== undefined) {
+      const anteriorRegistro = validas[anterior];
+      // O mesmo código pode existir nas DUAS visões do ERP (um ativo e um
+      // inativo — medido: 8 códigos em 19/11/2026). O registro ATIVO é o
+      // canônico: deixar o inativo vencer sobrescreveria preço/nome do produto
+      // que o operador vê na grade padrão com o dado da duplicata desativada.
+      const ativoVence = anteriorRegistro?.ativo === true && registro.ativo === false;
       divergentes.push({
         indice,
         codigo,
         nome: registro.nome,
-        motivo: `código repetido no lote (linha ${anterior + 1}); vale a última`,
+        motivo: ativoVence
+          ? `código repetido no lote (linha ${anterior + 1}); o registro ativo vence`
+          : `código repetido no lote (linha ${anterior + 1}); vale a última`,
       });
-      validas[anterior] = registro;
+      validas[anterior] = ativoVence ? anteriorRegistro : registro;
       continue;
     }
     vistos.set(codigo, validas.length);
@@ -272,6 +322,113 @@ export function planejarUpsert(validas, existentesPorCodigo) {
   }
 
   return { criados, atualizados, divergentes };
+}
+
+/**
+ * DECIDE O `ativo` DE UMA LINHA DE UPSERT — e a regra é assimétrica de propósito.
+ *
+ * O que o upsert fazia até aqui:
+ *  - produto NOVO entrava com `ativo: true` **sempre** — inclusive vindo da
+ *    visão de inativos, o que faria um item desativado no ERP nascer disponível
+ *    para o agente;
+ *  - produto EXISTENTE mantinha o `ativo` do banco (`existente?.ativo ?? true`),
+ *    ou seja, importar nunca promovia nem rebaixava.
+ *
+ * A regra declarada (e testada) é:
+ *  - **novo** adota o status da coleta (`true`/`false`; ausente = `true`, que é
+ *    o contrato do modo default);
+ *  - **existente nunca muda de status por importação**:
+ *      ativo no banco + linha inativa  -> continua ativo (`nao_rebaixa_ativo`);
+ *      inativo no banco + linha ativa  -> continua inativo (`nao_promove_inativo`).
+ *
+ * Por que não rebaixar: desativar tira o produto do catálogo que o agente
+ * consulta — e a visão de inativos pode vir incompleta por paginação, sessão ou
+ * filtro. "Não achei na lista" não é prova de que o produto foi desativado.
+ *
+ * Por que não promover: reativar é decisão de negócio (item em fim de linha,
+ * preço em revisão, bloqueio fiscal). O importador não tem esse contexto, e
+ * reativar em silêncio é tão arriscado quanto desativar. Nos dois sentidos, a
+ * mudança fica explícita para quem opera — o relatório mostra o que foi contido.
+ */
+export function resolverAtivoNoUpsert({ existente = null, ativoEntrante } = {}) {
+  const entrante = ativoEntrante !== false;
+
+  if (!existente) {
+    return entrante
+      ? { ativo: true, motivo: "novo_ativo" }
+      : { ativo: false, motivo: "novo_inativo" };
+  }
+
+  // `null`/`undefined` no banco não deveria acontecer (o schema é not null com
+  // default true), mas tratar como ativo é o lado seguro: não desliga produto
+  // por um campo que veio vazio.
+  const ativoNoBanco = existente.ativo !== false;
+
+  if (ativoNoBanco && !entrante) return { ativo: true, motivo: "nao_rebaixa_ativo" };
+  if (!ativoNoBanco && entrante) return { ativo: false, motivo: "nao_promove_inativo" };
+  return ativoNoBanco
+    ? { ativo: true, motivo: "preserva_ativo" }
+    : { ativo: false, motivo: "preserva_inativo" };
+}
+
+/**
+ * Monta as linhas do upsert já com a decisão de `ativo` — pura, para o teste
+ * provar as quatro combinações sem Supabase.
+ */
+export function montarLinhasDoUpsert({ organizationId, criados, atualizados, existentesPorCodigo }) {
+  const linhas = [];
+  const status = {
+    novos_ativos: 0,
+    novos_inativos: 0,
+    preservados_ativos: 0,
+    preservados_inativos: 0,
+    rebaixamentos_bloqueados: 0,
+    promocoes_bloqueadas: 0,
+  };
+
+  const contar = (motivo) => {
+    if (motivo === "novo_ativo") status.novos_ativos += 1;
+    else if (motivo === "novo_inativo") status.novos_inativos += 1;
+    else if (motivo === "preserva_ativo") status.preservados_ativos += 1;
+    else if (motivo === "preserva_inativo") status.preservados_inativos += 1;
+    else if (motivo === "nao_rebaixa_ativo") status.rebaixamentos_bloqueados += 1;
+    else if (motivo === "nao_promove_inativo") status.promocoes_bloqueadas += 1;
+  };
+
+  for (const produto of criados ?? []) {
+    const decisao = resolverAtivoNoUpsert({ existente: null, ativoEntrante: produto.ativo });
+    contar(decisao.motivo);
+    linhas.push({
+      organization_id: organizationId,
+      codigo: produto.codigo,
+      nome: produto.nome,
+      preco_cents: produto.preco_cents,
+      moeda: "BRL",
+      unidade: produto.unidade,
+      imagem_url: produto.foto,
+      origem: "mercos",
+      ativo: decisao.ativo,
+    });
+  }
+
+  for (const produto of atualizados ?? []) {
+    const existente = existentesPorCodigo?.get?.(produto.codigo) ?? null;
+    const decisao = resolverAtivoNoUpsert({ existente, ativoEntrante: produto.ativo });
+    contar(decisao.motivo);
+    linhas.push({
+      organization_id: organizationId,
+      codigo: produto.codigo,
+      nome: produto.nome,
+      preco_cents: produto.preco_cents,
+      moeda: "BRL",
+      unidade: produto.unidade ?? existente?.unidade ?? null,
+      // Foto só preenche o vazio; foto curada não é sobrescrita pelo ERP.
+      imagem_url: existente?.imagem_url ? existente.imagem_url : produto.foto,
+      ativo: decisao.ativo,
+    });
+  }
+
+  return { linhas, status };
 }
 
 /**

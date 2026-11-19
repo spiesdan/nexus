@@ -9,6 +9,11 @@
  *   é atualizado em preço/unidade/foto e o nome fica como está; a divergência
  *   vai para o relatório com os dois nomes lado a lado. Rebatizar produto em
  *   silêncio é o tipo de "sincronização" que ninguém consegue auditar depois.
+ * - **O status de produto existente não é sobrescrito.** Linha inativa não
+ *   rebaixa produto ativo; linha ativa não promove produto inativo. Produto
+ *   novo adota o status da coleta (`ativo`), então o modo `--todos` cria os
+ *   inativos já desligados. A decisão está em `resolverAtivoNoUpsert` e o
+ *   relatório conta cada caso (`status`).
  * - **Dry-run é o padrão.** Sem `--aplicar`, nada é escrito: o relatório sai
  *   igualzinho, e é ele que se revisa antes.
  *
@@ -23,7 +28,7 @@ import { createInterface } from "node:readline";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { classificarLinhas, planejarUpsert } from "./catalogo-logica.mjs";
+import { classificarLinhas, montarLinhasDoUpsert, planejarUpsert } from "./catalogo-logica.mjs";
 
 const arg = (nome, padrao) => {
   const i = process.argv.indexOf(`--${nome}`);
@@ -98,42 +103,6 @@ async function buscarExistentes(admin, codigos) {
   return porCodigo;
 }
 
-function montarLinhas(criados, atualizados, existentesPorCodigo) {
-  const linhas = [];
-
-  for (const produto of criados) {
-    linhas.push({
-      organization_id: ORG,
-      codigo: produto.codigo,
-      nome: produto.nome,
-      preco_cents: produto.preco_cents,
-      moeda: "BRL",
-      unidade: produto.unidade,
-      imagem_url: produto.foto,
-      origem: "mercos",
-      ativo: true,
-    });
-  }
-
-  for (const produto of atualizados) {
-    const existente = existentesPorCodigo.get(produto.codigo);
-    linhas.push({
-      organization_id: ORG,
-      codigo: produto.codigo,
-      // Nome do BANCO (decisão registrada no cabeçalho).
-      nome: produto.nome,
-      preco_cents: produto.preco_cents,
-      moeda: "BRL",
-      unidade: produto.unidade ?? existente?.unidade ?? null,
-      // Foto só preenche o vazio; foto curada não é sobrescrita pelo ERP.
-      imagem_url: existente?.imagem_url ? existente.imagem_url : produto.foto,
-      ativo: existente?.ativo ?? true,
-    });
-  }
-
-  return linhas;
-}
-
 async function main() {
   if (COLETAR) await coletar();
 
@@ -150,7 +119,12 @@ async function main() {
   );
   const { criados, atualizados, divergentes: nomesDivergentes } = planejarUpsert(validas, existentes);
 
-  const linhasParaGravar = montarLinhas(criados, atualizados, existentes);
+  const { linhas: linhasParaGravar, status: statusDoAtivo } = montarLinhasDoUpsert({
+    organizationId: ORG,
+    criados,
+    atualizados,
+    existentesPorCodigo: existentes,
+  });
   let gravados = 0;
 
   if (APLICAR && linhasParaGravar.length > 0) {
@@ -175,6 +149,10 @@ async function main() {
     divergentes: divergentes.length + nomesDivergentes.length,
     sem_codigo: semCodigo.length,
     gravados,
+    // O que a importação fez (ou deixou de fazer) com `ativo`. É aqui que o
+    // dono vê quantos produtos o modo `--todos` criaria já inativos e quantos
+    // status a regra de não-rebaixar/não-promover conteve.
+    status: statusDoAtivo,
     detalhe: {
       // Nome divergente é o que o dono revisa: preço atualizado, nome mantido.
       nomes_divergentes: nomesDivergentes.slice(0, 200),
@@ -192,6 +170,7 @@ async function main() {
     atualizados: relatorio.atualizados,
     divergentes: relatorio.divergentes,
     sem_codigo: relatorio.sem_codigo,
+    status: relatorio.status,
     relatorio: SAIDA_RELATORIO,
   });
 }

@@ -22,13 +22,17 @@ import {
   COLUNAS_LEGADO,
   indexarCatalogo,
   mapearColunas,
+  montarLinhasDoUpsert,
   normalizarCodigo,
   normalizarNome,
   motivoDoVazio,
   planejarPareamento,
   planejarUpsert,
   precoParaCents,
+  resolverAtivoNoUpsert,
   rotasDoCatalogo,
+  urlComStatus,
+  visoesDoCatalogo,
 } from "../../workers/mercos/catalogo-logica.mjs";
 
 describe("cabeçalho manda nas colunas", () => {
@@ -124,6 +128,19 @@ describe("classificação do lote", () => {
     expect(validas).toHaveLength(1);
     expect(validas[0]!.preco_cents).toBe(1100);
     expect(divergentes[0]!.motivo).toContain("código repetido");
+  });
+
+  it("mesmo código nas duas visões: o registro ATIVO vence e não é sobrescrito pelo inativo", () => {
+    // Medido em 19/11/2026: 8 códigos existem nas duas visões do ERP (ex.: 875,
+    // ALCOOL PERFUMADO 5 L, um ativo e um inativo). O inativo não pode ditar
+    // preço/nome do produto que o operador vê na grade padrão.
+    const { validas, divergentes } = classificarLinhas([
+      { codigo: "875", nome: "ALCOOL PERFUMADO 5 L", preco: "10,00", ativo: true, situacao: "ativos" },
+      { codigo: "875", nome: "ALCOOL PERFUMADO 5 L", preco: "99,00", ativo: false, situacao: "inativos" },
+    ]);
+    expect(validas).toHaveLength(1);
+    expect(validas[0]).toMatchObject({ ativo: true, preco_cents: 1000 });
+    expect(divergentes[0]!.motivo).toContain("registro ativo vence");
   });
 });
 
@@ -281,5 +298,174 @@ describe("zero não é sucesso", () => {
 
   it("número ausente não vira sucesso por acidente", () => {
     expect(motivoDoVazio({ paginas: Number.NaN, produtosLidos: 10 })).toBe("nenhuma pagina lida");
+  });
+});
+
+/**
+ * ATIVOS × INATIVOS — o filtro real e o status que a coleta carrega.
+ *
+ * O parâmetro `situacao` era chute: medido na página real do `crm-mercos-1` em
+ * 19/11/2026, `?situacao=inativos` devolve a MESMA grade de ativos. A grade
+ * filtra por `status`: 1 = ativos, 2 = inativos, 0 = todos. O teste fixa isso
+ * para que o chute não volte.
+ */
+describe("visões da grade: ativos por default, inativos só com --todos", () => {
+  it("default continua só ativos, e com o status que a paginação usa", () => {
+    expect(visoesDoCatalogo()).toEqual([{ situacao: "ativos", status: "1", ativo: true }]);
+  });
+
+  it("--todos acrescenta inativos com status=2", () => {
+    expect(visoesDoCatalogo(true)).toEqual([
+      { situacao: "ativos", status: "1", ativo: true },
+      { situacao: "inativos", status: "2", ativo: false },
+    ]);
+  });
+
+  it("não existe visão com `situacao` — esse parâmetro é ignorado pelo ERP", () => {
+    expect(JSON.stringify(visoesDoCatalogo(true))).not.toContain("situacao=inativos");
+  });
+
+  it("monta a URL sobre a rota descoberta no menu, preservando o filtro", () => {
+    expect(urlComStatus("https://app.mercos.com/industria/338282/produtos/", "2")).toBe(
+      "https://app.mercos.com/industria/338282/produtos/?status=2&p=1",
+    );
+    expect(urlComStatus("https://app.mercos.com/industria/338282/produtos/?x=1", "1")).toBe(
+      "https://app.mercos.com/industria/338282/produtos/?x=1&status=1&p=1",
+    );
+  });
+});
+
+/**
+ * A SEMÂNTICA DO UPSERT POR `(organization_id, codigo)`.
+ *
+ * O risco que estes testes cobrem não é duplicar produto — é mudar `ativo` em
+ * silêncio. Rebaixar tira o produto do catálogo que o agente consulta;
+ * promover reativa item que alguém desligou de propósito. Os dois são decisão
+ * de negócio, e o importador não tem contexto para nenhum dos dois.
+ */
+describe("upsert: status de produto existente nunca é sobrescrito", () => {
+  it("ativo sobre ativo: preserva ativo", () => {
+    expect(resolverAtivoNoUpsert({ existente: { ativo: true }, ativoEntrante: true })).toEqual({
+      ativo: true,
+      motivo: "preserva_ativo",
+    });
+  });
+
+  it("inativo sobre inativo: preserva inativo", () => {
+    expect(resolverAtivoNoUpsert({ existente: { ativo: false }, ativoEntrante: false })).toEqual({
+      ativo: false,
+      motivo: "preserva_inativo",
+    });
+  });
+
+  it("inativo sobre ativo: NÃO rebaixa (o caso que o modo --todos não pode causar)", () => {
+    expect(resolverAtivoNoUpsert({ existente: { ativo: true }, ativoEntrante: false })).toEqual({
+      ativo: true,
+      motivo: "nao_rebaixa_ativo",
+    });
+  });
+
+  it("ativo sobre inativo: NÃO promove — decisão documentada, igual ao upsert atual", () => {
+    // O upsert atual preserva `existente.ativo`. Promover em silêncio seria
+    // reativar item em fim de linha/preço em revisão sem contexto humano.
+    expect(resolverAtivoNoUpsert({ existente: { ativo: false }, ativoEntrante: true })).toEqual({
+      ativo: false,
+      motivo: "nao_promove_inativo",
+    });
+  });
+
+  it("produto novo adota o status da coleta — inativo nasce inativo", () => {
+    expect(resolverAtivoNoUpsert({ existente: null, ativoEntrante: false })).toEqual({
+      ativo: false,
+      motivo: "novo_inativo",
+    });
+    expect(resolverAtivoNoUpsert({ existente: null, ativoEntrante: true })).toEqual({
+      ativo: true,
+      motivo: "novo_ativo",
+    });
+  });
+
+  it("linha sem marcador (coleta antiga/default) é ativa — não desliga produto por campo ausente", () => {
+    expect(resolverAtivoNoUpsert({ existente: null, ativoEntrante: undefined })).toEqual({
+      ativo: true,
+      motivo: "novo_ativo",
+    });
+  });
+
+  it("`ativo` nulo no banco é tratado como ativo (default do schema)", () => {
+    expect(resolverAtivoNoUpsert({ existente: { ativo: null }, ativoEntrante: false })).toEqual({
+      ativo: true,
+      motivo: "nao_rebaixa_ativo",
+    });
+  });
+});
+
+describe("montagem das linhas do upsert com o status decidido", () => {
+  const existentes = new Map([
+    ["411", { id: "p-411", codigo: "411", nome: "Toalhinha 5kg", preco_cents: 1000, ativo: true, unidade: "UN", imagem_url: "https://foto/curada.jpg" }],
+    ["806", { id: "p-806", codigo: "806", nome: "ESPONJA COM 4 UN", preco_cents: 500, ativo: false, unidade: "UN", imagem_url: null }],
+  ]);
+
+  const { linhas, status } = montarLinhasDoUpsert({
+    organizationId: "org-1",
+    criados: [
+      { codigo: "900", nome: "PRODUTO NOVO ATIVO", preco_cents: 100, unidade: "CX", foto: null, ativo: true },
+      { codigo: "901", nome: "PRODUTO NOVO INATIVO", preco_cents: 200, unidade: "CX", foto: null, ativo: false },
+    ],
+    atualizados: [
+      // inativo no ERP sobre ativo no banco: preço atualiza, status não.
+      { codigo: "411", nome: "Toalhinha 5kg", preco_cents: 1250, unidade: "UN", foto: "https://foto/erp.jpg", ativo: false },
+      // ativo no ERP sobre inativo no banco: status do banco vence.
+      { codigo: "806", nome: "ESPONJA COM 4 UN", preco_cents: 550, unidade: "UN", foto: "https://foto/erp2.jpg", ativo: true },
+    ],
+    existentesPorCodigo: existentes,
+  });
+
+  it("inativo sobre ativo mantém ativo=true e o preço novo", () => {
+    const linha = linhas.find((l) => l.codigo === "411");
+    expect(linha).toMatchObject({ ativo: true, preco_cents: 1250, nome: "Toalhinha 5kg" });
+  });
+
+  it("ativo sobre inativo mantém ativo=false — promoção não é automática", () => {
+    const linha = linhas.find((l) => l.codigo === "806");
+    expect(linha).toMatchObject({ ativo: false, preco_cents: 550, nome: "ESPONJA COM 4 UN" });
+  });
+
+  it("produto novo nasce com o status da coleta", () => {
+    expect(linhas.find((l) => l.codigo === "900")!.ativo).toBe(true);
+    expect(linhas.find((l) => l.codigo === "901")!.ativo).toBe(false);
+  });
+
+  it("nome e foto curados do banco continuam vencendo", () => {
+    const linha = linhas.find((l) => l.codigo === "411")!;
+    expect(linha.nome).toBe("Toalhinha 5kg");
+    expect(linha.imagem_url).toBe("https://foto/curada.jpg");
+  });
+
+  it("o relatório conta cada decisão (o dono vê o que foi contido)", () => {
+    expect(status).toEqual({
+      novos_ativos: 1,
+      novos_inativos: 1,
+      preservados_ativos: 0,
+      preservados_inativos: 0,
+      rebaixamentos_bloqueados: 1,
+      promocoes_bloqueadas: 1,
+    });
+  });
+});
+
+describe("classificação carrega o marcador de status da coleta", () => {
+  it("linha inativa da visão de inativos chega ao upsert como ativo=false", () => {
+    const { validas } = classificarLinhas([
+      { codigo: "723", nome: "AGUA OXIGENADA 1L", preco: "16,00", ativo: false, situacao: "inativos" },
+    ]);
+    expect(validas[0]!.ativo).toBe(false);
+  });
+
+  it("linha sem marcador continua ativa (compatível com JSONL antigo)", () => {
+    const { validas } = classificarLinhas([
+      { codigo: "411", nome: "TOALHINHA 5KG", preco: "10,00" },
+    ]);
+    expect(validas[0]!.ativo).toBe(true);
   });
 });

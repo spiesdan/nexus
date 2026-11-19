@@ -27,9 +27,23 @@
  * Não escreve no banco: grava JSONL incremental (retomável) e para. O upsert é
  * `catalogo.mjs`, que roda em dry-run por padrão.
  *
+ * ─── ATIVOS × INATIVOS (`--todos`) ────────────────────────────────────────
+ *
+ * O default continua sendo a grade padrão (ativos). `--todos` percorre também
+ * a visão de inativos e marca CADA linha com `ativo: true|false`, que é o que
+ * permite medir os dois lados e importar inativo sem inventar status.
+ *
+ * O parâmetro foi confirmado na página real (container `crm-mercos-1`,
+ * 19/11/2026), não chutado: a própria paginação devolve
+ * `?p=1&status=1&nome_codigo=`, e `status=2` mostra o rótulo "Exibir produtos
+ * inativos" com todas as linhas em `visibility_off`. **`?situacao=inativos`
+ * não filtra nada** — devolve a mesma grade de ativos. Ver
+ * `VISOES_DO_CATALOGO` em `catalogo-logica.mjs`.
+ *
  * Uso:
  *   MERCOS_EMAIL=... MERCOS_SENHA=... node workers/mercos/produtos.mjs \
  *     --saida /tmp/mercos/produtos.jsonl [--limite 0] [--espera 2500]
+ *   ... node workers/mercos/produtos.mjs --todos --saida /tmp/mercos/todos.jsonl
  */
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -41,6 +55,8 @@ import {
   mapearColunas,
   motivoDoVazio,
   rotasDoCatalogo,
+  urlComStatus,
+  visoesDoCatalogo,
 } from "./catalogo-logica.mjs";
 
 const arg = (nome, padrao) => {
@@ -79,25 +95,38 @@ async function rotaDoMenu(pagina) {
  * termina com sucesso. Aqui cada tentativa é registrada com HTTP e presença de
  * tabela, e nenhuma tabela é erro.
  */
-async function abrirCatalogo(rotas) {
+async function abrirCatalogo(rotas, visao) {
   const tentadas = [];
   for (const url of rotas) {
     const resposta = await pagina.goto(url, { waitUntil: "domcontentloaded", timeout: 180_000 });
     await pagina.waitForTimeout(ESPERA_MS);
     const tabela = await pagina.evaluate(() => document.querySelectorAll("table tbody tr").length);
-    tentadas.push({ url, http: resposta?.status() ?? null, linhas: tabela });
+    tentadas.push({ situacao: visao.situacao, status: visao.status, url, http: resposta?.status() ?? null, linhas: tabela });
     log("rota_tentada", tentadas[tentadas.length - 1]);
     if (tabela > 0) return tentadas;
   }
-  throw new Error(
-    `nenhuma rota do catálogo tem tabela: ${tentadas.map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" · ")}`,
+  const erro = new Error(
+    `nenhuma rota da visão ${visao.situacao} tem tabela: ${tentadas.map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" · ")}`,
   );
+  // Preserva o que foi tentado para o resumo da visão que falhou.
+  erro.tentadas = tentadas;
+  throw erro;
 }
 const EMAIL = process.env.MERCOS_EMAIL || "";
 const SENHA = process.env.MERCOS_SENHA || "";
 const SAIDA = arg("saida", "/tmp/mercos/produtos.jsonl");
 const RESUMO = arg("resumo", "/tmp/mercos/produtos-resumo.json");
 const LIMITE = Number(arg("limite", "0")) || Infinity;
+/**
+ * `--todos` é FLAG EXPLÍCITA. O default continua só ativos — quem não pediu a
+ * visão de inativos não paga o custo dela nem corre o risco de marcar um
+ * produto como inativo por uma coleta parcial.
+ *
+ * O limite é POR VISÃO: `--todos --limite 5` lê 5 ativos e 5 inativos. Um
+ * limite global faria a segunda visão começar vazia e falhar alto, que é o
+ * comportamento certo para um erro, mas não para um recorte de teste.
+ */
+const TODOS = process.argv.includes("--todos");
 /** 1,2 s entre páginas tomou 429 em 13/10/2026 (medido no coletor de pedidos). */
 const ESPERA_MS = Number(arg("espera", process.env.MERCOS_ESPERA_MS || "2500"));
 const MAX_PAGINAS = Number(arg("max-paginas", "500"));
@@ -189,97 +218,194 @@ async function proximaPagina(assinaturaAnterior) {
   return assinatura !== assinaturaAnterior;
 }
 
-let totalLido = 0;
-let paginas = 0;
-let cabecalhoLido = false;
-let mapeamento = { mapa: COLUNAS_LEGADO, completo: false, faltando: ["codigo", "nome"] };
+/**
+ * Coleta UMA visão (ativos ou inativos) e devolve o resultado com o motivo de
+ * vazio — sem derrubar a outra. O exit final só é 0 se TODAS as visões pedidas
+ * valeram; um erro numa não pode esconder a medição da outra.
+ */
+async function coletarVisao(visao, rotasBase) {
+  let produtosLidos = 0;
+  let paginas = 0;
+  let cabecalhoLido = false;
+  let mapeamento = { mapa: COLUNAS_LEGADO, completo: false, faltando: ["codigo", "nome"] };
+  let tentadas = [];
+
+  try {
+    const rotas = rotasBase.map((rota) => urlComStatus(rota, visao.status));
+    tentadas = await abrirCatalogo(rotas, visao);
+
+    let assinatura = "";
+
+    for (let pag = 1; pag <= MAX_PAGINAS; pag += 1) {
+      const { cabecalho, linhas } = await lerTabela();
+
+      if (pag === 1) {
+        const m = mapearColunas(cabecalho);
+        mapeamento = m;
+        cabecalhoLido = m.completo;
+        if (!m.completo) {
+          log("cabecalho_incompleto", {
+            situacao: visao.situacao,
+            cabecalho,
+            faltando: m.faltando,
+            plano_b: COLUNAS_LEGADO,
+          });
+        }
+      }
+
+      if (linhas.length === 0) break;
+
+      const mapa = mapeamento.mapa;
+      for (const linha of linhas) {
+        if (produtosLidos >= LIMITE) break;
+        const celula = (chave) => {
+          const i = mapa[chave];
+          return i === null || i === undefined ? null : (linha.celulas[i] ?? null);
+        };
+        const registro = {
+          codigo: celula("codigo"),
+          nome: celula("nome"),
+          unidade: celula("unidade"),
+          preco: celula("preco"),
+          ipi: celula("ipi"),
+          comissao: celula("comissao"),
+          estoque: celula("estoque"),
+          foto: fotoDoProduto(linha.foto, celula("nome")),
+          // A marca que o importador lê. `true` no default (só ativos);
+          // `false` quando a linha veio da visão de inativos.
+          ativo: visao.ativo,
+          situacao: visao.situacao,
+          cabecalho_lido: cabecalhoLido,
+          pagina: pag,
+        };
+        appendFileSync(SAIDA, JSON.stringify(registro) + "\n");
+        produtosLidos += 1;
+      }
+      paginas = pag;
+
+      if (produtosLidos >= LIMITE) break;
+
+      assinatura = await pagina.evaluate(() => document.body.innerText.slice(0, 2000));
+      const avancou = await proximaPagina(assinatura);
+      if (!avancou) break;
+    }
+  } catch (erro) {
+    const detalhe = String(erro).slice(0, 400);
+    log("visao_falhou", { situacao: visao.situacao, status: visao.status, detalhe });
+    return {
+      situacao: visao.situacao,
+      status: visao.status,
+      ativo: visao.ativo,
+      produtos_lidos: produtosLidos,
+      paginas,
+      cabecalho_lido: cabecalhoLido,
+      faltando: mapeamento.faltando ?? [],
+      rota: null,
+      tentadas: erro?.tentadas ?? tentadas,
+      motivo: `falha ao abrir: ${String(erro).slice(0, 300)}`,
+    };
+  }
+
+  const rota = tentadas.find((x) => x.linhas > 0)?.url ?? null;
+  return {
+    situacao: visao.situacao,
+    status: visao.status,
+    ativo: visao.ativo,
+    produtos_lidos: produtosLidos,
+    paginas,
+    cabecalho_lido: cabecalhoLido,
+    faltando: mapeamento.faltando ?? [],
+    rota,
+    tentadas,
+    /*
+     * Zero continua sendo falha — inclusive na visão de inativos. "0 inativos"
+     * é exatamente o sintoma que `?situacao=inativos` produzia: a rota responde
+     * 200, a grade de ativos aparece, e quem lê conclui que não há inativo
+     * nenhum. A diferença entre "não há" e "não li" só existe se o coletor
+     * disser qual foi.
+     */
+    motivo: motivoDoVazio({ paginas, produtosLidos }),
+  };
+}
 
 try {
   await entrar();
 
-  // O filtro padrão da grade é o que o operador vê — e é o que o produto deve
-  // espelhar. `?situacao=inativos` fica para uma segunda execução, se o dono
-  // quiser produtos desativados no catálogo (o upsert marca `ativo`).
+  // A rota é descoberta no menu; o filtro de situação entra por cima dela.
   const doMenu = await rotaDoMenu(pagina);
-  const rotas = [...new Set([...(doMenu ? [doMenu] : []), ...rotasDoCatalogo(EMPRESA)])];
-  const tentadas = await abrirCatalogo(rotas);
+  const rotasBase = [...new Set([...(doMenu ? [doMenu] : []), ...rotasDoCatalogo(EMPRESA)])];
+  const visoes = visoesDoCatalogo(TODOS);
 
-  let assinatura = "";
+  log("inicio", {
+    modo: TODOS ? "todos" : "ativos",
+    visoes: visoes.map((v) => ({ situacao: v.situacao, status: v.status })),
+    limite_por_visao: Number.isFinite(LIMITE) ? LIMITE : null,
+    espera_ms: ESPERA_MS,
+  });
 
-  for (let pag = 1; pag <= MAX_PAGINAS; pag += 1) {
-    const { cabecalho, linhas } = await lerTabela();
-
-    if (pag === 1) {
-      const m = mapearColunas(cabecalho);
-      mapeamento = m;
-      cabecalhoLido = m.completo;
-      if (!m.completo) {
-        log("cabecalho_incompleto", { cabecalho, faltando: m.faltando, plano_b: COLUNAS_LEGADO });
-      }
-    }
-
-    if (linhas.length === 0) break;
-
-    const mapa = mapeamento.mapa;
-    for (const linha of linhas) {
-      if (totalLido >= LIMITE) break;
-      const celula = (chave) => {
-        const i = mapa[chave];
-        return i === null || i === undefined ? null : (linha.celulas[i] ?? null);
-      };
-      const registro = {
-        codigo: celula("codigo"),
-        nome: celula("nome"),
-        unidade: celula("unidade"),
-        preco: celula("preco"),
-        ipi: celula("ipi"),
-        comissao: celula("comissao"),
-        estoque: celula("estoque"),
-        foto: fotoDoProduto(linha.foto, celula("nome")),
-        cabecalho_lido: cabecalhoLido,
-        pagina: pag,
-      };
-      appendFileSync(SAIDA, JSON.stringify(registro) + "\n");
-      totalLido += 1;
-    }
-    paginas = pag;
-
-    if (totalLido >= LIMITE) break;
-
-    assinatura = await pagina.evaluate(() => document.body.innerText.slice(0, 2000));
-    const avancou = await proximaPagina(assinatura);
-    if (!avancou) break;
+  const resultados = [];
+  for (const visao of visoes) {
+    resultados.push(await coletarVisao(visao, rotasBase));
   }
 
+  const porSituacao = (situacao) => resultados.find((r) => r.situacao === situacao) ?? null;
+  const totalLido = resultados.reduce((soma, r) => soma + r.produtos_lidos, 0);
+  const paginas = resultados.reduce((soma, r) => soma + r.paginas, 0);
+
   const resumo = {
+    modo: TODOS ? "todos" : "ativos",
     produtos_lidos: totalLido,
     paginas,
-    cabecalho_lido: cabecalhoLido,
-    faltando_no_cabecalho: mapeamento.faltando ?? [],
-    rota: tentadas.find((x) => x.linhas > 0)?.url ?? null,
+    cabecalho_lido: resultados.every((r) => r.cabecalho_lido),
+    faltando_no_cabecalho: [...new Set(resultados.flatMap((r) => r.faltando ?? []))],
+    rota: resultados.find((r) => r.rota)?.rota ?? null,
     arquivo: SAIDA,
+    ativos_lidos: porSituacao("ativos")?.produtos_lidos ?? 0,
+    inativos_lidos: porSituacao("inativos")?.produtos_lidos ?? 0,
+    paginas_ativos: porSituacao("ativos")?.paginas ?? 0,
+    paginas_inativos: porSituacao("inativos")?.paginas ?? 0,
+    visoes: resultados.map((r) => ({
+      situacao: r.situacao,
+      status: r.status,
+      ativo: r.ativo,
+      produtos_lidos: r.produtos_lidos,
+      paginas: r.paginas,
+      cabecalho_lido: r.cabecalho_lido,
+      rota: r.rota,
+      motivo: r.motivo,
+    })),
   };
   writeFileSync(RESUMO, JSON.stringify(resumo, null, 2) + "\n");
 
   /*
    * ZERO NÃO É SUCESSO. Medido em produção: `{"produtos_lidos":0,"paginas":0,
    * "cabecalho_lido":false}` saía com exit 0 — o mesmo silêncio que o coletor
-   * existe para eliminar. Só é sucesso se alguma página foi lida E alguma linha
-   * entrou; o resto é falha declarada, com o motivo e as rotas tentadas.
+   * existe para eliminar. Só é sucesso se TODAS as visões pedidas leram alguma
+   * página E alguma linha; o resto é falha declarada, com o motivo e as rotas
+   * tentadas de cada uma.
    */
-  const motivo = motivoDoVazio({ paginas, produtosLidos: totalLido });
-  if (motivo) {
+  const falhas = resultados.filter((r) => r.motivo);
+  if (falhas.length > 0) {
     log("fim", { ...resumo, ok: false });
-    log("sem_catalogo", {
-      motivo,
-      rotas_tentadas: tentadas,
-      cabecalho: cabecalhoLido ? "lido" : "nao lido",
-    });
+    for (const falha of falhas) {
+      log("sem_catalogo", {
+        situacao: falha.situacao,
+        motivo: falha.motivo,
+        rotas_tentadas: falha.tentadas,
+        cabecalho: falha.cabecalho_lido ? "lido" : "nao lido",
+      });
+    }
     process.stdout.write(
-      "\nFALHA: o catálogo voltou vazio.\n" +
-        `  rotas tentadas: ${tentadas.map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" | ")}\n` +
+      "\nFALHA: a coleta do catálogo voltou vazia.\n" +
+        falhas
+          .map(
+            (f) =>
+              `  visão ${f.situacao}: ${f.motivo}\n` +
+              `    rotas: ${(f.tentadas ?? []).map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" | ") || "—"}\n`,
+          )
+          .join("") +
         `  páginas lidas: ${paginas} · produtos: ${totalLido}\n` +
-        "  nada foi gravado além do JSONL vazio; o banco não é tocado por este script.\n",
+        "  o banco não é tocado por este script.\n",
     );
     process.exitCode = 1;
   } else {
