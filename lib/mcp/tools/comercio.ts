@@ -826,6 +826,7 @@ export const commercialCreateOrder: McpToolDefinition<typeof montarPedidoShape> 
       desconto_cents: 0,
       frete_cents: 0,
       modalidade_frete: "retirada",
+      ignorar_preco: false,
       ignorar_estoque: false,
       ignorar_credito: false,
       ...(input.observacoes ? { observacoes: input.observacoes } : {}),

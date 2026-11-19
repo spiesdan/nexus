@@ -110,14 +110,19 @@ export async function POST(req: NextRequest): Promise<Response> {
   // advisória", ver require-role.ts). O resultado vira `podeIgnorar` do
   // serviço (a tool de IA passa sempre false).
   let podeIgnorar = false;
-  if (entrada.ignorar_estoque || entrada.ignorar_credito) {
+  let podeIgnorarPreco = false;
+  if (entrada.ignorar_preco || entrada.ignorar_estoque || entrada.ignorar_credito) {
     const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
     if (!mgr.ok) {
-      return fail("validation_failed", "Só gerente pode ignorar estoque ou crédito.", 422, {
-        requestId,
-      });
+      return fail(
+        "validation_failed",
+        "Só gerente pode ignorar preço, estoque ou crédito.",
+        422,
+        { requestId },
+      );
     }
-    podeIgnorar = true;
+    podeIgnorar = entrada.ignorar_estoque || entrada.ignorar_credito;
+    podeIgnorarPreco = entrada.ignorar_preco;
   }
 
   const supabase = await createClient();
@@ -128,6 +133,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       orgId: authz.org.orgId,
       userId: authz.user.id,
       podeIgnorar,
+      podeIgnorarPreco,
     },
     entrada,
   );

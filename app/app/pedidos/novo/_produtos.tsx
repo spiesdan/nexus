@@ -53,6 +53,7 @@ export function ProductSearch({
   // grande — a lista local continua valendo e responde primeiro.
   const [remotos, setRemotos] = React.useState<Produto[]>([]);
   const [buscandoRemoto, setBuscandoRemoto] = React.useState(false);
+  const [erroRemoto, setErroRemoto] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -71,14 +72,19 @@ export function ProductSearch({
     }
     let vivo = true;
     setBuscandoRemoto(true);
+    setErroRemoto(false);
     apiClient
       .get<{ data: Produto[] }>(`/api/v1/products?busca=${encodeURIComponent(b)}&limite=12`)
       .then((r) => {
         if (vivo) setRemotos(Array.isArray(r.data) ? r.data : []);
       })
       .catch(() => {
-        // Busca remota é reforço: sem rede, a lista local continua valendo.
-        if (vivo) setRemotos([]);
+        // Busca remota é reforço: sem rede, a lista local continua valendo —
+        // mas a tela DIZ que a busca no catálogo inteiro falhou.
+        if (vivo) {
+          setRemotos([]);
+          setErroRemoto(true);
+        }
       })
       .finally(() => {
         if (vivo) setBuscandoRemoto(false);
@@ -189,6 +195,14 @@ export function ProductSearch({
       {/* Busca sem resultado não é catálogo vazio: sem esta linha, o operador
           não distingue "não existe produto com esse termo" de "a lista ainda
           não carregou" — e digita de novo achando que errou. */}
+      {buscandoRemoto && busca.trim() !== "" ? (
+        <p className="px-1 text-xs text-muted-foreground">{t("Buscando no catálogo…")}</p>
+      ) : null}
+      {erroRemoto && busca.trim() !== "" ? (
+        <p role="status" className="px-1 text-xs text-muted-foreground">
+          {t("Não foi possível buscar no catálogo inteiro; mostrando os produtos já carregados.")}
+        </p>
+      ) : null}
       {filtrados.length === 0 && busca.trim() !== "" && !buscandoRemoto && (
         <p className="px-1 text-xs text-muted-foreground">{t("Nenhum produto encontrado.")}</p>
       )}

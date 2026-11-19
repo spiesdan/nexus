@@ -166,6 +166,7 @@ export async function POST(
     endereco_entrega: base.endereco_entrega ?? undefined,
     transportadora_nome: base.transportadora_nome ?? undefined,
     modalidade_frete: base.modalidade_frete,
+    ignorar_preco: false,
     ignorar_estoque: false,
     ignorar_credito: false,
     itens,

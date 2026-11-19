@@ -141,6 +141,7 @@ export default async function NovoPedidoPage({
         telefone: (organizacao as unknown as { phone?: string | null } | null)?.phone ?? null,
       }}
       nomeVendedor={user.full_name ?? user.email}
+      escopoDoRascunho={`${activeOrg.orgId}:${user.id}`}
       textos={{
         titulo: t("Novo pedido"),
         subtitulo: t("Busque o cliente, adicione os produtos e finalize."),

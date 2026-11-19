@@ -48,7 +48,7 @@ o que o spec realmente abre.
 | J7  | transferir conversa entre IA e pessoa, com contexto, controle e auditoria                  | 2     | 3                   | 3   | 0   | 0        | 0      |
 | J8  | criar/publicar/pausar/rollback de agente, editar conhecimento, testar e avaliar resposta   | 12    | 43                  | 39  | 0   | 0        | 4      |
 | J9  | configurar follow-up e controlar enrollment, pausa, retomada, cancelamento, snooze e falha | 9     | 20                  | 20  | 0   | 0        | 0      |
-| J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão        | 4     | 4                   | 4   | 0   | 0        | 0      |
+| J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão        | 5     | 10                  | 4   | 0   | 0        | 0      |
 | J11 | compras, entrada de estoque, expedição, rota, motorista e fechamento                       | 4     | 4                   | 4   | 0   | 0        | 0      |
 | J12 | financeiro, títulos, recebimentos e indicadores                                            | 3     | 3                   | 3   | 0   | 0        | 0      |
 | J13 | operações fiscais e tratamento de falhas de sincronização                                  | 4     | 9                   | 4   | 1   | 0        | 0      |

@@ -21,7 +21,7 @@ import { OrderEditor } from "@/app/app/pedidos/novo/_editor";
 import { custoSomenteParaQuemVeMargem } from "@/lib/pedidos/custo-so-para-quem-ve-margem";
 import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
 import { apiClient } from "@/lib/api/client";
-import { rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
+import { chaveDoRascunho, rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
 import type { ContatoOpcao } from "@/app/app/pedidos/novo/_cliente";
 import type { Produto } from "@/lib/schemas/produtos";
 
@@ -50,6 +50,10 @@ afterEach(() => {
 beforeEach(() => {
   window.localStorage.clear();
 });
+
+/** O escopo que a página passa: `<org>:<user>`. */
+const ESCOPO = "org-teste:user-teste";
+const CHAVE = chaveDoRascunho(ESCOPO);
 
 const BILL: ContatoOpcao = {
   id: "c-bill",
@@ -125,7 +129,7 @@ const LINHA = {
 
 function rascunho(dados: { contatoId: string | null; clienteNome: string; chavePedido?: string }) {
   window.localStorage.setItem(
-    "pedido-rascunho",
+    CHAVE,
     JSON.stringify({
       salvoEm: Date.now(),
       dados: {
@@ -148,7 +152,7 @@ function rascunho(dados: { contatoId: string | null; clienteNome: string; chaveP
   );
 }
 
-function montar(contatoInicial?: string | null) {
+function montar(contatoInicial?: string | null, escopo = ESCOPO) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
@@ -162,6 +166,7 @@ function montar(contatoInicial?: string | null) {
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
+        escopoDoRascunho={escopo}
         textos={TEXTO}
       />
     </QueryClientProvider>,
@@ -219,7 +224,7 @@ describe("criador de pedidos — cliente vindo do link", () => {
 
     expect(screen.queryByTestId("conflito-rascunho")).toBeNull();
     expect(campoCliente().value).toBe("Bill Higiene");
-    expect(window.localStorage.getItem("pedido-rascunho")).toBeNull();
+    expect(window.localStorage.getItem(CHAVE)).toBeNull();
   });
 });
 
@@ -249,7 +254,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
       return Promise.resolve({ data: [] }) as never;
     });
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -288,6 +293,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org de teste"
           nomeVendedor="Vendedor"
+          escopoDoRascunho={ESCOPO}
           textos={TEXTO}
         />
       </QueryClientProvider>,
@@ -316,7 +322,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
 describe("rascunho só com cliente e proteção de navegação", () => {
   function rascunhoSemItens(dados: { contatoId: string | null; clienteNome: string }) {
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -393,7 +399,7 @@ function produto(over: Partial<Produto>): Produto {
 describe("revisão antes de finalizar (B.7)", () => {
   it("a prévia mostra itens, unidade, descontos, frete, total, parcelas, endereço e observações", () => {
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -481,6 +487,7 @@ describe("margem só para quem pode (B.12)", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org"
           nomeVendedor="V"
+          escopoDoRascunho={ESCOPO}
           textos={TEXTO}
         />
       </QueryClientProvider>,
@@ -499,6 +506,7 @@ describe("margem só para quem pode (B.12)", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org"
           nomeVendedor="V"
+          escopoDoRascunho={ESCOPO}
           textos={TEXTO}
         />
       </QueryClientProvider>,
@@ -520,6 +528,49 @@ describe("falha ao salvar o rascunho (B.15)", () => {
       timeout: 3000,
     });
     expect(screen.getByTestId("gerar-pedido").hasAttribute("disabled")).toBe(false);
+  });
+});
+
+describe("rascunho não vaza entre organização/usuário (B.7/E.7)", () => {
+  it("a chave carrega o escopo: outro usuário/org não restaura a venda alheia", () => {
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene" });
+
+    // Mesmo navegador, outro escopo (logout/troca de org): a chave é outra.
+    montar(null, "org-teste:outro-user");
+
+    expect(campoCliente().value).toBe("");
+    expect(screen.queryByTestId("conflito-rascunho")).toBeNull();
+  });
+
+  it("rascunho antigo (30 dias) ainda restaura — NÃO existe TTL definido", () => {
+    // Prova da ausência: a decisão de expirar rascunho local não está escrita.
+    // Registrado como pendência na auditoria; o teste fixa o comportamento atual.
+    window.localStorage.setItem(
+      CHAVE,
+      JSON.stringify({
+        salvoEm: Date.now() - 30 * 24 * 60 * 60 * 1000,
+        dados: {
+          contatoId: BILL.id,
+          clienteNome: "Bill Higiene",
+          linhas: [LINHA],
+          condicao: "",
+          observacoes: "",
+          obsInterna: "",
+          endereco: "",
+          transportadora: "",
+          rastreamento: "",
+          contatoNoCliente: "",
+          tabelaId: "",
+          descontoTexto: "",
+          descontoPctTexto: "",
+          freteTexto: "",
+        },
+      }),
+    );
+
+    montar(null);
+
+    expect(campoCliente().value).toBe("Bill Higiene");
   });
 });
 
