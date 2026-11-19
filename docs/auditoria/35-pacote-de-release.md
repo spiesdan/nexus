@@ -249,3 +249,15 @@ pelo dono.
 **Bloqueio conhecido:** sem o #605 a linha de ATUALIZAÇÃO do upsert morre em
 `origem NOT NULL`, e o catálogo não fecha (55 criados / 567 atualizados / 0
 desativados depende dele).
+
+
+## 24. Pacote da 1.59.2 (não cortado — aguarda ordem do dono)
+
+| Campo | Valor |
+|---|---|
+| Base | `nexus/main` no recorte |
+| Entra | **#609** (Criar pedido leva o cliente) · **#612** (Sentry fora do first load, −89 KB gz) · **#614/#616/#617** (experimentos de bundle revertidos + budget corrigido) · **#615** (B.7/B.9/B.10/B.12/B.14/B.15) · **#610** (estudo C do criador) |
+| Fragmentos | conferir no corte: perf/docs podem não ter fragmento; a frente do criador precisa do seu |
+| Número | derivado por `pnpm release:conferir` |
+| Corte | `workflow_dispatch` do `release` → PR do App → merge = tag |
+| Deploy | **1.59.1 ainda não deployada**; autorização é por versão e do dono |

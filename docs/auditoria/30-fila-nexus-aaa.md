@@ -726,3 +726,17 @@ do dono.
    desktop; rolagem do celular não pode piorar).
 3. **Serialização:** o F avisa ao fechar a fatia funcional; só então o D entra
    nesses arquivos. Até lá, o D mede e prepara — sem editar.
+
+## 28. Criador de pedidos — cinco decisões do dono (cada uma desbloqueia uma fatia)
+
+| # | Decisão | Por que é do dono | O que desbloqueia se decidida | Estado |
+|---|---|---|---|---|
+| 1 | **Reserva/baixa atômica de estoque** ao salvar o pedido | muda compromisso de estoque (regra comercial) | B.10 deixa de ser só aviso: reserva ou baixa com CAS e conciliação | pendente |
+| 2 | **Reprecificação ao trocar a tabela de preço** | preço de item já lançado é decisão comercial | troca de tabela com regra explícita (recalcula? preserva manual?) | pendente |
+| 3 | **UI de `ignorar_estoque`/`ignorar_credito`** | expor override a manager na tela é política | hoje só a API/MCP; a tela não oferece o poder | pendente |
+| 4 | **Fração/granel na quantidade** | schema é inteiro; vender a granel é regra de produto | quantidade decimal + unidade/múltiplo com arredondamento definido | pendente |
+| 5 | **Fallback de rascunho entre organizações/usuários** | rascunho de outra org/usuário pular para a própria vs. descartar | comportamento de retomada (hoje: não retoma; falta a regra escrita) | pendente |
+
+**Dono de todas: Dono.** Enquanto a decisão não vem, o código não inventa: B.10 diz
+"não há reserva", a troca de tabela preserva o comportamento atual, o override
+continua só na API, quantidade é inteira e rascunho de outra org não é retomado.

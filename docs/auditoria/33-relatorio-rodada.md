@@ -186,3 +186,15 @@ lugar — a fila aponta para lá.
 | **1.59.0 em produção** — app/worker/scheduler/fiscal/mercos/ocr/rota, `/health` com `version 1.59.0`, todos os checks ok | tag **`v1.59.0`**, commit **`ccadd516`**, 19/11/2026 (verificação do dono) |
 | `public.fn_sentinel_encerrar_org_suspensa` presente no banco | idem (verificação pós-deploy) |
 | **Mercos autorizado** — coleta `--todos`, `catalogo.mjs --aplicar` e `parear-itens.mjs --aplicar` | autorização textual do dono, 19/11; registro em `40-auditoria-de-acoes-em-producao.md` item 7 |
+
+
+### Atualização 19/11 — frente do criador de pedidos
+
+| Item | Estado | Evidência |
+|---|---|---|
+| Bug "Criar pedido" do perfil não levava o cliente | `[x]` | **#609** (`?contato=` lido no servidor) |
+| Riscos **B.7** revisão, **B.9** valores, **B.10** estoque, **B.12** preço/aprovação, **B.14** quantidade, **B.15** autosave | `[x]` | **#615** (prova de componente por risco) |
+| Coluna persistente no desktop | `[~]` | **#613** em revisão; falta a **barra fixa no celular** |
+| Três experimentos de bundle revertidos | `[x]` | **#614/#616/#617**; conclusão em [`44-inbox-103-experimentos.md`](44-inbox-103-experimentos.md): micro-splitting não paga (−4 KB, +2 KB, +1 KB), resta arquitetura |
+| 1.59.1 publicada, não deployada | `[!]` | aguarda autorização por versão do dono |
+| Cinco decisões comerciais abertas | `[!]` | fila §28 (reserva, reprecificação, UI de override, fração/granel, fallback de rascunho) |
