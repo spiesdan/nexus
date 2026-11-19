@@ -123,6 +123,10 @@ describe("scanner: o código bipado casa o produto", () => {
     await new Promise((r) => setTimeout(r, 80));
 
     expect(aoAdicionar).not.toHaveBeenCalled();
+    // E a tela diz por que nada entrou — silêncio aqui vira "a busca travou".
+    expect(
+      screen.getByText("Código não encontrado — confira o cadastro do produto."),
+    ).toBeTruthy();
   });
 
   it("código exato vence quem casa por trecho", async () => {

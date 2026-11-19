@@ -99,6 +99,10 @@ export function ProductSearch({
   // ↑↓ é escolha explícita: depois dela o Enter confirma o destacado mesmo com
   // vários candidatos. Sem isso, escolher com o teclado deixaria de funcionar.
   const [navegou, setNavegou] = React.useState(false);
+  // O código do leitor não existe: a tela precisa dizer isso. Um EAN que casa
+  // por trecho deixa UM produto na lista; sem esta mensagem, o Enter "não faz
+  // nada" e o vendedor acha que a busca travou (ou pior, clica no produto).
+  const [codigoInexistente, setCodigoInexistente] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -167,6 +171,7 @@ export function ProductSearch({
     setBusca("");
     setAmbiguo(false);
     setNavegou(false);
+    setCodigoInexistente(false);
   }
 
   /**
@@ -241,6 +246,7 @@ export function ProductSearch({
       // escolha humana.
       void buscarExatoNoServidor(termo).then((p) => {
         if (p) adicionar(p);
+        else if (veioDeLeitor) setCodigoInexistente(true);
       });
     } else if (e.key === "Escape") {
       setBusca("");
@@ -263,6 +269,7 @@ export function ProductSearch({
           setBusca(e.target.value);
           setAmbiguo(false);
           setNavegou(false);
+          setCodigoInexistente(false);
         }}
         onKeyDown={aoTeclar}
         placeholder={textos.buscarProduto}
@@ -281,9 +288,11 @@ export function ProductSearch({
         aria-describedby={
           ambiguo
             ? "busca-produto-ambiguo"
-            : filtrados.length === 0 && busca.trim() !== ""
-              ? "busca-produto-ajuda"
-              : undefined
+            : codigoInexistente
+              ? "busca-produto-codigo"
+              : filtrados.length === 0 && busca.trim() !== ""
+                ? "busca-produto-ajuda"
+                : undefined
         }
         autoComplete="off"
       />
@@ -349,6 +358,11 @@ export function ProductSearch({
           className="px-1 text-xs text-orange-600"
         >
           {t("Vários produtos encontrados — escolha um na lista para não lançar o item errado.")}
+        </p>
+      ) : null}
+      {codigoInexistente ? (
+        <p role="status" id="busca-produto-codigo" className="px-1 text-xs text-orange-600">
+          {t("Código não encontrado — confira o cadastro do produto.")}
         </p>
       ) : null}
     </div>

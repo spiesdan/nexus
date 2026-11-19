@@ -64,8 +64,10 @@ function banco() {
   function cadeia(tabela: string) {
     const filtros: Record<string, unknown> = {};
     const c: Record<string, unknown> = {};
-    const casa = (linha: Record<string, unknown>) =>
-      Object.entries(filtros).every(([col, v]) => linha[col] === v);
+    const casa = (linha: unknown) => {
+      const l = linha as Record<string, unknown>;
+      return Object.entries(filtros).every(([col, v]) => l[col] === v);
+    };
 
     c.select = () => c;
     c.eq = (col: string, v: unknown) => {
