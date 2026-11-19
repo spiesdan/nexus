@@ -320,7 +320,7 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: estados das subtelas de expedição (5.6b) · próximo: formulários de cadastro (erro por campo) · depois: densidade/tabelas das listas restantes
-F — agora: fechar #586 e anexar a prova · próximo: J6/J13/J14 no navegador · depois: matriz das 3 specs fora do CI
-G — agora: fechar #582 (claim de conversa parada) · próximo: proposta do 2º caso reversível · depois: retenção/LGPD provada
+D — agora: Mercos "todos os produtos" (--todos, ativos × inativos) · próximo: estados das subtelas de expedição (5.6b) · depois: formulários de cadastro
+F — agora: bug do filtro de cidade em Clientes · próximo: verify do #586 (spec sem declaração) · depois: matriz das 3 specs fora do CI
+G — agora: #582 (rebase, claim de conversa parada) · próximo: retenção/LGPD provada · depois: proposta do 2º caso reversível
 ```

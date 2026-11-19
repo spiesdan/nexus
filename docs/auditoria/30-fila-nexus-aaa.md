@@ -649,8 +649,12 @@ e são eles que faltam para parear os **616 itens** de pedido sem `product_id`.
 | **C — segunda passada `?situacao=inativos` sob demanda** | mesmo efeito de B, sem misturar no fluxo padrão | duas execuções para manter; a marcação precisa ser explícita |
 
 **Recomendação da coordenação:** **B**, com `ativo=false` no upsert e a grade de
-venda filtrando por `ativo` — é o único caminho que fecha o pareamento sem
-esconder o histórico. Mas a escolha é do dono.
+venda filtrando por `ativo`. Duas propriedades medidas antes de recomendar:
+(a) **importar inativo NÃO desativa ativo** — o upsert só grava `ativo=false`
+quando a linha do Mercos é inativa, e o D vai provar isso em teste; (b) o ganho é
+concreto: os **69 códigos** que faltam para parear os **616 itens** históricos.
+O D traz o número "traz X dos 69" **antes de qualquer escrita**; a decisão segue
+do dono.
 
 > **Operação (19/11/2026):** as **9 organizações de teste** em produção foram
 > **suspensas** pelo dono. Motivo: fixture de QA não deve conviver com dado real

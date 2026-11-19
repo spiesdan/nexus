@@ -11,42 +11,51 @@
 
 ## D — design/módulos
 
-- **agora:** *estados das subtelas de expedição (ficha 5.6b)* — vazio, carregando,
-  erro, permissão e retry em carga, rota e romaneio, com captura; nenhuma regra
-  de negócio tocada. Aceite: cada subtela com os estados provados e a ficha 5.6b
-  marcada.
-- **próximo:** *consistência de formulários de cadastro* — contatos e produtos
-  com erro por campo, `aria-describedby` ligando mensagem ao input e foco no
-  primeiro campo inválido. Aceite: teste de componente em cada formulário e axe
-  sem violação crítica.
-- **depois:** *densidade e tabelas das listas restantes* — estoque, compras e
-  faturamento com o mesmo cabeçalho/ordenação anunciada e estados de recorte.
-  Aceite: captura comparando as três listas e teste de `aria-sort`.
+- **agora (despachado pelo dono, passa na frente):** *Mercos "todos os
+  produtos"* — rodar o coletor em modo `--todos`, **medir ativos × inativos** e
+  provar que importar inativo **não desativa ativo** no banco (o upsert não pode
+  rebaixar `ativo=true` para `false` por causa de uma linha inativa). Trazer o
+  número "**traz X dos 69**" códigos que faltam para os 616 itens **antes de
+  qualquer escrita**. Aceite: medição + teste do upsert + número apresentado.
+- **próximo:** *estados das subtelas de expedição (ficha 5.6b)* — vazio,
+  carregando, erro, permissão e retry em carga, rota e romaneio, com captura.
+  Aceite: cada subtela com os estados provados e a ficha 5.6b marcada.
+- **depois:** *consistência de formulários de cadastro* — contatos e produtos com
+  erro por campo, `aria-describedby` e foco no primeiro inválido. Aceite: teste
+  de componente em cada formulário e axe sem violação crítica.
+
+> Histórico: outbox, paginação de pedidos, ficha 5.6b, axe fora do recorte
+> (14 rotas) e aria-sort fecharam no #581/#583.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora:** *fechar #586 e anexar a prova da regressão* — smoke 32/32 e critical
-  75/75 já medidos; os 2 defeitos reais corrigidos precisam de causa escrita e
-  link no quadro. Aceite: log da rodada citado e defeito com dono ou conserto.
-- **próximo:** *J6/J13/J14 na camada de navegador* — sucesso, erro e recuperação;
-  fiscal em homologação, nunca SEFAZ real. Aceite: três jornadas com prova visual
-  e log; nada marcado "instável" sem causa.
+- **agora (bug do dono, passa na frente):** *filtro de cidade em Clientes* — a
+  lista traz `AGROCOMERCIAL SCHULTZ LTDA ME` para uma cidade que não é a dele, e
+  a **mesma cidade aparece em 3 grafias** (caixa/acento/espaço). Corrigir a
+  comparação no servidor e a lista distinta (dedupe por `lower(trim())`, casing
+  da primeira ocorrência, ordem pt-BR). Aceite: teste de API com acento/caixa,
+  cross-tenant zero e render com cidade escolhida.
+- **próximo:** *#586 — `verify` por spec sem declaração* — a spec nova não está
+  em `SPECS_PARTE_*`/`JORNADAS`; declarar no lugar certo e provar que o gate
+  reconhece. Aceite: `verify` verde sem afrouxar o gate.
 - **depois:** *matriz das 3 specs fora do CI* — veredito por spec (entra /
   continua fora com dono e data / morre). Aceite: tabela publicada e
-  `FORA_DO_CI` coerente com ela.
+  `FORA_DO_CI` coerente.
+
+> A camada de navegador de J6/J13/J14 fica na sequência depois da matriz; nada
+> foi perdido, só reordenado.
 
 ## G — Sentinel
 
-- **agora:** *fechar #582 (claim de conversa parada)* — liberar o claim sem
+- **agora:** *#582 (rebase) — claim de conversa parada* — liberar o claim sem
   perder histórico, com motivo e auditoria; reexecução não duplica. Aceite: teste
   de rota + invariante de claim e PR verde.
-- **próximo:** *proposta do 2º caso de correção aprovada* — três candidatos
-  reversíveis (sem dinheiro/fisco), cada um com risco, CAS de reversão e
-  rollback; **não executar**. Aceite: documento aprovado pelo dono antes de
-  qualquer código.
-- **depois:** *retenção/LGPD do Sentinel provada* — retenção só alcança
-  ocorrências terminais e a purga é idempotente. Aceite: `test:db` com dois casos
-  (terminal apaga, aberta não) e reexecução sem efeito.
+- **próximo:** *retenção/LGPD provada* — retenção só alcança ocorrências
+  terminais e a purga é idempotente. Aceite: `test:db` com dois casos (terminal
+  apaga, aberta não) e reexecução sem efeito.
+- **depois:** *proposta do 2º caso de correção aprovada* — três candidatos
+  reversíveis (sem dinheiro/fisco), com risco, CAS de reversão e rollback; não
+  executar. Aceite: documento aprovado pelo dono antes de código.
 
 ## Coordenação (fora dos 3 slots)
 
