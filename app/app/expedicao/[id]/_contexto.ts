@@ -27,15 +27,26 @@ export async function contextoDaCarga(id: string) {
   const podeFechar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
+  /*
+   * A MOLDURA PRECISA DA CARGA ANTES DO FETCH DO CLIENTE.
+   *
+   * Antes vinha só `id`: a ficha inteira (número, status, abas) esperava o
+   * `detalhe`, que o cliente busca depois de hidratar. Resultado medido em
+   * 19/11/2026: `/expedicao/<id>`, `/rota`, `/fechamento` e `/motorista`
+   * abriam como **três retângulos cinza sem título** — sem número, sem aba, sem
+   * dizer o que estava carregando. O servidor já tem a linha; agora ela vai
+   * junto para a moldura pintar de primeira.
+   */
   const { data: carga } = await supabase
     .from("shipments")
-    .select("id, organization_id")
+    .select("id, numero, placa, veiculo_tipo, motorista_nome, status, created_at")
     .eq("organization_id", activeOrg.orgId)
     .eq("id", id)
     .maybeSingle();
   if (!carga) notFound();
 
   return {
+    cargaInicial: carga,
     // Modo entregador (0292): a cabine vira tela cheia, sem o cabeçalho da ficha.
     motorista: activeOrg.motorista === true,
     podeOperar,

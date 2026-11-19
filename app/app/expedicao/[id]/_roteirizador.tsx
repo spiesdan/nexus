@@ -1213,7 +1213,7 @@ export function Roteirizador({
           divisórias, não quatro cartões iguais. Cada célula responde a uma
           pergunta que a operação faz antes de sair — e só aparece com número
           quando há número: "Distância —" não informa nada. */}
-      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-3 2xl:grid-cols-5">
+      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs sm:grid-cols-3 xl:grid-cols-5">
         <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
           <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("Entregas")}

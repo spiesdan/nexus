@@ -161,6 +161,7 @@ function linkDoMapa(endereco: string | null): string | null {
 export function CargaClient({
   cargaId,
   secao,
+  cargaInicial,
   motorista = false,
   podeOperar,
   podeExcluir,
@@ -168,6 +169,16 @@ export function CargaClient({
   textos,
 }: {
   cargaId: string;
+  /** O que a moldura (número, status, abas) precisa ANTES do `detalhe` chegar. */
+  cargaInicial: {
+    id: string;
+    numero: number;
+    placa: string | null;
+    veiculo_tipo: string | null;
+    motorista_nome: string | null;
+    status: StatusDaCarga;
+    created_at?: string;
+  };
   /** Qual das quatro telas da carga esta rota renderiza. */
   secao: "paradas" | "rota" | "fechamento" | "motorista";
   /** Login de entregador (0292): a cabine ocupa a tela, sem cabeçalho da ficha. */
@@ -480,21 +491,94 @@ export function CargaClient({
     rolarPara(document.getElementById(`parada-${id}`), { block: "center" });
   }
 
+  /*
+   * A MOLDURA ANTES DO DADO — e o esqueleto com a FORMA do conteúdo.
+   *
+   * Medido em 19/11/2026: as três subtelas abriam com três retângulos cinza,
+   * sem número, sem abas e sem dizer o que carregava (o `<h1>` da cabine é
+   * `sr-only`, então nem título pintava). Quem chega de um link de rota vê uma
+   * tela quebrada por 1–3 s.
+   *
+   * O que já é conhecido no servidor pinta de primeira: voltar, número, status
+   * e as abas. O que falta é dito em texto (`Carregando a carga…`), anunciado
+   * (`aria-busy`) e esboçado na forma da seção — faixa, lista, mapa.
+   */
   if (!detalhe) {
+    const cargaDaMoldura = cargaInicial;
     return (
-      <div className="space-y-3 p-6">
-        {falhou ? (
-          <NexusErrorState
-            description={t("Não foi possível carregar esta carga.")}
-            onRetry={() => void recarregar()}
-          />
-        ) : (
-          <>
-            <Skeleton className="h-8 w-56" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-40 w-full" />
-          </>
-        )}
+      <div aria-busy="true" aria-live="polite">
+        <div className="border-b bg-background px-4 pt-3 pb-0 sm:px-6">
+          <Link
+            href="/app/expedicao"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-text"
+          >
+            <CaretLeft className="h-3.5 w-3.5" aria-hidden />
+            {textos.voltar}
+          </Link>
+
+          <div className="mt-1 flex flex-wrap items-center gap-2.5">
+            <h1 className="text-2xl font-medium tracking-tight text-text">
+              {numeroDaCarga(cargaDaMoldura.numero)}
+            </h1>
+            <Badge variant={VARIANTE_DA_CARGA[cargaDaMoldura.status] ?? "neutral"}>
+              {ROTULO_DA_CARGA[cargaDaMoldura.status] ?? cargaDaMoldura.status}
+            </Badge>
+            <span className="text-sm text-muted-foreground">{t("Carregando a carga…")}</span>
+          </div>
+
+          <nav
+            aria-label={t("Seções da carga")}
+            className="mt-2 flex items-center gap-0.5 overflow-x-auto border-t border-border"
+          >
+            {(
+              [
+                ["paradas", t("Paradas")],
+                ["rota", textos.rota],
+                ["fechamento", t("Fechamento")],
+              ] as const
+            ).map(([chave, rotulo]) => (
+              <span
+                key={chave}
+                aria-current={secao === chave ? "page" : undefined}
+                className={cn(
+                  "-mb-px inline-flex shrink-0 items-center border-b-2 px-2.5 py-2 text-xs font-medium whitespace-nowrap sm:text-sm",
+                  secao === chave
+                    ? "border-accent text-text"
+                    : "border-transparent text-muted-foreground",
+                )}
+              >
+                {rotulo}
+              </span>
+            ))}
+          </nav>
+        </div>
+
+        <div className="space-y-4 p-4 sm:p-6">
+          {falhou ? (
+            <NexusErrorState
+              description={t("Não foi possível carregar esta carga.")}
+              onRetry={() => void recarregar()}
+            />
+          ) : secao === "rota" ? (
+            <>
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-24 rounded-2xl" />
+                ))}
+              </div>
+              <Skeleton className="h-[320px] rounded-2xl" />
+            </>
+          ) : (
+            <>
+              <Skeleton className="h-28 rounded-2xl" />
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} className="h-24 rounded-2xl" />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -799,6 +883,9 @@ export function CargaClient({
                 </Link>
               </Button>
               {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (
+                <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
+              )}
+              {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -1067,15 +1154,19 @@ export function CargaClient({
                                 <span className="font-medium text-text tabular-nums">
                                   {comoMoeda(i.pedido.total_cents, "BRL")}
                                 </span>
-                                <span
-                                  className={cn(
-                                    "min-w-0 truncate",
-                                    !i.pedido.endereco_entrega && "text-warning-fg",
-                                  )}
-                                  title={i.pedido.endereco_entrega ?? undefined}
-                                >
-                                  {i.pedido.endereco_entrega ?? textos.semEndereco}
-                                </span>
+                                {/* O endereço aparece UMA vez. Antes, a parada
+                                    sem endereço dizia "Endereço não informado"
+                                    aqui e de novo no bloco com o pino — duas
+                                    frases iguais a 20 px de distância. A linha
+                                    de baixo é a que tem o alerta e a ação. */}
+                                {i.pedido.endereco_entrega && (
+                                  <span
+                                    className="min-w-0 truncate"
+                                    title={i.pedido.endereco_entrega}
+                                  >
+                                    {i.pedido.endereco_entrega}
+                                  </span>
+                                )}
                               </span>
                             </span>
                             <CaretDown
