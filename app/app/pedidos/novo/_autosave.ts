@@ -35,6 +35,9 @@ export function rascunhoDeOutroCliente(
 export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, ativo: boolean) {
   const [salvoEm, setSalvoEm] = React.useState<number | null>(null);
   const [restaurou, setRestaurou] = React.useState(false);
+  // `localStorage` pode recusar (modo privado, cota cheia, política do browser).
+  // Antes o catch era silencioso: o vendedor achava que o rascunho estava salvo.
+  const [falhaAoSalvar, setFalhaAoSalvar] = React.useState(false);
   const ref = React.useRef(dados);
   React.useEffect(() => {
     ref.current = dados;
@@ -61,8 +64,12 @@ export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, 
         const agora = Date.now();
         window.localStorage.setItem(chave, JSON.stringify({ salvoEm: agora, dados: ref.current }));
         setSalvoEm(agora);
+        setFalhaAoSalvar(false);
       } catch {
-        // Quota cheia ou privado: autosave é cortesia, nunca erro.
+        // Quota cheia ou privado: autosave é cortesia, mas o vendedor PRECISA
+        // saber que o rascunho não está no disco. A tela mostra o aviso e deixa
+        // continuar (o pedido ainda pode ser gerado).
+        setFalhaAoSalvar(true);
       }
     }, 2000);
     return () => clearTimeout(timer);
@@ -78,7 +85,7 @@ export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, 
     setRestaurou(false);
   }, [chave]);
 
-  return { salvoEm, restaurou, carregar, limpar };
+  return { salvoEm, restaurou, carregar, limpar, falhaAoSalvar };
 }
 
 /** "há N segundos/minutos" para o selo de salvo. */

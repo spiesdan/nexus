@@ -134,6 +134,7 @@ export function OrderEditor({
   tabelas,
   verMargem,
   comissaoPct,
+  descontoMaxVendedorPct,
   nomeOrganizacao,
   representada,
   nomeVendedor,
@@ -149,6 +150,8 @@ export function OrderEditor({
   tabelas: { id: string; nome: string; desconto_pct: number }[];
   verMargem: boolean;
   comissaoPct: number | null;
+  /** O teto do vendedor (política da org; default do servidor = 5%). */
+  descontoMaxVendedorPct: number;
   /** A "representada" do Mercos: a empresa que emite este pedido. */
   nomeOrganizacao: string;
   /**
@@ -364,7 +367,7 @@ export function OrderEditor({
   // rascunho do outro cliente antes de a pessoa escolher.
   const [conflitoDeRascunho, setConflitoDeRascunho] =
     React.useState<RascunhoDoPedido | null>(null);
-  const { salvoEm, carregar, limpar } = useAutosaveDraft(
+  const { salvoEm, carregar, limpar, falhaAoSalvar } = useAutosaveDraft(
     "pedido-rascunho",
     {
       contatoId,
@@ -487,6 +490,9 @@ export function OrderEditor({
           }),
           descontoPct: 0,
           estoque: produto.controla_estoque ? produto.quantidade : null,
+          unidade: produto.unidade ?? null,
+          multiplo: produto.multiplo ?? 1,
+          origemPreco: tabela ? "tabela" : "base",
         },
       ];
     });
@@ -507,6 +513,12 @@ export function OrderEditor({
   const freteCents = freteTexto.trim() === "" ? 0 : (precoParaCentavos(freteTexto) ?? 0);
   const total = subtotal - descontoCents - descontoPctCents + freteCents;
   const qtdUnidades = linhas.reduce((s, l) => s + l.quantidade, 0);
+  // Aprovação ANTES de gerar: o servidor escala acima do teto (mesma régua do
+  // POST). Antes, o aviso só aparecia depois da resposta — o vendedor
+  // descobria a consequência quando o pedido já existia.
+  const maiorDesconto = Math.max(descontoPct, ...linhas.map((l) => l.descontoPct), 0);
+  const aprovacaoNecessaria =
+    aprovacao || (linhas.length > 0 && maiorDesconto > descontoMaxVendedorPct);
 
   const margemPct = React.useMemo(() => {
     if (!verMargem || linhas.length === 0) return null;
@@ -776,6 +788,18 @@ export function OrderEditor({
         }
       />
 
+      {falhaAoSalvar ? (
+        <p
+          role="alert"
+          data-testid="rascunho-nao-salvo"
+          className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg"
+        >
+          {t(
+            "Não foi possível salvar o rascunho neste navegador (modo privado ou armazenamento cheio). Você pode continuar e gerar o pedido, mas não feche a aba antes disso.",
+          )}
+        </p>
+      ) : null}
+
       {/* O cartão do topo do Mercos: número e pill do status. O número só
           existe depois do "Gerar pedido" — mostrá-lo aqui exigiria criar o
           rascunho no instante em que a tela abre, e é exatamente isso que
@@ -916,6 +940,11 @@ export function OrderEditor({
             aoMudar={mudarLinha}
             aoRemover={(k) => setLinhas((ls) => ls.filter((l) => l.key !== k))}
           />
+          {linhas.length > 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t("O saldo é conferido ao gerar o pedido; não há reserva de estoque.")}
+            </p>
+          ) : null}
         </Card>
 
         <AfinsNoPedido
@@ -988,8 +1017,9 @@ export function OrderEditor({
             margemPct,
             comissaoCents,
             parcelas: calcularParcelas(total, condicao),
-            aprovacaoNecessaria: aprovacao,
+            aprovacaoNecessaria,
           }}
+          descontoMaxPct={descontoMaxVendedorPct}
           descontoTexto={descontoTexto}
           aoDesconto={setDescontoTexto}
           descontoPctTexto={descontoPctTexto}
@@ -1010,6 +1040,9 @@ export function OrderEditor({
             margem: textos.margem,
             comissao: textos.comissao,
             aguardandoAprovacao: textos.aguardandoAprovacao,
+            descontoTotal: t("Desconto total"),
+            descontosSomam: t("R$ e % somam"),
+            tetoDesconto: t("Teto de desconto do vendedor"),
             revisar: textos.revisar,
             itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
           }}
@@ -1172,33 +1205,116 @@ export function OrderEditor({
               {t("Como o pedido vai sair. Nada foi gravado ainda.")}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 text-sm">
-            <p>
-              <span className="text-muted-foreground">{t("Cliente")}: </span>
-              <strong>{clienteNome || "—"}</strong>
-            </p>
-            <p>
-              <span className="text-muted-foreground">{textos.condicao}: </span>
-              <strong>{condicao.trim() || "—"}</strong>
-            </p>
+          <div className="max-h-[60vh] space-y-3 overflow-y-auto text-sm">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              <dt className="text-muted-foreground">{t("Cliente")}</dt>
+              <dd className="font-medium">{clienteNome || "—"}</dd>
+              <dt className="text-muted-foreground">{textos.condicao}</dt>
+              <dd className="font-medium">{condicao.trim() || "—"}</dd>
+              <dt className="text-muted-foreground">{textos.formaPagamento}</dt>
+              <dd className="font-medium">
+                {formaPagamento ? FORMA_DE_PAGAMENTO_LABEL[formaPagamento] : textos.prazoLivre}
+              </dd>
+              <dt className="text-muted-foreground">{textos.exigeNf}</dt>
+              <dd className="font-medium">{exigeNf ? t("Sim") : t("Não")}</dd>
+              {endereco.trim() ? (
+                <>
+                  <dt className="text-muted-foreground">{textos.endereco}</dt>
+                  <dd className="font-medium">{endereco}</dd>
+                </>
+              ) : null}
+            </dl>
+
             <ul className="divide-y rounded-lg border">
               {linhas.length === 0 ? (
                 <li className="px-3 py-2 text-muted-foreground">{t("Nenhum item.")}</li>
               ) : (
-                linhas.map((l) => (
-                  <li key={l.key} className="flex items-center justify-between gap-3 px-3 py-2">
-                    <span className="min-w-0 truncate">{l.nome}</span>
-                    <span className="shrink-0 tabular-nums">
-                      {l.quantidade} × {comoMoeda(precoParaCentavos(l.precoTexto) ?? 0, "BRL")}
-                    </span>
-                  </li>
-                ))
+                linhas.map((l) => {
+                  const unit = precoParaCentavos(l.precoTexto) ?? 0;
+                  const linha = subtotalDoItem(l.quantidade, unit, l.descontoPct);
+                  return (
+                    <li key={l.key} className="space-y-0.5 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="min-w-0 truncate font-medium">{l.nome}</span>
+                        <span className="shrink-0 tabular-nums">{comoMoeda(linha, "BRL")}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {l.quantidade}
+                        {l.unidade ? ` ${l.unidade}` : ""} × {comoMoeda(unit, "BRL")}
+                        {l.descontoPct > 0 ? ` · ${t("desconto")} ${l.descontoPct}%` : ""}
+                        {l.origemPreco === "tabela"
+                          ? ` · ${t("preço da tabela")}`
+                          : l.origemPreco === "manual"
+                            ? ` · ${t("preço manual")}`
+                            : ""}
+                      </p>
+                    </li>
+                  );
+                })
               )}
             </ul>
-            <div className="flex justify-between border-t pt-2 text-base font-semibold">
-              <span>{textos.total}</span>
-              <span className="tabular-nums">{comoMoeda(total, "BRL")}</span>
-            </div>
+
+            <dl className="space-y-1">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">{textos.subtotal}</dt>
+                <dd className="tabular-nums">{comoMoeda(subtotal, "BRL")}</dd>
+              </div>
+              {descontoCents > 0 ? (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{textos.desconto} (R$)</dt>
+                  <dd className="tabular-nums">− {comoMoeda(descontoCents, "BRL")}</dd>
+                </div>
+              ) : null}
+              {descontoPct > 0 ? (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{textos.desconto} (%)</dt>
+                  <dd className="tabular-nums">
+                    − {comoMoeda(descontoPctCents, "BRL")} ({descontoPct.toLocaleString("pt-BR")}%)
+                  </dd>
+                </div>
+              ) : null}
+              {freteCents > 0 ? (
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">{textos.frete}</dt>
+                  <dd className="tabular-nums">{comoMoeda(freteCents, "BRL")}</dd>
+                </div>
+              ) : null}
+              <div className="flex justify-between border-t pt-2 text-base font-semibold">
+                <dt>{textos.total}</dt>
+                <dd className="tabular-nums">{comoMoeda(total, "BRL")}</dd>
+              </div>
+            </dl>
+
+            {calcularParcelas(total, condicao).length > 0 ? (
+              <ul className="space-y-0.5 text-xs text-muted-foreground">
+                {calcularParcelas(total, condicao).map((p) => (
+                  <li key={p.n} className="flex justify-between">
+                    <span>
+                      {p.n}ª · {p.vencimento}
+                    </span>
+                    <span className="tabular-nums">{comoMoeda(p.valor_cents, "BRL")}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            {observacoes.trim() ? (
+              <p>
+                <span className="text-muted-foreground">{textos.observacoes}: </span>
+                {observacoes}
+              </p>
+            ) : null}
+            {obsInterna.trim() ? (
+              <p>
+                <span className="text-muted-foreground">{textos.obsInterna}: </span>
+                {obsInterna}
+              </p>
+            ) : null}
+            {aprovacaoNecessaria ? (
+              <p role="alert" className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-warning-fg">
+                ⚠ {textos.aguardandoAprovacao}
+              </p>
+            ) : null}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPreviaAberta(false)}>

@@ -4,6 +4,7 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { COLUNAS_DO_PRODUTO, type Produto } from "@/lib/schemas/produtos";
+import { custoSomenteParaQuemVeMargem } from "@/lib/pedidos/custo-so-para-quem-ve-margem";
 import { createClient } from "@/lib/supabase/server";
 
 import { OrderEditor } from "./_editor";
@@ -69,7 +70,7 @@ export default async function NovoPedidoPage({
         .limit(100),
       supabase
         .from("commercial_policies")
-        .select("comissao_padrao_pct")
+        .select("comissao_padrao_pct, desconto_max_vendedor_pct")
         .eq("organization_id", activeOrg.orgId)
         .maybeSingle(),
       // A "representada" do Mercos: razão social, CNPJ e telefone do emitente.
@@ -111,18 +112,27 @@ export default async function NovoPedidoPage({
     contatoInicial && !listaDeContatos.some((c) => c.id === contatoInicial.id)
       ? [contatoInicial, ...listaDeContatos]
       : listaDeContatos;
+  // Custo é dado de margem: quem não pode ver margem não precisa recebê-lo nem
+  // no payload do RSC. A UI já escondia, mas o valor viajava até o browser.
+  const produtosDoEditor = custoSomenteParaQuemVeMargem(
+    (produtos ?? []) as unknown as Produto[],
+    verMargem,
+  );
+  const politica = policies as unknown as {
+    comissao_padrao_pct: number | null;
+    desconto_max_vendedor_pct: number | null;
+  } | null;
 
   return (
     <OrderEditor
-      produtos={(produtos ?? []) as unknown as Produto[]}
+      produtos={produtosDoEditor}
       contatos={contatosDoEditor}
       contatoInicial={contatoInicial?.id ?? null}
       tabelas={(tabelas ?? []) as unknown as { id: string; nome: string; desconto_pct: number }[]}
       verMargem={verMargem}
-      comissaoPct={
-        (policies as unknown as { comissao_padrao_pct: number | null } | null)
-          ?.comissao_padrao_pct ?? null
-      }
+      comissaoPct={politica?.comissao_padrao_pct ?? null}
+      // O servidor usa o mesmo default quando não há política (criar-pedido).
+      descontoMaxVendedorPct={politica?.desconto_max_vendedor_pct ?? 5}
       nomeOrganizacao={activeOrg.name ?? ""}
       representada={{
         razaoSocial:
