@@ -213,3 +213,24 @@ ainda não liberou:
 Preparado pela coordenação AAA. Comandos e números acima são reproduzíveis a
 partir de `nexus/main`; nenhuma afirmação de deploy ou de produção foi feita.
 A execução do corte e do deploy é ato humano.
+
+## 22. Pacote da 1.58.1 (não cortado — aguarda ordem do dono)
+
+| Campo | Valor |
+|---|---|
+| Base | `nexus/main` no dia do corte (`git log --oneline -1`) |
+| Última tag | **`v1.58.0`** (`4c7cd633`) |
+| Entram (mergeados) | **#581** pendências 5.4/5.6 · **#583** axe 14 rotas + ordem anunciada · **#584** devolução não é duplicidade no Sentinel · **#585** coletor do Mercos com rota real e fail-loud · **#586** regressão local (smoke 32/32, critical 75/75) + spec no CI |
+| Entram se fecharem antes | filtro de cidade em Clientes (F) · **#582** claim de conversa parada (G) |
+| Fragmentos na `main` | 4 (`axe-telas-e-ordem-das-listas`, `mercos-catalogo-rota-e-falha`, `nota-duplicada-ignora-devolucao`, `pendencias-5-4-e-5-6`) |
+| Fragmentos que faltarão | um para a cidade (F traz no PR) e um para o #582, se ele entrar |
+| Número | **derivado** por `pnpm release:conferir` — não digitar |
+| Corte | `workflow_dispatch` do `release` → PR assinado pelo App → merge = tag |
+
+**Nada é aplicado no banco por este pacote.** O pareamento do catálogo continua
+bloqueado: depende da decisão dos inativos (§25 da fila) e de um `--dry-run`
+aprovado com o número "traz X dos 69".
+
+**Deploy:** a 1.58.1 só deve ser aprovada depois da verificação da 1.58.0
+(`to_regclass` das quatro tabelas + funções da correção) — que segue em curso
+pelo dono.
