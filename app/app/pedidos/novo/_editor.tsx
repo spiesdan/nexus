@@ -392,23 +392,23 @@ export function OrderEditor({
   /* eslint-disable react-hooks/set-state-in-effect */
   React.useEffect(() => {
     const salvo = carregar();
-    if (
-      salvo &&
-      Array.isArray(salvo.linhas) &&
-      (salvo.linhas as unknown[]).length > 0 &&
-      linhas.length === 0
-    ) {
-      const s = salvo as unknown as RascunhoDoPedido;
-      // O link da ficha manda um cliente; o rascunho salvo pode ser de OUTRO.
-      // Restaurar em silêncio trocaria o cliente que a pessoa acabou de
-      // escolher — e descartar em silêncio perderia a venda em andamento.
-      // Nenhum dos dois: a decisão é explícita.
-      if (rascunhoDeOutroCliente(s, contatoInicial)) {
-        setConflitoDeRascunho(s);
-        return;
-      }
-      aplicarRascunho(s);
+    if (!salvo || linhas.length > 0) return;
+    const s = salvo as unknown as RascunhoDoPedido;
+    const temItens = Array.isArray(s.linhas) && s.linhas.length > 0;
+    const temCliente = Boolean(s.contatoId || s.clienteNome?.trim());
+    // Um rascunho só com o cliente escolhido também é intenção e volta. Mas o
+    // link da ficha vence esse caso: sem itens não há venda para perder, e o
+    // cliente que a pessoa acabou de clicar não pode ser trocado por um resto.
+    if (!temItens && !temCliente) return;
+    if (rascunhoDeOutroCliente(s, contatoInicial)) {
+      // O link manda um cliente; o rascunho salvo pode ser de OUTRO. Com itens,
+      // restaurar em silêncio trocaria o cliente e descartar perderia a venda:
+      // a decisão é explícita. Sem itens, o link vence (o resto de cliente não
+      // é aplicado).
+      if (temItens) setConflitoDeRascunho(s);
+      return;
     }
+    aplicarRascunho(s);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
@@ -417,7 +417,7 @@ export function OrderEditor({
     setContatoId(s.contatoId);
     if (s.chavePedido) setChavePedido(s.chavePedido);
     setClienteNome(s.clienteNome);
-    setLinhas(s.linhas);
+    setLinhas(Array.isArray(s.linhas) ? s.linhas : []);
     setCondicao(s.condicao ?? "");
     // Rascunho salvo antes da 0261 não tem os dois campos. `|| ""` e `?? false`
     // em vez de acesso direto: um rascunho de ontem não pode fazer a tela
@@ -443,6 +443,19 @@ export function OrderEditor({
     setFreteTexto(s.freteTexto ?? "");
     nexusToast.info(textos.rascunhoRestaurado);
   }
+
+  // Fechar/recarregar com itens no pedido pede confirmação. O autosave guarda
+  // o conteúdo, mas a surpresa de perder a tela sem aviso é outra coisa —
+  // e a confirmação nativa é a única disponível antes de `beforeunload`.
+  React.useEffect(() => {
+    if (linhas.length === 0) return;
+    const avisar = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", avisar);
+    return () => window.removeEventListener("beforeunload", avisar);
+  }, [linhas.length]);
 
   /** Sai da URL do link sem navegar de novo (não remonta o editor). */
   function esquecerClienteDoLink() {

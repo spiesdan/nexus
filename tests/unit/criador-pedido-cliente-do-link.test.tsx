@@ -309,6 +309,66 @@ describe("autosave restaura TODOS os campos editáveis", () => {
   });
 });
 
+describe("rascunho só com cliente e proteção de navegação", () => {
+  function rascunhoSemItens(dados: { contatoId: string | null; clienteNome: string }) {
+    window.localStorage.setItem(
+      "pedido-rascunho",
+      JSON.stringify({
+        salvoEm: Date.now(),
+        dados: {
+          ...dados,
+          linhas: [],
+          condicao: "",
+          observacoes: "",
+          obsInterna: "",
+          endereco: "",
+          transportadora: "",
+          rastreamento: "",
+          contatoNoCliente: "",
+          tabelaId: "",
+          descontoTexto: "",
+          descontoPctTexto: "",
+          freteTexto: "",
+        },
+      }),
+    );
+  }
+
+  it("cliente escolhido sem itens também volta (quando não há link)", () => {
+    rascunhoSemItens({ contatoId: OUTRO.id, clienteNome: "Cliente Antigo" });
+
+    montar(null);
+
+    expect(campoCliente().value).toBe("Cliente Antigo");
+  });
+
+  it("com link, rascunho só de cliente NÃO troca o cliente do link", () => {
+    rascunhoSemItens({ contatoId: OUTRO.id, clienteNome: "Cliente Antigo" });
+
+    montar(BILL.id);
+
+    expect(campoCliente().value).toBe("Bill Higiene");
+    expect(screen.queryByTestId("conflito-rascunho")).toBeNull();
+  });
+
+  it("fechar/recarregar com itens pede confirmação; sem itens, não", () => {
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene" });
+    montar(null);
+    expect(campoCliente().value).toBe("Bill Higiene");
+
+    const comItens = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(comItens);
+    expect(comItens.defaultPrevented).toBe(true);
+
+    cleanup();
+    window.localStorage.clear();
+    montar(null);
+    const vazio = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(vazio);
+    expect(vazio.defaultPrevented).toBe(false);
+  });
+});
+
 describe("clique duplo e retry não duplicam o pedido", () => {
   it("Cmd/Ctrl+Enter duas vezes no mesmo envio chama o POST uma vez", async () => {
     const post = vi.mocked(apiClient.post);

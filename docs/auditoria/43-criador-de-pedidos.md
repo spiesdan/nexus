@@ -61,9 +61,9 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | 2.21 | Numeração do pedido | **EXISTE** | `fn_proximo_numero_pedido` (0209), por org |
 | 2.22 | Idempotência / clique duplo | **CORRIGIDO nesta rodada** | `chave_sincronizacao` por editor, persistida no rascunho; guarda síncrona em `comEnvio`; o atalho passa pela mesma porta |
 | 2.23 | Retry depois de timeout | **EXISTE com a chave** | `apiClient` **não repete POST** (`lib/api/client.ts:191-205`); o retry manual reusa a mesma chave e o servidor devolve `ja_existia` |
-| 2.24 | Autosave / restauração | **CORRIGIDO nesta rodada** | `_autosave.ts` (2 s) e `aplicarRascunho` devolve **todos** os campos editáveis: desconto R$ e %, frete, tabela, endereço, transportadora, rastreio, contato no cliente, observações e obs. interna. Prova: teste “autosave restaura TODOS os campos”. Ainda só restaura se houver **itens** (cliente sozinho não persiste) |
+| 2.24 | Autosave / restauração | **CORRIGIDO nesta rodada** | `_autosave.ts` (2 s) e `aplicarRascunho` devolve **todos** os campos editáveis: desconto R$ e %, frete, tabela, endereço, transportadora, rastreio, contato no cliente, observações e obs. interna. Prova: teste “autosave restaura TODOS os campos”. Restaura também o cliente escolhido **sem itens** (quando não há link). Com link de outro cliente sem itens, o link vence |
 | 2.25 | Rascunho de outro cliente × link | **CORRIGIDO nesta rodada** | diálogo “usar o cliente do link × continuar o rascunho”; autosave desligado até a decisão |
-| 2.26 | Proteção de navegação | **FALTA** | não há `beforeunload`/bloqueio de rota; a mitigação é o autosave |
+| 2.26 | Proteção de navegação | **CORRIGIDO nesta rodada** | `beforeunload` pede confirmação quando há itens; sem itens não incomoda. Navegação SPA entre telas continua sem bloqueio (o autosave cobre o conteúdo) |
 | 2.27 | Revisão antes de finalizar | **EXISTE (leitura)** | `previaAberta` (`_editor.tsx:1132`); a prévia fecha e o estado permanece |
 | 2.28 | Erros preservando dados | **EXISTE** | `showApiError` sem limpar estado; validação local rola até a seção |
 | 2.29 | Cmd/Ctrl+Enter | **EXISTE com guarda** | `_atalhos.ts`; agora `finalizar → comEnvio` |
@@ -104,7 +104,13 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
    `enviando`) e dados buscados (`últimos preços`, histórico) **não** entram de
    propósito; não há campo sensível no editor.
    *Prova:* “autosave restaura TODOS os campos editáveis” (11º caso do arquivo).
-6. **Retry não duplica** — o editor passou a enviar `chave_sincronizacao` (UUID
+6. **Cliente sem itens e navegação** — um rascunho só com o cliente escolhido
+   passou a voltar (quando não há link); com link, o cliente do link vence, sem
+   diálogo, porque não há venda para perder. Fechar/recarregar com itens passou a
+   pedir confirmação (`beforeunload`).
+   *Prova:* “cliente escolhido sem itens também volta”, “com link, rascunho só
+   de cliente NÃO troca” e “fechar/recarregar com itens pede confirmação”.
+7. **Retry não duplica** — o editor passou a enviar `chave_sincronizacao` (UUID
    por editor, **persistido no rascunho**): timeout + retry (ou reload + retry)
    devolve o pedido existente (`ja_existia`) em vez de criar outro.
    *Prova:* “Cmd/Ctrl+Enter duas vezes” (1 POST) e “depois de um erro, o retry
@@ -117,8 +123,6 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | **P1** | Estoque sem reserva e baixa fora da transação do pedido | aberto | decidir com o dono: reserva na criação? baixa atômica via RPC? compensação? |
 | **P1** | Troca de tabela não reprecifica itens já lançados | aberto | ao trocar, oferecer “reprecificar itens” e mostrar o delta; hoje o servidor recusa 422 |
 | **P1** | Override de estoque/crédito só por API | aberto | botão de gerente com confirmação, enviando `ignorar_*` |
-| **P2** | Navegação sem aviso | aberto | `beforeunload` quando houver itens (o autosave cobre o conteúdo, não a surpresa) |
-| **P2** | Rascunho sem itens (só cliente) não restaura | aberto | persistir cliente escolhido mesmo sem linhas |
 | **P2** | Quantidade fracionária | **DEPENDE DE REGRA** | confirmar se o produto vende a granel; só então schema/UI |
 | **P2** | Modalidade de frete / previsão não expostas | aberto | campos existem no schema; falta UI |
 | **P2** | Multimoeda | **DEPENDE DE REGRA** | não há taxa, cotação nem regra escrita |
