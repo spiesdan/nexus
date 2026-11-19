@@ -13,10 +13,10 @@ ocupa.
 A lista e a thread são 5 arquivos e ~1.300 linhas. Um PR só esconderia a
 revisão atrás de 40 KB de diff. O recorte é por TELA:
 
-| PR | Tela | Arquivos |
-| --- | --- | --- |
-| #623 | Lista (`/app/inbox`) | `ConversationList`, `ConversationListItem`, `InboxFilters` |
-| #624 | Thread (`/app/inbox/<id>`) | `ChatThread`, `ConversationHeader`, `InboxLayout` |
+| PR       | Tela                       | Arquivos                                                   |
+| -------- | -------------------------- | ---------------------------------------------------------- |
+| **#638** | Lista (`/app/inbox`)       | `ConversationList`, `ConversationListItem`, `InboxFilters` |
+| **#640** | Thread (`/app/inbox/<id>`) | `ChatThread`, `ConversationHeader`, `InboxLayout`          |
 
 ## Lista — o que mudou
 
@@ -41,18 +41,18 @@ revisão atrás de 40 KB de diff. O recorte é por TELA:
 
 ### Medido (1440×900 e 390×844, temas claro e escuro)
 
-| Medida | Antes | Depois |
-| --- | --- | --- |
-| Overflow horizontal (1440) | 0 px | **0 px** |
-| Overflow horizontal (390) | 0 px | **0 px** |
-| Coluna da lista (1440) | 272 px | 272 px |
-| Coluna da lista (390) | 342 px | 342 px |
-| Bloco de filtros (1440) | 272 px | **256 px** |
-| Bloco de filtros (390) | 240 px | **224 px** |
-| Altura da linha | 105 px | 105 px |
-| Linhas inteiras na tela | 5 | 5 |
-| axe crítico | 0 | **0** |
-| axe sério | 1 (shell) | 1 (shell) |
+| Medida                     | Antes     | Depois     |
+| -------------------------- | --------- | ---------- |
+| Overflow horizontal (1440) | 0 px      | **0 px**   |
+| Overflow horizontal (390)  | 0 px      | **0 px**   |
+| Coluna da lista (1440)     | 272 px    | 272 px     |
+| Coluna da lista (390)      | 342 px    | 342 px     |
+| Bloco de filtros (1440)    | 272 px    | **256 px** |
+| Bloco de filtros (390)     | 240 px    | **224 px** |
+| Altura da linha            | 105 px    | 105 px     |
+| Linhas inteiras na tela    | 5         | 5          |
+| axe crítico                | 0         | **0**      |
+| axe sério                  | 1 (shell) | 1 (shell)  |
 
 **A ALTURA DA LINHA NÃO MUDOU — e a tabela diz o porquê.** O respiro caiu 4px,
 os intervalos 2px, e a prévia subiu de 12px para 13px (+2px de entrelinha): o
@@ -83,15 +83,36 @@ recorte.
 
 ### Medido
 
-| Medida | Antes | Depois |
-| --- | --- | --- |
-| Overflow horizontal (1440) | 0 px | 0 px |
-| Overflow horizontal (390) | 0 px | 0 px |
-| Título do contato | 16px/700 | **16px/600** |
-| Selo de estado | 12px/700 | **11px/600** |
-| Ações sem nome acessível | 0 | **0** |
-| Foco visível (anel) | 2px sólido | 2px sólido |
-| axe crítico | 0 | 0 |
+| Medida                       | Antes        | Depois           |
+| ---------------------------- | ------------ | ---------------- |
+| Overflow horizontal (1440)   | 0 px         | **0 px**         |
+| Overflow horizontal (390)    | 0 px         | **0 px**         |
+| Altura do cabeçalho (1440)   | 195 px       | **191 px**       |
+| Altura do cabeçalho (390)    | 267 px       | **263 px**       |
+| Título do contato            | 16px/700     | **16px/600**     |
+| Selo de estado (classe)      | 12px/700     | **11px/600**     |
+| Ações no cabeçalho           | 7            | 7                |
+| Ações sem nome acessível     | 0            | **0**            |
+| Foco visível no cabeçalho    | anel visível | **anel visível** |
+| axe crítico (thread)         | 0            | **0**            |
+| axe crítico (fora do acesso) | 0            | **0**            |
+
+O foco foi medido **por teclado** (`Tab`), e não com `.focus()`: o anel do
+produto é `:focus-visible` e o foco programático não o acende. A prova visual
+está em `docs/auditoria/capturas/depois-inbox-thread/foco-cabecalho_light_1440.png`
+(produzida por `tests/sonda-foco-no-inbox.ts`).
+
+O `getComputedStyle` do botão focado devolve `outline-style: none` com 2px de
+largura: o anel desses botões é **box-shadow** (`focus-visible:ring-2` do
+primitivo `Button`), não `outline` — e é por isso que a captura é a prova, não o
+número. Em `forced-colors` o anel volta a ser `outline: 2px solid Highlight`
+(`app/globals.css`), que é o caminho que o modo de alto contraste enxerga.
+
+A violação **séria** do axe (`label-content-name-mismatch`) é a mesma do
+recorte da lista e é do **shell** (`[data-testid="tenant-switcher"]`), presente
+igual no "antes", nos dois temas. A `color-contrast` que aparecia no tema escuro
+era o metadado da linha da lista sobre `accent-soft` — corrigida no PR #638,
+e por isso as duas metades do "depois" medem 0 em `color-contrast`.
 
 ## O que NÃO foi feito, e por quê
 

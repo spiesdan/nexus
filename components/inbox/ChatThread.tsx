@@ -19,7 +19,7 @@ import { useDeleteNote } from "@/hooks/inbox/useDeleteNote";
 import { useDebugToggle } from "@/hooks/ai/useDebugToggle";
 import { useActiveOrg, useUser } from "@/hooks/auth/AuthProvider";
 import { ROLE_RANK } from "@/lib/auth/types";
-import { ArrowDown } from "@/lib/ui/icons";
+import { ArrowDown, ChatCircle } from "@/lib/ui/icons";
 import type { Message, Note } from "@/lib/types/messaging";
 
 interface Props {
@@ -325,11 +325,30 @@ export function ChatThread({ conversationId, onResponder }: Props) {
   }
 
   if (q.isLoading) {
+    /*
+     * O ESQUELETO TEM A FORMA DO FIO — bolhas alternando de lado, na largura
+     * em que as bolhas de verdade nascem (`max-w-[min(520px,78%)]`), sobre o
+     * mesmo fundo da conversa.
+     *
+     * Antes eram quatro blocos de 48px alinhados à esquerda, sobre um fundo
+     * branco: não lembravam uma conversa, e a troca pelo conteúdo era um pulo
+     * de layout. Também não diziam nada a quem não vê a tela — `aria-busy` no
+     * contêiner mais o `role="status"` dizem.
+     */
     return (
-      <div {...sinalDoCanal} className="space-y-3 p-4">
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-12 w-2/3" />
-        ))}
+      <div {...sinalDoCanal} aria-busy="true" className={`flex h-full flex-col ${WA.chatBg}`}>
+        <p role="status" className="sr-only">
+          {t("Carregando mensagens…")}
+        </p>
+        <div className="flex-1 space-y-2 px-6 py-5" aria-hidden>
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className={i % 2 === 0 ? "flex justify-start" : "flex justify-end"}>
+              <Skeleton
+                className={`h-11 rounded-[14px] ${i % 2 === 0 ? "w-[min(56%,320px)]" : "w-[min(44%,260px)]"}`}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -338,9 +357,16 @@ export function ChatThread({ conversationId, onResponder }: Props) {
     return (
       <div
         {...sinalDoCanal}
-        className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground"
+        // `role="alert"`: o erro nasce de um refetch silencioso, não de um
+        // clique — sem anúncio, quem não vê a tela continua digitando numa
+        // conversa que não carregou.
+        role="alert"
+        className={`flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground ${WA.chatBg}`}
       >
-        <p>{t("Erro ao carregar mensagens.")}</p>
+        <p className="font-medium text-text">{t("Erro ao carregar mensagens.")}</p>
+        <p className="max-w-xs text-center text-xs">
+          {t("Tentar novamente recarrega o histórico desta conversa.")}
+        </p>
         <Button
           size="sm"
           variant="outline"
@@ -354,12 +380,28 @@ export function ChatThread({ conversationId, onResponder }: Props) {
   }
 
   if (items.length === 0) {
+    /*
+     * CONVERSA SEM HISTÓRICO é um estado, não um vazio de tela.
+     *
+     * Era uma frase solta, cinza, no meio do fio: mesma cara de "carregando" e
+     * de "erro", sem dizer que ali é o começo e não uma falha. Ganha ícone,
+     * `role="status"` (o estado pode nascer de um envio que acabou de sair) e
+     * o mesmo fundo do fio, para não parecer outra tela.
+     */
     return (
       <div
         {...sinalDoCanal}
-        className="flex h-full items-center justify-center text-sm text-muted-foreground"
+        className={`flex h-full flex-col items-center justify-center gap-2 px-6 text-center ${WA.chatBg}`}
       >
-        {t("Nenhuma mensagem nesta conversa.")}
+        <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted-foreground shadow-sm">
+          <ChatCircle size={22} weight="duotone" aria-hidden />
+        </div>
+        <p role="status" className="text-sm font-medium text-text">
+          {t("Nenhuma mensagem nesta conversa.")}
+        </p>
+        <p className="max-w-xs text-xs text-muted-foreground">
+          {t("As mensagens aparecem aqui em tempo real.")}
+        </p>
       </div>
     );
   }
@@ -385,6 +427,14 @@ export function ChatThread({ conversationId, onResponder }: Props) {
       <div
         ref={scrollerRef}
         onScroll={aoRolar}
+        // A ÁREA DO FIO É UM LANDMARK, não um `div` anônimo: é o bloco que a
+        // pessoa volta a ler o tempo todo, e sem nome o leitor de tela não tem
+        // como pular direto para ele (só tabular o cabeçalho inteiro). `region`
+        // e NÃO `log`: `log` é região viva, e o produto já anuncia mensagem
+        // nova por outro caminho (o sino e o aviso de entrada) — dois anúncios
+        // para o mesmo fato é ruído.
+        role="region"
+        aria-label={t("Mensagens da conversa")}
         // `.msgs` da referência: 22×26 de respiro (aqui na grade de 4px da
         // §15: 20×24) — o padding mora no scroller para a pílula de dia, as
         // bolhas e a nota nascerem todas alinhadas na mesma margem.
