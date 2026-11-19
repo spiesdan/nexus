@@ -83,6 +83,23 @@ for (const rota of rotas) {
         // `document.fonts.ready` + um respiro: sem isso a captura pega a fonte
         // de fallback e a comparação entre duas rodadas vira ruído.
         await pagina.evaluate(() => document.fonts?.ready);
+        /*
+         * ESPERAR O `<h1>`, NÃO UM TEMPO FIXO.
+         *
+         * Telas que buscam dado no cliente renderizam o cabeçalho DEPOIS do
+         * fetch. Com 800 ms fixos, três subtelas de expedição foram capturadas
+         * sem `<h1>` e o artefato dizia "h1: []" — um defeito que não existia
+         * (medido de novo com 4 s: todas têm). A captura passa a esperar o
+         * título aparecer (até 8 s) e registra quanto esperou; se não vier,
+         * registra `esperouH1Ms: null` e a captura vale como "sem título".
+         */
+        const t0 = Date.now();
+        await pagina
+          .waitForFunction(() => document.querySelector("h1") !== null, undefined, { timeout: 8000 })
+          .catch(() => {});
+        const esperouH1Ms = (await pagina.evaluate(() => document.querySelector("h1") !== null))
+          ? Date.now() - t0
+          : null;
         await pagina.waitForTimeout(800);
 
         const medida = await pagina.evaluate(() => {
@@ -100,7 +117,7 @@ for (const rota of rotas) {
         });
 
         await pagina.screenshot({ path: path.join(SAIDA, nome), fullPage: false });
-        registros.push({ rota, tema, largura, arquivo: nome, ...medida });
+        registros.push({ rota, tema, largura, arquivo: nome, esperouH1Ms, ...medida });
         process.stdout.write(
           `${rota.padEnd(12)} ${tema.padEnd(6)} ${String(largura).padStart(4)}px · tema=${medida.tema}` +
             ` · h1=${JSON.stringify(medida.h1)} · textos=${medida.textos} · overflow=${medida.overflowX}\n`,

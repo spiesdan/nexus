@@ -2726,3 +2726,52 @@ helper, verifica a regra global (inclusive `scroll-behavior: auto`) e as quatro 
   dentro ao abrir, `Esc` fechando, foco voltando ao gatilho e Tab que **não escapa** do diálogo.
   O Radix já fazia; o teste impede que alguém troque o primitivo por um `<div>` posicionado e perca
   as três garantias sem erro de build.
+
+## axe WCAG 2.2 AA nas telas fora do recorte (18/11/2026)
+
+Despacho do coordenador, item 1: rodar `axe-nas-telas` onde ele ainda não ia. O instrumento
+(`scripts/auditoria/axe-nas-telas.mjs`) ganhou três coisas antes de medir:
+
+- **o recorte**: estoque, compras, expedição, faturamento e sentinel entraram na lista padrão;
+- **`--rotas`** para rota dinâmica (`/app/expedicao/<id>/rota` não cabe numa lista fixa);
+- **contexto por tela** — `h1`, caracteres de texto e elementos visitados. "0 violações" numa
+  página que não renderizou é indistinguível de tela limpa; agora o número tem prova de que havia
+  tela;
+- **artefato mesclado por rota** (uma execução parcial apagava as anteriores — V-33).
+
+Resultado — **13 rotas estáticas + 1 dinâmica, 0 violações WCAG 2.2 AA em todas**:
+
+| Tela | violações | nós avaliados | regras | h1 | caracteres |
+| --- | --- | --- | --- | --- | --- |
+| `/app/estoque` | **0** | 295 | 27 | Estoque | 860 |
+| `/app/compras` | **0** | 292 | 27 | Compras | 627 |
+| `/app/expedicao` | **0** | 477 | 25 | Expedição | 1.327 |
+| `/app/expedicao/<id>/rota` | **0** | 435 | — | Carga 031 | 1.831 |
+| `/app/faturamento` | **0** | 327 | 27 | Faturamento | 4.216 |
+| `/app/sentinel` | **0** | 511 | 27 | Sentinel | 4.657 |
+| `/app` | 0 | 444 | 23 | Boa noite, E2E. | 3.441 |
+| `/app/pedidos` | 0 | 1.231 | 27 | Pedidos | 8.617 |
+| `/app/contacts` | 0 | 892 | 28 | Clientes | 2.410 |
+| `/app/inbox` | 0 | 448 | 26 | Inbox | 979 |
+| `/app/financeiro` | 0 | 434 | 29 | Financeiro | 1.500 |
+| `/app/notas` | 0 | 516 | 30 | Notas fiscais | 1.905 |
+| `/app/settings` | 0 | 351 | 23 | Configurações | 1.556 |
+| `/login` | 0 | 49 | 23 | Entrar | 82 |
+
+Artefato: `capturas/axe-nas-telas.json`.
+
+### V-71 · Média · A cabine do motorista não tinha `<h1>` — **CORRIGIDO**
+
+As três subtelas de expedição devolvem antes do cabeçalho do painel (que é quem tem o `<h1>`).
+Em `rota` e `fechamento` o conteúdo segue no layout principal; em **`motorista`** o componente
+retorna cedo e a cabine abria **sem título nenhum** — medido na captura das subtelas. Corrigido com
+`<h1 className="sr-only">Modo motorista · Carga 031</h1>` nos dois ramos (imersivo e com barra): o
+mapa ocupa a tela, então o título existe na árvore de acessibilidade e não ocupa pixel.
+
+### V-72 · Média · A captura media antes de a tela ter título — **CORRIGIDO no instrumento**
+
+`captura-publica.mjs` esperava `document.fonts.ready` + 800 ms. Telas que buscam dado no cliente
+renderizam o cabeçalho **depois** do fetch: três subtelas de expedição foram gravadas com `h1: []`,
+e o artefato afirmava um defeito que não existia (medido de novo com 4 s: todas têm). O instrumento
+agora **espera o `<h1>`** (até 8 s) e registra `esperouH1Ms`; se não vier, registra `null` — que é
+o único caso em que o "sem título" vale.

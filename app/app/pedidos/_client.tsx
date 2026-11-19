@@ -37,6 +37,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import {
   ArrowsClockwise,
@@ -1323,6 +1324,17 @@ export function PedidosClient({
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border fill-well">
           <Table>
+            {/*
+              A ORDEM É INFORMAÇÃO, E ELA NÃO ESTAVA NA TABELA.
+              A lista sai do servidor por `numero` desc (page.tsx). Quem usa
+              leitor de tela não tem como saber por que a linha 1 é a 1 — nem
+              que a ordem não muda ao clicar no cabeçalho (não há ordenação
+              interativa aqui). `caption` em `sr-only`: descreve sem ocupar
+              pixel no meio de uma lista densa.
+            */}
+            <TableCaption className="sr-only">
+              {t("Pedidos, do mais recente para o mais antigo pelo número.")}
+            </TableCaption>
             <TableHeader>
               <TableRow className="bg-stage-2/60 hover:bg-stage-2/60">
                 {podeCriar && (
