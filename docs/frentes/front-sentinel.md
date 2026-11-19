@@ -413,6 +413,47 @@ pnpm test:db
 #   não duplicam evento, ativa intocada, isolamento por organização
 ```
 
+### v1.7 — encerramento por regra avaliada e tetos de coleta medidos
+
+Produção (19/11/2026): a organização real sempre fechava a rodada com
+`truncado = t`; `encerrar_ausentes` nunca rodava e o falso positivo da devolução
+ficava aberto para sempre. A medição local com o volume real mostrou **onde**
+estava o corte:
+
+| Volume | Coleta | Detecção | Truncados (antes) |
+|---|---:|---:|---|
+| 1,2k produtos · 32k itens/movimentos · 14k contatos · 1,5k pedidos | **5,2 s** | **65 ms** | `pedidos`, `estoque_razao` |
+
+O orçamento de 8 s **não** era o gargalo: a detecção levava 65 ms. O corte era
+**teto de coleta** — `TETO_PEDIDOS=500` para 1,5k pedidos e
+`TETO_ESTOQUE_RAZAO=500` para 1,2k produtos com diferença. Aumentar o teto no
+escuro não era opção; os valores novos foram medidos:
+
+- `TETO_PEDIDOS` 500 → **2.000**; `TETO_ESTOQUE_RAZAO` 500 → **2.000**;
+  `TETO_PRODUTOS` 200 → **2.000**; `TETO_CONTATOS_ENDERECO` 1.000 → **15.000**.
+- Com os tetos novos, o mesmo volume: coleta **4,2 s**, detecção **262 ms**,
+  `truncados = []` — total abaixo dos 8 s, sem aumento de orçamento.
+- Regras mais lentas (ms): `operacao.lead_duplicado` 25,1;
+  `cadastro.endereco_com_lixo` 8,4; `fiscal.nota_rejeitada` 6,4;
+  `operacao.estoque_divergente` 4,2. Nenhuma perto de 8 s.
+
+**Encerramento por regra**, não por rodada completa:
+
+- `executarDetectores` devolve `regrasAvaliadas`, `regrasNaoAvaliadas` e
+  `temposPorRegra`; `sentinel_runs.detalhe` grava as listas e os tempos.
+- `fn_sentinel_encerrar_ausentes` recebe só as regras avaliadas e sem falha de
+  registro; regra que não rodou fica intocada. O corte por **coleta** continua
+  bloqueando tudo (snapshot incompleto para todas); achado que não coube no teto
+  da org protege a própria regra.
+- Rodada truncada por **tempo** (não por coleta) agora fecha as regras que
+  rodaram — a garantia “não fechar sem avaliar” continua, e o acúmulo para de
+  crescer.
+
+**Efeito em produção:** com o volume real e os tetos novos, a próxima varredura
+completa avalia todas as regras e `encerrar_ausentes` fecha a ocorrência da
+devolução como `nao_detectada_na_execucao`, preservando o histórico. Sem
+migration (0330 não foi necessária): a função já aceitava a lista de regras.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
@@ -485,14 +526,12 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (v1.6, 19/11/2026)
+## 11. Onde retomar (v1.7, 19/11/2026)
 
-- **Fatia anterior** (`front/sentinel-correcao2`, #582): 0328, liberar claim de
-  conversa parada; detector `operacao.conversa_claim_parado`; motivo
-  obrigatório; CAS e reversão honesta. Sem tocar em webhook (arquivo forense,
-  não fila).
-- **Esta fatia** (`front/sentinel-org-suspensa`): 0329, organização suspensa não
-  alimenta o Sentinel; encerra abertas com motivo e registra a rodada em
-  `organizacoes_puladas`. Corte na coleta, decidido e justificado abaixo.
-- **Próxima da fila**: prova de retenção/LGPD (`fn_sentinel_expurgar` já
-  existe; falta o invariante dedicado) e contrato do próximo caso reversível.
+- **Esta fatia** (`sentinel/encerrar-por-regra`): encerramento por regra
+  avaliada; `regrasNaoAvaliadas`/`temposPorRegra` no detalhe; tetos de coleta
+  medidos (pedidos 2.000, estoque 2.000, produtos 2.000, contatos 15.000) para
+  o volume real não truncar. Sem migration.
+- **Próxima**: medir `contatos_endereco`/`leads` em produção e, se a coleta
+  voltar a truncar, decidir entre teto maior ou agregação SQL — com número, não
+  no escuro.

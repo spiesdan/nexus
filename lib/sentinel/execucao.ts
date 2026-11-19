@@ -188,8 +188,11 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
     logger.info("sentinel.detection", {
       organizationId,
       regrasAvaliadas: deteccao.regrasAvaliadas.length,
+      regrasNaoAvaliadas: deteccao.regrasNaoAvaliadas.length,
+      coletasTruncadas: coleta.truncados,
       tempoMs: deteccao.tempoMs,
       truncadoPorTempo: deteccao.truncadoPorTempo,
+      regraMaisLenta: Object.entries(deteccao.temposPorRegra).sort((a, b) => b[1] - a[1])[0] ?? null,
     });
 
     let criadas = 0;
@@ -213,12 +216,19 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
       else reafirmadas += 1;
     }
 
-    // Só encerra por ausência com prova completa: sem truncamento, sem regra
-    // que falhou e sem falha de registro naquela regra.
+    // Encerra por REGRA AVALIADA, não por rodada completa. A garantia que
+    // importa é "não fechar sem ter avaliado a regra": quem não rodou (corte de
+    // tempo, falha) fica de fora. Coleta truncada continua bloqueando tudo —
+    // nela o snapshot está incompleto para TODAS as regras, inclusive as que
+    // rodaram. Achado que não coube no teto da org também protege a sua regra:
+    // fechar por ausência quando o achado existe mas foi descartado seria mentira.
     let encerradas = 0;
-    if (!truncado && erros === 0) {
+    const regrasComAchadoForaDoTeto = new Set(
+      deteccao.achados.slice(config.limiteOcorrencias).map((a) => a.regra),
+    );
+    if (!coleta.truncado) {
       const regrasSeguras = deteccao.regrasAvaliadas.filter(
-        (r) => !regrasComErro.has(r),
+        (r) => !regrasComErro.has(r) && !regrasComAchadoForaDoTeto.has(r),
       );
       if (regrasSeguras.length > 0) {
         const { data: n, error } = await admin.rpc("fn_sentinel_encerrar_ausentes", {
@@ -276,6 +286,10 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
           limite: config.limiteOcorrencias,
           deteccao_ms: deteccao.tempoMs,
           regras_avaliadas: deteccao.regrasAvaliadas.length,
+          regras_avaliadas_ids: deteccao.regrasAvaliadas,
+          regras_nao_avaliadas: deteccao.regrasNaoAvaliadas,
+          coletas_truncadas: coleta.truncados,
+          tempos_por_regra_ms: deteccao.temposPorRegra,
           deteccao_truncada_por_tempo: deteccao.truncadoPorTempo,
         },
       })

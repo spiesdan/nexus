@@ -38,11 +38,11 @@ import { DIA_MS } from "./utilitarios";
 
 const TETO_NOTAS = 500;
 const TETO_NOTAS_PEDIDOS = 2_000;
-const TETO_PEDIDOS = 500;
+const TETO_PEDIDOS = 2_000;
 const TETO_JOBS_FISCAIS = 500;
 const TETO_SYNC_FISCAL = 100;
-const TETO_PRODUTOS = 200;
-const TETO_ESTOQUE_RAZAO = 500;
+const TETO_PRODUTOS = 1_000;
+const TETO_ESTOQUE_RAZAO = 2_000;
 const TETO_RECEBIVEIS = 1_000;
 const TETO_LEADS = 2_000;
 const TETO_FILA = 500;
@@ -53,7 +53,7 @@ const TETO_DUPLICADOS = 200;
 // 100 mantém o `in (ids)` do PostgREST abaixo do limite de URL; se houver mais,
 // a coleta trunca e a rodada não encerra por ausência.
 const TETO_CORRECOES = 100;
-const TETO_CONTATOS_ENDERECO = 1_000;
+const TETO_CONTATOS_ENDERECO = 15_000;
 const TETO_CONVERSAS_PARADAS = 200;
 const TETO_EVENTOS_CORRECAO = 2_000;
 
@@ -108,6 +108,8 @@ interface JobCorrecao {
 export interface ResultadoColeta {
   snapshot: Snapshot;
   truncado: boolean;
+  /** Nomes das coletas que bateram no teto (`notas`, `produtos`, ...). */
+  truncados: string[];
   falhas: string[];
 }
 
@@ -438,26 +440,26 @@ export async function coletarSnapshot(
   });
 
   const coletas = [
-    notas,
-    notasPedidos,
-    pedidos,
-    jobsFiscais,
-    sincronizacoesFiscais,
-    produtos,
-    estoqueRazao,
-    recebiveis,
-    leadsAbertos,
-    fila,
-    webhooks,
-    importacoesMercos,
-    campanhasProspeccao,
-    campanhasVenda,
-    clientesDuplicados,
-    contatosEndereco,
-    conversasParadas,
-    ocorrenciasCorrecao,
-    eventosCorrecao,
-    jobsCorrecao,
+    { nome: "notas", coleta: notas },
+    { nome: "notas_pedidos", coleta: notasPedidos },
+    { nome: "pedidos", coleta: pedidos },
+    { nome: "jobs_fiscais", coleta: jobsFiscais },
+    { nome: "sincronizacoes_fiscais", coleta: sincronizacoesFiscais },
+    { nome: "produtos", coleta: produtos },
+    { nome: "estoque_razao", coleta: estoqueRazao },
+    { nome: "recebiveis", coleta: recebiveis },
+    { nome: "leads_abertos", coleta: leadsAbertos },
+    { nome: "fila", coleta: fila },
+    { nome: "webhooks", coleta: webhooks },
+    { nome: "importacoes_mercos", coleta: importacoesMercos },
+    { nome: "campanhas_prospeccao", coleta: campanhasProspeccao },
+    { nome: "campanhas_venda", coleta: campanhasVenda },
+    { nome: "clientes_duplicados", coleta: clientesDuplicados },
+    { nome: "contatos_endereco", coleta: contatosEndereco },
+    { nome: "conversas_paradas", coleta: conversasParadas },
+    { nome: "ocorrencias_correcao", coleta: ocorrenciasCorrecao },
+    { nome: "eventos_correcao", coleta: eventosCorrecao },
+    { nome: "jobs_correcao", coleta: jobsCorrecao },
   ];
 
   return {
@@ -483,7 +485,8 @@ export async function coletarSnapshot(
       contatosEndereco: contatosEndereco.dados,
       conversasParadas: conversasParadas.dados,
     },
-    truncado: coletas.some((c) => c.truncado),
-    falhas: coletas.map((c) => c.falha).filter((f): f is string => f !== null),
+    truncado: coletas.some((c) => c.coleta.truncado),
+    truncados: coletas.filter((c) => c.coleta.truncado).map((c) => c.nome),
+    falhas: coletas.map((c) => c.coleta.falha).filter((f): f is string => f !== null),
   };
 }

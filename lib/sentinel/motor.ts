@@ -39,6 +39,10 @@ export interface ResultadoDeteccao {
   achados: Achado[];
   /** Regras que rodaram até o fim — só elas podem encerrar ocorrências ausentes. */
   regrasAvaliadas: string[];
+  /** Regras que NÃO rodaram (orçamento estourou ou falharam) — intocadas. */
+  regrasNaoAvaliadas: string[];
+  /** Tempo por regra avaliada, em ms — para medir quem estoura o orçamento. */
+  temposPorRegra: Record<string, number>;
   falhas: FalhaDeRegra[];
   /** Tempo total da fase de detecção (sem coleta/persistência). */
   tempoMs: number;
@@ -98,6 +102,8 @@ export function executarDetectores(
   const orcamento = opcoes.orcamentoMs ?? ORCAMENTO_DETECCAO_PADRAO_MS;
   const porFingerprint = new Map<string, Achado>();
   const regrasAvaliadas: string[] = [];
+  const regrasNaoAvaliadas: string[] = [];
+  const temposPorRegra: Record<string, number> = {};
   const falhas: FalhaDeRegra[] = [];
   const inicio = performance.now();
   let truncadoPorTempo = false;
@@ -109,13 +115,24 @@ export function executarDetectores(
     // interromper CPU síncrona); o que não acontece é começar a próxima.
     if (performance.now() - inicio > orcamento) {
       truncadoPorTempo = true;
+      // Tudo o que ainda não foi avaliado (inclusive esta e as seguintes) fica
+      // registrado como intocado; o runner não pode encerrar ocorrência delas.
+      const indiceAtual = regras.indexOf(regra);
+      for (const restante of regras.slice(indiceAtual)) {
+        if (!desativados.has(restante.id) && !regrasAvaliadas.includes(restante.id)) {
+          regrasNaoAvaliadas.push(restante.id);
+        }
+      }
       break;
     }
 
     try {
+      const inicioDaRegra = performance.now();
       const achados = regra.detectar(snapshot);
+      temposPorRegra[regra.id] = Math.round((performance.now() - inicioDaRegra) * 10) / 10;
       if (!Array.isArray(achados)) {
         falhas.push({ regra: regra.id, motivo: "detector não devolveu array" });
+        regrasNaoAvaliadas.push(regra.id);
         continue;
       }
 
@@ -138,6 +155,7 @@ export function executarDetectores(
       }
       if (invalido) {
         falhas.push({ regra: regra.id, motivo: invalido });
+        regrasNaoAvaliadas.push(regra.id);
         continue;
       }
 
@@ -154,6 +172,7 @@ export function executarDetectores(
     } catch (erro) {
       const motivo = erro instanceof Error ? erro.message : String(erro);
       falhas.push({ regra: regra.id, motivo: motivo.slice(0, 300) });
+      regrasNaoAvaliadas.push(regra.id);
     }
   }
 
@@ -167,6 +186,8 @@ export function executarDetectores(
   return {
     achados,
     regrasAvaliadas,
+    regrasNaoAvaliadas,
+    temposPorRegra,
     falhas,
     tempoMs: Math.round(performance.now() - inicio),
     truncadoPorTempo,
