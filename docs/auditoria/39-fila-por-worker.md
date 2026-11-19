@@ -177,3 +177,16 @@ O que foi feito:
 **Regra daqui pra frente:** build **só** com janela do orquestrador; teste
 dirigido; `tsc` no fim e um por vez; Playwright só na captura e fechado no mesmo
 comando; **uma sessão por worker** (checar `opencode session list` antes de abrir).
+
+### Janela de E2E do criador (19/11/2026) — ~25 min
+
+- Orquestrador roda **build de produção na `main`** + `playwright
+  tests/e2e/criador-de-pedidos-matriz.spec.ts --workers=1`.
+- O **shim** de `node_modules/.bin/next` (`next.real` ao lado) **continua**; o
+  orquestrador bypassa. **Não remover por conta própria.**
+- Workers avisados (d19/f19/g19): só leitura/edição/teste dirigido curto; nenhum
+  build, Playwright, `next dev`, `tsc` longo ou suíte.
+- Abertura verificada: load 7,7, swap 2,4 GB, **zero** `next`/Chromium/`tsc`/suíte.
+- Resultado da matriz entra em `43-criador-de-pedidos.md` §9; itens E.2/E.4/E.5/
+  E.8/E.9/E.10 passam de “codificado” para “provado” ou ficam declarados com o
+  motivo medido.
