@@ -320,7 +320,32 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: #594 no rebase/merge · próximo: decisão dos inativos (dono) + --aplicar · depois: estados de expedição (5.6b)
-F — agora: J6/J13/J14 como gate no CI · próximo: J6/J13/J14 em homologação · depois: regressão local da 1.58.1
-G — agora: Sentinel ignora organização suspensa · próximo: proposta do 2º caso reversível · depois: painel de rejeição por fornecedor
+D — agora: aguardando liberação do F (estudo C fechado) · próximo: coluna persistente + barra fixa · depois: expedição (#607)
+F — agora: #609 + descontoTexto no rascunho (dono dos arquivos) · próximo: regressão do fluxo · depois: benchmark
+G — agora: #608 (SLO) + #600 (reativação) · próximo: remedição do Sentinel · depois: 2º caso reversível
 ```
+
+
+## Deploy 1.59.0 verificado (19/11/2026)
+
+- **7 containers em 1.59.0** (app, worker, scheduler, fiscal, mercos, ocr, rota);
+  `/health` responde `version 1.59.0`; todos os checks ok.
+- `public.fn_sentinel_encerrar_org_suspensa` **presente** no banco — a correção do
+  Sentinel para organização suspensa está viva em produção.
+- Evidência: tag **`v1.59.0`**, commit **`ccadd516`**, 19/11/2026 (verificação do dono).
+- **Produção autorizada para o Mercos**: coleta `--todos` (847 produtos),
+  `catalogo.mjs --aplicar` (55 criados inativos, 567 atualizados, 0 desativados) e
+  `parear-itens.mjs --aplicar` (por código). Registro e reversão na auditoria de
+  produção (item 7).
+
+
+## Catálogo do Mercos aplicado em produção (19/11/2026)
+
+- **847 produtos** coletados (`--todos`, 57 páginas); **55 criados** (inativos),
+  **567 atualizados**, 34 divergentes, 210 sem código, **622 gravados**.
+- **616 → 194** itens históricos pareados **por código**; restam **422** (46
+  códigos sem produto) e **9 ambíguos** que não foram aplicados.
+- Catálogo hoje: **1.196 produtos**, 1.139 ativos / 57 inativos, **799** com
+  `origem='mercos'`.
+- Execução com código da `main` em `/app/_fix` (imagem 1.59.0); o `origem` só
+  entra oficialmente na próxima release. Reversão registrada na auditoria (item 7).
