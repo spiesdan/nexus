@@ -148,12 +148,15 @@ export async function listContactsHandler(
   }
   if (q.tag) query = query.contains("tags", [q.tag]);
   if (q.source) query = query.eq("source", q.source);
-  if (q.cidade) {
-    // Igualdade case-insensitive (ILIKE sem `%`) com o valor já trimado pelo
-    // schema. `%`, `_` e `\` são curingas do LIKE: escapar é o que impede uma
-    // cidade chamada "100%" de casar com toda a base.
-    const cidade = q.cidade.replace(/[\\%_]/g, (m) => `\\${m}`);
-    query = query.ilike("cidade", cidade);
+  if (q.cidade !== undefined) {
+    // As variantes vêm do seletor canônico (município do IBGE): todas as
+    // grafias cruas daquela cidade, já lidas do banco pela rota de cidades.
+    // `IN` exato é o que casa `UNIAO DA VITORIA` com `União da Vitória` sem
+    // `unaccent` e sem migration. String única = lista de um (contrato antigo).
+    const variantes = (Array.isArray(q.cidade) ? q.cidade : [q.cidade])
+      .map((valor) => valor.trim())
+      .filter((valor) => valor.length > 0);
+    if (variantes.length > 0) query = query.in("cidade", variantes);
   }
 
   if (q.cursor) {

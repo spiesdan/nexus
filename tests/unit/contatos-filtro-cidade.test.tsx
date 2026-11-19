@@ -20,7 +20,22 @@ const useContactList = vi.fn();
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
 vi.mock("@/hooks/contacts/useContactList", () => ({ useContactList: (...a: unknown[]) => useContactList(...a) }));
 vi.mock("@/hooks/contacts/useContactCities", () => ({
-  useContactCities: () => ({ data: ["Ribeirão Preto", "São Paulo"] }),
+  useContactCities: () => ({
+    data: [
+      {
+        nome: "Ribeirão Preto",
+        uf: "SP",
+        rotulo: "Ribeirão Preto/SP",
+        variantes: ["Ribeirão Preto", "RIBEIRAO PRETO"],
+      },
+      {
+        nome: "São Paulo",
+        uf: "SP",
+        rotulo: "São Paulo/SP",
+        variantes: ["São Paulo", "SAO PAULO", "sao paulo"],
+      },
+    ],
+  }),
 }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -79,23 +94,27 @@ describe("Clientes — filtro por cidade", () => {
     renderizar();
 
     const cidade = document.getElementById("filtro-cidade") as HTMLSelectElement;
-    fireEvent.change(cidade, { target: { value: "São Paulo" } });
+    fireEvent.change(cidade, { target: { value: "São Paulo/SP" } });
 
-    const ultimo = useContactList.mock.calls.at(-1)?.[0] as { cidade?: string };
-    expect(ultimo.cidade).toBe("São Paulo");
+    const ultimo = useContactList.mock.calls.at(-1)?.[0] as { cidade?: string[] };
+    // O filtro recebe TODAS as variantes canônicas — é o `IN` que casa acento
+    // e caixa sem migration.
+    expect(ultimo.cidade).toEqual(["São Paulo", "SAO PAULO", "sao paulo"]);
 
-    // Chip com o nome da cidade e botão de remover.
-    const chip = screen.getByText("Cidade: São Paulo");
+    // Chip com o rótulo canônico e botão de remover.
+    const chip = screen.getByText("Cidade: São Paulo/SP");
     expect(chip).toBeTruthy();
     const remover = chip.closest("button") ?? chip.parentElement?.querySelector("button");
     if (remover) fireEvent.click(remover);
-    expect((useContactList.mock.calls.at(-1)?.[0] as { cidade?: string }).cidade).toBeUndefined();
+    expect(
+      (useContactList.mock.calls.at(-1)?.[0] as { cidade?: string[] }).cidade,
+    ).toBeUndefined();
 
     // Escolhe de novo e usa "Limpar filtros".
-    fireEvent.change(cidade, { target: { value: "Ribeirão Preto" } });
+    fireEvent.change(cidade, { target: { value: "Ribeirão Preto/SP" } });
     fireEvent.click(screen.getByRole("button", { name: /Limpar filtros/ }));
     expect(
-      (useContactList.mock.calls.at(-1)?.[0] as { cidade?: string }).cidade,
+      (useContactList.mock.calls.at(-1)?.[0] as { cidade?: string[] }).cidade,
     ).toBeUndefined();
   });
 });

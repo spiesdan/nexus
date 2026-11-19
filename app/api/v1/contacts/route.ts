@@ -39,7 +39,11 @@ export async function GET(req: NextRequest): Promise<Response> {
     search: url.searchParams.get("search") ?? undefined,
     tag: url.searchParams.get("tag") ?? undefined,
     source: url.searchParams.get("source") ?? undefined,
-    cidade: url.searchParams.get("cidade") ?? undefined,
+    // Repetido (`?cidade=CANOINHAS&cidade=Canoinhas`): o seletor manda as
+    // variantes da cidade canônica para o `IN` do handler.
+    cidade: url.searchParams.getAll("cidade").length
+      ? url.searchParams.getAll("cidade")
+      : undefined,
     cursor: url.searchParams.get("cursor") ?? undefined,
     limit: url.searchParams.get("limit") ?? undefined,
     order_by: url.searchParams.get("order_by") ?? undefined,
