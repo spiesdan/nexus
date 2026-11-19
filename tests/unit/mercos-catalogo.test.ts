@@ -19,9 +19,11 @@ import { describe, expect, it } from "vitest";
 import {
   chaveSemZeros,
   classificarLinhas,
+  coletaIncompleta,
   COLUNAS_LEGADO,
   indexarCatalogo,
   mapearColunas,
+  montarLinhasDeUpsert,
   normalizarCodigo,
   normalizarNome,
   motivoDoVazio,
@@ -29,6 +31,7 @@ import {
   planejarUpsert,
   precoParaCents,
   rotasDoCatalogo,
+  STATUS_DA_GRADE,
 } from "../../workers/mercos/catalogo-logica.mjs";
 
 describe("cabeçalho manda nas colunas", () => {
@@ -254,13 +257,16 @@ describe("normalização", () => {
  */
 describe("rota do catálogo", () => {
   it("a primeira candidata é a que o menu aponta de fato (industria)", () => {
-    expect(rotasDoCatalogo("338282")[0]).toBe("https://app.mercos.com/industria/338282/produtos/");
+    expect(rotasDoCatalogo("338282")[0]).toBe(
+      "https://app.mercos.com/industria/338282/produtos/?p=1&status=1&nome_codigo=",
+    );
   });
 
   it("a rota antiga continua como rede, não como primeira tentativa", () => {
     const rotas = rotasDoCatalogo("338282");
-    expect(rotas).toContain("https://app.mercos.com/338282/produtos/");
-    expect(rotas[0]).not.toBe("https://app.mercos.com/338282/produtos/");
+    expect(rotas).toContain("https://app.mercos.com/338282/produtos/?p=1&status=1&nome_codigo=");
+    expect(rotas[0]).not.toBe(rotas[1]);
+    expect(rotas[0]).toContain("/industria/");
   });
 });
 
@@ -281,5 +287,147 @@ describe("zero não é sucesso", () => {
 
   it("número ausente não vira sucesso por acidente", () => {
     expect(motivoDoVazio({ paginas: Number.NaN, produtosLidos: 10 })).toBe("nenhuma pagina lida");
+  });
+});
+
+/**
+ * IMPORTAR "TODOS" NÃO DESATIVA NINGUÉM — e produto novo nasce como o ERP diz.
+ *
+ * A pergunta do dono é se vale importar o catálogo com os inativos dentro. A
+ * resposta depende de uma coisa só: **importar um produto inativo do ERP pode
+ * desativar um produto ativo no banco?** Não pode, e é aqui que isso está preso.
+ *
+ * As três regras, nesta ordem:
+ *  1. produto que JÁ existe mantém o `ativo` do banco (quem desativou foi uma
+ *     pessoa; o ERP não manda na vitrine);
+ *  2. produto NOVO nasce como o ERP disse — inativo no ERP entra inativo, senão
+ *     ele apareceria na vitrine e na tabela de preço sem ninguém pedir;
+ *  3. sem informação da fonte, nasce ativo (comportamento de antes).
+ */
+describe("upsert do catálogo: `ativo` nunca é rebaixado pelo ERP", () => {
+  const org = "00000000-0000-0000-0000-000000000001";
+  const existente = (codigo: string, ativo: boolean) =>
+    new Map([
+      [codigo, { id: `id-${codigo}`, codigo, nome: `PRODUTO ${codigo}`, ativo, preco_cents: 100 }],
+    ]);
+
+  const produto = (codigo: string, ativo_erp: boolean | null) => ({
+    codigo,
+    nome: `PRODUTO ${codigo}`,
+    preco_cents: 199,
+    unidade: "UN",
+    foto: null,
+    ativo_erp,
+    bruto: null,
+  });
+
+  it("produto ativo no banco que vem INATIVO do ERP continua ativo", () => {
+    const linha = montarLinhasDeUpsert(
+      org,
+      [],
+      [produto("480", false)],
+      existente("480", true),
+    )[0]!;
+    expect(linha.ativo).toBe(true);
+    expect(linha.preco_cents).toBe(199); // preço atualiza; visibilidade não
+  });
+
+  it("produto já inativo no banco que vem ATIVO do ERP continua inativo", () => {
+    const linha = montarLinhasDeUpsert(
+      org,
+      [],
+      [produto("480", true)],
+      existente("480", false),
+    )[0]!;
+    expect(linha.ativo).toBe(false);
+  });
+
+  it("produto NOVO que vem inativo do ERP nasce inativo", () => {
+    const linha = montarLinhasDeUpsert(org, [produto("901", false)], [], new Map())[0]!;
+    expect(linha).toMatchObject({ codigo: "901", ativo: false, origem: "mercos" });
+  });
+
+  it("produto NOVO sem informação de situação nasce ativo", () => {
+    const linha = montarLinhasDeUpsert(org, [produto("902", null)], [], new Map())[0]!;
+    expect(linha.ativo).toBe(true);
+  });
+
+  it("produto NOVO ativo no ERP nasce ativo", () => {
+    const linha = montarLinhasDeUpsert(org, [produto("903", true)], [], new Map())[0]!;
+    expect(linha.ativo).toBe(true);
+  });
+
+  it("nome do banco vence e foto curada não é sobrescrita", () => {
+    const mapa = new Map([
+      [
+        "480",
+        {
+          id: "id-480",
+          codigo: "480",
+          nome: "CESTO INOX DO BANCO",
+          ativo: true,
+          imagem_url: "https://exemplo/foto-curada.jpg",
+        },
+      ],
+    ]);
+    const linha = montarLinhasDeUpsert(
+      org,
+      [],
+      [
+        {
+          ...produto("480", true),
+          nome: "CESTO INOX DO MERCOS",
+          foto: "https://exemplo/erp.jpg",
+        },
+      ],
+      mapa,
+    )[0]!;
+    expect(linha.nome).toBe("CESTO INOX DO MERCOS"); // a linha usa o nome já decidido
+    expect(linha.imagem_url).toBe("https://exemplo/foto-curada.jpg");
+  });
+});
+
+describe("status da grade e rotas", () => {
+  it("a rota leva o filtro na pílula de paginação (`?p=1&status=N`)", () => {
+    expect(rotasDoCatalogo("338282", STATUS_DA_GRADE.ativos)[0]).toContain("?p=1&status=1");
+    expect(rotasDoCatalogo("338282", STATUS_DA_GRADE.todos)[0]).toContain("?p=1&status=0");
+  });
+
+  it("os três valores medidos: ativos=1, todos=0, inativos=2", () => {
+    // Contador do ERP em 19/11/2026: 601 / 847 / (só inativos).
+    expect(STATUS_DA_GRADE).toEqual({ ativos: "1", todos: "0", inativos: "2" });
+  });
+});
+
+/**
+ * A COLETA QUE PARA NO MEIO NÃO É SUCESSO.
+ *
+ * Em 19/11/2026 a mesma coleta parou duas vezes: **75 de 601** produtos e
+ * **495 de 601**, as duas com `ok: true`. O critério de "terminei" era comparar
+ * 2.000 caracteres de `innerText` entre páginas — quando a grade demorava a
+ * trocar, aquilo virava "fim de catálogo".
+ *
+ * A régua agora é o contador do próprio ERP (`/contar_produtos/<rep>/`): 601
+ * com `status=1`, 847 com `status=0`. Estes casos prendem a decisão.
+ */
+describe("completude da coleta", () => {
+  it("leu menos que o ERP disse: incompleta", () => {
+    expect(coletaIncompleta({ lidos: 495, totalNoErp: 601 })).toBe(true);
+    expect(coletaIncompleta({ lidos: 75, totalNoErp: 601 })).toBe(true);
+  });
+
+  it("leu o total: completa", () => {
+    expect(coletaIncompleta({ lidos: 601, totalNoErp: 601 })).toBe(false);
+    expect(coletaIncompleta({ lidos: 847, totalNoErp: 847 })).toBe(false);
+  });
+
+  it("ERP não informou total: não dá para cobrar", () => {
+    expect(coletaIncompleta({ lidos: 10, totalNoErp: null })).toBe(false);
+    expect(coletaIncompleta({ lidos: 10, totalNoErp: Number.NaN })).toBe(false);
+  });
+
+  it("`--limite` é amostra declarada, não truncamento", () => {
+    expect(coletaIncompleta({ lidos: 10, totalNoErp: 601, limite: 10 })).toBe(false);
+    expect(coletaIncompleta({ lidos: 9, totalNoErp: 601, limite: 10 })).toBe(true);
   });
 });
