@@ -593,6 +593,11 @@ beforeAll(() => {
             (organization_id, occurrence_id, tipo, estado_novo, origem)
             values (v_org, v_sentinel_occ, 'detectada', 'nova', 'sentinel');
         end if;
+        if not exists (select 1 from public.api_request_samples where organization_id = v_org) then
+          insert into public.api_request_samples
+            (organization_id, route, status, duration_ms, request_id)
+            values (v_org, '/api/v1/contacts', 200, 10, 'seed-rls-' || v_org::text);
+        end if;
       end loop;
     end
     $seed$;
@@ -764,6 +769,9 @@ export const TABLES = [
   "sentinel_runs",
   "sentinel_occurrences",
   "sentinel_occurrence_events",
+  // migration 0330 — série dos SLOs de API. Leitura org-scoped; escrita só
+  // service_role no `after()` da resposta (não há policy de insert para sessão).
+  "api_request_samples",
 ] as const;
 
 describe("RLS tenant isolation (fn_user_org_ids pattern)", () => {

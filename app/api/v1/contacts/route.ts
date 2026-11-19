@@ -21,9 +21,11 @@ import { createClient } from "@/lib/supabase/server";
 
 import { listContactsHandler, createContactHandler } from "./_handler";
 
+
+import { comMetricas } from "@/lib/observabilidade/rotas";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest): Promise<Response> {
+async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const supabase = await createClient();
   const {
@@ -118,3 +120,5 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }
+
+export const GET = comMetricas("/api/v1/contacts", get);

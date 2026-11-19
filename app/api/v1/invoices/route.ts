@@ -28,9 +28,11 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+
+import { comMetricas } from "@/lib/observabilidade/rotas";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest): Promise<Response> {
+async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "invoices" });
   if (!authz.ok) return authz.response;
@@ -154,3 +156,5 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }
+
+export const GET = comMetricas("/api/v1/invoices", get);

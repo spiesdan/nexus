@@ -155,28 +155,34 @@ dito.
 
 ---
 
-## 3.1 O SLO virou tela (19/11/2026)
+## 3.1 O SLO virou tela — e os dois primeiros agora têm série
 
-O SLO deixou de morar só neste documento: `/admin/observabilidade` (plataforma,
-`platform_admin`, leitura apenas) mostra os três cartões — disponibilidade,
-latência e frescor do Sentinel — com fórmula, janela, alvo, valor atual e
-estado (`ok` / `em risco` / `estourado` / `sem histórico`).
+`/admin/observabilidade` (plataforma, `platform_admin`, leitura apenas) mostra
+os três cartões — disponibilidade, latência e frescor do Sentinel — com fórmula,
+janela, alvo, valor atual e estado (`ok` / `em risco` / `estourado` / `sem
+histórico`).
 
 **Fonte dos números, sem invenção:**
 
-- **Frescor do Sentinel:** calculado agora de `organizations` (ativas, não
-  suspensas) + `sentinel_settings.ultima_execucao_em` e `intervalo_minutos`.
-  É o único dos três com série consultável hoje.
-- **Disponibilidade e latência:** a tela diz **“sem histórico ainda”**. A fonte
-  é o log estruturado `api.5xx` (criado nesta linha) e a duração das rotas, mas
-  nenhum dos dois é persistido em tabela consultável; mostrar `0%` ou `0 ms`
-  seria mentira, não saúde. O que falta é a série: persistir os eventos/durações
-  e só então ligar o valor. O doc 42 §2 tem a medição local, que não é série de
-  produção.
+- **Disponibilidade e latência:** vêm de `api_request_samples` (migration 0330),
+  uma linha por requisição das cinco rotas quentes. Guarda rota, status,
+  duração, código de 5xx, request id e a org do cookie `active_org` quando
+  existe — **sem body, sem PII, sem mensagem**. A escrita acontece no `after()`
+  da resposta, fora do caminho crítico do 200. Amostragem **100%** hoje
+  (`AMOSTRAGEM = 1` em `lib/observabilidade/rotas.ts`).
+- O agregado `fn_slo_api_resumo(7, rotas)` devolve total, 5xx e p95 numa ida ao
+  banco. **Menos de 100 amostras na janela continua “sem histórico”** — não é
+  zero, é ausência de prova.
+- **Frescor do Sentinel:** calculado de `organizations` (ativas, não suspensas)
+  + `sentinel_settings.ultima_execucao_em` e `intervalo_minutos`.
+- **Retenção:** `fn_api_metricas_expurgar(7, lote)` apaga em lotes o que passou
+  de 7 dias; o cron diário `data-retention` chama até o lote voltar incompleto.
+  Piso de 7 no corpo da função e idempotência cobertos por `test:db`.
 
-O cartão de disponibilidade usa o alvo de 99,5% e o de latência 800 ms p95 —
-os mesmos propostos acima. O estado “em risco” é a faixa de 2 pontos abaixo do
-alvo; abaixo dela, “estourado”. Nada aqui é SLA de cliente.
+O que ainda depende de série é o **valor de produção**: a tela mede a janela
+real de 7 dias a partir do primeiro deploy da 0330; até lá, os cartões dizem
+“sem histórico”. O doc 42 §2 (medição local) continua sendo régua de latência,
+não série de produção.
 
 ## 4. Erros e recuperação (o que o produto faz hoje)
 

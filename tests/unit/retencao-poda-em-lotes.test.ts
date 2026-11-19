@@ -68,7 +68,12 @@ function bancoQueDevolve(sequencias: {
   const db: PodaDb = {
     async rpc(nome, args) {
       chamadas.push({ nome, dias: args.p_retencao_dias, limite: args.p_limite });
-      const balde = nome === "fn_podar_fila_de_jobs" ? restante.fila : restante.auditoria;
+      const balde =
+        nome === "fn_podar_fila_de_jobs"
+          ? restante.fila
+          : nome === "fn_expurgar_auditoria_vencida"
+            ? restante.auditoria
+            : { shift: () => 0 };
       return { data: balde.shift() ?? 0, error: null };
     },
   };
@@ -184,6 +189,7 @@ describe("houveEfeito — as duas direções", () => {
     espelho_apagado: 0,
     // Quarta poda (migration 0190): os nonces de OAuth do Google já queimados.
     nonces_apagados: 0,
+    metricas_apagadas: 0,
     lotes_espelho: 0,
     espelho_tem_resto: false,
     retencao_fila_dias: RETENCAO_FILA_DIAS_PADRAO,
@@ -202,6 +208,7 @@ describe("houveEfeito — as duas direções", () => {
     // quarta poda (eu) a ligou ao laço e ao retorno e esqueceu do predicado —
     // um parágrafo abaixo do comentário que descreve exatamente esse defeito.
     expect(houveEfeito({ ...base, nonces_apagados: 1 })).toBe(true);
+    expect(houveEfeito({ ...base, metricas_apagadas: 1 })).toBe(true);
   });
 
   it("apagou job → audita; apagou auditoria → audita", () => {

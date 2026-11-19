@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +87,7 @@ export async function GET(): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const [orgsRes, settingsRes] = await Promise.all([
+  const [orgsRes, settingsRes, resumoApi] = await Promise.all([
     lerTodasAsPaginas<{ id: string }>((de, ate) =>
       admin
         .from("organizations")
@@ -109,6 +110,10 @@ export async function GET(): Promise<Response> {
         .order("organization_id")
         .range(de, ate),
     ),
+    admin.rpc("fn_slo_api_resumo", {
+      p_dias: 7,
+      p_rotas: [...ROTAS_DO_SLO],
+    }),
   ]);
 
   if (orgsRes.erro) {
@@ -119,6 +124,21 @@ export async function GET(): Promise<Response> {
       requestId,
     });
   }
+  if (resumoApi.error) {
+    return fail("internal_error", "Não foi possível ler a série de API.", 500, { requestId });
+  }
+
+  const amostras = Number((resumoApi.data as { total?: number } | null)?.total ?? 0);
+  const erros = Number((resumoApi.data as { erros?: number } | null)?.erros ?? 0);
+  const p95Bruto = (resumoApi.data as { p95?: number | string | null } | null)?.p95;
+  const p95 = p95Bruto === null || p95Bruto === undefined ? null : Math.round(Number(p95Bruto));
+  const MIN_AMOSTRAS = 100;
+  const temSerie = amostras >= MIN_AMOSTRAS;
+  const disponibilidade = temSerie ? Math.round((1 - erros / amostras) * 1000) / 10 : null;
+  const estadoDisponibilidade: EstadoSlo =
+    disponibilidade === null ? "sem_historico" : estadoPorValor(disponibilidade, 99.5, 1.5);
+  const estadoLatencia: EstadoSlo =
+    p95 === null || !temSerie ? "sem_historico" : p95 <= 800 ? "ok" : p95 <= 1000 ? "em_risco" : "estourado";
 
   const orgs = orgsRes.dados;
   const settings = settingsRes.dados;
@@ -161,10 +181,13 @@ export async function GET(): Promise<Response> {
       janela: "7 dias",
       alvo: "≥ 99,5%",
       unidade: "%",
-      valor: null,
-      estado: "sem_historico",
+      valor: disponibilidade,
+      estado: estadoDisponibilidade,
       nota:
-        "Sem série histórica consultável. A fonte é o log estruturado `api.5xx`, que ainda não é persistido em tabela; zero seria mentira, não saúde.",
+        disponibilidade === null
+          ? `Sem amostras suficientes (${amostras}/${MIN_AMOSTRAS}) na janela.`
+          : `${amostras} amostras, ${erros} respostas 5xx.`,
+      detalhe: { amostras, erros }, 
     },
     {
       id: "latencia",
@@ -173,10 +196,13 @@ export async function GET(): Promise<Response> {
       janela: "janelas de 5 min · 7 dias",
       alvo: "≤ 800 ms",
       unidade: "ms",
-      valor: null,
-      estado: "sem_historico",
+      valor: p95,
+      estado: estadoLatencia,
       nota:
-        "Sem série histórica consultável. O doc 42 tem a medição local (p50 109–174 ms), mas não é produção nem série.",
+        p95 === null || !temSerie
+          ? `Sem amostras suficientes (${amostras}/${MIN_AMOSTRAS}) na janela.`
+          : `p95 de ${amostras} amostras 2xx/3xx na janela.`,
+      detalhe: { amostras }, 
     },
     {
       id: "frescor_sentinel",

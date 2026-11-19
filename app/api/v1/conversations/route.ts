@@ -13,9 +13,11 @@ import { comNomeDoAtendente } from "@/lib/users/com-nome-do-atendente";
 
 import { listConversationsHandler } from "./_handler";
 
+
+import { comMetricas } from "@/lib/observabilidade/rotas";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest): Promise<Response> {
+async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const supabase = await createClient();
 
@@ -90,3 +92,5 @@ export async function GET(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Erro interno.", 500, { requestId });
   }
 }
+
+export const GET = comMetricas("/api/v1/conversations", get);

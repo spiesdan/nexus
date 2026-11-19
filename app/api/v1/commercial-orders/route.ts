@@ -19,9 +19,11 @@ import { comNomeDoEmitente } from "@/lib/comercial/emitente";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+
+import { comMetricas } from "@/lib/observabilidade/rotas";
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest): Promise<Response> {
+async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "commercial_orders" });
   if (!authz.ok) return authz.response;
@@ -188,3 +190,5 @@ export async function POST(req: NextRequest): Promise<Response> {
     { requestId, status: 201 },
   );
 }
+
+export const GET = comMetricas("/api/v1/commercial-orders", get);
