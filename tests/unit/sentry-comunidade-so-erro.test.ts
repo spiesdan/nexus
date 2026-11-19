@@ -129,7 +129,10 @@ describe("o nome da integração casa com o SDK instalado", () => {
  * typecheck, a lint e a todo teste que não abra um browser.
  */
 describe("o init do cliente honra a política", () => {
-  const fonte = readFileSync(path.join(process.cwd(), "instrumentation-client.ts"), "utf8");
+  // O init saiu de `instrumentation-client.ts` para `lib/sentry/cliente.ts` no
+  // doc 43: o entry ficou só com a fila de erros e o SDK passou a ser importado
+  // sob demanda. A guarda segue o CALL SITE, não o nome do arquivo.
+  const fonte = readFileSync(path.join(process.cwd(), "lib/sentry/cliente.ts"), "utf8");
 
   it("passa as integrações como FUNÇÃO, não como array", () => {
     const i = fonte.indexOf("integrations:");
