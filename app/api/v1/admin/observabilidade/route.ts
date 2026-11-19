@@ -56,7 +56,12 @@ export async function GET(): Promise<Response> {
   const admin = createAdminClient();
   const [{ data: orgs, error: erroOrgs }, { data: settings, error: erroSettings }] =
     await Promise.all([
-      admin.from("organizations").select("id").is("suspended_at", null).limit(5_000),
+      admin
+        .from("organizations")
+        .select("id")
+        .eq("status", "active")
+        .is("suspended_at", null)
+        .limit(5_000),
       admin
         .from("sentinel_settings")
         .select("organization_id, ativo, intervalo_minutos, ultima_execucao_em")

@@ -99,7 +99,10 @@ export function ObservabilidadeClient() {
   const t = useT();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "observabilidade"],
-    queryFn: () => apiClient.get<Resposta>("/api/v1/admin/observabilidade").then((r) => r.data),
+    queryFn: () =>
+      apiClient
+        .get<{ data: Resposta }>("/api/v1/admin/observabilidade")
+        .then((r) => r.data),
     staleTime: 30_000,
     refetchInterval: 60_000,
   });

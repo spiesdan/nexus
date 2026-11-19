@@ -9,7 +9,7 @@ import {
   Scales,
   Warning,
   ChartBar,
-  ChartLine,
+  ChartLineUp,
   Users,
   ShieldCheck,
   CalendarBlank,
@@ -35,7 +35,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/lgpd", label: "LGPD", icon: Scales },
   { href: "/admin/incidents", label: "Incidents", icon: Warning },
   { href: "/admin/usage", label: "Usage", icon: ChartBar },
-  { href: "/admin/observabilidade", label: "Observabilidade", icon: ChartLine },
+  { href: "/admin/observabilidade", label: "Observabilidade", icon: ChartLineUp },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/platform-admins", label: "Platform Admins", icon: ShieldCheck },
   // A porta da tela de marca. Ela NÃO entra em `lib/navigation/registry.ts`:
