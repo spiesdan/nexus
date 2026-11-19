@@ -141,12 +141,13 @@ comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 | **Coletor do catálogo lê zero em produção** | `[x]` | D | DOM real + parser/rota corretos + fail-loud com 0 páginas + coleta real | **#585**: rota real `/industria/…` (o `/produtos/` dava 404), 601 produtos lidos, exit 1 quando não há página | — |
 | **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #585 (coleta real) | Depende da decisão dos inativos (§25) e de um `--dry-run` aprovado |
 | **A11y fora do recorte** | `[x]` | D | axe WCAG 2.2 AA, 0 violações críticas | **#583**: 14 rotas + `<h1>` da cabine + ordem anunciada | — |
-| **Sentinel — claim de conversa parada** | `[~]` | G | liberar claim com motivo, sem perder histórico | **#582** (aberto) | PR em revisão |
+| **Sentinel — claim de conversa parada** | `[x]` | G | liberar claim com motivo, sem perder histórico | **#590** (mergeado) | — |
 | **Falso positivo da devolução no Sentinel** | `[x]` | G | devolução finalidade 4 não é duplicidade | **#584** | — |
 | **Regressão local 1.58.0** | `[~]` | F | smoke + critical no commit da tag, com log | **#586** (aberto): smoke 32/32, critical 75/75, 2 defeitos reais | PR em revisão |
 | **A11y nas telas restantes** | `[~]` | D | axe sem violação crítica nas telas cobertas | #491/#516/#531/#535 | Cobertura além das 10 telas do `axe-telas-principais` |
 | **iOS** | `[!]` **encerrado por decisão** | Dono | decisão registrada, sem item órfão | `29-capacidades.md` item 30 | — (fora de escopo; só volta com conta Apple + aparelho + distribuição por instalação) |
-| **Release 1.58.0** | `[x]` tag | Dono (deploy) | tag `v1.58.0` + imagens publicadas | `4c7cd633` | Deploy em curso pelo dono; verificar `to_regclass` depois |
+| **Release 1.58.0** | `[x]` tag + deploy | Dono | tag + imagens + deploy verificado | `4c7cd633` | — |
+| **Release 1.59.0** | `[x]` tag + deploy **verificado** | Dono | 7 containers em 1.59.0, `/health` `version 1.59.0`, checks ok, `fn_sentinel_encerrar_org_suspensa` presente | tag `v1.59.0`, commit `ccadd516`, 19/11/2026 | — |
 
 ### O que está fechado (para não repetir)
 
@@ -176,3 +177,12 @@ este programa não executa.
 **Fonte única de auditoria de produção:** [`40-auditoria-de-acoes-em-producao.md`](40-auditoria-de-acoes-em-producao.md)
 (PR #597 do dono). Este programa **não** registra ação de produção em outro
 lugar — a fila aponta para lá.
+
+
+### Atualização 19/11 — deploy 1.59.0 verificado
+
+| Fato | Evidência |
+|---|---|
+| **1.59.0 em produção** — app/worker/scheduler/fiscal/mercos/ocr/rota, `/health` com `version 1.59.0`, todos os checks ok | tag **`v1.59.0`**, commit **`ccadd516`**, 19/11/2026 (verificação do dono) |
+| `public.fn_sentinel_encerrar_org_suspensa` presente no banco | idem (verificação pós-deploy) |
+| **Mercos autorizado** — coleta `--todos`, `catalogo.mjs --aplicar` e `parear-itens.mjs --aplicar` | autorização textual do dono, 19/11; registro em `40-auditoria-de-acoes-em-producao.md` item 7 |

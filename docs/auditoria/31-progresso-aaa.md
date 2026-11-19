@@ -324,3 +324,16 @@ D — agora: #594 (rebase sem redesenho + merge) · próximo: design em expediç
 F — agora: matriz de cobertura reconciliada · próximo: Android real [!] com motivo · depois: J1–J16 na matriz
 G — agora: #596 + desempenho/SLO com baseline · próximo: remedição do Sentinel · depois: proposta do 2º caso reversível
 ```
+
+
+## Deploy 1.59.0 verificado (19/11/2026)
+
+- **7 containers em 1.59.0** (app, worker, scheduler, fiscal, mercos, ocr, rota);
+  `/health` responde `version 1.59.0`; todos os checks ok.
+- `public.fn_sentinel_encerrar_org_suspensa` **presente** no banco — a correção do
+  Sentinel para organização suspensa está viva em produção.
+- Evidência: tag **`v1.59.0`**, commit **`ccadd516`**, 19/11/2026 (verificação do dono).
+- **Produção autorizada para o Mercos**: coleta `--todos` (847 produtos),
+  `catalogo.mjs --aplicar` (55 criados inativos, 567 atualizados, 0 desativados) e
+  `parear-itens.mjs --aplicar` (por código). Registro e reversão na auditoria de
+  produção (item 7).
