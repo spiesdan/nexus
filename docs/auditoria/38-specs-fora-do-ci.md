@@ -43,7 +43,7 @@ não a prosa.
 |---|---:|---|---|---|---|
 | `vps-fresh-onboarding` | 12 | J1.1–J1.13: bootstrap do dono, wizard, WAHA/QR, convite sem Resend, MFA, pular WhatsApp | Exige banco **fresco** do `baseline.sql`, dono criado por `scripts/bootstrap-owner.ts`, **WAHA** com QR real e **Redis** | **não** — só num stack dedicado | **JOB PRÓPRIO** (`vps-install`), não no `e2e.yml` de PR |
 | `inbox-tempo-real` | 1 | mensagem chega ao inbox **sem F5**, por fora do browser | (a) não discrimina o conserto — passa com e sem a correção do token; (b) reprovou duas vezes o mesmo sha de PR que não toca inbox (issue #347) | **sim** — 1/1 em 28 s, medido nesta rodada | **MANTER FORA** até a #347; a cerca que discrimina é unitária |
-| `visual-snapshots` | 14 | faixa superior de login + 4 telas, desktop escuro/claro e celular, com baseline versionado | baselines têm sufixo de plataforma (`…-darwin.png`, 1% de tolerância); o runner do CI é ubuntu | **sim** — 14/14 em 5,4 min, medido nesta rodada | **INCORPORAR** com runner fixo (container oficial do Playwright) |
+| `visual-snapshots` | 14 | faixa superior de login + 4 telas, desktop escuro/claro e celular, com baseline versionado | baselines têm sufixo de plataforma (`*-darwin.png`, 1% de tolerância); o runner do CI é ubuntu | **sim** — 14/14 em 5,4 min, medido nesta rodada | **INCORPORAR** com runner fixo (container oficial do Playwright) |
 
 ## 3. Veredito por spec
 
