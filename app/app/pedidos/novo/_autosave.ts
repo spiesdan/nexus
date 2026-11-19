@@ -46,6 +46,28 @@ export function rascunhoDeOutroCliente(
   return (rascunho.contatoId ?? null) !== contatoDoLink;
 }
 
+/**
+ * A CHAVE DO RASCUNHO É DO DONO, NÃO DO NAVEGADOR.
+ *
+ * O autosave morava em `localStorage["pedido-rascunho"]` — uma chave só para a
+ * instalação inteira. Num balcão compartilhado (que é como loja pequena usa o
+ * sistema) a vendedora B abria o pedido e encontrava o rascunho da vendedora A:
+ * cliente, itens e, pior, o nome de quem comprou. Trocando de organização no
+ * mesmo browser, o vazamento era entre tenants.
+ *
+ * A chave passa a carregar organização + usuário. O rascunho antigo (sem
+ * escopo) NÃO é lido: restaurar um rascunho de dono desconhecido é exatamente
+ * o vazamento que esta função existe para impedir, e perder um rascunho local é
+ * um preço honesto por não mostrar a venda de outra pessoa.
+ */
+export function chaveDoRascunho(
+  orgId: string | null | undefined,
+  userId: string | null | undefined,
+): string {
+  return `pedido-rascunho:${orgId ?? "sem-org"}:${userId ?? "sem-usuario"}`;
+}
+
+
 export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, ativo: boolean) {
   const [salvoEm, setSalvoEm] = React.useState<number | null>(null);
   const [restaurou, setRestaurou] = React.useState(false);
