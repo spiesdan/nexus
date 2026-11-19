@@ -29,6 +29,7 @@ export interface TotaisDoResumo {
  */
 export function OrderSummary({
   totais,
+  descontoMaxPct,
   descontoTexto,
   aoDesconto,
   descontoPctTexto,
@@ -58,6 +59,8 @@ export function OrderSummary({
    * ficava escondido no celular.
    */
   mostrarAcoes?: boolean;
+  /** Teto de desconto do vendedor (política da org). */
+  descontoMaxPct: number;
   textos: {
     subtotal: string;
     desconto: string;
@@ -68,6 +71,9 @@ export function OrderSummary({
     margem: string;
     comissao: string;
     aguardandoAprovacao: string;
+    descontoTotal: string;
+    descontosSomam: string;
+    tetoDesconto: string;
     revisar: string;
     itensUnidades: (itens: number, un: number) => string;
   };
@@ -129,6 +135,16 @@ export function OrderSummary({
               />
             </dd>
           </div>
+          <div className="flex justify-between border-t pt-2">
+            <dt className="text-muted-foreground">
+              {textos.descontoTotal}
+              <span className="block text-[11px]">{textos.descontosSomam}</span>
+            </dt>
+            <dd className="tabular-nums">{comoMoeda(totais.descontoCents, "BRL")}</dd>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {textos.tetoDesconto}: {descontoMaxPct.toLocaleString("pt-BR")}%
+          </p>
           {totais.margemPct !== null && (
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{textos.margem}</dt>

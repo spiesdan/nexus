@@ -16,6 +16,12 @@ export interface LinhaDoPedido {
   precoTexto: string;
   descontoPct: number;
   estoque: number | null;
+  /** Unidade de venda do produto ("kg", "un", "cx"); null = não informada. */
+  unidade?: string | null;
+  /** Venda em múltiplos de N (ficha 0275). Informativo: o servidor não valida. */
+  multiplo?: number;
+  /** De onde veio o preço da linha — o que o vendedor está vendo. */
+  origemPreco?: "base" | "tabela" | "manual";
 }
 
 /**
@@ -60,17 +66,31 @@ export function OrderItems({
               <Label>{t("Qtd")}</Label>
               <NexusQuantityStepper
                 value={l.quantidade}
-                onChange={(qtd) => aoMudar(l.key, { quantidade: qtd })}
-                label={t("Quantidade")}
+                // O schema do pedido só aceita inteiro (`int().min(1)`): o
+                // stepper não pode deixar a tela aceitar 1,5 e o servidor
+                // recusar no fim. Fração fica como decisão pendente (a regra
+                // de venda a granel não existe).
+                onChange={(qtd) => aoMudar(l.key, { quantidade: Math.max(1, Math.trunc(qtd)) })}
+                label={l.unidade ? `${t("Quantidade")} (${l.unidade})` : t("Quantidade")}
               />
-              {l.estoque !== null && (
-                <p
-                  className={`mt-1 text-xs ${l.estoque < l.quantidade ? "text-orange-600" : "text-muted-foreground"}`}
-                >
-                  {t("estoque")}: {l.estoque}
-                  {l.estoque < l.quantidade && ` ⚠`}
+              {l.estoque === null ? (
+                <p className="mt-1 text-xs text-muted-foreground">{t("estoque não controlado")}</p>
+              ) : l.estoque === 0 ? (
+                <p className="mt-1 text-xs text-orange-600">{t("sem saldo")}</p>
+              ) : l.estoque < l.quantidade ? (
+                <p className="mt-1 text-xs text-orange-600">
+                  {t("insuficiente")}: {l.estoque} {t("disponível")}
+                </p>
+              ) : (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {l.estoque} {t("em estoque")}
                 </p>
               )}
+              {l.multiplo && l.multiplo > 1 ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t("vendido em múltiplos de")} {l.multiplo}
+                </p>
+              ) : null}
             </div>
             <div>
               <Label>{t("Preço")}</Label>
@@ -78,8 +98,22 @@ export function OrderItems({
                 aria-label={t("Preço")}
                 className="h-9"
                 value={l.precoTexto}
-                onChange={(e) => aoMudar(l.key, { precoTexto: e.target.value })}
+                onChange={(e) =>
+                  aoMudar(l.key, { precoTexto: e.target.value, origemPreco: "manual" })
+                }
               />
+              {l.origemPreco ? (
+                <p
+                  className="mt-1 text-xs text-muted-foreground"
+                  data-testid={`origem-preco-${l.key}`}
+                >
+                  {l.origemPreco === "tabela"
+                    ? t("preço da tabela")
+                    : l.origemPreco === "manual"
+                      ? t("preço manual")
+                      : t("preço base")}
+                </p>
+              ) : null}
             </div>
             <div>
               <Label>{t("Desc. %")}</Label>

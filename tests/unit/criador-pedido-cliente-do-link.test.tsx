@@ -13,11 +13,12 @@
  *  4. rascunho do MESMO cliente restaura sem perguntar.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProximasAcoes } from "@/app/app/contacts/[id]/_acoes";
 import { OrderEditor } from "@/app/app/pedidos/novo/_editor";
+import { custoSomenteParaQuemVeMargem } from "@/lib/pedidos/custo-so-para-quem-ve-margem";
 import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
 import { apiClient } from "@/lib/api/client";
 import { rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
@@ -42,6 +43,7 @@ vi.mock("@/components/nexus-ui/feedback/nexus-toast", () => ({
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   window.localStorage.clear();
 });
 
@@ -157,6 +159,7 @@ function montar(contatoInicial?: string | null) {
         tabelas={[]}
         verMargem={false}
         comissaoPct={null}
+        descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
         textos={TEXTO}
@@ -282,6 +285,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
           tabelas={[{ id: "tab-1", nome: "Tabela Ouro", desconto_pct: 0 }]}
           verMargem={false}
           comissaoPct={null}
+          descontoMaxVendedorPct={5}
           nomeOrganizacao="Org de teste"
           nomeVendedor="Vendedor"
           textos={TEXTO}
@@ -366,6 +370,156 @@ describe("rascunho só com cliente e proteção de navegação", () => {
     const vazio = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(vazio);
     expect(vazio.defaultPrevented).toBe(false);
+  });
+});
+
+function produto(over: Partial<Produto>): Produto {
+  return {
+    id: "p1",
+    codigo: "P1",
+    nome: "Produto um",
+    marca: null,
+    preco_cents: 5000,
+    custo_cents: 3000,
+    controla_estoque: false,
+    quantidade: 0,
+    ativo: true,
+    unidade: "un",
+    multiplo: 1,
+    ...over,
+  } as unknown as Produto;
+}
+
+describe("revisão antes de finalizar (B.7)", () => {
+  it("a prévia mostra itens, unidade, descontos, frete, total, parcelas, endereço e observações", () => {
+    window.localStorage.setItem(
+      "pedido-rascunho",
+      JSON.stringify({
+        salvoEm: Date.now(),
+        dados: {
+          chavePedido: "chave-fixa",
+          contatoId: BILL.id,
+          clienteNome: "Bill Higiene",
+          linhas: [
+            {
+              ...LINHA,
+              key: "linha-1",
+              quantidade: 2,
+              precoTexto: "50,00",
+              descontoPct: 10,
+              unidade: "kg",
+              origemPreco: "tabela",
+            },
+          ],
+          condicao: "30/60",
+          formaPagamento: "agendado_30",
+          exigeNf: true,
+          observacoes: "Entregar à tarde",
+          obsInterna: "Conferir",
+          endereco: "Rua A, 10",
+          transportadora: "",
+          rastreamento: "",
+          contatoNoCliente: "",
+          tabelaId: "",
+          descontoTexto: "10,00",
+          descontoPctTexto: "5",
+          freteTexto: "20,00",
+        },
+      }),
+    );
+
+    montar(null);
+    fireEvent.click(screen.getByRole("button", { name: "Visualizar" }));
+
+    // B.9: o resumo deixa explícito que R$ e % são cumulativos e qual é o teto.
+    expect(screen.getByText(/R\$ e % somam/)).toBeTruthy();
+    expect(screen.getByText(/Teto de desconto do vendedor: 5%/)).toBeTruthy();
+
+    const previa = within(screen.getByRole("dialog"));
+    expect(previa.getByText("Bill Higiene")).toBeTruthy();
+    expect(previa.getByText("30/60")).toBeTruthy();
+    expect(previa.getByText("Agendado — 30 dias")).toBeTruthy();
+    expect(previa.getByText("Sim")).toBeTruthy();
+    expect(previa.getByText("Rua A, 10")).toBeTruthy();
+    expect(previa.getByText("Produto um")).toBeTruthy();
+    expect(previa.getByText(/2 kg × R\$ 50,00/)).toBeTruthy();
+    expect(previa.getByText(/desconto 10%/)).toBeTruthy();
+    expect(previa.getByText(/preço da tabela/)).toBeTruthy();
+    // Linha = 2 × 50 − 10% = 90,00; duas vezes (linha e subtotal).
+    expect(previa.getAllByText(/R\$ 90,00/).length).toBeGreaterThanOrEqual(1);
+    expect(previa.getByText(/R\$ 10,00/)).toBeTruthy();
+    expect(previa.getByText(/R\$ 4,50/)).toBeTruthy();
+    expect(previa.getByText(/R\$ 20,00/)).toBeTruthy();
+    expect(previa.getByText(/R\$ 95,50/)).toBeTruthy();
+    expect(previa.getByText(/1ª ·/)).toBeTruthy();
+    expect(previa.getByText(/2ª ·/)).toBeTruthy();
+    expect(previa.getByText("Entregar à tarde")).toBeTruthy();
+    expect(previa.getByText("Conferir")).toBeTruthy();
+    // 10% (item) > teto de 5%: a consequência aparece ANTES de gerar.
+    expect(previa.getByText(/Aguardando aprovação/)).toBeTruthy();
+  });
+});
+
+describe("margem só para quem pode (B.12)", () => {
+  it("custo não atravessa a fronteira sem permissão", () => {
+    expect(custoSomenteParaQuemVeMargem([{ custo_cents: 3000 }], false)[0]?.custo_cents).toBeNull();
+    expect(custoSomenteParaQuemVeMargem([{ custo_cents: 3000 }], true)[0]?.custo_cents).toBe(3000);
+  });
+
+  it("a linha de margem não renderiza para quem não pode ver", () => {
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene" });
+    const produtos = [produto({ id: "produto-1" })];
+
+    const semPermissao = render(
+      <QueryClientProvider client={new QueryClient()}>
+        <OrderEditor
+          produtos={produtos}
+          contatos={[BILL, OUTRO]}
+          tabelas={[]}
+          verMargem={false}
+          comissaoPct={null}
+          descontoMaxVendedorPct={5}
+          nomeOrganizacao="Org"
+          nomeVendedor="V"
+          textos={TEXTO}
+        />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByText("Margem")).toBeNull();
+    semPermissao.unmount();
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <OrderEditor
+          produtos={produtos}
+          contatos={[BILL, OUTRO]}
+          tabelas={[]}
+          verMargem
+          comissaoPct={null}
+          descontoMaxVendedorPct={5}
+          nomeOrganizacao="Org"
+          nomeVendedor="V"
+          textos={TEXTO}
+        />
+      </QueryClientProvider>,
+    );
+    expect(screen.getByText("Margem")).toBeTruthy();
+  });
+});
+
+describe("falha ao salvar o rascunho (B.15)", () => {
+  it("avisa que o rascunho não foi salvo e deixa continuar", async () => {
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene" });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("QuotaExceededError");
+    });
+
+    montar(null);
+
+    await waitFor(() => expect(screen.getByTestId("rascunho-nao-salvo")).toBeTruthy(), {
+      timeout: 3000,
+    });
+    expect(screen.getByTestId("gerar-pedido").hasAttribute("disabled")).toBe(false);
   });
 });
 
