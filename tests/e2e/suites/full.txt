@@ -63,6 +63,9 @@ jornada-fiscal.spec.ts
 jornada-ia.spec.ts
 jornada-venda.spec.ts
 jornadas-ui-p1-01.spec.ts
+j6-inbox-atender-e-recuperar.spec.ts
+j13-fiscal-homologacao.spec.ts
+j14-lgpd-aprovar-pela-tela.spec.ts
 kanban-owner-filter.spec.ts
 kpi-e-charts-canonicos.spec.ts
 marca-logo.spec.ts

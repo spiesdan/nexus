@@ -44,22 +44,22 @@ o que o spec realmente abre.
 | J3  | captura, qualificação e atribuição de lead                                                 | 9     | 15                  | 14  | 1   | 0        | 0      |
 | J4  | mover lead entre etapas, agendar próximo passo e registrar resultado                       | 17    | 57                  | 59  | 0   | 0        | 2      |
 | J5  | buscar ou criar contato, revisar Customer 360 e histórico                                  | 2     | 3                   | 3   | 0   | 0        | 0      |
-| J6  | receber, atribuir, responder, encaminhar e encerrar conversa no inbox                      | 6     | 13                  | 7   | 2   | 0        | 0      |
+| J6  | receber, atribuir, responder, encaminhar e encerrar conversa no inbox                      | 7     | 14                  | 8   | 2   | 0        | 0      |
 | J7  | transferir conversa entre IA e pessoa, com contexto, controle e auditoria                  | 2     | 3                   | 3   | 0   | 0        | 0      |
 | J8  | criar/publicar/pausar/rollback de agente, editar conhecimento, testar e avaliar resposta   | 12    | 43                  | 39  | 0   | 0        | 4      |
 | J9  | configurar follow-up e controlar enrollment, pausa, retomada, cancelamento, snooze e falha | 9     | 20                  | 20  | 0   | 0        | 0      |
 | J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão        | 4     | 4                   | 4   | 0   | 0        | 0      |
 | J11 | compras, entrada de estoque, expedição, rota, motorista e fechamento                       | 4     | 4                   | 4   | 0   | 0        | 0      |
 | J12 | financeiro, títulos, recebimentos e indicadores                                            | 3     | 3                   | 3   | 0   | 0        | 0      |
-| J13 | operações fiscais e tratamento de falhas de sincronização                                  | 3     | 8                   | 3   | 1   | 0        | 0      |
-| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria                          | 3     | 8                   | 2   | 1   | 0        | 1      |
+| J13 | operações fiscais e tratamento de falhas de sincronização                                  | 4     | 9                   | 4   | 1   | 0        | 0      |
+| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria                          | 4     | 9                   | 3   | 1   | 0        | 1      |
 | J15 | atualizar, configurar integração, revisar erro e recuperar o serviço                       | 8     | 19                  | 18  | 0   | 1        | 0      |
 | J16 | captura de pedido offline, fila, sincronização, conflito e rejeição                        | 0     | 0                   | 0   | 0   | 0        | 0      |
 
 <!-- TABELA:FIM -->
 
-As 100 specs do disco fecham: **83** estão em jornadas (algumas em duas, de propósito — o mesmo
-teste prova a atribuição em J3/J6 e o gatilho de etapa em J4/J9), **17** são contratos
+As 107 specs do disco fecham: **87** estão em jornadas (algumas em duas, de propósito — o mesmo
+teste prova a atribuição em J3/J6 e o gatilho de etapa em J4/J9), **20** são contratos
 transversais e estão nomeadas em `TRANSVERSAIS` no gerador com o motivo de cada uma, e **0**
 ficaram sem classificação. Esse número é impresso pelo gerador e cobrado pelo gate
 `tests/unit/jornadas-fecham.test.ts`: spec no disco sem jornada e sem motivo escrito não passa.
@@ -229,6 +229,13 @@ mensagem. As abas espelham o comando do automático.
 a mesma rota. Os dois testes de resposta citando estão `skip` — o motivo está escrito no arquivo
 e precisa ser lido antes de tratar como cobertura.
 
+**Prova em navegador (2026-11-19).** `j6-inbox-atender-e-recuperar.spec.ts` percorre os três
+desfechos na MESMA sessão: assume a conversa pela Fila, responde com um WAHA de verdade no fio
+(sucesso), vê o transporte recusar com a bolha dizendo **Falhou** + **Reenviar** (erro), e
+recupera pelo botão quando o transporte volta — a tentativa que falhou fica no histórico, que é
+o contrato do componente. Fecha a conversa pela confirmação e vê o estado mudar no cabeçalho.
+Evidência: `evidence/jornadas-2026-11-19/j6-0{1..4}-*.png`.
+
 **Prova em Vitest (P1-01, sem navegador).** As lacunas de **encerrar** e **arquivar** foram
 fechadas na camada que decide o estado, não no clique: `tests/unit/inbox-fechar-e-arquivar-rotas.test.ts`
 (fechar: grava `closed`, solta o silêncio do episódio, audita; 404; 500; permissão antes da
@@ -377,9 +384,20 @@ honesto sem emissor** — a tela não finge que emitiu. O módulo de notas prova
 subtelas** do fiscal abrem com sessão real, que a porta do sidebar é `/app/fiscal` e que nota
 inexistente cai em 404 — ou seja, cobre a **porta** de cada subtela, não o estado de cada uma.
 
+**Prova em navegador (2026-11-19).** `j13-fiscal-homologacao.spec.ts` abre a tela de
+sincronização em **homologação** e prova os três desfechos: a execução falha com motivo
+acionável (senha do certificado ausente) e fica registrada no histórico; a causa é consertada
+PELA TELA de configuração e a nova tentativa passa desse bloqueio, parando no motivo de
+ambiente — que é o estado verdadeiro da homologação, e o portão é LOCAL (`motivoDeNaoBaixar`,
+`lib/fiscal/eventos.ts`), então **nenhum HTTP à SEFAZ acontece**. O sucesso é provado na nota de
+entrada: aprovar a conferência muda o estado com autor e data, e reabrir + aprovar de novo mostra
+que a decisão não travou o fluxo. Evidência: `evidence/jornadas-2026-11-19/j13-0{1..4}-*.png`.
+
 **O que fica descoberto.** A suíte `tests/fiscal` existe e não foi executada aqui — isso está
-dito, não escondido. E o E2E ainda não força a falha: a recuperação é provada abaixo por rota e
-componente, não por navegador.
+dito, não escondido. E o E2E agora força a falha pela tela, mas a **distribuição com sucesso**
+continua impossível em homologação por decisão de produto: a SEFAZ não entrega DF-e de terceiro
+lá, e o app recusa antes de chamar. Provar esse caminho exigiria produção — que esta doutrina
+proíbe — ou um sidecar com certificado real.
 
 **Prova em Vitest (P1-01, sem navegador).** `tests/unit/j13-fiscal-falha-de-sincronizacao.test.ts`
 cobre o resultado da sincronização: 200 com novas/atualizadas, 409 de lock concorrente, 422 de
@@ -430,6 +448,14 @@ o que existe agora é prova de rota/componente, declarada:
 - **auditoria**: `tests/unit/j14-auditoria-export.test.ts` prova o CSV (cabeçalho, escape de
   vírgula/aspas/quebra de linha, vazio ≠ erro, filtros + organização, `viewer` barrado, 422 e
   500). Os filtros da tela continuam sem prova de navegador.
+
+**Prova em navegador (2026-11-19).** `j14-lgpd-aprovar-pela-tela.spec.ts` abre a lista do DPO,
+a prévia (mascarada, com as contagens) e aprova com justificativa — o status vai para
+**Processando** e a trilha `lgpd.manually_approved` aparece na mesma tela. O guard de 10
+caracteres é exercitado (confirmação desabilitada). A falha de rede é injetada no fio
+(`page.route`/abort) na confirmação de uma segunda solicitação: a tela diz "Falha ao aprovar…"
+e o status continua **Recebido**, nunca um sucesso otimista; sem a falha injetada, a mesma
+solicitação é aprovada (recuperação). Evidência: `evidence/jornadas-2026-11-19/j14-0{1..4}-*.png`.
 
 Duas rotas de importação não têm chamador fora da API — `contacts/import` e `ai/skills/import`.
 São API pública sem superfície: funcionam, e ninguém as alcança pela tela.
