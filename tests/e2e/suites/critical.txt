@@ -3,6 +3,7 @@ capacidades-do-agente.spec.ts
 compras-do-rascunho-ao-estoque.spec.ts
 confirmar-dado-do-contato.spec.ts
 contato-salva-email.spec.ts
+criador-pedido-acessivel-320.spec.ts
 conversa-vira-lead.spec.ts
 credenciais-de-ia.spec.ts
 distribuicao-atendimento.spec.ts

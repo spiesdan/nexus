@@ -1265,6 +1265,7 @@ export function OrderEditor({
                 descontosSomam: t("R$ e % somam"),
                 tetoDesconto: t("Teto de desconto do vendedor"),
                 revisar: textos.revisar,
+                resumoDoPedido: t("Resumo do pedido"),
                 itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
               }}
             />
@@ -1275,14 +1276,14 @@ export function OrderEditor({
       {/* A barra de ação do Mercos, no rodapé: no celular ela fica fixa, porque
           "Gerar pedido" não pode exigir rolar quatro seções de volta. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-background px-4 pt-2.5 pb-2.5 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t bg-background px-4 pt-2.5 pb-2.5 lg:hidden"
         style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
       >
         <p className="text-sm text-muted-foreground">
           {linhas.length} {t("itens")} · {qtdUnidades} un
         </p>
-        <div className="flex items-center gap-3">
-          <p className="text-lg font-semibold tabular-nums">
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <p className="whitespace-nowrap text-lg font-semibold tabular-nums">
             {comoMoeda(total, "BRL")}
           </p>
           <Button
