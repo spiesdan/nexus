@@ -19,7 +19,7 @@ import type { NextRequest } from "next/server";
 import { fail, ok } from "@/lib/api/wrappers";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { organizacoesDevidas } from "@/lib/sentinel/agenda";
+import { organizacoesDevidas, type AgendaSentinel } from "@/lib/sentinel/agenda";
 import { sentinelLigadoNoAmbiente } from "@/lib/sentinel/config";
 import { executarSentinela, type ResultadoExecucao } from "@/lib/sentinel/execucao";
 
@@ -53,9 +53,9 @@ async function handle(req: NextRequest): Promise<Response> {
     return ok({ desligado: true, organizacoes: [] }, { requestId });
   }
 
-  let devidas;
+  let agenda: AgendaSentinel;
   try {
-    devidas = await organizacoesDevidas(Date.now(), TAMANHO_DA_RODADA);
+    agenda = await organizacoesDevidas(Date.now(), TAMANHO_DA_RODADA);
   } catch (erro) {
     logger.error("sentinel.cron_due_failed", {
       erro: erro instanceof Error ? erro.message : String(erro),
@@ -63,12 +63,19 @@ async function handle(req: NextRequest): Promise<Response> {
     return fail("internal_error", "Não foi possível calcular a agenda.", 500, { requestId });
   }
 
-  if (devidas.length === 0) {
-    return ok({ desligado: false, organizacoes: [] }, { requestId });
+  // Suspensas vêm depois das ativas: elas não podem atrasar a detecção real,
+  // mas ainda precisam da rodada registrada e do fechamento com motivo.
+  const fila = [...agenda.devidas, ...agenda.suspensas];
+
+  if (fila.length === 0) {
+    return ok(
+      { desligado: false, organizacoes: [], organizacoes_puladas: 0 },
+      { requestId },
+    );
   }
 
   const resumos: Resumo[] = [];
-  for (const org of devidas) {
+  for (const org of fila) {
     const resultado = await executarSentinela({
       organizationId: org.organizationId,
       origem: "cron",
@@ -86,7 +93,14 @@ async function handle(req: NextRequest): Promise<Response> {
     });
   }
 
-  return ok({ desligado: false, organizacoes: resumos }, { requestId });
+  return ok(
+    {
+      desligado: false,
+      organizacoes: resumos,
+      organizacoes_puladas: agenda.suspensas.length,
+    },
+    { requestId },
+  );
 }
 
 export const GET = handle;

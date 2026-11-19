@@ -105,6 +105,26 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
 
   const admin = createAdminClient();
 
+  // Organização suspensa não produz trabalho: o corte é ANTES da coleta, para
+  // que dado de org suspensa nem entre no processo (nada de snapshot, detecção
+  // ou reafirmação). A rodada ainda é registrada abaixo, com motivo declarado.
+  // Falha de leitura não bloqueia a instalação inteira: segue como ativa e o
+  // próximo tick corrige.
+  const { data: organizacao, error: erroOrganizacao } = await admin
+    .from("organizations")
+    .select("suspended_at")
+    .eq("id", organizationId)
+    .maybeSingle();
+  if (erroOrganizacao) {
+    logger.warn("sentinel.org_read_failed", {
+      organizationId,
+      erro: erroOrganizacao.message,
+    });
+  }
+  const suspensa = Boolean(
+    (organizacao as { suspended_at: string | null } | null)?.suspended_at,
+  );
+
   // Rede de segurança do worker que morreu: uma execução `executando` órfã
   // bloquearia o índice único parcial para sempre.
   await admin
@@ -143,6 +163,16 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
   const execucaoId = (criada as { id: string }).id;
 
   try {
+    if (suspensa) {
+      return await encerrarPorSuspensao({
+        organizationId,
+        execucaoId,
+        opcoes,
+        inicio,
+        agoraMs,
+      });
+    }
+
     const coleta = await coletarSnapshot(organizationId, agoraMs);
     const deteccao = executarDetectores(coleta.snapshot, {
       desativados: config.detectoresDesativados,
@@ -361,6 +391,95 @@ async function marcarUltimaExecucao(organizationId: string, agoraMs: number): Pr
     logger.warn("sentinel.settings_touch_failed", { organizationId, erro: error.message });
   }
 }
+
+/**
+ * Organização suspensa: registra a rodada e encerra as ocorrências abertas com
+ * motivo `organizacao_suspensa`. NÃO coleta snapshot e NÃO roda detector, então
+ * nenhuma ocorrência nasce ou é reafirmada. Encerrar (não apagar) preserva a
+ * linha e o histórico append-only.
+ */
+async function encerrarPorSuspensao(args: {
+  organizationId: string;
+  execucaoId: string;
+  opcoes: OpcoesExecucao;
+  inicio: number;
+  agoraMs: number;
+}): Promise<ResultadoExecucao> {
+  const { organizationId, execucaoId, opcoes, inicio, agoraMs } = args;
+  const admin = createAdminClient();
+
+  const { data, error } = await admin.rpc("fn_sentinel_encerrar_org_suspensa", {
+    p_organization_id: organizationId,
+    p_execucao_id: execucaoId,
+  });
+
+  if (error) {
+    logger.error("sentinel.suspended_close_failed", {
+      organizationId,
+      execucaoId,
+      erro: error.message,
+    });
+    const duracaoMs = Math.max(0, Date.now() - inicio);
+    await admin
+      .from("sentinel_runs")
+      .update({
+        status: "erro",
+        finalizado_em: new Date().toISOString(),
+        duracao_ms: duracaoMs,
+        erro: "falha_ao_encerrar_org_suspensa",
+        detalhe: { motivo: "organizacao_suspensa", falhas: [error.message.slice(0, 300)] },
+      })
+      .eq("id", execucaoId)
+      .eq("organization_id", organizationId);
+    return {
+      ...resultadoVazio("erro", "falha_ao_encerrar_org_suspensa"),
+      execucaoId,
+      falhas: [error.message.slice(0, 300)],
+      duracaoMs,
+    };
+  }
+
+  const encerradas = Number(data) || 0;
+  const duracaoMs = Math.max(0, Date.now() - inicio);
+
+  await admin
+    .from("sentinel_runs")
+    .update({
+      status: "ignorada",
+      finalizado_em: new Date().toISOString(),
+      duracao_ms: duracaoMs,
+      encerradas,
+      detalhe: { motivo: "organizacao_suspensa", encerradas },
+    })
+    .eq("id", execucaoId)
+    .eq("organization_id", organizationId);
+
+  await marcarUltimaExecucao(organizationId, agoraMs);
+
+  if (encerradas > 0 || opcoes.origem === "manual") {
+    await audit({
+      action: "sentinel.run",
+      organizationId,
+      actorUserId: opcoes.usuarioId ?? null,
+      resourceType: "sentinel_runs",
+      resourceId: execucaoId,
+      metadata: {
+        origem: opcoes.origem,
+        status: "ignorada",
+        motivo: "organizacao_suspensa",
+        encerradas,
+      },
+    });
+  }
+
+  return {
+    ...resultadoVazio("ignorada", "organizacao_suspensa"),
+    execucaoId,
+    encerradas,
+    duracaoMs,
+  };
+}
+
 
 async function auditarSeManual(
   organizationId: string,

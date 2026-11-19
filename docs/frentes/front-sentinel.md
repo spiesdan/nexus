@@ -175,8 +175,9 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `supabase/migrations/20261123170000_0324_sentinel_estoque_sem_movimento.sql` | view com `left join`: razão vazio também é divergência |
 | `supabase/migrations/20261123180000_0325_sentinel_correcao_aprovada.sql` | Nível 2 restrito: antecipar/reverter job watchdog com CAS |
 | `supabase/migrations/20261123210000_0328_sentinel_liberar_conversa.sql` | segundo caso: liberar/reverter claim de conversa com CAS |
-| `supabase/baseline.sql` (apêndices 0316/0321/0324/0325) | o que o self-host aplica |
-| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325 |
+| `supabase/migrations/20261123220000_0329_sentinel_org_suspensa.sql` | org suspensa: encerrar abertas com motivo, sem coletar |
+| `supabase/baseline.sql` (apêndices 0316/0321/0324/0325/0328/0329) | o que o self-host aplica |
+| `supabase/migrations/MANIFEST.md` | linhas da 0316/0321/0324/0325/0328/0329 |
 | `lib/sentinel/tipos.ts` | contrato do snapshot/achado/plano |
 | `lib/sentinel/regras-fiscal.ts` | 13 detectores fiscais |
 | `lib/sentinel/regras-operacao.ts` | 19 detectores de operação/financeiro/campanha (inclui endereço com lixo e claim parado) |
@@ -185,8 +186,8 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/coleta.ts` | 19 consultas com teto e filtro de org (inclui correção e endereços) |
 | `lib/sentinel/recomendacoes.ts` | plano revisável por regra (Nível 1) |
 | `lib/sentinel/regras-correcao.ts` | observa reversão honesta e aprovação vencida — sem executar nada |
-| `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, audit |
-| `lib/sentinel/agenda.ts` | quais orgs o cron deve varrer |
+| `lib/sentinel/execucao.ts` | rodada, upsert, encerramento, retenção, corte de org suspensa, audit |
+| `lib/sentinel/agenda.ts` | quais orgs o cron varre e quais estão suspensas (`organizacoes_puladas`) |
 | `lib/sentinel/estado.ts` | máquina de estados + gate de gestor |
 | `lib/sentinel/config.ts` | defaults, kill switch, "devida?" |
 | `lib/sentinel/correcao.ts` / `correcao-constantes.ts` | elegibilidade pura, hash do plano e allowlist do único caso corrigível |
@@ -206,6 +207,10 @@ cron rodou. Rodada com achado, encerramento ou falha audita.
 | `lib/sentinel/somente-leitura.test.ts` | catraca: escrita só em `sentinel_*`, RPC só `fn_sentinel_*`, plano sem função/chave de execução |
 | `tests/invariants/sentinel-correcao.test.ts` | RPC 0325: antecipa, reverte, recusa running/flywheel/outra org |
 | `tests/invariants/sentinel-conversa-correcao.test.ts` | RPC 0328: libera, reverte, não rouba claim de outro, recusa org/regra/motivo |
+| `tests/invariants/sentinel-suspensao.test.ts` | RPC 0329: encerra com motivo, preserva histórico, duas rodadas sem evento extra, isolamento |
+| `lib/sentinel/agenda-suspensas.test.ts` | suspensa fora da fila de detecção e sem consumir vaga |
+| `lib/sentinel/execucao-suspensa.test.ts` | suspensa não coleta; ativa continua |
+| `app/api/v1/cron/sentinel/route.test.ts` | `organizacoes_puladas` + ordem ativas→suspensas |
 | `tests/api/sentinel-conversa-correcao.test.ts` | rota: manager, motivo, hash, CAS, alvo proibido |
 | `tests/unit/sentinel-correcao-conversa-tela.test.tsx` | simular → motivo+confirmação → liberar; reverter |
 | `lib/sentinel/regras-correcao.test.ts` | observabilidade: CAS de reversão e janela de 5 min, com negativos |
@@ -380,6 +385,34 @@ ocorrência aberta com motivo `nao_detectada_na_execucao` — o histórico fica.
 rodada estiver truncada (coleta/regra), o encerramento não acontece por desenho;
 a próxima rodada limpa fecha.
 
+### v1.6 — organização suspensa não alimenta o painel
+
+Medido em produção em 19/11/2026: das 23 ocorrências abertas, **20 eram de
+`E2E Test Org`**, já suspensa; só 3 eram da organização real. O Sentinel não
+pode gastar atenção em organização suspensa.
+
+O corte é na **origem**: `organizations.suspended_at is not null` pula a coleta,
+então nenhum detector roda, nenhuma ocorrência nasce e nenhuma existente é
+reafirmada. A rodada continua registrada em `sentinel_runs` (`ignorada`, motivo
+`organizacao_suspensa`) e o cron responde `organizacoes_puladas` com a contagem
+honesta. As ocorrências **abertas** da suspensa são encerradas por
+`fn_sentinel_encerrar_org_suspensa` com motivo declarado
+`organizacao_suspensa` — encerrar, não apagar: linha e histórico append-only
+ficam. A suspensa não consome as 3 vagas do tick; ela é processada depois das
+ativas.
+
+```bash
+pnpm exec vitest run lib/sentinel/agenda-suspensas.test.ts \
+  lib/sentinel/execucao-suspensa.test.ts \
+  app/api/v1/cron/sentinel/route.test.ts
+#   agenda 2 (suspensa fora da fila, kill switch), execução 2 (não coleta,
+#   org ativa continua), cron 2 (organizacoes_puladas e vazio)
+
+pnpm test:db
+#   invariante 0329: encerra com motivo, preserva histórico, duas rodadas
+#   não duplicam evento, ativa intocada, isolamento por organização
+```
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
@@ -452,10 +485,14 @@ fiscal/financeira real.
    a confiança da divergência de estoque.
 5. Ampliar o E2E visual para outras resoluções/dispositivos.
 
-## 11. Onde retomar (v1.5, 18/11/2026)
+## 11. Onde retomar (v1.6, 19/11/2026)
 
-- **Esta fatia** (`front/sentinel-correcao2`): 0328, liberar claim de conversa
-  parada; detector `operacao.conversa_claim_parado`; motivo obrigatório; CAS e
-  reversão honesta. Sem tocar em webhook (arquivo forense, não fila).
-- **Próxima de produto**: outro caso de correção com reversão honesta, um por
-  vez; nunca em nota, saldo, pagamento ou envio externo.
+- **Fatia anterior** (`front/sentinel-correcao2`, #582): 0328, liberar claim de
+  conversa parada; detector `operacao.conversa_claim_parado`; motivo
+  obrigatório; CAS e reversão honesta. Sem tocar em webhook (arquivo forense,
+  não fila).
+- **Esta fatia** (`front/sentinel-org-suspensa`): 0329, organização suspensa não
+  alimenta o Sentinel; encerra abertas com motivo e registra a rodada em
+  `organizacoes_puladas`. Corte na coleta, decidido e justificado abaixo.
+- **Próxima da fila**: prova de retenção/LGPD (`fn_sentinel_expurgar` já
+  existe; falta o invariante dedicado) e contrato do próximo caso reversível.

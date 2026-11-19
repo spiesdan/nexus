@@ -29,6 +29,14 @@ export async function POST(_req: NextRequest): Promise<Response> {
   });
 
   if (resultado.status === "ignorada") {
+    if (resultado.motivo === "organizacao_suspensa") {
+      return fail(
+        "sentinel_org_suspensa",
+        "Esta organização está suspensa. O Sentinel registrou a rodada e encerrou as ocorrências abertas sem varrer dado nenhum.",
+        409,
+        { requestId, details: { motivo: resultado.motivo, encerradas: resultado.encerradas } },
+      );
+    }
     const desligadoNaOrg = resultado.motivo === "desligado_na_organizacao";
     return fail(
       desligadoNaOrg ? "sentinel_disabled" : "sentinel_busy",

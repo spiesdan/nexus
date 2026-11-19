@@ -118,6 +118,8 @@ const CONFIA_NO_CHAMADOR: Readonly<Record<string, string>> = {
   fn_sentinel_aplicar_mudanca:
     "app/api/v1/sentinel/occurrences/[id]/route.ts — admin.rpc com a org da ocorrência",
   fn_sentinel_encerrar_ausentes: "lib/sentinel/execucao.ts — org da execução do Sentinel",
+  fn_sentinel_encerrar_org_suspensa:
+    "lib/sentinel/execucao.ts — org da execução do Sentinel (organização suspensa)",
   fn_sentinel_expurgar: "lib/sentinel/execucao.ts — org da execução do Sentinel",
   fn_sentinel_registrar_ocorrencia: "lib/sentinel/execucao.ts — org da execução do Sentinel",
   fn_sentinel_corrigir_job:
