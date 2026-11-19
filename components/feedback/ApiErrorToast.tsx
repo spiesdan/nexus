@@ -174,6 +174,32 @@ export function showApiError(err: unknown): void {
   toastFor(err, (texto) => traduzir(texto, idiomaAtual()));
 }
 
+/**
+ * O MESMO ERRO, SEM O TOAST — para quando a TELA já mostra o erro.
+ *
+ * Medido em 19/11/2026 na ficha da carga: a leitura falhou, a tela pintou o
+ * `NexusErrorState` ("Não foi possível carregar esta carga." + Tentar
+ * novamente) **e** o `showApiError` disparou "Erro inesperado. Tente
+ * novamente." no canto. Duas frases para o mesmo fato, e a de cima cobrindo o
+ * conteúdo enquanto some sozinha em 4 s.
+ *
+ * A regra: **um erro se anuncia uma vez**. Se a tela tem um lugar para o erro
+ * (estado de erro, faixa `role="alert"`), esse é o anúncio; o toast fica para
+ * erro de AÇÃO, onde não há onde pintar (o clique falhou e a tela continua
+ * igual).
+ *
+ * Exportada separada, e não como segundo parâmetro de `showApiError`: ela é
+ * passada por REFERÊNCIA como `onError` em ~80 lugares, e o TanStack chama
+ * `onError(error, variables, context)` — um segundo parâmetro receberia
+ * `variables` no lugar da opção (foi o que já quebrou o typecheck uma vez).
+ */
+export function showApiErrorSemToast(err: unknown): void {
+  // Não é no-op de preguiça: o valor está em NÃO falar. Quando a tela pinta o
+  // erro, este caminho também não deve inventar log/telemetria de UI — o erro
+  // já está na resposta e no estado da tela.
+  void err;
+}
+
 export function useApiErrorHandler(): (err: unknown) => void {
   const t = useT();
   return (err: unknown) => toastFor(err, t);
