@@ -1,0 +1,288 @@
+[
+  {
+    "tela": "thread",
+    "largura": 1440,
+    "tema": "light",
+    "overflow": 0,
+    "cabecalho": {
+      "altura": 195,
+      "titulo": "Quem Manda 1795045777179",
+      "tituloPx": "16px/700",
+      "seloPx": "16px/400"
+    },
+    "acoes": [
+      {
+        "rotulo": "Assumir",
+        "ariaLabel": "Você passa a responder esta conversa e o atendimento automático para aqui."
+      },
+      {
+        "rotulo": "Devolver ao automático",
+        "ariaLabel": "Devolve esta conversa ao atendimento automático."
+      },
+      {
+        "rotulo": "Marcar sem envio",
+        "ariaLabel": "Marca o contato como sem envio — o sistema não envia mais nada a esta pessoa, mesmo no próximo turno."
+      },
+      {
+        "rotulo": "Transferir",
+        "ariaLabel": "Transferir"
+      },
+      {
+        "rotulo": "Lembrar",
+        "ariaLabel": "Lembrar"
+      },
+      {
+        "rotulo": "Fechar",
+        "ariaLabel": "Fechar"
+      },
+      {
+        "rotulo": "Ver contato",
+        "ariaLabel": "Ver contato"
+      }
+    ],
+    "foco": {
+      "alvo": "Assumir",
+      "outline": "none 2px rgb(126, 119, 240) ring=rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup="
+      ]
+    }
+  },
+  {
+    "tela": "sem-acesso",
+    "largura": 1440,
+    "tema": "light",
+    "overflow": 0,
+    "cabecalho": null,
+    "acoes": [],
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup="
+      ]
+    }
+  },
+  {
+    "tela": "thread",
+    "largura": 390,
+    "tema": "light",
+    "overflow": 0,
+    "cabecalho": {
+      "altura": 267,
+      "titulo": "Quem Manda 1795045777179",
+      "tituloPx": "16px/700",
+      "seloPx": "16px/400"
+    },
+    "acoes": [
+      {
+        "rotulo": "Assumir",
+        "ariaLabel": "Você passa a responder esta conversa e o atendimento automático para aqui."
+      },
+      {
+        "rotulo": "Devolver ao automático",
+        "ariaLabel": "Devolve esta conversa ao atendimento automático."
+      },
+      {
+        "rotulo": "Marcar sem envio",
+        "ariaLabel": "Marca o contato como sem envio — o sistema não envia mais nada a esta pessoa, mesmo no próximo turno."
+      },
+      {
+        "rotulo": "Transferir",
+        "ariaLabel": "Transferir"
+      },
+      {
+        "rotulo": "Lembrar",
+        "ariaLabel": "Lembrar"
+      },
+      {
+        "rotulo": "Fechar",
+        "ariaLabel": "Fechar"
+      },
+      {
+        "rotulo": "Ver contato",
+        "ariaLabel": "Ver contato"
+      }
+    ],
+    "foco": {
+      "alvo": "Assumir",
+      "outline": "none 2px rgb(126, 119, 240) ring=rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "tela": "sem-acesso",
+    "largura": 390,
+    "tema": "light",
+    "overflow": 0,
+    "cabecalho": null,
+    "acoes": [],
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "tela": "thread",
+    "largura": 1440,
+    "tema": "dark",
+    "overflow": 0,
+    "cabecalho": {
+      "altura": 195,
+      "titulo": "Quem Manda 1795045777179",
+      "tituloPx": "16px/700",
+      "seloPx": "16px/400"
+    },
+    "acoes": [
+      {
+        "rotulo": "Assumir",
+        "ariaLabel": "Você passa a responder esta conversa e o atendimento automático para aqui."
+      },
+      {
+        "rotulo": "Devolver ao automático",
+        "ariaLabel": "Devolve esta conversa ao atendimento automático."
+      },
+      {
+        "rotulo": "Marcar sem envio",
+        "ariaLabel": "Marca o contato como sem envio — o sistema não envia mais nada a esta pessoa, mesmo no próximo turno."
+      },
+      {
+        "rotulo": "Transferir",
+        "ariaLabel": "Transferir"
+      },
+      {
+        "rotulo": "Lembrar",
+        "ariaLabel": "Lembrar"
+      },
+      {
+        "rotulo": "Fechar",
+        "ariaLabel": "Fechar"
+      },
+      {
+        "rotulo": "Ver contato",
+        "ariaLabel": "Ver contato"
+      }
+    ],
+    "foco": {
+      "alvo": "Assumir",
+      "outline": "none 2px rgb(164, 165, 255) ring=rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 2,
+      "ids": [
+        "color-contrast (serious)",
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "color-contrast: .border-l-accent > .min-w-0.flex-1 > .leading-snug.mt-0\\.5.text-\\[13px\\] :: <p class=\"mt-0.5 truncate text-[13px] leading-snug text-muted-foreground\">Oi, queria saber o preço</p>",
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup="
+      ]
+    }
+  },
+  {
+    "tela": "sem-acesso",
+    "largura": 1440,
+    "tema": "dark",
+    "overflow": 0,
+    "cabecalho": null,
+    "acoes": [],
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup="
+      ]
+    }
+  },
+  {
+    "tela": "thread",
+    "largura": 390,
+    "tema": "dark",
+    "overflow": 0,
+    "cabecalho": {
+      "altura": 267,
+      "titulo": "Quem Manda 1795045777179",
+      "tituloPx": "16px/700",
+      "seloPx": "16px/400"
+    },
+    "acoes": [
+      {
+        "rotulo": "Assumir",
+        "ariaLabel": "Você passa a responder esta conversa e o atendimento automático para aqui."
+      },
+      {
+        "rotulo": "Devolver ao automático",
+        "ariaLabel": "Devolve esta conversa ao atendimento automático."
+      },
+      {
+        "rotulo": "Marcar sem envio",
+        "ariaLabel": "Marca o contato como sem envio — o sistema não envia mais nada a esta pessoa, mesmo no próximo turno."
+      },
+      {
+        "rotulo": "Transferir",
+        "ariaLabel": "Transferir"
+      },
+      {
+        "rotulo": "Lembrar",
+        "ariaLabel": "Lembrar"
+      },
+      {
+        "rotulo": "Fechar",
+        "ariaLabel": "Fechar"
+      },
+      {
+        "rotulo": "Ver contato",
+        "ariaLabel": "Ver contato"
+      }
+    ],
+    "foco": {
+      "alvo": "Assumir",
+      "outline": "none 2px rgb(164, 165, 255) ring=rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "tela": "sem-acesso",
+    "largura": 390,
+    "tema": "dark",
+    "overflow": 0,
+    "cabecalho": null,
+    "acoes": [],
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  }
+]

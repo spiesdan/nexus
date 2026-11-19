@@ -169,11 +169,20 @@ export function ConversationHeader({ conversation }: Props) {
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <h2 className="truncate text-base font-bold">{displayName}</h2>
+          {/* O NOME É O TÍTULO DESTA COLUNA — e o selo de estado é metadado,
+              não concorrente. Antes o nome (16px/700) e o selo (12px/700)
+              tinham o MESMO peso: dois negritos lado a lado, e o olho pousava
+              no selo colorido antes de saber com quem estava falando. Agora o
+              nome fica em `semibold` com tracking apertado e o selo desce para
+              11px/600 — a hierarquia passa a existir em peso e em tamanho, não
+              em cor. */}
+          <h2 className="truncate text-base font-semibold tracking-tight text-text">
+            {displayName}
+          </h2>
           <Badge
             variant="outline"
             className={cn(
-              "h-5 rounded-full px-2.5 text-xs font-bold",
+              "h-5 rounded-full px-2 text-[11px] font-semibold",
               COR_DO_STATUS[status] ?? "border-border text-muted-foreground",
             )}
           >
@@ -221,7 +230,7 @@ export function ConversationHeader({ conversation }: Props) {
           )}
         </div>
         {phone && (
-          <p className="mt-0.5 flex items-center gap-1 text-[13px] text-muted-foreground">
+          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
             <Phone size={11} weight="regular" aria-hidden /> {phone}
           </p>
         )}
