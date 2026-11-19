@@ -320,7 +320,7 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: Mercos "todos os produtos" (--todos, ativos × inativos) · próximo: estados das subtelas de expedição (5.6b) · depois: formulários de cadastro
-F — agora: bug do filtro de cidade em Clientes · próximo: verify do #586 (spec sem declaração) · depois: matriz das 3 specs fora do CI
-G — agora: #582 (rebase, claim de conversa parada) · próximo: retenção/LGPD provada · depois: proposta do 2º caso reversível
+D — agora: #592 (rebase + verde + merge) · próximo: "traz X dos 69" · depois: estados das subtelas de expedição
+F — agora: #589 (verify + merge) · próximo: J6/J13/J14 no navegador · depois: regressão local da 1.58.1
+G — agora: Sentinel ignora organização suspensa · próximo: proposta do 2º caso reversível · depois: painel de rejeição por fornecedor
 ```
