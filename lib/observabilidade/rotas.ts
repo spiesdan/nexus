@@ -41,7 +41,7 @@ interface Amostra {
 type Handler = (req: NextRequest, contexto?: unknown) => Promise<Response>;
 
 function organizacaoDoCookie(req: NextRequest): string | null {
-  const valor = req.cookies.get("active_org")?.value;
+  const valor = req.cookies?.get?.("active_org")?.value;
   return valor && UUID.test(valor) ? valor : null;
 }
 
