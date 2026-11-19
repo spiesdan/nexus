@@ -318,7 +318,7 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
       ) : notas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-muted-foreground">{t("Pedido sem nota fiscal.")}</p>
-          <Button size="sm" variant="outline" onClick={() => void emitir()} disabled={emitindo}>
+          <Button size="sm" variant="ghost" onClick={() => void emitir()} disabled={emitindo}>
             {emitindo ? t("Enviando…") : t("Emitir NF-e")}
           </Button>
         </div>
@@ -822,37 +822,12 @@ export function DetalheDoPedido({
                 {t("Visualizar")}
               </Link>
             </Button>
-            <Button size="sm" variant="outline" asChild>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t("Enviar por WhatsApp")}
-              </a>
-            </Button>
-            {podeEditar && (pedido.status === "rascunho" || pedido.status === "em_analise") && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => void gerarLinkDoOrcamento()}
-                disabled={gerandoLink}
-              >
-                {gerandoLink ? t("Gerando link…") : t("Orçamento com aprovação")}
-              </Button>
-            )}
-            {contato?.email && (
-              <Button size="sm" variant="outline" asChild>
-                <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>
-                  {t("Enviar por e-mail")}
-                </a>
-              </Button>
-            )}
-            <Button size="sm" variant="outline" onClick={copiarLink}>
-              {t("Copiar link do pedido no Portal")}
-            </Button>
-            {/* O "Mais opções" do Mercos: o que se usa de vez em quando sai da
-                frente das ações do dia a dia (faturar, visualizar, enviar). */}
+            {/* O QUE SE USA DE VEZ EM QUANDO SAI DA FRENTE.
+                Medido no build de produção em 19/11/2026: com oito botões, a
+                barra de ações ocupava 964 px dos 976 disponíveis e o `<h1>`
+                ficava com 12 px — o número do pedido aparecia por baixo dos
+                botões. Aqui ficam as ações do dia a dia (avançar, concluir,
+                visualizar) e o resto entra no menu, como no Mercos. */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline">
@@ -860,6 +835,34 @@ export function DetalheDoPedido({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {t("Enviar por WhatsApp")}
+                  </a>
+                </DropdownMenuItem>
+                {podeEditar && (pedido.status === "rascunho" || pedido.status === "em_analise") && (
+                  <DropdownMenuItem
+                    disabled={gerandoLink}
+                    onSelect={() => void gerarLinkDoOrcamento()}
+                  >
+                    {gerandoLink ? t("Gerando link…") : t("Orçamento com aprovação")}
+                  </DropdownMenuItem>
+                )}
+                {contato?.email && (
+                  <DropdownMenuItem asChild>
+                    <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>
+                      {t("Enviar por e-mail")}
+                    </a>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={copiarLink}>
+                  {t("Copiar link do pedido no Portal")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href={`/app/pedidos/imprimir?ids=${pedido.id}`}>
                     {t("Imprimir pedido")}

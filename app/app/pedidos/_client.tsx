@@ -1138,9 +1138,10 @@ export function PedidosClient({
       {/* Barra de massa */}
       {podeCriar && selecionados.length > 0 && (
         <Card className="hover-raise flex flex-wrap items-center gap-2 p-3 text-sm">
-          <span className="text-muted-foreground">
-            {selecionados.length} {t("selecionados")}
+          <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-text tabular-nums">
+            {selecionados.length}
           </span>
+          <span className="text-muted-foreground">{t("selecionados")}</span>
           <Button size="sm" onClick={() => void avancarEmMassa()}>
             {textos.avancarSelecionados}
           </Button>
@@ -1150,11 +1151,6 @@ export function PedidosClient({
           <Button size="sm" variant="outline" onClick={cancelarEmMassa}>
             {textos.cancelarSelecionados}
           </Button>
-          {podeExcluir && (
-            <Button size="sm" variant="destructive" onClick={() => void excluirEmMassa()}>
-              {textos.excluirSelecionados}
-            </Button>
-          )}
           <Button size="sm" variant="outline" onClick={exportar}>
             {textos.exportar}
           </Button>
@@ -1163,6 +1159,20 @@ export function PedidosClient({
               {textos.imprimirSelecionados}
             </Link>
           </Button>
+          {/* O que destrói fica longe do que avança: separador + ponta direita. */}
+          {podeExcluir && (
+            <>
+              <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
+              <Button
+                size="sm"
+                variant="destructive"
+                className="sm:ml-auto"
+                onClick={() => void excluirEmMassa()}
+              >
+                {textos.excluirSelecionados}
+              </Button>
+            </>
+          )}
         </Card>
       )}
 
@@ -1274,9 +1284,24 @@ export function PedidosClient({
                             <p className="text-sm font-semibold text-text tabular-nums">
                               {comoMoeda(p.total_cents, p.moeda)}
                             </p>
+                            {/* QUEM EMITIU, não de onde veio.
+                                O nome vem de `lib/comercial/emitente.ts`
+                                (`created_by` resolvido). Quando ele não resolve
+                                — importação, IA, instalação sem service role —
+                                o cartão cai no rótulo de origem, que ao menos
+                                diz que origem houve; o UUID de quem criou nunca
+                                aparece (`tests/unit/pedidos-emissao`).
+                                O `·` é o vínculo com a linha: sem ele o texto lê
+                                "Daniel" solto ao lado do total.
+                                O dia NÃO se repete: ele já é o título do grupo
+                                (HOJE, ONTEM…) — por isso só entra quando não há
+                                emissor a dizer. */}
                             <p className="max-w-44 truncate text-xs text-text-subtle">
-                              <span className="tabular-nums">{diaCurto}</span>
-                              <span className="hidden sm:inline"> · {emissor}</span>
+                              {emissor ? (
+                                <span>· {emissor}</span>
+                              ) : (
+                                <span className="tabular-nums">{diaCurto}</span>
+                              )}
                             </p>
                           </div>
                         </div>
