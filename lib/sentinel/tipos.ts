@@ -24,8 +24,14 @@ export const PESO_SEVERIDADE: Record<Severidade, number> = {
   critica: 4,
 };
 
-export type Categoria = "fiscal" | "operacao" | "financeiro" | "campanha";
-export const CATEGORIAS = ["fiscal", "operacao", "financeiro", "campanha"] as const satisfies readonly Categoria[];
+export type Categoria = "fiscal" | "operacao" | "financeiro" | "campanha" | "plataforma";
+export const CATEGORIAS = [
+  "fiscal",
+  "operacao",
+  "financeiro",
+  "campanha",
+  "plataforma",
+] as const satisfies readonly Categoria[];
 
 export type EstadoOcorrencia =
   | "nova"
@@ -360,6 +366,21 @@ export interface ConversaParada {
   last_message_at: string | null;
 }
 
+export interface SloPorRota {
+  route: string;
+  total: number;
+  erros: number;
+  p95: number | null;
+}
+
+export interface ResumoSloApi {
+  janela_dias: number;
+  rotas: SloPorRota[];
+  total: number;
+  erros: number;
+  p95: number | null;
+}
+
 export interface Snapshot {
   organizationId: string;
   agoraMs: number;
@@ -381,6 +402,8 @@ export interface Snapshot {
   correcoes: CorrecaoSentinel[];
   contatosEndereco: ContatoEndereco[];
   conversasParadas: ConversaParada[];
+  /** Série de API dos SLOs; null quando a coleta não conseguiu ler. */
+  sloApi: ResumoSloApi | null;
 }
 
 /** Metadados da regra no registry — a tela lê daqui a explicação. */
@@ -389,7 +412,8 @@ export interface Regra {
   categoria: Categoria;
   /** Por que ela existe, em uma frase que a pessoa entende sem ler código. */
   descricao: string;
-  detectar: (snapshot: Snapshot) => Achado[];
+  /** `null` = regra não pôde ser avaliada (ex.: sem amostra); não encerra ausentes. */
+  detectar: (snapshot: Snapshot) => Achado[] | null;
 }
 
 export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
@@ -414,5 +438,6 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     correcoes: [],
     contatosEndereco: [],
     conversasParadas: [],
+    sloApi: null,
   };
 }

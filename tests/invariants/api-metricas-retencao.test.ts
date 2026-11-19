@@ -51,6 +51,14 @@ describe("API de métricas — retenção e agregado (0330)", () => {
     ).toBe(0);
   });
 
+  it("SLO por rota devolve a evidência que o Sentinel usa", () => {
+    expect(
+      lastLine(
+        sql(`select route || ':' || total || ':' || erros from public.fn_slo_api_rotas(7, array['${ROTA}']::text[]);`),
+      ),
+    ).toBe(`${ROTA}:3:1`);
+  });
+
   it("consulta da tela com 1.000 amostras fica abaixo de 200 ms no local", () => {
     sql(`
       insert into public.api_request_samples

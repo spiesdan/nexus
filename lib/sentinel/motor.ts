@@ -130,6 +130,12 @@ export function executarDetectores(
       const inicioDaRegra = performance.now();
       const achados = regra.detectar(snapshot);
       temposPorRegra[regra.id] = Math.round((performance.now() - inicioDaRegra) * 10) / 10;
+      if (achados === null) {
+        // Regra sem dados para avaliar: não entra em `regrasAvaliadas`, então
+        // não pode fechar ocorrência por ausência. O detalhe da rodada registra.
+        regrasNaoAvaliadas.push(regra.id);
+        continue;
+      }
       if (!Array.isArray(achados)) {
         falhas.push({ regra: regra.id, motivo: "detector não devolveu array" });
         regrasNaoAvaliadas.push(regra.id);

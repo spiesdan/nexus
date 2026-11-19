@@ -15,14 +15,10 @@ import type { NextRequest } from "next/server";
 
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { ROTAS_DO_SLO } from "./rotas-slo";
 
-export const ROTAS_DO_SLO = [
-  "/api/v1/commercial-orders",
-  "/api/v1/conversations",
-  "/api/v1/contacts",
-  "/api/v1/invoices",
-  "/api/v1/financeiro/dashboard",
-] as const;
+export { ROTAS_DO_SLO };
+
 
 /** Fração das requisições medidas. 1 = 100%. */
 export const AMOSTRAGEM = 1;
