@@ -50,7 +50,7 @@ import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
-import { haQuantoTempo, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
+import { haQuantoTempo, chaveDoRascunho, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
 import { randomId } from "@/lib/random-id";
@@ -138,6 +138,7 @@ export function OrderEditor({
   nomeOrganizacao,
   representada,
   nomeVendedor,
+  donoDoRascunho,
   textos,
 }: {
   produtos: Produto[];
@@ -167,6 +168,12 @@ export function OrderEditor({
   };
   /** Quem está vendendo — o "Vendedor" do bloco de detalhes. */
   nomeVendedor?: string | null;
+  /**
+   * De quem é o rascunho local. Sem isto, `localStorage` é uma gaveta única
+   * para todos os usuários e organizações do mesmo navegador — e o rascunho de
+   * uma vendedora aparecia para a outra (ver `chaveDoRascunho`).
+   */
+  donoDoRascunho: { orgId: string; userId: string };
   textos: TextosBase;
 }) {
   const t = useT();
@@ -367,7 +374,7 @@ export function OrderEditor({
   // rascunho do outro cliente antes de a pessoa escolher.
   const [conflitoDeRascunho, setConflitoDeRascunho] = React.useState<RascunhoDoPedido | null>(null);
   const { salvoEm, carregar, limpar, falhaAoSalvar } = useAutosaveDraft(
-    "pedido-rascunho",
+    chaveDoRascunho(donoDoRascunho.orgId, donoDoRascunho.userId),
     {
       contatoId,
       chavePedido,

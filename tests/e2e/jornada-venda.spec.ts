@@ -31,8 +31,8 @@ test.setTimeout(300_000);
  *   barra do rodapé) → toast `Pedido criado: PED-…` + redirect para
  *   `/app/pedidos`, ficha aberta pelo card da lista.
  *
- * Guardas de ambiente: o autosave (`localStorage["pedido-rascunho"]`) é
- * limpo no início — um rascunho deixado por outra execução restauraria itens
+ * Guardas de ambiente: o autosave (`localStorage["pedido-rascunho:<org>:<user>"]`)
+ * é limpo no início — um rascunho deixado por outra execução restauraria itens
  * alheios no passo Cliente; produto nasce com `controla_estoque: false` porque
  * estoque não é o que esta jornada mede.
  */
@@ -41,7 +41,13 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   const cliente = `Cliente Jornada Venda ${carimbo}`;
   const codigo = `JV${carimbo}`;
 
-  await page.addInitScript(() => window.localStorage.removeItem("pedido-rascunho"));
+  // A chave do rascunho é escopada por organização+usuário (`chaveDoRascunho`);
+  // limpar só a chave legada não limpava nada.
+  await page.addInitScript(() => {
+    for (const k of Object.keys(window.localStorage)) {
+      if (k.startsWith("pedido-rascunho")) window.localStorage.removeItem(k);
+    }
+  });
   await loginComoAdmin(page, lerCreds());
 
   // Pré-condições pela API: produto e contato. A jornada sob teste começa na
