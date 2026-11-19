@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 
 type EstadoSlo = "ok" | "em_risco" | "estourado" | "sem_historico";
@@ -47,14 +48,15 @@ const VARIANTE_DO_ESTADO: Record<
   sem_historico: "neutral",
 };
 
-function valorNaTela(slo: Slo): string {
+function valorNaTela(slo: Slo, tag: string): string {
   if (slo.valor === null) return "—";
-  if (slo.unidade === "%") return `${slo.valor.toLocaleString("pt-BR")}%`;
-  return `${slo.valor.toLocaleString("pt-BR")} ms`;
+  if (slo.unidade === "%") return `${slo.valor.toLocaleString(tag)}%`;
+  return `${slo.valor.toLocaleString(tag)} ms`;
 }
 
 function CartaoDeSlo({ slo }: { slo: Slo }) {
   const t = useT();
+  const tag = useTagDeIdioma();
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
@@ -67,7 +69,7 @@ function CartaoDeSlo({ slo }: { slo: Slo }) {
             {t("Valor atual")}
           </p>
           <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">
-            {valorNaTela(slo)}
+            {valorNaTela(slo, tag)}
           </p>
           {slo.valor === null ? (
             <p className="mt-1 text-sm text-text-muted">{t("sem histórico ainda")}</p>
@@ -97,6 +99,7 @@ function CartaoDeSlo({ slo }: { slo: Slo }) {
 
 export function ObservabilidadeClient() {
   const t = useT();
+  const tag = useTagDeIdioma();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "observabilidade"],
     queryFn: () =>
@@ -142,7 +145,7 @@ export function ObservabilidadeClient() {
             ))}
           </div>
           <p className="text-xs text-text-muted">
-            {t("Gerado em")} {new Date(data.gerado_em).toLocaleString("pt-BR")}.
+            {t("Gerado em")} {new Date(data.gerado_em).toLocaleString(tag)}.
           </p>
         </>
       )}
