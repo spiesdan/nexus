@@ -24,6 +24,7 @@ import { NewContactDialog } from "@/components/contacts/NewContactDialog";
 import { ImportContactsDialog } from "@/components/contacts/ImportContactsDialog";
 import { EmptyContacts } from "@/components/empty";
 import type { ContactOrderBy } from "@/lib/schemas/contacts";
+import type { CidadeCanonica } from "@/lib/contacts/cidades";
 
 const SOURCE_OPTIONS = [
   { value: "manual", label: "Manual" },
@@ -40,7 +41,7 @@ export function ContactsListClient() {
   const [search, setSearch] = useState("");
   const [tag, setTag] = useState<string | undefined>(undefined);
   const [source, setSource] = useState<string | undefined>(undefined);
-  const [cidade, setCidade] = useState<string | undefined>(undefined);
+  const [cidade, setCidade] = useState<CidadeCanonica | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<ContactOrderBy>("last_activity_at");
   const [orderDir, setOrderDir] = useState<"asc" | "desc">("desc");
   const [limit, setLimit] = useState<number>(25);
@@ -54,7 +55,15 @@ export function ContactsListClient() {
   }, [searchInput]);
 
   const filters = useMemo(
-    () => ({ search, tag, source, cidade, order_by: orderBy, order_dir: orderDir, limit }),
+    () => ({
+      search,
+      tag,
+      source,
+      cidade: cidade?.variantes,
+      order_by: orderBy,
+      order_dir: orderDir,
+      limit,
+    }),
     [search, tag, source, cidade, orderBy, orderDir, limit],
   );
   const q = useContactList(filters);
@@ -109,7 +118,7 @@ export function ContactsListClient() {
   if (cidade) {
     chips.push({
       key: "cidade",
-      label: `${t("Cidade")}: ${cidade}`,
+      label: `${t("Cidade")}: ${cidade.rotulo}`,
       onRemove: () => setCidade(undefined),
     });
   }
@@ -171,9 +180,9 @@ export function ContactsListClient() {
           <FilterSelect
             id="filtro-cidade"
             label={t("Cidade")}
-            value={cidade ?? ""}
-            onChange={(v) => setCidade(v || undefined)}
-            options={cidades.map((nome) => ({ value: nome, label: nome }))}
+            value={cidade?.rotulo ?? ""}
+            onChange={(v) => setCidade(cidades.find((c) => c.rotulo === v))}
+            options={cidades.map((c) => ({ value: c.rotulo, label: c.rotulo }))}
             allLabel={t("Todas as cidades")}
           />
           <FilterSelect

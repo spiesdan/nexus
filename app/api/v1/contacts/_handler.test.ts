@@ -32,13 +32,14 @@ type Registro = {
   eq: Array<[string, unknown]>;
   is: Array<[string, unknown]>;
   ilike: Array<[string, unknown]>;
+  in: Array<[string, unknown]>;
   insert: Record<string, unknown> | null;
 };
 
 function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown[] } = {}) {
   const consultas: Registro[] = [];
   const criar = (tabela: string) => {
-    const r: Registro = { tabela, eq: [], is: [], ilike: [], insert: null };
+    const r: Registro = { tabela, eq: [], is: [], ilike: [], in: [], insert: null };
     consultas.push(r);
     const b: Record<string, unknown> = {
       select: () => b,
@@ -52,6 +53,10 @@ function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown
       },
       ilike: (c: string, v: unknown) => {
         r.ilike.push([c, v]);
+        return b;
+      },
+      in: (c: string, v: unknown) => {
+        r.in.push([c, v]);
         return b;
       },
       or: () => b,
@@ -111,30 +116,34 @@ describe("listContactsHandler", () => {
 
 
 describe("listContactsHandler — filtro por cidade", () => {
-  it("manda ilike (case-insensitive) com o valor trimado e a organização explícita", async () => {
+  it("filtra pelas VARIANTES canônicas com IN e organização explícita", async () => {
+    // O seletor manda todas as grafias da cidade canônica: `IN` é o que casa
+    // CANOINHAS/Canoinhas/canoinhas (e UNIAO DA VITORIA/União da Vitória) sem
+    // migration e sem `unaccent`.
     const { client, consultas } = stub({ linhas: [] });
+    const variantes = ["CANOINHAS", "Canoinhas", "canoinhas"];
 
-    await listContactsHandler(client as never, ctx, { cidade: "  Ribeirão Preto  " } as never);
+    await listContactsHandler(client as never, ctx, { cidade: variantes } as never);
 
     const q = consultas.find((c) => c.tabela === "contacts");
     expect(q?.eq).toContainEqual(["organization_id", ORG]);
-    expect(q?.ilike).toEqual([["cidade", "Ribeirão Preto"]]);
+    expect(q?.in).toEqual([["cidade", variantes]]);
   });
 
-  it("curinga do LIKE na cidade é escapado, não vira 'todos'", async () => {
-    // Uma cidade chamada "100%" (ou um valor manipulado na URL) não pode casar
-    // com a base inteira: `%` e `_` são operadores do ILIKE.
+  it("string única continua aceita como lista de um (contrato antigo)", async () => {
     const { client, consultas } = stub({ linhas: [] });
 
-    await listContactsHandler(client as never, ctx, { cidade: "100%_oeste" } as never);
+    await listContactsHandler(client as never, ctx, { cidade: "  Mafra  " } as never);
 
     const q = consultas.find((c) => c.tabela === "contacts");
-    expect(q?.ilike).toEqual([["cidade", "100\\%\\_oeste"]]);
+    expect(q?.in).toEqual([["cidade", ["Mafra"]]]);
   });
 
-  it("sem cidade, nenhum ilike é emitido", async () => {
+  it("sem cidade, nenhum filtro de cidade é emitido", async () => {
     const { client, consultas } = stub({ linhas: [] });
     await listContactsHandler(client as never, ctx, {} as never);
-    expect(consultas.find((c) => c.tabela === "contacts")?.ilike).toEqual([]);
+    const q = consultas.find((c) => c.tabela === "contacts");
+    expect(q?.in).toEqual([]);
+    expect(q?.ilike).toEqual([]);
   });
 });

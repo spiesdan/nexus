@@ -14,8 +14,8 @@ export interface ContactListFilters {
   search?: string;
   tag?: string;
   source?: string;
-  /** Igualdade case-insensitive (o valor vem do seletor de cidades). */
-  cidade?: string;
+  /** Grafias cruas da cidade canônica escolhida (o filtro usa `IN`). */
+  cidade?: string[];
   order_by?: ContactOrderBy;
   order_dir?: "asc" | "desc";
   limit?: number;
@@ -30,7 +30,7 @@ export function useContactList(filters: ContactListFilters) {
       if (filters.search) qs.set("search", filters.search);
       if (filters.tag) qs.set("tag", filters.tag);
       if (filters.source) qs.set("source", filters.source);
-      if (filters.cidade) qs.set("cidade", filters.cidade);
+      for (const variante of filters.cidade ?? []) qs.append("cidade", variante);
       if (filters.order_by) qs.set("order_by", filters.order_by);
       if (filters.order_dir) qs.set("order_dir", filters.order_dir);
       if (filters.limit) qs.set("limit", String(filters.limit));

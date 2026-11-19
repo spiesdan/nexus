@@ -79,69 +79,71 @@ beforeAll(() => {
 
     delete from public.contacts where organization_id in ('${ORG_A}', '${ORG_B}');
 
-    insert into public.contacts (organization_id, name, display_name, cidade, is_anonymized)
+    insert into public.contacts (organization_id, name, display_name, cidade, uf, is_anonymized)
     values
-      ('${ORG_A}', 'Cliente A', 'Cliente A', 'Ribeirão Preto', false),
-      ('${ORG_A}', 'Cliente A2', 'Cliente A2', 'São Paulo', false),
-      ('${ORG_B}', 'Cliente B', 'Cliente B', 'Ribeirão Preto', false),
-      ('${ORG_B}', 'Cliente B2', 'Cliente B2', 'São Paulo', false);
+      ('${ORG_A}', 'Cliente A',  'Cliente A',  'Canoinhas', 'SC', false),
+      ('${ORG_A}', 'Cliente A2', 'Cliente A2', 'UNIAO DA VITORIA', 'PR', false),
+      ('${ORG_A}', 'Cliente A3', 'Cliente A3', 'União da Vitória', 'PR', false),
+      ('${ORG_A}', 'Cliente A4', 'Cliente A4', 'AGROCOMERCIAL SCHULTZ LTDA ME', 'SC', false),
+      ('${ORG_B}', 'Cliente B',  'Cliente B',  'Canoinhas', 'SC', false),
+      ('${ORG_B}', 'Cliente B2', 'Cliente B2', 'Mafra', 'SC', false);
 
   `);
 });
 
 describe("contacts — filtro por cidade entre organizações", () => {
-  it("A filtra a própria cidade e não vê o contato de B (zero cross-tenant)", () => {
+  it("filtra pelas variantes canônicas com IN e não vê o contato de B", () => {
+    const variantes = "('Canoinhas','CANOINHAS','canoinhas')";
     expect(
       countAs(
         AGENTE_A,
         `select count(*) from public.contacts
-          where organization_id = '${ORG_A}' and cidade ilike 'ribeirão preto'`,
+          where organization_id = '${ORG_A}' and cidade in ${variantes}`,
       ),
     ).toBe(1);
-    // Sem o filtro de organização, a MESMA condição de cidade acharia também o
-    // contato de B. É a prova de que o `.eq("organization_id")` do handler é o
-    // que segura a fronteira — e a RLS, a segunda rede.
+    // Sem o filtro de organização, a MESMA condição acharia o contato de B. É a
+    // prova de que o `.eq("organization_id")` do handler é o que segura a
+    // fronteira — e a RLS, a segunda rede.
     expect(
       countAs(
         AGENTE_A,
-        `select count(*) from public.contacts where cidade ilike 'ribeirão preto'`,
+        `select count(*) from public.contacts where cidade in ${variantes}`,
       ),
     ).toBe(1);
   });
 
-  it("a lista de cidades de A não inclui as de B", () => {
-    const cidades = sql(`
-      set role authenticated;
-      select set_config('request.jwt.claims', '{"sub":"${AGENTE_A}"}', false);
-      select count(*) from public.contacts
-       where organization_id = '${ORG_B}' and cidade ilike 'ribeirão preto';
-    `);
-    expect(Number(cidades.split("\n").filter(Boolean).pop())).toBe(0);
-    // E as cidades de A, vistas por A, são exatamente as duas esperadas.
+  it("acento não separa: as duas grafias de União da Vitória casam juntas", () => {
+    const variantes = "('União da Vitória','UNIAO DA VITORIA')";
+    expect(
+      countAs(
+        AGENTE_A,
+        `select count(*) from public.contacts
+          where organization_id = '${ORG_A}' and cidade in ${variantes}`,
+      ),
+    ).toBe(2);
+  });
+
+  it("cidade que só existe em B continua zero para A (cross-tenant)", () => {
+    expect(
+      countAs(
+        AGENTE_A,
+        `select count(*) from public.contacts
+          where organization_id = '${ORG_B}' and cidade in ('Mafra')`,
+      ),
+    ).toBe(0);
+    // E sem o filtro de organização a RLS tampouco devolve a linha de B.
+    expect(
+      countAs(AGENTE_A, `select count(*) from public.contacts where cidade = 'Mafra'`),
+    ).toBe(0);
+  });
+
+  it("A vê as próprias cidades na leitura que alimenta o seletor", () => {
     const deA = sql(`
       set role authenticated;
       select set_config('request.jwt.claims', '{"sub":"${AGENTE_A}"}', false);
       select count(*) from public.contacts
-       where organization_id = '${ORG_A}' and cidade ilike 'são paulo';
+       where organization_id = '${ORG_A}' and cidade in ('União da Vitória','UNIAO DA VITORIA');
     `);
-    expect(Number(deA.split("\n").filter(Boolean).pop())).toBe(1);
+    expect(Number(deA.split("\n").filter(Boolean).pop())).toBe(2);
   });
-
-  it("caixa é ignorada; acento não", () => {
-    expect(
-      countAs(
-        AGENTE_A,
-        `select count(*) from public.contacts
-          where organization_id = '${ORG_A}' and cidade ilike 'SÃO PAULO'`,
-      ),
-    ).toBe(1);
-    expect(
-      countAs(
-        AGENTE_A,
-        `select count(*) from public.contacts
-          where organization_id = '${ORG_A}' and cidade ilike 'sao paulo'`,
-      ),
-    ).toBe(0);
-  });
-
 });
