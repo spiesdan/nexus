@@ -51,3 +51,24 @@
 - Quando o deploy do dono terminar: disparar o **`--dry-run`** do catálogo do
   Mercos e levar o relatório (criados/atualizados/divergentes/sem_codigo) para
   aprovação — nada é aplicado sem ela.
+
+## Restrição de ambiente (ordem do dono, 19/11/2026)
+
+A máquina já reiniciou três vezes hoje (load 10/26/37; 7,8 GB de swap). **O
+coordenador responde por isso na fila e nos despachos**, e todo worker recebe
+estas regras no prompt:
+
+1. **Um `next build` por vez, nunca dois em paralelo.** Se precisar de build,
+   espera o outro terminar — ou usa teste dirigido. Medido nesta rodada: **dois**
+   `e2e-build.sh` rodavam em worktrees diferentes; o duplicado foi morto e o swap
+   caiu de 7,8 GB para 5,8 GB.
+2. **Nada de suíte completa** (`test:unit`, `test:db`, e2e inteiro) por rotina —
+   só teste dirigido ao arquivo/fatia.
+3. **Dev server sobe só enquanto precisa** e é derrubado no fim (3000/3021/3022).
+4. **Emulador Android só com prova de aparelho a fazer**, e `adb emu kill` depois.
+5. **Docker local**: `supabase stop` quando nenhuma fatia depende dele.
+6. **Build de imagem Docker só no CI**, nunca local em paralelo com `next build`.
+
+**Serialização:** quando um worker pedir algo pesado, o coordenador diz quem roda
+primeiro e quem espera — e registra aqui. Nesta rodada: F ficou com o único build
+(e2e da jornada); D e G seguem em teste dirigido, sem build.
