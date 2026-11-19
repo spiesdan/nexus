@@ -431,3 +431,25 @@ describe("completude da coleta", () => {
     expect(coletaIncompleta({ lidos: 9, totalNoErp: 601, limite: 10 })).toBe(true);
   });
 });
+
+describe("origem em toda linha do upsert", () => {
+  it("linhas de ATUALIZAÇÃO também levam origem — NOT NULL no INSERT do upsert", async () => {
+    // Medido em produção em 19/11/2026: o primeiro `--aplicar` real morreu com
+    // `null value in column "origem"`. O Postgres valida a linha do INSERT mesmo
+    // quando ela cai no DO UPDATE, então a lista de atualizados precisa do campo.
+    const { montarLinhasDeUpsert } = await import("../../workers/mercos/catalogo-logica.mjs");
+    const criados = [{ codigo: "1", nome: "NOVO", preco_cents: 100, unidade: "UN", ativo_erp: true }];
+    const atualizados = [{ codigo: "2", nome: "EXISTENTE", preco_cents: 200, unidade: "UN", ativo_erp: true }];
+    const existentes = new Map([["2", { codigo: "2", ativo: true, origem: "odivix", unidade: "CX", imagem_url: null }]]);
+
+    const linhas = montarLinhasDeUpsert("org", criados, atualizados, existentes);
+
+    expect(linhas).toHaveLength(2);
+    for (const linha of linhas) {
+      expect(linha.origem, `linha ${linha.codigo} sem origem`).toBeTruthy();
+    }
+    // Atualização preserva a origem do banco; criação nasce como mercos.
+    expect(linhas[0].origem).toBe("mercos");
+    expect(linhas[1].origem).toBe("odivix");
+  });
+});
