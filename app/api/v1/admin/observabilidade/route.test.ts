@@ -33,6 +33,7 @@ function builder(fonte: Fonte) {
 }
 
 const from = vi.fn();
+const rpc = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -48,7 +49,8 @@ function montar(
       tabela === "organizations" ? (orgs as unknown[]) : (settings as unknown[]);
     return builder(({ de, ate }) => ({ data: linhas.slice(de, ate + 1), error: null }));
   });
-  vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+  rpc.mockResolvedValue({ data: { total: 0, erros: 0, p95: null }, error: null });
+  vi.mocked(createAdminClient).mockReturnValue({ from, rpc } as never);
 }
 
 async function corpo(res: Response) {
@@ -127,11 +129,30 @@ describe("GET /api/v1/admin/observabilidade", () => {
     });
   });
 
+  it("com amostras suficientes calcula disponibilidade e p95 reais", async () => {
+    montar([{ id: "org-a" }], []);
+    rpc.mockResolvedValue({ data: { total: 1_000, erros: 2, p95: 450.4 }, error: null });
+
+    const res = await GET();
+    const { slos } = (await corpo(res)).data;
+    expect(slos.find((s) => s.id === "disponibilidade")).toMatchObject({
+      valor: 99.8,
+      estado: "ok",
+      detalhe: { amostras: 1_000, erros: 2 },
+    });
+    expect(slos.find((s) => s.id === "latencia")).toMatchObject({
+      valor: 450,
+      estado: "ok",
+      detalhe: { amostras: 1_000 },
+    });
+  });
+
   it("erro de leitura vira 500, não painel vazio", async () => {
     from.mockImplementation((tabela: string) =>
       builder(tabela === "organizations" ? { data: null, error: { message: "db" } } : { data: [], error: null }),
     );
-    vi.mocked(createAdminClient).mockReturnValue({ from } as never);
+    rpc.mockResolvedValue({ data: { total: 0, erros: 0, p95: null }, error: null });
+    vi.mocked(createAdminClient).mockReturnValue({ from, rpc } as never);
     const res = await GET();
     expect(res.status).toBe(500);
   });

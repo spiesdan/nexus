@@ -12,11 +12,13 @@ import { requireRole } from "@/lib/auth/require-role";
 import { situacaoDe } from "@/lib/comercial/financeiro";
 import { createClient } from "@/lib/supabase/server";
 
+
+import { comMetricas } from "@/lib/observabilidade/rotas";
 export const dynamic = "force-dynamic";
 
 const DIA = 86400000;
 
-export async function GET(req: NextRequest): Promise<Response> {
+async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const authz = await requireRole("viewer", { requestId, resource: "financial_receivables" });
   if (!authz.ok) return authz.response;
@@ -119,3 +121,5 @@ export async function GET(req: NextRequest): Promise<Response> {
     { requestId, meta: { amostra_parcial: amostraParcial } },
   );
 }
+
+export const GET = comMetricas("/api/v1/financeiro/dashboard", get);
