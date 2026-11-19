@@ -1002,10 +1002,11 @@ export function OrderEditor({
                 tabela={tabela}
                 ultimosPrecos={ultimos}
                 inputRef={buscaRef}
-                aoAdicionar={(p, q) => {
-                  const prod = porId.get(p.id);
-                  if (prod) adicionar(prod, q);
-                }}
+                // O produto vem da busca (local OU remota). O `porId` só tem o
+                // lote que a página carregou; filtrar por ele descartava em
+                // SILÊNCIO o produto encontrado no servidor (fora dos 2.000) —
+                // foi o defeito que derrubou E.1/E.2 na janela.
+                aoAdicionar={(p, q) => adicionar(p, q)}
                 textos={{ produtos: textos.produtos, buscarProduto: textos.buscarProduto }}
               />
 

@@ -146,7 +146,7 @@ function montar({ comRascunho = true }: { comRascunho?: boolean } = {}) {
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
-        donoDoRascunho={{ orgId: "org-teste", userId: "user-teste" }}
+        escopoDoRascunho="org-teste:user-teste"
         textos={TEXTO}
       />
     </QueryClientProvider>,

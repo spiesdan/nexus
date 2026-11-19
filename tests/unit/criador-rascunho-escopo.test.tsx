@@ -111,7 +111,7 @@ const LINHA = {
 
 function gravarRascunho(dono: { orgId: string; userId: string }, dados: Record<string, unknown>) {
   window.localStorage.setItem(
-    chaveDoRascunho(dono.orgId, dono.userId),
+    chaveDoRascunho(`${dono.orgId}:${dono.userId}`),
     JSON.stringify({
       salvoEm: Date.now(),
       dados: {
@@ -151,7 +151,7 @@ function montar(dono: { orgId: string; userId: string }) {
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
-        donoDoRascunho={dono}
+        escopoDoRascunho={`${dono.orgId}:${dono.userId}`}
         textos={TEXTO}
       />
     </QueryClientProvider>,
@@ -219,14 +219,14 @@ describe("rascunho é da pessoa na organização, não do navegador", () => {
     gravarRascunho(ANA, { clienteNome: "Cliente da Ana" });
     gravarRascunho(BRUNO, { clienteNome: "Cliente do Bruno", contatoId: null });
 
-    expect(chaveDoRascunho(ANA.orgId, ANA.userId)).not.toBe(
-      chaveDoRascunho(BRUNO.orgId, BRUNO.userId),
+    expect(chaveDoRascunho(`${ANA.orgId}:${ANA.userId}`)).not.toBe(
+      chaveDoRascunho(`${BRUNO.orgId}:${BRUNO.userId}`),
     );
     expect(
-      JSON.parse(window.localStorage.getItem(chaveDoRascunho(ANA.orgId, ANA.userId)) ?? "{}"),
+      JSON.parse(window.localStorage.getItem(chaveDoRascunho(`${ANA.orgId}:${ANA.userId}`)) ?? "{}"),
     ).toMatchObject({ dados: { clienteNome: "Cliente da Ana" } });
     expect(
-      JSON.parse(window.localStorage.getItem(chaveDoRascunho(BRUNO.orgId, BRUNO.userId)) ?? "{}"),
+      JSON.parse(window.localStorage.getItem(chaveDoRascunho(`${BRUNO.orgId}:${BRUNO.userId}`)) ?? "{}"),
     ).toMatchObject({ dados: { clienteNome: "Cliente do Bruno" } });
   });
 });

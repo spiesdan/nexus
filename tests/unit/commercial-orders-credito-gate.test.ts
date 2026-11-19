@@ -214,7 +214,7 @@ describe("POST /api/v1/commercial-orders — crédito", () => {
     const res = await POST(req(pedido({ ignorar_credito: true })));
     expect(res.status).toBe(422);
     const corpo = (await res.json()) as { error: { message: string } };
-    expect(corpo.error.message).toBe("Só gerente pode ignorar estoque ou crédito.");
+    expect(corpo.error.message).toBe("Só gerente pode ignorar preço, estoque ou crédito.");
     // O gate vem antes de qualquer leitura/escrita de pedido.
     expect(mem.pedidos).toHaveLength(0);
     expect(mem.escritas).toHaveLength(0);

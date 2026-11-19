@@ -156,9 +156,17 @@ function rascunho(dados: Record<string, unknown>) {
   );
 }
 
-function montar(props: { produtos?: Produto[]; tabelas?: { id: string; nome: string; desconto_pct: number }[]; contatoInicial?: string | null } = {}) {
+function montar(
+  props: {
+    produtos?: Produto[];
+    tabelas?: { id: string; nome: string; desconto_pct: number }[];
+    contatoInicial?: string | null;
+  } = {},
+) {
   return render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
       <OrderEditor
         produtos={props.produtos ?? [produto({})]}
         contatos={[BILL]}
@@ -169,7 +177,7 @@ function montar(props: { produtos?: Produto[]; tabelas?: { id: string; nome: str
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
-        donoDoRascunho={{ orgId: "org-teste", userId: "user-teste" }}
+        escopoDoRascunho="org-teste:user-teste"
         textos={TEXTO}
       />
     </QueryClientProvider>,
@@ -180,12 +188,51 @@ const precoDaLine = () => (screen.getAllByLabelText("Preço")[0] as HTMLInputEle
 const origemDaLine = () =>
   document.querySelector('[data-testid^="origem-preco-"]')?.textContent ?? "";
 
+describe("E.1/E.2 — produto que só a busca do servidor encontrou entra no pedido", () => {
+  it("o clique no resultado remoto adiciona o item (sem o filtro porId)", async () => {
+    const remoto = produto({
+      id: "remoto",
+      codigo: "REMOTO-1",
+      nome: "Produto Remoto",
+      unidade: null,
+      controla_estoque: false,
+    });
+    vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url.includes("/api/v1/products?busca=")) {
+        return Promise.resolve({ data: [remoto] }) as never;
+      }
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      if (url.startsWith("/api/v1/contacts/")) {
+        return Promise.resolve({
+          data: { limite_credito_cents: null, condicao_pagamento: null },
+        }) as never;
+      }
+      return Promise.resolve({ data: [] }) as never;
+    });
+
+    montar({ produtos: [] });
+    fireEvent.change(document.getElementById("busca-produto")!, {
+      target: { value: "REMOTO-1" },
+    });
+    await waitFor(() => expect(screen.getByText("Produto Remoto")).toBeTruthy());
+    fireEvent.click(screen.getByRole("option", { name: /REMOTO-1/ }));
+
+    await waitFor(() =>
+      expect(screen.queryByText("Nenhum item ainda — busque e adicione.")).toBeNull(),
+    );
+    expect(screen.getByText("Produto Remoto")).toBeTruthy();
+    expect(screen.getByRole("spinbutton", { name: /Quantidade/ })).toBeTruthy();
+  });
+});
+
 beforeEach(() => {
   window.localStorage.clear();
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
     if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
     if (url.startsWith("/api/v1/contacts/")) {
-      return Promise.resolve({ data: { limite_credito_cents: null, condicao_pagamento: null } }) as never;
+      return Promise.resolve({
+        data: { limite_credito_cents: null, condicao_pagamento: null },
+      }) as never;
     }
     return Promise.resolve({ data: [] }) as never;
   });
@@ -243,7 +290,10 @@ describe("3 · tabela de preço reflete nos itens", () => {
       }
       return Promise.resolve({ data: [] }) as never;
     });
-    rascunho({ tabelaId: "tab-1", linhas: [linha({ precoTexto: "39,90", origemPreco: "manual" })] });
+    rascunho({
+      tabelaId: "tab-1",
+      linhas: [linha({ precoTexto: "39,90", origemPreco: "manual" })],
+    });
 
     montar({ tabelas: [{ id: "tab-1", nome: "Tabela Ouro", desconto_pct: 10 }] });
 
@@ -255,7 +305,11 @@ describe("3 · tabela de preço reflete nos itens", () => {
   it("editar o preço na linha marca a origem como manual", () => {
     const aoMudar = vi.fn();
     render(
-      <OrderItems linhas={[linha({ origemPreco: "tabela" })]} aoMudar={aoMudar} aoRemover={vi.fn()} />,
+      <OrderItems
+        linhas={[linha({ origemPreco: "tabela" })]}
+        aoMudar={aoMudar}
+        aoRemover={vi.fn()}
+      />,
     );
 
     fireEvent.change(screen.getByLabelText("Preço"), { target: { value: "39,90" } });
@@ -316,7 +370,9 @@ describe("5 · crédito: avisa antes de gerar, com a régua do servidor", () => 
     // 90,00 em aberto + 50,00 deste pedido > 100,00 de limite.
     await waitFor(() => expect(screen.getByTestId("credito-estourado")).toBeTruthy());
     expect(screen.getByTestId("credito-estourado").textContent).toContain("R$ 90,00");
-    expect(screen.getByTestId("credito-estourado").textContent).toContain("só um gerente pode liberar");
+    expect(screen.getByTestId("credito-estourado").textContent).toContain(
+      "só um gerente pode liberar",
+    );
     // Nada foi enviado: o aviso é ANTES do clique.
     expect(vi.mocked(apiClient.post)).not.toHaveBeenCalled();
   });
