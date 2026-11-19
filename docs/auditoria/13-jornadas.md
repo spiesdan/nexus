@@ -44,15 +44,15 @@ o que o spec realmente abre.
 | J3  | captura, qualificação e atribuição de lead                                                 | 9     | 15                  | 14  | 1   | 0        | 0      |
 | J4  | mover lead entre etapas, agendar próximo passo e registrar resultado                       | 17    | 57                  | 59  | 0   | 0        | 2      |
 | J5  | buscar ou criar contato, revisar Customer 360 e histórico                                  | 2     | 3                   | 3   | 0   | 0        | 0      |
-| J6  | receber, atribuir, responder, encaminhar e encerrar conversa no inbox                      | 5     | 9                   | 7   | 2   | 0        | 0      |
+| J6  | receber, atribuir, responder, encaminhar e encerrar conversa no inbox                      | 6     | 13                  | 7   | 2   | 0        | 0      |
 | J7  | transferir conversa entre IA e pessoa, com contexto, controle e auditoria                  | 2     | 3                   | 3   | 0   | 0        | 0      |
 | J8  | criar/publicar/pausar/rollback de agente, editar conhecimento, testar e avaliar resposta   | 12    | 43                  | 39  | 0   | 0        | 4      |
 | J9  | configurar follow-up e controlar enrollment, pausa, retomada, cancelamento, snooze e falha | 9     | 20                  | 20  | 0   | 0        | 0      |
 | J10 | criar e processar pedido, aplicar políticas, verificar estoque, cobrança e comissão        | 4     | 4                   | 4   | 0   | 0        | 0      |
 | J11 | compras, entrada de estoque, expedição, rota, motorista e fechamento                       | 4     | 4                   | 4   | 0   | 0        | 0      |
 | J12 | financeiro, títulos, recebimentos e indicadores                                            | 3     | 3                   | 3   | 0   | 0        | 0      |
-| J13 | operações fiscais e tratamento de falhas de sincronização                                  | 2     | 4                   | 3   | 1   | 0        | 0      |
-| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria                          | 2     | 4                   | 2   | 1   | 0        | 1      |
+| J13 | operações fiscais e tratamento de falhas de sincronização                                  | 3     | 8                   | 3   | 1   | 0        | 0      |
+| J14 | importar/exportar dados, LGPD, solicitações e trilha de auditoria                          | 3     | 8                   | 2   | 1   | 0        | 1      |
 | J15 | atualizar, configurar integração, revisar erro e recuperar o serviço                       | 8     | 19                  | 18  | 0   | 1        | 0      |
 | J16 | captura de pedido offline, fila, sincronização, conflito e rejeição                        | 0     | 0                   | 0   | 0   | 0        | 0      |
 
