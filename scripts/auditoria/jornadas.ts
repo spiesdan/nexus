@@ -153,6 +153,7 @@ export const JORNADAS: Jornada[] = [
       "inbox-responder-citando",
       "queue-assign",
       "jornadas-ui-p1-01",
+      "j6-inbox-atender-e-recuperar",
     ],
   },
   {
@@ -223,7 +224,12 @@ export const JORNADAS: Jornada[] = [
   {
     id: "J13",
     titulo: "operações fiscais e tratamento de falhas de sincronização",
-    specs: ["jornada-fiscal", "notas-fiscais-modulo", "jornadas-ui-p1-01"],
+    specs: [
+      "jornada-fiscal",
+      "notas-fiscais-modulo",
+      "jornadas-ui-p1-01",
+      "j13-fiscal-homologacao",
+    ],
     outroWorkflow: {
       specs: ["tests/fiscal/**"],
       workflow: "workflow próprio (playwright.fiscal.config.ts)",
@@ -234,7 +240,12 @@ export const JORNADAS: Jornada[] = [
   {
     id: "J14",
     titulo: "importar/exportar dados, LGPD, solicitações e trilha de auditoria",
-    specs: ["auditoria-aceite-11-itens", "responsividade-nas-rotas", "jornadas-ui-p1-01"],
+    specs: [
+      "auditoria-aceite-11-itens",
+      "responsividade-nas-rotas",
+      "jornadas-ui-p1-01",
+      "j14-lgpd-aprovar-pela-tela",
+    ],
   },
   {
     id: "J15",
