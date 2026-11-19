@@ -5,7 +5,12 @@ import type { NextConfig } from "next";
  *  - LCP < 2.5s p75
  *  - CLS < 0.1 p75
  *  - INP < 200ms p75
- *  - Initial bundle /app/inbox < 250KB gzipped
+ *  - Initial bundle /app/inbox < 512KB gzipped
+ *
+ * O 250KB original era alvo de story da EPIC-12 (S-12.05), nunca medido e sem
+ * gate no CI — `analyze:check` não existe. O medido em 19/11/2026 é 503KB
+ * (docs/auditoria/43 e 44). 512KB é o budget de ratchet; 400KB segue como
+ * stretch de arquitetura (Supabase/zod), não como budget vigente.
  */
 const nextConfig: NextConfig = {
   // Self-host: gera .next/standalone pro container Docker (node server.js).
