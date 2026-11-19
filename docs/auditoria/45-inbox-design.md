@@ -13,10 +13,10 @@ ocupa.
 A lista e a thread são 5 arquivos e ~1.300 linhas. Um PR só esconderia a
 revisão atrás de 40 KB de diff. O recorte é por TELA:
 
-| PR   | Tela                       | Arquivos                                                   |
-| ---- | -------------------------- | ---------------------------------------------------------- |
-| #623 | Lista (`/app/inbox`)       | `ConversationList`, `ConversationListItem`, `InboxFilters` |
-| #624 | Thread (`/app/inbox/<id>`) | `ChatThread`, `ConversationHeader`, `InboxLayout`          |
+| PR       | Tela                       | Arquivos                                                   |
+| -------- | -------------------------- | ---------------------------------------------------------- |
+| **#638** | Lista (`/app/inbox`)       | `ConversationList`, `ConversationListItem`, `InboxFilters` |
+| **#640** | Thread (`/app/inbox/<id>`) | `ChatThread`, `ConversationHeader`, `InboxLayout`          |
 
 ## Lista — o que mudou
 
