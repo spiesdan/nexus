@@ -4,6 +4,7 @@ import {
   campanhasComCidadeInvalida,
   campanhasComCidadeRepetida,
   clientesDuplicadosPorEmail,
+  conversasComClaimParado,
   enderecoComLixo,
   estoqueDivergente,
   estoqueNegativo,
@@ -24,6 +25,7 @@ import {
   campanhaProspeccao,
   campanhaVenda,
   contatoEndereco,
+  conversaParada,
   duplicado,
   estoqueRazao,
   ha,
@@ -498,6 +500,54 @@ describe("detectores de operação — caso positivo e negativo", () => {
             contatoEndereco({ id: "c2", logradouro: null, cidade: "Curitiba" }),
           ],
         }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("conversa com claim parado há 7+ dias sem mensagem dispara; recente ou sem claim não", () => {
+    const parada = primeiro(
+      conversasComClaimParado(
+        snapshot({
+          conversasParadas: [
+            conversaParada({ id: "c1", assigned_at: ha(10 * DIA), last_message_at: ha(9 * DIA) }),
+          ],
+        }),
+      ),
+    );
+    expect(parada.regra).toBe("operacao.conversa_claim_parado");
+    expect(parada.severidade).toBe("media");
+    expect(parada.evidencia.limiar_dias).toBe(7);
+    expect(Number(parada.evidencia.dias_parada)).toBeGreaterThanOrEqual(9);
+
+    expect(
+      conversasComClaimParado(
+        snapshot({
+          conversasParadas: [
+            conversaParada({ assigned_at: ha(6 * DIA), last_message_at: ha(5 * DIA) }),
+          ],
+        }),
+      ),
+    ).toHaveLength(0);
+
+    // Mensagem recente: não é conversa esquecida, é conversa em andamento.
+    expect(
+      conversasComClaimParado(
+        snapshot({
+          conversasParadas: [
+            conversaParada({ assigned_at: ha(10 * DIA), last_message_at: ha(1 * DIA) }),
+          ],
+        }),
+      ),
+    ).toHaveLength(0);
+
+    expect(
+      conversasComClaimParado(
+        snapshot({ conversasParadas: [conversaParada({ assigned_to_user_id: null })] }),
+      ),
+    ).toHaveLength(0);
+    expect(
+      conversasComClaimParado(
+        snapshot({ conversasParadas: [conversaParada({ status: "open" })] }),
       ),
     ).toHaveLength(0);
   });

@@ -625,4 +625,22 @@ export const RECOMENDACOES: Record<string, Construtor> = {
           " na janela.",
       },
     ),
+
+  "operacao.conversa_claim_parado": () =>
+    plano(
+      "Devolver a conversa para a fila — ou confirmar que o responsável ainda vai atender.",
+      [
+        "Confira com o responsável se a conversa ainda é dele.",
+        "Se não for, libere o claim para a fila da organização.",
+        "Se o cliente já foi atendido, encerre a conversa em vez de devolvê-la.",
+      ],
+      ["decisão do responsável", "se o cliente já foi atendido"],
+      {
+        fonte: ["conversations", "user_organizations"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        limitacao:
+          "A conversa volta para a fila sem responsável; quem assumir depois passa a ser o novo dono.",
+      },
+    ),
 };

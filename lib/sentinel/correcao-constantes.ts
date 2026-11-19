@@ -27,3 +27,21 @@ export const CORRECAO_JOB = {
 export function correcaoDeJobSuportada(regra: string, entidadeTipo: string): boolean {
   return regra === CORRECAO_JOB.regra && entidadeTipo === CORRECAO_JOB.entidadeTipo;
 }
+
+/**
+ * Segundo caso corrigível (0328): conversa com claim parado.
+ *
+ * Diferente do job, aqui a ação devolve a conversa para a FILA (`open`, sem
+ * responsável). O CAS é `status='claimed'` + `assigned_to_user_id` +
+ * `assigned_at`; a reversão só vale enquanto ninguém assumiu de novo.
+ */
+export const CORRECAO_CONVERSA = {
+  regra: "operacao.conversa_claim_parado",
+  entidadeTipo: "conversations",
+  /** Mesmo piso do detector: claim sem mensagem há 7 dias. */
+  atrasoMinimoMs: 7 * 24 * 60 * 60 * 1000,
+} as const;
+
+export function correcaoDeConversaSuportada(regra: string, entidadeTipo: string): boolean {
+  return regra === CORRECAO_CONVERSA.regra && entidadeTipo === CORRECAO_CONVERSA.entidadeTipo;
+}

@@ -225,7 +225,7 @@
       "col": 2,
       "type": "route",
       "label": "POST /sentinel/occurrences/[id]/correcao",
-      "sublabel": "Nível 2 restrito: dry-run, execução aprovada com hash, antes/depois e reversão honesta"
+      "sublabel": "Nível 2 restrito: job watchdog e claim de conversa, dry-run, hash, CAS, antes/depois e reversão honesta"
     }
   ],
   "edges": [

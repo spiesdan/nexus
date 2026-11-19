@@ -58,6 +58,7 @@ import {
 } from "@/lib/ui/icons";
 
 import { CorrecaoAprovada } from "./_correcao";
+import { CorrecaoDeConversa } from "./_correcao_conversa";
 import type {
   ConfiguracaoSentinelCliente,
   DetalheSentinel,
@@ -657,10 +658,16 @@ export function SentinelClient({
                 })()}
 
                 {podeGerir ? (
-                  <CorrecaoAprovada
-                    ocorrencia={detalhe.ocorrencia}
-                    onAtualizar={() => abrirDetalhe(detalhe.ocorrencia)}
-                  />
+                  <>
+                    <CorrecaoAprovada
+                      ocorrencia={detalhe.ocorrencia}
+                      onAtualizar={() => abrirDetalhe(detalhe.ocorrencia)}
+                    />
+                    <CorrecaoDeConversa
+                      ocorrencia={detalhe.ocorrencia}
+                      onAtualizar={() => abrirDetalhe(detalhe.ocorrencia)}
+                    />
+                  </>
                 ) : null}
 
                 <section>

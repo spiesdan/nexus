@@ -124,6 +124,10 @@ const CONFIA_NO_CHAMADOR: Readonly<Record<string, string>> = {
     "app/api/v1/sentinel/occurrences/[id]/correcao/route.ts — admin.rpc com a org da ocorrência aprovada",
   fn_sentinel_reverter_job:
     "app/api/v1/sentinel/occurrences/[id]/correcao/reverter/route.ts — admin.rpc com a org da ocorrência corrigida",
+  fn_sentinel_liberar_conversa:
+    "app/api/v1/sentinel/occurrences/[id]/correcao/conversa/route.ts — admin.rpc com a org da ocorrência aprovada",
+  fn_sentinel_reverter_liberacao_conversa:
+    "app/api/v1/sentinel/occurrences/[id]/correcao/conversa/reverter/route.ts — admin.rpc com a org da ocorrência corrigida",
   fn_upsert_wa_contact: "lib/waha/ingest.ts — org resolvida da sessão do canal",
   fn_upsert_wa_conversation: "lib/waha/ingest.ts — org resolvida da sessão do canal",
   fn_aplicar_status_mercos:
