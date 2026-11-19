@@ -320,9 +320,9 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: #594 (rebase sem redesenho + merge) · próximo: design em expedição · depois: estoque/compras e faturamento
-F — agora: matriz de cobertura reconciliada · próximo: Android real [!] com motivo · depois: J1–J16 na matriz
-G — agora: #596 + desempenho/SLO com baseline · próximo: remedição do Sentinel · depois: proposta do 2º caso reversível
+D — agora: estudo C do criador de pedidos (medição, sem tocar arquivos do F) · próximo: aplicar desenho após o F · depois: design em expedição
+F — agora: criador de pedidos — bug ?contato= + auditoria funcional (dono de _editor/_cliente/_itens) · próximo: testes de regressão do fluxo · depois: benchmark
+G — agora: #608 (SLO) + #600 (reativação) · próximo: remedição do Sentinel · depois: proposta do 2º caso reversível
 ```
 
 

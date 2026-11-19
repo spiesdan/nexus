@@ -11,37 +11,40 @@
 
 ## D — design/módulos
 
-- **agora:** *#594 no rebase (sem redesenho) + merge* — `feat/mercos-catalogo-todos`
-  está `dirty`; rebase em `nexus/main`, conflito preservando os dois lados, gates de
-  migration/fragmento e merge nos 5 checks. Aceite: PR mergeado.
-- **próximo:** *design aplicado em expedição (carga/rota/romaneio)* — identidade
-  pelos tokens existentes, sem sistema paralelo e sem regra de negócio; captura
-  antes/depois + estados. Aceite: uma subtela por PR, axe sem violação crítica.
-- **depois:** *design aplicado em estoque/compras e faturamento* — mesma régua.
-  Aceite: idem, com captura.
+- **agora:** *estudo C do criador de pedidos (somente medição)* — wizard de 5
+  etapas × tela única com resumo persistente: medir cliques, tempo, erro, teclado
+  e viewport **no estado atual**, sem tocar `_editor/_cliente/_itens` (são do F
+  nesta rodada). Aceite: comparativo com números e recomendação.
+- **próximo:** *aplicar o desenho vencedor* — só depois que o F fechar a fatia
+  funcional e avisar; arquivos liberados na ordem. Aceite: fluxo com o desenho
+  aprovado, estados e captura antes/depois.
+- **depois:** *design em expedição (retomar)* — #607 em revisão; seguir nas
+  subtelas restantes. Aceite: uma tela por PR com captura.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora:** *matriz de cobertura reconciliada* — `41-cobertura-reconciliada.md`
-  cruzando inventário × código (`find app/app app/admin -name page.tsx`), com
-  linha por rota/subtela/aba/modal/drawer, estado e exceção com dono. Aceite:
-  contagem por comando × linhas da matriz, diferença explicada, checagem que não
-  envelhece.
-- **próximo:** *Android real* — registrar `[!]` com motivo e método de teste
-  (aparelho), sem diluir em "mobile ok". Aceite: linha no quadro + passos.
-- **depois:** *jornadas J1–J16 na matriz* — onde cada uma é provada (Vitest/E2E/
-  manual) e o que falta. Aceite: tabela fechada.
+- **agora (topo, P0):** *criador de pedidos — funcional* — fechar o bug do botão
+  "Criar pedido" (`?contato=` lido no servidor, cliente preenchido), com teste; e
+  a auditoria funcional (validação, crédito, permissão, offline) no mesmo PR ou em
+  PRs pequenos. **Dono dos arquivos `_editor/_cliente/_itens` nesta rodada.**
+  Aceite: bug reproduzido e corrigido com prova; riscos nomeados.
+- **próximo:** *testes de regressão do fluxo* — criar, editar item, salvar,
+  retomar; offline sem perder texto. Aceite: testes dirigidos verdes.
+- **depois:** *benchmark D* — tempo/cliques do fluxo contra o estado anterior.
+  Aceite: números com método.
+
+> #606/#601 (jornada no CI) seguem em revisão; ao entrarem, não competem com esta
+> fatia.
 
 ## G — Sentinel
 
-- **agora:** *#596 (organização suspensa) + desempenho/SLO* — fechar o PR nos 5
-  checks e produzir `42-desempenho-e-slo.md` com baseline medido (bundle, latência
-  p50/p95 das fontes reais, erros/retries) e SLI/SLO propostos com alvo
-  justificado. Aceite: números com data e comando reproduzível.
-- **próximo:** *remedição do Sentinel pós-#596* — distribuição de ocorrências por
+- **agora:** *fechar desempenho/SLO (#608) e a reativação do Sentinel (#600)* —
+  SLO com baseline medido (bundle, p50/p95, erros) e teste de reativação verde.
+  Aceite: ambos nos 5 checks e mergeados.
+- **próximo:** *remedição do Sentinel pós-#596* — distribuição por
   organização/regra, FP e dedup com número. Aceite: tabela antes/depois.
 - **depois:** *proposta do 2º caso de correção aprovada* — três candidatos
-  reversíveis, com risco/CAS/rollback; não executar. Aceite: aprovação do dono.
+  reversíveis com risco/CAS/rollback; não executar. Aceite: aprovação do dono.
 
 ## Coordenação (fora dos 3 slots)
 

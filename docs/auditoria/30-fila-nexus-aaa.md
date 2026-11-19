@@ -661,3 +661,35 @@ do dono.
 > nem consumir cota de IA/WhatsApp da instalação. Efeito colateral registrado: o
 > Sentinel deixa de varrer essas organizações (esperado) e qualquer prova que
 > dependesse delas passa a valer só em ambiente local.
+
+## 26. Frente prioritária — CRIADOR DE PEDIDOS (`/app/pedidos/novo`)
+
+> **Prioridade:** topo, junto dos P0. É a tela de maior uso comercial e a que
+> concentra o bug relatado pelo dono.
+
+### Donos e escopo
+
+| Dono | Escopo | Estado |
+|---|---|---|
+| **F (funcional)** | auditoria A (funcional), riscos B, benchmark D, testes E; **começou pelo bug**: "Criar pedido" no perfil do cliente não leva o cliente (`_acoes.tsx:56`, `_inteligencia360.tsx:39/:82` sem `?contato=`, `novo/page.tsx` não lê `searchParams`) | em execução |
+| **D (desenho/UX)** | estudo C: **wizard de 5 etapas × tela única com resumo persistente**, com evidência (cliques, tempo, erro, teclado, viewport) | **serializado** atrás do F |
+
+### Regra de convivência (a tela é a mesma)
+
+- `_editor.tsx`, `_cliente.tsx` e `_itens.tsx` são **do F nesta rodada**. O D só
+  entra nesses arquivos **depois** que o F fechar a fatia e avisar.
+- Precisa dos dois no mesmo arquivo? O coordenador **serializa**: quem termina
+  primeiro, o outro começa. Nada de edição concorrente.
+- Enquanto espera, o D mede o **estado atual** (cliques/tempo/teclado/viewport) e
+  prepara o desenho — sem tocar nos arquivos do F.
+- Nada de build duplicado, Playwright órfão ou emulador esquecido.
+
+### Aceite da frente
+
+1. **Bug fechado**: do perfil do cliente, "Criar pedido" abre o criador **com o
+   cliente preenchido** (`?contato=` lido no servidor), com teste de rota/componente.
+2. **Auditoria funcional** com riscos nomeados (validação, limite, crédito,
+   permissão, offline) e o que foi corrigido.
+3. **Desenho** com estudo comparativo medido e decisão registrada (não "achismo"):
+   cliques e tempo por tarefa, teclado, viewport e erro.
+4. **Testes** de regressão do fluxo completo (criar, editar item, salvar, retomar).
