@@ -8,6 +8,95 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.60.0] — 2026-11-19
+
+### Adicionado
+
+- **Admin ganha a tela de observabilidade com os três SLOs da instalação** A plataforma agora vê, em `/admin/observabilidade`, disponibilidade, latência
+  das listas e frescor da varredura do Sentinel — cada um com fórmula, janela,
+  alvo, valor atual e estado. A tela é leitura apenas e exige `platform_admin`.
+
+  O frescor do Sentinel é calculado de `organizations` + `sentinel_settings`.
+  Disponibilidade e latência mostram “sem histórico ainda” em vez de zero: a
+  fonte (`api.5xx` e duração das rotas) ainda não é persistida em tabela
+  consultável. Zero seria mentira, não saúde.
+
+### Corrigido
+
+- **Criador de pedidos em 320 px, por teclado e com leitor de tela** O resumo do pedido passou a ser uma **região navegável** (`role=region` com nome) e os
+  campos de desconto (R$ e %) e frete ganharam nome acessível — antes o leitor de tela
+  anunciava "editar, em branco" e não havia como pular direto aos totais. A busca de
+  produto passou a se chamar pelo que faz ("Buscar produto…", não a seção "Produtos") e a
+  lista virou `listbox` com `aria-selected`. A barra de ação do rodapé e a grade de
+  quantidade/preço/desconto de cada item passaram a quebrar linha em telas estreitas,
+  então a página cabe em **320 px** sem rolagem horizontal (medido no navegador por
+  `tests/e2e/criador-pedido-acessivel-320.spec.ts`, que roda no smoke).
+
+  Nada a fazer na VPS.
+
+- **Rascunho do pedido é da pessoa na organização, não do navegador** O autosave do criador de pedidos morava numa chave única do `localStorage`
+  (`pedido-rascunho`) — a mesma para todos os usuários e organizações do navegador. Num
+  balcão compartilhado, que é como loja pequena usa o sistema, a vendedora B abria
+  `/app/pedidos/novo` e encontrava cliente, itens e preço do rascunho da vendedora A;
+  trocando de organização no mesmo navegador, o vazamento era entre tenants. A chave passou
+  a carregar organização e usuário.
+
+  O rascunho salvo por versões anteriores (na chave sem dono) **não** é retomado: restaurar
+  um rascunho de dono desconhecido é exatamente o vazamento que a correção fecha. Nada a
+  fazer na VPS; a venda em andamento é redigitada uma vez.
+
+- **Busca de produto do pedido: o código bipado não vira item errado** O `Enter` da busca de produto lançava **o primeiro resultado da lista**, qualquer que
+  fosse o termo: bipar um EAN que não existe, num catálogo onde outro produto casava por
+  trecho, adicionava o produto errado ao pedido — com o preço errado — e digitar três
+  letras e teclar `Enter` vendia o primeiro café do catálogo sem ninguém escolher. Agora o
+  `Enter` só lança o que é inequívoco: o **código exato** (o que o leitor bipa) ou o
+  resultado **único**; com vários candidatos, a tela pede a escolha e diz por quê. Um
+  código de leitor que não existe agora **avisa** que não foi encontrado, em vez de deixar
+  a tela em silêncio.
+
+  Duas correções de apoio: o servidor passou a devolver o produto do código exato **na frente** da lista limitada (antes, num catálogo grande, ele podia ser cortado pelo
+  `limit` e a tela dizer "nenhum produto encontrado" para um produto que existe), e a ficha
+  do produto passou a nomear o campo como "SKU, referência ou código de barras (EAN)" — é
+  ali que o EAN mora, sem uma segunda identidade para o mesmo produto.
+
+  Nada a fazer na VPS.
+
+- **Pedido avisa o crédito antes de gerar e reprecifica ao trocar de tabela** Dois defeitos do editor de pedidos, os dois descobertos só no clique final:
+
+  **Crédito.** O servidor recusava (422) o pedido que estourava o limite do cliente, mas a
+  tela só alertava sobre o saldo **já** em aberto: um cliente com R$ 100 de folga e um
+  pedido de R$ 5.000 passava sem aviso. Agora a tela faz a mesma conta do gate
+  (`em aberto + este pedido <= limite`), com a **mesma lista de status** que comprometem
+  crédito, e avisa antes do clique — dizendo que só um gerente pode liberar.
+
+  **Tabela de preço.** Trocar a tabela só mudava o `tabelaId`: os itens já lançados
+  mantinham o preço antigo e o servidor recusava o pedido inteiro no fim. Agora a troca
+  reprecifica os itens — exceto o preço digitado à mão, que é decisão comercial e continua
+  marcado como manual.
+
+  Nada a fazer na VPS.
+
+- **Sentinel encerra ocorrência por regra avaliada e deixa de truncar no volume real** A varredura da organização real sempre terminava truncada, então
+  `encerrar_ausentes` nunca rodava e ocorrências já corrigidas ficavam abertas
+  para sempre. A medição com o volume real mostrou que o corte não era o orçamento
+  de detecção (65 ms), e sim os tetos de coleta: 1,5k pedidos contra teto de 500 e
+  1,2k produtos com diferença de estoque contra teto de 500.
+
+  Os tetos foram elevados com número medido (coleta 4,2 s, detecção 262 ms, dentro
+  dos 8 s) e o encerramento passou a ser por regra avaliada: quem rodou e não achou
+  fecha; quem não rodou, ou viu snapshot incompleto, fica intocado.
+
+- **Sentry deixa de pesar no carregamento inicial das telas** O SDK do Sentry era importado estaticamente pelo entry de instrumentação e pelos
+  boundaries de erro, então entrava no first load de toda rota — inclusive login.
+  Agora o SDK é carregado sob demanda depois da hidratação; uma fila síncrona
+  guarda erros e rejeições da janela inicial e os entrega assim que ele
+  inicializa. O Replay continua ligado, mas fora do caminho crítico.
+
+  Medido no mesmo método do doc 42: inbox cai de 592 KB para 503 KB gzip (−15%),
+  login de 318 KB para 228 KB (−28%), e nenhuma das seis rotas principais
+  regrediu. O alvo de 400 KB do inbox ainda não foi atingido; faltam 103 KB, com
+  os ofensores restantes registrados no doc 43.
+
 ## [1.59.1] — 2026-11-19
 
 ### Alterado
@@ -8202,7 +8291,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.60.0...HEAD
+[1.60.0]: https://github.com/spiesdan/nexus/compare/v1.59.1...v1.60.0
 [1.59.1]: https://github.com/spiesdan/nexus/compare/v1.59.0...v1.59.1
 [1.59.0]: https://github.com/spiesdan/nexus/compare/v1.58.0...v1.59.0
 [1.58.0]: https://github.com/spiesdan/nexus/compare/v1.57.0...v1.58.0
