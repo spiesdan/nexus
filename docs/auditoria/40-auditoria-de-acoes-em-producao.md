@@ -77,6 +77,48 @@ Rollback de ambas: refixar as tags no `.env` (`APP_IMAGE`, `WORKER_IMAGE`, …) 
 
 ---
 
+## 7. 19/11/2026 — Catálogo do Mercos aplicado (coleta, catálogo e pareamento)
+
+**Autorização:** dono, 19/11/2026 ("pode"). **Escopo:** organização `4bc721ce…`
+(Bill Higiene), container `crm-mercos-1`, imagem **1.59.0** — nesta execução o
+código da `main` foi copiado para `/app/_fix`, porque o `origem` no upsert ainda
+não estava no artefato oficial.
+
+| # | Ação | Resultado medido |
+|---|---|---|
+| 1 | `produtos.mjs --todos` | **847 produtos**, 57 páginas, total do ERP 847 |
+| 2 | `catalogo.mjs --aplicar` | lidos 847 · **55 criados** (inativos) · **567 atualizados** · 34 divergentes · 210 sem código · **622 gravados** |
+| 3 | `parear-itens.mjs --aplicar` | **616 → 194** pareados por código; restantes **422**; 46 códigos sem produto; 9 ambíguos não aplicados |
+
+**Catálogo depois:** 1.196 produtos (1.139 ativos / 57 inativos), 799 com
+`origem='mercos'`.
+**Reversão:** criados têm `origem='mercos'` e `created_at` do dia → desativar, nunca
+apagar; pareamento é `product_id` com lista no relatório; dump pré-deploy cobre.
+
+## 8. 19/11/2026 — Deploy 1.60.0 e a prova do `origem` no artefato oficial
+
+**Autorização:** dono. **Ação:** `update.sh --to v1.60.0`.
+
+| Verificação | Resultado |
+|---|---|
+| Containers | **7 em 1.60.0** |
+| `/health` | `healthy`, `version 1.60.0` |
+| Checks | supabase, redis, rate_limit, waha — ok |
+| `/login` | 200 |
+| Tabelas | presentes |
+
+**Prova do `origem` sem cópia manual** (imagem 1.60.0): coleta `--todos` = **847
+lidos / 57 páginas / total do ERP confere**; dry-run do catálogo **sem erro**:
+`criados 0 · atualizados 622 · divergentes 34 · sem código 210`. O caminho que
+estourava `null value in column "origem"` completa no artefato oficial.
+
+**Isso fecha** o item "a importação depende de cópia manual" e o `[!]` do catálogo.
+
+**Reversão:** refixar as três imagens em `1.59.0` no `.env` e `up -d` com os dois
+`-f`; baseline é aditivo.
+
+**Rollback:** refixar 1.59.0; banco não é revertido (aditivo).
+
 ## 6. O que este documento **não** cobre
 
 - Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
