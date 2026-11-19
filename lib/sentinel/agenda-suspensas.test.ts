@@ -97,4 +97,28 @@ describe("Sentinel — agenda com organização suspensa", () => {
     expect(agenda.suspensas.map((o) => o.organizationId)).toEqual(["org-1", "org-2"]);
     expect(agenda.devidas.some((o) => o.organizationId === "org-desligada")).toBe(false);
   });
+
+  /**
+   * A suspensão é lida do banco A CADA tick (`organizations.suspended_at`), não
+   * congelada na configuração do Sentinel. Então reativar é só limpar a coluna:
+   * a organização volta para a fila de detecção sozinha, sem tocar em
+   * `sentinel_settings`. Este teste fixa essa promessa — sem ele, "reativada
+   * volta a ser incluída" seria só prosa.
+   */
+  it("organização reativada volta para a fila de detecção no tick seguinte", async () => {
+    const settings = [
+      { organization_id: "org-reativada", ativo: true, ultima_execucao_em: null },
+    ];
+
+    montar([{ id: "org-reativada", suspended_at: "2026-11-19T09:00:00.000Z" }], settings);
+    const suspensa = await organizacoesDevidas(AGORA, 3);
+    expect(suspensa.devidas).toEqual([]);
+    expect(suspensa.suspensas.map((o) => o.organizationId)).toEqual(["org-reativada"]);
+
+    // Mesmo id, mesma configuração; só `suspended_at` voltou a null.
+    montar([{ id: "org-reativada", suspended_at: null }], settings);
+    const reativada = await organizacoesDevidas(AGORA, 3);
+    expect(reativada.devidas.map((o) => o.organizationId)).toEqual(["org-reativada"]);
+    expect(reativada.suspensas).toEqual([]);
+  });
 });
