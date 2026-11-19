@@ -300,3 +300,27 @@ workflow `release` (#548).
 O que ainda está aberto é só trabalho novo: o PR desta fila (#556) e o que os
 três workers abrirem. Fila zerada não é programa concluído — é a primeira vez que
 a dívida de triagem não tem item.
+
+## Rodada 13 — quadro do DoD vivo (18/11/2026, `4c7cd633`)
+
+O quadro completo fica em [`33-relatorio-rodada.md`](33-relatorio-rodada.md) §7 e
+passa a ser **relido a cada rodada**. Resumo do estado:
+
+| Fechado | Parcial | Decisão |
+|---|---|---|
+| fichas 5.4/5.6/5.8/5.10-5.11 · B-7 (dreno + 401) · `update.sh` fail-loud · Sentinel v1.4 · `endereco_com_lixo` · **1.58.0 com tag `v1.58.0`** | outbox do inbox web (D) · J6/J13/J14 no navegador (F) · painel de rejeição por fornecedor (G) · matriz das 3 specs fora do CI (F) · a11y além das 10 telas (D) | **iOS encerrado por decisão do dono** (conta Apple, aparelho, assinatura de 7 dias, distribuição por instalação, PWA) |
+
+**Produção:** 1.57.0 saudável · 1.58.0 tagueada e **deploy aprovado**, em curso pelo
+dono. O pareamento do catálogo só acontece depois desse deploy e de `--dry-run`
+aprovado.
+
+
+## Fila por worker (mantida a cada rodada)
+
+A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
+
+```
+D — agora: Mercos "todos os produtos" (--todos, ativos × inativos) · próximo: estados das subtelas de expedição (5.6b) · depois: formulários de cadastro
+F — agora: bug do filtro de cidade em Clientes · próximo: verify do #586 (spec sem declaração) · depois: matriz das 3 specs fora do CI
+G — agora: #582 (rebase, claim de conversa parada) · próximo: retenção/LGPD provada · depois: proposta do 2º caso reversível
+```
