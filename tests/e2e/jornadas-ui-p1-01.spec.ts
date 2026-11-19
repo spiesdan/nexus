@@ -72,11 +72,25 @@ test.describe("P1-01 — UI das jornadas críticas", () => {
     const dialogo = page.getByRole("alertdialog");
     await expect(dialogo.getByText("Fechar esta conversa?")).toBeVisible();
     await dialogo.getByRole("button", { name: "Fechar" }).click();
+    // O clique só valeu quando o diálogo sai de cena — esperar por ele evita
+    // medir o "antes" do POST e ler o resultado como falha de produto.
+    await expect(dialogo).toHaveCount(0);
 
     // O estado vem do servidor (close + invalidação da query), não de um
-    // otimismo local: o selo passa a "Fechada" e o botão desaparece.
-    await expect(page.getByText("Fechada").first()).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole("button", { name: "Fechar", exact: true })).toHaveCount(0);
+    // otimismo local: o selo do CABEÇALHO passa a "Fechada" e o botão some.
+    //
+    // `exact: true` não é estilo: sem ele `getByText("Fechada")` casa também o
+    // rótulo da aba de filtros "Fechadas", que está SEMPRE na tela. Medido em
+    // 19/11/2026: com o POST de fechar ainda em voo, esta linha passava contra
+    // a aba e o teste só reprovava duas linhas abaixo — o diagnóstico apontava
+    // para o botão, não para a asserção que mentiu.
+    await expect(page.getByText("Fechada", { exact: true }).first()).toBeVisible({ timeout: 30_000 });
+    // Timeout explícito: o default de 5 s do `expect` é menor que o ida-e-volta
+    // do POST + invalidação + refetch sob carga. Medido no trace do run que
+    // reprovou: a requisição de `/close` ainda estava em voo aos 5 s.
+    await expect(page.getByRole("button", { name: "Fechar", exact: true })).toHaveCount(0, {
+      timeout: 30_000,
+    });
     await page.screenshot({ path: path.join(EVIDENCIA, "50-j6-conversa-fechada.png"), fullPage: true });
   });
 

@@ -863,3 +863,43 @@ A anonimização em si não tem botão na tela (é rota/worker) — a prova dela
 
 **Limitações declaradas:** nada foi executado em produção; WAHA/Redis/Google não participam
 destas specs; APK/iOS seguem fora deste recorte.
+
+### 4.4 A prova de navegador entra no gate da `main` (19/11/2026)
+
+`tests/e2e/jornadas-ui-p1-01.spec.ts` já estava em `SPECS_PARTE_2` — rodava, portanto, na suíte
+`full` (noturna/dispatch). Este incremento a declara **também** em
+`tests/e2e/suites/critical.txt`, a suíte do `push` na `main` (e do `e2e-pos-deploy`). O `smoke`
+continua sem ela de propósito: quatro testes com dois seeds e três logins encarecem o ciclo de PR
+e não acrescentam cobertura sobre o que a `critical` já roda.
+
+Duas execuções **consecutivas**, contra `next start` de produção e o Supabase local, sem reseed
+entre elas (a prova de que os seeds são idempotentes):
+
+```console
+$ E2E_PORT=3017 pnpm exec playwright test --workers=1 tests/e2e/jornadas-ui-p1-01.spec.ts
+  4 passed (3.4m)
+  4 passed (4.3m)
+```
+
+Duas fontes de flutuação foram **reproduzidas** e corrigidas com causa — nenhuma foi rotulada de
+"flaky":
+
+1. **Login com MFA em banco compartilhado.** `loginComoAdmin` esperava só `/login/mfa`. Com duas
+   sessões no mesmo Supabase local, o seed de credenciais reenrola o TOTP no meio da execução e
+   o fator fica `unverified` (confirmado por `auth.admin.getUserById(...).factors`); a partir daí
+   o login cai direto em `/app` e a espera estourava 30 s — 3 de 4 testes, medido. O helper agora
+   aceita os **dois** desfechos e, se a tela de MFA sumir (volta para `/login`), devolve `false`
+   para o retry que já re-semeia as credenciais. No CI a corrida não existe (o seed roda uma vez
+   por job), e quem prova MFA continua sendo `auth`/`reset-password-mfa` — o helper só quer uma
+   sessão.
+2. **O selo do J6 não discriminava.** `getByText("Fechada")` sem `exact` casava também a aba de
+   filtros "Fechadas", que está sempre na tela: o teste passava com a conversa ainda **Aberta** e
+   só reprovava na linha seguinte. O trace do run vermelho mostrou o `POST /close` ainda em voo
+   aos 5 s (timeout default do `expect`) sob carga. Agora o selo exige `exact: true`, o diálogo
+   tem de sair de cena e o botão tem 30 s para sumir — com a conversa aberta, a asserção reprova.
+
+Os dois gates que cobram a declaração ficam verdes com a mudança:
+`tests/unit/e2e-cobertura-completa.test.ts` (a spec já estava em `SPECS_PARTE_2`) e
+`tests/unit/e2e-suices-aderentes.test.ts` (`smoke ⊆ critical ⊆ full`, e `full` continua igual a
+`SPECS_PARTE_1 ∪ SPECS_PARTE_2`).
+
