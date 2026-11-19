@@ -8,6 +8,100 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.0] — 2026-11-19
+
+### Adicionado
+
+- **Sentinel devolve para a fila a conversa assumida e esquecida** Uma conversa com responsável há mais de 7 dias e sem mensagem some da fila sem
+  ninguém perceber: o claim não tem prazo. O Sentinel agora encontra esse caso e
+  oferece ao gestor simular a liberação, escrever o motivo, confirmar e devolver a
+  conversa para a fila — sem responsável.
+
+  A reversão só existe enquanto ninguém assumiu a conversa de novo. Se outro
+  agente já pegou, o sistema recusa em vez de roubar o claim. A ação não envia
+  mensagem e não toca em nota, pagamento, recebível nem campanha.
+
+  O webhook em dead-letter foi descartado como caso de correção: o arquivo de
+  webhooks é forense, não uma fila; mudar o status não faz ninguém reprocessar, e
+  reenviar o HTTP seria uma ação externa sem reversão honesta.
+
+### Corrigido
+
+- **axe nas telas fora do recorte (0 violações) e as listas dizem em que ordem estão** As telas de estoque, compras, expedição, faturamento e sentinel passaram a ser medidas pelo axe
+  em WCAG 2.2 AA — 0 violações, com número de nós e de regras por tela no artefato. O instrumento
+  agora registra o título e o tamanho do texto de cada tela (para "0 violações" não ser confundido
+  com página vazia) e mescla o resultado em vez de sobrescrever.
+
+  A cabine do motorista abria sem título de nível 1 (as subtelas de expedição devolvem antes do
+  cabeçalho do painel). Ganhou `<h1 class="sr-only">` — existe para leitor de tela, não ocupa pixel
+  no mapa.
+
+  Pedidos, produtos e notas ganharam legenda que diz a ordem que já tinham (número desc; ativos e
+  nome; data desc). Nenhuma das três ordena ao clique, então `aria-sort` não se aplica — o que
+  faltava era a ordem estar dita.
+
+- **Coleta do catálogo do Mercos acha a rota certa e falha alto quando volta vazia** A coleta do catálogo pedia `/<empresa>/produtos/`, que responde 404 nesta
+  instalação — e o Playwright não lança em 404, então ela lia zero linhas e
+  terminava com `produtos_lidos: 0` e exit 0. A rota real é
+  `/industria/<empresa>/produtos/` (é a que o menu aponta; ela é descoberta ali,
+  porque o segmento muda com o tipo de conta), com as rotas fixas como rede.
+
+  Coleta vazia deixou de ser sucesso: nenhuma página lida e página lida sem linha
+  são falhas distintas, com motivo no log e exit 1.
+
+  Medido em produção: **601 produtos em 41 páginas**, cabeçalho lido por inteiro;
+  433 com código e preço legível, 162 sem código no ERP (relatados por nome),
+  6 com código repetido.
+
+- **Coleta do catálogo ganha o modo "todos" (inativos) e passa a falhar quando lê menos que o ERP** O filtro da grade do Mercos é `status` — `1` ativos (601), `0` todos (847), `2`
+  só inativos — e agora o coletor aceita `--todos`. Os dois modos rodaram em
+  produção: 601 em 41 páginas e 847 em 57, com 246 inativos no meio.
+
+  O contador do próprio ERP (`/contar_produtos/<rep>/`) virou gate: se a coleta lê
+  menos que o total informado, ela falha em vez de terminar com sucesso. Era um
+  defeito real — em 19/11 a mesma coleta parou em 75 de 601 e em 495 de 601, as
+  duas com `ok: true`.
+
+  Importar produto inativo **não desativa** produto ativo no catálogo (143 casos
+  medidos, nenhum alterado); produto novo que vem inativo nasce inativo.
+  `--aplicar` segue exigindo decisão do dono — o dry-run não grava nada.
+
+- **Devolução deixa de ser contada como nota duplicada pelo Sentinel** O Sentinel acusava duas notas vivas no mesmo pedido sem olhar a finalidade. Uma
+  devolução (`finalidade=4`) é a segunda nota por natureza: o banco já sabe disso
+  desde a correção que separou devolução de venda, e o detector agora usa a mesma
+  regra. Venda + devolução e devolução + devolução não abrem ocorrência; duas
+  vendas vivas continuam abrindo.
+
+  A evidência passa a mostrar as `finalidades` do grupo. O falso positivo já
+  aberto fecha no próximo ciclo completo de varredura, pelo encerramento por
+  ausência — sem apagar o histórico.
+
+- **Pedidos avisa quando a lista tem mais do que mostra; Inbox fecha a decisão sobre fila offline** A lista de pedidos carrega no máximo 200 e não dizia isso: passando de 200 no
+  período, o pedido seguinte simplesmente não existia para quem olhava a tela.
+  Agora a tela mostra "Mostrando 200 de N pedidos no período — refine o período ou
+  a busca", com o total vindo da mesma consulta.
+
+  O Inbox **não** ganha fila de mensagens offline nesta fase, e isso passa a estar
+  escrito: a rota de envio não tem chave de idempotência, então reenviar em retry
+  pode duplicar, e mensagem não é caso de "reenviar até dar certo" (ordem, citação
+  e janela de atendimento entram na conta). O que existe é o que foi entregue:
+  sem rede, o envio é bloqueado, o texto fica e o aviso explica.
+
+  A expedição ganhou ficha de estados das subtelas (motorista, fechamento, rota),
+  incluindo o único outbox real do produto — o de desfecho de entrega.
+
+- **Sentinel deixa de gastar atenção com organização suspensa** Organização suspensa não tem negócio em andamento, mas o Sentinel continuava
+  varrendo os dados dela: numa instalação real, 20 das 23 ocorrências abertas
+  eram de uma organização de teste já suspensa. O painel do dono virava 87% de
+  ruído.
+
+  Agora a varredura corta na origem: organização com `suspended_at` não tem
+  snapshot coletado, então nenhum detector roda, nenhuma ocorrência nasce e
+  nenhuma existente é reafirmada. A rodada continua registrada, com motivo
+  declarado e a contagem `organizacoes_puladas` no cron. As ocorrências abertas
+  da suspensa são encerradas — não apagadas — com motivo
+  `organizacao_suspensa`, preservando linha e histórico.
+
 ## [1.58.0] — 2026-11-18
 
 ### Adicionado
@@ -8082,7 +8176,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.58.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.0...HEAD
+[1.59.0]: https://github.com/spiesdan/nexus/compare/v1.58.0...v1.59.0
 [1.58.0]: https://github.com/spiesdan/nexus/compare/v1.57.0...v1.58.0
 [1.57.0]: https://github.com/spiesdan/nexus/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/spiesdan/nexus/compare/v1.55.0...v1.56.0
