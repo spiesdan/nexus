@@ -213,3 +213,16 @@ queimada, conflito multiplicado e o corte da release pegaria metade.
 consolidar em um e fechar os demais com motivo.
 
 **#623** (G, `/admin/observabilidade`): PR legítimo, 5 checks rodando — segue.
+
+### Congelamento de merges — release 1.60.0 (19/11/2026)
+
+- **Nenhum merge por ~30 min**, incluindo #640 e PRs novos. Quem está codando
+  continua commitando na branch; merge só depois da release.
+- Motivo medido: o corte da 1.60.0 defasou quando a **#638** entrou depois dele;
+  release que persegue merge vira dança. O corte novo sai do topo (`1675f90a6`)
+  e o **coordenador mergeia** o PR de release quando ele ficar verde.
+- **#639** (corte velho) foi fechado pelo dono. **#637**, **#638** e **#623**
+  estão na `main`.
+- **D**: #638 (lista) mergeado; **#640 (thread) aberto — ele está com os arquivos
+  do inbox em uso**, e o F não toca neles.
+- **G**: `/admin/observabilidade` **mergeado** (#623).
