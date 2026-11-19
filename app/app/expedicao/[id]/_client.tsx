@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { showApiError, showApiErrorSemToast } from "@/components/feedback/ApiErrorToast";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
@@ -210,12 +210,14 @@ export function CargaClient({
         setDetalhe({ ...d, itens: d.itens });
       } else {
         setDetalhe(null);
+        // A tela já pinta o erro (`NexusErrorState`): toast aqui duplicaria a
+        // mensagem e ainda cobriria o conteúdo por 4 s.
         setFalhou(true);
-        showApiError(new Error(t("Resposta inesperada do servidor.")));
+        showApiErrorSemToast(new Error(t("Resposta inesperada do servidor.")));
       }
     } catch (e) {
       setFalhou(true);
-      showApiError(e);
+      showApiErrorSemToast(e);
     }
   }, [cargaId, t]);
 
