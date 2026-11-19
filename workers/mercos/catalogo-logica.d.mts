@@ -39,6 +39,9 @@ export interface LinhaColetada {
   estoque?: unknown;
   cabecalho_lido?: boolean;
   pagina?: number;
+  /** `true`/`false` = a fonte afirmou; `null`/ausente = não sei. */
+  ativo?: boolean | null;
+  origem_da_linha?: string;
 }
 
 export interface ProdutoClassificado {
@@ -47,6 +50,8 @@ export interface ProdutoClassificado {
   preco_cents: number;
   unidade: string | null;
   foto: string | null;
+  /** O que a fonte disse sobre estar ativo; `null` quando não disse. */
+  ativo_erp: boolean | null;
   bruto: LinhaColetada | null;
 }
 
@@ -140,7 +145,17 @@ export declare function planejarPareamento(
  * aponta. `/<empresa>/produtos/` responde 404 nesta instalação e fica como
  * rede. Ver `docs/runbooks/mercos-catalogo.md`.
  */
-export declare function rotasDoCatalogo(empresa: string): string[];
+export declare function rotasDoCatalogo(empresa: string, status?: string): string[];
+
+/** A coleta leu menos que o total informado pelo ERP (e não foi por `--limite`). */
+export declare function coletaIncompleta(fonte: {
+  lidos: number;
+  totalNoErp: number | null;
+  limite?: number;
+}): boolean;
+
+/** `status` da grade: 1 = ativos (padrão), 0 = todos, 2 = só inativos. */
+export declare const STATUS_DA_GRADE: Readonly<{ ativos: string; todos: string; inativos: string }>;
 
 /**
  * `null` quando a coleta valeu; o motivo da falha quando não valeu.
@@ -151,3 +166,28 @@ export declare function motivoDoVazio(contagem: {
   paginas: number;
   produtosLidos: number;
 }): string | null;
+
+/** Uma linha pronta para o upsert em `catalog_products`. */
+export interface LinhaDeUpsert {
+  organization_id: string;
+  codigo: string;
+  nome: string;
+  preco_cents: number;
+  moeda: string;
+  unidade: string | null;
+  imagem_url: string | null;
+  origem: string;
+  ativo: boolean;
+}
+
+/**
+ * Monta as linhas do upsert, onde mora a regra de `ativo`:
+ * produto existente mantém o do banco; produto novo nasce como o ERP disse
+ * (`ativo_erp === false` → inativo); sem informação, ativo.
+ */
+export declare function montarLinhasDeUpsert(
+  organizationId: string,
+  criados: ProdutoParaUpsert[] | null | undefined,
+  atualizados: ProdutoParaUpsert[] | null | undefined,
+  existentesPorCodigo: Map<string, ProdutoExistente> | null | undefined,
+): LinhaDeUpsert[];

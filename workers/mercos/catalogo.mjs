@@ -23,7 +23,7 @@ import { createInterface } from "node:readline";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { classificarLinhas, planejarUpsert } from "./catalogo-logica.mjs";
+import { classificarLinhas, montarLinhasDeUpsert, planejarUpsert } from "./catalogo-logica.mjs";
 
 const arg = (nome, padrao) => {
   const i = process.argv.indexOf(`--${nome}`);
@@ -39,7 +39,12 @@ const TAMANHO_LOTE = 200;
 
 const log = (evento, dados = {}) =>
   process.stdout.write(
-    JSON.stringify({ ts: new Date().toISOString(), importador: "mercos-catalogo", evento, ...dados }) + "\n",
+    JSON.stringify({
+      ts: new Date().toISOString(),
+      importador: "mercos-catalogo",
+      evento,
+      ...dados,
+    }) + "\n",
   );
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -98,42 +103,6 @@ async function buscarExistentes(admin, codigos) {
   return porCodigo;
 }
 
-function montarLinhas(criados, atualizados, existentesPorCodigo) {
-  const linhas = [];
-
-  for (const produto of criados) {
-    linhas.push({
-      organization_id: ORG,
-      codigo: produto.codigo,
-      nome: produto.nome,
-      preco_cents: produto.preco_cents,
-      moeda: "BRL",
-      unidade: produto.unidade,
-      imagem_url: produto.foto,
-      origem: "mercos",
-      ativo: true,
-    });
-  }
-
-  for (const produto of atualizados) {
-    const existente = existentesPorCodigo.get(produto.codigo);
-    linhas.push({
-      organization_id: ORG,
-      codigo: produto.codigo,
-      // Nome do BANCO (decisão registrada no cabeçalho).
-      nome: produto.nome,
-      preco_cents: produto.preco_cents,
-      moeda: "BRL",
-      unidade: produto.unidade ?? existente?.unidade ?? null,
-      // Foto só preenche o vazio; foto curada não é sobrescrita pelo ERP.
-      imagem_url: existente?.imagem_url ? existente.imagem_url : produto.foto,
-      ativo: existente?.ativo ?? true,
-    });
-  }
-
-  return linhas;
-}
-
 async function main() {
   if (COLETAR) await coletar();
 
@@ -148,9 +117,13 @@ async function main() {
     admin,
     validas.map((p) => p.codigo),
   );
-  const { criados, atualizados, divergentes: nomesDivergentes } = planejarUpsert(validas, existentes);
+  const {
+    criados,
+    atualizados,
+    divergentes: nomesDivergentes,
+  } = planejarUpsert(validas, existentes);
 
-  const linhasParaGravar = montarLinhas(criados, atualizados, existentes);
+  const linhasParaGravar = montarLinhasDeUpsert(ORG, criados, atualizados, existentes);
   let gravados = 0;
 
   if (APLICAR && linhasParaGravar.length > 0) {
