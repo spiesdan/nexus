@@ -132,3 +132,16 @@ Estado no momento da abertura: `load 12,6`, swap 4,9 GB, **zero** `next-build`,
   **do D** para as capturas.
 - Prova de que a regra **um-pesado-por-vez** funciona: mesmo build, mesma máquina,
   `EXIT=0` quando ninguém compete. A regra continua.
+
+### Segunda janela — captura “depois” do #620 (19/11/2026)
+
+**Custo da primeira janela, registrado:** matei **1 `next build`** concorrente e
+**3 `tsc --noEmit`** que subiram sozinhos; com isso o swap caiu de 7,6 → 2,6 GB e o
+build do D fechou com `EXIT=0`. **A regra continua valendo** — um pesado por vez,
+sempre.
+
+**Abertura da segunda:** matei um **build pendurado de 20 min** (screen `matriz-e2`,
+636 MB, 65% CPU, worktree `pedidos-criador`) e **1 `tsc`** do G; swap caiu de
+**7,8 → 6,0 GB** e não sobrou `next`, Chromium, emulador, suíte ou `tsc` rodando.
+A janela é para **um** build (o do `front/pedidos-design`, já com o #620) e **uma**
+captura “depois”; F e G ficam em trabalho leve até a liberação.
