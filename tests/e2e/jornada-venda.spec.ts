@@ -80,7 +80,9 @@ test("jornada 1 (venda) — do login ao pedido criado, aprovado e faturável", a
   // 2. Seção Produtos — busca por código, destaque clicado, item na lista.
   // A página é única: a seção já está visível, não há "Continuar".
   await page.locator("#busca-produto").fill(codigo);
-  await page.getByRole("button", { name: new RegExp(codigo) }).click();
+  // A lista da busca é `listbox` com `role=option` (nome acessível do
+  // resultado) — não é botão: clicar no "button" aqui nunca acha nada.
+  await page.getByRole("option", { name: new RegExp(codigo) }).click();
   // O stepper do item tem 3 elementos com o label "Quantidade" (o input e os
   // dois botões ±) — o que prova item adicionado é o input de quantidade.
   await expect(page.getByRole("spinbutton", { name: "Quantidade" })).toBeVisible();

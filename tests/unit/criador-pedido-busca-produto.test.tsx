@@ -54,7 +54,11 @@ describe("ProductSearch — busca no servidor", () => {
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Produtos"), { target: { value: "café" } });
+    // O nome acessível do campo é o que ele FAZ ("Buscar produto"), não a
+    // seção ("Produtos") — ver `criador-acessivel.test.tsx`.
+    fireEvent.change(screen.getByRole("combobox", { name: "Buscar produto" }), {
+      target: { value: "café" },
+    });
 
     await waitFor(() => expect(screen.getByText("Café Especial 1kg")).toBeTruthy());
     expect(screen.queryByText("Café Inativo")).toBeNull();
