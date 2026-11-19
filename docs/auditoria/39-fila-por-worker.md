@@ -102,3 +102,21 @@ find app/admin -name 'page.tsx' | wc -l      # 21
 A soma dos estados da matriz **tem que fechar** com essas contagens; diferença
 explicada (rota dinâmica, tela fora do menu, redirecionamento). Se a contagem
 mudar no código, a matriz muda no mesmo PR — o número não envelhece.
+
+## Janela de build — serialização manual pelo orquestrador (19/11/2026)
+
+**Aberta às 19/11, ~12 minutos.** Motivo: o D perdeu **dois** `next build`
+(SIGTERM 143 e restart) e, sem build, a prova visual do #613 fica impossível.
+
+Regras da janela:
+
+- **Nenhum** `next build`, Playwright, suíte (`test:unit`/`test:db`/e2e) ou
+  emulador nos três workers; só leitura, edição e teste unitário curto.
+- O **orquestrador** roda o build do D no worktree dele; ninguém mais builda.
+- Processo pesado que aparecer durante a janela **é morto** (feito com dois `tsc`
+  que estavam rodando) e o worker refaz depois.
+- Ao fim, o orquestrador confirma que não sobrou `next`/Chromium e **libera** os
+  agentes.
+
+Estado no momento da abertura: `load 12,6`, swap 4,9 GB, **zero** `next-build`,
+`next-server`, Chromium ou emulador.
