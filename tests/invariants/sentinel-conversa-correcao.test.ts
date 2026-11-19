@@ -25,6 +25,9 @@ const OCC_A = "a0280000-5555-4000-8000-000000000001";
 const CONV_B = "b0280000-4444-4000-8000-000000000002";
 const OCC_B = "b0280000-5555-4000-8000-000000000002";
 
+const MSG_A1 = "a0280000-6666-4000-8000-000000000001";
+const MSG_A2 = "a0280000-6666-4000-8000-000000000002";
+
 function liberar(org: string, occ: string, conversa: string): number {
   return Number(
     lastLine(
@@ -71,6 +74,16 @@ beforeAll(() => {
        '${USER_A}', now() - interval '10 days', now() - interval '9 days')
     on conflict (id) do nothing;
 
+    insert into public.messages
+      (id, organization_id, conversation_id, channel_session_id, contact_id,
+       type, direction, status, body, sent_at)
+    values
+      ('${MSG_A1}', '${ORG_A}', '${CONV_A}', '${SESSION_A}', '${CONTACT_A}',
+       'text', 'inbound', 'received', 'primeira mensagem', now() - interval '12 days'),
+      ('${MSG_A2}', '${ORG_A}', '${CONV_A}', '${SESSION_A}', '${CONTACT_A}',
+       'text', 'outbound', 'sent', 'segunda mensagem', now() - interval '9 days')
+    on conflict (id) do nothing;
+
     insert into public.sentinel_occurrences
       (id, organization_id, fingerprint, regra, categoria, entidade_tipo, entidade_id,
        titulo, resumo, causa_provavel, severidade, estado)
@@ -87,10 +100,34 @@ beforeAll(() => {
 
 describe("Sentinel — liberar conversa parada (0328)", () => {
   it("libera o claim, abre a conversa e grava o antes/depois", () => {
+    const mensagensAntes = sql(
+      `select count(*) || ':' || string_agg(body, '|' order by sent_at) from public.messages where conversation_id = '${CONV_A}';`,
+    );
+
     expect(liberar(ORG_A, OCC_A, CONV_A)).toBe(1);
     expect(
       sql(`select status || ':' || coalesce(assigned_to_user_id::text, 'sem') from public.conversations where id = '${CONV_A}';`),
     ).toBe("open:sem");
+
+    // Liberar o claim não apaga nem reescreve o histórico da conversa.
+    expect(
+      sql(`select count(*) || ':' || string_agg(body, '|' order by sent_at) from public.messages where conversation_id = '${CONV_A}';`),
+    ).toBe(mensagensAntes);
+    expect(mensagensAntes).toBe("2:primeira mensagem|segunda mensagem");
+
+    // Reexecutar a mesma liberação não duplica evento nem muda o desfecho.
+    const eventosAntes = Number(
+      sql(`select count(*) from public.sentinel_occurrence_events where occurrence_id = '${OCC_A}';`),
+    );
+    expect(liberar(ORG_A, OCC_A, CONV_A)).toBe(0);
+    expect(
+      Number(
+        sql(`select count(*) from public.sentinel_occurrence_events where occurrence_id = '${OCC_A}';`),
+      ),
+    ).toBe(eventosAntes);
+    expect(
+      sql(`select estado from public.sentinel_occurrences where id = '${OCC_A}';`),
+    ).toBe("corrigida");
     expect(
       sql(`select estado from public.sentinel_occurrences where id = '${OCC_A}';`),
     ).toBe("corrigida");
