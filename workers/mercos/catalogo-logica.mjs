@@ -261,6 +261,11 @@ export function montarLinhasDeUpsert(organizationId, criados, atualizados, exist
       moeda: "BRL",
       unidade: produto.unidade ?? existente?.unidade ?? null,
       imagem_url: existente?.imagem_url ? existente.imagem_url : produto.foto,
+      // `origem` é NOT NULL: no upsert, o Postgres valida a linha do INSERT
+      // mesmo quando cai no DO UPDATE. Sem este campo, todo produto EXISTENTE
+      // derrubava o lote inteiro com "null value in column "origem"" —
+      // medido em produção em 19/11/2026, no primeiro `--aplicar` real.
+      origem: existente?.origem ?? "mercos",
       ativo: existente?.ativo ?? produto.ativo_erp !== false,
     });
   }
