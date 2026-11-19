@@ -87,6 +87,22 @@ type RespostaSugestoes = {
   amostra_parcial: boolean;
 };
 
+/**
+ * O SALDO ZERADO NÃO É O MESMO QUE SALDO BAIXO.
+ *
+ * O banco tem `catalog_products_quantidade_nao_negativa` (check constraint), então
+ * **saldo negativo é impossível** nesta modelagem — quem tenta gravar recebe
+ * erro. O estado que existe é o **zerado**: não é erro, é "acabou", e fica
+ * discreto para não competir com o saldo real. Positivo é o normal e não ganha
+ * cor. O ramo negativo fica como defesa: se a constraint relaxar um dia, a
+ * tabela não pinta -2 como se fosse 2.
+ */
+function classeDoSaldo(quantidade: number): string {
+  if (quantidade < 0) return "font-semibold text-error-fg";
+  if (quantidade === 0) return "text-text-subtle";
+  return "text-text";
+}
+
 const ROTULO_TIPO: Record<Movimento["tipo"], string> = {
   entrada: "Entrada",
   saida: "Saída",
@@ -124,28 +140,33 @@ export function EstoqueClient({ podeEscrever }: { podeEscrever: boolean }) {
         title="Estoque"
         subtitle="Saldo dos produtos, o razão das movimentações e o que recompor."
         navigation={
-          <nav className="flex gap-4">
-            <button
-              type="button"
-              onClick={() => trocarAba("saldos")}
-              className={aba === "saldos" ? "font-medium text-text" : "hover:text-text"}
-            >
-              Saldos
-            </button>
-            <button
-              type="button"
-              onClick={() => trocarAba("movimentos")}
-              className={aba === "movimentos" ? "font-medium text-text" : "hover:text-text"}
-            >
-              Movimentos
-            </button>
-            <button
-              type="button"
-              onClick={() => trocarAba("sugestoes")}
-              className={aba === "sugestoes" ? "font-medium text-text" : "hover:text-text"}
-            >
-              Sugestões
-            </button>
+          // As três abas usam o MESMO idioma das seções da carga: sublinhado no
+          // ativo e `aria-current`, que é o que o leitor de tela anuncia. Antes
+          // eram três botões de texto com `font-medium`: a aba ativa só se
+          // distinguia pelo peso, e peso sozinho não diz onde a pessoa está.
+          <nav aria-label="Seções do estoque" className="flex gap-1">
+            {(
+              [
+                ["saldos", "Saldos"],
+                ["movimentos", "Movimentos"],
+                ["sugestoes", "Sugestões"],
+              ] as const
+            ).map(([chave, rotulo]) => (
+              <button
+                key={chave}
+                type="button"
+                onClick={() => trocarAba(chave)}
+                aria-current={aba === chave ? "page" : undefined}
+                className={
+                  "-mb-px inline-flex items-center border-b-2 px-2.5 py-1.5 text-sm whitespace-nowrap transition-colors " +
+                  (aba === chave
+                    ? "border-accent font-medium text-text"
+                    : "border-transparent text-muted-foreground hover:border-accent/40 hover:text-text")
+                }
+              >
+                {rotulo}
+              </button>
+            ))}
           </nav>
         }
       />
@@ -222,7 +243,11 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
             <TableRow key={p.id}>
               <TableCell className="text-text-muted">{p.codigo || "—"}</TableCell>
               <TableCell className="font-medium">{p.nome}</TableCell>
-              <TableCell className="text-right font-medium tabular-nums">{p.quantidade}</TableCell>
+              <TableCell
+                className={"text-right font-medium tabular-nums " + classeDoSaldo(p.quantidade)}
+              >
+                {p.quantidade}
+              </TableCell>
               <TableCell className="text-right">
                 {podeEscrever ? (
                   <Button variant="ghost" size="sm" onClick={() => abrirMovimento(p.id)}>
@@ -296,7 +321,9 @@ function AbaSaldos({ podeEscrever }: { podeEscrever: boolean }) {
               <p className="font-medium">{p.nome}</p>
               <p className="text-sm text-text-muted">{p.codigo || "Sem código"}</p>
             </div>
-            <span className="font-medium tabular-nums">{p.quantidade}</span>
+            <span className={"font-medium tabular-nums " + classeDoSaldo(p.quantidade)}>
+              {p.quantidade}
+            </span>
           </div>
         )}
       />
