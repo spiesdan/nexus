@@ -120,3 +120,15 @@ Regras da janela:
 
 Estado no momento da abertura: `load 12,6`, swap 4,9 GB, **zero** `next-build`,
 `next-server`, Chromium ou emulador.
+
+### Resultado da janela — usada com sucesso
+
+- O build do D foi concluído com **`EXIT=0`**, 52 páginas estáticas e `.next/BUILD_ID`
+  presente. Antes da serialização ele tinha morrido **duas vezes** (SIGTERM 143 e
+  restart por concorrência).
+- **Violações mortas durante a janela:** um **segundo `next build`** (screen
+  `matriz-e`, 448 MB, 92% CPU) e três `tsc --noEmit` que subiram por conta própria.
+  Com isso o swap caiu de **7,6 GB → 2,6 GB** e sobrou só o `next start` + Chromium
+  **do D** para as capturas.
+- Prova de que a regra **um-pesado-por-vez** funciona: mesmo build, mesma máquina,
+  `EXIT=0` quando ninguém compete. A regra continua.
