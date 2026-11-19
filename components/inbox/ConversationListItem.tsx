@@ -176,6 +176,24 @@ export function ConversationListItem({
   const canal = conversation.channel_sessions ?? null;
   const rotuloCanal = canal?.phone_number ?? canal?.display_name ?? null;
 
+  /**
+   * Há ALGUM selo para desenhar nesta linha?
+   *
+   * A faixa de selos é a última linha da linha da lista e existia SEMPRE — com
+   * `mt-1.5` fixo mesmo quando estava vazia. Numa instalação com um canal só, a
+   * maioria das linhas não tem selo nenhum: era margem paga por todas elas. A
+   * lista é a tela em que o atendente passa o dia; 6px × 30 linhas é uma linha
+   * e meia de conversa a menos na tela.
+   */
+  const temSelos =
+    visibleTags.length > 0 ||
+    overflow > 0 ||
+    (mostrarAtendente && comando.quem === "humano") ||
+    Boolean(mostrarCanal && rotuloCanal) ||
+    Boolean(c?.is_blocked) ||
+    Boolean(c?.is_anonymized) ||
+    unread > 0;
+
   return (
     <button
       type="button"
@@ -200,7 +218,10 @@ export function ConversationListItem({
             <AvatarImage src={`/api/v1/contacts/${c.id}/avatar`} alt="" className="object-cover" />
           ) : null}
           <AvatarFallback
-            className={cn("text-[13px] font-bold", isSelected && "bg-accent text-accent-foreground")}
+            className={cn(
+              "text-[13px] font-bold",
+              isSelected && "bg-accent text-accent-foreground",
+            )}
           >
             {initials(displayName, phoneFallback)}
           </AvatarFallback>
@@ -246,9 +267,7 @@ export function ConversationListItem({
           {/* Hora: um degrau ABAIXO da prévia, e não no mesmo tamanho dela. O
               relógio é a informação menos importante da linha e competia com o
               texto que se lê. */}
-          <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-            {time}
-          </span>
+          <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">{time}</span>
         </div>
 
         <p
@@ -261,45 +280,65 @@ export function ConversationListItem({
           {truncated}
         </p>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1">
-          {visibleTags.map((t) => (
-            <Badge key={t} variant="secondary" className="h-4 px-1.5 text-[10px]">
-              {t}
-            </Badge>
-          ))}
-          {overflow > 0 && <span className="text-[10px] text-muted-foreground">+{overflow}</span>}
-          {mostrarAtendente && comando.quem === "humano" && (
-            <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
-          )}
-          {mostrarCanal && rotuloCanal && (
-            <Badge
-              variant="outline"
-              className="h-4 gap-1 px-1.5 text-[10px] font-normal text-muted-foreground"
-              title={`${t("Entrou por")} ${rotuloCanal}`}
-            >
-              <Phone size={9} weight="regular" aria-hidden />
-              {rotuloCanal}
-            </Badge>
-          )}
-          {c?.is_blocked && (
-            <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
-              {t("Bloqueado")}
-            </Badge>
-          )}
-          {c?.is_anonymized && (
-            <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
-              {t("Anonimizado")}
-            </Badge>
-          )}
-          {unread > 0 && (
-            <Badge className={`ml-auto h-4 min-w-4 px-1.5 text-[10px] ${WA.unread}`}>
-              {unread}
-              {/* Um número sozinho não diz o que conta. "3 não lidas" é o que
+        {/* A FAIXA DE SELOS SÓ EXISTE QUANDO HÁ SELO.
+            Ela carregava `mt-1.5` fixo e, sem tag/canal/selo nenhum, deixava 6px
+            de margem para um `div` de altura zero — em toda linha de instalação
+            com um canal só. `compacto` é o caso comum: quase nenhuma linha tem
+            selo, e o vão era invisível na conta. */}
+        {temSelos && (
+          <div className="mt-1 flex flex-wrap items-center gap-1">
+            {visibleTags.map((t) => (
+              <Badge key={t} variant="secondary" className="h-4 px-1.5 text-[10px]">
+                {t}
+              </Badge>
+            ))}
+            {overflow > 0 && (
+              <span
+                className={cn("text-[10px]", isSelected ? "text-text" : "text-muted-foreground")}
+              >
+                +{overflow}
+              </span>
+            )}
+            {mostrarAtendente && comando.quem === "humano" && (
+              <OwnerBadge ownerKind="user" ownerName={comando.nome ?? t("Atendente")} compacto />
+            )}
+            {mostrarCanal && rotuloCanal && (
+              <Badge
+                variant="outline"
+                // Na linha SELECIONADA o fundo é `accent-soft`; o cinza-mudo a
+                // 10px não alcança o mínimo AA sobre ele no tema escuro (medido
+                // pelo axe: `color-contrast` em `Entrou por …`). Metadado de 10px
+                // em linha selecionada vai na tinta cheia.
+                className={cn(
+                  "h-4 gap-1 px-1.5 text-[10px] font-normal",
+                  isSelected ? "text-text" : "text-muted-foreground",
+                )}
+                title={`${t("Entrou por")} ${rotuloCanal}`}
+              >
+                <Phone size={9} weight="regular" aria-hidden />
+                {rotuloCanal}
+              </Badge>
+            )}
+            {c?.is_blocked && (
+              <Badge variant="destructive" className="h-4 px-1.5 text-[10px]">
+                {t("Bloqueado")}
+              </Badge>
+            )}
+            {c?.is_anonymized && (
+              <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+                {t("Anonimizado")}
+              </Badge>
+            )}
+            {unread > 0 && (
+              <Badge className={`ml-auto h-4 min-w-4 px-1.5 text-[10px] ${WA.unread}`}>
+                {unread}
+                {/* Um número sozinho não diz o que conta. "3 não lidas" é o que
                   o leitor de tela precisa ouvir para o selo significar algo. */}
-              <span className="sr-only"> {t("não lidas")}</span>
-            </Badge>
-          )}
-        </div>
+                <span className="sr-only"> {t("não lidas")}</span>
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
     </button>
   );

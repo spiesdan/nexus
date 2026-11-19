@@ -43,7 +43,10 @@ async function entrar(page: Page): Promise<void> {
   for (let tentativa = 1; tentativa <= 4; tentativa++) {
     await page.locator("#email").fill(CREDS.users.manager.email, { timeout: 120_000 });
     await page.locator("#password").fill(CREDS.password, { timeout: 120_000 });
-    await page.getByRole("button", { name: /entrar/i }).first().click();
+    await page
+      .getByRole("button", { name: /entrar/i })
+      .first()
+      .click();
     try {
       await page.waitForURL(/\/app\//, { timeout: 40_000 });
       return;
@@ -78,19 +81,17 @@ interface Medida {
   titulos: { h1: string[]; h2: string[] };
   tipografia: { nome: string; hora: string; previa: string } | null;
   foco: { alvo: string; outline: string; shadow: string } | null;
-  axe: { critica: number; seria: number; ids: string[] };
+  axe: { critica: number; seria: number; ids: string[]; nos: string[] };
 }
 
-async function medir(
-  page: Page,
-  rotulo: string,
-  tema: string,
-  comFoco = true,
-): Promise<Medida> {
+async function medir(page: Page, rotulo: string, tema: string, comFoco = true): Promise<Medida> {
   const pagina = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
-    overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    overflow: Math.max(
+      0,
+      document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    ),
   }));
 
   const grade = await page.evaluate(() => {
@@ -99,9 +100,14 @@ async function medir(
   });
 
   const coluna = await page.evaluate(() => {
-    const el = document.querySelector<HTMLElement>("[data-realtime-status]");
-    const primeira = el?.firstElementChild as HTMLElement | null;
-    return primeira ? Math.round(primeira.getBoundingClientRect().width) : 0;
+    // A COLUNA DA LISTA — pela mãe do bloco de filtros, e não pelo
+    // `firstElementChild` da grade: o primeiro filho é o `<h1 class="sr-only">`
+    // ("Inbox"), que mede 1px. Medir o h1 diria "coluna de 1px" e ninguém
+    // notaria que o número está errado.
+    const busca = document.querySelector<HTMLInputElement>('input[aria-label="Buscar conversas"]');
+    const bloco = busca?.closest<HTMLElement>("div.grid");
+    const col = bloco?.parentElement as HTMLElement | null;
+    return col ? Math.round(col.getBoundingClientRect().width) : 0;
   });
 
   // O bloco de filtros é o pai do campo de busca — o primeiro `div` da coluna.
@@ -180,7 +186,6 @@ async function medir(
 
   const axe = await new AxeBuilder({ page }).analyze();
   const graves = axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious");
-
   return {
     aba: rotulo,
     largura: page.viewportSize()?.width ?? 0,
@@ -198,6 +203,9 @@ async function medir(
       critica: axe.violations.filter((v) => v.impact === "critical").length,
       seria: axe.violations.filter((v) => v.impact === "serious").length,
       ids: graves.map((v) => `${v.id} (${v.impact})`),
+      // O ALVO, não só a regra: "label-content-name-mismatch" sem o nó é um
+      // achado que ninguém consegue corrigir.
+      nos: graves.flatMap((v) => v.nodes.slice(0, 3).map((n) => `${v.id}: ${n.target.join(" ")}`)),
     },
   };
 }
@@ -290,6 +298,7 @@ async function main(): Promise<void> {
       if (erros.length) console.info(`   console: ${erros.slice(0, 3).join(" | ")}`);
       for (const m of [daLista, daThread]) {
         if (m.axe.ids.length) console.info(`   axe ${m.aba}: ${m.axe.ids.join(", ")}`);
+        for (const no of m.axe.nos) console.info(`     ${m.aba} → ${no}`);
       }
 
       await contexto.close();
