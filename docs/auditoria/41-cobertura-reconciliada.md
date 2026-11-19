@@ -72,7 +72,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/campanhas` | campanhas | **pendente** | — | D |
 | `/app/carteira` | carteira | **pendente** | — | D |
 | `/app/comissoes` | comissoes | **pendente** | — | D |
-| `/app/compras/[id]` | compras | **pendente** | — | D |
+| `/app/compras/[id]` | compras | **aplicado** | #648 · `47-compras-recebimento-design.md` · `capturas/antes-compras/` + `capturas/recebimento-*.png` | D |
 | `/app/compras` | compras | **pendente** | — | D |
 | `/app/connections` | connections | **pendente** | — | D |
 | `/app/contacts/[id]` | contacts | **pendente** | — | D |
@@ -84,7 +84,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/expedicao/[id]/rota` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
 | `/app/expedicao/nova` | expedicao | **pendente** | — | D |
 | `/app/expedicao` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
-| `/app/faturamento` | faturamento | **pendente** | — | D |
+| `/app/faturamento` | faturamento | **aplicado** | #649 · `48-faturamento-design.md` · `capturas/{antes,depois}-faturamento/` | D |
 | `/app/financeiro` | financeiro | **pendente** | — | D |
 | `/app/fiscal/configuracoes` | fiscal | **pendente** | — | D |
 | `/app/fiscal/eventos` | fiscal | **pendente** | — | D |
@@ -114,10 +114,10 @@ base sumiu; duas telas entraram depois dela.
 | `/app/meu-dia` | meu-dia | **pendente** | — | D |
 | `/app/notas` | notas | **pendente** | — | D |
 | `/app` | público | **pendente** | — | D |
-| `/app/pedidos/[id]` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha | D |
+| `/app/pedidos/[id]` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha · `capturas/{antes,depois}-pedidos/` | D |
 | `/app/pedidos/imprimir` | pedidos | **fora de escopo** | documento de impressão — layout de papel, não superfície de operação | D |
 | `/app/pedidos/novo` | pedidos | **aplicado** | `44-criador-de-pedidos-experiencia.md` (aplicado em #615) | D |
-| `/app/pedidos` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha | D |
+| `/app/pedidos` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha · `capturas/{antes,depois}-pedidos/` | D |
 | `/app/pipelines/[id]` | pipelines | **pendente** | — | D |
 | `/app/products` | products | **pendente** | — | D |
 | `/app/prospeccao/campanhas/[id]` | prospeccao | **pendente** | — | D |
@@ -239,7 +239,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/kanban` | sim | pendente | — |
 | `/app/comissoes` | sim | pendente | — |
 | `/app/titulos` | sim | pendente | — |
-| `/app/faturamento` | sim | pendente | — |
+| `/app/faturamento` | sim | aplicado | #649 · `48-faturamento-design.md` · `capturas/{antes,depois}-faturamento/` |
 | `/app/financeiro` | sim | pendente | — |
 | `/app/carteira` | sim | pendente | — |
 | `/app/tarefas` | sim | pendente | — |
