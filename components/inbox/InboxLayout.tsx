@@ -124,7 +124,7 @@ function parseFilterParam(v: string | null): InboxTab {
  */
 function Atalho({ children }: { children: ReactNode }) {
   return (
-    <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-text">
+    <kbd className="rounded-md border border-border bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-text">
       {children}
     </kbd>
   );
