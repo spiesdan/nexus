@@ -58,6 +58,8 @@ import { rolarPara } from "@/lib/ui/movimento";
 /** O que o autosave guarda — e o que a restauração pode receber de outro dia. */
 interface RascunhoDoPedido {
   contatoId: string | null;
+  /** A mesma chave sobrevive ao reload: retry não cria pedido duplicado. */
+  chavePedido?: string;
   clienteNome: string;
   linhas: LinhaDoPedido[];
   condicao: string;
@@ -203,6 +205,15 @@ export function OrderEditor({
   const [descontoPctTexto, setDescontoPctTexto] = React.useState("");
   const [freteTexto, setFreteTexto] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
+  // A chave de idempotência nasce com o editor e é GRAVADA no rascunho: se a
+  // resposta do POST se perder e a pessoa tentar de novo (ou recarregar e
+  // tentar), o servidor devolve o pedido que já existe em vez de criar outro.
+  // `crypto.randomUUID` existe no Node 22 (SSR) e no browser; o valor não é
+  // renderizado, então servidor e cliente não precisam concordar.
+  const [chavePedido, setChavePedido] = React.useState<string>(() => crypto.randomUUID());
+  // Guarda SÍNCRONA: `enviando` só desabilita o botão no próximo render — dois
+  // cliques (ou Cmd+Enter repetido) no mesmo frame entrariam duas vezes.
+  const envioEmVoo = React.useRef(false);
   const [aprovacao, setAprovacao] = React.useState(false);
   // Uma página só, como o Mercos: as quatro seções (cliente, representada,
   // produtos, detalhes) ficam todas visíveis e o estado é único. Nada de passo
@@ -348,6 +359,7 @@ export function OrderEditor({
     "pedido-rascunho",
     {
       contatoId,
+      chavePedido,
       clienteNome,
       linhas,
       condicao,
@@ -394,6 +406,7 @@ export function OrderEditor({
 
   function aplicarRascunho(s: RascunhoDoPedido) {
     setContatoId(s.contatoId);
+    if (s.chavePedido) setChavePedido(s.chavePedido);
     setClienteNome(s.clienteNome);
     setLinhas(s.linhas);
     setCondicao(s.condicao ?? "");
@@ -569,6 +582,7 @@ export function OrderEditor({
       }>(`/api/v1/commercial-orders`, {
         contact_id: contatoId,
         cliente_nome: clienteNome.trim(),
+        chave_sincronizacao: chavePedido,
         status,
         origem: "vendedor",
         desconto_cents: descontoCents,
@@ -627,15 +641,20 @@ export function OrderEditor({
 
   useOrderShortcuts({
     focarBusca: () => buscaRef.current?.focus(),
-    finalizar: () => void enviar("aprovado"),
+    // Passa pela MESMA porta do botão: o atalho também respeita a guarda de
+    // envio em voo (antes ele chamava `enviar` direto e furava o `enviando`).
+    finalizar: () => void comEnvio("aprovado"),
     desfocar: () => (document.activeElement as HTMLElement | null)?.blur(),
   });
 
   async function comEnvio(status: "rascunho" | "aprovado", canal?: "email" | "whatsapp") {
+    if (envioEmVoo.current) return;
+    envioEmVoo.current = true;
     setEnviando(true);
     try {
       await enviar(status, canal);
     } finally {
+      envioEmVoo.current = false;
       setEnviando(false);
     }
   }

@@ -13,12 +13,13 @@
  *  4. rascunho do MESMO cliente restaura sem perguntar.
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProximasAcoes } from "@/app/app/contacts/[id]/_acoes";
 import { OrderEditor } from "@/app/app/pedidos/novo/_editor";
 import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
+import { apiClient } from "@/lib/api/client";
 import { rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
 import type { ContatoOpcao } from "@/app/app/pedidos/novo/_cliente";
 import type { Produto } from "@/lib/schemas/produtos";
@@ -120,12 +121,13 @@ const LINHA = {
   estoque: null,
 };
 
-function rascunho(dados: { contatoId: string | null; clienteNome: string }) {
+function rascunho(dados: { contatoId: string | null; clienteNome: string; chavePedido?: string }) {
   window.localStorage.setItem(
     "pedido-rascunho",
     JSON.stringify({
       salvoEm: Date.now(),
       dados: {
+        chavePedido: "chave-fixa",
         ...dados,
         linhas: [LINHA],
         condicao: "",
@@ -231,6 +233,49 @@ describe("o botão da ficha leva o cliente na URL", () => {
     expect(screen.getByRole("link", { name: "Criar pedido" }).getAttribute("href")).toBe(
       "/app/pedidos/novo?contato=c-bill",
     );
+  });
+});
+
+describe("clique duplo e retry não duplicam o pedido", () => {
+  it("Cmd/Ctrl+Enter duas vezes no mesmo envio chama o POST uma vez", async () => {
+    const post = vi.mocked(apiClient.post);
+    post.mockReset();
+    let resolver!: (valor: unknown) => void;
+    post.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolver = resolve;
+        }) as never,
+    );
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene" });
+
+    montar(null);
+    fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+    fireEvent.keyDown(window, { key: "Enter", ctrlKey: true });
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post.mock.calls[0]?.[1]).toMatchObject({ chave_sincronizacao: "chave-fixa" });
+
+    resolver({ data: { id: "pedido-1", numero: 1 } });
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+  });
+
+  it("depois de um erro, o retry reusa a MESMA chave (o servidor deduplica)", async () => {
+    const post = vi.mocked(apiClient.post);
+    post.mockReset();
+    post
+      .mockRejectedValueOnce(new Error("timeout"))
+      .mockResolvedValueOnce({ data: { id: "pedido-1", numero: 1 } });
+    rascunho({ contatoId: BILL.id, clienteNome: "Bill Higiene", chavePedido: "chave-fixa" });
+
+    montar(null);
+    fireEvent.click(screen.getByTestId("gerar-pedido"));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByTestId("gerar-pedido"));
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+
+    expect(post.mock.calls[0]?.[1]).toMatchObject({ chave_sincronizacao: "chave-fixa" });
+    expect(post.mock.calls[1]?.[1]).toMatchObject({ chave_sincronizacao: "chave-fixa" });
   });
 });
 
