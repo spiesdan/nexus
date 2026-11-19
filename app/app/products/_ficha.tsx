@@ -233,7 +233,7 @@ export function FichaDoProduto({
           rotulo="Código"
           valor={rascunho.codigo}
           onChange={(v) => setRascunho((r) => ({ ...r, codigo: v }))}
-          placeholder={t("SKU ou referência")}
+          placeholder={t("SKU, referência ou código de barras (EAN)")}
         />
       </div>
 

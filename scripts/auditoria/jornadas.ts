@@ -205,6 +205,7 @@ export const JORNADAS: Jornada[] = [
       "imprimir-pedidos-mesma-aba",
       "estoque-entrada-saida-e-saldo",
       "criador-de-pedidos-matriz",
+      "criador-pedido-acessivel-320",
     ],
   },
   {

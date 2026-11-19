@@ -175,7 +175,10 @@ export default async function NovoPedidoPage({
         usarClienteDoLink: t("Usar o cliente do link"),
         continuarRascunho: t("Continuar o rascunho"),
         produtos: t("Produtos"),
-        buscarProduto: t("Buscar produto, código ou EAN… (/ foca)"),
+        // O atalho `/` é uma dica de TELA, não parte do nome do campo: com ele
+        // aqui, o leitor de tela anunciava "… (/ foca)" em todo foco. A dica
+        // vive no `title` do próprio campo (ver `_produtos.tsx`).
+        buscarProduto: t("Buscar produto, código ou EAN"),
         subtotal: t("Subtotal"),
         desconto: t("Desconto"),
         frete: t("Frete"),
