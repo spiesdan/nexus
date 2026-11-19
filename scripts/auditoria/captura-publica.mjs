@@ -100,7 +100,42 @@ for (const rota of rotas) {
         const esperouH1Ms = (await pagina.evaluate(() => document.querySelector("h1") !== null))
           ? Date.now() - t0
           : null;
-        await pagina.waitForTimeout(800);
+
+        /*
+         * ESPERAR A TELA, NÃO SÓ O TÍTULO.
+         *
+         * Telas que buscam dado no cliente pintam o `<h1>` e deixam o corpo num
+         * esqueleto ("Carregando rota…"). Medido em 19/11/2026: a rota da carga
+         * saía na captura como um retângulo cinza vazio — o artefato provava o
+         * contrário do que a tela faz. Aqui a espera é pelo fim do esqueleto, e
+         * o tempo fica registrado (`esperouTelaMs`); se não terminar, a captura
+         * vale como "ainda carregando" e isso aparece no JSON.
+         */
+        const t1 = Date.now();
+        /*
+         * ESPERAR O ESQUELETO SAIR — não só o texto.
+         *
+         * `NexusDataTable` em `state="loading"` pinta blocos `animate-pulse` e
+         * NÃO escreve "Carregando": em 19/11/2026 a captura de `/app/estoque`
+         * saiu com a tabela em esqueleto mesmo depois de 25 s de espera por
+         * texto, e o artefato dizia "0 problemas" numa tela que ainda não
+         * tinha dado. Aqui a espera é pelo ÚLTIMO dos dois sinais.
+         */
+        await pagina
+          .waitForFunction(
+            () =>
+              !/Carregando|Compilando|Preparando/.test(document.body.innerText ?? "") &&
+              document.querySelector('[class*="animate-pulse"]') === null,
+            undefined,
+            { timeout: 30000 },
+          )
+          .catch(() => {});
+        const esperouTelaMs = /Carregando|Compilando|Preparando/.test(
+          await pagina.evaluate(() => document.body.innerText ?? ""),
+        )
+          ? null
+          : Date.now() - t1;
+        await pagina.waitForTimeout(900);
 
         const medida = await pagina.evaluate(() => {
           const raiz = document.documentElement;
@@ -117,7 +152,7 @@ for (const rota of rotas) {
         });
 
         await pagina.screenshot({ path: path.join(SAIDA, nome), fullPage: false });
-        registros.push({ rota, tema, largura, arquivo: nome, esperouH1Ms, ...medida });
+        registros.push({ rota, tema, largura, arquivo: nome, esperouH1Ms, esperouTelaMs, ...medida });
         process.stdout.write(
           `${rota.padEnd(12)} ${tema.padEnd(6)} ${String(largura).padStart(4)}px · tema=${medida.tema}` +
             ` · h1=${JSON.stringify(medida.h1)} · textos=${medida.textos} · overflow=${medida.overflowX}\n`,
