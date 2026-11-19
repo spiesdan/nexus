@@ -11,7 +11,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * crédito é visível na ficha, não um zero que barra tudo.
  */
 
-const STATUS_EM_ABERTO = ["em_analise", "aprovado", "concluido", "faturado", "expedido"];
+/**
+ * Os status que COMPROMETEM crédito. Exportado porque a tela precisa da MESMA
+ * régua do gate: `_cliente.tsx` mostrava "Em aberto" somando rascunhos
+ * (orçamento não é dívida) e o servidor barrava com outra conta. Duas réguas
+ * para o mesmo número produzem o pior aviso possível — o que erra para os dois
+ * lados.
+ */
+export const STATUS_EM_ABERTO = [
+  "em_analise",
+  "aprovado",
+  "concluido",
+  "faturado",
+  "expedido",
+] as const;
+
 
 export interface SituacaoDeCredito {
   /** false = sem limite definido; não há bloqueio possível. */

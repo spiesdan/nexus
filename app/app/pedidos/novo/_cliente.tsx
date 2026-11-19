@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiClient } from "@/lib/api/client";
+import { STATUS_EM_ABERTO } from "@/lib/comercial/credito";
 import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import { comoMoeda } from "@/lib/format/moeda";
 
@@ -70,6 +71,7 @@ export function CustomerSelector({
   aoCriarNovo,
   textos,
   mostrarResumo,
+  aoMudarResumo,
 }: {
   contatos: ContatoOpcao[];
   contatoId: string | null;
@@ -80,6 +82,13 @@ export function CustomerSelector({
   textos: { cliente: string; buscarCliente: string; clienteAvulso: string };
   /** Só na tela de NF-e avulsa: o resumo de pedidos/comércio não se aplica. */
   mostrarResumo?: boolean;
+  /**
+   * O que o seletor descobriu sobre o cliente (limite, em aberto). O editor usa
+   * para avisar ANTES de gerar que o pedido vai estourar o crédito — o número
+   * já é buscado aqui, e duplicar a busca para a mesma pergunta seria uma
+   * segunda régua esperando para divergir.
+   */
+  aoMudarResumo?: (resumo: ResumoDoCliente | null) => void;
 }) {
   const t = useT();
   const [busca, setBusca] = React.useState(clienteNome);
@@ -95,12 +104,13 @@ export function CustomerSelector({
     if (!contatoId || mostrarResumo === false) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setResumo(null);
+      aoMudarResumo?.(null);
       return;
     }
     let vivo = true;
     (async () => {
       try {
-        const [contato, pedidos] = await Promise.all([
+        const [contato, pedidos, credito] = await Promise.all([
           apiClient
             .get<{ data: { limite_credito_cents: number | null; condicao_pagamento: string | null } }>(
               `/api/v1/contacts/${contatoId}`,
@@ -111,22 +121,36 @@ export function CustomerSelector({
               `/api/v1/commercial-orders?contact_id=${contatoId}`,
             )
             .then((r) => (Array.isArray(r.data) ? r.data : [])),
+          // A conta do gate, feita no servidor. A lista de pedidos acima vem
+          // limitada a 200 linhas: num cliente com histórico maior, somar dali
+          // subestimava o "em aberto" e o aviso ficava mudo.
+          apiClient
+            .get<{
+              data: { tem_limite: boolean; limite_cents: number | null; em_aberto_cents: number };
+            }>(`/api/v1/contacts/${contatoId}/credito`)
+            .then((r) => r.data)
+            .catch(() => null),
         ]);
         if (!vivo) return;
         const validos = pedidos.filter((p) => p.status !== "cancelado");
-        const emAberto = validos
-          .filter((p) => p.status !== "entregue")
+        // Plano B quando a rota de crédito não responde (servidor antigo ou
+        // rede): a MESMA lista de status do gate. Nunca é a régua preferida.
+        const emAbertoPorLista = validos
+          .filter((p) => (STATUS_EM_ABERTO as readonly string[]).includes(p.status))
           .reduce((s, p) => s + p.total_cents, 0);
+        const emAberto = credito?.em_aberto_cents ?? emAbertoPorLista;
         const ultimo = validos.sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0];
-        setResumo({
-          limite_cents: contato.limite_credito_cents,
+        const novo: ResumoDoCliente = {
+          limite_cents: credito?.limite_cents ?? contato.limite_credito_cents,
           condicao: contato.condicao_pagamento,
           emAberto_cents: emAberto,
           diasSemCompra: ultimo
             ? Math.floor((Date.now() - new Date(ultimo.created_at).getTime()) / 86400000)
             : null,
           ultimoTotal_cents: ultimo?.total_cents ?? null,
-        });
+        };
+        setResumo(novo);
+        aoMudarResumo?.(novo);
       } catch (e) {
         if (vivo) showApiError(e);
       }
@@ -134,7 +158,9 @@ export function CustomerSelector({
     return () => {
       vivo = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contatoId]);
+
 
   const [remotos, setRemotos] = React.useState<ContatoOpcao[]>([]);
   const [buscando, setBuscando] = React.useState(false);
