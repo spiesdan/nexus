@@ -337,3 +337,15 @@ G — agora: #608 (SLO) + #600 (reativação) · próximo: remedição do Sentin
   `catalogo.mjs --aplicar` (55 criados inativos, 567 atualizados, 0 desativados) e
   `parear-itens.mjs --aplicar` (por código). Registro e reversão na auditoria de
   produção (item 7).
+
+
+## Catálogo do Mercos aplicado em produção (19/11/2026)
+
+- **847 produtos** coletados (`--todos`, 57 páginas); **55 criados** (inativos),
+  **567 atualizados**, 34 divergentes, 210 sem código, **622 gravados**.
+- **616 → 194** itens históricos pareados **por código**; restam **422** (46
+  códigos sem produto) e **9 ambíguos** que não foram aplicados.
+- Catálogo hoje: **1.196 produtos**, 1.139 ativos / 57 inativos, **799** com
+  `origem='mercos'`.
+- Execução com código da `main` em `/app/_fix` (imagem 1.59.0); o `origem` só
+  entra oficialmente na próxima release. Reversão registrada na auditoria (item 7).

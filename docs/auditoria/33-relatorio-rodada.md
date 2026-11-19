@@ -139,7 +139,8 @@ comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 | **`update.sh` fail-loud** | `[x]` | Orquestrador | aborta antes do `up -d` em DDL não-benigno | #568 | — |
 | **E2E completo** | `[~]` | F | veredito por spec (entra / fora com dono e data / morre) | workflow `FORA_DO_CI` | Matriz das 3 specs fora do CI, com bloqueio real de cada uma |
 | **Coletor do catálogo lê zero em produção** | `[x]` | D | DOM real + parser/rota corretos + fail-loud com 0 páginas + coleta real | **#585**: rota real `/industria/…` (o `/produtos/` dava 404), 601 produtos lidos, exit 1 quando não há página | — |
-| **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #585 (coleta real) | Depende da decisão dos inativos (§25) e de um `--dry-run` aprovado |
+| **Pareamento do catálogo** | `[x]` | D + Dono | 616 → 194 por código, 0 desativados | produção 19/11: 847 lidos, 55 criados, 567 atualizados | — |
+| **Restante do pareamento** | `[!]` | Dono + D | 422 itens / 46 códigos e 9 ambíguos | **#588** aberto (descrição em `produto_codigo`) | Depende do #588 e da decisão humana dos 9 ambíguos |
 | **A11y fora do recorte** | `[x]` | D | axe WCAG 2.2 AA, 0 violações críticas | **#583**: 14 rotas + `<h1>` da cabine + ordem anunciada | — |
 | **Sentinel — claim de conversa parada** | `[x]` | G | liberar claim com motivo, sem perder histórico | **#590** (mergeado) | — |
 | **Falso positivo da devolução no Sentinel** | `[x]` | G | devolução finalidade 4 não é duplicidade | **#584** | — |
@@ -198,3 +199,23 @@ lugar — a fila aponta para lá.
 | Três experimentos de bundle revertidos | `[x]` | **#614/#616/#617**; conclusão em [`44-inbox-103-experimentos.md`](44-inbox-103-experimentos.md): micro-splitting não paga (−4 KB, +2 KB, +1 KB), resta arquitetura |
 | 1.59.1 publicada, não deployada | `[!]` | aguarda autorização por versão do dono |
 | Cinco decisões comerciais abertas | `[!]` | fila §28 (reserva, reprecificação, UI de override, fração/granel, fallback de rascunho) |
+
+### Atualização 19/11 — catálogo do Mercos aplicado em produção
+
+| Medida | Número |
+|---|---|
+| Coleta `--todos` | **847 produtos**, 57 páginas, total do ERP 847 (`/tmp/mercos/produtos-todos.jsonl`) |
+| Catálogo `--aplicar` | lidos 847 · **criados 55** (todos inativos) · **atualizados 567** · divergentes 34 · sem código 210 · **gravados 622** |
+| Pareamento `--aplicar` | itens sem produto **616 → 194 pareados por código**; restantes **422**; 46 códigos ainda sem produto; 2 candidatos por nome e 9 ambíguos **não aplicados** (só relatados) |
+| Catálogo depois | **1.196 produtos** (1.139 ativos, 57 inativos), **799** com `origem='mercos'` |
+
+**Execução:** código da `main` copiado para `/app/_fix` no container (a imagem é
+**1.59.0**; o `origem` no upsert entra oficialmente na próxima release). Data:
+**19/11/2026**. Reversão: os 55 criados têm `origem='mercos'` e `created_at` do dia
+(desativar, nunca apagar); o pareamento é `product_id` com a lista no relatório;
+dump pré-deploy cobre o resto.
+
+**Estado no quadro:** *pareamento do catálogo* `[x]`. O **restante** vira item
+próprio: **46 códigos / 422 itens** dependem do **#588** (importador grava
+descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambíguos**
+(decisão humana produto a produto).
