@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
@@ -19,10 +18,20 @@ export function SegmentError({ error, reset, segment }: SegmentErrorProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const id = Sentry.captureException(error, {
-      tags: segment ? { segment } : undefined,
-    });
-    setEventId(id);
+    let vivo = true;
+    // Mesmo motivo do global-error: o boundary está no grafo de toda rota; o
+    // SDK só é buscado quando há erro de verdade.
+    void import("@sentry/nextjs")
+      .then((Sentry) => {
+        if (!vivo) return;
+        setEventId(Sentry.captureException(error, { tags: segment ? { segment } : undefined }));
+      })
+      .catch(() => {
+        // sem chunk, o ID cai no `error.digest`.
+      });
+    return () => {
+      vivo = false;
+    };
   }, [error, segment]);
 
   const displayId = eventId ?? error.digest ?? "—";
