@@ -70,24 +70,76 @@ também não passa.
 O código volta ao estado do #612. **Nenhuma rota regrediu**; inbox segue
 **503 KB**, faltando **103 KB**.
 
-## O que três cortes negativos dizem
+## Experimento D — arquitetura (parado antes do código)
 
-Micro-splitting no inbox **não paga**: o Turbopack regrupa os componentes em
-chunks próprios e o runtime de cada `dynamic` consome o ganho. Os 103 KB
-restantes não estão num import esquecido; estão na arquitetura da casca:
+Analisei os dois alvos grandes. **Nenhum é um corte de componente; os dois
+exigem mudança de arquitetura**, então parei antes de escrever código, como a
+regra da fatia manda.
 
-| Ofensor | Gzip | Por que não é corte trivial |
-|---|---:|---|
-| bootstrap Next + manifesto Sentry | 73 KB | não é SDK; `routeManifestInjection: false` rende pouco e perde rota parametrizada |
-| cliente Supabase | 61 KB | sessão/auth no browser; lazy muda o boot da casca |
-| casca (sidebar/topbar) | 35 KB | componentes do produto em toda rota |
-| zod | 31 KB | validação de formulário no cliente, 4/6 rotas |
+### Supabase client — 61 KB, 6/6 rotas
 
-**Proposta honesta:** o alvo de 400 KB não fecha por micro-corte. As opções são
-(i) rever o alvo para ~480–500 KB com o ganho já entregue, ou (ii) uma fatia de
-arquitetura para tirar Supabase/zod do first load com desenho explícito de
-hidratação — e um build de prova. Continuar fatiando componentes só produz
-+1/+2 KB.
+`hooks/auth/AuthProvider.tsx` chama `createClient()` **no render**
+(`useRef(createClient())`), e `lib/supabase/browser.ts` importa
+`@supabase/ssr`/`@supabase/supabase-js` estaticamente. O client é usado por 7
+arquivos (auth, realtime de inbox, alertas, canais, merge de contatos,
+roteirizador, public-env). Tirar do first load exige:
+
+- trocar `createClient()` síncrono por um acessor assíncrono (`getSupabase()`),
+  ou criar o client só depois da hidratação;
+- revisar refresh de sessão (hoje `setInterval` de 40 min no provider) e
+  `signOut`, que passam a esperar o módulo;
+- provar que realtime do inbox continua assinando depois da hidratação;
+- atualizar 7 call sites + testes de auth/realtime.
+
+**Risco:** atrasar a sessão no boot da casca é exatamente o tipo de mudança que
+pode trocar um ganho de 61 KB por tela piscando/401 intermitente. É trabalho de
+arquitetura com dono, não um experimento de uma tarde.
+
+### zod — 31 KB, 4/6 rotas
+
+O chunk `311w6il3iuk2p.js` é zod puro (155 marcas `Zod`), mas o caminho que o
+traz ao inbox não é um import óbvio: `lib/schemas/messaging.ts` **não** é
+importado pelo inbox, e o único import de schema no inbox é `import type`
+(apagado). Antes de cortar, é preciso mapear o grafo com o bundle analyzer; um
+corte no lugar errado só move o chunk de nome. Sozinho, 31 KB **não** atinge o
+critério de 40 KB.
+
+**Conclusão do D:** não há experimento de arquitetura que caiba em “um build,
+mesma régua” sem mudar o contrato de sessão/hidratação. Não rodei build novo
+porque não houve código novo — e não vou fingir ganho que não medi.
+
+## O budget declarado de 250 KB
+
+O número **nunca foi medido**. Ele nasceu em `5d0cdb5c` (28/04/2026,
+“EPIC-12 … partial”) como alvo de story:
+
+- `docs/stories/epics/EPIC-12-hardening.md` §S-12.05: “Bundle inicial da rota
+  `/app/inbox` <250KB gzipped; route splitting + dynamic imports aplicados” —
+  o checkbox da história está **desmarcado**;
+- o CI nunca teve o gate prometido: `package.json` **não tem**
+  `analyze:check`, e `perf.yml`/`build-and-size` só prova que o build termina;
+- não há série histórica de bundle no repositório.
+
+Ou seja: é cópia de intenção de template, não régua. Um budget que nunca foi
+verdade não vigia nada.
+
+**Proposta de valor real (medido em 19/11/2026, doc 43 + este):**
+
+| Rota | Medido | Budget proposto (ratchet) |
+|---|---:|---:|
+| `/app/inbox` | **503 KB** | **512 KB** |
+| `/app/notas` | 458 KB | 470 KB |
+| `/app/pedidos` | 435 KB | 448 KB |
+| `/app/fiscal` | 423 KB | 435 KB |
+| `/app/financeiro` | 410 KB | 422 KB |
+| `/app/sentinel` | 406 KB | 418 KB |
+| `/login` | 228 KB | 240 KB |
+
+512 KB dá ~9 KB (1,8%) de folga para churn de chunk e reprova qualquer
+regressão maior que isso. O alvo de **400 KB** continua existindo como
+**stretch com dono de arquitetura**, não como budget vigente: exige o corte de
+Supabase (61 KB) ou Supabase+zod, que é a fatia D. Gate proposto: ler
+`.next/diagnostics/route-bundle-stats.json` no CI e falhar acima da tabela.
 
 ## Limitações
 
@@ -95,3 +147,10 @@ Medição local, um build por variante, sem LCP/INP. A conclusão é sobre **fir
 load de JS**, não sobre experiência de campo. O doc 43 continua válido para o
 Sentry; este corrige três estimativas dele (áudio, date-fns e diálogos
 secundários).
+
+## Encerramento
+
+Micro-splitting no inbox está **medido e não paga** (áudio +2 KB, date-fns
+−4 KB, diálogos +1 KB); o que resta é arquitetura, e o alvo declarado precisa
+refletir o medido (512 KB) ou virar trabalho de arquitetura com dono (stretch
+400 KB).
