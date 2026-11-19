@@ -8,6 +8,31 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.2] — 2026-11-19
+
+### Corrigido
+
+- **Sentinel encerra ocorrência por regra avaliada e deixa de truncar no volume real** A varredura da organização real sempre terminava truncada, então
+  `encerrar_ausentes` nunca rodava e ocorrências já corrigidas ficavam abertas
+  para sempre. A medição com o volume real mostrou que o corte não era o orçamento
+  de detecção (65 ms), e sim os tetos de coleta: 1,5k pedidos contra teto de 500 e
+  1,2k produtos com diferença de estoque contra teto de 500.
+
+  Os tetos foram elevados com número medido (coleta 4,2 s, detecção 262 ms, dentro
+  dos 8 s) e o encerramento passou a ser por regra avaliada: quem rodou e não achou
+  fecha; quem não rodou, ou viu snapshot incompleto, fica intocado.
+
+- **Sentry deixa de pesar no carregamento inicial das telas** O SDK do Sentry era importado estaticamente pelo entry de instrumentação e pelos
+  boundaries de erro, então entrava no first load de toda rota — inclusive login.
+  Agora o SDK é carregado sob demanda depois da hidratação; uma fila síncrona
+  guarda erros e rejeições da janela inicial e os entrega assim que ele
+  inicializa. O Replay continua ligado, mas fora do caminho crítico.
+
+  Medido no mesmo método do doc 42: inbox cai de 592 KB para 503 KB gzip (−15%),
+  login de 318 KB para 228 KB (−28%), e nenhuma das seis rotas principais
+  regrediu. O alvo de 400 KB do inbox ainda não foi atingido; faltam 103 KB, com
+  os ofensores restantes registrados no doc 43.
+
 ## [1.59.1] — 2026-11-19
 
 ### Alterado
@@ -8202,7 +8227,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.2...HEAD
+[1.59.2]: https://github.com/spiesdan/nexus/compare/v1.59.1...v1.59.2
 [1.59.1]: https://github.com/spiesdan/nexus/compare/v1.59.0...v1.59.1
 [1.59.0]: https://github.com/spiesdan/nexus/compare/v1.58.0...v1.59.0
 [1.58.0]: https://github.com/spiesdan/nexus/compare/v1.57.0...v1.58.0
