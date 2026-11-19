@@ -11,51 +11,38 @@
 
 ## D — design/módulos
 
-- **agora (despachado pelo dono, passa na frente):** *Mercos "todos os
-  produtos"* — rodar o coletor em modo `--todos`, **medir ativos × inativos** e
-  provar que importar inativo **não desativa ativo** no banco (o upsert não pode
-  rebaixar `ativo=true` para `false` por causa de uma linha inativa). Trazer o
-  número "**traz X dos 69**" códigos que faltam para os 616 itens **antes de
-  qualquer escrita**. Aceite: medição + teste do upsert + número apresentado.
-- **próximo:** *estados das subtelas de expedição (ficha 5.6b)* — vazio,
-  carregando, erro, permissão e retry em carga, rota e romaneio, com captura.
-  Aceite: cada subtela com os estados provados e a ficha 5.6b marcada.
-- **depois:** *consistência de formulários de cadastro* — contatos e produtos com
-  erro por campo, `aria-describedby` e foco no primeiro inválido. Aceite: teste
-  de componente em cada formulário e axe sem violação crítica.
-
-> Histórico: outbox, paginação de pedidos, ficha 5.6b, axe fora do recorte
-> (14 rotas) e aria-sort fecharam no #581/#583.
+- **agora:** *#592 no rebase + verde + merge* — `fix/mercos-produtos-rota` está `dirty`
+  e com `verify` vermelho; rebase em `nexus/main`, conserto do teste e merge nos 5
+  checks. Aceite: PR mergeado e CI verde.
+- **próximo:** *o número "traz X dos 69"* — medir com o modo `--todos` (somente
+  leitura) quantos dos 69 códigos inativos faltantes o coletor enxerga; se não
+  houver acesso, entregar o comando exato. Aceite: número ou comando, sem escrita.
+- **depois:** *estados das subtelas de expedição (5.6b)* — vazio, carregando, erro,
+  permissão e retry em carga, rota e romaneio, com captura. Aceite: cada subtela
+  provada e ficha marcada.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora (bug do dono, passa na frente):** *filtro de cidade em Clientes* — a
-  lista traz `AGROCOMERCIAL SCHULTZ LTDA ME` para uma cidade que não é a dele, e
-  a **mesma cidade aparece em 3 grafias** (caixa/acento/espaço). Corrigir a
-  comparação no servidor e a lista distinta (dedupe por `lower(trim())`, casing
-  da primeira ocorrência, ordem pt-BR). Aceite: teste de API com acento/caixa,
-  cross-tenant zero e render com cidade escolhida.
-- **próximo:** *#586 — `verify` por spec sem declaração* — a spec nova não está
-  em `SPECS_PARTE_*`/`JORNADAS`; declarar no lugar certo e provar que o gate
-  reconhece. Aceite: `verify` verde sem afrouxar o gate.
-- **depois:** *matriz das 3 specs fora do CI* — veredito por spec (entra /
-  continua fora com dono e data / morre). Aceite: tabela publicada e
-  `FORA_DO_CI` coerente.
-
-> A camada de navegador de J6/J13/J14 fica na sequência depois da matriz; nada
-> foi perdido, só reordenado.
+- **agora:** *#589 no verde + merge* — matriz das 3 specs fora do CI com `verify`
+  vermelho; corrigir a declaração (não o gate) e mergear nos 5 checks. Aceite: PR
+  mergeado e `verify` verde.
+- **próximo:** *J6/J13/J14 na camada de navegador* — sucesso, erro e recuperação;
+  fiscal em homologação, nunca SEFAZ real. Aceite: prova visual/log das três.
+- **depois:** *regressão local da 1.58.1* — smoke + critical no commit da tag.
+  Aceite: ambos verdes com log anexado.
 
 ## G — Sentinel
 
-- **agora:** *#582 (rebase) — claim de conversa parada* — liberar o claim sem
-  perder histórico, com motivo e auditoria; reexecução não duplica. Aceite: teste
-  de rota + invariante de claim e PR verde.
-- **próximo:** *retenção/LGPD provada* — retenção só alcança ocorrências
-  terminais e a purga é idempotente. Aceite: `test:db` com dois casos (terminal
-  apaga, aberta não) e reexecução sem efeito.
-- **depois:** *proposta do 2º caso de correção aprovada* — três candidatos
-  reversíveis (sem dinheiro/fisco), com risco, CAS de reversão e rollback; não
-  executar. Aceite: documento aprovado pelo dono antes de código.
+- **agora:** *Sentinel ignora organização suspensa* — 20 das 23 ocorrências eram
+  de `E2E Test Org` (fixture suspensa). Excluir organização suspensa da seleção da
+  varredura, preservando histórico e voltando a incluir se reativada. Aceite: teste
+  com duas organizações (ativa varre, suspensa não) e reexecução sem mudança de
+  histórico.
+- **próximo:** *proposta do 2º caso de correção aprovada* — três candidatos
+  reversíveis (sem dinheiro/fisco), com risco, CAS e rollback; não executar.
+  Aceite: documento aprovado pelo dono antes de código.
+- **depois:** *painel de rejeição por fornecedor* — agrupar por CNPJ/cStat,
+  read-only, escopado por organização. Aceite: teste de componente com dois tenants.
 
 ## Coordenação (fora dos 3 slots)
 
