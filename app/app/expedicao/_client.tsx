@@ -15,9 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
-import {
-  chaveDeBusca,
-} from "@/lib/expedicao/buscar-embarcavel";
+import { chaveDeBusca } from "@/lib/expedicao/buscar-embarcavel";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   numeroDaCarga,
@@ -107,10 +105,7 @@ function BarraDeParadas({ progresso }: { progresso: ProgressoDaCarga }) {
   const pctEntregue = total > 0 ? (entregues / total) * 100 : 0;
   const pctDevolvido = total > 0 ? (devolvidos / total) * 100 : 0;
   return (
-    <span
-      aria-hidden
-      className="flex h-1.5 w-20 shrink-0 overflow-hidden rounded-full bg-muted"
-    >
+    <span aria-hidden className="flex h-1.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
       <span className="h-full bg-success" style={{ width: `${pctEntregue}%` }} />
       <span className="h-full bg-error" style={{ width: `${pctDevolvido}%` }} />
     </span>
@@ -377,8 +372,15 @@ export function ExpedicaoClient({
             </div>
 
             {disponiveis.map((c) => {
-              const pr =
-                progresso[c.id] ?? { total: 0, entregues: 0, devolvidos: 0, cidades: [], semCidade: 0, veiculos: [], motoristas: [] };
+              const pr = progresso[c.id] ?? {
+                total: 0,
+                entregues: 0,
+                devolvidos: 0,
+                cidades: [],
+                semCidade: 0,
+                veiculos: [],
+                motoristas: [],
+              };
               const feitas = pr.entregues + pr.devolvidos;
               const pct = pr.total > 0 ? Math.round((feitas / pr.total) * 100) : 0;
               const naRua = c.status === "em_rota";
@@ -417,7 +419,10 @@ export function ExpedicaoClient({
                   <div className="mt-3 flex items-center gap-2.5">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                       <div
-                        className={cn("h-full rounded-full transition-[width]", naRua ? "bg-success" : "bg-accent")}
+                        className={cn(
+                          "h-full rounded-full transition-[width]",
+                          naRua ? "bg-success" : "bg-accent",
+                        )}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -521,7 +526,7 @@ export function ExpedicaoClient({
             {t("Na rua")}
           </span>
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
+            <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
               {contagem.em_rota}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -551,7 +556,7 @@ export function ExpedicaoClient({
             {t("Montando")}
           </span>
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
+            <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
               {contagem.montando}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -575,7 +580,7 @@ export function ExpedicaoClient({
             {textos.embarcaveis}
           </span>
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
+            <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
               {fila.total}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -601,7 +606,7 @@ export function ExpedicaoClient({
             {t("Concluídas")}
           </span>
           <span className="flex min-w-0 items-baseline gap-2">
-            <span className="shrink-0 text-2xl font-semibold tabular-nums text-text">
+            <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
               {contagem.concluidas}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
@@ -621,227 +626,224 @@ export function ExpedicaoClient({
       </div>
 
       {/* ── A fila ──────────────────────────────────────────────────────── */}
-        <section className="min-w-0 space-y-3" aria-labelledby="titulo-cargas">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div className="min-w-0">
-              <h2 id="titulo-cargas" className="text-base font-medium text-text">
-                {textos.cargas}
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                {contagem.todas === 0
-                  ? t("A primeira carga nasce ao lado.")
-                  : `${contagem.todas} ${
-                      contagem.todas === 1 ? t("carga no total") : t("cargas no total")
-                    } · ${t("o que precisa de você vem primeiro")}`}
-              </p>
-            </div>
-
-            <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-              {(opcoesDeVeiculo.length > 0 || opcoesDeMotorista.length > 0) && (
-                <>
-                  <select
-                    aria-label={t("Filtrar por veículo")}
-                    value={filtroVeiculo}
-                    onChange={(e) => setFiltroVeiculo(e.target.value)}
-                    className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
-                  >
-                    <option value="">{t("Todos os veículos")}</option>
-                    {opcoesDeVeiculo.map((placa) => (
-                      <option key={placa} value={placa}>
-                        {placa}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    aria-label={t("Filtrar por motorista")}
-                    value={filtroMotorista}
-                    onChange={(e) => setFiltroMotorista(e.target.value)}
-                    className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
-                  >
-                    <option value="">{t("Todos os motoristas")}</option>
-                    {opcoesDeMotorista.map((nome) => (
-                      <option key={nome} value={nome}>
-                        {nome}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-              <div className="relative w-full sm:w-60">
-                <MagnifyingGlass
-                  size={15}
-                  className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-subtle"
-                />
-                <Input
-                  value={buscaCarga}
-                  onChange={(e) => setBuscaCarga(e.target.value)}
-                  placeholder={t("Número, placa ou motorista")}
-                  aria-label={t("Buscar carga")}
-                  className="h-9 w-full bg-surface pl-9"
-                />
-              </div>
-            </div>
+      <section className="min-w-0 space-y-3" aria-labelledby="titulo-cargas">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div className="min-w-0">
+            <h2 id="titulo-cargas" className="text-base font-medium text-text">
+              {textos.cargas}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {contagem.todas === 0
+                ? t("A primeira carga nasce ao lado.")
+                : `${contagem.todas} ${
+                    contagem.todas === 1 ? t("carga no total") : t("cargas no total")
+                  } · ${t("o que precisa de você vem primeiro")}`}
+            </p>
           </div>
 
-          {(filtroDeCargaAtivo || buscandoCarga || filtroDeAtribuicaoAtivo) && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {filtroDeCargaAtivo && (
-                <Badge variant="neutral">
-                  {filtrosDeCarga.find((f) => f.chave === filtroCargas)?.rotulo}
-                </Badge>
-              )}
-              {filtroVeiculo && <Badge variant="neutral">{filtroVeiculo}</Badge>}
-              {filtroMotorista && <Badge variant="neutral">{filtroMotorista}</Badge>}
-              {buscandoCarga && <Badge variant="neutral">“{buscaCarga}”</Badge>}
-              <button
-                type="button"
-                onClick={() => {
-                  setFiltroCargas("todas");
-                  setBuscaCarga("");
-                  setFiltroVeiculo("");
-                  setFiltroMotorista("");
-                }}
-                className="underline underline-offset-4 hover:text-text"
-              >
-                {t("Limpar filtros")}
-              </button>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            {(opcoesDeVeiculo.length > 0 || opcoesDeMotorista.length > 0) && (
+              <>
+                <select
+                  aria-label={t("Filtrar por veículo")}
+                  value={filtroVeiculo}
+                  onChange={(e) => setFiltroVeiculo(e.target.value)}
+                  className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
+                >
+                  <option value="">{t("Todos os veículos")}</option>
+                  {opcoesDeVeiculo.map((placa) => (
+                    <option key={placa} value={placa}>
+                      {placa}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label={t("Filtrar por motorista")}
+                  value={filtroMotorista}
+                  onChange={(e) => setFiltroMotorista(e.target.value)}
+                  className="h-9 min-w-0 rounded-lg border border-border bg-surface px-2 text-xs text-text"
+                >
+                  <option value="">{t("Todos os motoristas")}</option>
+                  {opcoesDeMotorista.map((nome) => (
+                    <option key={nome} value={nome}>
+                      {nome}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+            <div className="relative w-full sm:w-60">
+              <MagnifyingGlass
+                size={15}
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-text-subtle"
+              />
+              <Input
+                value={buscaCarga}
+                onChange={(e) => setBuscaCarga(e.target.value)}
+                placeholder={t("Número, placa ou motorista")}
+                aria-label={t("Buscar carga")}
+                className="h-9 w-full bg-surface pl-9"
+              />
             </div>
-          )}
+          </div>
+        </div>
 
-          {inicial.length === 0 ? (
-            <NexusEmptyState
-              icon={Truck}
-              headline={textos.vazias}
-              subcopy={t("Escolha os pedidos em Nova carga e informe o veículo.")}
+        {(filtroDeCargaAtivo || buscandoCarga || filtroDeAtribuicaoAtivo) && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {filtroDeCargaAtivo && (
+              <Badge variant="neutral">
+                {filtrosDeCarga.find((f) => f.chave === filtroCargas)?.rotulo}
+              </Badge>
+            )}
+            {filtroVeiculo && <Badge variant="neutral">{filtroVeiculo}</Badge>}
+            {filtroMotorista && <Badge variant="neutral">{filtroMotorista}</Badge>}
+            {buscandoCarga && <Badge variant="neutral">“{buscaCarga}”</Badge>}
+            <button
+              type="button"
+              onClick={() => {
+                setFiltroCargas("todas");
+                setBuscaCarga("");
+                setFiltroVeiculo("");
+                setFiltroMotorista("");
+              }}
+              className="underline underline-offset-4 hover:text-text"
+            >
+              {t("Limpar filtros")}
+            </button>
+          </div>
+        )}
+
+        {inicial.length === 0 ? (
+          <NexusEmptyState
+            icon={Truck}
+            headline={textos.vazias}
+            subcopy={t("Escolha os pedidos em Nova carga e informe o veículo.")}
+          />
+        ) : cargasFiltradas.length === 0 ? (
+          <Card className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
+            <p className="text-muted-foreground">
+              {buscandoCarga
+                ? t("Nenhuma carga encontrada com esse termo.")
+                : t("Nenhuma carga neste filtro.")}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setFiltroCargas("todas");
+                setBuscaCarga("");
+                setFiltroVeiculo("");
+                setFiltroMotorista("");
+              }}
+            >
+              {t("Limpar filtros")}
+            </Button>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            <GrupoDaFila
+              titulo={t("Na rua")}
+              ponto="bg-info"
+              cargas={emRotaFiltradas}
+              progresso={progresso}
+              aberto={gruposAbertos.em_rota ?? false}
+              aoAbrir={() => setGruposAbertos((g) => ({ ...g, em_rota: !g.em_rota }))}
+              concluindoId={concluindoId}
+              aoConcluir={concluirCarga}
+              motorista={motorista}
+              textos={textos}
             />
-          ) : cargasFiltradas.length === 0 ? (
-            <Card className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
-              <p className="text-muted-foreground">
-                {buscandoCarga
-                  ? t("Nenhuma carga encontrada com esse termo.")
-                  : t("Nenhuma carga neste filtro.")}
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setFiltroCargas("todas");
-                  setBuscaCarga("");
-                  setFiltroVeiculo("");
-                  setFiltroMotorista("");
-                }}
-              >
-                {t("Limpar filtros")}
-              </Button>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              <GrupoDaFila
-                titulo={t("Na rua")}
-                ponto="bg-info"
-                cargas={emRotaFiltradas}
-                progresso={progresso}
-                aberto={gruposAbertos.em_rota ?? false}
-                aoAbrir={() => setGruposAbertos((g) => ({ ...g, em_rota: !g.em_rota }))}
-                concluindoId={concluindoId}
-                aoConcluir={concluirCarga}
-                motorista={motorista}
-                textos={textos}
-              />
-              <GrupoDaFila
-                titulo={t("Na doca")}
-                ponto="bg-warning"
-                cargas={montandoFiltradas}
-                progresso={progresso}
-                aberto={gruposAbertos.montando ?? false}
-                aoAbrir={() => setGruposAbertos((g) => ({ ...g, montando: !g.montando }))}
-                concluindoId={concluindoId}
-                aoConcluir={concluirCarga}
-                motorista={motorista}
-                textos={textos}
-              />
+            <GrupoDaFila
+              titulo={t("Na doca")}
+              ponto="bg-warning"
+              cargas={montandoFiltradas}
+              progresso={progresso}
+              aberto={gruposAbertos.montando ?? false}
+              aoAbrir={() => setGruposAbertos((g) => ({ ...g, montando: !g.montando }))}
+              concluindoId={concluindoId}
+              aoConcluir={concluirCarga}
+              motorista={motorista}
+              textos={textos}
+            />
 
-              {!filtroDeCargaAtivo &&
-                !buscandoCarga &&
-                emRotaFiltradas.length === 0 &&
-                montandoFiltradas.length === 0 && (
-                  <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-4 py-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-success-bg text-success-fg">
-                      <CheckCircle size={17} aria-hidden />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-text">
-                        {t("Nada na rua nem na doca.")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {t("A próxima carga nasce em Nova carga.")}
-                      </p>
-                    </div>
-                    {podeCriar && (
-                      <Button asChild size="sm" variant="outline">
-                        <Link href="/app/expedicao/nova">{textos.nova}</Link>
-                      </Button>
-                    )}
+            {!filtroDeCargaAtivo &&
+              !buscandoCarga &&
+              emRotaFiltradas.length === 0 &&
+              montandoFiltradas.length === 0 && (
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-border bg-surface px-4 py-3">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-success-bg text-success-fg">
+                    <CheckCircle size={17} aria-hidden />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-text">{t("Nada na rua nem na doca.")}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("A próxima carga nasce em Nova carga.")}
+                    </p>
                   </div>
-                )}
-
-              {historicoFiltrado.length > 0 && (
-                <section aria-labelledby="titulo-historico">
-                  <button
-                    type="button"
-                    onClick={() => setHistoricoAberto((v) => !v)}
-                    aria-expanded={historicoVisivel}
-                    className="flex w-full items-center gap-2 rounded-lg py-1 text-left text-xs font-medium text-muted-foreground hover:text-text"
-                  >
-                    <CaretDown
-                      size={14}
-                      aria-hidden
-                      className={cn("transition-transform", !historicoVisivel && "-rotate-90")}
-                    />
-                    {t("Histórico")} ({historicoFiltrado.length})
-                    <span className="font-normal text-text-subtle">
-                      {t("concluídas e canceladas")}
-                    </span>
-                  </button>
-                  {historicoVisivel && (
-                    <ul className="mt-1 overflow-hidden rounded-xl border border-border bg-surface">
-                      {historicoFiltrado.map((c) => (
-                        <LinhaDaCarga
-                          key={c.id}
-                          carga={c}
-                          progresso={
-                            progresso[c.id] ?? {
-                              total: 0,
-                              entregues: 0,
-                              devolvidos: 0,
-                              cidades: [],
-                              semCidade: 0,
-                              veiculos: [],
-                              motoristas: [],
-                            }
-                          }
-                          concluindo={concluindoId === c.id}
-                          aoConcluir={concluirCarga}
-                          motorista={motorista}
-                          textos={textos}
-                        />
-                      ))}
-                    </ul>
+                  {podeCriar && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href="/app/expedicao/nova">{textos.nova}</Link>
+                    </Button>
                   )}
-                </section>
+                </div>
               )}
 
-              {emRotaFiltradas.length === 0 &&
-                montandoFiltradas.length === 0 &&
-                historicoFiltrado.length === 0 && (
-                  <Card className="p-4 text-sm text-muted-foreground">
-                    {t("Nenhuma carga encontrada com esse termo.")}
-                  </Card>
+            {historicoFiltrado.length > 0 && (
+              <section aria-labelledby="titulo-historico">
+                <button
+                  type="button"
+                  onClick={() => setHistoricoAberto((v) => !v)}
+                  aria-expanded={historicoVisivel}
+                  className="flex w-full items-center gap-2 rounded-lg py-1 text-left text-xs font-medium text-muted-foreground hover:text-text"
+                >
+                  <CaretDown
+                    size={14}
+                    aria-hidden
+                    className={cn("transition-transform", !historicoVisivel && "-rotate-90")}
+                  />
+                  {t("Histórico")} ({historicoFiltrado.length})
+                  <span className="font-normal text-text-subtle">
+                    {t("concluídas e canceladas")}
+                  </span>
+                </button>
+                {historicoVisivel && (
+                  <ul className="mt-1 overflow-hidden rounded-xl border border-border bg-surface">
+                    {historicoFiltrado.map((c) => (
+                      <LinhaDaCarga
+                        key={c.id}
+                        carga={c}
+                        progresso={
+                          progresso[c.id] ?? {
+                            total: 0,
+                            entregues: 0,
+                            devolvidos: 0,
+                            cidades: [],
+                            semCidade: 0,
+                            veiculos: [],
+                            motoristas: [],
+                          }
+                        }
+                        concluindo={concluindoId === c.id}
+                        aoConcluir={concluirCarga}
+                        motorista={motorista}
+                        textos={textos}
+                      />
+                    ))}
+                  </ul>
                 )}
-            </div>
-          )}
-        </section>
+              </section>
+            )}
 
+            {emRotaFiltradas.length === 0 &&
+              montandoFiltradas.length === 0 &&
+              historicoFiltrado.length === 0 && (
+                <Card className="p-4 text-sm text-muted-foreground">
+                  {t("Nenhuma carga encontrada com esse termo.")}
+                </Card>
+              )}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
@@ -881,7 +883,9 @@ function GrupoDaFila({
         <h3 className="text-[11px] font-semibold tracking-[0.1em] text-muted-foreground uppercase">
           {titulo}
         </h3>
-        <span className="text-[11px] text-text-subtle tabular-nums">{cargas.length}</span>
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
+          {cargas.length}
+        </span>
       </div>
       <ul className="overflow-hidden rounded-xl border border-border bg-surface">
         {visiveis.map((c) => (
@@ -966,7 +970,7 @@ function LinhaDaCarga({
         <p className="text-[9px] font-semibold tracking-[0.14em] text-text-subtle uppercase">
           {t("Carga")}
         </p>
-        <p className="text-lg leading-none font-semibold text-text tabular-nums">
+        <p className="text-xl leading-none font-semibold tracking-tight text-text tabular-nums">
           {String(carga.numero).padStart(3, "0")}
         </p>
       </div>
@@ -994,7 +998,7 @@ function LinhaDaCarga({
         )}
 
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 font-medium text-text">
             <span
               aria-hidden
               className={cn("h-1.5 w-1.5 rounded-full", PONTO_DA_CARGA[carga.status])}
@@ -1008,7 +1012,8 @@ function LinhaDaCarga({
               </span>
               <BarraDeParadas progresso={progresso} />
               <span className="tabular-nums">
-                {finalizadas}/{progresso.total} {t("paradas")}
+                <span className="font-medium text-text">{finalizadas}</span>/{progresso.total}{" "}
+                {t("paradas")}
               </span>
               {progresso.devolvidos > 0 && (
                 <span className="inline-flex items-center gap-1 font-medium text-error-fg">
