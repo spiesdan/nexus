@@ -320,7 +320,7 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: #594 no rebase/merge · próximo: decisão dos inativos (dono) + --aplicar · depois: estados de expedição (5.6b)
-F — agora: J6/J13/J14 como gate no CI · próximo: J6/J13/J14 em homologação · depois: regressão local da 1.58.1
-G — agora: Sentinel ignora organização suspensa · próximo: proposta do 2º caso reversível · depois: painel de rejeição por fornecedor
+D — agora: #594 (rebase sem redesenho + merge) · próximo: design em expedição · depois: estoque/compras e faturamento
+F — agora: matriz de cobertura reconciliada · próximo: Android real [!] com motivo · depois: J1–J16 na matriz
+G — agora: #596 + desempenho/SLO com baseline · próximo: remedição do Sentinel · depois: proposta do 2º caso reversível
 ```

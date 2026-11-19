@@ -11,38 +11,37 @@
 
 ## D — design/módulos
 
-- **agora:** *#594 no rebase e merge* — `feat/mercos-catalogo-todos` com os 14 checks
-  verdes; só falta rebase em `nexus/main`. Aceite: rebase sem perder os dois lados,
-  gates de migration/fragmento verdes e merge nos 5 checks.
-- **próximo:** *decisão dos inativos* — o número já foi entregue ao dono
-  (**22 dos 69; 194 dos 616; 55 nascem inativos; 143 não desativam**); o `--aplicar`
-  depende de o coletor novo estar em produção. Aceite: decisão registrada + deploy.
-- **depois:** *estados das subtelas de expedição (5.6b)* — vazio, carregando, erro,
-  permissão e retry em carga, rota e romaneio, com captura. Aceite: cada subtela
-  provada e ficha marcada.
+- **agora:** *#594 no rebase (sem redesenho) + merge* — `feat/mercos-catalogo-todos`
+  está `dirty`; rebase em `nexus/main`, conflito preservando os dois lados, gates de
+  migration/fragmento e merge nos 5 checks. Aceite: PR mergeado.
+- **próximo:** *design aplicado em expedição (carga/rota/romaneio)* — identidade
+  pelos tokens existentes, sem sistema paralelo e sem regra de negócio; captura
+  antes/depois + estados. Aceite: uma subtela por PR, axe sem violação crítica.
+- **depois:** *design aplicado em estoque/compras e faturamento* — mesma régua.
+  Aceite: idem, com captura.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora:** *jornada de navegador como gate* — a prova de J6/J13/J14 existe; falta
-  declará-la no conjunto certo do CI (`critical`/`full`, nunca smoke) e provar
-  estabilidade em duas execuções. Aceite: `e2e-cobertura-completa` e
-  `e2e-suices-aderentes` verdes + evidência das duas rodadas (ou bloqueio de
-  ambiente escrito).
-- **próximo:** *J6/J13/J14 em homologação* — fluxo fiscal com nota em homologação,
-  nunca SEFAZ real; erro e recuperação. Aceite: prova visual/log.
-- **depois:** *regressão local da 1.58.1* — smoke + critical no commit da tag.
-  Aceite: ambos verdes com log.
+- **agora:** *matriz de cobertura reconciliada* — `41-cobertura-reconciliada.md`
+  cruzando inventário × código (`find app/app app/admin -name page.tsx`), com
+  linha por rota/subtela/aba/modal/drawer, estado e exceção com dono. Aceite:
+  contagem por comando × linhas da matriz, diferença explicada, checagem que não
+  envelhece.
+- **próximo:** *Android real* — registrar `[!]` com motivo e método de teste
+  (aparelho), sem diluir em "mobile ok". Aceite: linha no quadro + passos.
+- **depois:** *jornadas J1–J16 na matriz* — onde cada uma é provada (Vitest/E2E/
+  manual) e o que falta. Aceite: tabela fechada.
 
 ## G — Sentinel
 
-- **agora:** *Sentinel ignora organização suspensa* — 20 das 23 ocorrências eram de
-  `E2E Test Org`. Excluir da seleção da varredura, preservar histórico e voltar a
-  incluir se reativada. Aceite: teste com ativa × suspensa e reexecução sem mudança.
-- **próximo:** *proposta do 2º caso de correção aprovada* — três candidatos
-  reversíveis (sem dinheiro/fisco), com risco, CAS e rollback; não executar.
-  Aceite: documento aprovado pelo dono antes de código.
-- **depois:** *painel de rejeição por fornecedor* — por CNPJ/cStat, read-only,
-  escopado por organização. Aceite: teste de componente com dois tenants.
+- **agora:** *#596 (organização suspensa) + desempenho/SLO* — fechar o PR nos 5
+  checks e produzir `42-desempenho-e-slo.md` com baseline medido (bundle, latência
+  p50/p95 das fontes reais, erros/retries) e SLI/SLO propostos com alvo
+  justificado. Aceite: números com data e comando reproduzível.
+- **próximo:** *remedição do Sentinel pós-#596* — distribuição de ocorrências por
+  organização/regra, FP e dedup com número. Aceite: tabela antes/depois.
+- **depois:** *proposta do 2º caso de correção aprovada* — três candidatos
+  reversíveis, com risco/CAS/rollback; não executar. Aceite: aprovação do dono.
 
 ## Coordenação (fora dos 3 slots)
 

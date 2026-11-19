@@ -158,3 +158,21 @@ v1.1–v1.4, fichas 5.4/5.6/5.8/5.10-5.11, B-7 e kit fail-loud.
 **Produção:** 1.57.0 saudável com sidecar na mesma versão; **1.58.0 com tag
 publicada e deploy aprovado**, em curso pelo dono. O deploy é o único passo que
 este programa não executa.
+
+## 8. Mapa dos sete pontos do Prompt Mestre reenviado (19/11/2026)
+
+> Estados com evidência (PR/commit). Onde não há prova, é `[ ]`.
+
+| # | Ponto cobrado | Estado | Dono | Evidência | O que falta (1 frase) |
+|---|---|---|---|---|---|
+| 1 | **Design/UI aplicado página por página** ("medir a11y não é redesign") | `[~]` | D | #583 (axe 14 rotas + ordem), #535/#531/#524/#525/#529 (shell/a11y) | Aplicar identidade nas subtelas restantes, começando por **expedição** (carga/rota/romaneio) |
+| 2 | **Cobertura reconciliada** de rotas/subtelas/abas/modais/drawers/estados/jornadas | `[~]` | F | #589 (matriz das 3 specs fora do CI); `09-telas-estados`, `09b-subtelas` | Matriz única em `41-cobertura-reconciliada.md` com contagem por comando e exceções |
+| 3 | **Mobile por ambiente** (web ≠ emulador ≠ Android real ≠ iOS) | `[~]` | F/D | web #514; emulador B-7 #565; Android real **nunca**; iOS decisão | Android real é `[!]` com motivo; iOS `[!]` encerrado por decisão |
+| 4 | **Módulos 5.x** sem parcial escondido | `[~]` | D/G | fichas #563, #571, #572, #574, #581 | Fechar as pendências declaradas nas fichas (outbox, paginação, subtelas) |
+| 5 | **Sentinel** com números (FP, reais, dedup, isolamento, retenção, observabilidade, correções) | `[~]` | G | 23 ocorrências · 20 de `E2E Test Org` · #584 (FP devolução) · #590 (claim) · #591 (retenção) · #596 (suspensa) | Depois de #596, remedir a distribuição e provar dedup/isolamento com número |
+| 6 | **Desempenho/observabilidade** (bundle, SLI/SLO, erros, recuperação, carga, latência) com baseline e método | `[ ]` | G | nenhum SLI/SLO medido | `42-desempenho-e-slo.md`: baseline medido, método e alvo justificado |
+| 7 | **Mercos**: dry-run + relatório; escrita só com autorização | `[~]` | D + Dono | #585 (coletor real, fail-loud), #594 (`--todos`, pendente) | `--aplicar` só depois da decisão dos inativos e do coletor em produção |
+
+**Fonte única de auditoria de produção:** [`40-auditoria-de-acoes-em-producao.md`](40-auditoria-de-acoes-em-producao.md)
+(PR #597 do dono). Este programa **não** registra ação de produção em outro
+lugar — a fila aponta para lá.
