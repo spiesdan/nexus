@@ -318,7 +318,7 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
       ) : notas.length === 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           <p className="text-sm text-muted-foreground">{t("Pedido sem nota fiscal.")}</p>
-          <Button size="sm" variant="outline" onClick={() => void emitir()} disabled={emitindo}>
+          <Button size="sm" variant="ghost" onClick={() => void emitir()} disabled={emitindo}>
             {emitindo ? t("Enviando…") : t("Emitir NF-e")}
           </Button>
         </div>
@@ -822,7 +822,7 @@ export function DetalheDoPedido({
                 {t("Visualizar")}
               </Link>
             </Button>
-            <Button size="sm" variant="outline" asChild>
+            <Button size="sm" variant="ghost" asChild>
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
                 target="_blank"
@@ -842,17 +842,18 @@ export function DetalheDoPedido({
               </Button>
             )}
             {contato?.email && (
-              <Button size="sm" variant="outline" asChild>
+              <Button size="sm" variant="ghost" asChild>
                 <a href={`mailto:${contato.email}?subject=${encodeURIComponent(resumoWhats)}`}>
                   {t("Enviar por e-mail")}
                 </a>
               </Button>
             )}
-            <Button size="sm" variant="outline" onClick={copiarLink}>
+            <Button size="sm" variant="ghost" onClick={copiarLink}>
               {t("Copiar link do pedido no Portal")}
             </Button>
             {/* O "Mais opções" do Mercos: o que se usa de vez em quando sai da
                 frente das ações do dia a dia (faturar, visualizar, enviar). */}
+            <span aria-hidden className="mx-0.5 hidden h-5 w-px bg-border sm:block" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="outline">
