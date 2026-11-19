@@ -8,6 +8,7 @@
 import * as correcao from "./regras-correcao";
 import * as fiscal from "./regras-fiscal";
 import * as operacao from "./regras-operacao";
+import * as plataforma from "./regras-plataforma";
 import type { Regra } from "./tipos";
 
 export const REGRAS: readonly Regra[] = [
@@ -197,6 +198,13 @@ export const REGRAS: readonly Regra[] = [
     descricao:
       "Mais de um lead aberto no mesmo funil para o mesmo contato, telefone ou e-mail normalizado.",
     detectar: operacao.leadsDuplicados,
+  },
+  {
+    id: "plataforma.slo_estourado",
+    categoria: "plataforma",
+    descricao:
+      "Disponibilidade ou p95 das rotas quentes fora do SLO na janela de 7 dias, com amostra suficiente.",
+    detectar: plataforma.slosEstourados,
   },
   {
     id: "operacao.correcao_sem_reversao",

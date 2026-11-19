@@ -21,7 +21,7 @@ Nesta versão **não há**:
 O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e o
 `api_audit_log` (quem agiu). As tabelas de negócio são lidas, nunca escritas.
 
-## 2. Regras implementadas (34)
+## 2. Regras implementadas (35)
 
 ### Fiscal (12)
 
@@ -65,6 +65,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `operacao.correcao_sem_reversao` | correção aplicada cujo job saiu de `pending`/do `run_after` gravado — reversão não é mais honesta | media |
 | `operacao.aprovacao_expirada` | ocorrência `aprovada` além da janela de 5 min do plano revisado | baixa |
 | `operacao.conversa_claim_parado` | conversa `claimed` há 7+ dias sem mensagem — some da fila sem ninguém ver | media |
+| `plataforma.slo_estourado` | disponibilidade <99,5% ou p95 >800 ms nas rotas quentes com ≥100 amostras na janela de 7 dias | media/alta/critica |
 | `cadastro.endereco_com_lixo` | `contacts.logradouro/complemento/bairro/cidade` com `NULL`/`undefined`/`NaN` como **palavra** ou só espaços, agrupado por org; `RUA NULLS` não casa | media |
 
 **Falsos positivos evitados de propósito:**

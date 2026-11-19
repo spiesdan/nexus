@@ -50,8 +50,24 @@ describe("motor de detecção", () => {
     for (const regra of REGRAS) {
       expect(regra.descricao.trim().length, regra.id).toBeGreaterThan(10);
       expect(() => regra.detectar(vazia), regra.id).not.toThrow();
-      expect(regra.detectar(vazia), regra.id).toEqual([]);
+      const achados = regra.detectar(vazia);
+      // `null` = regra sem dado para avaliar (ex.: série de SLO vazia); não é
+      // achado nem falha, e por isso não entra em `regrasAvaliadas`.
+      if (achados !== null) expect(achados, regra.id).toEqual([]);
     }
+  });
+
+  it("regra que devolve null não é avaliada, não falha e não fecha ausentes", () => {
+    const semDados: Regra = {
+      id: "regra.sem-dados",
+      categoria: "plataforma",
+      descricao: "sem série para avaliar nesta rodada",
+      detectar: () => null,
+    };
+    const r = executarDetectores(snapshot(), { regras: [semDados] });
+    expect(r.regrasAvaliadas).toEqual([]);
+    expect(r.regrasNaoAvaliadas).toEqual(["regra.sem-dados"]);
+    expect(r.falhas).toEqual([]);
   });
 
   it("uma regra que lança não derruba as outras e não conta como avaliada", () => {
@@ -179,6 +195,13 @@ describe("motor de detecção", () => {
       recebiveis: Array.from({ length: 2_000 }, (_, i) =>
         recebivel({ id: `recebivel-${i}`, order_id: `pedido-${i}`, vencimento: "2026-12-01" }),
       ),
+      sloApi: {
+        janela_dias: 7,
+        total: 100,
+        erros: 0,
+        p95: 100,
+        rotas: [{ route: "/api/v1/contacts", total: 100, erros: 0, p95: 100 }],
+      },
       leadsAbertos: Array.from({ length: 2_000 }, (_, i) =>
         leadAberto({
           id: `lead-${i}`,

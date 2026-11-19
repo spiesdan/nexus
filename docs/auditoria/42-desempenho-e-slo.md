@@ -179,6 +179,12 @@ histórico`).
   de 7 dias; o cron diário `data-retention` chama até o lote voltar incompleto.
   Piso de 7 no corpo da função e idempotência cobertos por `test:db`.
 
+**O laço fecha no Sentinel:** a regra `plataforma.slo_estourado` lê a mesma
+série (por rota, 0331) e abre uma ocorrência por SLO — `disponibilidade` ou
+`latencia` — quando o alvo é perdido com ≥100 amostras na janela. Sem amostra
+suficiente não abre e não reafirma: a rodada registra isso no detalhe, não como
+ocorrência. Reexecutar atualiza a mesma ocorrência pelo fingerprint estável.
+
 O que ainda depende de série é o **valor de produção**: a tela mede a janela
 real de 7 dias a partir do primeiro deploy da 0330; até lá, os cartões dizem
 “sem histórico”. O doc 42 §2 (medição local) continua sendo régua de latência,
