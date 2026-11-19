@@ -71,3 +71,35 @@ estas regras no prompt:
 **Serialização:** quando um worker pedir algo pesado, o coordenador diz quem roda
 primeiro e quem espera — e registra aqui. Nesta rodada: F ficou com o único build
 (e2e da jornada); D e G seguem em teste dirigido, sem build.
+
+## Contrato da matriz de cobertura (`41-cobertura-reconciliada.md`)
+
+**A matriz é o backlog único do design.** O D não avança por impressão: avança
+por linha, marcando cada uma.
+
+### Formato obrigatório por linha
+
+| caminho | módulo | redesign? | estados (o que existe) | evidência | dono |
+|---|---|---|---|---|---|
+| `/app/pedidos` | 5.6 | `aplicado` / `já conforme` / `pendente` / `fora de escopo (motivo)` | vazio · carregando · erro · permissão · offline · limite | captura + commit | D |
+
+- **Linha sem veredito é pendência visível** — não pode desaparecer.
+- **Estados**: dizer quais existem hoje e quais só existem no papel; "não se
+  aplica" também é resposta, com motivo.
+- **Ordem**: risco de uso — pedidos, inbox, fiscal, expedição, financeiro;
+  depois configurações; depois admin.
+
+### Reconciliação numérica (fechar no topo da matriz)
+
+Contagem por comando, não por memória:
+
+```bash
+find app/app -name page.tsx | wc -l          # 111 na main de 19/11
+find app -name page.tsx | wc -l              # 158
+grep -c 'href: "/app' lib/navigation/registry.ts   # 78 (rotas de menu)
+find app/admin -name 'page.tsx' | wc -l      # 21
+```
+
+A soma dos estados da matriz **tem que fechar** com essas contagens; diferença
+explicada (rota dinâmica, tela fora do menu, redirecionamento). Se a contagem
+mudar no código, a matriz muda no mesmo PR — o número não envelhece.
