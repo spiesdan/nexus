@@ -145,3 +145,17 @@ sempre.
 **7,8 → 6,0 GB** e não sobrou `next`, Chromium, emulador, suíte ou `tsc` rodando.
 A janela é para **um** build (o do `front/pedidos-design`, já com o #620) e **uma**
 captura “depois”; F e G ficam em trabalho leve até a liberação.
+
+### Duas janelas, duas bem-sucedidas — a regra vira dado
+
+| Janela | O que foi morto | Resultado |
+|---|---|---|
+| **1ª** (build do D/#613) | **1 `next build`** concorrente + **3 `tsc --noEmit`** | `EXIT=0`, 52 páginas; swap 7,6 → 2,6 GB |
+| **2ª** (build do #620) | **1 `next build`** do G (`/private/tmp/nexus-g`) + **1 `next start` de 315 MB** + **Chromium** | `EXIT=0`; `<h1>` 12 → **499 px**, barra 964 px/8 → **465 px/4**, cruzamento h1×ações **sim → não**, overflow 0 em 1440 e 390 |
+
+**Conclusão com dados:** o mesmo build, na mesma máquina, falhou duas vezes sob
+concorrência e passou duas vezes quando ninguém competiu. **Um pesado por vez é
+regra permanente** — e processo pesado que aparecer durante a janela é morto.
+
+**Confirmado na `main`:** #619 (`2d395fc7`, erro único de anúncio) e #620 (ações
+do criador em “Mais opções”) entram com o CI fechado.
