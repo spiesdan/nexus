@@ -128,7 +128,7 @@ coordenador integra e roda os gates no código integrado.
 
 | ID | Requisito | Estado | Evidência | Dono | Depende de | Critério de aceite |
 |---|---|---|---|---|---|---|
-| **P3-01** | Capacitor iOS | `[!]` | `29-capacidades.md` item 30 — ausente por decisão; **não iniciado**, sem `ios/` nem conta Apple | Dono | Decisão de produto + conta Apple | Só entra com decisão registrada e dispositivo |
+| **P3-01** | Capacitor iOS | `[!]` **encerrado por decisão** | `29-capacidades.md` item 30: **decisão do dono em 18/11/2026** — sem conta Apple, sem aparelho, assinatura gratuita de 7 dias, distribuição por instalação não escala, e **PWA é o caminho oficial no iPhone** | Dono | — | Encerrado. Só volta com **conta Apple + aparelho + decisão de distribuição por instalação**, as três juntas |
 | **P3-02** | Rate limit: produção não pode cair em fallback de memória em silêncio | `[x]` | #520 → `6daec49d`: fallback **declarado** (backend/motivo/desde) e `/api/v1/health` com check `rate_limit` que dá 503 em produção | A | — | Produção falha alto sem Upstash, ou fallback declarado |
 | **P3-03** | Limpar planos antigos que ensinam `db push` | `[x]` | #506: 7 planos ativos apontam `pnpm db:migrate`; gate novo; `plan/progress.md` preservado como diário histórico | Coordenador | — | Nenhum plano ativo ensina caminho proibido; histórico preservado com aviso |
 
@@ -601,3 +601,63 @@ kit precisa da mesma régua.
 
 **Não cortar sem ordem.** O corte manual é recusado pelo gate (aconteceu na
 1.56.0); o caminho é o workflow.
+
+## 22. Rodada 13 — delegação e o que falta (18/11/2026)
+
+> Regra nova do dono: o coordenador **não para**. Todo fim de rodada escolhe a
+> próxima tarefa sem dono e delega. Abaixo, o dono de cada uma e o aceite.
+
+| Dono | Agora | Próxima | Aceite |
+|---|---|---|---|
+| **D** | fichas 5.4/5.6/5.8/5.10-5.11 entregues | **outbox no inbox web** (pendência da ficha 5.4) | mensagem enfileirada sobrevive a reload/rede; sem duplicar no dreno; estado visível |
+| **F** | smoke/critical local (1.58.0) | **anexar a prova da B-7** (dreno 200 + `401 token_revoked` com fila intacta) e a matriz do que o smoke não cobriu | evidência reproduzível; nada apontando para produção |
+| **G** | Sentinel v1.4 + §15/§16 | **painel de rejeição por fornecedor** (read-only), que faltou no v1.4; depois proposta de 2º caso de correção aprovada com análise de reversibilidade — **sem executar** | painel lê ocorrências por CNPJ/emitente; proposta lista risco e rollback; nenhuma escrita fiscal/financeira |
+| **Coordenação** | release #579 e deploy | fechar tag, matriz do E2E e inventário de exclusões | ver §23 |
+
+## 23. E2E completo — dono e o que é possível fechar
+
+O CI roda smoke em PR, critical na main e full no noturno; **três specs ficam
+fora** por motivo escrito no workflow. Fechar "E2E completo" não é rodar mais:
+é decidir o destino de cada exclusão.
+
+| Spec | Bloqueio real | Dá para fechar? |
+|---|---|---|
+| `vps-fresh-onboarding` | WAHA + Redis + Resend + Nuvemshop | só com serviços externos de teste (dono) |
+| `inbox-tempo-real` | conta Google de teste com consentimento | só com a conta (dono) |
+| `mobile-offline` | emulador Android no CI | emulador no runner é possível, mas caro; decisão do dono |
+
+**Dono da matriz:** F (depois da B-7). O aceite é uma tabela com veredito por
+spec — "entra no CI", "continua fora com dono e data", ou "morre" — e a
+fidelidade de `SPECS_PARTE_*` continua cobrada pelo gate existente.
+
+
+## 25. Decisão pendente — importar produtos INATIVOS do Mercos? (19/11/2026)
+
+> **Dono da decisão:** Dono. **Bloqueia:** pareamento dos 616 itens históricos.
+> **Não decidir por conta própria:** é regra de negócio (o que entra no catálogo).
+
+O coletor (#585) lista **só ativos**, que é o que o operador vê na grade padrão.
+A medição do dono: sobram **69 códigos** que só aparecem como inativo no Mercos —
+e são eles que faltam para parear os **616 itens** de pedido sem `product_id`.
+
+**Opções medidas:**
+
+| Opção | Efeito | Risco |
+|---|---|---|
+| **A — importar só ativos (hoje)** | catálogo = o que se vende; 616 itens seguem sem vínculo | pareamento incompleto para sempre |
+| **B — importar inativos marcando `ativo=false`** | 69 códigos entram; pareamento histórico fecha; grade de venda continua só com ativos | produto inativo passa a existir no banco (relatórios precisam filtrar) |
+| **C — segunda passada `?situacao=inativos` sob demanda** | mesmo efeito de B, sem misturar no fluxo padrão | duas execuções para manter; a marcação precisa ser explícita |
+
+**Recomendação da coordenação:** **B**, com `ativo=false` no upsert e a grade de
+venda filtrando por `ativo`. Duas propriedades medidas antes de recomendar:
+(a) **importar inativo NÃO desativa ativo** — o upsert só grava `ativo=false`
+quando a linha do Mercos é inativa, e o D vai provar isso em teste; (b) o ganho é
+concreto: os **69 códigos** que faltam para parear os **616 itens** históricos.
+O D traz o número "traz X dos 69" **antes de qualquer escrita**; a decisão segue
+do dono.
+
+> **Operação (19/11/2026):** as **9 organizações de teste** em produção foram
+> **suspensas** pelo dono. Motivo: fixture de QA não deve conviver com dado real
+> nem consumir cota de IA/WhatsApp da instalação. Efeito colateral registrado: o
+> Sentinel deixa de varrer essas organizações (esperado) e qualquer prova que
+> dependesse delas passa a valer só em ambiente local.

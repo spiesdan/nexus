@@ -50,7 +50,28 @@
 | 27 | Busca global e command palette | **existente** | 4.6/4.7 | — |
 | 28 | Notificações e alertas | **parcial** | `operational_alerts`; central de avisos | prioridade/SLA do inbox |
 | 29 | Nuvemshop (pedidos espelhados) | **existente** | 5.10; `orders`/`nuvemshop_products` | — |
-| 30 | iOS | **ausente** | C4/7.12: não há `ios/` nem `@capacitor/ios` | fora de escopo por decisão |
+| 30 | iOS | **ausente** | C4/7.12: não há `ios/` nem `@capacitor/ios`; PWA é o caminho oficial no iPhone. **Encerrado por decisão do dono em 18/11/2026 — ver abaixo** | — |
+
+### Item 30 — iOS: decisão do dono (18/11/2026)
+
+**Estado: encerrado por decisão.** Não é pendência, não é `[!]` órfão, e não entra
+no roadmap até que as quatro condições abaixo mudem. Quatro motivos reais, na
+ordem em que pesam:
+
+1. **Sem conta Apple (Developer Program) e sem aparelho Apple** nesta operação. O
+   prompt mestre proíbe declarar iOS validado sem dispositivo real — e não há
+   dispositivo.
+2. **A assinatura gratuita expira em 7 dias** e vale só no aparelho do dono; não
+   serve para vendedor em campo.
+3. **Distribuição num produto self-host**: cada instalação tem domínio próprio.
+   App de loja apontando para URL arbitrária colide com as regras, e um build por
+   cliente não escala; Enterprise (in-house) com cliente viola os termos.
+4. **PWA é o caminho oficial no iPhone** — instala na tela inicial, roda o mesmo
+   shell offline, não expira e não depende de loja.
+
+**Um `.ipa` só volta ao escopo com as três coisas juntas:** conta Apple +
+aparelho Apple + decisão de distribuição por instalação. Sem as três, o item
+continua encerrado.
 
 ## 3. O que **não** foi duplicado
 

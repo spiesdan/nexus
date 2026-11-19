@@ -174,3 +174,120 @@ Os **162 sem código** são a mesma família: sem código não há identidade
 (`(organization_id, codigo)` é o índice único), então eles aparecem no relatório
 por nome e **não** entram no catálogo. Preencher o código no ERP é o caminho;
 inventar identidade no importador, não.
+
+## O modo "todos" (com inativos) — 19/11/2026
+
+A pergunta do dono era: *importar os inativos traz quantos dos 69 códigos?*
+Antes disso era preciso achar **onde** esse "todos" existe. Resposta medida: na
+própria grade, pelo parâmetro `status`.
+
+### O filtro é `status` — numérico, na pílula de paginação
+
+A grade não tem seletor de status (o único dropdown é "Todas as categorias"), e
+`?situacao=inativos`, `?inativos=true`, `?ativos=false`, `?situacao=todos`,
+`?status=inativos` e `?mostrar=inativos` **não mudam nada** — todos devolvem a
+mesma primeira página, com zero linha inativa.
+
+O filtro está nos links de paginação: `.?p=2&status=1&nome_codigo=`. E a tela tem
+um botão "Contar registros" que confirma o significado de cada valor:
+
+| `status` | total (`/contar_produtos/<rep>/`) | o que é |
+| --- | --- | --- |
+| `1` | **601** | só ativos (padrão da tela) |
+| `0` | **847** | **todos** — 246 inativos no meio |
+| `2` | (só inativos) | 15 de 15 linhas inativas na primeira página |
+
+`--todos` usa `status=0`; sem a flag, `status=1`. (O menu de exportação "apenas
+ativos" × "todos" é o mesmo filtro, entregue por e-mail — não é preciso esperar
+e-mail nenhum: `exportar_produtos_excel_ajax` responde `{"is_exportando": …}` e
+não baixa arquivo.)
+
+### O contador do ERP virou gate de completude
+
+`/contar_produtos/<representada>/?&status=N` devolve `{"total": N}`, e a rota
+inteira está no `onclick` da `div#contarRegistro` (a gente lê de lá em vez de
+montar). O coletor compara o que leu com o total e **falha** se leu menos:
+
+```
+FALHA: a coleta leu 495 de 601 produtos que o ERP diz ter.
+```
+
+Isso não é zelo abstrato: em 19/11/2026 a mesma coleta parou duas vezes no meio
+(75 de 601 e 495 de 601) e as duas terminaram com `ok: true` — o critério antigo
+comparava 2.000 caracteres de `innerText` e chamava de "fim" quando a grade
+demorava a trocar. Agora a paginação espera o `id` da primeira linha mudar, tenta
+duas vezes e, se não mudar, **lança**.
+
+### Medição: ativos × todos (mesma instalação, 19/11/2026)
+
+| | `status=1` (ativos) | `status=0` (todos) |
+| --- | --- | --- |
+| linhas lidas | **601** | **847** |
+| páginas | 41 | 57 |
+| total informado pelo ERP | 601 | 847 |
+| linhas sem código | 162 | 210 |
+| códigos distintos | **433** | **622** |
+| linhas inativas | 0 | **246** (197 códigos) |
+
+Dos 622 códigos, **189 só existem em inativos**.
+
+### Quantos dos 69 entram
+
+Dos 69 códigos sem produto, **22 aparecem em `status=0`** — e **todos os 22
+estão inativos** no ERP. Os outros 47 não aparecem nem em "todos" (ver a seção
+seguinte: 38 deles não são códigos).
+
+| impacto | número |
+| --- | --- |
+| códigos dos 69 que entram | **22** (de 31 numéricos; os 38 que são nomes nunca casam) |
+| itens de pedido que passam a ter produto | **194 dos 616** (31,5%) |
+| produtos novos que a coleta "todos" criaria | **55** — todos inativos no ERP |
+| produtos já no catálogo que seriam atualizados | **567** |
+
+Exemplo dos que entram: `18` BALDE 15L, `19` BALDE 20L, `26` BALDE PRETO 10L,
+`88`/`89` dispensers de papel, `130` flanela, `249` papel toalha, `431` vassoura
+gari — todos inativos no ERP e ausentes do nosso catálogo.
+
+### Importar inativo NÃO desativa ativo (regra + prova)
+
+Três decisões, nesta ordem (`montarLinhasDeUpsert`, em `catalogo-logica.mjs`):
+
+1. **produto que já existe mantém o `ativo` do banco** — quem desativou foi uma
+   pessoa; o ERP não manda na vitrine;
+2. **produto novo nasce como o ERP disse** — inativo no ERP entra inativo
+   (senão apareceria na vitrine e na tabela de preço sem ninguém pedir);
+3. **sem informação da fonte, nasce ativo** (comportamento de antes).
+
+Medido na coleta "todos" contra o catálogo real:
+
+| | quantos |
+| --- | --- |
+| inativos no ERP que hoje estão **ativos** no catálogo | **143** → continuam ativos |
+| ativos no ERP que hoje estão **inativos** no catálogo | **0** → nada é reativado |
+| produtos novos, todos inativos no ERP | **55** → nascem inativos |
+
+Dry-run do importador sobre os 847 (`aplicado: false`, **nada gravado**):
+
+```json
+{"lidos":847,"criados":55,"atualizados":567,"divergentes":34,"sem_codigo":210,"gravados":0}
+```
+
+## Por que 38 dos 69 não são códigos (defeito NOSSO, não do ERP) — issue #588
+
+`supabase/migrations/20261021130000_0278_mercos_import_runs.sql`, na função
+`fn_importar_pedido_mercos`:
+
+```sql
+if v_codigo is null then
+  v_codigo := v_descricao;   -- ← a descrição vira o "código"
+end if;
+```
+
+O fallback existe para satisfazer `produto_codigo text not null`, mas o efeito é
+que todo item sem código no ERP entra com a **descrição** no campo de código
+(`BALDE 15 LTS ALCA DE FERRO BF15CS`, `PAPEL HIG 64 ROLOS 30M FOLHA SIMPLES`,
+`HIST`). A partir daí o pareamento por código não tem como casar — e o relatório
+conta 38 "códigos" que nunca foram códigos.
+
+Item aberto com dono e aceite em **#588** (migration + baseline + MANIFEST +
+`test:db`), porque não se remenda no coletor.

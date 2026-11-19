@@ -111,12 +111,18 @@ export const contactListQuerySchema = z.object({
   tag: z.string().optional(),
   source: z.string().optional(),
   /**
-   * Cidade do contato — igualdade CASE-INSENSITIVE, com trim. Não é busca
-   * parcial: o valor vem do seletor (`/api/v1/contacts/cidades`), então é o
-   * nome exato como está no banco. Acento continua significando algo: "sao
-   * paulo" não casa com "São Paulo" (documentado no teste).
+   * Cidade do contato — LISTA de grafias cruas que resolvem para o mesmo
+   * município do IBGE.
+   *
+   * O seletor devolve `{ rotulo: "Canoinhas/SC", variantes: ["CANOINHAS",
+   * "Canoinhas", "canoinhas"] }` e a lista manda todas: o filtro vira
+   * `IN (...)`. Sem migration e sem `unaccent`, é o que faz `UNIAO DA VITORIA`
+   * casar com `União da Vitória`. Uma string única continua aceita (contrato
+   * antigo) e é tratada como lista de um.
    */
-  cidade: z.string().trim().max(120).optional(),
+  cidade: z
+    .union([z.string().trim().min(1).max(120), z.array(z.string().trim().min(1).max(120)).max(200)])
+    .optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
   order_by: z.enum(CONTACT_ORDER_BY).default("last_activity_at"),

@@ -145,12 +145,30 @@ export function mapearColunas(cabecalho) {
  * a primeira candidata é sempre a do menu (descoberta, não adivinhada); as
  * fixas ficam como rede.
  */
-export function rotasDoCatalogo(empresa) {
+export function rotasDoCatalogo(empresa, status = "1") {
+  const consulta = `?p=1&status=${status}&nome_codigo=`;
   return [
-    `https://app.mercos.com/industria/${empresa}/produtos/`,
-    `https://app.mercos.com/${empresa}/produtos/`,
+    `https://app.mercos.com/industria/${empresa}/produtos/${consulta}`,
+    `https://app.mercos.com/${empresa}/produtos/${consulta}`,
   ];
 }
+
+/**
+ * O `status` do filtro da grade — medido em 19/11/2026, no `crm-mercos-1`.
+ *
+ * A pílula de paginação carrega o filtro (`.?p=2&status=1&nome_codigo=`), e o
+ * contador de registros confirma o que cada valor significa:
+ *
+ *   status=1 → **601** produtos (só ativos; é o padrão da tela)
+ *   status=0 → **847** produtos (**todos**, 246 inativos no meio)
+ *   status=2 → só os inativos (15 de 15 na primeira página)
+ *
+ * Era isso que faltava: `?situacao=inativos`, `?inativos=true`, `?ativos=false`
+ * e `?status=inativos` não mudam nada — o parâmetro é `status` e o valor é
+ * numérico. O menu de exportação ("apenas ativos" × "todos") é o mesmo filtro,
+ * entregue por e-mail; não é preciso esperar o e-mail.
+ */
+export const STATUS_DA_GRADE = Object.freeze({ ativos: "1", todos: "0", inativos: "2" });
 
 /**
  * ZERO NÃO É SUCESSO — o motivo, ou `null` quando a coleta valeu.
@@ -167,6 +185,27 @@ export function motivoDoVazio({ paginas, produtosLidos }) {
   return null;
 }
 
+/**
+ * A COLETA LEU MENOS DO QUE O ERP DISSE TER?
+ *
+ * O contador do próprio ERP (`/contar_produtos/<rep>/`) informa o total do
+ * filtro — 601 com `status=1`, 847 com `status=0`. Se a coleta parar antes
+ * (paginação que não avança, aba que dorme), esse número não bate.
+ *
+ * Existe porque aconteceu: em 19/11/2026 a mesma coleta parou em **75 de 601** e
+ * em **495 de 601**, e as duas terminaram com `ok: true` — um catálogo pela
+ * metade que se anuncia completo é pior que uma falha.
+ *
+ * `--limite` é a única razão legítima para ler menos (amostra declarada).
+ * Total desconhecido (`null`) não vira falha: não dá para cobrar uma régua que
+ * o ERP não entregou.
+ */
+export function coletaIncompleta({ lidos, totalNoErp, limite }) {
+  if (!Number.isFinite(totalNoErp)) return false;
+  if (Number.isFinite(limite) && lidos >= limite) return false;
+  return lidos < totalNoErp;
+}
+
 /** Plano B declarado do legado. Só usado quando o `<thead>` não foi lido. */
 export const COLUNAS_LEGADO = Object.freeze({
   codigo: 2,
@@ -176,6 +215,58 @@ export const COLUNAS_LEGADO = Object.freeze({
   comissao: 6,
   preco: 7,
 });
+
+/**
+ * AS LINHAS QUE VÃO PARA O UPSERT — onde mora a regra de não desativar ninguém.
+ *
+ * Três decisões, nesta ordem:
+ *
+ * 1. **Produto que já existe mantém o `ativo` do banco.** Importar do ERP nunca
+ *    desativa catálogo: quem desativou aqui foi uma pessoa, e o ERP não é
+ *    autoridade sobre o que a loja vende. (É por isso que ler "todos" — com
+ *    inativos — não apaga nem esconde o que já está publicado.)
+ * 2. **Produto NOVO nasce como o ERP disse.** Se a fonte afirma que ele está
+ *    inativo, ele entra inativo: criar um produto inativo como ativo o colocaria
+ *    na vitrine e na tabela de preço sem ninguém ter pedido isso.
+ * 3. **Sem informação da fonte (`null`), nasce ativo** — é o comportamento de
+ *    antes, e a grade só lista ativos de qualquer forma.
+ *
+ * Nome e foto também têm dono: o nome do BANCO vence (divergência vai para o
+ * relatório) e a foto só preenche o vazio.
+ */
+export function montarLinhasDeUpsert(organizationId, criados, atualizados, existentesPorCodigo) {
+  const linhas = [];
+
+  for (const produto of criados ?? []) {
+    linhas.push({
+      organization_id: organizationId,
+      codigo: produto.codigo,
+      nome: produto.nome,
+      preco_cents: produto.preco_cents,
+      moeda: "BRL",
+      unidade: produto.unidade,
+      imagem_url: produto.foto,
+      origem: "mercos",
+      ativo: produto.ativo_erp !== false,
+    });
+  }
+
+  for (const produto of atualizados ?? []) {
+    const existente = existentesPorCodigo?.get?.(produto.codigo) ?? null;
+    linhas.push({
+      organization_id: organizationId,
+      codigo: produto.codigo,
+      nome: produto.nome,
+      preco_cents: produto.preco_cents,
+      moeda: "BRL",
+      unidade: produto.unidade ?? existente?.unidade ?? null,
+      imagem_url: existente?.imagem_url ? existente.imagem_url : produto.foto,
+      ativo: existente?.ativo ?? produto.ativo_erp !== false,
+    });
+  }
+
+  return linhas;
+}
 
 /**
  * Classifica as linhas coletadas em utilizáveis, divergentes e sem código.
@@ -214,6 +305,12 @@ export function classificarLinhas(linhas) {
       preco_cents,
       unidade: normalizarCodigo(linha?.unidade),
       foto: normalizarCodigo(linha?.foto),
+      /*
+       * `true` / `false` só quando a FONTE disse. A grade diz por linha (o botão
+       * de inativar/ativar de cada `<tr>`); ausência vira `null` ("não sei"), e
+       * `null` não desativa nada.
+       */
+      ativo_erp: typeof linha?.ativo === "boolean" ? linha.ativo : null,
       bruto: linha ?? null,
     };
 

@@ -1,59 +1,92 @@
 /**
- * O SELETOR DE CIDADE NÃO PODE TER DUPLICATA NEM OPÇÃO VAZIA.
+ * O SELETOR DE CIDADE FALA IBGE, NÃO TEXTO LIVRE.
  *
- * `contacts.cidade` é texto livre desde sempre. Numa base real a mesma cidade
- * aparece como "São Paulo", "são paulo" e " São Paulo " — um `distinct` cru
- * ofereceria três opções para a mesma escolha, e a terceira filtraria por uma
- * string que o usuário não reconhece.
+ * Medido na instalação real (org `4bc721ce…`): **162 valores distintos** de
+ * `cidade`, incluindo `CANOINHAS`, `Canoinhas` e `canoinhas` como três opções e
+ * `AGROCOMERCIAL SCHULTZ LTDA ME` — nome de empresa no campo de cidade. O
+ * filtro listava o valor cru e não conseguia casar as grafias.
  *
- * As propriedades travadas aqui:
- *  1. chave de deduplicação = `lower(trim())` e espaços internos colapsados;
- *  2. o texto exibido é o da PRIMEIRA ocorrência (o banco entrega ordenado);
- *  3. vazio, só-espaços e null não viram opção;
- *  4. ordem alfabética pt-BR, com acento no lugar certo ("Água" antes de "Ave");
- *  5. acento NÃO é ignorado na comparação de valor: "sao paulo" não é
- *     "São Paulo" — o filtro é case-insensitive, não accent-insensitive.
+ * O contrato agora:
+ *  1. só entra o que `municipioIbge(cidade, uf)` resolve (tabela oficial, 5.571
+ *     municípios) — empresa, bairro e erro de digitação ficam de fora e são
+ *     CONTADOS em `sem_municipio`;
+ *  2. as grafias cruas do mesmo município viram UMA opção (`Canoinhas/SC`) e
+ *     todas ficam em `variantes` — é o que o filtro usa no `IN`;
+ *  3. ordem alfabética pt-BR do rótulo, acento na posição certa.
  */
 import { describe, expect, it } from "vitest";
 
-import { cidadesUnicas } from "@/lib/contacts/cidades";
+import { cidadesCanonicas } from "@/lib/contacts/cidades";
 
-describe("cidadesUnicas", () => {
-  it("deduplica por caixa e espaço, mantendo o casing da primeira ocorrência", () => {
-    expect(
-      cidadesUnicas([
-        { cidade: "São Paulo" },
-        { cidade: "são paulo" },
-        { cidade: "  SÃO   PAULO  " },
-        { cidade: "Rio de Janeiro" },
-      ]),
-    ).toEqual(["Rio de Janeiro", "São Paulo"]);
-  });
-
-  it("não inventa cidade a partir de vazio, espaço ou null", () => {
-    expect(cidadesUnicas([{ cidade: null }, { cidade: "" }, { cidade: "   " }])).toEqual([]);
-    expect(cidadesUnicas([])).toEqual([]);
-  });
-
-  it("ordena em pt-BR: acento não joga a palavra para depois do Z", () => {
-    expect(
-      cidadesUnicas([
-        { cidade: "Zé Doca" },
-        { cidade: "Ave" },
-        { cidade: "Água Branca" },
-        { cidade: "Salvador" },
-        { cidade: "São Paulo" },
-      ]),
-    ).toEqual(["Água Branca", "Ave", "Salvador", "São Paulo", "Zé Doca"]);
-  });
-
-  it("acento ainda separa cidades diferentes (só a caixa é ignorada)", () => {
-    // "sao paulo" e "São Paulo" são grafias da mesma cidade na cabeça de quem
-    // lê — mas um filtro accent-insensitive não está no escopo desta fatia, e
-    // fingir que estão iguais juntaria "Açaí" com "Acai" no mesmo balde.
-    expect(cidadesUnicas([{ cidade: "Sao Paulo" }, { cidade: "São Paulo" }])).toEqual([
-      "Sao Paulo",
-      "São Paulo",
+describe("cidadesCanonicas", () => {
+  it("agrupa as grafias de caixa no município do IBGE e guarda as variantes", () => {
+    const { cidades } = cidadesCanonicas([
+      { cidade: "CANOINHAS", uf: "SC" },
+      { cidade: "Canoinhas", uf: "SC" },
+      { cidade: "canoinhas", uf: "SC" },
+      { cidade: "Mafra", uf: "SC" },
     ]);
+
+    expect(cidades.map((c) => c.rotulo)).toEqual(["Canoinhas/SC", "Mafra/SC"]);
+    expect(cidades[0]?.variantes).toHaveLength(3);
+    expect(cidades[0]?.variantes).toEqual(
+      expect.arrayContaining(["CANOINHAS", "Canoinhas", "canoinhas"]),
+    );
+  });
+
+  it("nome de empresa NÃO vira cidade — e é contado em sem_municipio", () => {
+    const { cidades, sem_municipio } = cidadesCanonicas([
+      { cidade: "CANOINHAS", uf: "SC" },
+      { cidade: "AGROCOMERCIAL SCHULTZ LTDA ME", uf: "SC" },
+      { cidade: "Centro", uf: "SC" },
+    ]);
+
+    expect(cidades.map((c) => c.rotulo)).toEqual(["Canoinhas/SC"]);
+    expect(sem_municipio).toBe(2);
+  });
+
+  it("conta contato sem cidade (null, vazio e só-espaços) em sem_municipio", () => {
+    const { cidades, sem_municipio } = cidadesCanonicas([
+      { cidade: null, uf: null },
+      { cidade: "", uf: "SC" },
+      { cidade: "   ", uf: "SC" },
+      { cidade: "Mafra", uf: "SC" },
+    ]);
+
+    expect(cidades.map((c) => c.rotulo)).toEqual(["Mafra/SC"]);
+    expect(sem_municipio).toBe(3);
+  });
+
+  it("acento não separa o mesmo município: União da Vitória e UNIAO DA VITORIA", () => {
+    const { cidades } = cidadesCanonicas([
+      { cidade: "União da Vitória", uf: "PR" },
+      { cidade: "UNIAO DA VITORIA", uf: "PR" },
+      { cidade: "  União  da  Vitória ", uf: "PR" },
+    ]);
+
+    expect(cidades).toHaveLength(1);
+    expect(cidades[0]?.rotulo).toBe("União da Vitória/PR");
+    // A variante com espaços internos repetidos é normalizada antes de entrar.
+    expect(cidades[0]?.variantes).toEqual(
+      expect.arrayContaining(["União da Vitória", "UNIAO DA VITORIA"]),
+    );
+    expect(cidades[0]?.variantes).toHaveLength(2);
+  });
+
+  it("resolve cidade com o estado por extenso no mesmo campo", () => {
+    const { cidades, sem_municipio } = cidadesCanonicas([
+      { cidade: "Mafra, Santa Catarina", uf: null },
+    ]);
+    expect(sem_municipio).toBe(0);
+    expect(cidades[0]?.rotulo).toBe("Mafra/SC");
+  });
+
+  it("ordena em pt-BR pelo rótulo, com acento na posição certa", () => {
+    const { cidades } = cidadesCanonicas([
+      { cidade: "Mafra", uf: "SC" },
+      { cidade: "Água Branca", uf: "PI" },
+      { cidade: "Canoinhas", uf: "SC" },
+    ]);
+    expect(cidades.map((c) => c.rotulo)).toEqual(["Água Branca/PI", "Canoinhas/SC", "Mafra/SC"]);
   });
 });
