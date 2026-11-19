@@ -46,13 +46,43 @@ export async function GET(req: NextRequest): Promise<Response> {
   // AGENTE, em `lib/catalogo/busca.ts`, e ela responde a outra pergunta.
   if (busca !== "") q = q.or(`nome.ilike.%${busca}%,codigo.ilike.%${busca}%,marca.ilike.%${busca}%`);
 
+  /**
+   * O CÓDIGO EXATO VEM PRIMEIRO — e é uma consulta separada de propósito.
+   *
+   * O leitor de código de barras digita o EAN e aperta Enter. O pedido pede
+   * `limite=12`, e a lista é ordenada por `ativo`/`nome`: num catálogo grande,
+   * o produto do código bipado é só mais um `ilike` e pode ficar FORA dos 12 —
+   * então a tela diria "nenhum produto encontrado" para um produto que existe,
+   * e o vendedor cadastraria de novo. Ordenar por relevância no cliente não
+   * resolve: o que foi cortado nunca chega ao cliente.
+   *
+   * `.eq("codigo", busca)` bate no índice único `(organization_id, codigo)`,
+   * então é uma leitura por chave, não uma varredura. Devolver a linha exata na
+   * frente também é o que faz o Enter do editor ser inequívoco.
+   */
+  let exato: unknown = null;
+  if (busca !== "") {
+    const { data } = await supabase
+      .from("catalog_products")
+      .select(COLUNAS_DO_PRODUTO)
+      .eq("organization_id", authz.org.orgId)
+      .eq("codigo", busca)
+      .maybeSingle();
+    exato = data ?? null;
+  }
+
   const { data, error } = await q
     .order("ativo", { ascending: false })
     .order("nome")
     .limit(limite);
 
   if (error) return fail("internal_error", "Erro ao listar os produtos.", 500, { requestId });
-  return ok(data ?? [], { requestId });
+  const linhas = (data ?? []) as unknown as { id: string }[];
+  const exatoComId = exato as unknown as { id: string } | null;
+  const lista = exatoComId
+    ? [exatoComId, ...linhas.filter((l) => l.id !== exatoComId.id)]
+    : linhas;
+  return ok(lista, { requestId });
 }
 
 export async function POST(req: NextRequest): Promise<Response> {

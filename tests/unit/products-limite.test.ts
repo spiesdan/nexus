@@ -43,11 +43,15 @@ function bancoQueGuardaOLimite() {
     eq: () => q,
     or: () => q,
     order: () => q,
+    // A rota faz uma leitura por chave (`codigo` exato) antes da listagem —
+    // sem `maybeSingle` aqui o dublê quebraria no primeiro `busca=`.
+    maybeSingle: () => Promise.resolve({ data: null, error: null }),
     limit: (n: number) => {
       capturados.push(n);
       return Promise.resolve({ data: [], error: null });
     },
   };
+
   vi.mocked(createClient).mockReturnValue({ from: () => q } as never);
   return capturados;
 }
