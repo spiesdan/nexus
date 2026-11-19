@@ -53,6 +53,7 @@ import { OrderSummary } from "./_resumo";
 import { haQuantoTempo, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
+import { randomId } from "@/lib/random-id";
 import { rolarPara } from "@/lib/ui/movimento";
 
 /** O que o autosave guarda — e o que a restauração pode receber de outro dia. */
@@ -208,9 +209,11 @@ export function OrderEditor({
   // A chave de idempotência nasce com o editor e é GRAVADA no rascunho: se a
   // resposta do POST se perder e a pessoa tentar de novo (ou recarregar e
   // tentar), o servidor devolve o pedido que já existe em vez de criar outro.
-  // `crypto.randomUUID` existe no Node 22 (SSR) e no browser; o valor não é
-  // renderizado, então servidor e cliente não precisam concordar.
-  const [chavePedido, setChavePedido] = React.useState<string>(() => crypto.randomUUID());
+  // `randomId` (lib/random-id.ts) e não `crypto.randomUUID` cru: em VPS
+  // self-host sem TLS (http://IP) o browser não expõe `randomUUID` — o helper
+  // cai em `getRandomValues`. O valor não é renderizado, então servidor e
+  // cliente não precisam concordar.
+  const [chavePedido, setChavePedido] = React.useState<string>(() => randomId());
   // Guarda SÍNCRONA: `enviando` só desabilita o botão no próximo render — dois
   // cliques (ou Cmd+Enter repetido) no mesmo frame entrariam duas vezes.
   const envioEmVoo = React.useRef(false);
