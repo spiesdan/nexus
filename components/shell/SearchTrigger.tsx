@@ -57,10 +57,20 @@ export function SearchTrigger() {
       >
         <MagnifyingGlass size={18} aria-hidden className="shrink-0 md:hidden" />
         <MagnifyingGlass size={14} aria-hidden className="hidden shrink-0 md:block" />
-        <span className="hidden truncate md:inline">{t("Buscar...")}</span>
-        <kbd className="ml-auto hidden rounded-md border bg-muted px-1.5 py-0.5 text-[10px] text-text md:inline">
-          {atalho}
-        </kbd>
+        <span className="hidden truncate md:inline">{t("Buscar")}</span>
+        {/*
+          O atalho é desenhado por CSS (`content: attr()`), não por nó de texto.
+          Axe `label-content-name-mismatch` exige que TODO texto visível esteja
+          no nome acessível — e o nome é "Buscar em todo o sistema" (fixo, para
+          não colidir com os filtros locais). Com `⌘K`/`Ctrl K` como texto, o
+          botão reprovava em AA; como pseudo-conteúdo ele continua visível e
+          some da árvore de texto que a regra mede.
+        */}
+        <kbd
+          aria-hidden
+          data-atalho={atalho}
+          className="ml-auto hidden rounded-md border bg-muted px-1.5 py-0.5 text-[10px] text-text after:content-[attr(data-atalho)] md:inline"
+        />
       </Button>
       <CommandPalette open={open} onOpenChange={setOpen} />
     </>

@@ -51,6 +51,8 @@ describe("gatilho da busca global", () => {
 
     // A dica visível (a partir de `md`) é o mesmo atalho — `⌘K` ou `Ctrl K`.
     const kbd = container.querySelector("kbd");
-    expect(kbd?.textContent?.trim()).toMatch(/^(⌘K|Ctrl K)$/);
+    // O atalho visível é desenhado por CSS (`content: attr(data-atalho)`) para
+    // não entrar no texto que o axe `label-content-name-mismatch` mede.
+    expect(kbd?.getAttribute("data-atalho")).toMatch(/^(⌘K|Ctrl K)$/);
   });
 });

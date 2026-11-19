@@ -32,6 +32,11 @@ test.setTimeout(300_000);
 test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluído", async ({ page }) => {
   const carimbo = Date.now();
   const cliente = `Cliente Jornada Expedicao ${carimbo}`;
+  // Placa única por execução. Era "ABC1D23" fixo, e a segunda rodada numa base
+  // reaproveitada encontrava a carga da primeira ainda aberta — o teste morria
+  // no meio, sem nenhum defeito de produto. Formato do produto: ABC1D23.
+  const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const placa = `ABC${carimbo % 10}${letras[Math.floor(carimbo / 10) % 26]}${String(carimbo % 100).padStart(2, "0")}`;
 
   await loginComoAdmin(page, lerCreds());
   const produtoId = await semearProduto(page, `Produto Jornada Expedicao ${carimbo}`);
@@ -53,7 +58,7 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   });
 
   // Placa no formato do produto (ABC1D23) e o pedido marcado.
-  await page.locator("#placa").fill("ABC1D23");
+  await page.locator("#placa").fill(placa);
   await page.locator("#veiculo").fill("HR");
   await page.locator("#motorista").fill(`Motorista ${carimbo}`);
   await page.locator("label").filter({ hasText: numero }).getByRole("checkbox").check();
@@ -73,7 +78,7 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   // carga. Se o nome voltar a dizer "fechamento", alguém vai procurar o
   // impresso que não existe mais.
   await expect(page.getByRole("heading", { level: 1, name: /^Carga \d{3}$/ })).toBeVisible();
-  await expect(page.getByText(/Montando · ABC1D23/)).toBeVisible();
+  await expect(page.getByText(new RegExp(`Montando · ${placa}`))).toBeVisible();
   const romaneio = page.getByRole("link", { name: /^Romaneio \(PDF\)$/ });
   await expect(romaneio).toBeVisible();
   await expect(romaneio).toHaveAttribute("href", /\/api\/v1\/shipments\/.+\/romaneio/);
@@ -94,14 +99,19 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   // 5. Saída para rota → status "Em rota" e "Concluir carga" ainda travado
   // (a parada não foi entregue).
   await sairRota.click();
-  await expect(page.getByText(/Em rota · ABC1D23/)).toBeVisible({ timeout: 20_000 });
+  // Confirmação nova do design wave: avisar clientes e tirar a carga de
+  // "montando" não pode acontecer por clique acidental.
+  await page.getByRole("alertdialog").getByRole("button", { name: "Iniciar rota" }).click();
+  await expect(page.getByText(new RegExp(`Em rota · ${placa}`))).toBeVisible({ timeout: 20_000 });
   const concluir = page.getByRole("button", { name: "Concluir carga" });
   await expect(concluir).toBeDisabled();
 
   // 6. Entrega da parada → card "Paradas concluídas" 1/1 → conclusão libera.
   await page.getByRole("button", { name: "Entregue", exact: true }).click();
+  // O design wave pede confirmação para avançar o pedido para 'entregue'.
+  await page.getByRole("alertdialog").getByRole("button", { name: "Entregar" }).click();
   await expect(page.getByText("1/1", { exact: true })).toBeVisible({ timeout: 20_000 });
   await expect(concluir).toBeEnabled();
   await concluir.click();
-  await expect(page.getByText(/Concluída · ABC1D23/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(new RegExp(`Concluída · ${placa}`))).toBeVisible({ timeout: 20_000 });
 });

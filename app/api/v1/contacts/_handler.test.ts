@@ -16,7 +16,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@/lib/api/types";
 
-import { createContactHandler, listContactsHandler } from "./_handler";
+import { createContactHandler, listContactsHandler, patchContactHandler } from "./_handler";
 
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined), isServiceRoleConfigured: () => false }));
 
@@ -35,11 +35,19 @@ type Registro = {
   insert: Record<string, unknown> | null;
 };
 
-function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown[] } = {}) {
+function stub(
+  opts: {
+    erro?: { code: string; message: string };
+    linhas?: unknown[];
+    /** Erro devolvido pelo UPDATE (depois do SELECT do existente). */
+    erroPatch?: { code: string; message: string };
+  } = {},
+) {
   const consultas: Registro[] = [];
   const criar = (tabela: string) => {
     const r: Registro = { tabela, eq: [], is: [], ilike: [], insert: null };
     consultas.push(r);
+    let atualizou = false;
     const b: Record<string, unknown> = {
       select: () => b,
       eq: (c: string, v: unknown) => {
@@ -61,8 +69,17 @@ function stub(opts: { erro?: { code: string; message: string }; linhas?: unknown
         r.insert = linha;
         return b;
       },
+      update: () => {
+        atualizou = true;
+        return b;
+      },
       single: async () => ({ data: opts.erro ? null : (opts.linhas?.[0] ?? null), error: opts.erro ?? null }),
-      maybeSingle: async () => ({ data: null, error: null }),
+      // O SELECT do existente não erra; o UPDATE (que também termina em
+      // maybeSingle nesta rota) pode.
+      maybeSingle: async () => ({
+        data: opts.linhas?.[0] ?? null,
+        error: atualizou ? (opts.erroPatch ?? null) : null,
+      }),
       then: (resolve: (v: { data: unknown[]; error: null }) => unknown) =>
         resolve({ data: opts.linhas ?? [], error: null }),
     };
@@ -136,5 +153,47 @@ describe("listContactsHandler — filtro por cidade", () => {
     const { client, consultas } = stub({ linhas: [] });
     await listContactsHandler(client as never, ctx, {} as never);
     expect(consultas.find((c) => c.tabela === "contacts")?.ilike).toEqual([]);
+  });
+});
+
+
+describe("patchContactHandler — conflito de dado único", () => {
+  const EXISTENTE = {
+    id: "44444444-4444-4444-8444-444444444444",
+    organization_id: ORG,
+    is_anonymized: false,
+    tags: [],
+    consent: {},
+    email: null,
+    phone_number: null,
+    name: "Maria",
+    display_name: "Maria",
+  };
+
+  it("CNPJ já usado por outro contato é 409 contato_duplicado, não 500", async () => {
+    // O PATCH esbarra no mesmo índice único parcial do POST (`contacts_org_cnpj_key`).
+    // Antes virava `internal_error` — quem editava lia que o sistema quebrou, e
+    // não que o documento pertence a outro contato.
+    const { client } = stub({
+      linhas: [EXISTENTE],
+      erroPatch: { code: "23505", message: "duplicate key value violates unique constraint" },
+    });
+
+    await expect(
+      patchContactHandler(client as never, ctx, EXISTENTE.id, {
+        cnpj: "11222333000181",
+      } as never),
+    ).rejects.toMatchObject({ status: 409, code: "contato_duplicado" });
+  });
+
+  it("erro que não é conflito continua 500", async () => {
+    const { client } = stub({
+      linhas: [EXISTENTE],
+      erroPatch: { code: "XX000", message: "lock timeout" },
+    });
+
+    await expect(
+      patchContactHandler(client as never, ctx, EXISTENTE.id, { bairro: "Centro" } as never),
+    ).rejects.toMatchObject({ status: 500, code: "internal_error" });
   });
 });

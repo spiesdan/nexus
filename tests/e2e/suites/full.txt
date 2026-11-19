@@ -62,6 +62,7 @@ jornada-financeiro.spec.ts
 jornada-fiscal.spec.ts
 jornada-ia.spec.ts
 jornada-venda.spec.ts
+jornadas-ui-p1-01.spec.ts
 kanban-owner-filter.spec.ts
 kpi-e-charts-canonicos.spec.ts
 marca-logo.spec.ts

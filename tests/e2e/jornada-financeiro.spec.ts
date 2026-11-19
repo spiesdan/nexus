@@ -41,6 +41,9 @@ test("jornada 5 (financeiro) — faturar gera título, receber baixa e conciliar
     timeout: 20_000,
   });
   await page.getByRole("button", { name: "Faturar pedido" }).click();
+  // O design wave passou a pedir confirmação para mudança irreversível de
+  // status ("O status passa a Faturado e não volta para Aprovado").
+  await page.getByRole("alertdialog").getByRole("button", { name: "Faturar" }).click();
   await expect(page.getByText("Faturado", { exact: true }).first()).toBeVisible({
     timeout: 20_000,
   });

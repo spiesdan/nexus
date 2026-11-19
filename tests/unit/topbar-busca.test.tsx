@@ -61,7 +61,8 @@ describe("busca da TopBar", () => {
 
   it("mostra o atalho da plataforma no <kbd>", () => {
     render(<SearchTrigger />);
-    expect(screen.getByText(/^(⌘K|Ctrl K)$/)).toBeInTheDocument();
+    const kbd = document.querySelector("kbd");
+    expect(kbd?.getAttribute("data-atalho")).toMatch(/^(⌘K|Ctrl K)$/);
   });
 
   it("o clique abre a paleta", () => {
