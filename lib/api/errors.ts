@@ -93,6 +93,11 @@ export const ApiErrorCodes = {
   sentinel_disabled: "sentinel_disabled",
   /** Já existe uma varredura em andamento para a organização (claim único). */
   sentinel_busy: "sentinel_busy",
+  /**
+   * 0329: a organização está suspensa. A varredura não roda dado nenhum; a
+   * rodada é registrada e as ocorrências abertas são encerradas com motivo.
+   */
+  sentinel_org_suspensa: "sentinel_org_suspensa",
   /** v1.3: a ocorrência não é do único caso com correção aprovada (job watchdog). */
   correcao_nao_suportada: "correcao_nao_suportada",
   /** A ocorrência ainda não foi aprovada por um gestor (execução recusada). */
