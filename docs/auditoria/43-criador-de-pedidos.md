@@ -269,33 +269,51 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 
 ## 9. Matriz E — os dez cenários, com prova e defeito
 
-> **Execução na janela de build (19/11/2026, `e2e-matriz`):** E.1/E.2
-> **FALHOU** — o produto era encontrado pela busca remota, mas o clique/Enter
-> não o adicionava: `aoAdicionar` fazia `porId.get(p.id)` e descartava em
-> silêncio o produto que estava **fora do lote de 2.000** carregado pela
-> página. O campo de quantidade não aparecia porque **não havia item**. Os
-> outros cinco cenários **não rodaram** (a suíte para na primeira falha).
+> **Execução no build oficial 1.60.0** — tag `v1.60.0`, `next start` local,
+> `playwright test tests/e2e/criador-de-pedidos-matriz.spec.ts --workers=1`,
+> 19/11/2026: **6 de 6 verdes em 2,2 min**. A primeira rodada no build
+> reprovou E.3 e E.10 e é ela que dá o valor da matriz — o que segue foi
+> achado ali, não deduzido.
 >
-> **Correção nesta branch:** `aoAdicionar` usa o produto da busca diretamente
-> (`adicionar(p, q)`), sem o filtro `porId`. A matriz precisa ser reexecutada
-> com `--max-failures=0` para medir os seis de uma vez; até lá, **nenhum
-> cenário de navegador é marcado como `[x]`**.
-
-> Medido em 19/11/2026 sobre `nexus/main` @ `9fce82fa`. Cada linha nomeia o
-> arquivo de prova; o que é unitário não se apresenta como E2E.
+> **O que a execução achou (e corrigiu nesta branch):**
+>
+> 1. **E.3 — tabela de preço nunca ativava no app real.** O editor lia
+>    `d.itens` do `GET /price-tables/:id`, mas o corpo é
+>    `{ data: { …, itens } }` (`ok()` embrulha): o `.then` estourava em
+>    `new Map(undefined)` e caía no `.catch`. Só o dublê dos testes devolvia o
+>    corpo sem embrulho, então a suíte passava com o app quebrado. Além disso,
+>    `adicionar` montava a linha com `produto.preco_cents` e rotulava a origem
+>    por existir tabela — item a preço de catálogo dizendo "preço da tabela".
+>    Os dois foram corrigidos; o teste de componente novo **falha na versão
+>    antiga e passa na corrigida**.
+> 2. **E.10 — violação de acessibilidade real.** O `<dl>` do resumo tinha um
+>    `<p>` filho direto ("Teto de desconto do vendedor"): `definition-list`
+>    **serious** no axe, em 390 px. O texto virou `<span>` dentro do `<dd>` do
+>    desconto — continua ligado ao termo e o `<dl>` volta ao content model.
+> 3. **Três seletores do spec vencidos contra a própria tela** (não são defeito
+>    de produto): o resultado da busca virou `option` (era `button`);
+>    `"Cliente"` por substring casava "Contato no cliente" (agora `exact`);
+>    o campo de produto é `combobox` "Buscar produto…" (era `textbox`
+>    "Produtos"). E a premissa do E.3 mudou de propósito: trocar de tabela
+>    **reprecifica**, então o 422 de "preço fora da tabela" passou a ser
+>    provocado pela tabela que muda **no servidor** com a tela já carregada —
+>    o caso que sobra de verdade.
+>
+> Medido em 19/11/2026. Cada linha nomeia o arquivo de prova; o que é unitário
+> não se apresenta como E2E.
 
 | # | Cenário | Estado | Prova |
 |---|---|---|---|
-| 1 | EAN/SKU/scanner: código casa produto; EAN inexistente não inventa; SKU ambíguo não escolhe sozinho | **DEFEITO CORRIGIDO** — o `Enter` lançava o primeiro da lista; **segundo defeito** (produto remoto não entrava por `porId`) corrigido nesta branch | `criador-busca-scanner.test.tsx`, `products-busca-codigo-exato.test.ts`; E2E **falhou** antes da correção |
-| 2 | Escala: 600 produtos e 600 contatos; busca responde; catálogo não vai inteiro | **OK + MEDIDO** (rajada, teto de 8 linhas, 1 consulta remota, lote de 2.000/500) | `criador-escala-busca.test.tsx`; E2E de 2.100 produtos **falhou** no add, não na busca |
-| 3 | Tabela/override reflete nos itens; preço manual marcado e preservado | **DEFEITO CORRIGIDO** — trocar a tabela não reprecificava | `criador-tabela-credito-parcelas.test.tsx`; E2E pendente |
-| 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **OK** (a ausência de reserva é dita na tela e no doc) | `criador-tabela-credito-parcelas.test.tsx`, `criador-itens-estoque-unidade.test.tsx` |
-| 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **DEFEITO CORRIGIDO** (tela) + gate do servidor provado | `criador-tabela-credito-parcelas.test.tsx`, `commercial-orders-credito-gate.test.ts` |
+| 1 | EAN/SKU/scanner: código casa produto; EAN inexistente não inventa; SKU ambíguo não escolhe sozinho | **PROVADO no navegador (1.60.0)** — código, nome, marca e scanner; `Enter` só lança identidade inequívoca; produto **fora do lote de 2.000** entra pelo servidor | `criador-busca-scanner.test.tsx`, `products-busca-codigo-exato.test.ts` + E2E “E.1/E.2” |
+| 2 | Escala: 600 produtos e 600 contatos; busca responde; catálogo não vai inteiro | **PROVADO no navegador (1.60.0) + unit** — E2E semeia **520 contatos e 2.100 produtos**, alvo fora do lote; carregando e erro visíveis; unit mede a rajada (teto de 8, uma consulta remota) | `criador-escala-busca.test.tsx` + E2E “E.1/E.2” |
+| 3 | Tabela/override reflete nos itens; preço manual marcado e preservado | **DEFEITO ACHADO no 1.60.0 e corrigido** — a tabela **nunca ativava** (`d.itens` × `{ data: { itens } }`) e o item entrava a preço de catálogo rotulado de tabela; trocar reprecifica e o manual é preservado | `criador-tabela-credito-parcelas.test.tsx` (teste novo, falha sem a correção) + E2E “E.3” **verde** |
+| 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **PROVADO no navegador (1.60.0)** — suficiente, insuficiente (422), desatualizado (saldo muda antes do POST) e não controlado; a tela declara a ausência de reserva | E2E “E.4” + `criador-itens-estoque-unidade.test.tsx` |
+| 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **PROVADO no navegador (1.60.0)** — limite estourado recusa 422 sem gravar, sem limite cria, acima do teto vai a `em_analise` com “Aprovar pedido”; gate do servidor provado no unit | E2E “E.5” + `commercial-orders-credito-gate.test.ts` |
 | 6 | Quantidade inteira (B.14); parcelas somam o total; fração/granel não quebra | **OK** (fração segue **DEPENDE DE REGRA**) | `criador-tabela-credito-parcelas.test.tsx`, `parcelas-fecham.test.ts` |
 | 7 | Rascunho entre org/usuário não é retomado; `descontoTexto` volta | **DEFEITO CORRIGIDO** — chave única do navegador | `criador-rascunho-escopo.test.tsx`, `criador-pedido-cliente-do-link.test.tsx` |
-| 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **OK, provado na rota** (mesmo pedido, mesmos itens, sem número queimado) | `commercial-orders-timeout-retry.test.ts`; E2E de `route.fetch`+`abort` pendente |
-| 9 | Reconciliação: itens/parcelas somam no banco de teste | **OK** (Postgres efêmero com o `baseline.sql`) | `tests/invariants/pedido-reconciliacao.test.ts` |
-| 10 | 320 px, teclado e leitor de tela | **CORRIGIDO + unit** | `criador-acessibilidade-teclado.test.tsx`, `criador-pedido-acessivel-320.spec.ts` (E2E declarada no critical) |
+| 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **PROVADO no navegador (1.60.0)** — `route.fetch()` commita, `abort` derruba a resposta; reenviar cria **1 pedido**, mesmos itens, sem número queimado; e na rota (`commercial-orders-timeout-retry`) | E2E “E.8/E.9” + `commercial-orders-timeout-retry.test.ts` |
+| 9 | Reconciliação: itens/parcelas somam no banco de teste | **PROVADO no navegador (1.60.0) + invariante** — pedido criado pela tela: itens = subtotal, subtotal − desconto + frete = total, `chave_sincronizacao` e 1 item no banco | E2E “E.8/E.9” + `tests/invariants/pedido-reconciliacao.test.ts` |
+| 10 | 320 px, teclado e leitor de tela | **PROVADO no navegador (1.60.0)** — 320/390/768/1440 sem overflow; Tab do cliente chega à busca; axe sem `serious`/`critical` em 390 e 1440 (a violação `definition-list` do `<dl>` foi achada e corrigida aqui) | E2E “E.10” + `criador-acessivel.test.tsx`, `criador-pedido-acessivel-320.spec.ts` |
 
 ### O que mudou no produto por causa desta matriz
 
@@ -307,6 +325,12 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 5. **Produto remoto entra no pedido** — `aoAdicionar` deixou de filtrar por
    `porId`; era o defeito que derrubou E.1/E.2 na janela.
 6. **Quantidade inteira, unidade/múltiplo, 320 px/teclado/leitor.**
+7. **Tabela de preço ativa ao adicionar** — o preço da linha é o da tabela
+   (override > desconto > catálogo). Antes, com a tabela escolhida, o item
+   entrava a preço de catálogo **rotulado** de tabela; e a tabela nem ativava,
+   porque o cliente lia o corpo da rota sem o embrulho `data`.
+8. **`<dl>` do resumo** — o teto de desconto saiu de `<p>` solto para dentro do
+   `<dd>` do desconto (axe `definition-list`, serious).
 
 ### Pendências declaradas (sem regra escrita)
 
@@ -315,5 +339,8 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 - Reserva de estoque / baixa atômica: não existe.
 - Fração/granel e bloqueio por múltiplo: `multiplo` informado, não validado.
 - Multimoeda: sem seletor nem cotação.
-- **Reexecução da matriz E no navegador** após a correção do `porId`
-  (E.1/E.2 e os cinco que não rodaram).
+- E.10: leitor de tela real (NVDA/VoiceOver) segue fora do automatizado —
+  a régua é axe + nomes acessíveis + Tab.
+- E.3: depois da reprecificação, o 422 de "preço fora da tabela" só acontece
+  quando a tabela muda **no servidor** com a tela carregada; a troca de tabela
+  na tela reprecifica (e é isso que se quer).

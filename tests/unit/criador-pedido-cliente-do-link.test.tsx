@@ -249,7 +249,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
     const get = vi.mocked(apiClient.get);
     get.mockImplementation((url: string) => {
       if (url.startsWith("/api/v1/price-tables/")) {
-        return Promise.resolve({ itens: [] }) as never;
+        return Promise.resolve({ data: { itens: [] } }) as never;
       }
       return Promise.resolve({ data: [] }) as never;
     });
@@ -615,7 +615,7 @@ describe("E.3 — preço de tabela × override manual", () => {
   it("gerente com preço manual envia ignorar_preco (flag próprio)", async () => {
     const get = vi.mocked(apiClient.get);
     get.mockImplementation((url: string) => {
-      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
       return Promise.resolve({ data: [] }) as never;
     });
     const post = vi.mocked(apiClient.post);
@@ -635,7 +635,7 @@ describe("E.3 — preço de tabela × override manual", () => {
   it("sem permissão de margem, não manda o flag (o servidor vai recusar o preço fora da tabela)", async () => {
     const get = vi.mocked(apiClient.get);
     get.mockImplementation((url: string) => {
-      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
       return Promise.resolve({ data: [] }) as never;
     });
     const post = vi.mocked(apiClient.post);

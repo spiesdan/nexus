@@ -309,15 +309,20 @@ export function OrderEditor({
     }
     let vivo = true;
     apiClient
-      .get<{ itens: { product_id: string; preco_cents: number | null }[] }>(
+      // O corpo da rota é `{ data: { …, itens } }` (`ok()` embrulha). Ler
+      // `d.itens` direto dava `undefined` → `new Map(undefined)` estourava no
+      // `.then` e caía no `.catch`: a tabela NUNCA ativava no app real (só no
+      // teste, cujo dublê devolvia o corpo sem o embrulho).
+      .get<{ data: { itens: { product_id: string; preco_cents: number | null }[] } }>(
         `/api/v1/price-tables/${tabelaId}`,
       )
-      .then((d) => {
+      .then((r) => {
         if (!vivo) return;
         const tab = tabelas.find((x) => x.id === tabelaId);
+        const itens = r.data?.itens ?? [];
         const nova: PrecoDeTabela = {
           desconto_pct: Number(tab?.desconto_pct ?? 0),
-          overrides: new Map(d.itens.map((i) => [i.product_id, i.preco_cents])),
+          overrides: new Map(itens.map((i) => [i.product_id, i.preco_cents])),
         };
         setTabela(nova);
         reprecificar(nova);
@@ -540,6 +545,21 @@ export function OrderEditor({
         copia[i] = { ...copia[i]!, quantidade: copia[i]!.quantidade + quantidade };
         return copia;
       }
+      // O preço da linha é o que a tabela ATIVA manda, não o de catálogo.
+      //
+      // Antes, `precoTexto` vinha sempre de `produto.preco_cents` e
+      // `origemPreco` era `"tabela"` só porque havia tabela: o item entrava a
+      // preço de catálogo ROTULADO de tabela. Na tela isso some (o vendedor lê
+      // "preço da tabela"); no servidor vira 422 no clique final, ou pior, um
+      // pedido cobrando o preço errado. Quem adiciona DEPOIS de a tabela
+      // carregar é o caminho comum (escolhe a tabela, depois os itens).
+      const valor = tabela
+        ? precoEfetivo(
+            produto.preco_cents,
+            tabela.desconto_pct,
+            tabela.overrides.get(produto.id) ?? null,
+          )
+        : produto.preco_cents;
       return [
         ...ls,
         {
@@ -549,14 +569,12 @@ export function OrderEditor({
           nome: produto.nome,
           quantidade,
           permite_fracao: false,
-          precoTexto: (produto.preco_cents / 100).toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-          }),
+          precoTexto: textoDoPreco(valor),
           descontoPct: 0,
           estoque: produto.controla_estoque ? produto.quantidade : null,
           unidade: produto.unidade ?? null,
           multiplo: produto.multiplo ?? 1,
-          origemPreco: tabela ? "tabela" : "base",
+          origemPreco: tabela && valor !== produto.preco_cents ? "tabela" : "base",
         },
       ];
     });

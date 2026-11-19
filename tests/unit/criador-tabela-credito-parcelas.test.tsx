@@ -201,7 +201,7 @@ describe("E.1/E.2 — produto que só a busca do servidor encontrou entra no ped
       if (url.includes("/api/v1/products?busca=")) {
         return Promise.resolve({ data: [remoto] }) as never;
       }
-      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
       if (url.startsWith("/api/v1/contacts/")) {
         return Promise.resolve({
           data: { limite_credito_cents: null, condicao_pagamento: null },
@@ -228,7 +228,7 @@ describe("E.1/E.2 — produto que só a busca do servidor encontrou entra no ped
 beforeEach(() => {
   window.localStorage.clear();
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
-    if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+    if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
     if (url.startsWith("/api/v1/contacts/")) {
       return Promise.resolve({
         data: { limite_credito_cents: null, condicao_pagamento: null },
@@ -248,7 +248,7 @@ describe("3 · tabela de preço reflete nos itens", () => {
   it("com tabela aplicada, o preço do item é o da tabela (override vence o desconto)", async () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url.startsWith("/api/v1/price-tables/")) {
-        return Promise.resolve({ itens: [{ product_id: "p1", preco_cents: 4200 }] }) as never;
+        return Promise.resolve({ data: { itens: [{ product_id: "p1", preco_cents: 4200 }] } }) as never;
       }
       return Promise.resolve({ data: [] }) as never;
     });
@@ -263,7 +263,7 @@ describe("3 · tabela de preço reflete nos itens", () => {
 
   it("sem override, o desconto da tabela é aplicado ao preço base", async () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
-      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
       return Promise.resolve({ data: [] }) as never;
     });
     rascunho({ tabelaId: "tab-1" });
@@ -272,6 +272,46 @@ describe("3 · tabela de preço reflete nos itens", () => {
 
     await waitFor(() => expect(precoDaLine()).toBe("45,00"));
     expect(origemDaLine()).toBe("preço da tabela");
+  });
+
+  it("adicionar com a tabela JÁ carregada entra com o preço dela, não o de catálogo", async () => {
+    vi.mocked(apiClient.get).mockImplementation((url: string) => {
+      if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
+      return Promise.resolve({ data: [] }) as never;
+    });
+    rascunho({ tabelaId: "tab-1" });
+    montar({
+      produtos: [
+        produto({}),
+        produto({
+          id: "p2",
+          codigo: "P2",
+          nome: "Produto dois",
+          preco_cents: 10000,
+          quantidade: 5,
+        }),
+      ],
+      tabelas: [{ id: "tab-1", nome: "Tabela Ouro", desconto_pct: 10 }],
+    });
+
+    // A tabela carregou de fato: a linha restaurada já está a 45,00.
+    await waitFor(() => expect(precoDaLine()).toBe("45,00"));
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Buscar produto" }), {
+      target: { value: "P2" },
+    });
+    fireEvent.click(screen.getByRole("option", { name: /Produto dois/ }));
+
+    // 90,00 é o preço da tabela (10% sobre 100,00). Antes da correção o item
+    // entrava a 100,00 — e ainda assim rotulado "preço da tabela".
+    await waitFor(() =>
+      expect(
+        screen.getAllByLabelText("Preço").map((i) => (i as HTMLInputElement).value),
+      ).toEqual(["45,00", "90,00"]),
+    );
+    expect(
+      [...document.querySelectorAll('[data-testid^="origem-preco-"]')].map((e) => e.textContent),
+    ).toEqual(["preço da tabela", "preço da tabela"]);
   });
 
   it("sem tabela, o preço volta ao de catálogo e a origem diz base", async () => {
@@ -286,7 +326,7 @@ describe("3 · tabela de preço reflete nos itens", () => {
   it("preço digitado à mão marca manual e NÃO é sobrescrito pela tabela", async () => {
     vi.mocked(apiClient.get).mockImplementation((url: string) => {
       if (url.startsWith("/api/v1/price-tables/")) {
-        return Promise.resolve({ itens: [{ product_id: "p1", preco_cents: 4200 }] }) as never;
+        return Promise.resolve({ data: { itens: [{ product_id: "p1", preco_cents: 4200 }] } }) as never;
       }
       return Promise.resolve({ data: [] }) as never;
     });

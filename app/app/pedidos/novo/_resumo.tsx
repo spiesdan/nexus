@@ -150,11 +150,16 @@ export function OrderSummary({
               {textos.descontoTotal}
               <span className="block text-[11px]">{textos.descontosSomam}</span>
             </dt>
-            <dd className="tabular-nums">{comoMoeda(totais.descontoCents, "BRL")}</dd>
+            <dd className="tabular-nums">
+              {comoMoeda(totais.descontoCents, "BRL")}
+              {/* O teto DESCREVE este valor. Dentro do `<dd>` ele continua
+                  ligado ao termo; solto no `<dl>` era um `<p>` filho direto —
+                  violação `definition-list` (serious) que o axe pegou. */}
+              <span className="block text-[11px] text-muted-foreground">
+                {textos.tetoDesconto}: {descontoMaxPct.toLocaleString("pt-BR")}%
+              </span>
+            </dd>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {textos.tetoDesconto}: {descontoMaxPct.toLocaleString("pt-BR")}%
-          </p>
           {totais.margemPct !== null && (
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{textos.margem}</dt>
