@@ -1,0 +1,12 @@
+11-18 19:16:56.713 I/GoogleTTSServiceImpl( 2319): For default lang en-us is name en-US-language (en-us-x-iog-server)
+11-18 19:16:56.714 I/GoogleTTSServiceImpl( 2319): currentLocale = en-US
+11-18 19:16:56.797 I/MediaFocusControl(  669): requestAudioFocus() from uid/pid 10161/6966 AA=USAGE_ASSISTANCE_ACCESSIBILITY/CONTENT_TYPE_SPEECH clientId=android.media.AudioManager@6402c81com.google.android.accessibility.utils.output.SpeechControllerImpl$5@3a87126 callingPack=com.google.android.marvin.talkback req=3 flags=0x0 sdk=36
+11-18 19:16:56.802 I/GoogleTTSServiceImpl( 2319): Synthesis request for locale eng-USA and name en-US-language
+11-18 19:16:56.808 I/GoogleTTSServiceImpl( 2319): TTS dispatch: en-us-x-iog-lstm-embedded
+11-18 19:16:57.983 I/GoogleTTSServiceImpl( 2319): Synthesis request for locale eng-USA and name en-US-language
+11-18 19:16:57.986 I/GoogleTTSServiceImpl( 2319): TTS dispatch: en-us-x-iog-lstm-embedded
+11-18 19:16:59.431 I/GoogleTTSServiceImpl( 2319): Synthesis request for locale eng-USA and name en-US-language
+11-18 19:16:59.433 I/GoogleTTSServiceImpl( 2319): TTS dispatch: en-us-x-iog-lstm-embedded
+11-18 19:17:02.269 I/GoogleTTSServiceImpl( 2319): Synthesis request for locale eng-USA and name en-US-language
+11-18 19:17:02.270 I/GoogleTTSServiceImpl( 2319): TTS dispatch: en-us-x-iog-lstm-embedded
+11-18 19:17:03.148 I/MediaFocusControl(  669): abandonAudioFocus() from uid/pid 10161/6966 clientId=android.media.AudioManager@6402c81com.google.android.accessibility.utils.output.SpeechControllerImpl$5@3a87126 callingPack=com.google.android.marvin.talkback

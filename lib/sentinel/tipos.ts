@@ -141,6 +141,10 @@ export interface NotaFiscal {
   status: string;
   total_cents: number;
   erro: string | null;
+  /** cStat devolvido pela SEFAZ (texto; 100/101/135/150/151 são sucesso). */
+  sefaz_cstat: string | null;
+  /** xMotivo do cStat — a mensagem que explica a rejeição. */
+  sefaz_xmotivo: string | null;
   created_at: string;
   updated_at: string;
 }

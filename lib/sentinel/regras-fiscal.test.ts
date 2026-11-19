@@ -12,9 +12,11 @@ import {
   notasSemVinculo,
   notasTravadasEmEmissao,
   pedidosComNfSemNota,
+  rejeicoesRepetidas,
   sincronizacaoFiscalComFalha,
 } from "./regras-fiscal";
 import { DIA, HORA, MIN, jobFiscal, nota, pedido, primeiro, snapshot, syncFiscal } from "./teste-fixtures";
+import { fingerprint } from "./tipos";
 
 describe("detectores fiscais — caso positivo e negativo", () => {
   it("nota rejeitada: erro/denegada dispara; autorizada não", () => {
@@ -260,5 +262,76 @@ describe("detectores fiscais — caso positivo e negativo", () => {
     expect(String(achado.evidencia.erro)).not.toContain("joao@cliente.com");
     expect(String(achado.evidencia.erro)).not.toContain("5511999998888");
     expect(String(achado.evidencia.erro)).toContain("[email]");
+  });
+
+  it("rejeição repetida: 3 do mesmo cStat/série abrem UMA ocorrência com limiar declarado", () => {
+    const notas = [
+      nota({ id: "n1", numero: 10, sefaz_cstat: "539", sefaz_xmotivo: "Rejeicao: duplicidade", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 2 * HORA).toISOString() }),
+      nota({ id: "n2", numero: 12, sefaz_cstat: "539", sefaz_xmotivo: "Rejeicao: duplicidade", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - HORA).toISOString() }),
+      nota({ id: "n3", numero: 11, sefaz_cstat: " 539 ", sefaz_xmotivo: "Rejeicao: duplicidade", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 30 * MIN).toISOString() }),
+    ];
+    const achados = rejeicoesRepetidas(snapshot({ notas }));
+    expect(achados).toHaveLength(1);
+    const a = primeiro(achados);
+    expect(a.regra).toBe("fiscal.rejeicao_repetida");
+    expect(a.severidade).toBe("alta");
+    expect(a.evidencia.total).toBe(3);
+    expect(a.evidencia.limiar).toBe(3);
+    expect(a.evidencia.primeiro_numero).toBe(10);
+    expect(a.evidencia.ultimo_numero).toBe(12);
+    expect(a.evidencia.notas).toEqual([10, 11, 12]);
+    expect(String(a.evidencia.mensagem)).toContain("duplicidade");
+  });
+
+  it("rejeição repetida: 2 não abre, cStat de sucesso não entra, fora da janela não conta", () => {
+    const duas = [
+      nota({ id: "n1", numero: 10, sefaz_cstat: "539", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - HORA).toISOString() }),
+      nota({ id: "n2", numero: 11, sefaz_cstat: "539", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 2 * HORA).toISOString() }),
+    ];
+    expect(rejeicoesRepetidas(snapshot({ notas: duas }))).toHaveLength(0);
+
+    const sucesso = [100, 101, 135, 150, 151].map((cstat, i) =>
+      nota({ id: `ok-${i}`, numero: 20 + i, sefaz_cstat: String(cstat) }),
+    );
+    expect(rejeicoesRepetidas(snapshot({ notas: sucesso }))).toHaveLength(0);
+
+    const antiga = nota({
+      id: "velha",
+      numero: 9,
+      sefaz_cstat: "539",
+      updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 25 * HORA).toISOString(),
+    });
+    expect(rejeicoesRepetidas(snapshot({ notas: [...duas, antiga] }))).toHaveLength(0);
+  });
+
+  it("rejeição repetida: séries diferentes são grupos diferentes; duas orgs, uma cada", () => {
+    const base = [10, 11, 12].map((numero) =>
+      nota({ id: `s1-${numero}`, numero, serie: "1", sefaz_cstat: "610" }),
+    );
+    const outraSerie = [20, 21, 22].map((numero) =>
+      nota({ id: `s2-${numero}`, numero, serie: "2", sefaz_cstat: "610" }),
+    );
+    expect(rejeicoesRepetidas(snapshot({ notas: [...base, ...outraSerie] }))).toHaveLength(2);
+
+    const org1 = primeiro(rejeicoesRepetidas(snapshot({ organizationId: "org-1", notas: base })));
+    const org2 = primeiro(rejeicoesRepetidas(snapshot({ organizationId: "org-2", notas: base })));
+    expect(org1.entidadeId).not.toBe(org2.entidadeId);
+  });
+
+  it("rejeição repetida: fingerprint estável e contagem cresce na reexecução", () => {
+    const tres = [10, 11, 12].map((numero) =>
+      nota({ id: `n${numero}`, numero, sefaz_cstat: "176" }),
+    );
+    const primeira = primeiro(rejeicoesRepetidas(snapshot({ notas: tres })));
+    const quatro = [
+      ...tres,
+      nota({ id: "n13", numero: 13, sefaz_cstat: "176" }),
+    ];
+    const segunda = primeiro(rejeicoesRepetidas(snapshot({ notas: quatro })));
+
+    expect(fingerprint(segunda)).toBe(fingerprint(primeira));
+    expect(segunda.evidencia.total).toBe(4);
+    expect(segunda.evidencia.primeiro_numero).toBe(10);
+    expect(segunda.evidencia.ultimo_numero).toBe(13);
   });
 });

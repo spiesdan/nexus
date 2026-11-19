@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { updateTenant } from "@/app/actions/settings/updateTenant";
 import { useT } from "@/hooks/i18n/useT";
+import { primeiraMensagemDeCampo } from "@/lib/forms/mensagem-de-validacao";
 import { tenantSchema, type Locale, type TenantInput } from "@/lib/schemas/settings";
 
 interface Props {
@@ -35,6 +36,16 @@ export function TenantForm({ initial }: Props) {
   const [form, setForm] = useState<TenantInput>(initial);
   const [reasonsText, setReasonsText] = useState((initial.lost_reasons_extra ?? []).join(", "));
   const [isPending, startTransition] = useTransition();
+  const rotulos: Record<string, string> = {
+    display_name: t("Nome de exibição"),
+    legal_name: t("Razão social"),
+    cnpj: "CNPJ",
+    phone: t("Telefone"),
+    dpo_email: "DPO email",
+    timezone: t("Fuso horário"),
+    locale: t("Idioma"),
+    lost_reasons_extra: t("Motivos de perda"),
+  };
 
   function set<K extends keyof TenantInput>(key: K, value: TenantInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -49,13 +60,20 @@ export function TenantForm({ initial }: Props) {
     const candidate = { ...form, lost_reasons_extra: reasons };
     const parsed = tenantSchema.safeParse(candidate);
     if (!parsed.success) {
-      toast.error(t("Dados inválidos."));
+      toast.error(primeiraMensagemDeCampo(parsed.error.flatten(), rotulos, t("Dados inválidos.")));
       return;
     }
     startTransition(async () => {
       const r = await updateTenant(parsed.data);
       if (r.ok) toast.success(t("Organização atualizada."));
-      else toast.error(`${t("Erro")}: ${r.error}`);
+      else {
+        const padrao = `${t("Erro")}: ${r.error}`;
+        toast.error(
+          r.details
+            ? primeiraMensagemDeCampo(r.details, rotulos, padrao)
+            : padrao,
+        );
+      }
     });
   }
 

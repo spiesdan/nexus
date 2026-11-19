@@ -8,7 +8,13 @@ import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusDataTable } from "@/components/nexus-ui/data/NexusDataTable";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
-import { FilterActions, FilterBar, FilterPrimary, FilterSearch, FilterSelect } from "@/components/filters/FilterBar";
+import {
+  FilterActions,
+  FilterBar,
+  FilterPrimary,
+  FilterSearch,
+  FilterSelect,
+} from "@/components/filters/FilterBar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +53,7 @@ import {
 import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { Package, Plus, Storefront, Trash } from "@/lib/ui/icons";
 
+import { mensagemDeErro } from "@/lib/ui/erros";
 type CompraLinha = {
   id: string;
   numero: number;
@@ -162,14 +169,12 @@ function AbaPedidos({ podeEscrever }: { podeEscrever: boolean }) {
   const carregar = React.useCallback(async (s: string) => {
     try {
       const qs = s ? `?status=${s}` : "";
-      const corpo = await apiClient.get<{ data: CompraLinha[] }>(
-        `/api/v1/purchase-orders${qs}`,
-      );
+      const corpo = await apiClient.get<{ data: CompraLinha[] }>(`/api/v1/purchase-orders${qs}`);
       setLinhas(corpo.data ?? []);
       setErro("");
       setEstado((corpo.data ?? []).length === 0 ? "empty" : "ready");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar compras.");
+      setErro(mensagemDeErro(e, "Erro ao carregar compras."));
       setEstado("error");
     }
   }, []);
@@ -206,7 +211,11 @@ function AbaPedidos({ podeEscrever }: { podeEscrever: boolean }) {
             <TableCell className="font-medium">#{l.numero}</TableCell>
             <TableCell>{nomeFornecedor(l.supplier_id) ?? "—"}</TableCell>
             <TableCell>
-              <Badge variant={VARIANTE[ehStatusCompra(l.status) ? tonalidadeStatusCompra(l.status) : "cinza"]}>
+              <Badge
+                variant={
+                  VARIANTE[ehStatusCompra(l.status) ? tonalidadeStatusCompra(l.status) : "cinza"]
+                }
+              >
                 {rotuloStatusCompra(l.status)}
               </Badge>
             </TableCell>
@@ -281,7 +290,11 @@ function AbaPedidos({ podeEscrever }: { podeEscrever: boolean }) {
                 {nomeFornecedor(l.supplier_id) ?? "Sem fornecedor"}
               </p>
             </div>
-            <Badge variant={VARIANTE[ehStatusCompra(l.status) ? tonalidadeStatusCompra(l.status) : "cinza"]}>
+            <Badge
+              variant={
+                VARIANTE[ehStatusCompra(l.status) ? tonalidadeStatusCompra(l.status) : "cinza"]
+              }
+            >
               {rotuloStatusCompra(l.status)}
             </Badge>
           </div>
@@ -327,7 +340,7 @@ function AbaFornecedores({ podeEscrever }: { podeEscrever: boolean }) {
       setErro("");
       setEstado((corpo.data ?? []).length === 0 ? "empty" : "ready");
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Erro ao carregar fornecedores.");
+      setErro(mensagemDeErro(e, "Erro ao carregar fornecedores."));
       setEstado("error");
     }
   }, []);
@@ -488,10 +501,7 @@ function DialogNovaCompra({
           })),
       };
       if (corpo.itens.length === 0) throw new Error("Adicione ao menos um item.");
-      const resp = await apiClient.post<{ data: { id: string } }>(
-        "/api/v1/purchase-orders",
-        corpo,
-      );
+      const resp = await apiClient.post<{ data: { id: string } }>("/api/v1/purchase-orders", corpo);
       nexusToast.success("Pedido de compra criado.");
       aoCriar(resp.data.id);
       onOpenChange(false);
@@ -499,7 +509,7 @@ function DialogNovaCompra({
       setObservacoes("");
       setSupplierId("");
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Erro ao criar o pedido.";
+      const msg = mensagemDeErro(e, "Erro ao criar o pedido.");
       setErroServidor(msg);
     } finally {
       setSubmetendo(false);
@@ -519,7 +529,10 @@ function DialogNovaCompra({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Fornecedor (opcional)</Label>
-            <Select value={supplierId || "sem"} onValueChange={(v) => setSupplierId(v === "sem" ? "" : v)}>
+            <Select
+              value={supplierId || "sem"}
+              onValueChange={(v) => setSupplierId(v === "sem" ? "" : v)}
+            >
               <SelectTrigger aria-label="Fornecedor (opcional)">
                 <SelectValue placeholder="Sem fornecedor" />
               </SelectTrigger>
@@ -551,8 +564,14 @@ function DialogNovaCompra({
             {itens.map((item, i) => {
               const produto = produtos.find((p) => p.id === item.product_id);
               return (
-                <div key={i} className="grid grid-cols-1 gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_6rem_7rem_2rem]">
-                  <Select value={item.product_id || "nada"} onValueChange={(v) => trocarItem(i, { product_id: v === "nada" ? "" : v })}>
+                <div
+                  key={i}
+                  className="grid grid-cols-1 gap-2 rounded-lg border border-border p-3 sm:grid-cols-[1fr_6rem_7rem_2rem]"
+                >
+                  <Select
+                    value={item.product_id || "nada"}
+                    onValueChange={(v) => trocarItem(i, { product_id: v === "nada" ? "" : v })}
+                  >
                     <SelectTrigger aria-label="Produto">
                       <SelectValue placeholder="Produto" />
                     </SelectTrigger>
@@ -604,7 +623,9 @@ function DialogNovaCompra({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setItens((ant) => [...ant, { product_id: "", quantidade: "1", custo_reais: "" }])}
+              onClick={() =>
+                setItens((ant) => [...ant, { product_id: "", quantidade: "1", custo_reais: "" }])
+              }
             >
               <Plus className="mr-2 h-4 w-4" /> Adicionar item
             </Button>
@@ -668,7 +689,7 @@ function DialogNovoFornecedor({
       setEmail("");
       setTelefone("");
     } catch (e) {
-      setErroServidor(e instanceof Error ? e.message : "Erro ao cadastrar fornecedor.");
+      setErroServidor(mensagemDeErro(e, "Erro ao cadastrar fornecedor."));
     } finally {
       setSubmetendo(false);
     }

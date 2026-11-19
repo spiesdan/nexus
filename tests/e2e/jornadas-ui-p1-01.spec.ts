@@ -27,7 +27,6 @@ import { execNpx } from "./utils/npx";
 import { lerCreds, loginComoAdmin, type CredsE2E } from "./helpers/login-admin";
 
 const EVIDENCIA = path.join(process.cwd(), "docs/auditoria/evidencias/jornadas-ui-2026-11-18");
-const CREDS_PATH = path.join(process.cwd(), ".e2e-creds.json");
 
 interface CredsComFila extends CredsE2E {
   org_id?: string;
@@ -111,8 +110,8 @@ test.describe("P1-01 — UI das jornadas críticas", () => {
       });
     });
 
-    let c = creds();
-    c = (await loginComoAdmin(page, c)) as CredsComFila;
+    const c = creds();
+    await loginComoAdmin(page, c);
     await page.goto("/app/fiscal/sincronizacoes");
 
     const botao = page.getByRole("button", { name: "Sincronizar agora" });
@@ -146,8 +145,7 @@ test.describe("P1-01 — UI das jornadas críticas", () => {
     const c = creds();
     if (!c.lgpd) throw new Error("seed-e2e-lgpd não gravou o bloco lgpd");
 
-    let atual = (await loginComoAdmin(page, c)) as CredsComFila;
-    atual = { ...atual, lgpd: c.lgpd };
+    await loginComoAdmin(page, c);
     await page.goto(`/app/lgpd/requests/${c.lgpd.request_id}`);
 
     const abrir = page.getByRole("button", { name: /Aprovar anonimização/ });

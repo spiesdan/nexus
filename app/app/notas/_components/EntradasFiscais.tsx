@@ -5,6 +5,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { EmptyState } from "@/components/empty";
+import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,32 @@ export function EntradasFiscais({
   const [expandida, setExpandida] = React.useState<string | null>(null);
   const [eventoPor, setEventoPor] = React.useState<Record<string, string>>({});
   const [agindo, setAgindo] = React.useState<string | null>(null);
+  /**
+   * O ERRO DA LEITURA PRECISA DE ESTADO PRÓPRIO.
+   *
+   * `recarregar` só chamava `showApiError` (toast) e seguia. Quando a leitura
+   * falhava e a lista estava vazia, a tela caía no vazio — "Nenhuma nota de
+   * entrada ainda" — com um toast que some em 4 segundos. É a mesma classe da
+   * V-22/V-43: o estado afirma uma coisa (não há nada) quando o problema é
+   * outro (não deu para ler). Agora o erro vira tela com "Tentar de novo".
+   */
+  const [erro, setErro] = React.useState<string | null>(null);
+
+  /**
+   * Erro de transporte vira frase em português; o resto mantém a mensagem.
+   *
+   * Local de propósito: o helper compartilhado (`lib/ui/erros.ts`) entra com a
+   * fatia 5.6, que ainda está em PR. Duplicar seis linhas aqui é melhor que
+   * fazer esta fatia depender de outra para compilar — e a unificação fica
+   * anotada no §8 da ficha 5.8.
+   */
+  function mensagemDaFalha(e: unknown): string {
+    const semRede = typeof navigator !== "undefined" && navigator.onLine === false;
+    if (semRede) return t("Sem conexão. Verifique a rede e tente de novo.");
+    if (e instanceof TypeError) return t("Sem conexão. Verifique a rede e tente de novo.");
+    if (e instanceof Error && e.message.trim()) return e.message;
+    return t("Não foi possível carregar as notas de entrada.");
+  }
 
   async function recarregar() {
     setCarregando(true);
@@ -114,7 +141,9 @@ export function EntradasFiscais({
       ]);
       setEntradas(corpoEntradas.data ?? []);
       setPagaveis(corpoPagaveis.data ?? []);
+      setErro(null);
     } catch (e) {
+      setErro(mensagemDaFalha(e));
       showApiError(e);
     } finally {
       setCarregando(false);
@@ -239,307 +268,329 @@ export function EntradasFiscais({
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-10 w-full" />
         </div>
+      ) : erro && visiveis.length === 0 ? (
+        <NexusErrorState
+          title={t("Não foi possível carregar as notas de entrada")}
+          description={erro}
+          onRetry={() => void recarregar()}
+        />
       ) : visiveis.length === 0 ? (
         <EmptyState
           icon={FileText}
           headline={textos.nenhumaEntrada}
           subcopy={t("Clique em Buscar na SEFAZ para puxar as notas emitidas contra o CNPJ.")}
-          primary={undefined}
+          primary={
+            podeSincronizar
+              ? { label: textos.buscarSefaz, onClick: () => void sincronizar() }
+              : undefined
+          }
         />
       ) : (
-        <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
-                <TableHead>{textos.numNota}</TableHead>
-                <TableHead>{textos.fornecedor}</TableHead>
-                <TableHead>{textos.data}</TableHead>
-                <TableHead className="text-right">{textos.valorTotal}</TableHead>
-                <TableHead>{textos.status}</TableHead>
-                <TableHead>{textos.detalhe}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visiveis.map((e) => {
-                const aberta = expandida === e.id;
-                const temXml = !!e.xml && e.itens_json.length > 0;
-                return (
-                  <React.Fragment key={e.id}>
-                    <TableRow>
-                      <TableCell className="font-medium">
-                        {identificacaoDaEntrada(e.numero, e.serie)}
-                      </TableCell>
-                      <TableCell>
-                        <span className="block max-w-56 truncate" title={e.emitente_nome}>
-                          {e.emitente_nome}
-                        </span>
-                        <span className="block text-xs text-muted-foreground">
-                          {e.emitente_cnpj}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {e.dh_emi ? new Date(e.dh_emi).toLocaleDateString(tagIdioma) : "—"}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {comoMoeda(e.valor_total_cents, "BRL")}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1">
-                          <Badge variant={VARIANTE_STATUS[e.status]}>
-                            {ROTULO_DA_ENTRADA[e.status]}
-                          </Badge>
-                          <Badge
-                            variant={VARIANTE_CONFERENCIA[e.conferencia_status]}
-                            className="text-[10px]"
-                          >
-                            {ROTULO_DA_CONFERENCIA[e.conferencia_status]}
-                          </Badge>
-                          {e.situacao_fiscal !== "desconhecida" && (
-                            <Badge variant="outline" className="text-[10px]">
-                              {ROTULO_DA_SITUACAO[e.situacao_fiscal]}
+        <div className="space-y-2">
+          {erro ? (
+            <p role="alert" className="text-xs text-error-fg">
+              {erro}{" "}
+              <button type="button" className="underline" onClick={() => void recarregar()}>
+                {t("Tentar de novo")}
+              </button>
+            </p>
+          ) : null}
+          <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead>{textos.numNota}</TableHead>
+                  <TableHead>{textos.fornecedor}</TableHead>
+                  <TableHead>{textos.data}</TableHead>
+                  <TableHead className="text-right">{textos.valorTotal}</TableHead>
+                  <TableHead>{textos.status}</TableHead>
+                  <TableHead>{textos.detalhe}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visiveis.map((e) => {
+                  const aberta = expandida === e.id;
+                  const temXml = !!e.xml && e.itens_json.length > 0;
+                  return (
+                    <React.Fragment key={e.id}>
+                      <TableRow>
+                        <TableCell className="font-medium">
+                          {identificacaoDaEntrada(e.numero, e.serie)}
+                        </TableCell>
+                        <TableCell>
+                          <span className="block max-w-56 truncate" title={e.emitente_nome}>
+                            {e.emitente_nome}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {e.emitente_cnpj}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {e.dh_emi ? new Date(e.dh_emi).toLocaleDateString(tagIdioma) : "—"}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {comoMoeda(e.valor_total_cents, "BRL")}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap items-center gap-1">
+                            <Badge variant={VARIANTE_STATUS[e.status]}>
+                              {ROTULO_DA_ENTRADA[e.status]}
                             </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <button
-                          type="button"
-                          className="underline underline-offset-4"
-                          onClick={() => setExpandida(aberta ? null : e.id)}
-                        >
-                          {aberta ? "−" : "+"}
-                        </button>
-                      </TableCell>
-                    </TableRow>
-                    {aberta && (
-                      <TableRow className="bg-muted/20 hover:bg-muted/20">
-                        <TableCell colSpan={6}>
-                          <div className="space-y-3 p-1 text-sm">
-                            <p className="text-xs break-all text-muted-foreground">
-                              {textos.chaveAcesso}: {e.chave}
-                            </p>
-                            {e.manifestacao && (
-                              <p className="text-xs">
-                                {textos.manifestar}: <strong>{e.manifestacao}</strong>
-                                {e.manifestada_em
-                                  ? ` · ${new Date(e.manifestada_em).toLocaleString(tagIdioma)}`
-                                  : ""}
-                              </p>
+                            <Badge
+                              variant={VARIANTE_CONFERENCIA[e.conferencia_status]}
+                              className="text-[10px]"
+                            >
+                              {ROTULO_DA_CONFERENCIA[e.conferencia_status]}
+                            </Badge>
+                            {e.situacao_fiscal !== "desconhecida" && (
+                              <Badge variant="outline" className="text-[10px]">
+                                {ROTULO_DA_SITUACAO[e.situacao_fiscal]}
+                              </Badge>
                             )}
-                            {temXml ? (
-                              <>
-                                <div>
-                                  <p className="mb-1 font-medium">
-                                    {textos.itensLabel} ({e.itens_json.length})
-                                  </p>
-                                  <ul className="space-y-1 text-xs">
-                                    {e.itens_json.map((it, i) => (
-                                      <li key={i} className="flex justify-between gap-2">
-                                        <span className="truncate">
-                                          {it.codigo} · {it.descricao} · {it.quantidade}{" "}
-                                          {it.unidade ?? "UN"}
-                                        </span>
-                                        <span className="tabular-nums">
-                                          {comoMoeda(it.total_cents, "BRL")}
-                                        </span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                                {e.cobranca_json.length > 0 && (
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          <button
+                            type="button"
+                            className="underline underline-offset-4"
+                            onClick={() => setExpandida(aberta ? null : e.id)}
+                          >
+                            {aberta ? "−" : "+"}
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                      {aberta && (
+                        <TableRow className="bg-muted/20 hover:bg-muted/20">
+                          <TableCell colSpan={6}>
+                            <div className="space-y-3 p-1 text-sm">
+                              <p className="text-xs break-all text-muted-foreground">
+                                {textos.chaveAcesso}: {e.chave}
+                              </p>
+                              {e.manifestacao && (
+                                <p className="text-xs">
+                                  {textos.manifestar}: <strong>{e.manifestacao}</strong>
+                                  {e.manifestada_em
+                                    ? ` · ${new Date(e.manifestada_em).toLocaleString(tagIdioma)}`
+                                    : ""}
+                                </p>
+                              )}
+                              {temXml ? (
+                                <>
                                   <div>
-                                    <p className="mb-1 font-medium">{textos.duplicatas}</p>
+                                    <p className="mb-1 font-medium">
+                                      {textos.itensLabel} ({e.itens_json.length})
+                                    </p>
                                     <ul className="space-y-1 text-xs">
-                                      {e.cobranca_json.map((d, i) => (
+                                      {e.itens_json.map((it, i) => (
                                         <li key={i} className="flex justify-between gap-2">
-                                          <span>
-                                            {d.numero || `#${i + 1}`} · {d.vencimento || "—"}
+                                          <span className="truncate">
+                                            {it.codigo} · {it.descricao} · {it.quantidade}{" "}
+                                            {it.unidade ?? "UN"}
                                           </span>
                                           <span className="tabular-nums">
-                                            {comoMoeda(d.valor_cents, "BRL")}
+                                            {comoMoeda(it.total_cents, "BRL")}
                                           </span>
                                         </li>
                                       ))}
                                     </ul>
                                   </div>
-                                )}
-                                {(pagaveisPorEntrada.get(e.id) ?? []).length > 0 && (
-                                  <div>
-                                    <p className="mb-1 font-medium">{textos.contasPagar}</p>
-                                    <ul className="space-y-1 text-xs">
-                                      {(pagaveisPorEntrada.get(e.id) ?? []).map((p) => (
-                                        <li
-                                          key={p.id}
-                                          className="flex items-center justify-between gap-2"
-                                        >
-                                          <span>
-                                            {p.parcela_n}/{p.total_parcelas} · {p.vencimento}
-                                          </span>
-                                          <div className="flex items-center gap-2">
-                                            <span className="tabular-nums">
-                                              {comoMoeda(p.valor_original_cents, "BRL")}
+                                  {e.cobranca_json.length > 0 && (
+                                    <div>
+                                      <p className="mb-1 font-medium">{textos.duplicatas}</p>
+                                      <ul className="space-y-1 text-xs">
+                                        {e.cobranca_json.map((d, i) => (
+                                          <li key={i} className="flex justify-between gap-2">
+                                            <span>
+                                              {d.numero || `#${i + 1}`} · {d.vencimento || "—"}
                                             </span>
-                                            <Badge
-                                              variant={p.status === "pago" ? "success" : "neutral"}
-                                              className="text-[10px]"
-                                            >
-                                              {t(ROTULO_PAGAVEL[p.status] ?? p.status)}
-                                            </Badge>
-                                          </div>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-xs text-muted-foreground">
-                                {textos.semXmlEntrada}
-                              </p>
-                            )}
-                            <div className="flex flex-wrap items-center gap-2">
-                              {e.xml && (
-                                <Button size="sm" variant="outline" onClick={() => baixarXml(e)}>
-                                  <DownloadSimple size={14} /> {textos.baixarXml}
-                                </Button>
+                                            <span className="tabular-nums">
+                                              {comoMoeda(d.valor_cents, "BRL")}
+                                            </span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                  {(pagaveisPorEntrada.get(e.id) ?? []).length > 0 && (
+                                    <div>
+                                      <p className="mb-1 font-medium">{textos.contasPagar}</p>
+                                      <ul className="space-y-1 text-xs">
+                                        {(pagaveisPorEntrada.get(e.id) ?? []).map((p) => (
+                                          <li
+                                            key={p.id}
+                                            className="flex items-center justify-between gap-2"
+                                          >
+                                            <span>
+                                              {p.parcela_n}/{p.total_parcelas} · {p.vencimento}
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                              <span className="tabular-nums">
+                                                {comoMoeda(p.valor_original_cents, "BRL")}
+                                              </span>
+                                              <Badge
+                                                variant={
+                                                  p.status === "pago" ? "success" : "neutral"
+                                                }
+                                                className="text-[10px]"
+                                              >
+                                                {t(ROTULO_PAGAVEL[p.status] ?? p.status)}
+                                              </Badge>
+                                            </div>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">
+                                  {textos.semXmlEntrada}
+                                </p>
                               )}
-                              {podeSincronizar &&
-                                (e.status === "nova" || e.status === "manifestada") && (
-                                  <>
-                                    <select
-                                      value={eventoPor[e.id] ?? "210210"}
-                                      onChange={(ev) =>
-                                        setEventoPor((m) => ({ ...m, [e.id]: ev.target.value }))
-                                      }
-                                      aria-label={textos.manifestar}
-                                      className="h-8 rounded-md border bg-background px-2 text-xs"
-                                    >
-                                      {EVENTOS.filter(
-                                        // Ciência é rotina (agent). Os outros três
-                                        // declaram operação e exigem gerente — a
-                                        // rota recusa e a policy também.
-                                        (ev) => ev.codigo === "210210" || podeConferir,
-                                      ).map((ev) => (
-                                        <option key={ev.codigo} value={ev.codigo}>
-                                          {ev.rotulo}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      disabled={agindo === e.id + "manifestar"}
-                                      onClick={() =>
-                                        void acao(
-                                          e.id,
-                                          "manifestar",
-                                          { evento: eventoPor[e.id] ?? "210210" },
-                                          textos.manifestadaOk,
-                                        )
-                                      }
-                                    >
-                                      {textos.manifestar}
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      disabled={agindo === e.id + "ignorar"}
-                                      onClick={() =>
-                                        void acao(e.id, "ignorar", {}, textos.ignoradaOk)
-                                      }
-                                    >
-                                      {textos.ignorarEntrada}
-                                    </Button>
-                                  </>
+                              <div className="flex flex-wrap items-center gap-2">
+                                {e.xml && (
+                                  <Button size="sm" variant="outline" onClick={() => baixarXml(e)}>
+                                    <DownloadSimple size={14} /> {textos.baixarXml}
+                                  </Button>
                                 )}
-                              {podeConferir &&
-                                temXml &&
-                                e.status !== "importada" &&
-                                e.status !== "ignorada" && (
-                                  <>
-                                    {e.conferencia_status === "aprovada" ? (
+                                {podeSincronizar &&
+                                  (e.status === "nova" || e.status === "manifestada") && (
+                                    <>
+                                      <select
+                                        value={eventoPor[e.id] ?? "210210"}
+                                        onChange={(ev) =>
+                                          setEventoPor((m) => ({ ...m, [e.id]: ev.target.value }))
+                                        }
+                                        aria-label={textos.manifestar}
+                                        className="h-8 rounded-md border bg-background px-2 text-xs"
+                                      >
+                                        {EVENTOS.filter(
+                                          // Ciência é rotina (agent). Os outros três
+                                          // declaram operação e exigem gerente — a
+                                          // rota recusa e a policy também.
+                                          (ev) => ev.codigo === "210210" || podeConferir,
+                                        ).map((ev) => (
+                                          <option key={ev.codigo} value={ev.codigo}>
+                                            {ev.rotulo}
+                                          </option>
+                                        ))}
+                                      </select>
                                       <Button
                                         size="sm"
-                                        variant="ghost"
-                                        disabled={agindo === e.id + "conferencia"}
+                                        variant="outline"
+                                        disabled={agindo === e.id + "manifestar"}
                                         onClick={() =>
                                           void acao(
                                             e.id,
-                                            "conferencia",
-                                            { decisao: "reabrir" },
-                                            t("Conferência reaberta."),
+                                            "manifestar",
+                                            { evento: eventoPor[e.id] ?? "210210" },
+                                            textos.manifestadaOk,
                                           )
                                         }
                                       >
-                                        {t("Reabrir conferência")}
+                                        {textos.manifestar}
                                       </Button>
-                                    ) : (
-                                      <>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        disabled={agindo === e.id + "ignorar"}
+                                        onClick={() =>
+                                          void acao(e.id, "ignorar", {}, textos.ignoradaOk)
+                                        }
+                                      >
+                                        {textos.ignorarEntrada}
+                                      </Button>
+                                    </>
+                                  )}
+                                {podeConferir &&
+                                  temXml &&
+                                  e.status !== "importada" &&
+                                  e.status !== "ignorada" && (
+                                    <>
+                                      {e.conferencia_status === "aprovada" ? (
                                         <Button
                                           size="sm"
+                                          variant="ghost"
                                           disabled={agindo === e.id + "conferencia"}
                                           onClick={() =>
                                             void acao(
                                               e.id,
                                               "conferencia",
-                                              { decisao: "aprovar" },
-                                              t("Conferência aprovada."),
+                                              { decisao: "reabrir" },
+                                              t("Conferência reaberta."),
                                             )
                                           }
                                         >
-                                          {t("Aprovar conferência")}
+                                          {t("Reabrir conferência")}
                                         </Button>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          disabled={agindo === e.id + "conferencia"}
-                                          onClick={() =>
-                                            void acao(
-                                              e.id,
-                                              "conferencia",
-                                              { decisao: "rejeitar" },
-                                              t("Conferência rejeitada."),
-                                            )
-                                          }
-                                        >
-                                          {t("Rejeitar")}
-                                        </Button>
-                                      </>
-                                    )}
-                                  </>
-                                )}
-                              {podeImportar &&
-                                temXml &&
-                                e.status !== "importada" &&
-                                e.status !== "ignorada" && (
-                                  <Button
-                                    size="sm"
-                                    disabled={
-                                      agindo === e.id + "importar" ||
-                                      e.conferencia_status !== "aprovada"
-                                    }
-                                    title={
-                                      e.conferencia_status === "aprovada"
-                                        ? undefined
-                                        : t("Aprove a conferência antes de mover estoque.")
-                                    }
-                                    onClick={() =>
-                                      void acao(e.id, "importar", {}, textos.importadaOk)
-                                    }
-                                  >
-                                    {textos.importarEntrada}
-                                  </Button>
-                                )}
+                                      ) : (
+                                        <>
+                                          <Button
+                                            size="sm"
+                                            disabled={agindo === e.id + "conferencia"}
+                                            onClick={() =>
+                                              void acao(
+                                                e.id,
+                                                "conferencia",
+                                                { decisao: "aprovar" },
+                                                t("Conferência aprovada."),
+                                              )
+                                            }
+                                          >
+                                            {t("Aprovar conferência")}
+                                          </Button>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={agindo === e.id + "conferencia"}
+                                            onClick={() =>
+                                              void acao(
+                                                e.id,
+                                                "conferencia",
+                                                { decisao: "rejeitar" },
+                                                t("Conferência rejeitada."),
+                                              )
+                                            }
+                                          >
+                                            {t("Rejeitar")}
+                                          </Button>
+                                        </>
+                                      )}
+                                    </>
+                                  )}
+                                {podeImportar &&
+                                  temXml &&
+                                  e.status !== "importada" &&
+                                  e.status !== "ignorada" && (
+                                    <Button
+                                      size="sm"
+                                      disabled={
+                                        agindo === e.id + "importar" ||
+                                        e.conferencia_status !== "aprovada"
+                                      }
+                                      title={
+                                        e.conferencia_status === "aprovada"
+                                          ? undefined
+                                          : t("Aprove a conferência antes de mover estoque.")
+                                      }
+                                      onClick={() =>
+                                        void acao(e.id, "importar", {}, textos.importadaOk)
+                                      }
+                                    >
+                                      {textos.importarEntrada}
+                                    </Button>
+                                  )}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
-                );
-              })}
-            </TableBody>
-          </Table>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       )}
     </div>

@@ -8,6 +8,122 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.58.0] — 2026-11-18
+
+### Adicionado
+
+- **Sentinel encontra cadastro com endereço gravado como "NULL", "undefined" ou "NaN"** Cadastros antigos podem ter o texto do valor ausente no endereço: `NULL`,
+  `undefined`, `NaN` ou só espaços em logradouro, complemento, bairro ou cidade.
+  A busca é por palavra: `RUA NULL` casa; `RUA NULLS` não.
+  O Sentinel passa a abrir uma ocorrência por organização com a contagem por campo
+  e os ids dos cadastros afetados — sem colocar o endereço na evidência, porque é
+  dado pessoal.
+
+  É observação, não correção: o escritor que gravava o literal não está mais no
+  código, e o cadastro precisa do dado real confirmado por uma pessoa. O alerta
+  serve para o passado não ficar invisível e para o futuro não regredir calado.
+  Medido após a limpeza dos 84 históricos: **0 cadastros** com o literal.
+
+- **Sentinel enxerga o padrão de rejeição da SEFAZ, não só a nota uma a uma** Quando o mesmo código de rejeição da SEFAZ (cStat) se repete na mesma série no
+  mesmo dia, o problema costuma estar no cadastro ou na configuração do emitente —
+  não em azar. O Sentinel agora abre **uma ocorrência por grupo** (organização +
+  cStat + série + dia), com a contagem, os primeiros/últimos números de nota, a
+  mensagem do cStat e o limiar usado.
+
+  O limiar é declarado: **3 notas na janela de 24h**. Com 2, não abre. CStat de
+  sucesso (100/101/135/150/151) não entra. Reexecutar no mesmo dia atualiza a
+  mesma ocorrência e o histórico mostra a contagem crescendo; não duplica.
+
+  É observação pura: o Sentinel não reemite, não cancela e não escreve em notas.
+
+### Corrigido
+
+- **A tela deixa de mostrar "Failed to fetch" — erro de rede vira frase em português** Estoque, compras e recebimento mostravam a mensagem crua do navegador quando a
+  requisição falhava por rede: **"Failed to fetch"**, em inglês, no lugar do texto
+  que explica o que houve. Agora erro de transporte (ou navegador offline) vira
+  uma frase que manda verificar a conexão e tentar de novo — mantendo na tela o
+  que já estava carregado.
+
+  Erro do servidor continua mostrando o texto da rota, e a validação do próprio
+  produto ("Adicione ao menos um item.") continua dizendo o que precisa ser dito.
+
+- **Erro de configuração diz qual campo; convite vencido tem estado próprio** - **Salvar em Configurações → Empresa/Perfil** agora mostra o **campo** e a
+    mensagem (ex.: “Nome de exibição: informe ao menos 2 caracteres”), em vez de
+    “Dados inválidos.” quando o Zod recusa. Vale para a validação da tela e para a
+    resposta da Server Action.
+  - **Equipe → Membros** passa a ser visível só para gerentes e administradores;
+    quem é viewer/agent vê uma frase explicando, em vez de um erro de carregamento
+    (403) na lista. A aba Atendimento continua com a mensagem de permissão que já
+    existia.
+  - **Convite vencido** deixa de parecer “Pendente”: a tabela distingue
+    **Aceito, Pendente e Expirado** usando a mesma janela de 24h do token, sem
+    inventar um segundo prazo.
+  - **Detalhe LGPD** com erro de leitura ganha “Tentar novamente”, em vez de uma
+    faixa vermelha sem saída.
+
+  Nenhuma regra de negócio, RLS, fiscal ou financeiro foi alterada; é estado/UX.
+
+- **Fiscal: "Emitindo" explica a saída, a reemissão mostra que está enviando e falha de leitura não vira vazio** Três estados da tela fiscal mentiam por omissão:
+
+  - a nota em **Emitindo** mostrava só o rótulo; a explicação ("se passar de 15
+    minutos, use Tentar de novo") existia apenas no `title` do botão, que não
+    aparece no toque. Agora a dica fica ao lado do status;
+  - a **reemissão** não tinha estado de envio — o botão seguia clicável durante a
+    chamada. Agora desabilita enquanto a nota está sendo enfileirada;
+  - a **lista de entradas** tratava falha de leitura como "nenhuma nota ainda"
+    (só um toast de 4 s). Agora mostra erro com "Tentar de novo", ou uma faixa
+    acima da tabela quando já havia dados na tela.
+
+  Os vazios de entradas e de notas ganharam próximo passo (Buscar na SEFAZ /
+  Abrir a Visão Geral / Ver pedidos). Nenhuma regra fiscal foi alterada.
+
+- **Inbox: envio sem rede não apaga mais o texto, e "carregar mais" avisa quando está pausado** Sem rede, o envio de mensagem ficava pendente em silêncio — sem erro, sem
+  sucesso — e o campo, que é limpo antes do resultado, ficava vazio: o texto
+  escrito se perdia e a mensagem sairia sozinha quando a rede voltasse. Agora o
+  envio é barrado antes de limpar o campo, com aviso e o texto preservado.
+
+  As duas listas paginadas do Inbox (conversas e mensagens antigas) também
+  passaram a mostrar "sem conexão" no lugar do "Carregar mais" quando a busca está
+  pausada, como as outras listas do produto já faziam.
+
+- **Atualização para quando o banco recusa parte do schema** O `update.sh` aplicava o schema e, se o banco recusasse parte dele, avisava e
+  **continuava**: contêineres subiam na versão nova, o site respondia 200 e uma
+  tabela simplesmente não existia — o defeito apareceria só quando alguém usasse o
+  recurso.
+
+  Medido no deploy da 1.57.0: um erro de DDL no meio do baseline deixou o schema
+  incompleto e o `health` verde, porque o `health` é probe interno e não olha
+  schema.
+
+  Agora a atualização **para antes de trocar as imagens** quando o banco recusa
+  parte do schema: o que está no ar continua sendo a versão anterior, inteira, e a
+  mensagem diz o que fazer. Quem sabe o que está fazendo pode subir mesmo assim com
+  `NEXUS_SCHEMA_NAO_FATAL=1`.
+
+- **Leitor de tela encontra os campos e a contagem no shell offline** No shell offline, os campos de busca de cliente, busca de produto e observação
+  só tinham placeholder; o TalkBack lia o exemplo, não o nome do campo. Agora os
+  três têm nome acessível (`Buscar cliente`, `Buscar produto`, `Observação
+  (opcional)`).
+
+  A contagem da fila (“Fila de envio (1)”) é uma região viva e o cliente
+  escolhido/total são `status`: uma mudança é anunciada sem o foco sair do lugar.
+  O estado de conexão e o “aguardando envio” já estavam em palavra, não só em
+  cor.
+
+  Validado no emulador com TalkBack 16 ligado; a árvore de acessibilidade
+  pós-instalação expõe os nomes dos três campos. A fala exata não é registrada
+  pelo logcat — a prova de conteúdo é a árvore, e a de síntese é o TTS.
+
+- **Devolução deixa de ser tratada como nota duplicada** A trava que impede duas notas vivas para o mesmo pedido contava a **devolução**
+  (finalidade 4) como concorrente da nota de venda — e uma devolução é,
+  legitimamente, a segunda nota do mesmo pedido. Em produção isso abortou o
+  backfill de vínculos de itens: o pedido 19560 ficou com um vínculo só.
+
+  A trava passou a considerar a finalidade: devolução não ocupa o pedido, e nota
+  **cancelada** deixa de contar como viva ao vincular itens. Também foi corrigido o
+  bloco de schema que quebrava quando uma função tinha `search_path` vazio
+  (`set search_path = , pg_temp`), que era o erro visto no deploy.
+
 ## [1.57.0] — 2026-11-18
 
 ### Adicionado
@@ -7966,7 +8082,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.57.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.58.0...HEAD
+[1.58.0]: https://github.com/spiesdan/nexus/compare/v1.57.0...v1.58.0
 [1.57.0]: https://github.com/spiesdan/nexus/compare/v1.56.0...v1.57.0
 [1.56.0]: https://github.com/spiesdan/nexus/compare/v1.55.0...v1.56.0
 [1.55.0]: https://github.com/spiesdan/nexus/compare/v1.54.0...v1.55.0

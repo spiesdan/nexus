@@ -116,3 +116,83 @@ pnpm test:shell                                  # kit de instalação
 
 A triagem de PR usou a API REST do GitHub (o `gh` não está instalado); os
 comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
+
+## 7. O que falta para o DoD — item por item (18/11/2026)
+
+> Sem "quase pronto": cada linha é uma entrega que o §13 do prompt mestre cobra e
+> que **não** está fechada. O que está fechado tem `[x]` na fila com prova.
+
+### Módulos (fichas + estados)
+
+| Módulo | Estado | O que falta |
+|---|---|---|
+| 5.4 inbox/atendimento/campanhas | `[~]` | #563 (estado offline) em CI; falta ficha com evidência dos 7 estados e o recorte de campanhas |
+| 5.6 pedidos/estoque/compras/expedição | `[ ]` | ficha por subtela + estados; E caiu antes de começar |
+| 5.8 fiscal | `[~]` | telas cobertas por testes de rota; falta ficha visual/estados |
+| 5.10/5.11 configurações/equipe/LGPD/admin | `[~]` | equipe/tokens/admin com estados honestos (#507/#519); falta ficha e o recorte de LGPD |
+
+### Jornadas
+
+| Jornada | Estado | O que falta |
+|---|---|---|
+| J6 inbox | `[~]` | prova em Vitest (#517) e reenvio corrigido (#503); falta E2E de navegador |
+| J13 fiscal | `[~]` | prova em Vitest; falta E2E com nota em homologação (sem SEFAZ real) |
+| J14 LGPD | `[~]` | sem E2E; export/anonimização provados por unidade |
+
+### Sentinel
+
+| Item | Estado |
+|---|---|
+| v1.2/v1.3 (estoque sem movimento, correção aprovada, observabilidade) | `[x]` na 1.57.0 |
+| **v1.4** — timeout/erro de SEFAZ agrupado por código e emitente, com painel | `[ ]` — não iniciado |
+| `cadastro.endereco_com_lixo` | `[x]` (#560/#564) |
+
+### Mobile e acessibilidade
+
+| Item | Estado |
+|---|---|
+| B-7: dreno aceito e `401 token_revoked` com fila intacta | `[~]` — F no emulador; prova ainda não anexada |
+| **Leitor de tela em aparelho (TalkBack)** | `[!]` — exige dispositivo; nada foi executado |
+| iOS | `[!]` — fora de escopo por decisão (P3-01) |
+
+### Testes e operação
+
+| Item | Estado |
+|---|---|
+| E2E completo | `[~]` — PR roda smoke; critical na main; full noturno. 3 specs fora do CI por motivo escrito |
+| `update.sh` falhar alto em DDL | `[ ]` — **P0 da fila (§20)**, dono orquestrador |
+| Deploy da 1.58.0 | `[ ]` — depende do corte (não autorizado) |
+| Pareamento do catálogo em produção | `[ ]` — só depois de release + deploy do `nexus-mercos` + `--dry-run` aprovado |
+
+### O que **está** fechado (para não repetir)
+
+P0 de código inteiro (F-09, F-17 73/73, service role, financeiro, fiscal,
+estoque, deploy/restore, Sentinel v1), idempotência fiscal nas quatro rotas,
+nome de campanha, nome fantasia, catálogo do Mercos **em código**, e a release
+1.57.0 publicada. Produção roda 1.57.0 (deploy do dono), com sidecar da mesma
+versão.
+
+### Atualização de 18/11 (fim do dia) — o que mudou de verdade
+
+| Fato | Consequência |
+|---|---|
+| **1.57.0 em produção** (app/worker/scheduler/fiscal/mercos/ocr/rota), healthy, health 200 | a versão que roda hoje não é a do repositório de ontem; o programa passou a medir contra ela |
+| **Três defeitos de schema revelados pelo deploy**: devolução (finalidade 4) barrada pela 0315; nota cancelada contando como viva no trigger de `invoice_orders`; bloco da 0320 quebrando com `search_path` vazio | corrigidos no **#566** (0326/0327); baseline aplicado em produção com `ON_ERROR_STOP`: 0 erros; pedido 19560 voltou a ter 2 vínculos |
+| **`update.sh` seguia com schema pela metade** e dizia "healthy" | **#568**: para antes de trocar as imagens; escape explícito `NEXUS_SCHEMA_NAO_FATAL=1`; teste no kit |
+| **Fichas de módulo**: 5.4 (#563, estado offline), 5.6 (#571, erro de rede em português), 5.8 (#572, estados da nota/listas) | três das cinco lacunas fechadas; falta **5.10/5.11** (#574, G) |
+| **Jornadas** J6/J13/J14 | prova em Vitest (#517) e defeitos corrigidos; **E2E de navegador continua aberto** |
+| **Sentinel v1.4** (rejeição de SEFAZ agrupada) | entrou (`sentinel-rejeicao-repetida`); falta painel por fornecedor se o dono quiser |
+| **B-7 do mobile** | F medindo dreno aceito e `401 token_revoked` no emulador; prova ainda não anexada |
+
+### O que continua aberto — dono e critério de aceite
+
+| Item | Dono | Aceite |
+|---|---|---|
+| Ficha **5.10/5.11** | G (#574) | ficha + estados de configurações/equipe/LGPD/admin com evidência; sem tocar regra |
+| **J6/J13/J14 E2E** | F (depois da B-7) | navegador real: sucesso, erro e recuperação; nenhuma marcada "instável" sem causa |
+| **B-7** | F | dreno aceito (200) + `401 token_revoked` com fila intacta + repetição sem duplicar |
+| **TalkBack em aparelho** | Dono (dispositivo) | leitura das 3 telas de operação; hoje `[!]`, nada executado |
+| **Pareamento do catálogo** | D + Dono | release → deploy `nexus-mercos` → `--dry-run` → relatório aprovado → aplicar |
+| **E2E completo** | Coordenação | full noturno verde; 3 specs fora do CI com motivo escrito |
+| **Corte da 1.58.0** | Dono | os três critérios dele (5.10/5.11, smoke do F, fragmentos) |
+| **Deploy da 1.58.0** | Dono | plano do `35` §6.1, com `to_regclass` verde |

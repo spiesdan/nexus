@@ -47,6 +47,7 @@ import {
 import { DESCRICAO_DO_PAPEL, PAPEIS_HUMANOS, ROTULO_DO_PAPEL, rotuloDoPapel } from "@/lib/auth/types";
 import { type Role } from "@/lib/schemas/team";
 import { DotsThree } from "@/lib/ui/icons";
+import { estadoDoConvite } from "@/lib/team/convite";
 import { SetorCell } from "./SetorCell";
 import { NomeCell } from "./NomeCell";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
@@ -211,11 +212,23 @@ export function TeamMembersClient({ currentUserId, canManage }: Props) {
                     )}
                   </TableCell>
                   <TableCell>
-                    {m.accepted_at ? (
-                      <Badge variant="default">{t("Aceito")}</Badge>
-                    ) : (
-                      <Badge variant="outline">{t("Pendente")}</Badge>
-                    )}
+                    {(() => {
+                      const estado = estadoDoConvite(m);
+                      if (estado === "aceito") {
+                        return <Badge variant="default">{t("Aceito")}</Badge>;
+                      }
+                      if (estado === "expirado") {
+                        return (
+                          <Badge
+                            variant="destructive"
+                            title={t("O convite venceu em 24h. Envie outro para a pessoa entrar.")}
+                          >
+                            {t("Expirado")}
+                          </Badge>
+                        );
+                      }
+                      return <Badge variant="outline">{t("Pendente")}</Badge>;
+                    })()}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
                     {m.last_sign_in_at
