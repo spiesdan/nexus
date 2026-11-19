@@ -1284,15 +1284,18 @@ export function PedidosClient({
                             <p className="text-sm font-semibold text-text tabular-nums">
                               {comoMoeda(p.total_cents, p.moeda)}
                             </p>
-                            {/* O dia já é o título do grupo (HOJE, ONTEM…):
-                                repetir a data em cada linha é ruído. Fica o
-                                emissor, que o grupo não diz. */}
-                            {/* O dia já é o título do grupo (HOJE, ONTEM…),
-                                então a data sai da linha — mas QUEM EMITIU fica:
-                                é por ele que o operador sabe de quem é o pedido
-                                (`tests/unit/pedidos-emissao`). O separador vem
-                                junto: sem ele o cartão lê "Daniel" solto, ao
-                                lado do total, e some o vínculo com a linha. */}
+                            {/* QUEM EMITIU, não de onde veio.
+                                O nome vem de `lib/comercial/emitente.ts`
+                                (`created_by` resolvido). Quando ele não resolve
+                                — importação, IA, instalação sem service role —
+                                o cartão cai no rótulo de origem, que ao menos
+                                diz que origem houve; o UUID de quem criou nunca
+                                aparece (`tests/unit/pedidos-emissao`).
+                                O `·` é o vínculo com a linha: sem ele o texto lê
+                                "Daniel" solto ao lado do total.
+                                O dia NÃO se repete: ele já é o título do grupo
+                                (HOJE, ONTEM…) — por isso só entra quando não há
+                                emissor a dizer. */}
                             <p className="max-w-44 truncate text-xs text-text-subtle">
                               {emissor ? (
                                 <span>· {emissor}</span>
