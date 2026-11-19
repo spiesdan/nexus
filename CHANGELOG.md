@@ -8,6 +8,32 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.59.1] — 2026-11-19
+
+### Alterado
+
+- **Expedição ganha hierarquia visual e a ficha da carga abre com título e abas, não com blocos cinza** As cinco telas da expedição (lista, detalhe/paradas, rota, fechamento e motorista)
+  passaram por aplicação de identidade visual: número da carga como identificador
+  principal, estado com peso de texto e não de metadado, progresso colado na
+  contagem, contagem de grupo em pílula, endereço dito uma vez só na parada e as
+  ações destrutivas separadas do resto.
+
+  A ficha da carga (detalhe, rota, fechamento e motorista) pintava três retângulos
+  cinza até o fetch do cliente terminar — sem número, sem aba, sem dizer o que
+  carregava. Agora o servidor entrega número, status e abas, e o esqueleto tem a
+  forma do conteúdo com `aria-busy` e "Carregando a carga…".
+
+  Contraste: 0 textos abaixo do mínimo AA em 862 medições (445 no escuro, 417 no
+  claro). Nenhuma regra de negócio foi tocada.
+
+### Corrigido
+
+- **Erro 5xx devolvido pela API passa a deixar rastro** Resposta 5xx devolvida por `fail()` não é exceção: o Next nunca a entrega ao
+  `onRequestError` do Sentry, e ela não aparecia em contagem nenhuma. O wrapper
+  agora emite uma linha estruturada `api.5xx` com código, status e request id —
+  sem a mensagem nem detalhes, que podem carregar dado de negócio. É a fonte
+  mínima do SLI de disponibilidade do doc 42; 4xx não gera a linha.
+
 ## [1.59.0] — 2026-11-19
 
 ### Adicionado
@@ -8176,7 +8202,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.59.1...HEAD
+[1.59.1]: https://github.com/spiesdan/nexus/compare/v1.59.0...v1.59.1
 [1.59.0]: https://github.com/spiesdan/nexus/compare/v1.58.0...v1.59.0
 [1.58.0]: https://github.com/spiesdan/nexus/compare/v1.57.0...v1.58.0
 [1.57.0]: https://github.com/spiesdan/nexus/compare/v1.56.0...v1.57.0
