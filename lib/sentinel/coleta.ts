@@ -139,7 +139,7 @@ export async function coletarSnapshot(
       admin
         .from("invoices")
         .select(
-          "id, order_id, serie, numero, chave_acesso, status, total_cents, erro, sefaz_cstat, sefaz_xmotivo, created_at, updated_at",
+          "id, order_id, serie, numero, chave_acesso, status, total_cents, erro, sefaz_cstat, sefaz_xmotivo, extras_fiscais, created_at, updated_at",
         )
         .eq("organization_id", organizationId)
         .gte("created_at", iso(365 * DIA_MS))

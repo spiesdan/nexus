@@ -111,6 +111,53 @@ describe("detectores fiscais — caso positivo e negativo", () => {
     expect(primeiro(secundario).entidadeId).toBe("pedido-x");
   });
 
+
+  it("devolução não concorre com a venda: venda+devolução e devolução+devolução não abrem", () => {
+    const pedido = "7a7e781b-0000-4000-8000-000000009560";
+    // Caso real 19560: 4634 é a venda; 4644 é a devolução (finalidade 4,
+    // ref_nfe da 4634). O banco já sabe disso desde a 0326; o detector agora
+    // usa a mesma regra.
+    const venda = nota({
+      id: "4634",
+      order_id: pedido,
+      numero: 4634,
+      status: "autorizada",
+      extras_fiscais: { finalidade: "1" },
+    });
+    const devolucao = nota({
+      id: "4644",
+      order_id: pedido,
+      numero: 4644,
+      status: "autorizada",
+      extras_fiscais: { finalidade: "4", ref_nfe: "chave-4634" },
+    });
+
+    expect(
+      notasDuplicadasPorPedido(snapshot({ notas: [venda, devolucao] })),
+    ).toHaveLength(0);
+    expect(
+      notasDuplicadasPorPedido(snapshot({ notas: [devolucao, { ...devolucao, id: "4645", numero: 4645 }] })),
+    ).toHaveLength(0);
+
+    // Duas VENDAS vivas continuam sendo o caso crítico que motivou a regra.
+    const duasVendas = notasDuplicadasPorPedido(snapshot({ notas: [venda, { ...venda, id: "4635", numero: 4635 }] }));
+    expect(duasVendas).toHaveLength(1);
+    expect(primeiro(duasVendas).evidencia.finalidades).toEqual([1, 1]);
+
+    // Devolução ligada como pedido secundário (0294) também não conta.
+    expect(
+      notasDuplicadasPorPedido(
+        snapshot({
+          notas: [venda, { ...devolucao, order_id: "outro-pedido" }],
+          notasPedidos: [
+            { invoice_id: "4634", order_id: pedido },
+            { invoice_id: "4644", order_id: pedido },
+          ],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
   it("divergência de valor: totais diferentes disparam; iguais não", () => {
     expect(
       divergenciaDeValorDaNota(
