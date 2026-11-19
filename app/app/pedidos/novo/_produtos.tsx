@@ -266,6 +266,9 @@ export function ProductSearch({
         }}
         onKeyDown={aoTeclar}
         placeholder={textos.buscarProduto}
+        // A dica do atalho fica no `title` (mouse), não no nome acessível:
+        // "/ foca" dentro do placeholder era lido em todo foco do leitor.
+        title={`${textos.buscarProduto} (/ ${t("foca")})`}
         // O `<Label>` acima nomeia a SEÇÃO ("Produtos"); quem chega pelo
         // leitor de tela ou pelo Tab precisa saber que este campo BUSCA. Sem
         // o `aria-label`, o nome acessível do campo era "Produtos" — e um
