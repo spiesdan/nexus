@@ -107,7 +107,17 @@ async function tentarMfa(page: Page, secret: string, tentativas: number): Promis
     ultimoCodigoEnviado = codigo;
 
     const digito = page.locator('input[aria-label="Dígito 1"]');
-    await digito.waitFor({ state: "visible", timeout: 15_000 });
+    try {
+      await digito.waitFor({ state: "visible", timeout: 15_000 });
+    } catch {
+      // A tela de MFA pode SUMIR no meio da espera: outra sessão rodou o seed,
+      // removeu o fator e o app devolveu a pessoa para `/login`. Devolver
+      // `false` faz `loginCom` re-semear e tentar de novo UMA vez — em vez de
+      // estourar um timeout que se lê como "a tela de MFA quebrou". Medido em
+      // 19/11/2026 com duas sessões no mesmo Supabase local: 2 de 4 testes
+      // pararam nesta linha, com a página de volta no formulário de login.
+      return false;
+    }
     // O campo desabilita enquanto o código anterior é verificado.
     for (let espera = 0; espera < 20 && (await digito.isDisabled()); espera++) {
       await page.waitForTimeout(500);
@@ -149,7 +159,27 @@ async function loginCom(
     await page.locator("#email").fill(email);
     await page.locator("#password").fill(atuais.password);
     await page.getByRole("button", { name: /entrar/i }).click();
-    await page.waitForURL(/\/login\/mfa/, { timeout: 30_000 });
+
+    // Espera o desfecho do login, e ele tem DOIS: `/login/mfa` quando o GoTrue
+    // exige o segundo fator, `/app/…` quando não exige. Exigir só o primeiro
+    // transformava uma condição do BANCO em timeout de 30 s que parece defeito
+    // de tela.
+    //
+    // Medido em 19/11/2026 nesta máquina, com duas sessões usando o MESMO
+    // Supabase local: `seed-e2e-credentials.ts` roda em paralelo, remove e
+    // reenrola o fator TOTP do admin, e a verificação de uma das sessões perde
+    // a corrida — o fator fica `unverified`. A partir daí o login do admin não
+    // pede MFA e cai direto em `/app/inbox`; `waitForURL(/login/mfa)` estoura
+    // em 3 de 4 testes, sem nenhuma tela errada. A consulta que confirma:
+    //
+    //   auth.admin.getUserById(admin).factors →
+    //     [{ status: "unverified", factor_type: "totp" }]
+    //
+    // O CI não tem essa corrida (o seed roda UMA vez por job), e a suíte
+    // continua a mesma: quem prova MFA é `auth`/`reset-password-mfa`, não este
+    // helper. Aqui o que se quer é uma SESSÃO — com ou sem segundo fator.
+    await page.waitForURL(/\/(login\/mfa|app\/)/, { timeout: 30_000 });
+    if (!/\/login\/mfa/.test(new URL(page.url()).pathname)) return atuais;
 
     if (await tentarMfa(page, secret!, 3)) return atuais;
 
