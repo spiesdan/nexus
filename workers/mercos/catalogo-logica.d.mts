@@ -132,3 +132,22 @@ export declare function planejarPareamento(
   itens: ItemSemProduto[] | null | undefined,
   catalogo: CatalogoIndexado,
 ): PlanoDePareamento;
+
+/**
+ * As rotas candidatas do catálogo, na ordem de tentativa.
+ *
+ * A primeira é `/industria/<empresa>/produtos/` — a que o menu autenticado
+ * aponta. `/<empresa>/produtos/` responde 404 nesta instalação e fica como
+ * rede. Ver `docs/runbooks/mercos-catalogo.md`.
+ */
+export declare function rotasDoCatalogo(empresa: string): string[];
+
+/**
+ * `null` quando a coleta valeu; o motivo da falha quando não valeu.
+ *
+ * `paginas === 0` e "página lida sem linha" são motivos distintos de propósito.
+ */
+export declare function motivoDoVazio(contagem: {
+  paginas: number;
+  produtosLidos: number;
+}): string | null;

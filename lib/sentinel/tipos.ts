@@ -145,6 +145,8 @@ export interface NotaFiscal {
   sefaz_cstat: string | null;
   /** xMotivo do cStat — a mensagem que explica a rejeição. */
   sefaz_xmotivo: string | null;
+  /** Extras fiscais; `finalidade=4` é devolução (não concorre com a venda). */
+  extras_fiscais: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }

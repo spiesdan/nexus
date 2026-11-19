@@ -106,8 +106,15 @@ validação local e fallback.
 1. **Fila offline no navegador** para o recebimento/pedido (hoje só o motorista
    tem outbox): decidir se o web reusa `lib/entregas/outbox` ou fica só com o
    aviso.
-2. **Paginação da lista de pedidos** (limite 200 com filtro de período): é
-   decisão de produto, não defeito de estado.
+2. **Paginação da lista de pedidos — FECHADO como aviso de recorte.**
+   A lista **não tem "carregar mais"** e o `limit(200)` truncava em silêncio: o
+   201º pedido do período não existia para quem olhava a tela. Não é paginação
+   (que exigiria curso/estado na URL): é **honestidade**, com o mesmo componente
+   das telas fiscais (`RecorteDaLista`, que já dizia "Mostrando X de Y — refine o
+   período"). A contagem vem do `count: "exact"` da **mesma** consulta
+   (`app/app/pedidos/page.tsx`), não de uma segunda pergunta que poderia
+   divergir; o cliente recebe `totalNoPeriodo` e mostra o aviso quando há mais.
+   Gate: `tests/unit/pedidos-lista-diz-o-recorte.test.ts`.
 3. **Estados das subtelas de expedição** merecem ficha própria se o módulo
    crescer (roteirizador/fechamento já têm estados, mas não foram medidos em
    navegador nesta rodada).

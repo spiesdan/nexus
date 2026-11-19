@@ -36,7 +36,12 @@ import { dirname } from "node:path";
 
 import { chromium } from "@playwright/test";
 
-import { mapearColunas, COLUNAS_LEGADO } from "./catalogo-logica.mjs";
+import {
+  COLUNAS_LEGADO,
+  mapearColunas,
+  motivoDoVazio,
+  rotasDoCatalogo,
+} from "./catalogo-logica.mjs";
 
 const arg = (nome, padrao) => {
   const i = process.argv.indexOf(`--${nome}`);
@@ -45,6 +50,49 @@ const arg = (nome, padrao) => {
 
 const EMPRESA = process.env.MERCOS_EMPRESA || "338282";
 const BASE = `https://app.mercos.com/${EMPRESA}`;
+
+/**
+ * A rota que o MENU autenticado aponta — descoberta, não adivinhação.
+ *
+ * O segmento do meio muda com o tipo de conta (`/industria/`, e há instalações
+ * em `/distribuidor/`). Ler do menu evita transformar essa diferença num 404
+ * silencioso de novo.
+ */
+async function rotaDoMenu(pagina) {
+  return pagina
+    .evaluate(() => {
+      const link = [...document.querySelectorAll("a[href]")].find(
+        (a) =>
+          (a.textContent ?? "").replace(/\s+/g, " ").trim() === "Produtos" &&
+          /produtos\/?$/i.test(a.getAttribute("href") ?? ""),
+      );
+      return link ? new URL(link.href, location.href).href : null;
+    })
+    .catch(() => null);
+}
+
+/**
+ * Vai para a primeira rota que REALMENTE tem a grade.
+ *
+ * Medido em 18/11/2026: `/338282/produtos/` devolve 404 e o `goto` não lança —
+ * a página de erro tem `<h1>` e texto, então o coletor "lê zero linhas" e
+ * termina com sucesso. Aqui cada tentativa é registrada com HTTP e presença de
+ * tabela, e nenhuma tabela é erro.
+ */
+async function abrirCatalogo(rotas) {
+  const tentadas = [];
+  for (const url of rotas) {
+    const resposta = await pagina.goto(url, { waitUntil: "domcontentloaded", timeout: 180_000 });
+    await pagina.waitForTimeout(ESPERA_MS);
+    const tabela = await pagina.evaluate(() => document.querySelectorAll("table tbody tr").length);
+    tentadas.push({ url, http: resposta?.status() ?? null, linhas: tabela });
+    log("rota_tentada", tentadas[tentadas.length - 1]);
+    if (tabela > 0) return tentadas;
+  }
+  throw new Error(
+    `nenhuma rota do catálogo tem tabela: ${tentadas.map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" · ")}`,
+  );
+}
 const EMAIL = process.env.MERCOS_EMAIL || "";
 const SENHA = process.env.MERCOS_SENHA || "";
 const SAIDA = arg("saida", "/tmp/mercos/produtos.jsonl");
@@ -61,7 +109,8 @@ if (!EMAIL || !SENHA) {
 
 const log = (evento, dados = {}) =>
   process.stdout.write(
-    JSON.stringify({ ts: new Date().toISOString(), coletor: "mercos-produtos", evento, ...dados }) + "\n",
+    JSON.stringify({ ts: new Date().toISOString(), coletor: "mercos-produtos", evento, ...dados }) +
+      "\n",
   );
 
 mkdirSync(dirname(SAIDA), { recursive: true });
@@ -69,7 +118,10 @@ mkdirSync(dirname(SAIDA), { recursive: true });
 writeFileSync(SAIDA, "");
 
 const navegador = await chromium.launch({ headless: true });
-const contexto = await navegador.newContext({ locale: "pt-BR", viewport: { width: 1440, height: 900 } });
+const contexto = await navegador.newContext({
+  locale: "pt-BR",
+  viewport: { width: 1440, height: 900 },
+});
 const pagina = await contexto.newPage();
 
 async function entrar() {
@@ -103,7 +155,8 @@ async function lerTabela() {
       const src = img ? img.currentSrc || img.src || "" : "";
       return {
         celulas: tds.map((td) => (td.innerText ?? "").replace(/\s+/g, " ").trim()),
-        foto: /^https?:/.test(src) && !/logo|megafone|sem_imagem|carregando/i.test(src) ? src : null,
+        foto:
+          /^https?:/.test(src) && !/logo|megafone|sem_imagem|carregando/i.test(src) ? src : null,
       };
     });
 
@@ -118,12 +171,14 @@ async function proximaPagina(assinaturaAnterior) {
     await proxima.click();
   } else {
     // Grade sem "próxima" explícita: tenta o número seguinte ao atual.
-    const atual = Number(await pagina.evaluate(() => {
-      const ativo = document.querySelector(
-        '[aria-current="page"], .pagination .active, .pager .active, li.active',
-      );
-      return (ativo?.textContent ?? "").trim();
-    }));
+    const atual = Number(
+      await pagina.evaluate(() => {
+        const ativo = document.querySelector(
+          '[aria-current="page"], .pagination .active, .pager .active, li.active',
+        );
+        return (ativo?.textContent ?? "").trim();
+      }),
+    );
     if (!Number.isFinite(atual) || atual <= 0) return false;
     const link = pagina.getByRole("link", { name: new RegExp(`^${atual + 1}$`) }).first();
     if ((await link.count()) === 0) return false;
@@ -145,8 +200,9 @@ try {
   // O filtro padrão da grade é o que o operador vê — e é o que o produto deve
   // espelhar. `?situacao=inativos` fica para uma segunda execução, se o dono
   // quiser produtos desativados no catálogo (o upsert marca `ativo`).
-  await pagina.goto(`${BASE}/produtos/`, { waitUntil: "domcontentloaded", timeout: 180_000 });
-  await pagina.waitForTimeout(ESPERA_MS);
+  const doMenu = await rotaDoMenu(pagina);
+  const rotas = [...new Set([...(doMenu ? [doMenu] : []), ...rotasDoCatalogo(EMPRESA)])];
+  const tentadas = await abrirCatalogo(rotas);
 
   let assinatura = "";
 
@@ -200,10 +256,35 @@ try {
     paginas,
     cabecalho_lido: cabecalhoLido,
     faltando_no_cabecalho: mapeamento.faltando ?? [],
+    rota: tentadas.find((x) => x.linhas > 0)?.url ?? null,
     arquivo: SAIDA,
   };
   writeFileSync(RESUMO, JSON.stringify(resumo, null, 2) + "\n");
-  log("fim", resumo);
+
+  /*
+   * ZERO NÃO É SUCESSO. Medido em produção: `{"produtos_lidos":0,"paginas":0,
+   * "cabecalho_lido":false}` saía com exit 0 — o mesmo silêncio que o coletor
+   * existe para eliminar. Só é sucesso se alguma página foi lida E alguma linha
+   * entrou; o resto é falha declarada, com o motivo e as rotas tentadas.
+   */
+  const motivo = motivoDoVazio({ paginas, produtosLidos: totalLido });
+  if (motivo) {
+    log("fim", { ...resumo, ok: false });
+    log("sem_catalogo", {
+      motivo,
+      rotas_tentadas: tentadas,
+      cabecalho: cabecalhoLido ? "lido" : "nao lido",
+    });
+    process.stdout.write(
+      "\nFALHA: o catálogo voltou vazio.\n" +
+        `  rotas tentadas: ${tentadas.map((x) => `${x.url} (HTTP ${x.http}, ${x.linhas} linhas)`).join(" | ")}\n` +
+        `  páginas lidas: ${paginas} · produtos: ${totalLido}\n` +
+        "  nada foi gravado além do JSONL vazio; o banco não é tocado por este script.\n",
+    );
+    process.exitCode = 1;
+  } else {
+    log("fim", { ...resumo, ok: true });
+  }
 } catch (erro) {
   log("erro", { detalhe: String(erro).slice(0, 400) });
   process.exitCode = 1;

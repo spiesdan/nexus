@@ -1,54 +1,162 @@
 {
-  "geradoEm": "2026-11-18T17:35:44.355Z",
+  "geradoEm": "2026-11-18T23:37:28.234Z",
   "base": "http://localhost:3021",
   "registros": [
     {
-      "rota": "/admin",
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
       "tema": "dark",
       "largura": 1440,
-      "arquivo": "admin_dark_1440.png",
-      "titulo": "Dashboard — Admin Plataforma",
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_dark_1440.png",
+      "esperouH1Ms": 894,
+      "titulo": "Expedição · NEXUS",
       "h1": [
-        "Dashboard"
+        "Carga 031"
       ],
       "overflowX": 0,
-      "textos": 28
+      "textos": 100
     },
     {
-      "rota": "/admin",
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_dark_390.png",
+      "esperouH1Ms": 1528,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 96
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
       "tema": "light",
       "largura": 1440,
-      "arquivo": "admin_light_1440.png",
-      "titulo": "Dashboard — Admin Plataforma",
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_light_1440.png",
+      "esperouH1Ms": 895,
+      "titulo": "Expedição · NEXUS",
       "h1": [
-        "Dashboard"
+        "Carga 031"
       ],
       "overflowX": 0,
-      "textos": 28
+      "textos": 96
     },
     {
-      "rota": "/admin/tenants",
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_light_390.png",
+      "esperouH1Ms": 1176,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 57
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
       "tema": "dark",
       "largura": 1440,
-      "arquivo": "admin_tenants_dark_1440.png",
-      "titulo": "Tenants — Admin Plataforma",
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_dark_1440.png",
+      "esperouH1Ms": 1328,
+      "titulo": "Expedição · NEXUS",
       "h1": [
-        "Tenants"
+        "Carga 031"
       ],
       "overflowX": 0,
-      "textos": 36
+      "textos": 56
     },
     {
-      "rota": "/admin/tenants",
-      "tema": "light",
-      "largura": 1440,
-      "arquivo": "admin_tenants_light_1440.png",
-      "titulo": "Tenants — Admin Plataforma",
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_dark_390.png",
+      "esperouH1Ms": 1758,
+      "titulo": "Expedição · NEXUS",
       "h1": [
-        "Tenants"
+        "Carga 031"
       ],
       "overflowX": 0,
-      "textos": 35
+      "textos": 126
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_light_1440.png",
+      "esperouH1Ms": 1331,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 126
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_light_390.png",
+      "esperouH1Ms": 1894,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 126
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_dark_1440.png",
+      "esperouH1Ms": 1091,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Modo motorista · Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 77
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_dark_390.png",
+      "esperouH1Ms": 883,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Modo motorista · Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 77
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_light_1440.png",
+      "esperouH1Ms": 753,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Modo motorista · Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 78
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_light_390.png",
+      "esperouH1Ms": 1073,
+      "titulo": "Expedição · NEXUS",
+      "h1": [
+        "Modo motorista · Carga 031"
+      ],
+      "overflowX": 0,
+      "textos": 78
     }
   ]
 }

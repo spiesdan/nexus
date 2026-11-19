@@ -33,7 +33,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.nota_pendente_antiga` | `pendente` criada há > 24 h | media |
 | `fiscal.nota_sem_vinculo` | autorizada com `order_id` nulo | media |
 | `fiscal.nota_sem_chave` | autorizada sem `chave_acesso` | alta |
-| `fiscal.nota_duplicada_por_pedido` | 2+ notas vivas no mesmo pedido (principal **ou** secundário de agrupamento) | crítica |
+| `fiscal.nota_duplicada_por_pedido` | 2+ notas **de venda** vivas no mesmo pedido (principal **ou** secundário); `finalidade=4` (devolução) não concorre, como na 0326 | crítica |
 | `fiscal.divergencia_valor_nota` | total da nota ≠ total do pedido | alta |
 | `fiscal.nota_autorizada_pedido_nao_faturado` | nota autorizada + pedido em rascunho/análise/aprovado | media |
 | `fiscal.pedido_com_nf_sem_nota` | `exige_nf` + status avançado sem nota ativa (janela 1 h/24 h) | crítica/alta |
@@ -363,6 +363,23 @@ reversão honesta. O caso escolhido foi o claim de conversa parada (7 dias sem
 mensagem), que devolve a conversa para a fila e só reverte enquanto ninguém
 assumiu.
 
+### Correção — devolução não é duplicidade
+
+O detector passou a usar a mesma regra da 0326 no banco:
+`coalesce(nullif(extras_fiscais->>'finalidade','')::int, 1) <> 4`. Venda + devolução
+e devolução + devolução não abrem; duas vendas continuam abrindo. A evidência
+ganhou `finalidades` para o operador saber por que o grupo existe.
+
+Regressão do pedido 19560 (4634 venda / 4644 devolução, `ref_nfe`) em
+`lib/sentinel/regras-fiscal.test.ts`; coleta real no Supabase local confirmou 0
+para venda+devolução.
+
+O falso positivo em produção fecha no próximo ciclo **completo**: a regra é
+avaliada, não devolve o pedido, e `fn_sentinel_encerrar_ausentes` encerra a
+ocorrência aberta com motivo `nao_detectada_na_execucao` — o histórico fica. Se a
+rodada estiver truncada (coleta/regra), o encerramento não acontece por desenho;
+a próxima rodada limpa fecha.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 
@@ -392,10 +409,11 @@ fiscal/financeira real.
    patológica, não contra uma única regra que bloqueie a CPU para sempre.
 10. **E2E de navegador pendente nesta máquina** (sem `.env.e2e`): a prova de
     banco veio de `pnpm test:db`; a de tela é componente + rota (PR da prova).
-11. **A correção do Nível 2 é deliberadamente estreita:** só job `watchdog`
-    `pending` atrasado; job de atendimento (envio externo), `running`/`dead`,
-    nota, saldo, pagamento, recebível, pedido e campanha são recusa dura. Os
-    demais casos exigem uma fatia própria com antes/depois comprovado.
+11. **A correção do Nível 2 é deliberadamente estreita:** dois casos — job
+    `watchdog` `pending` atrasado e claim de conversa parado; job de atendimento
+    (envio externo), `running`/`dead`, nota, saldo, pagamento, recebível,
+    pedido e campanha são recusa dura. Os demais exigem fatia própria com
+    antes/depois comprovado.
 12. **Reversão honesta ou nenhuma:** se o worker reclamou o job, a RPC devolve
     zero linhas e a tela responde 409; não existe "desfiz" que não desfez.
 13. **O segundo caso corrigível é só claim de conversa parado:** 7 dias sem

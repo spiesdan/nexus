@@ -633,6 +633,16 @@ export function CargaClient({
     // tem painel) e sem padding — a casca já entrega a altura toda.
     return (
       <div className="h-full">
+        {/*
+          O NÍVEL 1 QUE FALTAVA. As três subtelas de expedição devolvem ANTES do
+          cabeçalho do painel (que é quem tem o `<h1>`), então a cabine do
+          motorista abria sem título nenhum — medido em 18/11/2026 na captura
+          das subtelas: `h1: []` nas duas larguras. `sr-only` porque o mapa
+          ocupa a tela: existe na árvore de acessibilidade e não ocupa pixel.
+        */}
+        <h1 className="sr-only">
+          {t("Modo motorista")} · {numeroDaCarga(carga.numero)}
+        </h1>
         <ModoMotorista
           cargaId={cargaId}
           podeOperar={podeOperar}
@@ -646,6 +656,9 @@ export function CargaClient({
   if (secao === "motorista") {
     return (
       <div className="-mx-6 -mt-6 min-h-full">
+        <h1 className="sr-only">
+          {t("Modo motorista")} · {numeroDaCarga(carga.numero)}
+        </h1>
         <div className="border-b border-border bg-surface px-4 py-2.5 sm:px-6">
           <div className="mx-auto max-w-2xl">
             <Link

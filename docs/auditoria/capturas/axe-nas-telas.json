@@ -1,53 +1,229 @@
 {
-  "base": "http://localhost:3011",
-  "medido_em": "2026-11-17T13:54:23.574Z",
+  "base": "http://localhost:3021",
+  "medido_em": "2026-11-18T23:34:23.707Z",
   "regras": "wcag2a + wcag2aa",
   "resultados": [
     {
       "rota": "/app",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Dashboard · NEXUS",
+        "h1": [
+          "Boa noite, E2E."
+        ],
+        "textoCaracteres": 3441,
+        "elementos": 1185
+      },
+      "regrasAvaliadas": 23,
+      "nosAvaliados": 444,
       "total": 0,
       "porImpacto": {}
     },
     {
-      "rota": "/app/pedidos",
+      "rota": "/app/compras",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Compras · NEXUS",
+        "h1": [
+          "Compras"
+        ],
+        "textoCaracteres": 627,
+        "elementos": 627
+      },
+      "regrasAvaliadas": 27,
+      "nosAvaliados": 292,
       "total": 0,
       "porImpacto": {}
     },
     {
       "rota": "/app/contacts",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Clientes · NEXUS",
+        "h1": [
+          "Clientes"
+        ],
+        "textoCaracteres": 2410,
+        "elementos": 1172
+      },
+      "regrasAvaliadas": 28,
+      "nosAvaliados": 892,
       "total": 0,
       "porImpacto": {}
     },
     {
-      "rota": "/app/inbox",
+      "rota": "/app/estoque",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Estoque · NEXUS",
+        "h1": [
+          "Estoque"
+        ],
+        "textoCaracteres": 860,
+        "elementos": 656
+      },
+      "regrasAvaliadas": 27,
+      "nosAvaliados": 295,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/expedicao",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Expedição · NEXUS",
+        "h1": [
+          "Expedição"
+        ],
+        "textoCaracteres": 1327,
+        "elementos": 775
+      },
+      "regrasAvaliadas": 25,
+      "nosAvaliados": 477,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Expedição · NEXUS",
+        "h1": [
+          "Carga 031"
+        ],
+        "textoCaracteres": 1831,
+        "elementos": 728
+      },
+      "regrasAvaliadas": 26,
+      "nosAvaliados": 435,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/faturamento",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Faturamento · NEXUS",
+        "h1": [
+          "Faturamento"
+        ],
+        "textoCaracteres": 4216,
+        "elementos": 1401
+      },
+      "regrasAvaliadas": 27,
+      "nosAvaliados": 327,
       "total": 0,
       "porImpacto": {}
     },
     {
       "rota": "/app/financeiro",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Contas a Receber · NEXUS",
+        "h1": [
+          "Financeiro"
+        ],
+        "textoCaracteres": 1500,
+        "elementos": 720
+      },
+      "regrasAvaliadas": 29,
+      "nosAvaliados": 434,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/inbox",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Inbox · NEXUS",
+        "h1": [
+          "Inbox"
+        ],
+        "textoCaracteres": 979,
+        "elementos": 656
+      },
+      "regrasAvaliadas": 26,
+      "nosAvaliados": 448,
       "total": 0,
       "porImpacto": {}
     },
     {
       "rota": "/app/notas",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Notas fiscais · NEXUS",
+        "h1": [
+          "Notas fiscais"
+        ],
+        "textoCaracteres": 1905,
+        "elementos": 733
+      },
+      "regrasAvaliadas": 30,
+      "nosAvaliados": 516,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/pedidos",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Pedidos · NEXUS",
+        "h1": [
+          "Pedidos"
+        ],
+        "textoCaracteres": 8617,
+        "elementos": 1822
+      },
+      "regrasAvaliadas": 27,
+      "nosAvaliados": 1231,
+      "total": 0,
+      "porImpacto": {}
+    },
+    {
+      "rota": "/app/sentinel",
+      "violacoes": [],
+      "contexto": {
+        "titulo": "Sentinel · NEXUS",
+        "h1": [
+          "Sentinel"
+        ],
+        "textoCaracteres": 4657,
+        "elementos": 1018
+      },
+      "regrasAvaliadas": 27,
+      "nosAvaliados": 511,
       "total": 0,
       "porImpacto": {}
     },
     {
       "rota": "/app/settings",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Configurações · NEXUS",
+        "h1": [
+          "Configurações"
+        ],
+        "textoCaracteres": 1556,
+        "elementos": 684
+      },
+      "regrasAvaliadas": 23,
+      "nosAvaliados": 351,
       "total": 0,
       "porImpacto": {}
     },
     {
       "rota": "/login",
       "violacoes": [],
+      "contexto": {
+        "titulo": "Entrar · NEXUS",
+        "h1": [
+          "Entrar"
+        ],
+        "textoCaracteres": 82,
+        "elementos": 369
+      },
+      "regrasAvaliadas": 23,
+      "nosAvaliados": 49,
       "total": 0,
       "porImpacto": {}
     }

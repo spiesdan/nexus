@@ -36,6 +36,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableCaption,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { apiClient } from "@/lib/api/client";
@@ -609,6 +610,9 @@ export function GradeNotas({
         <>
           <div className="hover-raise overflow-x-auto rounded-lg border border-border bg-surface">
             <Table>
+              <TableCaption className="sr-only">
+                {t("Notas, da mais recente para a mais antiga pela data de criação.")}
+              </TableCaption>
               <TableHeader>
                 <TableRow className="bg-muted/40 hover:bg-muted/40">
                   <TableHead>{textos.status}</TableHead>

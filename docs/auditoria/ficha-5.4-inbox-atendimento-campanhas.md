@@ -123,9 +123,21 @@ TanStack é o mesmo já verificado na V-42 para as outras listas.
 
 ## 8. Pendências que exigem decisão
 
-1. **Envio offline com fila** (outbox do Inbox web): hoje a correção impede a
-   perda; enfileirar e enviar ao reconectar é capacidade nova, e existe outbox
-   no app mobile — decidir se o web usa o mesmo caminho.
+1. **Envio offline com fila no Inbox web — DECIDIDO: não nesta fase.**
+   O composer **bloqueia** o envio sem rede e **preserva o texto** (§6.1); não
+   há outbox de mensagens no web. Por quê, com o que está medido:
+   - a rota de envio (`app/api/v1/messages/route.ts`) **não lê
+     `Idempotency-Key`** — reenviar em retry pode duplicar a mensagem, e o único
+     outbox que existe hoje (`lib/entregas/outbox`) é de **desfecho de entrega**
+     (um por pedido, idempotente por natureza), não de sequência de mensagens;
+   - mensagem não é o caso de "reenviar até dar certo": ordem, `reply_to` e
+     janela de atendimento entram na conta, e um envio tardio pode chegar fora
+     de contexto;
+   - a alternativa barata — bloquear e avisar — está entregue e testada
+     (`composer-offline-nao-perde-texto`).
+   Revisitar exige, nesta ordem: idempotência na rota de envio, dedupe no
+   cliente e política de expiração da fila. Enquanto isso, **não** prometemos
+   entrega offline no web.
 2. **"Sem conexão" na abertura do Inbox**: a lista vem do cache e continua
    legível, mas o produto não diz que está mostrando cache. Um selo discreto
    ("mostrando o que já carregou") é decisão de produto.
