@@ -1,0 +1,422 @@
+[
+  {
+    "aba": "lista",
+    "largura": 1440,
+    "tema": "light",
+    "pagina": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 1152,
+      "scrollWidth": 1152
+    },
+    "colunaDaLista": 272,
+    "blocoDeFiltros": 256,
+    "linha": {
+      "altura": 105,
+      "largura": 271
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(24, 25, 37)",
+      "hora": "11px/400 rgb(102, 102, 102)",
+      "previa": "13px/400 rgb(102, 102, 102)"
+    },
+    "foco": {
+      "alvo": "Q1Aguardando há 22 horas",
+      "outline": "solid 2px rgb(126, 119, 240)",
+      "shadow": "none"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "aba": "thread",
+    "largura": 1440,
+    "tema": "light",
+    "pagina": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 1152,
+      "scrollWidth": 1152
+    },
+    "colunaDaLista": 272,
+    "blocoDeFiltros": 256,
+    "linha": {
+      "altura": 105,
+      "largura": 271
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe",
+        "Quem Manda 1795045777179"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(24, 25, 37)",
+      "hora": "11px/400 rgb(102, 102, 102)",
+      "previa": "13px/400 rgb(102, 102, 102)"
+    },
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "aba": "lista",
+    "largura": 390,
+    "tema": "light",
+    "pagina": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 342,
+      "scrollWidth": 342
+    },
+    "colunaDaLista": 342,
+    "blocoDeFiltros": 224,
+    "linha": {
+      "altura": 105,
+      "largura": 341
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(24, 25, 37)",
+      "hora": "11px/400 rgb(102, 102, 102)",
+      "previa": "13px/400 rgb(102, 102, 102)"
+    },
+    "foco": {
+      "alvo": "Q1Aguardando há 22 horas",
+      "outline": "solid 2px rgb(126, 119, 240)",
+      "shadow": "none"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "aba": "thread",
+    "largura": 390,
+    "tema": "light",
+    "pagina": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 342,
+      "scrollWidth": 342
+    },
+    "colunaDaLista": 0,
+    "blocoDeFiltros": 0,
+    "linha": {
+      "altura": 0,
+      "largura": 0
+    },
+    "linhasNaTela": 6,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe",
+        "Quem Manda 1795045777179"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(24, 25, 37)",
+      "hora": "11px/400 rgb(102, 102, 102)",
+      "previa": "13px/400 rgb(102, 102, 102)"
+    },
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "aba": "lista",
+    "largura": 1440,
+    "tema": "dark",
+    "pagina": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 1152,
+      "scrollWidth": 1152
+    },
+    "colunaDaLista": 272,
+    "blocoDeFiltros": 256,
+    "linha": {
+      "altura": 105,
+      "largura": 271
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(244, 244, 244)",
+      "hora": "11px/400 rgb(144, 144, 144)",
+      "previa": "13px/400 rgb(144, 144, 144)"
+    },
+    "foco": {
+      "alvo": "Q1Aguardando há 22 horas",
+      "outline": "solid 2px rgb(164, 165, 255)",
+      "shadow": "none"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "aba": "thread",
+    "largura": 1440,
+    "tema": "dark",
+    "pagina": {
+      "scrollWidth": 1440,
+      "clientWidth": 1440,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 1152,
+      "scrollWidth": 1152
+    },
+    "colunaDaLista": 272,
+    "blocoDeFiltros": 256,
+    "linha": {
+      "altura": 105,
+      "largura": 271
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe",
+        "Quem Manda 1795045777179"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(21, 21, 21)",
+      "hora": "11px/400 rgb(144, 144, 144)",
+      "previa": "13px/400 rgb(144, 144, 144)"
+    },
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "label-content-name-mismatch (serious)"
+      ],
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "aba": "lista",
+    "largura": 390,
+    "tema": "dark",
+    "pagina": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 342,
+      "scrollWidth": 342
+    },
+    "colunaDaLista": 342,
+    "blocoDeFiltros": 224,
+    "linha": {
+      "altura": 105,
+      "largura": 341
+    },
+    "linhasNaTela": 5,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(244, 244, 244)",
+      "hora": "11px/400 rgb(144, 144, 144)",
+      "previa": "13px/400 rgb(144, 144, 144)"
+    },
+    "foco": {
+      "alvo": "Q1Aguardando há 22 horas",
+      "outline": "solid 2px rgb(164, 165, 255)",
+      "shadow": "none"
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  },
+  {
+    "aba": "thread",
+    "largura": 390,
+    "tema": "dark",
+    "pagina": {
+      "scrollWidth": 390,
+      "clientWidth": 390,
+      "overflow": 0
+    },
+    "grade": {
+      "largura": 342,
+      "scrollWidth": 342
+    },
+    "colunaDaLista": 0,
+    "blocoDeFiltros": 0,
+    "linha": {
+      "altura": 0,
+      "largura": 0
+    },
+    "linhasNaTela": 6,
+    "titulos": {
+      "h1": [
+        "Inbox"
+      ],
+      "h2": [
+        "Visão geral",
+        "Vendas",
+        "Atendimento",
+        "Inteligência",
+        "Operação",
+        "Financeiro",
+        "Fiscal",
+        "Equipe",
+        "Quem Manda 1795045777179"
+      ]
+    },
+    "tipografia": {
+      "nome": "13px/700 rgb(21, 21, 21)",
+      "hora": "11px/400 rgb(144, 144, 144)",
+      "previa": "13px/400 rgb(144, 144, 144)"
+    },
+    "foco": null,
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "nos": []
+    }
+  }
+]
