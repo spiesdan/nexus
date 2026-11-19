@@ -23,7 +23,7 @@ interface Slo {
   valor: number | null;
   estado: EstadoSlo;
   nota: string;
-  detalhe?: Record<string, number | string | null>;
+  detalhe?: Record<string, number | string | boolean | null>;
 }
 
 interface Resposta {
