@@ -11,6 +11,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import type { ApiErrorCode } from "@/lib/api/errors";
+import { logger } from "@/lib/logger";
 
 // -----------------------------------------------------------------------------
 // Tipos públicos
@@ -81,7 +82,18 @@ export function fail(
   };
 
   const res = NextResponse.json(body, { status, headers: opts.headers });
-  res.headers.set("X-Request-Id", opts.requestId ?? randomUUID());
+  const requestId = opts.requestId ?? randomUUID();
+  res.headers.set("X-Request-Id", requestId);
+
+  // 5xx devolvido por `fail()` NÃO é exceção: o Next nunca o entrega ao
+  // `onRequestError` do Sentry. Sem esta linha, um 500 de rota some do
+  // Sentry e de qualquer contagem — só o cliente vê. O log estruturado é a
+  // fonte mínima para o SLI de disponibilidade (doc 42). Não logamos
+  // `message`/`details`: podem carregar dado de negócio.
+  if (status >= 500) {
+    logger.error("api.5xx", { code, status, requestId });
+  }
+
   return res;
 }
 
