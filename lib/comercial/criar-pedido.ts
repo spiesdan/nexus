@@ -10,6 +10,7 @@ import {
   type PedidoCreate,
 } from "@/lib/schemas/pedidos";
 import { precoEfetivo } from "@/lib/schemas/precos";
+import { parcelasFecham } from "@/lib/comercial/parcelas";
 import { ajustarEstoque } from "@/lib/estoque/ajustar";
 import { logger } from "@/lib/logger";
 
@@ -32,6 +33,11 @@ export interface ContextoDeCriacao {
    * manager; a TOOL passa sempre false (IA nunca ignora trava comercial).
    */
   podeIgnorar: boolean;
+  /**
+   * Preço negociado à mão com tabela aplicada. Flag própria: `podeIgnorar`
+   * continua valendo só para estoque/crédito/aprovação.
+   */
+  podeIgnorarPreco?: boolean;
 }
 
 export type ResultadoDeCriacao =
@@ -219,7 +225,7 @@ export async function criarPedidoComercial(
         descontoTabelaPct,
         item.product_id ? (precoNaTabela.get(item.product_id) ?? null) : null,
       );
-      if (efetivo !== item.preco_unit_cents && !ctx.podeIgnorar) {
+      if (efetivo !== item.preco_unit_cents && !ctx.podeIgnorarPreco) {
         return {
           ok: false,
           code: "validation_failed",
@@ -331,6 +337,15 @@ export async function criarPedidoComercial(
     if (contato) nomeDoClienteDoPedido = nomeDeExibicao(contato);
   }
 
+  const parcelasDoPedido = calcularParcelas(total, entrada.condicao_pagamento);
+  if (!parcelasFecham(parcelasDoPedido, total)) {
+    return {
+      ok: false,
+      code: "validation_failed",
+      message: "As parcelas não fecham com o total do pedido.",
+    };
+  }
+
   const { data: pedido, error: erroPedido } = await supabase
     .from("commercial_orders")
     .insert({
@@ -363,7 +378,7 @@ export async function criarPedidoComercial(
       transportadora_nome: entrada.transportadora_nome ?? null,
       modalidade_frete: entrada.modalidade_frete,
       previsao_entrega: entrada.previsao_entrega ?? null,
-      parcelas: calcularParcelas(total, entrada.condicao_pagamento),
+      parcelas: parcelasDoPedido,
       created_by: ctx.userId,
       // 0263: a chave que impede o pedido duplicado no retry do sync.
       chave_sincronizacao: entrada.chave_sincronizacao ?? null,

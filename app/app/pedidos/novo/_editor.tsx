@@ -50,7 +50,12 @@ import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
-import { haQuantoTempo, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
+import {
+  chaveDoRascunho,
+  haQuantoTempo,
+  rascunhoDeOutroCliente,
+  useAutosaveDraft,
+} from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
 import { randomId } from "@/lib/random-id";
@@ -138,6 +143,7 @@ export function OrderEditor({
   nomeOrganizacao,
   representada,
   nomeVendedor,
+  escopoDoRascunho,
   textos,
 }: {
   produtos: Produto[];
@@ -167,6 +173,8 @@ export function OrderEditor({
   };
   /** Quem está vendendo — o "Vendedor" do bloco de detalhes. */
   nomeVendedor?: string | null;
+  /** `<orgId>:<userId>` — isola o rascunho por tenant e por pessoa. */
+  escopoDoRascunho: string;
   textos: TextosBase;
 }) {
   const t = useT();
@@ -368,7 +376,7 @@ export function OrderEditor({
   const [conflitoDeRascunho, setConflitoDeRascunho] =
     React.useState<RascunhoDoPedido | null>(null);
   const { salvoEm, carregar, limpar, falhaAoSalvar } = useAutosaveDraft(
-    "pedido-rascunho",
+    chaveDoRascunho(escopoDoRascunho),
     {
       contatoId,
       chavePedido,
@@ -635,6 +643,11 @@ export function OrderEditor({
         desconto_cents: descontoCents,
         ...(descontoPct > 0 ? { desconto_pct: descontoPct } : {}),
         ...(tabelaId ? { price_table_id: tabelaId } : {}),
+        // Preço negociado à mão com tabela aplicada é alçada de gerente. O
+        // flag é próprio: não carrega junto o perdão de estoque/crédito.
+        ...(verMargem && tabelaId && linhas.some((l) => l.origemPreco === "manual")
+          ? { ignorar_preco: true }
+          : {}),
         frete_cents: freteCents,
         ...(condicao.trim() ? { condicao_pagamento: condicao.trim() } : {}),
         // 0261: sempre enviados, mesmo falsos/nulos. Sem isto, um pedido sem NF

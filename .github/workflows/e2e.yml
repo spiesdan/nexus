@@ -514,6 +514,11 @@ jobs:
         inbox-tempo-real.spec.ts
         mobile-offline.spec.ts
         visual-snapshots.spec.ts
+        criador-de-pedidos-matriz.spec.ts
+        # motivo: matriz E do criador — 520 contatos + 2.100 produtos, axe em 4
+        # viewports e 6 cenários de escrita. É evidência de fatia, não gate de
+        # PR: soma ~12 min ao job. Roda local (`playwright test …`) e no
+        # noturno quando o volume de CI permitir; o motivo fica aqui.
         # motivo: baseline de PIXEL tem sufixo de plataforma (…-darwin.png ×
         # …-linux.png). Os baselines versionados foram gerados em macOS; rodar
         # o job ubuntu sem os baselines linux reprovaria por plataforma, não por

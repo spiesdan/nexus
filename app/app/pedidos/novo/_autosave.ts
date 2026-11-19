@@ -8,6 +8,20 @@ import * as React from "react";
  * perde nada). O servidor só vê o pedido no Salvar/Finalizar — rascunho
  * local não é rascunho no banco.
  */
+/** Prefixo único: a chave real é `pedido-rascunho:<org>:<user>`. */
+export const PREFIXO_DO_RASCUNHO = "pedido-rascunho";
+
+/**
+ * O RASCUNHO É DE UMA ORGANIZAÇÃO E DE UM USUÁRIO.
+ *
+ * A chave era global (`pedido-rascunho`): o mesmo navegador, ao trocar de
+ * organização ou ao entrar outro usuário, restaurava a venda do anterior. A
+ * chave agora carrega o escopo; nada vaza entre tenants nem entre pessoas.
+ */
+export function chaveDoRascunho(escopo: string): string {
+  return `${PREFIXO_DO_RASCUNHO}:${escopo}`;
+}
+
 export interface RascunhoSalvo {
   salvoEm: number;
   dados: Record<string, unknown>;

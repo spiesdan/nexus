@@ -140,6 +140,12 @@ export const pedidoCreateSchema = z.object({
     .nullable()
     .optional(),
   /**
+   * Override de PREÇO (negociado à mão) quando há tabela aplicada. Só vale
+   * para `manager` para cima, e é um flag SEPARADO dos outros: mudar o preço
+   * não pode, de carona, ignorar estoque ou crédito.
+   */
+  ignorar_preco: z.boolean().default(false),
+  /**
    * Override de estoque insuficiente. Só vale para `manager` para cima — a
    * rota recusa com 422 se um papel menor mandar `true`. Falha fechada: pedir
    * o que não pode não passa em silêncio.

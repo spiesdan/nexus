@@ -203,6 +203,7 @@ export const JORNADAS: Jornada[] = [
       "pedido-idempotencia",
       "imprimir-pedidos-mesma-aba",
       "estoque-entrada-saida-e-saldo",
+      "criador-de-pedidos-matriz",
     ],
   },
   {

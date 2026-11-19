@@ -266,3 +266,47 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 ```
 
 `tsc` da fatia: 0. ESLint: 0 erros (1 warning pré-existente em `setHoje`).
+
+## 9. Matriz E — o que o dono listou, com prova
+
+> Execução local, Supabase `127.0.0.1:54321`, app de produção no `:3001`.
+> A spec pesada (`tests/e2e/criador-de-pedidos-matriz.spec.ts`) está declarada
+> em `FORA_DO_CI` **com motivo escrito** (520 contatos + 2.100 produtos, 4
+> viewports e escrita real): é evidência de fatia, não gate de PR. Tudo que ela
+> cria leva o prefixo `MATRIZ <carimbo>` e é apagado no `afterAll`.
+
+| # | Caso | Prova | Estado / decisão pendente |
+|---|---|---|---|
+| E.1 | código, EAN/GTIN, SKU, nome, marca, scanner | E2E “busca por código, nome e scanner”; `catalogo-sem-ean.test.ts` (unit) + `tests/invariants/catalogo-sem-ean.test.ts` (information_schema) | código/SKU/nome/marca **existem**; EAN/GTIN **não existe** no schema — ausência provada, não inventada |
+| E.2 | 500+ contatos e 500+ produtos; carregando/vazio/erro; sem truncar | E2E com 520 contatos + 2.100 produtos, alvo fora do lote carregado; atraso proposital (carregando) e 500 (erro) | busca remota provada; a página carrega 2.000 e a busca cobre o resto. O endpoint não devolve total — não há indicador de “N resultados” |
+| E.3 | tabela aplicar, trocar (422), override, preço inválido | E2E: 10% → linha a R$ 90,00; troca para 20% mantém a linha e o servidor recusa 422; `ignorar_preco` de gerente passa; “abc” é barrado na tela | **`ignorar_preco` foi criado nesta fatia** (flag próprio; não dá carona a estoque/crédito). Reprecificar automaticamente na troca continua pendente |
+| E.4 | estoque suficiente/insuficiente/desatualizado/não controlado | E2E: 5 em estoque → 6 = insuficiente (422); saldo cai para 1 antes do POST = 422; produto sem controle = “não controlado” | **sem reserva**: a baixa continua depois do commit. Decisão pendente |
+| E.5 | crédito estourado, sem histórico, aprovação | E2E: limite 10,00 × pedido 20,00 = 422; sem limite = criado; 10% > teto 5% = `em_analise` + “Aprovar pedido” na ficha | regra de crédito é a do código (`<=`); sem análise/garantia |
+| E.6 | soma das parcelas fecha; centavo divergente recusado | `parcelas-fecham.test.ts` (pedido + financeiro; divergência de 1 centavo = false) + guarda `parcelasFecham` antes do insert | `[]`/parcela única = “sem rateio”, não divergência |
+| E.7 | rascunho: expiração, logout, troca de org | `criador-pedido-cliente-do-link.test.tsx`: chave por `<org>:<user>`, outro escopo não restaura; 30 dias **ainda restaura** | **chave namespaced corrigida nesta fatia**; **não há TTL** — expiração é decisão pendente, provada a ausência |
+| E.8 | clique duplo, Cmd+Enter repetido, timeout com resposta perdida | unit: Cmd+Enter ×2 = 1 POST; retry reusa a chave. E2E: `route.fetch()` (servidor commita) + `abort`, reenvio = **1 pedido** | a chave é persistida no rascunho; o teste cobre o fio perdido |
+| E.9 | reconciliação no banco | E2E: pedido criado pela tela; `commercial_orders` com `subtotal=total=7500`, `chave_sincronizacao` v4 e 1 item 7500 | leitura por service role no banco local |
+| E.10 | 320/390/tablet/desktop; foco; nome acessível | E2E: sem overflow em 4 viewports; `Cliente` e `Produtos` acessíveis; Tab do cliente chega à busca; axe sem serious/critical em 390 e 1440 | axe roda na tela com item; leitor de tela real (NVDA/VoiceOver) segue fora do automatizado |
+
+### O que mudou no produto por causa desta matriz
+
+1. **Rascunho isolado por organização e usuário** — a chave era global
+   (`pedido-rascunho`); agora é `pedido-rascunho:<org>:<user>`. Sem isso, o
+   mesmo navegador restaurava a venda de outro tenant/usuário.
+2. **`ignorar_preco`** — preço negociado com tabela aplicada era recusado para
+   todo mundo (o `podeIgnorar` só ligava com estoque/crédito). O flag próprio
+   exige gerente e **não** perdoa estoque nem crédito.
+3. **Guarda `parcelasFecham`** antes de gravar — divergência de centavo vira
+   422, não pedido torto.
+4. **Busca de produto com estados** — “Buscando no catálogo…” e erro visível
+   quando a busca remota falha; a lista local continua.
+5. **Quantidade inteira e unidade/múltiplo** — ver §8/B.14.
+
+### Pendências declaradas (sem regra escrita)
+
+- EAN/GTIN: sem coluna, sem validação, sem busca; a lacuna é explícita.
+- TTL do rascunho local: não existe; 30 dias ainda restaura.
+- Reserva de estoque / baixa atômica: não existe.
+- Reprecificação ao trocar tabela: existe a recusa 422, não o recálculo.
+- Fração/granel e bloqueio por múltiplo: `multiplo` informado, não validado.
+- Multimoeda: sem seletor nem cotação.
