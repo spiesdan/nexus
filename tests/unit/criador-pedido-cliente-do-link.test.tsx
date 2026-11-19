@@ -21,7 +21,7 @@ import { OrderEditor } from "@/app/app/pedidos/novo/_editor";
 import { custoSomenteParaQuemVeMargem } from "@/lib/pedidos/custo-so-para-quem-ve-margem";
 import { linkDoNovoPedido } from "@/lib/pedidos/link-do-novo-pedido";
 import { apiClient } from "@/lib/api/client";
-import { rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
+import { chaveDoRascunho, rascunhoDeOutroCliente } from "@/app/app/pedidos/novo/_autosave";
 import type { ContatoOpcao } from "@/app/app/pedidos/novo/_cliente";
 import type { Produto } from "@/lib/schemas/produtos";
 
@@ -50,6 +50,10 @@ afterEach(() => {
 beforeEach(() => {
   window.localStorage.clear();
 });
+
+const ORG = "org-teste";
+const USUARIO = "user-teste";
+const CHAVE_DO_RASCUNHO = chaveDoRascunho(ORG, USUARIO);
 
 const BILL: ContatoOpcao = {
   id: "c-bill",
@@ -125,7 +129,7 @@ const LINHA = {
 
 function rascunho(dados: { contatoId: string | null; clienteNome: string; chavePedido?: string }) {
   window.localStorage.setItem(
-    "pedido-rascunho",
+    CHAVE_DO_RASCUNHO,
     JSON.stringify({
       salvoEm: Date.now(),
       dados: {
@@ -162,6 +166,7 @@ function montar(contatoInicial?: string | null) {
         descontoMaxVendedorPct={5}
         nomeOrganizacao="Org de teste"
         nomeVendedor="Vendedor"
+        donoDoRascunho={{ orgId: ORG, userId: USUARIO }}
         textos={TEXTO}
       />
     </QueryClientProvider>,
@@ -219,7 +224,7 @@ describe("criador de pedidos — cliente vindo do link", () => {
 
     expect(screen.queryByTestId("conflito-rascunho")).toBeNull();
     expect(campoCliente().value).toBe("Bill Higiene");
-    expect(window.localStorage.getItem("pedido-rascunho")).toBeNull();
+    expect(window.localStorage.getItem(CHAVE_DO_RASCUNHO)).toBeNull();
   });
 });
 
@@ -249,7 +254,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
       return Promise.resolve({ data: [] }) as never;
     });
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE_DO_RASCUNHO,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -288,6 +293,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org de teste"
           nomeVendedor="Vendedor"
+          donoDoRascunho={{ orgId: ORG, userId: USUARIO }}
           textos={TEXTO}
         />
       </QueryClientProvider>,
@@ -316,7 +322,7 @@ describe("autosave restaura TODOS os campos editáveis", () => {
 describe("rascunho só com cliente e proteção de navegação", () => {
   function rascunhoSemItens(dados: { contatoId: string | null; clienteNome: string }) {
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE_DO_RASCUNHO,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -393,7 +399,7 @@ function produto(over: Partial<Produto>): Produto {
 describe("revisão antes de finalizar (B.7)", () => {
   it("a prévia mostra itens, unidade, descontos, frete, total, parcelas, endereço e observações", () => {
     window.localStorage.setItem(
-      "pedido-rascunho",
+      CHAVE_DO_RASCUNHO,
       JSON.stringify({
         salvoEm: Date.now(),
         dados: {
@@ -481,6 +487,7 @@ describe("margem só para quem pode (B.12)", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org"
           nomeVendedor="V"
+          donoDoRascunho={{ orgId: ORG, userId: USUARIO }}
           textos={TEXTO}
         />
       </QueryClientProvider>,
@@ -499,6 +506,7 @@ describe("margem só para quem pode (B.12)", () => {
           descontoMaxVendedorPct={5}
           nomeOrganizacao="Org"
           nomeVendedor="V"
+          donoDoRascunho={{ orgId: ORG, userId: USUARIO }}
           textos={TEXTO}
         />
       </QueryClientProvider>,

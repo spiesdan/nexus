@@ -30,6 +30,7 @@ confirmar-dado-do-contato.spec.ts
 contato-salva-email.spec.ts
 conversa-vira-lead.spec.ts
 credenciais-de-ia.spec.ts
+criador-pedido-acessivel-320.spec.ts
 degradacao-silenciosa.spec.ts
 distribuicao-atendimento.spec.ts
 entrada-do-endereco.spec.ts
@@ -57,15 +58,15 @@ inbox-responder-citando.spec.ts
 inbox-scope.spec.ts
 inteligencia-carrega.spec.ts
 invite-lifecycle.spec.ts
+j13-fiscal-homologacao.spec.ts
+j14-lgpd-aprovar-pela-tela.spec.ts
+j6-inbox-atender-e-recuperar.spec.ts
 jornada-expedicao.spec.ts
 jornada-financeiro.spec.ts
 jornada-fiscal.spec.ts
 jornada-ia.spec.ts
 jornada-venda.spec.ts
 jornadas-ui-p1-01.spec.ts
-j6-inbox-atender-e-recuperar.spec.ts
-j13-fiscal-homologacao.spec.ts
-j14-lgpd-aprovar-pela-tela.spec.ts
 kanban-owner-filter.spec.ts
 kpi-e-charts-canonicos.spec.ts
 marca-logo.spec.ts

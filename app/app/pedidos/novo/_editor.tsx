@@ -42,15 +42,16 @@ import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
 import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import { NewContactDialog } from "@/components/contacts/NewContactDialog";
 import { precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
+import { precoEfetivo } from "@/lib/schemas/precos";
 import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
-import { CustomerSelector, type ContatoOpcao } from "./_cliente";
+import { CustomerSelector, type ContatoOpcao, type ResumoDoCliente } from "./_cliente";
 import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "./_produtos";
 import { AdicionarComIa } from "./_ia";
 import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
-import { haQuantoTempo, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
+import { haQuantoTempo, chaveDoRascunho, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
 import { randomId } from "@/lib/random-id";
@@ -138,6 +139,7 @@ export function OrderEditor({
   nomeOrganizacao,
   representada,
   nomeVendedor,
+  donoDoRascunho,
   textos,
 }: {
   produtos: Produto[];
@@ -167,6 +169,12 @@ export function OrderEditor({
   };
   /** Quem está vendendo — o "Vendedor" do bloco de detalhes. */
   nomeVendedor?: string | null;
+  /**
+   * De quem é o rascunho local. Sem isto, `localStorage` é uma gaveta única
+   * para todos os usuários e organizações do mesmo navegador — e o rascunho de
+   * uma vendedora aparecia para a outra (ver `chaveDoRascunho`).
+   */
+  donoDoRascunho: { orgId: string; userId: string };
   textos: TextosBase;
 }) {
   const t = useT();
@@ -186,6 +194,9 @@ export function OrderEditor({
   // para o cliente cadastrado AQUI entrar na hora, sem recarregar a tela (e sem
   // perder o rascunho do pedido).
   const [listaDeContatos, setListaDeContatos] = React.useState<ContatoOpcao[]>(contatos);
+  // Limite e saldo em aberto do cliente escolhido — quem busca é o seletor
+  // (mesma conta do gate de crédito do servidor).
+  const [resumoDoCliente, setResumoDoCliente] = React.useState<ResumoDoCliente | null>(null);
   const [novoClienteAberto, setNovoClienteAberto] = React.useState(false);
   const [linhas, setLinhas] = React.useState<LinhaDoPedido[]>([]);
   const [condicao, setCondicao] = React.useState("");
@@ -246,11 +257,53 @@ export function OrderEditor({
 
   const porId = React.useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
 
+  /** Texto de preço no mesmo formato que a linha usa. */
+  function textoDoPreco(cents: number): string {
+    return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  }
+
+  /**
+   * TROCOU A TABELA, TROCOU O PREÇO — MENOS O QUE FOI NEGOCIADO À MÃO.
+   *
+   * Antes, escolher outra tabela só trocava `tabelaId`: os itens já lançados
+   * continuavam com o preço antigo, e o servidor recusava o pedido inteiro
+   * (422 "preço fora da tabela") só no fim, depois de o vendedor revisar e
+   * clicar em gerar. A tela mostrava uma coisa e o servidor cobrava outra.
+   *
+   * A exceção é o preço digitado à mão (`origemPreco === "manual"`): ele é uma
+   * decisão comercial, não um resto de cálculo — sobrescrevê-lo apagaria o
+   * desconto que a pessoa acabou de negociar. O servidor continua exigindo
+   * gerente para aceitá-lo.
+   */
+  function reprecificar(nova: PrecoDeTabela | null) {
+    setLinhas((ls) =>
+      ls.map((l) => {
+        if (l.origemPreco === "manual") return l;
+        const p = porId.get(l.product_id);
+        if (!p) return l;
+        const valor = nova
+          ? precoEfetivo(p.preco_cents, nova.desconto_pct, nova.overrides.get(p.id) ?? null)
+          : p.preco_cents;
+        const origemPreco: "base" | "tabela" = nova && valor !== p.preco_cents ? "tabela" : "base";
+        return { ...l, precoTexto: textoDoPreco(valor), origemPreco };
+      }),
+    );
+  }
+
   // Tabela aplicada: desconto + overrides (para o preço efetivo da busca).
   React.useEffect(() => {
     if (!tabelaId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTabela(null);
+      // Sem tabela, o preço volta a ser o de catálogo — exceto o manual.
+      setLinhas((ls) =>
+        ls.map((l) => {
+          if (l.origemPreco === "manual") return l;
+          const p = porId.get(l.product_id);
+          if (!p) return l;
+          return { ...l, precoTexto: textoDoPreco(p.preco_cents), origemPreco: "base" };
+        }),
+      );
       return;
     }
     let vivo = true;
@@ -261,10 +314,12 @@ export function OrderEditor({
       .then((d) => {
         if (!vivo) return;
         const tab = tabelas.find((x) => x.id === tabelaId);
-        setTabela({
+        const nova: PrecoDeTabela = {
           desconto_pct: Number(tab?.desconto_pct ?? 0),
           overrides: new Map(d.itens.map((i) => [i.product_id, i.preco_cents])),
-        });
+        };
+        setTabela(nova);
+        reprecificar(nova);
       })
       .catch((e) => {
         if (vivo) showApiError(e);
@@ -272,7 +327,11 @@ export function OrderEditor({
     return () => {
       vivo = false;
     };
+    // `porId`/`tabelas` mudam quando o catálogo chega; `reprecificar` é estável
+    // em comportamento (usa só `porId` do render) e entra aqui de propósito.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabelaId, tabelas]);
+
 
   // Histórico do cliente: últimos preços + base de relacionados/reposição.
   React.useEffect(() => {
@@ -367,7 +426,7 @@ export function OrderEditor({
   // rascunho do outro cliente antes de a pessoa escolher.
   const [conflitoDeRascunho, setConflitoDeRascunho] = React.useState<RascunhoDoPedido | null>(null);
   const { salvoEm, carregar, limpar, falhaAoSalvar } = useAutosaveDraft(
-    "pedido-rascunho",
+    chaveDoRascunho(donoDoRascunho.orgId, donoDoRascunho.userId),
     {
       contatoId,
       chavePedido,
@@ -443,6 +502,11 @@ export function OrderEditor({
     // o que faz o desconto percentual voltar de fato.
     setDescontoPctTexto((s.descontoPctTexto ?? "").replace(",", "."));
     setFreteTexto(s.freteTexto ?? "");
+    // Rascunho sem tabela não pode voltar com preço de tabela (de uma tabela
+    // que foi apagada, ou de uma versão anterior da tela): o preço exibido
+    // tem de ser o que o servidor vai cobrar. Com tabela, quem reprecifica é
+    // o efeito que carrega os overrides.
+    if (!s.tabelaId) reprecificar(null);
     nexusToast.info(textos.rascunhoRestaurado);
   }
 
@@ -829,6 +893,7 @@ export function OrderEditor({
                   setClienteNome(nome);
                 }}
                 aoCriarNovo={() => setNovoClienteAberto(true)}
+                aoMudarResumo={setResumoDoCliente}
                 textos={{
                   cliente: textos.cliente,
                   buscarCliente: textos.buscarCliente,
@@ -1155,6 +1220,7 @@ export function OrderEditor({
             desconto e frete moram nele) e a barra fixa garante total + ação. */}
         <aside className="lg:col-span-4" aria-label={t("Resumo do pedido")}>
           <div className="lg:sticky lg:top-4">
+            <CartaoDeCredito resumo={resumoDoCliente} total={total} />
             <OrderSummary
               totais={{
                 subtotal,
@@ -1193,6 +1259,7 @@ export function OrderEditor({
                 descontosSomam: t("R$ e % somam"),
                 tetoDesconto: t("Teto de desconto do vendedor"),
                 revisar: textos.revisar,
+                resumoDoPedido: t("Resumo do pedido"),
                 itensUnidades: (itens, un) => `${itens} itens · ${un} un`,
               }}
             />
@@ -1203,14 +1270,16 @@ export function OrderEditor({
       {/* A barra de ação do Mercos, no rodapé: no celular ela fica fixa, porque
           "Gerar pedido" não pode exigir rolar quatro seções de volta. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-30 flex items-center justify-between gap-3 border-t bg-background px-4 pt-2.5 pb-2.5 lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t bg-background px-4 pt-2.5 pb-2.5 lg:hidden"
         style={{ paddingBottom: "max(0.625rem, env(safe-area-inset-bottom))" }}
       >
         <p className="text-sm text-muted-foreground">
           {linhas.length} {t("itens")} · {qtdUnidades} un
         </p>
-        <div className="flex items-center gap-3">
-          <p className="text-lg font-semibold tabular-nums">{comoMoeda(total, "BRL")}</p>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+          <p className="whitespace-nowrap text-lg font-semibold tabular-nums">
+            {comoMoeda(total, "BRL")}
+          </p>
           <Button
             onClick={() => void comEnvio("aprovado")}
             disabled={enviando}
@@ -1436,3 +1505,43 @@ function TituloDaSecao({ numero, children }: { numero: number; children: React.R
     </p>
   );
 }
+
+/**
+ * O AVISO DE CRÉDITO — ANTES de gerar, não depois.
+ *
+ * O servidor já recusava (422 "Cliente acima do limite de crédito") e o único
+ * sinal na tela era o alerta do seletor, que olhava só o saldo JÁ em aberto:
+ * um cliente com folga de R$ 100 e um pedido de R$ 5.000 passava sem aviso, e
+ * o vendedor descobria no clique de "Gerar pedido" — depois de montar o pedido
+ * inteiro. A conta que o servidor faz é `em_aberto + este pedido <= limite`;
+ * a tela passa a fazer a mesma, com o mesmo status de "em aberto"
+ * (`STATUS_EM_ABERTO`), e diz a consequência.
+ *
+ * `total` aqui é o total exibido (o servidor recalcula o dele) — a diferença
+ * possível é de arredondamento, nunca de régua.
+ */
+function CartaoDeCredito({
+  resumo,
+  total,
+}: {
+  resumo: ResumoDoCliente | null;
+  total: number;
+}) {
+  const t = useT();
+  const limite = resumo?.limite_cents ?? null;
+  if (limite === null || total <= 0) return null;
+  const emAberto = resumo?.emAberto_cents ?? 0;
+  if (emAberto + total <= limite) return null;
+  return (
+    <p
+      role="alert"
+      data-testid="credito-estourado"
+      className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-sm text-warning-fg"
+    >
+      {t("Este pedido passa do limite de crédito do cliente")}: {comoMoeda(emAberto, "BRL")}{" "}
+      {t("em aberto")} + {comoMoeda(total, "BRL")} {t("deste pedido")} &gt;{" "}
+      {comoMoeda(limite, "BRL")}. {t("Ao gerar, o sistema recusa — só um gerente pode liberar.")}
+    </p>
+  );
+}
+
