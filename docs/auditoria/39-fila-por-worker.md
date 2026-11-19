@@ -11,38 +11,38 @@
 
 ## D — design/módulos
 
-- **agora:** *#592 no rebase + verde + merge* — `fix/mercos-produtos-rota` está `dirty`
-  e com `verify` vermelho; rebase em `nexus/main`, conserto do teste e merge nos 5
-  checks. Aceite: PR mergeado e CI verde.
-- **próximo:** *o número "traz X dos 69"* — medir com o modo `--todos` (somente
-  leitura) quantos dos 69 códigos inativos faltantes o coletor enxerga; se não
-  houver acesso, entregar o comando exato. Aceite: número ou comando, sem escrita.
+- **agora:** *#594 no rebase e merge* — `feat/mercos-catalogo-todos` com os 14 checks
+  verdes; só falta rebase em `nexus/main`. Aceite: rebase sem perder os dois lados,
+  gates de migration/fragmento verdes e merge nos 5 checks.
+- **próximo:** *decisão dos inativos* — o número já foi entregue ao dono
+  (**22 dos 69; 194 dos 616; 55 nascem inativos; 143 não desativam**); o `--aplicar`
+  depende de o coletor novo estar em produção. Aceite: decisão registrada + deploy.
 - **depois:** *estados das subtelas de expedição (5.6b)* — vazio, carregando, erro,
   permissão e retry em carga, rota e romaneio, com captura. Aceite: cada subtela
   provada e ficha marcada.
 
 ## F — mobile/jornadas/qualidade
 
-- **agora:** *#589 no verde + merge* — matriz das 3 specs fora do CI com `verify`
-  vermelho; corrigir a declaração (não o gate) e mergear nos 5 checks. Aceite: PR
-  mergeado e `verify` verde.
-- **próximo:** *J6/J13/J14 na camada de navegador* — sucesso, erro e recuperação;
-  fiscal em homologação, nunca SEFAZ real. Aceite: prova visual/log das três.
+- **agora:** *jornada de navegador como gate* — a prova de J6/J13/J14 existe; falta
+  declará-la no conjunto certo do CI (`critical`/`full`, nunca smoke) e provar
+  estabilidade em duas execuções. Aceite: `e2e-cobertura-completa` e
+  `e2e-suices-aderentes` verdes + evidência das duas rodadas (ou bloqueio de
+  ambiente escrito).
+- **próximo:** *J6/J13/J14 em homologação* — fluxo fiscal com nota em homologação,
+  nunca SEFAZ real; erro e recuperação. Aceite: prova visual/log.
 - **depois:** *regressão local da 1.58.1* — smoke + critical no commit da tag.
-  Aceite: ambos verdes com log anexado.
+  Aceite: ambos verdes com log.
 
 ## G — Sentinel
 
-- **agora:** *Sentinel ignora organização suspensa* — 20 das 23 ocorrências eram
-  de `E2E Test Org` (fixture suspensa). Excluir organização suspensa da seleção da
-  varredura, preservando histórico e voltando a incluir se reativada. Aceite: teste
-  com duas organizações (ativa varre, suspensa não) e reexecução sem mudança de
-  histórico.
+- **agora:** *Sentinel ignora organização suspensa* — 20 das 23 ocorrências eram de
+  `E2E Test Org`. Excluir da seleção da varredura, preservar histórico e voltar a
+  incluir se reativada. Aceite: teste com ativa × suspensa e reexecução sem mudança.
 - **próximo:** *proposta do 2º caso de correção aprovada* — três candidatos
   reversíveis (sem dinheiro/fisco), com risco, CAS e rollback; não executar.
   Aceite: documento aprovado pelo dono antes de código.
-- **depois:** *painel de rejeição por fornecedor* — agrupar por CNPJ/cStat,
-  read-only, escopado por organização. Aceite: teste de componente com dois tenants.
+- **depois:** *painel de rejeição por fornecedor* — por CNPJ/cStat, read-only,
+  escopado por organização. Aceite: teste de componente com dois tenants.
 
 ## Coordenação (fora dos 3 slots)
 
