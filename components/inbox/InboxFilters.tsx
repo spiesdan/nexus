@@ -168,8 +168,13 @@ export function InboxFilters({ value, onChange }: Props) {
      * contador da última aba era cortado. `grid-cols-1` força a trilha
      * `minmax(0,1fr)`, que encolhe com a coluna; quem transborda por dentro (a
      * faixa de abas) quebra ou rola, sem arrastar o resto junto.
+     *
+     * O recuo horizontal é `3.5` (14px), a MESMA margem da linha da lista
+     * (`ConversationListItem`, `px-3.5`). Duas margens diferentes na mesma
+     * coluna desalinhavam o campo de busca do avatar em 2px — pouco por linha,
+     * visível na coluna inteira.
      */
-    <div className="grid grid-cols-1 gap-2.5 border-b border-border bg-card px-4 py-4">
+    <div className="grid grid-cols-1 gap-2 border-b border-border bg-card px-3.5 py-3">
       <Input
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}

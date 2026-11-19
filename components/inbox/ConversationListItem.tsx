@@ -188,7 +188,10 @@ export function ConversationListItem({
       aria-current={isSelected ? "true" : undefined}
     >
       <div className="relative shrink-0">
-        <Avatar className="h-10 w-10">
+        {/* As INICIAIS são decoração: elas resumem um nome que vem logo ao
+            lado e no nome acessível da linha. Sem `aria-hidden`, o leitor de
+            tela anuncia "M-S" antes de cada cliente — ruído em toda linha. */}
+        <Avatar className="h-10 w-10" aria-hidden>
           {/* Só monta a <img> quando existe arquivo: sem isso o browser pediria
               a rota para TODO contato da lista e levaria 404 em cada um sem
               foto — que é a maioria. O AvatarFallback do Radix já cobre o caso
@@ -222,25 +225,43 @@ export function ConversationListItem({
           </div>
         )}
         <div className="flex items-baseline justify-between gap-2">
+          {/* O NOME É O TÍTULO DA LINHA — e o que a distingue de uma linha
+              VISTA. Não lida não ganha só o selo no fim: o nome engrossa e a
+              prévia sobe do cinza-mudo para a tinta, que é a mesma gramática do
+              WhatsApp. Cor e negrito juntos fazem a diferença sobreviver ao
+              daltonismo e ao teste do metro. */}
           <span
             className={cn(
-              "truncate text-sm font-semibold",
-              c?.is_anonymized && "text-muted-foreground italic",
+              "truncate text-sm",
+              unread > 0 ? "font-bold" : "font-semibold",
+              // Cor em PARES mutuamente exclusivos: `text-text` e
+              // `text-muted-foreground` juntos são dois utilitários da mesma
+              // propriedade, e quem vence é a ordem da folha compilada — não a
+              // ordem em que estão escritos aqui.
+              c?.is_anonymized ? "text-muted-foreground italic" : "text-text",
             )}
           >
             {displayName}
           </span>
-          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {/* Hora: um degrau ABAIXO da prévia, e não no mesmo tamanho dela. O
+              relógio é a informação menos importante da linha e competia com o
+              texto que se lê. */}
+          <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
             {time}
           </span>
         </div>
 
-        <p className="mt-0.5 truncate text-xs text-muted-foreground">
+        <p
+          className={cn(
+            "mt-0.5 truncate text-[13px] leading-snug",
+            unread > 0 ? "font-medium text-text" : "text-muted-foreground",
+          )}
+        >
           {isAi ? <Robot size={10} weight="duotone" className="mr-1 inline" aria-hidden /> : null}
           {truncated}
         </p>
 
-        <div className="mt-1.5 flex flex-wrap items-center gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
           {visibleTags.map((t) => (
             <Badge key={t} variant="secondary" className="h-4 px-1.5 text-[10px]">
               {t}
@@ -273,6 +294,9 @@ export function ConversationListItem({
           {unread > 0 && (
             <Badge className={`ml-auto h-4 min-w-4 px-1.5 text-[10px] ${WA.unread}`}>
               {unread}
+              {/* Um número sozinho não diz o que conta. "3 não lidas" é o que
+                  o leitor de tela precisa ouvir para o selo significar algo. */}
+              <span className="sr-only"> {t("não lidas")}</span>
             </Badge>
           )}
         </div>

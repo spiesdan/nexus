@@ -117,11 +117,34 @@ export function ConversationList({
   }, [items]);
 
   if (q.isLoading) {
+    /*
+     * O ESQUELETO TEM A FORMA DA LISTA — e diz o que está carregando.
+     *
+     * Antes eram cinco blocos de 64px separados por 12px: nada ali lembrava
+     * uma linha da lista (avatar + duas linhas de texto, sem respiro entre
+     * elas), então a troca do esqueleto pelo conteúdo era um pulo de layout.
+     * E não dizia nada a quem não vê a tela: `aria-busy` no contêiner mais o
+     * `role="status"` com o texto dão o mesmo que o desenho dá a quem vê.
+     */
     return (
-      <div className="space-y-3 p-3">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
+      <div className="flex h-full flex-col" aria-busy="true">
+        <p role="status" className="sr-only">
+          {t("Carregando conversas…")}
+        </p>
+        <div className="flex-1 overflow-hidden" aria-hidden>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 border-b border-l-[3px] border-l-transparent px-3.5 py-2.5"
+            >
+              <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-2 pt-0.5">
+                <Skeleton className="h-3 w-1/2" />
+                <Skeleton className="h-3 w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -152,7 +175,14 @@ export function ConversationList({
       filters.search?.trim() || filters.tag || filters.channel_session_id || clientFilter,
     );
     return (
-      <div className="flex h-full items-center justify-center p-6">
+      <div
+        // O estado vazio é ANUNCIADO. Ele nasce de um gesto da própria pessoa
+        // (digitar na busca, trocar de aba) e, sem região viva, quem usa leitor
+        // de tela não recebe nada e continua tabulando uma área que ficou
+        // vazia.
+        role="status"
+        className="flex h-full items-center justify-center p-6"
+      >
         {filtrando ? <EmptyFilterResults /> : <EmptyInbox />}
       </div>
     );
@@ -174,7 +204,7 @@ export function ConversationList({
           />
         ))}
         {q.hasNextPage && (
-          <div className="flex justify-center p-3">
+          <div className="px-3.5 py-3">
             {/* OFFLINE, A BUSCA FICA PAUSADA — e a lista tem de dizer isso.
                 O TanStack Query, no modo `online` (padrão), não dispara a
                 requisição sem rede: sem este ramo o botão continuava escrito
@@ -186,7 +216,7 @@ export function ConversationList({
               <Button
                 size="sm"
                 variant="outline"
-                className={`${BTN_REF} ${BTN_REF_SEC}`}
+                className={`${BTN_REF} ${BTN_REF_SEC} w-full`}
                 onClick={() => q.fetchNextPage()}
                 disabled={q.isFetchingNextPage}
               >
