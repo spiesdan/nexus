@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import { useT } from "@/hooks/i18n/useT";
+import { apiClient } from "@/lib/api/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Produto } from "@/lib/schemas/produtos";
@@ -47,6 +48,11 @@ export function ProductSearch({
   const [busca, setBusca] = React.useState("");
   const [debounced, setDebounced] = React.useState("");
   const [destaque, setDestaque] = React.useState(0);
+  // Acima do lote carregado (2.000), o produto existe no banco e não existe na
+  // tela. A busca remota é o que impede "o produto não existe" numa carteira
+  // grande — a lista local continua valendo e responde primeiro.
+  const [remotos, setRemotos] = React.useState<Produto[]>([]);
+  const [buscandoRemoto, setBuscandoRemoto] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -56,11 +62,42 @@ export function ProductSearch({
     return () => clearTimeout(timer);
   }, [busca]);
 
+  React.useEffect(() => {
+    const b = debounced.trim();
+    if (b.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setRemotos([]);
+      return;
+    }
+    let vivo = true;
+    setBuscandoRemoto(true);
+    apiClient
+      .get<{ data: Produto[] }>(`/api/v1/products?busca=${encodeURIComponent(b)}&limite=12`)
+      .then((r) => {
+        if (vivo) setRemotos(Array.isArray(r.data) ? r.data : []);
+      })
+      .catch(() => {
+        // Busca remota é reforço: sem rede, a lista local continua valendo.
+        if (vivo) setRemotos([]);
+      })
+      .finally(() => {
+        if (vivo) setBuscandoRemoto(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [debounced]);
+
   const filtrados = React.useMemo(() => {
     const b = debounced.trim().toLowerCase();
     if (!b) return [];
-    const exato = produtos.filter((p) => p.codigo.toLowerCase() === b);
-    const resto = produtos.filter(
+    // O endpoint devolve inativos também (a tela de catálogo os mostra); o
+    // pedido só aceita ativo.
+    const porId = new Map(produtos.map((p) => [p.id, p]));
+    for (const p of remotos) if (p.ativo !== false) porId.set(p.id, p);
+    const universo = [...porId.values()];
+    const exato = universo.filter((p) => p.codigo.toLowerCase() === b);
+    const resto = universo.filter(
       (p) =>
         p.codigo.toLowerCase() !== b &&
         (p.nome.toLowerCase().includes(b) ||
@@ -68,7 +105,7 @@ export function ProductSearch({
           (p.marca ?? "").toLowerCase().includes(b)),
     );
     return [...exato, ...resto].slice(0, 8);
-  }, [debounced, produtos]);
+  }, [debounced, produtos, remotos]);
 
   function efetivo(p: Produto): { valor: number; origem: string } {
     if (!tabela) return { valor: p.preco_cents, origem: t("Base") };
@@ -152,7 +189,7 @@ export function ProductSearch({
       {/* Busca sem resultado não é catálogo vazio: sem esta linha, o operador
           não distingue "não existe produto com esse termo" de "a lista ainda
           não carregou" — e digita de novo achando que errou. */}
-      {filtrados.length === 0 && busca.trim() !== "" && (
+      {filtrados.length === 0 && busca.trim() !== "" && !buscandoRemoto && (
         <p className="px-1 text-xs text-muted-foreground">{t("Nenhum produto encontrado.")}</p>
       )}
     </div>

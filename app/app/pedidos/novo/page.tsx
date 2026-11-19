@@ -17,23 +17,31 @@ export const dynamic = "force-dynamic";
  * comissão; o editor monta o rascunho local (autosave) e a rota recalcula
  * tudo no Salvar/Finalizar (totais do cliente nunca entram).
  */
-export default async function NovoPedidoPage() {
+export default async function NovoPedidoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ contato?: string }>;
+}) {
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
   if (!activeOrg) redirect("/app");
+
+  const { contato: contatoDoLink } = await searchParams;
 
   const pode = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent;
   if (!pode) redirect("/app/pedidos");
   const verMargem = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
+  const camposDoContato = "id, fantasia, display_name, name, phone_number, email";
   const [
     { data: produtos },
     { data: contatos },
     { data: tabelas },
     { data: policies },
     { data: organizacao },
+    { data: contatoDoPedido },
   ] = await Promise.all([
       supabase
         .from("catalog_products")
@@ -47,7 +55,7 @@ export default async function NovoPedidoPage() {
         .limit(2000),
       supabase
         .from("contacts")
-        .select("id, fantasia, display_name, name, phone_number, email")
+        .select(camposDoContato)
         .eq("organization_id", activeOrg.orgId)
         .eq("is_anonymized", false)
         .order("display_name")
@@ -71,21 +79,44 @@ export default async function NovoPedidoPage() {
         .select("legal_name, cnpj, phone")
         .eq("id", activeOrg.orgId)
         .maybeSingle(),
+      // O cliente veio de um link da ficha/360° (`?contato=<id>`). A lista do
+      // seletor tem teto de 500 — numa base maior o contato do link pode ficar
+      // de fora, e a tela abriria sem ninguém selecionado. Buscar o id UMA vez,
+      // sempre com `organization_id` explícito, garante que o link funciona em
+      // qualquer tamanho de carteira. Contato de outra org/anônimo não resolve.
+      typeof contatoDoLink === "string" && contatoDoLink !== ""
+        ? supabase
+            .from("contacts")
+            .select(camposDoContato)
+            .eq("organization_id", activeOrg.orgId)
+            .eq("is_anonymized", false)
+            .eq("id", contatoDoLink)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
+
+  type ContatoDoEditor = {
+    id: string;
+    fantasia: string | null;
+    display_name: string | null;
+    name: string | null;
+    phone_number: string | null;
+    email: string | null;
+  };
+  const listaDeContatos = (contatos ?? []) as unknown as ContatoDoEditor[];
+  const contatoInicial = (contatoDoPedido ?? null) as unknown as ContatoDoEditor | null;
+  // O contato do link entra na frente da lista (e a lista local continua sendo
+  // a primeira página da organização, com busca no servidor no seletor).
+  const contatosDoEditor =
+    contatoInicial && !listaDeContatos.some((c) => c.id === contatoInicial.id)
+      ? [contatoInicial, ...listaDeContatos]
+      : listaDeContatos;
 
   return (
     <OrderEditor
       produtos={(produtos ?? []) as unknown as Produto[]}
-      contatos={
-        (contatos ?? []) as unknown as {
-          id: string;
-          fantasia: string | null;
-          display_name: string | null;
-          name: string | null;
-          phone_number: string | null;
-          email: string | null;
-        }[]
-      }
+      contatos={contatosDoEditor}
+      contatoInicial={contatoInicial?.id ?? null}
       tabelas={(tabelas ?? []) as unknown as { id: string; nome: string; desconto_pct: number }[]}
       verMargem={verMargem}
       comissaoPct={
@@ -126,6 +157,12 @@ export default async function NovoPedidoPage() {
         adicionar: t("Adicionar"),
         historico: t("Histórico do cliente"),
         rascunhoRestaurado: t("Rascunho anterior restaurado"),
+        rascunhoDeOutroCliente: t("Há um rascunho de outro cliente"),
+        rascunhoDeOutroClienteDesc: t(
+          "Você chegou aqui a partir de um cliente, mas existe um rascunho salvo de outro. Escolha qual manter — nada é apagado sem esta decisão.",
+        ),
+        usarClienteDoLink: t("Usar o cliente do link"),
+        continuarRascunho: t("Continuar o rascunho"),
         produtos: t("Produtos"),
         buscarProduto: t("Buscar produto, código ou EAN… (/ foca)"),
         subtotal: t("Subtotal"),

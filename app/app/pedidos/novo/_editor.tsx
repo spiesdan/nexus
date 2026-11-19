@@ -39,6 +39,7 @@ import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { rotuloDoContato } from "@/lib/contacts/rotulo-do-contato";
+import { nomeDeExibicao } from "@/lib/contacts/nome-de-exibicao";
 import { NewContactDialog } from "@/components/contacts/NewContactDialog";
 import { precoParaCentavos, type Produto } from "@/lib/schemas/produtos";
 import { calcularParcelas, subtotalDoItem } from "@/lib/schemas/pedidos";
@@ -49,10 +50,34 @@ import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
-import { haQuantoTempo, useAutosaveDraft } from "./_autosave";
+import { haQuantoTempo, rascunhoDeOutroCliente, useAutosaveDraft } from "./_autosave";
 import { useOrderShortcuts } from "./_atalhos";
 
+import { randomId } from "@/lib/random-id";
 import { rolarPara } from "@/lib/ui/movimento";
+
+/** O que o autosave guarda — e o que a restauração pode receber de outro dia. */
+interface RascunhoDoPedido {
+  contatoId: string | null;
+  /** A mesma chave sobrevive ao reload: retry não cria pedido duplicado. */
+  chavePedido?: string;
+  clienteNome: string;
+  linhas: LinhaDoPedido[];
+  condicao: string;
+  formaPagamento?: FormaDePagamento | "";
+  exigeNf?: boolean;
+  observacoes: string;
+  obsInterna?: string;
+  endereco?: string;
+  transportadora?: string;
+  rastreamento?: string;
+  contatoNoCliente?: string;
+  tabelaId?: string;
+  descontoTexto?: string;
+  descontoPctTexto?: string;
+  freteTexto?: string;
+}
+
 interface TextosBase {
   titulo: string;
   subtitulo: string;
@@ -76,6 +101,10 @@ interface TextosBase {
   adicionar: string;
   historico: string;
   rascunhoRestaurado: string;
+  rascunhoDeOutroCliente: string;
+  rascunhoDeOutroClienteDesc: string;
+  usarClienteDoLink: string;
+  continuarRascunho: string;
   produtos: string;
   buscarProduto: string;
   subtotal: string;
@@ -101,6 +130,7 @@ interface TextosBase {
 export function OrderEditor({
   produtos,
   contatos,
+  contatoInicial,
   tabelas,
   verMargem,
   comissaoPct,
@@ -111,6 +141,11 @@ export function OrderEditor({
 }: {
   produtos: Produto[];
   contatos: ContatoOpcao[];
+  /**
+   * Cliente vindo do link da ficha/360° (`/app/pedidos/novo?contato=<id>`).
+   * `null` significa "editor aberto sem cliente" — o comportamento de sempre.
+   */
+  contatoInicial?: string | null;
   tabelas: { id: string; nome: string; desconto_pct: number }[];
   verMargem: boolean;
   comissaoPct: number | null;
@@ -136,8 +171,14 @@ export function OrderEditor({
   const router = useRouter();
   const buscaRef = React.useRef<HTMLInputElement | null>(null);
 
-  const [contatoId, setContatoId] = React.useState<string | null>(null);
-  const [clienteNome, setClienteNome] = React.useState("");
+  const [contatoId, setContatoId] = React.useState<string | null>(contatoInicial ?? null);
+  const contatoDoLink = React.useMemo(
+    () => (contatoInicial ? contatos.find((c) => c.id === contatoInicial) : undefined),
+    [contatoInicial, contatos],
+  );
+  const [clienteNome, setClienteNome] = React.useState(
+    contatoDoLink ? nomeDeExibicao(contatoDoLink, t) : "",
+  );
   // A lista vem do servidor no carregamento da página; o estado local existe
   // para o cliente cadastrado AQUI entrar na hora, sem recarregar a tela (e sem
   // perder o rascunho do pedido).
@@ -171,6 +212,17 @@ export function OrderEditor({
   const [descontoPctTexto, setDescontoPctTexto] = React.useState("");
   const [freteTexto, setFreteTexto] = React.useState("");
   const [enviando, setEnviando] = React.useState(false);
+  // A chave de idempotência nasce com o editor e é GRAVADA no rascunho: se a
+  // resposta do POST se perder e a pessoa tentar de novo (ou recarregar e
+  // tentar), o servidor devolve o pedido que já existe em vez de criar outro.
+  // `randomId` (lib/random-id.ts) e não `crypto.randomUUID` cru: em VPS
+  // self-host sem TLS (http://IP) o browser não expõe `randomUUID` — o helper
+  // cai em `getRandomValues`. O valor não é renderizado, então servidor e
+  // cliente não precisam concordar.
+  const [chavePedido, setChavePedido] = React.useState<string>(() => randomId());
+  // Guarda SÍNCRONA: `enviando` só desabilita o botão no próximo render — dois
+  // cliques (ou Cmd+Enter repetido) no mesmo frame entrariam duas vezes.
+  const envioEmVoo = React.useRef(false);
   const [aprovacao, setAprovacao] = React.useState(false);
   // Uma página só, como o Mercos: as quatro seções (cliente, representada,
   // produtos, detalhes) ficam todas visíveis e o estado é único. Nada de passo
@@ -307,11 +359,16 @@ export function OrderEditor({
     };
   }, [contatoId, endereco]);
 
-  // Autosave (§31).
+  // Autosave (§31). Fica DESLIGADO enquanto há um rascunho divergente por
+  // decidir: o primeiro debounce (2 s) gravaria o pedido vazio por cima do
+  // rascunho do outro cliente antes de a pessoa escolher.
+  const [conflitoDeRascunho, setConflitoDeRascunho] =
+    React.useState<RascunhoDoPedido | null>(null);
   const { salvoEm, carregar, limpar } = useAutosaveDraft(
     "pedido-rascunho",
     {
       contatoId,
+      chavePedido,
       clienteNome,
       linhas,
       condicao,
@@ -328,49 +385,84 @@ export function OrderEditor({
       descontoPctTexto,
       freteTexto,
     },
-    true,
+    conflitoDeRascunho === null,
   );
   // Restauração única do autosave (montagem): sem ela, fechar o navegador
   // no meio da venda perde tudo (§31).
   /* eslint-disable react-hooks/set-state-in-effect */
   React.useEffect(() => {
     const salvo = carregar();
-    if (
-      salvo &&
-      Array.isArray(salvo.linhas) &&
-      (salvo.linhas as unknown[]).length > 0 &&
-      linhas.length === 0
-    ) {
-      const s = salvo as unknown as {
-        contatoId: string | null;
-        clienteNome: string;
-        linhas: LinhaDoPedido[];
-        condicao: string;
-        formaPagamento?: FormaDePagamento | "";
-        exigeNf?: boolean;
-        observacoes: string;
-        transportadora?: string;
-        rastreamento?: string;
-        contatoNoCliente?: string;
-      };
-      setContatoId(s.contatoId);
-      setClienteNome(s.clienteNome);
-      setLinhas(s.linhas);
-      setCondicao(s.condicao ?? "");
-      // Rascunho salvo antes da 0261 não tem os dois campos. `|| ""` e `?? false`
-      // em vez de acesso direto: um rascunho de ontem não pode fazer a tela
-      // quebrar em `undefined`.
-      setFormaPagamento(s.formaPagamento ?? "");
-      setExigeNf(s.exigeNf ?? false);
-      setObservacoes(s.observacoes ?? "");
-      setTransportadora(s.transportadora ?? "");
-      setRastreamento(s.rastreamento ?? "");
-      setContatoNoCliente(s.contatoNoCliente ?? "");
-      nexusToast.info(textos.rascunhoRestaurado);
+    if (!salvo || linhas.length > 0) return;
+    const s = salvo as unknown as RascunhoDoPedido;
+    const temItens = Array.isArray(s.linhas) && s.linhas.length > 0;
+    const temCliente = Boolean(s.contatoId || s.clienteNome?.trim());
+    // Um rascunho só com o cliente escolhido também é intenção e volta. Mas o
+    // link da ficha vence esse caso: sem itens não há venda para perder, e o
+    // cliente que a pessoa acabou de clicar não pode ser trocado por um resto.
+    if (!temItens && !temCliente) return;
+    if (rascunhoDeOutroCliente(s, contatoInicial)) {
+      // O link manda um cliente; o rascunho salvo pode ser de OUTRO. Com itens,
+      // restaurar em silêncio trocaria o cliente e descartar perderia a venda:
+      // a decisão é explícita. Sem itens, o link vence (o resto de cliente não
+      // é aplicado).
+      if (temItens) setConflitoDeRascunho(s);
+      return;
     }
+    aplicarRascunho(s);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  function aplicarRascunho(s: RascunhoDoPedido) {
+    setContatoId(s.contatoId);
+    if (s.chavePedido) setChavePedido(s.chavePedido);
+    setClienteNome(s.clienteNome);
+    setLinhas(Array.isArray(s.linhas) ? s.linhas : []);
+    setCondicao(s.condicao ?? "");
+    // Rascunho salvo antes da 0261 não tem os dois campos. `|| ""` e `?? false`
+    // em vez de acesso direto: um rascunho de ontem não pode fazer a tela
+    // quebrar em `undefined`.
+    setFormaPagamento(s.formaPagamento ?? "");
+    setExigeNf(s.exigeNf ?? false);
+    setObservacoes(s.observacoes ?? "");
+    // TODO campo editável que entra no autosave volta aqui. O desconto era o
+    // caso medido pelo design (salvava e não voltava); a varredura achou mais
+    // cinco com a mesma falha: obsInterna, endereco, tabelaId, descontoTexto,
+    // descontoPctTexto e freteTexto.
+    setObsInterna(s.obsInterna ?? "");
+    setEndereco(s.endereco ?? "");
+    setTransportadora(s.transportadora ?? "");
+    setRastreamento(s.rastreamento ?? "");
+    setContatoNoCliente(s.contatoNoCliente ?? "");
+    setTabelaId(s.tabelaId ?? "");
+    setDescontoTexto(s.descontoTexto ?? "");
+    // Input `type=number` só aceita ponto. Um rascunho antigo/colado com vírgula
+    // seria rejeitado pelo browser e o campo voltaria vazio — normalizar aqui é
+    // o que faz o desconto percentual voltar de fato.
+    setDescontoPctTexto((s.descontoPctTexto ?? "").replace(",", "."));
+    setFreteTexto(s.freteTexto ?? "");
+    nexusToast.info(textos.rascunhoRestaurado);
+  }
+
+  // Fechar/recarregar com itens no pedido pede confirmação. O autosave guarda
+  // o conteúdo, mas a surpresa de perder a tela sem aviso é outra coisa —
+  // e a confirmação nativa é a única disponível antes de `beforeunload`.
+  React.useEffect(() => {
+    if (linhas.length === 0) return;
+    const avisar = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", avisar);
+    return () => window.removeEventListener("beforeunload", avisar);
+  }, [linhas.length]);
+
+  /** Sai da URL do link sem navegar de novo (não remonta o editor). */
+  function esquecerClienteDoLink() {
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", "/app/pedidos/novo");
+    }
+  }
 
   function adicionar(produto: Produto, quantidade: number) {
     setLinhas((ls) => {
@@ -525,6 +617,7 @@ export function OrderEditor({
       }>(`/api/v1/commercial-orders`, {
         contact_id: contatoId,
         cliente_nome: clienteNome.trim(),
+        chave_sincronizacao: chavePedido,
         status,
         origem: "vendedor",
         desconto_cents: descontoCents,
@@ -583,15 +676,20 @@ export function OrderEditor({
 
   useOrderShortcuts({
     focarBusca: () => buscaRef.current?.focus(),
-    finalizar: () => void enviar("aprovado"),
+    // Passa pela MESMA porta do botão: o atalho também respeita a guarda de
+    // envio em voo (antes ele chamava `enviar` direto e furava o `enviando`).
+    finalizar: () => void comEnvio("aprovado"),
     desfocar: () => (document.activeElement as HTMLElement | null)?.blur(),
   });
 
   async function comEnvio(status: "rascunho" | "aprovado", canal?: "email" | "whatsapp") {
+    if (envioEmVoo.current) return;
+    envioEmVoo.current = true;
     setEnviando(true);
     try {
       await enviar(status, canal);
     } finally {
+      envioEmVoo.current = false;
       setEnviando(false);
     }
   }
@@ -1114,6 +1212,54 @@ export function OrderEditor({
               disabled={enviando}
             >
               {textos.finalizar}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* O rascunho é de outro cliente e o link trouxe este. A tela abre com o
+          cliente do link; a decisão sobre o rascunho é explícita e vem antes
+          de qualquer gravação (o autosave fica desligado enquanto isso). */}
+      <Dialog open={conflitoDeRascunho !== null}>
+        <DialogContent data-testid="conflito-rascunho">
+          <DialogHeader>
+            <DialogTitle>{textos.rascunhoDeOutroCliente}</DialogTitle>
+            <DialogDescription>{textos.rascunhoDeOutroClienteDesc}</DialogDescription>
+          </DialogHeader>
+          {conflitoDeRascunho ? (
+            <dl className="space-y-1 text-sm">
+              <div className="flex gap-1">
+                <dt className="text-muted-foreground">{textos.cliente}:</dt>
+                <dd className="font-medium">{clienteNome || t("Sem nome")}</dd>
+              </div>
+              <div className="flex gap-1">
+                <dt className="text-muted-foreground">{t("Rascunho")}:</dt>
+                <dd className="font-medium">
+                  {conflitoDeRascunho.clienteNome || t("Sem nome")} ·{" "}
+                  {conflitoDeRascunho.linhas.length} {t("item(ns)")}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (conflitoDeRascunho) aplicarRascunho(conflitoDeRascunho);
+                setConflitoDeRascunho(null);
+                esquecerClienteDoLink();
+              }}
+            >
+              {textos.continuarRascunho}
+            </Button>
+            <Button
+              onClick={() => {
+                limpar();
+                setConflitoDeRascunho(null);
+                esquecerClienteDoLink();
+              }}
+            >
+              {textos.usarClienteDoLink}
             </Button>
           </DialogFooter>
         </DialogContent>
