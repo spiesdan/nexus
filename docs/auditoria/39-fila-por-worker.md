@@ -159,3 +159,21 @@ regra permanente** — e processo pesado que aparecer durante a janela é morto.
 
 **Confirmado na `main`:** #619 (`2d395fc7`, erro único de anúncio) e #620 (ações
 do criador em “Mais opções”) entram com o CI fechado.
+
+### Parada de emergência (19/11/2026) — builds paralelos e sessões duplicadas
+
+Medido: **dois `next-build` em paralelo** (90% e 35% CPU), load 32, swap 6,8 GB.
+Causa raiz encontrada: **sessões duplicadas** dos workers (d17/d18/d19, f17/f18/f19,
+g17/g18/g19), cada uma retomando build/`e2e:build` e `tsc` por conta própria.
+
+O que foi feito:
+1. **`interrupt` nas sessões duplicadas** (`d17`, `f17`, `f18`, `g17`, `g18`) —
+   ficaram **uma por worker**: `d19`, `f19`, `g19`.
+2. **Build bloqueado nos worktrees** com shim em `node_modules/.bin/next`
+   (`.real` guardado ao lado): retry falha em ms em vez de subir 400% CPU.
+   **Restaurar quando o orquestrador abrir a janela** (`mv next.real next`).
+3. Processos pesados mortos; swap 6,8 → **3,4 GB**.
+
+**Regra daqui pra frente:** build **só** com janela do orquestrador; teste
+dirigido; `tsc` no fim e um por vez; Playwright só na captura e fechado no mesmo
+comando; **uma sessão por worker** (checar `opencode session list` antes de abrir).
