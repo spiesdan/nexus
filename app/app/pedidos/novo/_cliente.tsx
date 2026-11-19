@@ -31,6 +31,29 @@ export interface ResumoDoCliente {
 }
 
 /**
+ * A régua do seletor — pura e exportada para ser MEDIDA (matriz E · 2).
+ *
+ * A lista local (primeira página, até 500) responde primeiro; o que veio da
+ * busca do servidor entra depois, sem duplicar por id. O teto de 8 é da tela.
+ */
+export function filtrarContatos(
+  contatos: ContatoOpcao[],
+  remotos: ContatoOpcao[],
+  termo: string,
+  limite = 8,
+): ContatoOpcao[] {
+  const b = termo.trim().toLowerCase();
+  if (!b) return [];
+  const locais = contatos.filter((c) =>
+    [c.fantasia, c.display_name, c.name, c.phone_number, c.email]
+      .filter(Boolean)
+      .some((v) => (v as string).toLowerCase().includes(b)),
+  );
+  const vistos = new Set(locais.map((c) => c.id));
+  return [...locais, ...remotos.filter((c) => !vistos.has(c.id))].slice(0, limite);
+}
+
+/**
  * Seletor de cliente (§5–6): autocomplete rápido + resumo que carrega junto
  * (tabela, condição, limite, em aberto) + alertas contextuais (crédito,
  * dias sem compra). Alertas informam, nunca bloqueiam — o bloqueio mora no
@@ -151,17 +174,10 @@ export function CustomerSelector({
     };
   }, [busca]);
 
-  const filtrados = React.useMemo(() => {
-    const b = busca.trim().toLowerCase();
-    if (!b) return [];
-    const locais = contatos.filter((c) =>
-      [c.fantasia, c.display_name, c.name, c.phone_number, c.email]
-        .filter(Boolean)
-        .some((v) => (v as string).toLowerCase().includes(b)),
-    );
-    const vistos = new Set(locais.map((c) => c.id));
-    return [...locais, ...remotos.filter((c) => !vistos.has(c.id))].slice(0, 8);
-  }, [busca, contatos, remotos]);
+  const filtrados = React.useMemo(
+    () => filtrarContatos(contatos, remotos, busca),
+    [busca, contatos, remotos],
+  );
 
   return (
     <div className="space-y-2">
