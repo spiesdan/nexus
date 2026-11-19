@@ -23,7 +23,9 @@
 /** Códigos do Mercos são texto. `trim` e nada mais: mudar o código é mudar a identidade. */
 export function normalizarCodigo(valor) {
   if (valor === null || valor === undefined) return null;
-  const limpo = String(valor).replace(/\u00a0/g, " ").trim();
+  const limpo = String(valor)
+    .replace(/\u00a0/g, " ")
+    .trim();
   return limpo === "" ? null : limpo;
 }
 
@@ -59,7 +61,9 @@ export function chaveSemZeros(codigo) {
  */
 export function precoParaCents(valor) {
   if (valor === null || valor === undefined) return null;
-  const bruto = String(valor).replace(/[^\d.,-]/g, "").trim();
+  const bruto = String(valor)
+    .replace(/[^\d.,-]/g, "")
+    .trim();
   if (bruto === "") return null;
 
   const ultimaVirgula = bruto.lastIndexOf(",");
@@ -79,8 +83,7 @@ export function precoParaCents(valor) {
     const pos = Math.max(ultimaVirgula, ultimoPonto);
     const depois = bruto.length - pos - 1;
     const separador = bruto[pos];
-    normalizado =
-      depois === 3 ? bruto.replace(separador, "") : bruto.replace(separador, ".");
+    normalizado = depois === 3 ? bruto.replace(separador, "") : bruto.replace(separador, ".");
   } else {
     normalizado = bruto;
   }
@@ -126,6 +129,42 @@ export function mapearColunas(cabecalho) {
     completo: faltando.length === 0,
     faltando,
   };
+}
+
+/**
+ * A ROTA DO CATÁLOGO NÃO É `/<empresa>/produtos/`.
+ *
+ * Medido em produção em 18/11/2026, dentro do `crm-mercos-1`:
+ * `https://app.mercos.com/338282/produtos/` responde **404** e o `goto` não
+ * lança — a página de erro tem `<h1>` e texto. O coletor então lia zero linhas
+ * e terminava com `{"produtos_lidos":0,"paginas":0,"cabecalho_lido":false}` e
+ * **exit 0**: o mesmo silêncio que ele existe para eliminar.
+ *
+ * A rota real desta instalação é `/industria/<empresa>/produtos/`, e é ela que
+ * o menu autenticado aponta. O segmento do meio muda com o tipo de conta, então
+ * a primeira candidata é sempre a do menu (descoberta, não adivinhada); as
+ * fixas ficam como rede.
+ */
+export function rotasDoCatalogo(empresa) {
+  return [
+    `https://app.mercos.com/industria/${empresa}/produtos/`,
+    `https://app.mercos.com/${empresa}/produtos/`,
+  ];
+}
+
+/**
+ * ZERO NÃO É SUCESSO — o motivo, ou `null` quando a coleta valeu.
+ *
+ * `paginas === 0` = nem abriu a grade (rota errada, sessão caída, seletor
+ * quebrado). `produtos_lidos === 0` = abriu e não achou linha utilizável.
+ * Os dois viravam "fim" com exit 0; agora viram falha declarada com o motivo,
+ * separado, porque a ação de quem lê o log é diferente em cada caso.
+ */
+export function motivoDoVazio({ paginas, produtosLidos }) {
+  if (!Number.isFinite(paginas) || paginas <= 0) return "nenhuma pagina lida";
+  if (!Number.isFinite(produtosLidos) || produtosLidos <= 0)
+    return "pagina lida, nenhuma linha utilizavel";
+  return null;
 }
 
 /** Plano B declarado do legado. Só usado quando o `<thead>` não foi lido. */
@@ -273,7 +312,12 @@ export function planejarPareamento(itens, catalogo) {
       if (zero) {
         const candidato = catalogo.porCodigoSemZeros.get(zero);
         if (candidato) {
-          porZero.push({ itemId: item.id, codigo, produtoId: candidato.id, produtoCodigo: candidato.codigo });
+          porZero.push({
+            itemId: item.id,
+            codigo,
+            produtoId: candidato.id,
+            produtoCodigo: candidato.codigo,
+          });
           continue;
         }
       }
@@ -282,7 +326,12 @@ export function planejarPareamento(itens, catalogo) {
     if (nome) {
       const candidatos = catalogo.porNome.get(nome) ?? [];
       if (candidatos.length === 1) {
-        porNome.push({ itemId: item.id, nome, produtoId: candidatos[0].id, produtoCodigo: candidatos[0].codigo });
+        porNome.push({
+          itemId: item.id,
+          nome,
+          produtoId: candidatos[0].id,
+          produtoCodigo: candidatos[0].codigo,
+        });
         continue;
       }
       if (candidatos.length > 1) {
