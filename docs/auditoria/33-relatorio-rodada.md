@@ -138,8 +138,12 @@ comandos exatos estão em [`30-fila-nexus-aaa.md`](30-fila-nexus-aaa.md) §11.
 | **TalkBack** | `[!]` parcial | F/D | árvore + logcat no emulador | #576 | Só o acústico: texto falado, pronúncia pt-BR e anúncio dinâmico |
 | **`update.sh` fail-loud** | `[x]` | Orquestrador | aborta antes do `up -d` em DDL não-benigno | #568 | — |
 | **E2E completo** | `[~]` | F | veredito por spec (entra / fora com dono e data / morre) | workflow `FORA_DO_CI` | Matriz das 3 specs fora do CI, com bloqueio real de cada uma |
-| **Coletor do catálogo lê zero em produção** | `[!]` **crítico** | D | DOM real de `/produtos/` + parser/rota corretos + fail-loud com 0 páginas + 1 coleta real com `produtos_lidos > 0` (sem escrever) | log do `crm-mercos-1` em 1.58.0 (`cabecalho: []`, `paginas: 0`) | O parser não vê `<table>`/`<thead>`: medir a página e corrigir; hoje termina com código 0 |
-| **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #559, #578 | Depende do coletor acima e do deploy da 1.58.0 (em curso) |
+| **Coletor do catálogo lê zero em produção** | `[x]` | D | DOM real + parser/rota corretos + fail-loud com 0 páginas + coleta real | **#585**: rota real `/industria/…` (o `/produtos/` dava 404), 601 produtos lidos, exit 1 quando não há página | — |
+| **Pareamento do catálogo** | `[!]` | D + Dono | após o coletor: `--dry-run` → relatório aprovado | #585 (coleta real) | Depende da decisão dos inativos (§25) e de um `--dry-run` aprovado |
+| **A11y fora do recorte** | `[x]` | D | axe WCAG 2.2 AA, 0 violações críticas | **#583**: 14 rotas + `<h1>` da cabine + ordem anunciada | — |
+| **Sentinel — claim de conversa parada** | `[~]` | G | liberar claim com motivo, sem perder histórico | **#582** (aberto) | PR em revisão |
+| **Falso positivo da devolução no Sentinel** | `[x]` | G | devolução finalidade 4 não é duplicidade | **#584** | — |
+| **Regressão local 1.58.0** | `[~]` | F | smoke + critical no commit da tag, com log | **#586** (aberto): smoke 32/32, critical 75/75, 2 defeitos reais | PR em revisão |
 | **A11y nas telas restantes** | `[~]` | D | axe sem violação crítica nas telas cobertas | #491/#516/#531/#535 | Cobertura além das 10 telas do `axe-telas-principais` |
 | **iOS** | `[!]` **encerrado por decisão** | Dono | decisão registrada, sem item órfão | `29-capacidades.md` item 30 | — (fora de escopo; só volta com conta Apple + aparelho + distribuição por instalação) |
 | **Release 1.58.0** | `[x]` tag | Dono (deploy) | tag `v1.58.0` + imagens publicadas | `4c7cd633` | Deploy em curso pelo dono; verificar `to_regclass` depois |

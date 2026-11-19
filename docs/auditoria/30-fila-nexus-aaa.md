@@ -629,3 +629,31 @@ fora** por motivo escrito no workflow. Fechar "E2E completo" não é rodar mais:
 **Dono da matriz:** F (depois da B-7). O aceite é uma tabela com veredito por
 spec — "entra no CI", "continua fora com dono e data", ou "morre" — e a
 fidelidade de `SPECS_PARTE_*` continua cobrada pelo gate existente.
+
+
+## 25. Decisão pendente — importar produtos INATIVOS do Mercos? (19/11/2026)
+
+> **Dono da decisão:** Dono. **Bloqueia:** pareamento dos 616 itens históricos.
+> **Não decidir por conta própria:** é regra de negócio (o que entra no catálogo).
+
+O coletor (#585) lista **só ativos**, que é o que o operador vê na grade padrão.
+A medição do dono: sobram **69 códigos** que só aparecem como inativo no Mercos —
+e são eles que faltam para parear os **616 itens** de pedido sem `product_id`.
+
+**Opções medidas:**
+
+| Opção | Efeito | Risco |
+|---|---|---|
+| **A — importar só ativos (hoje)** | catálogo = o que se vende; 616 itens seguem sem vínculo | pareamento incompleto para sempre |
+| **B — importar inativos marcando `ativo=false`** | 69 códigos entram; pareamento histórico fecha; grade de venda continua só com ativos | produto inativo passa a existir no banco (relatórios precisam filtrar) |
+| **C — segunda passada `?situacao=inativos` sob demanda** | mesmo efeito de B, sem misturar no fluxo padrão | duas execuções para manter; a marcação precisa ser explícita |
+
+**Recomendação da coordenação:** **B**, com `ativo=false` no upsert e a grade de
+venda filtrando por `ativo` — é o único caminho que fecha o pareamento sem
+esconder o histórico. Mas a escolha é do dono.
+
+> **Operação (19/11/2026):** as **9 organizações de teste** em produção foram
+> **suspensas** pelo dono. Motivo: fixture de QA não deve conviver com dado real
+> nem consumir cota de IA/WhatsApp da instalação. Efeito colateral registrado: o
+> Sentinel deixa de varrer essas organizações (esperado) e qualquer prova que
+> dependesse delas passa a valer só em ambiente local.

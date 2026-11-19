@@ -50,7 +50,7 @@
 | 27 | Busca global e command palette | **existente** | 4.6/4.7 | — |
 | 28 | Notificações e alertas | **parcial** | `operational_alerts`; central de avisos | prioridade/SLA do inbox |
 | 29 | Nuvemshop (pedidos espelhados) | **existente** | 5.10; `orders`/`nuvemshop_products` | — |
-| 30 | iOS | **fora de escopo por decisão** | C4/7.12: não há `ios/` nem `@capacitor/ios`; PWA é o caminho oficial no iPhone | **Decisão do dono, 18/11/2026** — encerrado; ver abaixo |
+| 30 | iOS | **ausente** | C4/7.12: não há `ios/` nem `@capacitor/ios`; PWA é o caminho oficial no iPhone. **Encerrado por decisão do dono em 18/11/2026 — ver abaixo** | — |
 
 ### Item 30 — iOS: decisão do dono (18/11/2026)
 

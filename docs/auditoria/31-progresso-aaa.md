@@ -320,7 +320,7 @@ aprovado.
 A fila viva é [`39-fila-por-worker.md`](39-fila-por-worker.md):
 
 ```
-D — agora: coletor do catálogo lê zero (DOM real + fail-loud) · próximo: axe nas telas fora da régua · depois: aria-sort nas tabelas
-F — agora: J6/J13/J14 no navegador · próximo: matriz das 3 specs fora do CI · depois: regressão local da 1.58.0
-G — agora: painel de rejeição por fornecedor · próximo: proposta do 2º caso reversível · depois: retenção/LGPD provada
+D — agora: estados das subtelas de expedição (5.6b) · próximo: formulários de cadastro (erro por campo) · depois: densidade/tabelas das listas restantes
+F — agora: fechar #586 e anexar a prova · próximo: J6/J13/J14 no navegador · depois: matriz das 3 specs fora do CI
+G — agora: fechar #582 (claim de conversa parada) · próximo: proposta do 2º caso reversível · depois: retenção/LGPD provada
 ```
