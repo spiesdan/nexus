@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { headers } from "next/headers";
 import { ToasterDoProduto } from "@/components/feedback/ToasterDoProduto";
+import { SentryLazy } from "@/components/app/SentryLazy";
 import { coresDaBarraDoNavegador } from "@/lib/branding/barra-do-navegador";
 import { MarcaDaInstalacaoProvider } from "@/lib/branding/contexto";
 import { cssDaMarca } from "@/lib/branding/css";
@@ -300,6 +301,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="min-h-screen bg-bg font-sans text-text antialiased">
         <Providers>
+          <SentryLazy />
           <MarcaDosClientComponents>
             <ThemeProvider>{children}</ThemeProvider>
           </MarcaDosClientComponents>

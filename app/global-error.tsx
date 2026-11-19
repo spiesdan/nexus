@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect, useState } from "react";
 
 import { copyToClipboard } from "@/lib/clipboard";
@@ -16,8 +15,20 @@ export default function GlobalError({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const id = Sentry.captureException(error);
-    setEventId(id);
+    let vivo = true;
+    // `import()` e não import estático: este boundary entra no grafo de TODA
+    // rota, e o SDK do Sentry (~164 KB gz) não pode pagar o first load de quem
+    // nem errou. O chunk só é buscado quando a tela de erro aparece.
+    void import("@sentry/nextjs")
+      .then((Sentry) => {
+        if (vivo) setEventId(Sentry.captureException(error));
+      })
+      .catch(() => {
+        // sem chunk, o ID cai no `error.digest` — a tela continua utilizável.
+      });
+    return () => {
+      vivo = false;
+    };
   }, [error]);
 
   const displayId = eventId ?? error.digest ?? "—";

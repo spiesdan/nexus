@@ -8,6 +8,13 @@ ordem de grandeza, não como promessa de latência da VPS do cliente.
 Método completo e comandos no fim. Tudo que está aqui foi medido; opinião está
 marcada como opinião.
 
+> **Atualização 19/11/2026 (doc 43):** o Sentry saiu do first load. O
+> before/after mostra que o custo **atribuível ao SDK** é **~89 KB gz**, não os
+> 164 KB estimados aqui: o chunk de 151 KB também continha o bootstrap do Next.
+> A ordem dos ofensores não muda; o número era um teto. Ver
+> [`43-bundle-sentry-fora-do-first-load.md`](43-bundle-sentry-fora-do-first-load.md).
+
+
 ---
 
 ## 1. Bundle — JS por rota
