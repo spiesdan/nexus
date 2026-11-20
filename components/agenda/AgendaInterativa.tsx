@@ -104,7 +104,10 @@ export function AgendaInterativa({
     const mapa: Record<string, Array<{ instante: string; rotulo: string }>> = {};
     for (const s of horarios?.slots ?? []) {
       const d = new Date(s.inicio);
-      (mapa[format(d, "yyyy-MM-dd")] ??= []).push({ instante: s.inicio, rotulo: format(d, "HH:mm") });
+      (mapa[format(d, "yyyy-MM-dd")] ??= []).push({
+        instante: s.inicio,
+        rotulo: format(d, "HH:mm"),
+      });
     }
     return mapa;
   }, [horarios]);
@@ -177,7 +180,10 @@ export function AgendaInterativa({
     if (!pendente) return;
     const alvo = agendamentos.find((a) => a.id === pendente.id);
     if (!alvo) return;
-    const duracao = Math.max(differenceInMinutes(new Date(alvo.termina), new Date(alvo.comeca)), 15);
+    const duracao = Math.max(
+      differenceInMinutes(new Date(alvo.termina), new Date(alvo.comeca)),
+      15,
+    );
     const comeca = new Date(pendente.instante);
     const antes = { comeca: alvo.comeca, termina: alvo.termina };
     setOtimista({
@@ -213,7 +219,9 @@ export function AgendaInterativa({
           data-testid="tipo-da-grade"
           className="flex flex-wrap items-center gap-1.5 text-xs text-text-muted"
         >
-          <span className="shrink-0">{t("Horários livres de")}</span>
+          {/* "de" lia como "de quem" (a pessoa) e os chips ao lado são TIPO. Trocar
+              a preposição é o conserto inteiro: "livres PARA Atendimento". */}
+          <span className="shrink-0">{t("Horários livres para")}</span>
           {tipos.map((t) => (
             <button
               key={t.id}
@@ -247,7 +255,7 @@ export function AgendaInterativa({
           data-testid="motivo-da-grade"
           data-motivo={motivo}
           role="status"
-          className="rounded-sm border border-border bg-surface-sunken px-3 py-2 text-xs leading-4 text-text-muted"
+          className="bg-surface-sunken rounded-sm border border-border px-3 py-2 text-xs leading-4 text-text-muted"
         >
           {motivo === "sem-jornada" ? (
             <>
@@ -258,11 +266,19 @@ export function AgendaInterativa({
             </>
           ) : motivo === "erro" ? (
             <>
-              <span className="font-semibold text-text">{t("Não consegui carregar os horários.")}</span> {t("Os blocos ficam bloqueados até eu conseguir — é mais seguro que oferecer um horário que talvez não exista.")}
+              <span className="font-semibold text-text">
+                {t("Não consegui carregar os horários.")}
+              </span>{" "}
+              {t(
+                "Os blocos ficam bloqueados até eu conseguir — é mais seguro que oferecer um horário que talvez não exista.",
+              )}
             </>
           ) : (
             <>
-              <span className="font-semibold text-text">{t("Nenhum horário livre neste período.")}</span> {t("Os blocos vazios continuam aqui, e o que estiver publicado fica clicável.")}
+              <span className="font-semibold text-text">
+                {t("Nenhum horário livre neste período.")}
+              </span>{" "}
+              {t("Os blocos vazios continuam aqui, e o que estiver publicado fica clicável.")}
             </>
           )}
         </div>
@@ -280,7 +296,9 @@ export function AgendaInterativa({
           <p className="text-xs leading-4 text-text">
             {t("Remarcar")} <span className="font-semibold">{nomeDoPendente}</span> {t("para")}{" "}
             <span className="font-semibold">
-              {format(new Date(pendente.instante), "EEEE, d 'de' MMMM 'às' HH:mm", { locale: localeDaData })}
+              {format(new Date(pendente.instante), "EEEE, d 'de' MMMM 'às' HH:mm", {
+                locale: localeDaData,
+              })}
             </span>
             {t("? Quem foi atendido recebe o aviso da mudança.")}
           </p>
