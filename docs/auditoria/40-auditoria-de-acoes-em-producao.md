@@ -377,3 +377,15 @@ dos dois estados.
 **Nota para o relatório da manhã:** são **dois problemas diferentes no mesmo
 radar** — o `URI too long` (corrigido no **#695**) e o **motor ausente** (decisão
 acima). Sem separar os dois, parece que o fix do #695 resolveu o radar inteiro.
+
+## 19. 21/11/2026 — #691 entra com `ORDER_STOCK_ATOMIC=false`
+
+A baixa atômica de estoque (**#691**) entra na release com a **flag desligada**:
+a função `fn_criar_pedido_com_estoque` é criada, mas o caminho de criação **não
+usa** a RPC enquanto `ORDER_STOCK_ATOMIC=false`. O dono liga depois de ver o
+`test:db` rodando em produção.
+
+**Consequência:** comportamento atual preservado (baixa fora da transação, falha
+no log) até a flag ser ligada; a função existe para ser provada antes de virar
+caminho. **Reversão:** desligar a flag (já desligada) ou remover a função em
+migration futura.
