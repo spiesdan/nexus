@@ -6,7 +6,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecorteDaLista } from "@/components/nexus-ui/navigation/RecorteDaLista";
 import { useCases, type CaseListItem } from "@/hooks/ai/useCases";
 import { STATUS_BADGE_VARIANT, STATUS_LABEL } from "@/lib/ai/case-copy";
 import { Robot } from "@/lib/ui/icons";
@@ -23,12 +23,15 @@ export function CaseList() {
   return (
     <div className="flex min-h-0 flex-1 gap-6">
       <div className="flex w-full max-w-xs shrink-0 flex-col gap-4">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as "open" | "resolved")}>
-          <TabsList>
-            <TabsTrigger value="open">{t("Abertos")}{data ? ` (${data.open_count})` : ""}</TabsTrigger>
-            <TabsTrigger value="resolved">{t("Concluídos")}</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <RecorteDaLista
+          rotulo={t("Casos")}
+          valor={tab}
+          onChange={setTab}
+          opcoes={[
+            { valor: "open", rotulo: t("Abertos"), contagem: data?.open_count ?? null },
+            { valor: "resolved", rotulo: t("Concluídos") },
+          ]}
+        />
 
         {isLoading ? (
           <div className="space-y-2">
@@ -79,7 +82,10 @@ function CaseRow({
 }) {
   const localeDaData = useLocaleDeData();
   const t = useT();
-  const when = formatDistanceToNowStrict(new Date(item.opened_at), { addSuffix: true, locale: localeDaData });
+  const when = formatDistanceToNowStrict(new Date(item.opened_at), {
+    addSuffix: true,
+    locale: localeDaData,
+  });
   return (
     <li>
       <button

@@ -8,7 +8,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecorteDaLista } from "@/components/nexus-ui/navigation/RecorteDaLista";
 import { NexusAiApproval } from "@/components/nexus-ui/ai/NexusAiApproval";
 import {
   useProposals,
@@ -32,15 +32,19 @@ export function ProposalsList({ canDecide }: { canDecide: boolean }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "pending" | "history")}>
-        <TabsList>
-          <TabsTrigger value="pending">
-            {t("Aguardando decisão")}
-            {data ? ` (${data.pending.length})` : ""}
-          </TabsTrigger>
-          <TabsTrigger value="history">{t("Já decididas")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <RecorteDaLista
+        rotulo={t("Propostas")}
+        valor={tab}
+        onChange={setTab}
+        opcoes={[
+          {
+            valor: "pending",
+            rotulo: t("Aguardando decisão"),
+            contagem: data?.pending.length ?? null,
+          },
+          { valor: "history", rotulo: t("Já decididas") },
+        ]}
+      />
 
       {isLoading ? (
         <div className="space-y-2">
