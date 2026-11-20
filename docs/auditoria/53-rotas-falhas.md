@@ -30,6 +30,24 @@ três casos em que a rota **não pode** parecer quebrada nem mentir sucesso.
 - Nenhuma regra de geocodificação, capacidade, janela ou ordem.
 - O motor do mapa (MapLibre) e o `semNumero` que vem do servidor.
 
+## O BURACO QUE A CAPTURA FALHADA REVELOU (corrigido)
+
+A primeira tentativa de prova interceptou o POST com 500 e **nada apareceu**.
+Isso não era só instrumento: lendo o caminho, `lib/rotas/geocodificacao.ts:765`
+devolve `{ estado: "erro" }` **por parada** quando o `fetch` do provedor falha, e
+a rota responde **200**. O `catch` do cliente — onde o banner nasceu — nunca via
+a queda do serviço. O banner existia para o erro que quase não acontece (DB,
+timeout do lote) e **faltava exatamente no caso comum**: mapa fora do ar.
+
+Correção (só cliente, nenhuma regra):
+
+- a rodada agora separa `estado: "erro"` (provedor) de "sem resultado" (endereço);
+- **provedor fora** → banner: *"N paradas não foram localizadas: o serviço de
+  mapas não respondeu. Tente de novo em instantes."*;
+- **endereço não achado** → banner: *"N paradas sem endereço localizável. Corrija
+  o cadastro ou marque no mapa."*;
+- tudo localizado → banner limpo (e o toast de sucesso continua).
+
 ## Lacuna declarada (não maquiada)
 
 **As capturas desta fatia não saíram.** A tentativa de forçar o erro (interceptar

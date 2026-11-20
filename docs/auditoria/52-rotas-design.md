@@ -96,7 +96,7 @@ Capturas: `capturas/rota-antes-*-1440.png` e `capturas/rota-depois-*-1440.png`.
 
 Nenhuma regra de capacidade, janela, prioridade ou arredondamento foi tocada.
 
-### Por que o mapa ficou em 50vh (decisão medida)
+### Por que o mapa ficou em 50vh (DECISÃO FECHADA — medida)
 
 | Altura do mapa | 1440×900 | 1280×800 |
 | --- | --- | --- |

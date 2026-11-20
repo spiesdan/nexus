@@ -6,6 +6,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { mensagemDeErro } from "@/lib/ui/erros";
+import { diferencaDaOrdem } from "@/lib/rotas/diferenca-da-ordem";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
@@ -507,6 +508,16 @@ export function Roteirizador({
    * A decisão do que mostrar é tabela (`lib/rotas/publicacao`, testada sem
    * browser): publicar, já publicada, encerrada ou vazia. Aqui só se aplica.
    */
+  /**
+   * O QUE JÁ FOI PUBLICADO × O QUE ESTÁ NA TELA.
+   *
+   * `ordemMudou` dizia só "mudou". Depois de publicado, quem despacha precisa
+   * de **quantas** e **quais**: o motorista recebe a mudança como VERSÃO NOVA e
+   * só aplica quando confirma no aparelho (0231) — a tela diz isso em vez de
+   * fingir que a alteração já chegou.
+   */
+  const diferenca = diferencaDaOrdem(ordem, ordemSalva);
+
   const publicacao = estadoDaPublicacao({
     statusDaCarga: rota.carga.status,
     ordemMudou,
@@ -679,6 +690,7 @@ export function Roteirizador({
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
     let semResultado = 0;
+    let comErro = 0;
     let ultima: RotaCarregada | null = null;
     try {
       for (;;) {
@@ -700,6 +712,10 @@ export function Roteirizador({
         const d = corpo.data;
         localizadas += d.estados.filter((e) => e.estado === "ok").length;
         semResultado += d.estados.filter((e) => e.estado !== "ok").length;
+        // `estado: "erro"` é o PROVEDOR fora (fetch falhou/HTTP != 200), e a
+        // rota segue devolvendo 200 — por isso o `catch` abaixo não vê isso.
+        // Sem separar os dois, a falha de serviço virava "endereço não achado".
+        comErro += d.estados.filter((e) => e.estado === "erro").length;
         setProgressoGeo(d.restantes > 0 ? t(`Faltam ${d.restantes}…`) : t("Pronto."));
         ultima = (await recarregar()) ?? ultima;
         // Um lote sem estado nenhum não é "faltam N": é a rota sem alvo (sem
@@ -709,7 +725,34 @@ export function Roteirizador({
       }
       const paradas = ultima?.paradas ?? [];
       const noMapa = paradas.filter((p) => p.latitude != null && p.longitude != null).length;
-      setErroGeo(null);
+      /*
+       * A RODADA QUE NÃO LOCALIZOU NADA TAMBÉM É FALHA NA TELA.
+       *
+       * O provedor fora não lança: a rota devolve 200 com `estado: "erro"` por
+       * parada. Antes isso virava toast de 4 s ("Nenhuma parada localizada") e
+       * a tela ficava igual — o mesmo buraco do catch, um nível abaixo. Agora
+       * os dois casos viram o banner único, com texto diferente: serviço fora
+       * pede "tentar de novo"; endereço não achado pede correção.
+       */
+      if (comErro > 0) {
+        setErroGeo(
+          `${comErro} ${
+            comErro === 1
+              ? t("parada não foi localizada: o serviço de mapas não respondeu.")
+              : t("paradas não foram localizadas: o serviço de mapas não respondeu.")
+          } ${t("Tente de novo em instantes.")}`,
+        );
+      } else if (localizadas === 0 && semResultado > 0) {
+        setErroGeo(
+          `${semResultado} ${
+            semResultado === 1
+              ? t("parada sem endereço localizável. Corrija o cadastro ou marque no mapa.")
+              : t("paradas sem endereço localizável. Corrija o cadastro ou marque no mapa.")
+          }`,
+        );
+      } else {
+        setErroGeo(null);
+      }
       if (localizadas > 0 && semResultado === 0) {
         toast.success(`${localizadas} ${t("parada(s) localizada(s) no mapa.")}`);
       } else if (localizadas > 0) {
@@ -954,7 +997,7 @@ export function Roteirizador({
       );
       setRota(corpo.data);
       setProposta(null);
-      toast.success(t("Rota salva."));
+      toast.success(`${t("Rota salva.")} ${t("Versão")} ${corpo.data.carga.rota_versao}`);
       aoMudar();
     } catch (e) {
       showApiError(e);
@@ -1353,6 +1396,12 @@ export function Roteirizador({
             {trabalhando === "publicar" ? t("Publicando…") : t("Publicar rota")}
           </Button>
         )}
+        {publicacao.tipo === "publicada" && rota.carga.rota_em ? (
+          <p className="text-xs text-text-muted tabular-nums">
+            {t("Publicada em")} {new Date(rota.carga.rota_em).toLocaleString(tagDeIdioma)} ·{" "}
+            {t("versão")} {rota.carga.rota_versao}
+          </p>
+        ) : null}
         {publicacao.tipo === "publicada" && (
           <Button asChild size="sm" variant="outline" className="gap-1.5">
             <Link href={`/app/expedicao/${cargaId}/motorista`}>
@@ -1548,6 +1597,33 @@ export function Roteirizador({
           </div>
         )}
       </div>
+
+      {rota.carga.status === "em_rota" && diferenca.mudou ? (
+        <div
+          role="status"
+          data-testid="alteracoes-nao-publicadas"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/40 bg-warning-bg px-3.5 py-2.5 text-sm text-warning-fg"
+        >
+          <span>
+            {t("A rota está publicada e tem alterações que o motorista ainda não recebeu:")}{" "}
+            <strong className="font-semibold tabular-nums">
+              {diferenca.moveram} {t("moveram")}
+              {diferenca.novas > 0 ? ` · ${diferenca.novas} ${t("novas")}` : ""}
+              {diferenca.sairam > 0 ? ` · ${diferenca.sairam} ${t("saíram")}` : ""}
+            </strong>
+            {". "}
+            {t("Ao salvar, a versão sobe e o motorista confirma a nova sequência no aparelho.")}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void salvarOrdem()}
+            disabled={trabalhando !== null || ordem.length === 0}
+          >
+            {t("Publicar nova versão")}
+          </Button>
+        </div>
+      ) : null}
 
       {erroGeo ? (
         <div
