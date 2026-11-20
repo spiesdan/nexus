@@ -9,6 +9,7 @@ import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState"
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Archive } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -37,6 +38,8 @@ export function FaturamentoClient({
   const [linhas, setLinhas] = React.useState<LinhaFaturamento[]>([]);
   const [carregando, setCarregando] = React.useState(true);
   const [falhou, setFalhou] = React.useState(false);
+  /** O erro da ÚLTIMA leitura, para a faixa — o estado usa `falhou`. */
+  const [erroLeitura, setErroLeitura] = React.useState<string | null>(null);
   // Teto de 2.000 da rota: se a janela veio truncada, os KPIs são da amostra.
   // Antes o servidor só registrava no log e a tela somava a amostra como se
   // fosse o período inteiro (A10).
@@ -55,8 +58,17 @@ export function FaturamentoClient({
       }>(`/api/v1/faturamento${qs.toString() ? `?${qs}` : ""}`);
       setLinhas(corpo.data ?? []);
       setAmostraParcial(Boolean(corpo.meta?.amostra_parcial));
+      setErroLeitura(null);
     } catch (e) {
-      showApiError(e);
+      /*
+       * ERRO NÃO APAGA O QUE ESTAVA NA TELA.
+       *
+       * Trocar o período e a leitura falhar não é motivo para a lista sumir: o
+       * número anterior ainda serve para conferir, e quem perdeu o recorte é o
+       * aviso, não a tabela. Com dados → faixa `role="alert"` acima; sem dados
+       * → estado de erro com retry.
+       */
+      setErroLeitura(e instanceof Error ? e.message : "Não foi possível carregar o faturamento.");
       setFalhou(true);
     } finally {
       setCarregando(false);
@@ -88,6 +100,9 @@ export function FaturamentoClient({
 
   const total = linhas.reduce((acc, l) => acc + l.total_cents, 0);
   const semNf = linhas.filter((l) => l.nf_numero == null).length;
+  const totalSemNf = linhas
+    .filter((l) => l.nf_numero == null)
+    .reduce((acc, l) => acc + l.total_cents, 0);
 
   function exportar() {
     const blob = new Blob(
@@ -175,15 +190,45 @@ export function FaturamentoClient({
           <p className="mt-1 text-2xl font-semibold tabular-nums">{comoMoeda(total, "BRL")}</p>
         </Card>
         <Card className="hover-raise p-4">
+          {/* O número sozinho não diz se é muito ou pouco: "3 sem nota" de 4
+              pedidos é outro problema de "3 sem nota" de 400. O par
+              pedidos × dinheiro é o que o dono usa para cobrar. */}
           <p className="text-sm text-muted-foreground">{t("Faturados sem NF vinculada")}</p>
-          <p className="mt-1 text-2xl font-semibold tabular-nums">{semNf}</p>
+          <p className="mt-1 text-2xl font-semibold tabular-nums">{comoMoeda(totalSemNf, "BRL")}</p>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {semNf} {semNf === 1 ? t("pedido") : t("pedidos")}
+            {linhas.length > 0 ? ` ${t("de")} ${linhas.length}` : ""}
+          </p>
         </Card>
       </div>
 
+      {falhou && linhas.length > 0 ? (
+        <div
+          role="alert"
+          data-testid="erro-faturamento-com-dados"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-error/40 bg-error-bg px-3.5 py-2.5 text-sm text-error-fg"
+        >
+          <span>
+            {t("Não consegui atualizar este período. A lista abaixo é a última leitura boa.")}
+          </span>
+          <Button size="sm" variant="outline" onClick={() => void carregar(de, ate)}>
+            {t("Tentar de novo")}
+          </Button>
+        </div>
+      ) : null}
+
       <NexusDataTable<LinhaFaturamento>
-        state={carregando ? "loading" : falhou ? "error" : linhas.length === 0 ? "empty" : "ready"}
+        state={
+          carregando
+            ? "loading"
+            : falhou && linhas.length === 0
+              ? "error"
+              : linhas.length === 0
+                ? "empty"
+                : "ready"
+        }
         onRetry={() => void carregar(de, ate)}
-        errorDescription={t("Não foi possível carregar o faturamento.")}
+        errorDescription={erroLeitura ?? t("Não foi possível carregar o faturamento.")}
         empty={
           <NexusEmptyState
             icon={Archive}
@@ -242,7 +287,7 @@ export function FaturamentoClient({
                       {l.nf_numero != null ? (
                         `${l.nf_serie ?? ""} ${l.nf_numero}`
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <Badge variant="warning">{t("Sem NF")}</Badge>
                       )}
                     </TableCell>
                     <TableCell>{l.cliente_nome}</TableCell>
