@@ -476,3 +476,27 @@ Backup: db **20M** + waha + uploads (11:47).
 
 Execução Sentinel `3248b21d`: `achados=5 · reafirmadas=5 · encerradas=0 ·
 truncado=FALSE`. **Rollback:** refixar 1.62.0 (sem migration nova).
+
+## 24. 21/11/2026 — Cobertura inflada: o instrumento contava o que não mediu
+
+**Achado na conferência do `medidas.json` (1621 linhas) da matriz:**
+
+```
+368 medidas · 27 sem url ou sem h1
+6 rotas dinâmicas ([id]) × 4 combinações = 24 entradas com URL VAZIA,
+  registradas como overflow 0 / axe 0  ← nunca visitadas
+3 páginas sem h1: /titulos · /ai/providers · /ai/runs
+cabeçalho do arquivo diz "rotas": 2  ← bug do gerador (são 92)
+```
+
+O PR declarava “4 rotas puladas com motivo”, mas o artefato contava **6 como
+medidas**. O placar “368 medições / 104 de 110” estava **inflado em 24**.
+
+**Lição:** **cobertura inflada por instrumento que registra zero onde não olhou é
+pior que cobertura baixa** — ela produz um placar que ninguém questiona. Já
+aconteceu com a suíte E2E (8 falhas de infraestrutura), com a série do SLO (0
+amostras) e agora com a matriz.
+
+**Correção (D):** a varredura não grava resultado vazio; recálculo; dinâmicas
+voltam a `pendente`; investigar as 3 sem `h1`; consertar o cabeçalho. **#726
+bloqueado** até o número bater.
