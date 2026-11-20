@@ -193,92 +193,92 @@
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/configuracoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/eventos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/fornecedores",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/manifestacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/notas",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": true,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell); inclui a pílula ativa em `text-accent-ink`"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
       "capturar": true,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/0 (regras: nenhuma)",
-      "pular": "o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
+      "veredito": "**inválida** — o banco de teste não tem linha em `fiscal_entradas`; qualquer id responde 404 (a varredura mediu o destino, não a nota)",
+      "pular": "sem nota de entrada no banco de teste"
     },
     {
       "rota": "/fiscal/pendentes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/produtos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/relatorios",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/resumos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/sincronizacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/xml",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
+      "veredito": "**aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell)"
     },
     {
       "rota": "/expedicao",
