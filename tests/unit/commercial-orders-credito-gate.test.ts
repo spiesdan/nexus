@@ -20,6 +20,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fail } from "@/lib/api/wrappers";
+import { audit } from "@/lib/audit";
 import { requireRole } from "@/lib/auth/require-role";
 import { ROLE_RANK, type AuthUser, type Role } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/server";
@@ -220,7 +221,38 @@ describe("POST /api/v1/commercial-orders — crédito", () => {
     expect(mem.escritas).toHaveLength(0);
   });
 
-  it("gerente com `ignorar_credito` passa — é o override que existe", async () => {
+  it("gerente com `ignorar_credito` E motivo passa — e o override vai para a auditoria", async () => {
+    sessao("manager");
+    const mem = banco({ limite: 10000, emAberto: 9000 });
+    vi.mocked(createClient).mockResolvedValue(mem.cliente);
+    vi.mocked(createAdminClient).mockReturnValue(mem.cliente);
+    const { POST } = await import("@/app/api/v1/commercial-orders/route");
+
+    const res = await POST(
+      req(
+        pedido({
+          ignorar_credito: true,
+          motivo_override: "Cliente antigo, liberado pelo dono nesta semana.",
+        }),
+      ),
+    );
+    expect(res.status).toBe(201);
+    expect(mem.pedidos).toHaveLength(1);
+
+    // Decisão 3: não basta passar — tem de ficar o rastro de QUEM liberou,
+    // O QUÊ foi ignorado e POR QUÊ.
+    expect(vi.mocked(audit)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: "commercial_order.override",
+        metadata: {
+          ignorados: ["credito"],
+          motivo: "Cliente antigo, liberado pelo dono nesta semana.",
+        },
+      }),
+    );
+  });
+
+  it("override SEM motivo é recusado — poder invisível não passa (decisão 3)", async () => {
     sessao("manager");
     const mem = banco({ limite: 10000, emAberto: 9000 });
     vi.mocked(createClient).mockResolvedValue(mem.cliente);
@@ -228,8 +260,38 @@ describe("POST /api/v1/commercial-orders — crédito", () => {
     const { POST } = await import("@/app/api/v1/commercial-orders/route");
 
     const res = await POST(req(pedido({ ignorar_credito: true })));
-    expect(res.status).toBe(201);
-    expect(mem.pedidos).toHaveLength(1);
+    expect(res.status).toBe(422);
+    expect(mem.pedidos).toHaveLength(0);
+    // Nada de auditoria de override: não houve override nenhum.
+    expect(vi.mocked(audit)).not.toHaveBeenCalledWith(
+      expect.objectContaining({ action: "commercial_order.override" }),
+    );
+  });
+
+  it("motivo em branco (só espaços) não vale como motivo", async () => {
+    sessao("manager");
+    const mem = banco({ limite: 10000, emAberto: 9000 });
+    vi.mocked(createClient).mockResolvedValue(mem.cliente);
+    vi.mocked(createAdminClient).mockReturnValue(mem.cliente);
+    const { POST } = await import("@/app/api/v1/commercial-orders/route");
+
+    const res = await POST(req(pedido({ ignorar_credito: true, motivo_override: "   " })));
+    expect(res.status).toBe(422);
+    expect(mem.pedidos).toHaveLength(0);
+  });
+
+  it("agente continua barrado mesmo com motivo — o motivo não compra papel", async () => {
+    sessao("agent");
+    const mem = banco({ limite: 10000, emAberto: 9000 });
+    vi.mocked(createClient).mockResolvedValue(mem.cliente);
+    vi.mocked(createAdminClient).mockReturnValue(mem.cliente);
+    const { POST } = await import("@/app/api/v1/commercial-orders/route");
+
+    const res = await POST(
+      req(pedido({ ignorar_credito: true, motivo_override: "quería vender" })),
+    );
+    expect(res.status).toBe(422);
+    expect(mem.pedidos).toHaveLength(0);
   });
 
   it("rascunho (orçamento) não é barrado pelo crédito", async () => {
