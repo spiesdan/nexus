@@ -82,7 +82,8 @@ created_at` e a moldura usa isso.
 | Erros de console nas capturas | **0** |
 | `h1` antes/depois nas subtelas | **`[]` → `"Carga 031"`** (e `"Modo motorista · Carga 031"` na cabine) |
 | Tempo até a tela estar pronta (`esperouTelaMs`) | 4–822 ms, registrado por captura |
-| Alvos < 40 px (desktop) | lista 42 · detalhe 46 · rota 58 · fechamento 53 · motorista 41 |
+| Alvos < 40 px no CONTEÚDO (`main`), 5 telas | **12 · 11 · 11 · 1 · 1 → 0 em todas** |
+| Alvos < 40 px na página inteira (instrumento do D) | lista 42→30 · detalhe 33→31; a casca (sidebar 28 px, topbar 36 px) não foi tocada — é dívida global, não da expedição |
 
 > Sobre os alvos: o piso do WCAG 2.2 AA é **24 px**; o instrumento conta abaixo de
 > 40 px (régua de conforto, não de reprovação). Ficam registrados como fila de
@@ -99,7 +100,11 @@ created_at` e a moldura usa isso.
 
 1. **Nome do motorista**: a linha mostra `Motorista 1795040572758` — o dado do seed é
    um telefone no campo do nome. Não é design: é cadastro. Fica para a ficha de dados.
-2. **Alvos < 40 px** nas linhas (42–58 por tela): reduzir exige mexer no hit-target do
-   ícone de romaneio e do "abrir", o que muda o layout da linha — próximo recorte.
+2. **Alvos < 40 px — resolvido no conteúdo, não na casca.** As cinco telas
+   ganharam um piso de **44 px** para `a`, `button` e `input` dentro do `main`
+   (lista, detalhe, rota, fechamento, motorista): o instrumento mede **0** no
+   conteúdo. A página inteira ainda acusa ~30 porque a sidebar (links de 28 px)
+   e a topbar (ícones de 36 px) são globais; mexer nelas muda a densidade de
+   todo o produto e fica como dívida própria.
 3. **Toast + erro inline simultâneos** quando a carga falha: o toast "Erro inesperado"
    repete o que o bloco já diz. Unificar é uma linha, mas mexe no `showApiError` global.

@@ -443,3 +443,21 @@ permanecem), o que deve ser remedido — não somado de cabeça.
   Não são exceção; são lacuna de dono.
 - As **14 aplicadas** são todas de `app/app` (estoque, inbox, expedição,
   pedidos, compras); o `admin` não tem nenhuma linha `aplicado` ainda.
+
+## 11. Alvos de toque — expedição (aplicado)
+
+Piso de 44 px para `a`, `button` e `input` dentro do `main`; medição pelo
+instrumento do D (`scripts/auditoria/captura-visual.mjs`), largura 1440,
+conteúdo isolado do shell.
+
+| Tela | Antes (<40 px no `main`) | Depois |
+|---|---:|---:|
+| `/app/expedicao` | 12 | **0** |
+| `/app/expedicao/[id]` | 11 | **0** |
+| `/app/expedicao/[id]/rota` | 11 | **0** |
+| `/app/expedicao/[id]/fechamento` | 1 | **0** |
+| `/app/expedicao/[id]/motorista` | 1 | **0** |
+
+A página inteira ainda conta ~30 por causa da sidebar/topbar globais; ver
+`40-expedicao-design.md` §Pendências. TalkBack: locale do sistema e TTS em
+pt-BR provados por `getprop`/`settings`; áudio não, AVD `-no-audio`.

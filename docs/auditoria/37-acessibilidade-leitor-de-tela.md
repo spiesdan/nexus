@@ -98,10 +98,15 @@ lugar.
    foco de áudio), mas o serviço não grava o texto da utterance no log. A prova
    do **conteúdo** é a árvore de acessibilidade (`uiautomator`), que é a fonte
    que o TalkBack lê; a prova da **síntese** é o TTS.
-2. **Voz em inglês.** O AVD está configurado `en-US`, e o TTS registra
-   `eng-USA`. O texto em português é lido com fonética inglesa; não validei
-   pronúncia em pt-BR. Trocar o locale do sistema e reiniciar o AVD é o próximo
-   passo para uma prova acústica fiel.
+2. **Voz em pt-BR — configuração provada, áudio não.** Com `adb root` (o
+   `setprop` sem root falhou com `Failed to set property ... See dmesg`), o AVD
+   passou a `persist.sys.locale=pt-BR` e `system_locales=pt-BR`; o TalkBack
+   ficou `Bound services:{TalkBack}` e as janelas reportam `locales=[pt_BR]`.
+   `tts_default_synth=com.google.android.tts` e
+   `tts_default_locale=pt-BR` foram gravados. **Limite declarado:** o AVD foi
+   iniciado com `-no-audio`, então não há prova acústica; `ro.product.locale`
+   continua `en-US` (propriedade read-only do sistema). A pronúncia falada só
+   pode ser julgada com áudio.
 3. **Anúncio dinâmico da contagem não foi capturado em áudio.** A região viva
    está no DOM e o TalkBack está ativo; falta uma captura de fala (ou TTS log
    com texto) de uma mudança de fila.

@@ -1,0 +1,115 @@
+{
+  "base": "http://localhost:3002",
+  "grupo": "a11y-expedicao",
+  "perfil": "manager",
+  "url_depois_do_login": "http://localhost:3002/app/inbox",
+  "atualizado_em": "2026-11-20T01:06:06.328Z",
+  "puladas": [],
+  "resultados": [
+    {
+      "rota": "/app/expedicao",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2294,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_expedicao.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 30,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "textoVisivel": 1313,
+      "url": "/app/expedicao"
+    },
+    {
+      "rota": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 1741,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_expedicao_881e6057_d90f_4e35_bffc_2079d4ad39e6.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 958,
+      "url": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6"
+    },
+    {
+      "rota": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/rota",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2506,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_expedicao_881e6057_d90f_4e35_bffc_2079d4ad39e6_rota.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 34,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1599,
+      "url": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/rota"
+    },
+    {
+      "rota": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/fechamento",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 2428,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": true,
+      "arquivo": "desktop_app_expedicao_881e6057_d90f_4e35_bffc_2079d4ad39e6_fechamento.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 31,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Carga 008"
+      ],
+      "textoVisivel": 1419,
+      "url": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/fechamento"
+    },
+    {
+      "rota": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/motorista",
+      "largura": "desktop",
+      "status": 200,
+      "ms": 4573,
+      "erro": null,
+      "reconexoes": 0,
+      "assentou": false,
+      "arquivo": "desktop_app_expedicao_881e6057_d90f_4e35_bffc_2079d4ad39e6_motorista.png",
+      "errosDeConsole": [],
+      "falhasDeRede": [],
+      "titulo": "Expedição · NEXUS",
+      "overflowHorizontal": 0,
+      "alvosMenoresQue40": 32,
+      "camposSemRotulo": 0,
+      "h1": [
+        "Modo motorista · Carga 008"
+      ],
+      "textoVisivel": 789,
+      "url": "/app/expedicao/881e6057-d90f-4e35-bffc-2079d4ad39e6/motorista"
+    }
+  ]
+}
