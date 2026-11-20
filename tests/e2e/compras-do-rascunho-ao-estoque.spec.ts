@@ -16,7 +16,7 @@ test.setTimeout(300_000);
  *   detalhe com status `rascunho`;
  * - **enviar**: "Enviar ao fornecedor" → confirmação explícita → `enviado`
  *   (só cancelar ou receber depois);
- * - **receber**: "Receber no estoque" → "Receber tudo" vira entrada de
+ * - **receber**: "Receber no estoque" → "Confirmar recebimento" vira entrada de
  *   estoque por item (origem compra) → `recebido`;
  * - **saldo**: a aba Saldos de `/app/estoque` lê `catalog_products.quantidade`
  *   — o saldo de 3 é o recebimento acontecendo, não um número pintado.
@@ -73,7 +73,7 @@ test("compras — do pedido em rascunho ao recebimento no estoque", async ({ pag
   });
 
   await page.getByRole("button", { name: "Receber no estoque" }).click();
-  await page.getByRole("button", { name: "Receber tudo" }).click();
+  await page.getByRole("button", { name: "Confirmar recebimento" }).click();
   await expect(
     page
       .locator("[data-sonner-toast]")
