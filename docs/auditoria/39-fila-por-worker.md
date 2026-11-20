@@ -310,3 +310,22 @@ decisões autônomas com reversão, estado de produção).
 
 Uma janela por vez; a janela termina quando o dono mata o servidor; **swap > 4 GB
 encerra na hora**.
+
+## Estratégia das 118 pendentes — passe sistêmico (21/11/2026)
+
+Medição: **ai 39 · settings 28 · fiscal 25** concentram ~92 das pendências; o resto
+(radar 7, lgpd 5, contacts/prospeccao/team/tenants 3 cada) é cauda. Tela a tela
+levaria meses e faria cada tela divergir da vizinha.
+
+**Régua nova (D e G):**
+1. **Passe por primitiva** (lista, detalhe, formulário, configuração, estados):
+   conserta no componente compartilhado, não em 39 arquivos.
+2. **Varredura automatizada** do módulo (contraste, overflow, console, alvo de
+   toque; 2 temas × 2 larguras) em **uma rodada**.
+3. **Honestidade da matriz**: linha só vira `aplicado` se a varredura **mediu
+   aquela rota**. Falhou → `pendente` com o defeito escrito. Nunca “aplicado por
+   primitiva” sem medição.
+
+**Ordem:** D em `settings` → `ai` → `fiscal`; G nas 22 de `admin` na mesma lógica.
+A matriz `41` ganha a coluna **“como foi medido”** (`individual` × `varredura do
+módulo`).
