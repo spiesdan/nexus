@@ -196,32 +196,32 @@ base sumiu; duas telas entraram depois dela.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/403` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/500` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/503` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/account-suspended` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/403` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/500` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/503` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/account-suspended` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
-| `/legal/privacy` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/legal/terms` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/onboarding/connect-nuvemshop` | onboarding | **medido · alcançável só por URL** (passo desligado) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/connect-whatsapp` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/done` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/funil` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/invite-team` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding` | onboarding | **medido · redireciona** (→ primeiro passo pendente) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/setup-ai` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/testar` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/welcome` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/legal/privacy` | público/legal | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/legal/terms` | público/legal | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/onboarding/connect-nuvemshop` | onboarding | **já conforme** (passo desligado) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/connect-whatsapp` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/done` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/funil` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/invite-team` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding` | onboarding | **já conforme** (roteador) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/setup-ai` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/testar` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/onboarding/welcome` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
+| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/team/accept-invite/[token]` | público/auth | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
 
 ## 3. Registry de navegação (78 rotas `/app`)
 
@@ -444,14 +444,15 @@ permanecem), o que deve ser remedido — não somado de cabeça.
 
 ## 10. Pendentes sem dono (o que a matriz não pode esconder)
 
-- **143 linhas `pendente`** no total: **96** de `app/app` (com **D** como dono
-  do passe de design) + **47** sem dono funcional.
-- **47 `pendente` sem dono**: **22** de `app/admin` e **25** de
-  público/auth/onboarding/legal/estado (o `/design` é a 26ª e está `fora de
-  escopo`). Elas estão com `—` na coluna “Dono” — não têm agente na fila atual.
-  Não são exceção; são lacuna de dono.
-- As **14 aplicadas** são todas de `app/app` (estoque, inbox, expedição,
-  pedidos, compras); o `admin` não tem nenhuma linha `aplicado` ainda.
+- **118 linhas `pendente`**: **96** de `app/app` (com **D** como dono do
+  passe de design) + **22** de `app/admin` (sem dono funcional na fila atual).
+- **38 linhas concluídas**: **14** de `app/app` (`aplicado`) + **24** de
+  público/auth/onboarding (`aplicado`/`já conforme`, com #659/`50` e
+  `51-onboarding-design`). As 24 linhas de público/auth/onboarding agora têm
+  dono explícito — **D** (acesso/estado/legal) e **F** (onboarding) — e não são
+  mais “sem dono”.
+- **2 exceções** (`/app/pedidos/imprimir`, `/design`) e **1 roteador**
+  (`/onboarding`, sem UI própria) fecham a conta: **118 + 38 + 2 + 1 = 159**.
 
 ## 11. Alvos de toque — expedição (aplicado)
 
