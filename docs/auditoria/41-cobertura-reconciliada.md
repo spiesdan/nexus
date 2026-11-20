@@ -177,7 +177,7 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/tenants/[id]/health` | admin | **pendente** | — | — |
 | `/admin/tenants/[id]` | admin | **pendente** | — | — |
 | `/admin/tenants/new` | admin | **pendente** | — | — |
-| `/admin/tenants` | admin | **pendente** | — | — |
+| `/admin/tenants` | admin | **aplicado** — alvos < 40 px: 20/19 → 0 | `55-admin-tenants-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants.json` | G |
 | `/admin/usage` | admin | **pendente** | — | — |
 | `/admin/users/[id]` | admin | **pendente** | — | — |
 | `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |

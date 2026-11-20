@@ -33,7 +33,7 @@ export function TenantsClient() {
             : `${total} tenant${total !== 1 ? "s" : ""}${hasNextPage ? "+" : ""}`
         }
         actions={
-          <Button asChild size="sm" className="shrink-0">
+          <Button asChild size="sm" className="min-h-10 shrink-0">
             <Link href="/admin/tenants/new">
               <Plus size={16} aria-hidden />
               {t("Novo tenant")}
