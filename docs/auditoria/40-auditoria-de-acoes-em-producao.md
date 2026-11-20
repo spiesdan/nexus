@@ -128,3 +128,34 @@ estourava `null value in column "origem"` completa no artefato oficial.
 > Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
 > autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
 > auditoria.
+
+## 9. 20/11/2026 — Deploy 1.61.0 (em execução/verificação)
+
+**Autorização:** o dono respondeu "continue" à lista de pendências em que o deploy
+da 1.61.0 era a única ação de produção; o processo é o mesmo das versões 1.59.0 e
+1.60.0 por ele aprovadas. Registrado como autorização interpretada, com esta nota.
+
+**Ação:** `update.sh --to v1.61.0` (backup automático do `update.sh` antes do schema).
+
+| Verificação | Estado |
+|---|---|
+| 7 containers em 1.61.0 | a confirmar na VPS |
+| `/health` `version 1.61.0` | **ainda 1.60.0** às 2026-11-20T01:51Z (deploy em curso ou não aplicado) |
+| `to_regclass('public.api_request_samples')` (0330) | a confirmar (precisa da conexão de schema) |
+| `fn_slo_api_rotas` / `fn_api_metricas_expurgar` (0331) | a confirmar |
+| `/login` | 200 |
+
+Comandos da verificação (rodar na VPS, com a conexão de schema):
+
+```bash
+psql "$SUPABASE_DB_ADMIN_URL" -Atc \
+  "select to_regclass('public.api_request_samples'), to_regprocedure('public.fn_slo_api_rotas()'), to_regprocedure('public.fn_api_metricas_expurgar()')"
+curl -s https://<dominio>/api/v1/health | jq '.data.version'
+```
+
+**Sentinel (próxima rodada da org real):** conferir `sentinel_runs.truncado = f` e
+que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) esteja
+**encerrada** com `nao_detectada_na_execucao`; se não, abrir bug com a evidência.
+
+**Rollback:** refixar as três imagens em `1.60.0` no `.env` e `up -d` com os dois
+`-f`; schema é aditivo.
