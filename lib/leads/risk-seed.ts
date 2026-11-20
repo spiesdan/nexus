@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { classifyRisk, resolveStageWindow, type RiskBucket } from "@/lib/leads/risk-radar";
 import { sinceDoBucket } from "@/lib/leads/risk-since";
+import { porFatias } from "@/lib/db/por-fatias";
 
 /**
  * A ESTREIA do estado de risco: grava o que JÁ existe, sem mentir sobre quando
@@ -115,12 +116,20 @@ async function coletaEClassifica(
   const stageIds = [...new Set(leads.map((l) => l.stage_id).filter(Boolean))];
   const janelaPorEstagio = new Map<string, ReturnType<typeof resolveStageWindow>>();
   if (stageIds.length > 0) {
-    const { data: stages } = await admin
-      .from("crm_stages")
-      .select("id, expected_duration_hours")
-      .eq("organization_id", organizationId)
-      .in("id", stageIds);
-    for (const s of (stages ?? []) as Array<{ id: string; expected_duration_hours: number | null }>) {
+    // Em fatias: a lista sai da organização inteira (o SELECT de leads não tem
+    // `.limit`), e 500 UUIDs numa URL dão 414 — ver `lib/db/por-fatias.ts`.
+    const { linhas: stages } = await porFatias(stageIds, async (fatia) => {
+      const { data, error } = await admin
+        .from("crm_stages")
+        .select("id, expected_duration_hours")
+        .eq("organization_id", organizationId)
+        .in("id", fatia);
+      return {
+        linhas: (data ?? []) as Array<{ id: string; expected_duration_hours: number | null }>,
+        erro: error ?? undefined,
+      };
+    });
+    for (const s of stages) {
       janelaPorEstagio.set(s.id, resolveStageWindow(s));
     }
   }
@@ -131,15 +140,18 @@ async function coletaEClassifica(
   const contactIds = [...new Set(leads.map((l) => l.contact_id).filter((c): c is string => !!c))];
   const followupPorContato = new Set<string>();
   if (contactIds.length > 0) {
-    const { data: jobs } = await admin
-      .from("cron_jobs")
-      .select("contact_id")
-      .eq("organization_id", organizationId)
-      .eq("kind", "at")
-      .eq("enabled", true)
-      .gt("next_run_at", now.toISOString())
-      .in("contact_id", contactIds);
-    for (const j of (jobs ?? []) as Array<{ contact_id: string }>) {
+    const { linhas: jobs } = await porFatias(contactIds, async (fatia) => {
+      const { data, error } = await admin
+        .from("cron_jobs")
+        .select("contact_id")
+        .eq("organization_id", organizationId)
+        .eq("kind", "at")
+        .eq("enabled", true)
+        .gt("next_run_at", now.toISOString())
+        .in("contact_id", fatia);
+      return { linhas: (data ?? []) as Array<{ contact_id: string }>, erro: error ?? undefined };
+    });
+    for (const j of jobs) {
       followupPorContato.add(j.contact_id);
     }
   }

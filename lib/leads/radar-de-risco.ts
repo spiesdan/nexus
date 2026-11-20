@@ -17,6 +17,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { logger } from "@/lib/logger";
+import { porFatias } from "@/lib/db/por-fatias";
 import type { AcaoDaDecisao } from "@/lib/leads/laya-decisao";
 import {
   classifyRisk,
@@ -134,12 +135,20 @@ export async function carregaRadarDeRisco(
   ];
   const agentNameById = new Map<string, string>();
   if (agentIds.length > 0) {
-    const { data: agents } = await admin
-      .from("ai_agents")
-      .select("id, name")
-      .eq("organization_id", organizationId)
-      .in("id", agentIds);
-    for (const a of (agents ?? []) as Array<{ id: string; name: string }>) {
+    // Fatias de 100: a lista vem de até `SCAN_CAP` leads e 500 UUIDs numa URL
+    // dão 414 (`lib/db/por-fatias.ts`). A união é a mesma; o mapa, idêntico.
+    const { linhas: agents } = await porFatias(agentIds, async (fatia) => {
+      const { data, error } = await admin
+        .from("ai_agents")
+        .select("id, name")
+        .eq("organization_id", organizationId)
+        .in("id", fatia);
+      return {
+        linhas: (data ?? []) as Array<{ id: string; name: string }>,
+        erro: error ?? undefined,
+      };
+    });
+    for (const a of agents) {
       agentNameById.set(a.id, a.name);
     }
   }
@@ -150,15 +159,18 @@ export async function carregaRadarDeRisco(
   const stageIds = [...new Set(rows.map((l) => l.stage_id).filter(Boolean))];
   const windowByStage = new Map<string, ReturnType<typeof resolveStageWindow>>();
   if (stageIds.length > 0) {
-    const { data: stages } = await admin
-      .from("crm_stages")
-      .select("id, expected_duration_hours")
-      .eq("organization_id", organizationId)
-      .in("id", stageIds);
-    for (const s of (stages ?? []) as Array<{
-      id: string;
-      expected_duration_hours: number | null;
-    }>) {
+    const { linhas: stages } = await porFatias(stageIds, async (fatia) => {
+      const { data, error } = await admin
+        .from("crm_stages")
+        .select("id, expected_duration_hours")
+        .eq("organization_id", organizationId)
+        .in("id", fatia);
+      return {
+        linhas: (data ?? []) as Array<{ id: string; expected_duration_hours: number | null }>,
+        erro: error ?? undefined,
+      };
+    });
+    for (const s of stages) {
       windowByStage.set(s.id, resolveStageWindow(s));
     }
   }
@@ -174,36 +186,65 @@ export async function carregaRadarDeRisco(
 
   if (contactIds.length > 0) {
     const [followups, convs, contacts] = await Promise.all([
-      admin
-        .from("cron_jobs")
-        .select("contact_id, next_run_at")
-        .eq("organization_id", organizationId)
-        .eq("kind", "at")
-        .eq("enabled", true)
-        .gt("next_run_at", nowIso)
-        .in("contact_id", contactIds),
-      admin
-        .from("conversations")
-        .select("id, contact_id, assignee_kind")
-        .eq("organization_id", organizationId)
-        .in("contact_id", contactIds),
-      admin
-        .from("contacts")
-        .select("id, name, display_name")
-        .eq("organization_id", organizationId)
-        .in("id", contactIds),
+      porFatias(contactIds, async (fatia) => {
+        const { data, error } = await admin
+          .from("cron_jobs")
+          .select("contact_id, next_run_at")
+          .eq("organization_id", organizationId)
+          .eq("kind", "at")
+          .eq("enabled", true)
+          .gt("next_run_at", nowIso)
+          .in("contact_id", fatia);
+        return {
+          linhas: (data ?? []) as Array<{ contact_id: string; next_run_at: string }>,
+          erro: error ?? undefined,
+        };
+      }),
+      porFatias(contactIds, async (fatia) => {
+        const { data, error } = await admin
+          .from("conversations")
+          .select("id, contact_id, assignee_kind")
+          .eq("organization_id", organizationId)
+          .in("contact_id", fatia);
+        return {
+          linhas: (data ?? []) as Array<{
+            id: string;
+            contact_id: string;
+            assignee_kind: "user" | "ai" | null;
+          }>,
+          erro: error ?? undefined,
+        };
+      }),
+      porFatias(contactIds, async (fatia) => {
+        const { data, error } = await admin
+          .from("contacts")
+          .select("id, name, display_name")
+          .eq("organization_id", organizationId)
+          .in("id", fatia);
+        return {
+          linhas: (data ?? []) as Array<{
+            id: string;
+            name: string | null;
+            display_name: string | null;
+          }>,
+          erro: error ?? undefined,
+        };
+      }),
     ]);
 
-    for (const f of followups.data ?? []) {
+    for (const f of followups.linhas) {
       const prev = followupByContact.get(f.contact_id);
       if (!prev || f.next_run_at < prev) followupByContact.set(f.contact_id, f.next_run_at);
     }
-    for (const c of convs.data ?? []) {
+    // Contato com mais de uma conversa continua escolhendo "a primeira" — como
+    // antes: a query nunca teve `ORDER BY`, então qual era a primeira já não era
+    // contrato. O que muda aqui é só o tamanho da URL.
+    for (const c of convs.linhas) {
       if (!convByContact.has(c.contact_id)) {
         convByContact.set(c.contact_id, { id: c.id, assignee_kind: c.assignee_kind ?? null });
       }
     }
-    for (const p of contacts.data ?? []) {
+    for (const p of contacts.linhas) {
       nameByContact.set(p.id, p.display_name ?? p.name ?? null);
     }
   }
