@@ -175,6 +175,8 @@ export interface Pedido {
   frete_cents: number;
   contact_id: string | null;
   cliente_documento: string | null;
+  /** Autor humano. NULL = importado (Mercos) ou criado por rotina. */
+  created_by: string | null;
   created_at: string;
   updated_at: string;
 }

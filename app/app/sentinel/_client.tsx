@@ -1013,10 +1013,36 @@ function CamposDaEvidencia({ evidencia }: { evidencia: unknown }) {
     if (typeof v === "boolean") return v ? "sim" : "não";
     if (typeof v === "number") return <span className="tabular-nums">{v}</span>;
     if (typeof v === "string") {
+      if (v.startsWith("/app/")) {
+        return (
+          <Link href={v} className="font-medium text-accent-ink underline underline-offset-2">
+            abrir
+          </Link>
+        );
+      }
       return /^[A-Za-z0-9_-]{8,}$/.test(v) && !/\s/.test(v) ? (
         <span className="font-mono text-xs">{v}</span>
       ) : (
         v
+      );
+    }
+    if (Array.isArray(v)) {
+      return (
+        <span className="flex flex-wrap gap-x-3 gap-y-1">
+          {v.map((item, indice) =>
+            typeof item === "string" && item.startsWith("/app/") ? (
+              <Link
+                key={`${item}-${indice}`}
+                href={item}
+                className="font-medium text-accent-ink underline underline-offset-2"
+              >
+                abrir {indice + 1}
+              </Link>
+            ) : (
+              <span key={indice}>{typeof item === "string" ? item : JSON.stringify(item)}</span>
+            ),
+          )}
+        </span>
       );
     }
     return <span className="font-mono text-xs">{JSON.stringify(v)}</span>;
