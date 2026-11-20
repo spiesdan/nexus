@@ -91,7 +91,7 @@ export default async function LoginPage({
         <p>
           <Link
             href="/login/forgot"
-            className="text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-muted-foreground underline underline-offset-4 hover:text-foreground"
           >
             {t("Esqueci minha senha")}
           </Link>
@@ -100,7 +100,7 @@ export default async function LoginPage({
           {t("Não tem conta?")}{" "}
           <Link
             href="/signup"
-            className="font-medium text-foreground underline underline-offset-4"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 font-medium text-foreground underline underline-offset-4"
           >
             {t("Criar conta")}
           </Link>

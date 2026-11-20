@@ -201,17 +201,17 @@ base sumiu; duas telas entraram depois dela.
 |---|---|---|---|---|
 | `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · 24 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/login/mfa` | público/auth | **aplicado** (cartão da casca) | 4 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Verificação em duas etapas» confirmado** com sessão parcial (login parado antes do 2º fator) · `capturas/medido-mfa-publico-auth/` | D |
-| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 (claro/escuro × 1440/390) · **h1 «Entrar» confirmado** (régua 21/11) | D |
-| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Recuperar acesso» confirmado** (régua 21/11) | D |
+| `/login` | público/auth | **aplicado** (cartão + toque 44×44) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Entrar» confirmado** (régua 21/11) · `56`: links 130×17→138×44 e 69×17→77×44, medido antes/depois | D |
+| `/login/recovery` | público/auth | **aplicado** (cartão + toque 44×44) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Recuperar acesso» confirmado** · `56`: link 88×17→96×44, medido antes/depois | D |
 | `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · 20 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Criar conta» confirmado** (régua 21/11) | D |
+| `/signup` | público/auth | **aplicado** (cartão + toque 44×44) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Criar conta» confirmado** · `56`: link 38×17→46×44, medido antes/depois | D |
 | `/403` | estado/erro | **já conforme** | #659 · 16 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) · **h1 «500 — Erro interno» confirmado** (régua 21/11) | D |
 | `/503` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/account-suspended` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
-| `/legal/privacy` | público/legal | **já conforme** | #659 · 120 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/legal/terms` | público/legal | **já conforme** | #659 · 128 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/legal/privacy` | público/legal | **aplicado** (toque 44×44) | #659 · 120 textos, 0 abaixo do AA · overflow 0 · axe 0 · `56`: link 36×20→44×44, medido antes/depois | D |
+| `/legal/terms` | público/legal | **aplicado** (toque 44×44) | #659 · 128 textos, 0 abaixo do AA · overflow 0 · axe 0 · `56`: links 36×20→44×44 e 139×17→147×44, medidos antes/depois | D |
 | `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 — estado inválido; válido exige token real | D |
 | `/onboarding/connect-nuvemshop` | onboarding | **já conforme** (passo desligado) | #670 · 88 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
 | `/onboarding/connect-whatsapp` | onboarding | **já conforme** | #670 · 108 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |

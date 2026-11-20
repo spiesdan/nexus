@@ -95,7 +95,7 @@ export default async function TermsPage() {
           {t(
             "Os dados inseridos aqui — contatos, conversas, negócios, arquivos — pertencem ao operador e às pessoas a que se referem. O tratamento desses dados é descrito na",
           )}{" "}
-          <a className="underline underline-offset-2" href="/legal/privacy">
+          <a className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 underline underline-offset-2" href="/legal/privacy">
             {t("Política de Privacidade")}
           </a>
           .

@@ -1,0 +1,627 @@
+{
+  "base": "http://localhost:3002",
+  "rotulo": "antes-toque-5",
+  "medidas": [
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Entrar",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 5,
+        "pequenos": 5,
+        "exemplos": [
+          "input#email 318x40",
+          "input#password 318x40",
+          "button 318x36",
+          "a 130x17",
+          "a 69x17"
+        ]
+      },
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Recuperar acesso",
+      "redirecionou": false,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "toque": {
+        "total": 4,
+        "pequenos": 4,
+        "exemplos": [
+          "input#email 318x40",
+          "input#recovery-code 318x40",
+          "button 318x36",
+          "a 88x17"
+        ]
+      },
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Criar conta",
+      "redirecionou": false,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "toque": {
+        "total": 7,
+        "pequenos": 7,
+        "exemplos": [
+          "input#org_name 318x40",
+          "input#email 318x40",
+          "input#password 318x40",
+          "input#password_confirm 318x40",
+          "button 318x36"
+        ]
+      },
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Política de Privacidade",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 1,
+        "pequenos": 1,
+        "exemplos": [
+          "a 36x20"
+        ]
+      },
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Termos de Uso",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "a 36x20",
+          "a 139x17",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Entrar",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 5,
+        "pequenos": 4,
+        "exemplos": [
+          "input#email 276x40",
+          "input#password 276x40",
+          "a 130x17",
+          "a 69x17"
+        ]
+      },
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Recuperar acesso",
+      "redirecionou": false,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "toque": {
+        "total": 4,
+        "pequenos": 3,
+        "exemplos": [
+          "input#email 276x40",
+          "input#recovery-code 276x40",
+          "a 88x17"
+        ]
+      },
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Criar conta",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 6,
+        "pequenos": 5,
+        "exemplos": [
+          "input#org_name 276x40",
+          "input#email 276x40",
+          "input#password 276x40",
+          "input#password_confirm 276x40",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Política de Privacidade",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 1,
+        "pequenos": 1,
+        "exemplos": [
+          "a 36x20"
+        ]
+      },
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Termos de Uso",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 2,
+        "exemplos": [
+          "a 36x20",
+          "a 139x17"
+        ]
+      },
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Entrar",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 5,
+        "pequenos": 5,
+        "exemplos": [
+          "input#email 318x40",
+          "input#password 318x40",
+          "button 318x36",
+          "a 130x17",
+          "a 69x17"
+        ]
+      },
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Recuperar acesso",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 5,
+        "pequenos": 5,
+        "exemplos": [
+          "input#email 318x40",
+          "input#recovery-code 318x40",
+          "button 318x36",
+          "a 88x17",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Criar conta",
+      "redirecionou": false,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "toque": {
+        "total": 7,
+        "pequenos": 7,
+        "exemplos": [
+          "input#org_name 318x40",
+          "input#email 318x40",
+          "input#password 318x40",
+          "input#password_confirm 318x40",
+          "button 318x36"
+        ]
+      },
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Política de Privacidade",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 2,
+        "exemplos": [
+          "a 36x20",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Termos de Uso",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "a 36x20",
+          "a 139x17",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Entrar",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 5,
+        "pequenos": 4,
+        "exemplos": [
+          "input#email 276x40",
+          "input#password 276x40",
+          "a 130x17",
+          "a 69x17"
+        ]
+      },
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Recuperar acesso",
+      "redirecionou": false,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "toque": {
+        "total": 5,
+        "pequenos": 4,
+        "exemplos": [
+          "input#email 276x40",
+          "input#recovery-code 276x40",
+          "a 88x17",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Criar conta",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 6,
+        "pequenos": 5,
+        "exemplos": [
+          "input#org_name 276x40",
+          "input#email 276x40",
+          "input#password 276x40",
+          "input#password_confirm 276x40",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Política de Privacidade",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 2,
+        "exemplos": [
+          "a 36x20",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Termos de Uso",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "a 36x20",
+          "a 139x17",
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}
