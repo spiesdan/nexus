@@ -24,6 +24,7 @@ import {
   situacaoDoNumero,
 } from "@/lib/rotas/entradas";
 import { horaDoMinuto, minutosDoDia } from "@/lib/rotas/janelas";
+import { estadoDaPublicacao } from "@/lib/rotas/publicacao";
 import {
   formatarDistancia,
   formatarDuracao,
@@ -31,7 +32,7 @@ import {
   ordemCompleta,
 } from "@/lib/rotas/roteamento";
 import { createClient } from "@/lib/supabase/browser";
-import { CaretDown, CaretUp, MapPin } from "@/lib/ui/icons";
+import { ArrowRight, CaretDown, CaretUp, MapPin, PaperPlaneTilt } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
@@ -500,6 +501,17 @@ export function Roteirizador({
   const ordemMudou = ordem.join("|") !== ordemSalva.join("|") && ordem.length === ordemSalva.length;
   const configMudou =
     retornar !== rota.carga.retornar_origem || tempoParada !== rota.carga.tempo_parada_min;
+  /**
+   * PUBLICAR — o gesto que manda a rota para a rua.
+   *
+   * A decisão do que mostrar é tabela (`lib/rotas/publicacao`, testada sem
+   * browser): publicar, já publicada, encerrada ou vazia. Aqui só se aplica.
+   */
+  const publicacao = estadoDaPublicacao({
+    statusDaCarga: rota.carga.status,
+    ordemMudou,
+    paradas: paradasOrdenadas.length,
+  });
 
   // ── Distribuição por veículo: derivados ──────────────────────────────────
   const veiculosAtivos = (frota?.veiculos ?? []).filter((v) => v.ativo);
@@ -840,6 +852,71 @@ export function Roteirizador({
       if (!p.ruas)
         toast.warning(t("Serviço de ruas fora do ar — ordem aproximada (linha reta ×1,3)."));
       else toast.success(t("Rota otimizada. Confira e salve."));
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      setTrabalhando(null);
+    }
+  }
+
+  /**
+   * PUBLICAR A ROTA — salvar (se preciso) e pôr na rua, num clique.
+   *
+   * Antes o gesto morava na tela vizinha, como botão de STATUS ("Iniciar
+   * rota"): quem terminava de ordenar aqui tinha de sair da tela da rota para
+   * publicá-la. As duas consequências — o cliente é avisado e a rota passa a
+   * existir no aparelho do entregador — vão na confirmação, porque nenhuma
+   * delas é reversível pelo botão.
+   */
+  async function publicarRota() {
+    if (publicacao.tipo !== "publicar") return;
+    const seguir = await confirmar({
+      title: publicacao.precisaSalvar
+        ? t("Publicar a rota com a ordem que está na tela?")
+        : t("Publicar a rota?"),
+      description: (
+        <span>
+          {t('A carga sai de "montando" e a rota passa a aparecer no aparelho do entregador.')}{" "}
+          <strong>{t("Os clientes serão avisados por WhatsApp.")}</strong>{" "}
+          {t("Não dá para desfazer por este botão.")}
+        </span>
+      ),
+      confirmLabel: t("Publicar rota"),
+      cancelLabel: t("Cancelar"),
+    });
+    if (!seguir) return;
+
+    setTrabalhando("publicar");
+    try {
+      if (publicacao.precisaSalvar) {
+        // A ordem na tela vence: sem isso o entregador receberia a anterior.
+        await apiClient.patch(`/api/v1/shipments/${cargaId}/rota/ordem`, {
+          ordem,
+          ...(proposta
+            ? {
+                distancia_m: proposta.distancia_m,
+                duracao_s: proposta.duracao_dirigindo_s,
+                geometria: proposta.geometria,
+                provedor: proposta.provedor,
+                ruas: proposta.ruas,
+                modo: proposta.modo,
+                ...(proposta.origem
+                  ? {
+                      origem_endereco: proposta.origem.endereco,
+                      origem_lat: proposta.origem.lat,
+                      origem_lng: proposta.origem.lng,
+                    }
+                  : {}),
+                retornar_origem: proposta.retornar_origem,
+                tempo_parada_min: proposta.tempo_parada_min,
+              }
+            : { retornar_origem: retornar, tempo_parada_min: tempoParada }),
+        });
+        setProposta(null);
+      }
+      await apiClient.post(`/api/v1/shipments/${cargaId}/rota/iniciar`, {});
+      toast.success(t("Rota publicada. O entregador já vê a sequência."));
+      aoMudar();
     } catch (e) {
       showApiError(e);
     } finally {
@@ -1256,6 +1333,34 @@ export function Roteirizador({
                   : { rotulo: t("Publicada"), variante: "success" as const };
           return <Badge variant={estado.variante}>{estado.rotulo}</Badge>;
         })()}
+
+        {/*
+          PUBLICAR — a ação primária desta tela, onde ela é decidida.
+          O botão só existe quando publicar FAZ sentido (carga montando, com
+          parada): na rua ele vira o atalho do entregador, e em carga concluída
+          ou vazia não aparece — oferecer o gesto onde ele não existe é o
+          controle decorativo que esta base já pagou caro.
+        */}
+        {publicacao.tipo === "publicar" && podeOperar && (
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => void publicarRota()}
+            disabled={trabalhando !== null}
+            data-testid="publicar-rota"
+          >
+            <PaperPlaneTilt className="h-3.5 w-3.5" aria-hidden />
+            {trabalhando === "publicar" ? t("Publicando…") : t("Publicar rota")}
+          </Button>
+        )}
+        {publicacao.tipo === "publicada" && (
+          <Button asChild size="sm" variant="outline" className="gap-1.5">
+            <Link href={`/app/expedicao/${cargaId}/motorista`}>
+              {t("Abrir no modo entregador")}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* ── OS NÚMEROS DA CARGA, NUMA FAIXA SÓ ──────────────────────────────
