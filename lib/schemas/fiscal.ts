@@ -247,7 +247,11 @@ const destinatarioAjusteSchema = z.object({
   cidade: z.string().trim().min(2, "Município curto demais").max(60).optional(),
   uf: z.string().trim().length(2, "UF com 2 letras").toUpperCase().optional(),
   /** CEP de 8 dígitos, sem hífen (o formulário tira a máscara). */
-  cep: z.string().trim().regex(/^\d{8}$/, "CEP com 8 dígitos").optional(),
+  cep: z
+    .string()
+    .trim()
+    .regex(/^\d{8}$/, "CEP com 8 dígitos")
+    .optional(),
 });
 
 export type AjusteDoDestinatario = z.infer<typeof destinatarioAjusteSchema>;
@@ -300,9 +304,17 @@ const itemAvulsaSchema = z.object({
   /** Descrição do item (xProd). */
   descricao: z.string().trim().min(1, "Informe a descrição").max(120).optional(),
   /** NCM: 8 dígitos. */
-  ncm: z.string().trim().regex(/^\d{8}$/, "NCM tem 8 dígitos").optional(),
+  ncm: z
+    .string()
+    .trim()
+    .regex(/^\d{8}$/, "NCM tem 8 dígitos")
+    .optional(),
   /** CFOP: 4 dígitos. */
-  cfop: z.string().trim().regex(/^\d{4}$/, "CFOP tem 4 dígitos").optional(),
+  cfop: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "CFOP tem 4 dígitos")
+    .optional(),
   /** uCom/uTrib, 1..6. */
   unidade: z.string().trim().min(1, "Informe a unidade").max(6).optional(),
   quantidade: z.number().int().min(1, "quantidade precisa ser ao menos 1").max(999999),
@@ -348,36 +360,41 @@ export const avulsaSchema = z
 /** A venda avulsa, como a nota a guarda e a tela a envia. */
 export type AvulsaNota = z.infer<typeof avulsaSchema>;
 
-export const extrasFiscaisSchema = z.object({
-  transporte: transporteSchema.optional(),
-  cobranca: cobrancaSchema.optional(),
-  adicionais: adicionaisSchema.optional(),
-  entrega: entregaSchema.optional(),
-  /** Correções feitas NA NOTA depois de uma rejeição (ver `ajusteDaNotaSchema`). */
-  destinatario: destinatarioAjusteSchema.optional(),
-  itens: z.array(itemAjusteSchema).max(500).optional(),
-  /**
-   * NF-e AVULSA (venda sem pedido): o fato da venda em si, que não vem de um
-   * `commercial_orders`. Enquanto o campo está ausente a emissão é sempre de
-   * pedido (aprovado/concluído/faturado/expedido/entregue); com ele presente, a nota nasce sem
-   * pedido — a venda avulsa/balcão.
-   */
-  avulsa: avulsaSchema.optional(),
-  /**
-   * FINALIDADE DA NF-e (`finNFe`): ausente = 1 (venda normal); **4 =
-   * devolução**. Devolução é entrada (`tpNF=0`), referencia a venda original
-   * em `<NFref><refNFe>` e não tem pagamento (`tPag=90`).
-   *
-   * É campo de NOTA, não de pedido: a devolução nasce contra uma chave
-   * autorizada, e a chave não muda quando o pedido muda.
-   */
-  finalidade: z.union([z.literal(1), z.literal(4)]).optional(),
-  /** Chave (44 dígitos) da NF-e devolvida — obrigatória quando `finalidade = 4`. */
-  ref_nfe: z.string().regex(/^\d{44}$/).optional(),
-}).refine((v) => v.finalidade !== 4 || (v.ref_nfe ?? "").length === 44, {
-  message: "ref_nfe (chave de 44 dígitos) é obrigatória na devolução.",
-  path: ["ref_nfe"],
-});
+export const extrasFiscaisSchema = z
+  .object({
+    transporte: transporteSchema.optional(),
+    cobranca: cobrancaSchema.optional(),
+    adicionais: adicionaisSchema.optional(),
+    entrega: entregaSchema.optional(),
+    /** Correções feitas NA NOTA depois de uma rejeição (ver `ajusteDaNotaSchema`). */
+    destinatario: destinatarioAjusteSchema.optional(),
+    itens: z.array(itemAjusteSchema).max(500).optional(),
+    /**
+     * NF-e AVULSA (venda sem pedido): o fato da venda em si, que não vem de um
+     * `commercial_orders`. Enquanto o campo está ausente a emissão é sempre de
+     * pedido (aprovado/concluído/faturado/expedido/entregue); com ele presente, a nota nasce sem
+     * pedido — a venda avulsa/balcão.
+     */
+    avulsa: avulsaSchema.optional(),
+    /**
+     * FINALIDADE DA NF-e (`finNFe`): ausente = 1 (venda normal); **4 =
+     * devolução**. Devolução é entrada (`tpNF=0`), referencia a venda original
+     * em `<NFref><refNFe>` e não tem pagamento (`tPag=90`).
+     *
+     * É campo de NOTA, não de pedido: a devolução nasce contra uma chave
+     * autorizada, e a chave não muda quando o pedido muda.
+     */
+    finalidade: z.union([z.literal(1), z.literal(4)]).optional(),
+    /** Chave (44 dígitos) da NF-e devolvida — obrigatória quando `finalidade = 4`. */
+    ref_nfe: z
+      .string()
+      .regex(/^\d{44}$/)
+      .optional(),
+  })
+  .refine((v) => v.finalidade !== 4 || (v.ref_nfe ?? "").length === 44, {
+    message: "ref_nfe (chave de 44 dígitos) é obrigatória na devolução.",
+    path: ["ref_nfe"],
+  });
 
 /**
  * O corpo do PATCH da tela de correção.
@@ -397,10 +414,7 @@ export const ajusteDaNotaSchema = z
     reenviar: z.boolean().default(false),
   })
   .refine(
-    (v) =>
-      v.destinatario !== undefined ||
-      (v.itens?.length ?? 0) > 0 ||
-      v.adicionais !== undefined,
+    (v) => v.destinatario !== undefined || (v.itens?.length ?? 0) > 0 || v.adicionais !== undefined,
     { message: "Nada para corrigir.", path: ["destinatario"] },
   );
 
@@ -411,45 +425,43 @@ export type ExtrasFiscais = z.infer<typeof extrasFiscaisSchema>;
 /** Os extras já validados, como a nota os guarda (jsonb, 0257). */
 export type ExtrasFiscaisGravados = ExtrasFiscais | null | undefined;
 
-export const notaCreateSchema = z.object({
-  /**
-   * O pedido que origina a nota (agora opcional: venda avulsa/balcão). Sem
-   * pedido, sem nota — salvo a venda avulsa, que vai em `extras.avulsa`.
-   *
-   * Opcional quando `order_ids` vem preenchido: o primeiro pedido continua
-   * sendo o `order_id` da nota (compatibilidade com tudo que lê uma nota por
-   * pedido), e os demais entram em `invoice_orders`.
-   */
-  order_id: z.string().uuid().optional(),
-  /**
-   * AGRUPAMENTO — vários pedidos do MESMO cliente numa NF-e só.
-   *
-   * Cliente que tirou 3 pedidos no mês quer 1 nota, não 3. A NF-e aceita
-   * vários itens por documento; o que ela NÃO aceita é um destinatário
-   * diferente por item, e por isso a emissão recusa pedidos de clientes
-   * distintos (a regra mora em `emitirNota`, não aqui).
-   */
-  order_ids: z.array(z.string().uuid()).min(1).max(50).optional(),
-  /**
-   * Grupos da emissão que não vêm do pedido (0257). Opcionais: sem extras a
-   * nota sai com o que o pedido traz, como sempre. Ao escolher extras a
-   * pessoa está declarando um fato fiscal — por isso vão NA NOTA e não no
-   * pedido: a nota autorizada não se reescreve quando o pedido muda.
-   */
-  extras: extrasFiscaisSchema.optional(),
-})
+export const notaCreateSchema = z
+  .object({
+    /**
+     * O pedido que origina a nota (agora opcional: venda avulsa/balcão). Sem
+     * pedido, sem nota — salvo a venda avulsa, que vai em `extras.avulsa`.
+     *
+     * Opcional quando `order_ids` vem preenchido: o primeiro pedido continua
+     * sendo o `order_id` da nota (compatibilidade com tudo que lê uma nota por
+     * pedido), e os demais entram em `invoice_orders`.
+     */
+    order_id: z.string().uuid().optional(),
+    /**
+     * AGRUPAMENTO — vários pedidos do MESMO cliente numa NF-e só.
+     *
+     * Cliente que tirou 3 pedidos no mês quer 1 nota, não 3. A NF-e aceita
+     * vários itens por documento; o que ela NÃO aceita é um destinatário
+     * diferente por item, e por isso a emissão recusa pedidos de clientes
+     * distintos (a regra mora em `emitirNota`, não aqui).
+     */
+    order_ids: z.array(z.string().uuid()).min(1).max(50).optional(),
+    /**
+     * Grupos da emissão que não vêm do pedido (0257). Opcionais: sem extras a
+     * nota sai com o que o pedido traz, como sempre. Ao escolher extras a
+     * pessoa está declarando um fato fiscal — por isso vão NA NOTA e não no
+     * pedido: a nota autorizada não se reescreve quando o pedido muda.
+     */
+    extras: extrasFiscaisSchema.optional(),
+  })
   // Tudo o que dá para emitir: o pedido único, a lista do agrupamento (o
   // primeiro continua sendo o `order_id` da nota) — ou a venda avulsa, que não
   // nasce de pedido nenhum. A recusa aqui nomeia o campo em vez de deixar a
   // emissão falhar com "pedido não encontrado" no meio.
-  .refine(
-    (v) => v.order_id != null || (v.order_ids?.length ?? 0) > 0 || v.extras?.avulsa != null,
-    {
-      message:
-        "Informe o pedido (order_id) ou os pedidos agrupados (order_ids), ou a venda avulsa (extras.avulsa).",
-      path: ["order_id"],
-    },
-  );
+  .refine((v) => v.order_id != null || (v.order_ids?.length ?? 0) > 0 || v.extras?.avulsa != null, {
+    message:
+      "Informe o pedido (order_id) ou os pedidos agrupados (order_ids), ou a venda avulsa (extras.avulsa).",
+    path: ["order_id"],
+  });
 
 export type NotaCreate = z.infer<typeof notaCreateSchema>;
 
@@ -565,11 +577,18 @@ export interface NotaFiscal {
   erro: string | null;
   total_cents: number;
   created_at: string;
+  /**
+   * O jsonb do documento: `finalidade` (1 venda, 2 complementar, 3 ajuste,
+   * 4 devolução) e `ref_nfe` (chave da nota devolvida). A natureza é DERIVADA
+   * disto (`lib/fiscal/natureza-da-nota.ts`) — não há coluna nova nem regra
+   * nova: é o dado que o emissor já grava.
+   */
+  extras_fiscais: Record<string, unknown> | null;
 }
 
 export const COLUNAS_DA_NOTA =
   "id, order_id, serie, numero, chave_acesso, protocolo, sefaz_cstat, sefaz_xmotivo, " +
-  "status, provedor, erro, total_cents, created_at";
+  "status, provedor, erro, total_cents, created_at, extras_fiscais";
 
 /**
  * Os status do pedido que já são fato comercial e podem virar nota.
@@ -597,7 +616,13 @@ export const COLUNAS_DA_NOTA =
  * (a atualização é condicional e só alcança o `aprovado`); rejeição não mexe no
  * pedido. `rascunho` e `em_analise` continuam sendo intenção — não viram nota.
  */
-export const STATUS_FATURAVEL = ["aprovado", "concluido", "faturado", "expedido", "entregue"] as const;
+export const STATUS_FATURAVEL = [
+  "aprovado",
+  "concluido",
+  "faturado",
+  "expedido",
+  "entregue",
+] as const;
 
 /** Uma pergunta só, usada pela emissão, pela pré-validação e pelo assistente. */
 export function statusFaturavel(status: string): boolean {

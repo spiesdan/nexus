@@ -12,6 +12,7 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Badge } from "@/components/ui/badge";
+import { naturezaDaNota, ROTULO_DA_NATUREZA } from "@/lib/fiscal/natureza-da-nota";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -216,7 +217,28 @@ export function GradeNotas({
       contagem: inicial.filter((n) => n.status === "denegada").length,
     },
   ].filter((c) => c.valor === "" || c.contagem > 0);
+  /**
+   * A NATUREZA DE CADA NOTA — e a soma que não mistura.
+   *
+   * Caso real (pedido 19560): duas autorizadas de R$ 70, uma delas devolução
+   * (finalidade 4). A lista mostrava as duas iguais e o total somava as duas,
+   * o que lê como faturamento em dobro. Aqui o selo diz o que é, a devolução
+   * aponta a nota que devolve, e a soma separa venda de devolução.
+   */
+  const porChave = React.useMemo(
+    () => new Map(inicial.filter((n) => n.chave_acesso).map((n) => [n.chave_acesso as string, n])),
+    [inicial],
+  );
+  const naturezaDe = (n: NotaFiscal) => naturezaDaNota(n.extras_fiscais);
+
   const somaVisiveis = visiveis.reduce((a, n) => a + n.total_cents, 0);
+  const somaVenda = visiveis
+    .filter((n) => naturezaDe(n).natureza !== "devolucao")
+    .reduce((a, n) => a + n.total_cents, 0);
+  const somaDevolucao = visiveis
+    .filter((n) => naturezaDe(n).natureza === "devolucao")
+    .reduce((a, n) => a + n.total_cents, 0);
+  const temDevolucao = somaDevolucao > 0;
 
   const rotuloPeriodo =
     periodo === "ano"
@@ -569,7 +591,16 @@ export function GradeNotas({
 
           <span className="ml-auto text-xs text-muted-foreground tabular-nums">
             {visiveis.length} {textos.notas} ·{" "}
-            <strong className="font-semibold text-text">{comoMoeda(somaVisiveis, "BRL")}</strong>
+            <strong className="font-semibold text-text">{comoMoeda(somaVenda, "BRL")}</strong>
+            {temDevolucao ? (
+              <>
+                {" "}
+                {textos.venda.toLowerCase()} ·{" "}
+                <span className="text-muted-foreground">
+                  {comoMoeda(somaDevolucao, "BRL")} {textos.devolucao.toLowerCase()}
+                </span>
+              </>
+            ) : null}
           </span>
         </div>
       </div>
@@ -636,9 +667,48 @@ export function GradeNotas({
                   <React.Fragment key={n.id}>
                     <TableRow>
                       <TableCell>
-                        <Badge variant={VARIANTE_STATUS[n.status]}>
-                          {ROTULO_DA_NOTA[n.status] ?? n.status}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <Badge variant={VARIANTE_STATUS[n.status]}>
+                            {ROTULO_DA_NOTA[n.status] ?? n.status}
+                          </Badge>
+                          <Badge
+                            variant={
+                              naturezaDe(n).natureza === "devolucao"
+                                ? "warning"
+                                : naturezaDe(n).natureza === "venda"
+                                  ? "neutral"
+                                  : "info"
+                            }
+                            title={
+                              naturezaDe(n).natureza === "devolucao"
+                                ? t("Esta nota devolve mercadoria — ela não soma como venda.")
+                                : undefined
+                            }
+                          >
+                            {t(ROTULO_DA_NATUREZA[naturezaDe(n).natureza])}
+                          </Badge>
+                        </div>
+                        {naturezaDe(n).natureza === "devolucao" && naturezaDe(n).refNfe
+                          ? (() => {
+                              const original = porChave.get(naturezaDe(n).refNfe as string);
+                              const rotulo = original
+                                ? `${textos.devolveA} ${original.numero ?? textos.semNumero}/${original.serie}`
+                                : `${textos.devolveA} ${naturezaDe(n).refNfe!.slice(0, 8)}…`;
+                              return original ? (
+                                <button
+                                  type="button"
+                                  className="mt-1 block text-xs text-accent-ink underline underline-offset-4"
+                                  onClick={() => setExpandida(original.id)}
+                                >
+                                  {rotulo}
+                                </button>
+                              ) : (
+                                <span className="mt-1 block text-xs text-muted-foreground">
+                                  {rotulo}
+                                </span>
+                              );
+                            })()
+                          : null}
                         {n.erro && <span className="block text-xs text-error-fg">{n.erro}</span>}
                         {/*
                             EM EMISSÃO NÃO É ESTADO FINAL — e a tela dizia só
@@ -806,7 +876,24 @@ export function GradeNotas({
                     {visiveis.length} {textos.notas}
                   </TableCell>
                   <TableCell className="text-right whitespace-nowrap tabular-nums">
-                    {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
+                    {temDevolucao ? (
+                      <>
+                        <span className="block">
+                          {textos.venda}: {comoMoeda(somaVenda, "BRL")}
+                        </span>
+                        <span className="block text-muted-foreground">
+                          {textos.devolucao}: {comoMoeda(somaDevolucao, "BRL")}
+                        </span>
+                        <span className="block">
+                          {textos.total} ({textos.incluiDevolucao}):{" "}
+                          {comoMoeda(somaVisiveis, "BRL")}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        {textos.total}: {comoMoeda(somaVisiveis, "BRL")}
+                      </>
+                    )}
                   </TableCell>
                   <TableCell colSpan={2} className="hidden 2xl:table-cell" />
                 </TableRow>

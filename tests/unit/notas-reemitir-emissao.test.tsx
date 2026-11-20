@@ -58,6 +58,7 @@ function nota(status: NotaFiscal["status"]): NotaFiscal {
     provedor: "sidecar",
     erro: status === "erro" ? "SEFAZ indisponível" : null,
     total_cents: 1000,
+    extras_fiscais: null,
     created_at: "2026-11-18T12:00:00.000Z",
   };
 }
