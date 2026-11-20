@@ -253,3 +253,56 @@ describe("ficha do pedido — confirmação das ações com consequência", () =
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalled());
   });
 });
+
+/**
+ * DECISÃO 6 (20/11/2026) — CUSTO NO RESUMO DO PEDIDO.
+ *
+ * O resumo mostrava quantidade e valor, não custo/margem. O custo vem do
+ * catálogo ATUAL (o item do pedido não guarda o custo da época) e só chega à
+ * tela de quem vê margem — `null` significa "não pode ver", e aí o número não
+ * aparece. Nada aqui recalcula o valor do pedido.
+ */
+describe("ficha do pedido — custo e margem no resumo", () => {
+  function comCusto(custo: { totalCents: number; semCusto: number } | null) {
+    return render(
+      <DetalheDoPedido
+        pedido={pedidoDeTeste("concluido")}
+        itens={ITENS_ANTIGOS}
+        contato={null}
+        nomeVendedor={null}
+        nomeOrganizacao="Bill Higiene"
+        podeEditar
+        podeExcluir={false}
+        podeSincronizarMercos
+        custo={custo}
+      />,
+    );
+  }
+
+  it("mostra custo e margem quando quem vê a margem recebe o número", () => {
+    comCusto({ totalCents: 10_000, semCusto: 0 });
+
+    expect(screen.getByText(/Custo \(catálogo atual\)/)).toBeTruthy();
+    expect(screen.getByText("R$ 100,00")).toBeTruthy();
+    expect(screen.getByText(/^Margem:/)).toBeTruthy();
+    // Total do pedido de teste é R$ 426,00 → margem R$ 326,00 (76,5%).
+    expect(screen.getByText("R$ 326,00")).toBeTruthy();
+    expect(screen.getByText("(76.5%)")).toBeTruthy();
+  });
+
+  it("custo parcial avisa quantos itens ficaram fora", () => {
+    comCusto({ totalCents: 10_000, semCusto: 1 });
+
+    expect(screen.getByText(/1 item sem custo/)).toBeTruthy();
+  });
+
+  it("sem permissão (custo null) não mostra custo nem margem", () => {
+    comCusto(null);
+
+    expect(screen.queryByText(/Custo \(catálogo atual\)/)).toBeNull();
+    expect(screen.queryByText(/^Margem:/)).toBeNull();
+    // O resumo que já existia continua inteiro.
+    expect(screen.getByText(/Quantidade total/)).toBeTruthy();
+    expect(screen.getByText(/Valor total/)).toBeTruthy();
+  });
+});

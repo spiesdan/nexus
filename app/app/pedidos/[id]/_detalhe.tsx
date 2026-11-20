@@ -31,6 +31,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { copyToClipboard } from "@/lib/clipboard";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { margemDoPedido, type CustoDoPedido } from "@/lib/comercial/custo-do-pedido";
 import type { ItemDoPedido, PedidoComercial, StatusDoPedido } from "@/lib/schemas/pedidos";
 
 import { PillDoStatus } from "../_pills";
@@ -394,6 +395,7 @@ export function DetalheDoPedido({
   podeEditar,
   podeExcluir,
   podeSincronizarMercos,
+  custo,
 }: {
   pedido: PedidoComercial;
   itens: ItemDoPedido[];
@@ -410,6 +412,11 @@ export function DetalheDoPedido({
   podeExcluir: boolean;
   /** 0297: manager+ — a rota do "Atualizar do Mercos" pede esse nível. */
   podeSincronizarMercos: boolean;
+  /**
+   * Custo do pedido pelo catálogo ATUAL (decisão 6). `null` para quem não vê
+   * margem — o número não chega ao cliente nesse caso.
+   */
+  custo?: CustoDoPedido | null;
 }) {
   const tagIdioma = useTagDeIdioma();
   const t = useT();
@@ -1132,6 +1139,32 @@ export function DetalheDoPedido({
             <span className="text-muted-foreground">{t("Quantidade total")}: </span>
             <strong>{qtdTotal}</strong>
           </p>
+          {custo ? (
+            <>
+              <p title={t("Custo atual do catálogo — o item do pedido não guarda o custo da época.")}>
+                <span className="text-muted-foreground">{t("Custo (catálogo atual)")}: </span>
+                <strong className="tabular-nums">{comoMoeda(custo.totalCents, pedido.moeda)}</strong>
+                {custo.semCusto > 0 ? (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    · {custo.semCusto} {custo.semCusto === 1 ? t("item sem custo") : t("itens sem custo")}
+                  </span>
+                ) : null}
+              </p>
+              <p>
+                <span className="text-muted-foreground">{t("Margem")}: </span>
+                <strong className="tabular-nums">
+                  {comoMoeda(margemDoPedido(pedido.total_cents, custo).valorCents, pedido.moeda)}
+                </strong>
+                {(() => {
+                  const pct = margemDoPedido(pedido.total_cents, custo).pct;
+                  return pct === null ? null : (
+                    <span className="text-muted-foreground"> ({pct.toFixed(1)}%)</span>
+                  );
+                })()}
+              </p>
+            </>
+          ) : null}
           <p className="ml-auto text-base">
             <span className="text-muted-foreground">{t("Valor total")}: </span>
             <strong className="tabular-nums">{comoMoeda(pedido.total_cents, pedido.moeda)}</strong>
