@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BotaoSair } from "@/components/nexus-ui/feedback/BotaoSair";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { traduzir } from "@/lib/i18n/dicionario";
@@ -34,6 +36,12 @@ type BotaoDeStatus = {
   href: string;
   rotulo: string;
   variante: "outline" | "default";
+  /**
+   * "Sair" não pode ser link GET para /login: isso apenas mostra o formulário
+   * de entrada com a sessão antiga ainda viva (a pessoa volta para cá ao ir
+   * a /app). A Server Action encerra a sessão de verdade e então redirect.
+   */
+  encerrarSessao?: boolean;
 };
 
 type DefinicaoDeStatus = {
@@ -96,7 +104,7 @@ const CATALOGO: Record<VarianteStatus, DefinicaoDeStatus> = {
           {traduzir("Sua conta está suspensa. Entre em contato com", i)}{" "}
           <a
             href={`mailto:${suporte}`}
-            className="underline underline-offset-4 hover:text-foreground transition-colors"
+            className="inline-flex min-h-11 min-w-11 items-center px-1 underline underline-offset-4 transition-colors hover:text-foreground"
           >
             {suporte}
           </a>{" "}
@@ -108,7 +116,7 @@ const CATALOGO: Record<VarianteStatus, DefinicaoDeStatus> = {
           i,
         )
       ),
-    botoes: [{ href: "/login", rotulo: "Sair", variante: "outline" }],
+    botoes: [{ href: "/login", rotulo: "Sair", variante: "outline", encerrarSessao: true }],
     card: `${PADRAO.card} space-y-4`,
     descricaoClasse: "text-sm text-muted-foreground",
     acoesClasse: "pt-2",
@@ -151,16 +159,24 @@ export function StatusPage({
           {def.descricao(idioma, suporte)}
         </p>
         <div className={def.acoesClasse ?? PADRAO.acoesClasse}>
-          {def.botoes.map((botao) => (
-            <Button
-              key={botao.href + botao.rotulo}
-              asChild
-              variant={botao.variante === "outline" ? "outline" : "default"}
-              className="min-h-11"
-            >
-              <Link href={botao.href}>{traduzir(botao.rotulo, idioma)}</Link>
-            </Button>
-          ))}
+          {def.botoes.map((botao) =>
+            botao.encerrarSessao ? (
+              <BotaoSair
+                key={botao.href + botao.rotulo}
+                rotulo={botao.rotulo}
+                idioma={idioma}
+              />
+            ) : (
+              <Button
+                key={botao.href + botao.rotulo}
+                asChild
+                variant={botao.variante === "outline" ? "outline" : "default"}
+                className="min-h-11"
+              >
+                <Link href={botao.href}>{traduzir(botao.rotulo, idioma)}</Link>
+              </Button>
+            ),
+          )}
         </div>
       </Card>
     </main>
