@@ -1,5 +1,8 @@
 # 41 — Matriz das telas de `app/app`
 
+> **Como foi medido (obrigatório):** cada linha declara `individual` (captura/medição daquela rota) ou `varredura do módulo` (medição automatizada da rodada por primitiva). Linha só vira `aplicado` se a varredura **mediu aquela rota**; falhou → `pendente` com o defeito. “Aplicado por primitiva” sem medição **não vale**.
+
+
 **Data:** 19/11/2026 · **Base:** `nexus/main` @ `1675f90a` · **Método:** uma tela
 por linha, no MESMO build, em claro/escuro × 1440/390, com captura antes/depois
 quando a tela muda e **número para todas**.
