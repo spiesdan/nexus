@@ -667,6 +667,7 @@ export function Roteirizador({
     setProgressoGeo(t("Localizando…"));
     let localizadas = 0;
     let semResultado = 0;
+    let comErro = 0;
     let ultima: RotaCarregada | null = null;
     try {
       for (;;) {
@@ -688,6 +689,10 @@ export function Roteirizador({
         const d = corpo.data;
         localizadas += d.estados.filter((e) => e.estado === "ok").length;
         semResultado += d.estados.filter((e) => e.estado !== "ok").length;
+        // `estado: "erro"` é o PROVEDOR fora (fetch falhou/HTTP != 200), e a
+        // rota segue devolvendo 200 — por isso o `catch` abaixo não vê isso.
+        // Sem separar os dois, a falha de serviço virava "endereço não achado".
+        comErro += d.estados.filter((e) => e.estado === "erro").length;
         setProgressoGeo(d.restantes > 0 ? t(`Faltam ${d.restantes}…`) : t("Pronto."));
         ultima = (await recarregar()) ?? ultima;
         // Um lote sem estado nenhum não é "faltam N": é a rota sem alvo (sem
@@ -697,7 +702,34 @@ export function Roteirizador({
       }
       const paradas = ultima?.paradas ?? [];
       const noMapa = paradas.filter((p) => p.latitude != null && p.longitude != null).length;
-      setErroGeo(null);
+      /*
+       * A RODADA QUE NÃO LOCALIZOU NADA TAMBÉM É FALHA NA TELA.
+       *
+       * O provedor fora não lança: a rota devolve 200 com `estado: "erro"` por
+       * parada. Antes isso virava toast de 4 s ("Nenhuma parada localizada") e
+       * a tela ficava igual — o mesmo buraco do catch, um nível abaixo. Agora
+       * os dois casos viram o banner único, com texto diferente: serviço fora
+       * pede "tentar de novo"; endereço não achado pede correção.
+       */
+      if (comErro > 0) {
+        setErroGeo(
+          `${comErro} ${
+            comErro === 1
+              ? t("parada não foi localizada: o serviço de mapas não respondeu.")
+              : t("paradas não foram localizadas: o serviço de mapas não respondeu.")
+          } ${t("Tente de novo em instantes.")}`,
+        );
+      } else if (localizadas === 0 && semResultado > 0) {
+        setErroGeo(
+          `${semResultado} ${
+            semResultado === 1
+              ? t("parada sem endereço localizável. Corrija o cadastro ou marque no mapa.")
+              : t("paradas sem endereço localizável. Corrija o cadastro ou marque no mapa.")
+          }`,
+        );
+      } else {
+        setErroGeo(null);
+      }
       if (localizadas > 0 && semResultado === 0) {
         toast.success(`${localizadas} ${t("parada(s) localizada(s) no mapa.")}`);
       } else if (localizadas > 0) {
