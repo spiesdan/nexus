@@ -1,0 +1,258 @@
+[
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 25,
+      "abaixoDe40": 3,
+      "amostra": [
+        "button.flex.h-9 622x36 \"Standard\"",
+        "button.inline-flex.items-center 115x36 \"Criar tenant\"",
+        "button.inline-flex.items-center 98x36 \"Cancelar\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 13,
+      "abaixoDe40": 1,
+      "amostra": [
+        "button.flex.h-9 308x36 \"Standard\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 25,
+      "abaixoDe40": 3,
+      "amostra": [
+        "button.flex.h-9 622x36 \"Standard\"",
+        "button.inline-flex.items-center 115x36 \"Criar tenant\"",
+        "button.inline-flex.items-center 98x36 \"Cancelar\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 13,
+      "abaixoDe40": 1,
+      "amostra": [
+        "button.flex.h-9 308x36 \"Standard\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  }
+]

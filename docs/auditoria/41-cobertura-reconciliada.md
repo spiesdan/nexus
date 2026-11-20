@@ -174,9 +174,9 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/observabilidade` | admin | **pendente** | — | — |
 | `/admin` | admin | **pendente** | — | — |
 | `/admin/platform-admins` | admin | **pendente** | — | — |
-| `/admin/tenants/[id]/health` | admin | **pendente** | — | — |
+| `/admin/tenants/[id]/health` | admin | **já conforme** — 0 alvos < 40 px; overflow/axe/console limpos (mesma rodada de captura) | `59-admin-tenants-modulo-design.md` · `medidas-tenant-saude.json` | G |
 | `/admin/tenants/[id]` | admin | **aplicado** — axe crítico 1 → 0; alvos 7/5 → 0 | `58-admin-tenant-ficha-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenant-ficha.json` | G |
-| `/admin/tenants/new` | admin | **pendente** | — | — |
+| `/admin/tenants/new` | admin | **aplicado** — alvos < 40 px: 3/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390) | `59-admin-tenants-modulo-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants-new.json` | G |
 | `/admin/tenants` | admin | **aplicado** — alvos < 40 px: 20/19 → 0 | `55-admin-tenants-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants.json` | G |
 | `/admin/usage` | admin | **pendente** | — | — |
 | `/admin/users/[id]` | admin | **pendente** | — | — |

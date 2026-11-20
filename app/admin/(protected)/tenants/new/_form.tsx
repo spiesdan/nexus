@@ -225,7 +225,7 @@ export function NewTenantForm() {
                   setValue("plan", v as "standard" | "pro" | "enterprise")
                 }
               >
-                <SelectTrigger id="plan" aria-label={t("Plano")}>
+                <SelectTrigger id="plan" aria-label={t("Plano")} className="min-h-10">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -252,7 +252,7 @@ export function NewTenantForm() {
 
             {/* Actions */}
             <div className="flex items-center gap-3 pt-2">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting} className="min-h-10">
                 {isSubmitting ? t("Criando...") : t("Criar tenant")}
               </Button>
               <Button
@@ -260,6 +260,7 @@ export function NewTenantForm() {
                 variant="outline"
                 onClick={() => router.back()}
                 disabled={isSubmitting}
+                className="min-h-10"
               >
                 {t("Cancelar")}
               </Button>
