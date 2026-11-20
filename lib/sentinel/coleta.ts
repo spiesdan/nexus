@@ -48,7 +48,13 @@ const TETO_RECEBIVEIS = 1_000;
 const TETO_LEADS = 2_000;
 const TETO_FILA = 500;
 const TETO_WEBHOOKS = 500;
-const TETO_MERCOS = 100;
+// A janela é o HORIZONTE DAS REGRAS, não um número escolhido ao acaso:
+// `mercos_importacao_travada` olha queued/running >45 min e
+// `mercos_importacao_falhou` filtra 24 h. 7 dias cobre as duas com folga de
+// uma ordem de grandeza. Buscar 30 dias só enchia o teto com histórico que
+// nenhuma regra lê (medido na 1.61.0: 137 execuções em 30d, 42 em 7d).
+const JANELA_MERCOS_DIAS = 7;
+const TETO_MERCOS = 500;
 const TETO_CAMPANHAS = 300;
 const TETO_DUPLICADOS = 200;
 // 100 mantém o `in (ids)` do PostgREST abaixo do limite de URL; se houver mais,
@@ -288,7 +294,7 @@ export async function coletarSnapshot(
           "id, status, origem, started_at, finished_at, orders_new, errors, created_at",
         )
         .eq("organization_id", organizationId)
-        .gte("created_at", iso(30 * DIA_MS))
+        .gte("created_at", iso(JANELA_MERCOS_DIAS * DIA_MS))
         .order("created_at", { ascending: false })
         .limit(TETO_MERCOS + 1),
       TETO_MERCOS,

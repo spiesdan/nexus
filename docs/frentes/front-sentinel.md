@@ -459,6 +459,24 @@ completa avalia todas as regras e `encerrar_ausentes` fecha a ocorrência da
 devolução como `nao_detectada_na_execucao`, preservando o histórico. Sem
 migration (0330 não foi necessária): a função já aceitava a lista de regras.
 
+### v1.8 — truncamento por fonte, não por rodada
+
+Produção 1.61.0: `status=sucesso achados=21 ... truncado=t`,
+`coletas_truncadas=["importacoes_mercos"]`. A coleta Mercos lia 30 dias para
+alimentar regras de 45 min/24 h; 137 execuções em 30 dias (42 em 7) estouravam
+`TETO_MERCOS=100` e bloqueavam **todo** o encerramento.
+
+- A janela passou a ser **7 dias** — o horizonte das duas regras — e o teto
+  **500**. 137 em 30 dias não truncam; 600 em 7 ainda truncam (teste no banco).
+- O bloqueio passou a ser **por fonte**: `lib/sentinel/fontes.ts` mapeia regra →
+  coletas. `importacoes_mercos` truncada bloqueia só as duas regras Mercos;
+  `fiscal.*`, `operacao.lead_duplicado` etc. encerram normalmente.
+- Regra sem mapa de fontes bloqueia (nunca fecha no escuro); `fontes.test.ts`
+  exige entrada para toda regra do registry.
+
+**Prova:** 102 testes de `lib/sentinel` (Mercos truncado não impede fiscal/lead;
+fonte truncada impede a regra dependente) + `test:db` com 137/42 e 600/501.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 

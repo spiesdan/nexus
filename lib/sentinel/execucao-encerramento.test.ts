@@ -50,6 +50,7 @@ beforeEach(() => {
   vi.mocked(coletarSnapshot).mockResolvedValue({
     snapshot: snapshotVazio(ORG, Date.now()),
     truncado: false,
+    truncados: [],
     falhas: [],
   } as never);
 });
@@ -88,6 +89,34 @@ describe("Sentinel — encerramento por regra avaliada", () => {
         }),
       }),
     );
+  });
+
+  it("truncar importações Mercos fecha fiscal/lead e preserva só as regras Mercos", async () => {
+    vi.mocked(coletarSnapshot).mockResolvedValue({
+      snapshot: snapshotVazio(ORG, Date.now()),
+      truncado: true,
+      truncados: ["importacoes_mercos"],
+      falhas: [],
+    } as never);
+    vi.mocked(executarDetectores).mockReturnValue(
+      deteccao({
+        truncadoPorTempo: false,
+        regrasAvaliadas: [
+          "fiscal.nota_rejeitada",
+          "operacao.lead_duplicado",
+          "operacao.mercos_importacao_falhou",
+        ],
+        regrasNaoAvaliadas: [],
+      }),
+    );
+
+    await executarSentinela({ organizationId: ORG, origem: "cron" });
+
+    expect(rpc).toHaveBeenCalledWith("fn_sentinel_encerrar_ausentes", {
+      p_organization_id: ORG,
+      p_execucao_id: RUN,
+      p_regras: ["fiscal.nota_rejeitada", "operacao.lead_duplicado"],
+    });
   });
 
   it("coleta truncada bloqueia TODAS as regras (snapshot incompleto para todas)", async () => {
