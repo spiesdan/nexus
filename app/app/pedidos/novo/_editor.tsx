@@ -51,6 +51,7 @@ import { OrderItems, type LinhaDoPedido } from "./_itens";
 import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
+import { BlocoDeOverride, type EstadoDoOverride } from "./_override";
 import {
   chaveDoRascunho,
   haQuantoTempo,
@@ -198,6 +199,12 @@ export function OrderEditor({
   // Limite e saldo em aberto do cliente escolhido — quem busca é o seletor
   // (mesma conta do gate de crédito do servidor).
   const [resumoDoCliente, setResumoDoCliente] = React.useState<ResumoDoCliente | null>(null);
+  // Decisão 3: override de estoque/crédito é ato de gerente, com motivo.
+  const [override, setOverride] = React.useState<EstadoDoOverride>({
+    estoque: false,
+    credito: false,
+    motivo: "",
+  });
   const [novoClienteAberto, setNovoClienteAberto] = React.useState(false);
   const [linhas, setLinhas] = React.useState<LinhaDoPedido[]>([]);
   const [condicao, setCondicao] = React.useState("");
@@ -614,6 +621,24 @@ export function OrderEditor({
     return Math.round(((total - custo) / total) * 1000) / 10;
   }, [linhas, porId, verMargem, total]);
 
+  /*
+   * OS DOIS LIMITES QUE O GERENTE PODE LIBERAR (decisão 3).
+   *
+   * Crédito: a MESMA conta do gate (`em aberto + este pedido > limite`), com a
+   * lista de status que compromete — a tela não inventa régua própria.
+   * Estoque: linha cujo saldo conhecido é menor que a quantidade pedida. Item
+   * sem saldo conhecido (`estoque === null`) não habilita override porque não
+   * há falta a ignorar.
+   */
+  const limiteDoCliente = resumoDoCliente?.limite_cents ?? null;
+  const creditoExcedido =
+    limiteDoCliente !== null &&
+    total > 0 &&
+    (resumoDoCliente?.emAberto_cents ?? 0) + total > limiteDoCliente;
+  const faltaEstoque = linhas.some((l) => l.estoque !== null && l.estoque < l.quantidade);
+  const overrideUsado =
+    (override.credito && creditoExcedido) || (override.estoque && faltaEstoque);
+
   const comissaoCents =
     comissaoPct !== null && total > 0 ? Math.round((total * comissaoPct) / 100) : null;
 
@@ -690,6 +715,12 @@ export function OrderEditor({
       irPara("produtos");
       return;
     }
+    // Decisão 3: override sem motivo é poder invisível. Barra ANTES do POST —
+    // o servidor também recusa, mas a pessoa não deve perder a montagem.
+    if (overrideUsado && !override.motivo.trim()) {
+      nexusToast.error(t("Diga o motivo do override — ele vai para a auditoria."));
+      return;
+    }
     const itens = [];
     for (const l of linhas) {
       const unit = precoParaCentavos(l.precoTexto);
@@ -722,6 +753,11 @@ export function OrderEditor({
         ...(verMargem && tabelaId && linhas.some((l) => l.origemPreco === "manual")
           ? { ignorar_preco: true }
           : {}),
+        // Decisão 3: só quando o limite está de fato estourado/insuficiente, e
+        // só com motivo. O servidor cobra papel e motivo de novo.
+        ...(override.credito && creditoExcedido ? { ignorar_credito: true } : {}),
+        ...(override.estoque && faltaEstoque ? { ignorar_estoque: true } : {}),
+        ...(overrideUsado ? { motivo_override: override.motivo.trim() } : {}),
         frete_cents: freteCents,
         ...(condicao.trim() ? { condicao_pagamento: condicao.trim() } : {}),
         // 0261: sempre enviados, mesmo falsos/nulos. Sem isto, um pedido sem NF
@@ -1245,6 +1281,15 @@ export function OrderEditor({
             desconto e frete moram nele) e a barra fixa garante total + ação. */}
         <aside className="lg:col-span-4" aria-label={t("Resumo do pedido")}>
           <div className="lg:sticky lg:top-4">
+            {verMargem && (creditoExcedido || faltaEstoque) ? (
+              <BlocoDeOverride
+                estado={override}
+                creditoExcedido={creditoExcedido}
+                faltaEstoque={faltaEstoque}
+                aoMarcar={(qual, valor) => setOverride((o) => ({ ...o, [qual]: valor }))}
+                aoMotivo={(motivo) => setOverride((o) => ({ ...o, motivo }))}
+              />
+            ) : null}
             <CartaoDeCredito resumo={resumoDoCliente} total={total} />
             <OrderSummary
               totais={{

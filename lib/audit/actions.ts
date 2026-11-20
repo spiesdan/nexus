@@ -631,6 +631,11 @@ export const AUDIT_ACTIONS = [
   "sentinel.occurrence_state",
   "sentinel.settings_changed",
   /** Nível 2 restrito (0325): antes/depois de uma correção de job aprovada. */
+  /**
+   * Gerente passou por cima de um limite no pedido (decisão 3, 20/11/2026).
+   * O `metadata` carrega o que foi ignorado e o motivo declarado.
+   */
+  "commercial_order.override",
   "sentinel.correction_applied",
   "sentinel.correction_reverted",
 ] as const;

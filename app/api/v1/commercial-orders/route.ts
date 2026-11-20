@@ -113,7 +113,14 @@ export async function POST(req: NextRequest): Promise<Response> {
   // serviço (a tool de IA passa sempre false).
   let podeIgnorar = false;
   let podeIgnorarPreco = false;
-  if (entrada.ignorar_preco || entrada.ignorar_estoque || entrada.ignorar_credito) {
+  const ignorados = [
+    entrada.ignorar_estoque ? "estoque" : null,
+    entrada.ignorar_credito ? "credito" : null,
+    entrada.ignorar_preco ? "preco" : null,
+  ].filter((v): v is string => v !== null);
+  const motivoOverride = (entrada.motivo_override ?? "").trim();
+
+  if (ignorados.length > 0) {
     const mgr = await requireRole("manager", { requestId, resource: "commercial_orders" });
     if (!mgr.ok) {
       return fail(
@@ -126,6 +133,21 @@ export async function POST(req: NextRequest): Promise<Response> {
     podeIgnorar = entrada.ignorar_estoque || entrada.ignorar_credito;
     podeIgnorarPreco = entrada.ignorar_preco;
   }
+
+  // DECISÃO 3 (20/11/2026): override exige MOTIVO. Sem ele, o gerente exerceria
+  // poder invisível — a auditoria diria "alguém passou por cima" e mais nada.
+  // A recusa vem como 422 de campo, no mesmo formato das outras validações.
+  // O motivo é exigido para ESTOQUE e CRÉDITO (escopo da decisão 3). O
+  // `ignorar_preco` nasceu na E.3 com o próprio rastro de tabela e segue sem
+  // esta exigência — endurecê-lo aqui quebraria o fluxo já entregue.
+  const exigeMotivo = entrada.ignorar_estoque || entrada.ignorar_credito;
+  if (exigeMotivo && !motivoOverride) {
+    return fail("validation_failed", "Informe o motivo do override.", 422, {
+      requestId,
+      details: { motivo_override: ["Obrigatório quando um limite é ignorado."] },
+    });
+  }
+
 
   const supabase = await createClient();
   const resultado = await criarPedidoComercial(
@@ -180,6 +202,20 @@ export async function POST(req: NextRequest): Promise<Response> {
     resourceId: (resultado.pedido as { id: string }).id,
     requestId,
   });
+
+  // O RASTRO DO QUE FOI IGNORADO (decisão 3): quem, o quê e por quê. Só quando
+  // o pedido NASCEU agora — um retry idempotente não aplicou override nenhum.
+  if (ignorados.length > 0 && !resultado.ja_existia) {
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "commercial_order.override",
+      resourceType: "commercial_orders",
+      resourceId: (resultado.pedido as { id: string }).id,
+      requestId,
+      metadata: { ignorados, motivo: motivoOverride },
+    });
+  }
 
   return ok(
     {

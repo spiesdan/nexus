@@ -157,6 +157,15 @@ export const pedidoCreateSchema = z.object({
    */
   ignorar_credito: z.boolean().default(false),
   /**
+   * POR QUE o gerente está ignorando (decisão 3, 20/11/2026).
+   *
+   * Override sem motivo é poder invisível com outro nome: a auditoria
+   * registraria "alguém passou por cima", sem dizer por quê. Obrigatório
+   * quando `ignorar_estoque` ou `ignorar_credito` vier `true` (a rota cobra,
+   * com 422 de campo). O `ignorar_preco` tem fluxo próprio desde a E.3.
+   */
+  motivo_override: z.string().trim().max(500).optional(),
+  /**
    * Chave de idempotência da sincronização offline (0263).
    *
    * UUID gerado no dispositivo que capturou o pedido. Retry com a mesma chave
