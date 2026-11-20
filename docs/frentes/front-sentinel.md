@@ -665,3 +665,7 @@ constraint citada existe no baseline. Os dois **falham** com o select antigo
 
 **Prova a fazer após a 1.62.1:** rodada com `coletas_truncadas = []`,
 `leads_abertos` sem falha e `operacao.lead_duplicado` reafirmando as 5.
+
+Prova ponta a ponta no PostgREST local (v16, mesma versão do compose): o select
+novo devolve **200** com `crm_stages.name` e `contatos.name` preenchidos. Gate
+`pnpm test:db`: **184 arquivos / 2358 testes** verdes.
