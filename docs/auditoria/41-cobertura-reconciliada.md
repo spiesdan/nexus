@@ -223,6 +223,19 @@ base sumiu; duas telas entraram depois dela.
 | `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 
+## 2.3 Estado de erro fora de rota (3 arquivos)
+
+> **21/11/2026 — lacuna fechada.** `app/not-found.tsx`, `app/error.tsx` e
+> `app/global-error.tsx` existem desde sempre e **não apareciam nesta matriz**
+> (zero menções a 404): o E2E cobria a cópia do `/404`, não a superfície. Não
+> são `page.tsx`, então não entram nos totais da §1 — são arquivos de estado.
+
+| Arquivo | Estado | Evidência |
+|---|---|---|
+| `app/not-found.tsx` (404) | **medido no navegador · sem achado** — 4 combinações (claro/escuro × 1440/390): **0** textos abaixo do AA (4 avaliados), **0** overflow, **0** axe serious/critical. Renderiza o `StatusPage` da variante `nao-encontrada`. Rota inexistente **anônima** não chega aqui: o proxy manda para `/login?next=…` (307) — o 404 é para sessão, ou para `/404` direto | `capturas/medido-estado-erro-publico-auth/` (8 PNG + `medidas.json`) |
+| `app/error.tsx` | **medido · unit** — `SegmentError` (root) com título, ID do erro (`digest`) e os dois botões nomeados; “Tentar de novo” chama o `reset`. **Não** medido no navegador: exigiria inventar uma exceção, e não há rota de gatilho no produto | `tests/unit/segment-error-estado.test.tsx` |
+| `app/global-error.tsx` | **medido · unit** — fallback do layout raiz: título, ID e reset provados; cores **inline** de propósito (o layout que falhou é quem carrega o CSS), e por isso ele é **sempre claro** — decisão declarada, não esquecimento do tema | `tests/unit/segment-error-estado.test.tsx` |
+
 ## 3. Registry de navegação (78 rotas `/app`)
 
 > O registry é a fonte da sidebar. Nesta medição **as 78 rotas têm `page.tsx`**
