@@ -185,21 +185,22 @@ base sumiu; duas telas entraram depois dela.
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
-> **21/11/2026 — passe por PRIMITIVA (24 medidas · 1 pendente · 1 exceção).**
+> **21/11/2026 — passe por PRIMITIVA (25 medidas · 1 exceção).**
 > Medido em `next dev` nas duas pontas (antes/depois na mesma base): 64 medições
 > por lado, **0** textos abaixo do AA, **0** overflow, **0** axe serious. O
 > recorte por peça (§2.2.1) é o que pega divergência entre irmãs — uma tela que
 > ganha cartão e a outra não.
 >
-> **Uma linha não fecha por medição, e está dita:** `/login/mfa` redireciona
-> para `/login` sem sessão parcial (1º fator), então a captura mediu a tela de
-> login, não a de MFA. Fica `pendente · motivo medido` até haver login com MFA
-> interrompido antes do 2º fator. `/design` segue exceção declarada (§5).
+> **Todas as 25 fecham por medição.** `/login/mfa` era a exceção: sem sessão
+> parcial a rota redireciona para `/login`. Foi medida em 21/11 com o login
+> parado **antes do 2º fator** (admin do E2E, `tests/captura-mfa.ts`): h1
+> «Verificação em duas etapas» confirmado nas 4 combinações, 0 contraste abaixo
+> do AA, 0 overflow, 0 axe. `/design` segue exceção declarada (§5).
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
 | `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · 24 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/login/mfa` | público/auth | **pendente · motivo medido** | **medido e reprovado pela régua (21/11):** `urlFinal=/login`, h1 «Entrar» — a tela de MFA não renderiza sem sessão parcial (1º fator). Medir exige usuário com MFA e parar antes do 2º fator; até lá, **não é `aplicado`** | D |
+| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | 4 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Verificação em duas etapas» confirmado** com sessão parcial (login parado antes do 2º fator) · `capturas/medido-mfa-publico-auth/` | D |
 | `/login` | público/auth | **aplicado** (cartão da casca) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 (claro/escuro × 1440/390) · **h1 «Entrar» confirmado** (régua 21/11) | D |
 | `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Recuperar acesso» confirmado** (régua 21/11) | D |
 | `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · 20 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
@@ -234,7 +235,7 @@ base sumiu; duas telas entraram depois dela.
 
 | Primitiva | Onde é usada | Medição |
 |---|---|---|
-| **Cartão de acesso** — `Card` no layout de `(public)` | login, forgot, recovery, reset, **mfa***, signup | **5 de 6** medidas: 140 textos, 0 abaixo do AA, overflow 0, axe 0. \* mfa redireciona sem sessão parcial — pendente com motivo |
+| **Cartão de acesso** — `Card` no layout de `(public)` | login, forgot, recovery, reset, mfa, signup | **6 de 6** medidas: 156 textos, 0 abaixo do AA, overflow 0, axe 0 (mfa com sessão parcial) |
 | **Cartão de status** — `StatusPage` | 403, 500, 503, account-suspended e 404 (`not-found`) | **5 de 5**: 52 textos (16+12+12+12) nas 4 rotas + 16 no 404 (§2.3), 0 abaixo do AA |
 | **Documento legal** — `legal/layout` (medida de leitura `3xl`) | privacy, terms | **2 de 2**: 248 textos, 0 abaixo do AA, overflow 0 |
 | **Página pública** — `o/[token]` e os destinos de redirect | orçamento inválido, `/`, `vitrine-agenda` | **3 de 3**: estado inválido com 12 textos; `/` e `/vitrine` medidas como **redirect** (destino `/login?next=…`) |
@@ -253,7 +254,7 @@ deram `medida=ok` com o h1 esperado; **MFA deu `medida=NAO`** (`h1 «Entrar»`,
 `urlFinal=/login`) — a prova de que a linha antiga estava errada. As demais linhas
 mantêm a medição de 20/11, em que o `urlFinal` confirmou a rota certa.
 
-**Total de texto medido (4 combinações por rota):** 524 nas rotas de acesso/
+**Total de texto medido (4 combinações por rota):** 540 nas rotas de acesso/
 estado/legal/público + 1.380 no wizard. A soma inclui o que caiu em `/login` na
 medição do MFA — mas essa linha **não** é contada como MFA medido.
 

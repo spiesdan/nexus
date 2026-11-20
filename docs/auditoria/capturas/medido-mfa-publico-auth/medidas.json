@@ -1,0 +1,94 @@
+{
+  "base": "http://localhost:3315",
+  "rotulo": "medido",
+  "medidas": [
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login/mfa?factor=2e3fbb22-30a0-4e5c-8f42-197d9dca15b5",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Verificação em duas etapas",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login/mfa?factor=2e3fbb22-30a0-4e5c-8f42-197d9dca15b5",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Verificação em duas etapas",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login/mfa?factor=2e3fbb22-30a0-4e5c-8f42-197d9dca15b5",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Verificação em duas etapas",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login/mfa?factor=2e3fbb22-30a0-4e5c-8f42-197d9dca15b5",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Verificação em duas etapas",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    }
+  ]
+}
