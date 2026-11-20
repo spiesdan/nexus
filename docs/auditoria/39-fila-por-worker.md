@@ -159,3 +159,19 @@ regra permanente** — e processo pesado que aparecer durante a janela é morto.
 
 **Confirmado na `main`:** #619 (`2d395fc7`, erro único de anúncio) e #620 (ações
 do criador em “Mais opções”) entram com o CI fechado.
+
+
+## Regra permanente — congelar ANTES de cortar (20/11/2026)
+
+Três cortes ficaram defasados porque o merge entrou depois do disparo. O processo
+correto, agora escrito:
+
+1. **Congelar merges primeiro** — coordenador avisa os três workers, e ninguém
+   mergeia (nem o coordenador), só commita na branch.
+2. **Confirmar o congelamento** (nenhum merge em voo, fila de CI sem PR recém-aberto).
+3. **Só então** disparar o workflow de `release` do topo da `main`.
+4. Mergear o **PR de release** quando verde — é a única exceção ao congelamento.
+5. Depois da tag, **descongelar** e retomar a fila.
+
+Cortar antes de congelar produz release que persegue merge e obliga fechar PR de
+release (aconteceu com #639 e #664).

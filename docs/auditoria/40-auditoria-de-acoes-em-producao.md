@@ -184,6 +184,11 @@ executa.
    19560, NF 4634 + 4644) e **não** deve ser encerrada; a decisão é do
    dono/contador.
 
+**Publicada:** tag **`v1.61.1`** em **20/11/2026 ~04:00Z**, commit **`476c07f8`**
+(o PR de release #665 foi mergeado com 14 checks verdes). **Isto é tag, não
+deploy**: o deploy da 1.61.1 **aguarda autorização explícita do dono** — o
+coordenador não executa.
+
 **Rollback:** refixar 1.61.0 nas três imagens; schema aditivo.
 
 ## 12. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
