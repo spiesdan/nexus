@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.62.1] — 2026-11-20
+
+### Corrigido
+
+- **Sentinel volta a avaliar lead duplicado (embed de etapa com hint)** Na 1.62.0 o select de leads do Sentinel passou a trazer `crm_stages(name)` sem
+  hint de FK. Em instalação com duas relações entre `crm_leads` e `crm_stages`, o
+  PostgREST recusou o embed, a coleta `leads_abertos` inteira virou falha e
+  `operacao.lead_duplicado` deixou de ser avaliada — detector cego, sem encerrar
+  nada por engano. O select agora vive em `lib/sentinel/selects.ts` com
+  `crm_stages!crm_leads_stage_id_fkey(name)` e
+  `contatos:contacts!crm_leads_contact_id_fkey(...)`; o alias também faz a
+  evidência de contato chegar (antes caía no fallback de id). Testes simulam a
+  ambiguidade e provam que a coleta volta a devolver etapa e contato.
+
 ## [1.62.0] — 2026-11-20
 
 ### Adicionado
@@ -8529,7 +8543,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.1...HEAD
+[1.62.1]: https://github.com/spiesdan/nexus/compare/v1.62.0...v1.62.1
 [1.62.0]: https://github.com/spiesdan/nexus/compare/v1.61.1...v1.62.0
 [1.61.1]: https://github.com/spiesdan/nexus/compare/v1.61.0...v1.61.1
 [1.61.0]: https://github.com/spiesdan/nexus/compare/v1.60.0...v1.61.0
