@@ -206,7 +206,7 @@ describe("motor de detecção", () => {
         leadAberto({
           id: `lead-${i}`,
           contact_id: `contato-${i}`,
-          contatos: { phone_number: `+5511999${String(i).padStart(5, "0")}`, email_normalized: `p${i}@loja.test` },
+          contatos: { name: null, display_name: null, phone_number: `+5511999${String(i).padStart(5, "0")}`, email_normalized: `p${i}@loja.test` },
         }),
       ),
     });

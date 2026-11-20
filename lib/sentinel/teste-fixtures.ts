@@ -226,9 +226,16 @@ export function leadAberto(over: Partial<LeadAberto> = {}): LeadAberto {
   return {
     id: "lead-1",
     pipeline_id: "pipeline-1",
+    stage_id: "etapa-1",
     contact_id: "contato-1",
     created_at: ha(HORA),
-    contatos: { phone_number: "+5511999998888", email_normalized: "ana@loja.test" },
+    crm_stages: { name: "Novo" },
+    contatos: {
+      name: "Ana",
+      display_name: null,
+      phone_number: "+5511999998888",
+      email_normalized: "ana@loja.test",
+    },
     ...over,
   };
 }

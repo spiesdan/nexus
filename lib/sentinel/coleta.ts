@@ -251,7 +251,7 @@ export async function coletarSnapshot(
       admin
         .from("crm_leads")
         .select(
-          "id, pipeline_id, contact_id, created_at, contacts(phone_number, email_normalized)",
+          "id, pipeline_id, stage_id, contact_id, created_at, crm_stages(name), contacts(name, display_name, phone_number, email_normalized)",
         )
         .eq("organization_id", organizationId)
         .eq("status", "open")

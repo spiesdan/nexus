@@ -122,6 +122,51 @@ describe("detectores de operação — caso positivo e negativo", () => {
     ).toHaveLength(0);
   });
 
+  it("lead duplicado mostra o contato legível: nome → telefone → e-mail → id curto", () => {
+    const semNome = (over: Record<string, unknown>) =>
+      leadAberto({
+        contatos: {
+          name: null,
+          display_name: null,
+          phone_number: null,
+          email_normalized: null,
+          ...((over.contatos as Record<string, unknown> | undefined) ?? {}),
+        },
+        ...over,
+      });
+
+    const porTelefone = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          semNome({ id: "l1", contact_id: "c1", contatos: { name: null, display_name: null, phone_number: "+5511999998888", email_normalized: null } }),
+          semNome({ id: "l2", contact_id: "c2", contatos: { name: null, display_name: null, phone_number: "+55 11 99999-8888", email_normalized: null } }),
+        ],
+      }),
+    );
+    expect(primeiro(porTelefone).evidencia.identificacao_contato).toContain("8888");
+    expect(primeiro(porTelefone).titulo).toContain("8888");
+
+    const semTelefone = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          semNome({ id: "l3", contact_id: "c3", contatos: { name: null, display_name: null, phone_number: null, email_normalized: "ana@loja.test" } }),
+          semNome({ id: "l4", contact_id: "c4", contatos: { name: null, display_name: null, phone_number: null, email_normalized: "ana@loja.test" } }),
+        ],
+      }),
+    );
+    expect(primeiro(semTelefone).evidencia.identificacao_contato).toContain("loja.test");
+
+    const semNada = leadsDuplicados(
+      snapshot({
+        leadsAbertos: [
+          semNome({ id: "l5", contact_id: "contato-abcdef12" }),
+          semNome({ id: "l6", contact_id: "contato-abcdef12" }),
+        ],
+      }),
+    );
+    expect(primeiro(semNada).evidencia.identificacao_contato).toBe("contato contato-");
+  });
+
   it("lead duplicado por telefone/e-mail: contatos diferentes, evidência mascarada", () => {
     const porTelefone = leadsDuplicados(
       snapshot({
@@ -129,12 +174,12 @@ describe("detectores de operação — caso positivo e negativo", () => {
           leadAberto({
             id: "l1",
             contact_id: "c1",
-            contatos: { phone_number: "+5511999998888", email_normalized: null },
+            contatos: { name: null, display_name: null, phone_number: "+5511999998888", email_normalized: null },
           }),
           leadAberto({
             id: "l2",
             contact_id: "c2",
-            contatos: { phone_number: "+55 11 99999-8888", email_normalized: null },
+            contatos: { name: null, display_name: null, phone_number: "+55 11 99999-8888", email_normalized: null },
           }),
         ],
       }),
@@ -152,12 +197,12 @@ describe("detectores de operação — caso positivo e negativo", () => {
           leadAberto({
             id: "l1",
             contact_id: "c1",
-            contatos: { phone_number: null, email_normalized: "ana@loja.test" },
+            contatos: { name: null, display_name: null, phone_number: null, email_normalized: "ana@loja.test" },
           }),
           leadAberto({
             id: "l2",
             contact_id: "c2",
-            contatos: { phone_number: null, email_normalized: "ANA@loja.test" },
+            contatos: { name: null, display_name: null, phone_number: null, email_normalized: "ANA@loja.test" },
           }),
         ],
       }),

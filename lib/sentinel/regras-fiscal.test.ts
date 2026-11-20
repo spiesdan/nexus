@@ -143,6 +143,23 @@ describe("detectores fiscais — caso positivo e negativo", () => {
     const duasVendas = notasDuplicadasPorPedido(snapshot({ notas: [venda, { ...venda, id: "4635", numero: 4635 }] }));
     expect(duasVendas).toHaveLength(1);
     expect(primeiro(duasVendas).evidencia.finalidades).toEqual([1, 1]);
+    expect(primeiro(duasVendas).evidencia.naturezas).toEqual(["venda", "venda"]);
+    expect(primeiro(duasVendas).titulo).toContain("(2 vendas)");
+
+    // Venda + complementar (finalidade 2) abre e nomeia as naturezas.
+    const complementar = nota({
+      id: "4636",
+      order_id: pedido,
+      numero: 4636,
+      status: "autorizada",
+      extras_fiscais: { finalidade: "2", ref_nfe: "chave-4634" },
+    });
+    const comComplementar = notasDuplicadasPorPedido(
+      snapshot({ notas: [venda, complementar] }),
+    );
+    expect(comComplementar).toHaveLength(1);
+    expect(primeiro(comComplementar).titulo).toContain("(1 venda + 1 complementar)");
+    expect(primeiro(comComplementar).evidencia.naturezas).toEqual(["venda", "complementar"]);
 
     // Devolução ligada como pedido secundário (0294) também não conta.
     expect(

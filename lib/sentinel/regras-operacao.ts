@@ -6,7 +6,7 @@
  * pressupõe entidade que não existe (não há "expedição parada" sem carga
  * aberta, nem "sync VTEX" sem integração VTEX configurada).
  */
-import type { Achado, CampanhaProspeccao, Snapshot } from "./tipos";
+import type { Achado, CampanhaProspeccao, LeadAberto, Snapshot } from "./tipos";
 import {
   corta,
   DIA_MS,
@@ -572,6 +572,26 @@ export function clientesDuplicadosPorEmail(s: Snapshot): Achado[] {
  * conjunto de IDs e guarda a maior confiança. Lead sem contato fica de fora —
  * não há identidade para comparar e inventar uma seria pior.
  */
+/**
+ * Identificação LEGÍVEL do contato do lead. O UUID sozinho não diz de quem se
+ * trata — 10,2% dos contatos da org real não têm nome. Cascata: nome →
+ * telefone (mascarado, como na tela) → e-mail (mascarado) → id curto.
+ */
+function identificacaoDoContato(lead: LeadAberto): string {
+  const contato = lead.contatos;
+  const nome = contato?.name?.trim() || contato?.display_name?.trim();
+  if (nome) return nome;
+  if (contato?.phone_number) return mascararTelefone(contato.phone_number);
+  if (contato?.email_normalized) return mascararEmail(contato.email_normalized);
+  return lead.contact_id ? `contato ${lead.contact_id.slice(0, 8)}` : "contato sem cadastro";
+}
+
+function detalheDoLead(lead: LeadAberto | undefined): string {
+  if (!lead) return "lead fora do snapshot";
+  const etapa = lead.crm_stages?.name ?? (lead.stage_id ? `etapa ${lead.stage_id.slice(0, 8)}` : "sem etapa");
+  return `${identificacaoDoContato(lead)} · ${etapa} · ${lead.created_at}`;
+}
+
 export function leadsDuplicados(s: Snapshot): Achado[] {
   type Grupo = {
     pipeline: string;
@@ -632,8 +652,11 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
     }
   }
 
+  const leadPorId = new Map(s.leadsAbertos.map((lead) => [lead.id, lead]));
   return [...porAssinatura.entries()].map(([assinatura, grupo]) => {
     const ids = [...grupo.ids].sort();
+    const detalhes = ids.map((id) => detalheDoLead(leadPorId.get(id)));
+    const identificacao = detalhes[0]?.split(" · ")[0] ?? "contato sem identificação";
     const identidade =
       grupo.identidade === "contato"
         ? "mesmo contato"
@@ -645,9 +668,10 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
       categoria: "operacao" as const,
       entidadeTipo: "crm_leads",
       entidadeId: hashCurto(`leads:${grupo.pipeline}:${assinatura}`),
-      titulo: `${ids.length} leads abertos para o ${identidade}`,
+      titulo: `${ids.length} leads abertos para ${identificacao} (${identidade})`,
       resumo:
-        "Há mais de um card aberto para a mesma identidade no mesmo funil. O trabalho e o histórico ficam divididos.",
+        `Há mais de um card aberto para ${identificacao} no mesmo funil. ` +
+        "Veja etapa e data de criação de cada um para decidir qual manter.",
       causaProvavel:
         "Cadastro concorrente, captação repetida ou contato duplicado anterior à mescla.",
       severidade: "media" as const,
@@ -657,7 +681,9 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
         identidade: grupo.identidade,
         confianca: grupo.confianca,
         total: ids.length,
+        identificacao_contato: identificacao,
         leads: ids.slice(0, 20),
+        leads_detalhe: detalhes.slice(0, 20),
         ...(grupo.identidade === "telefone" && grupo.valor
           ? { telefone_mascarado: mascararTelefone(grupo.valor) }
           : {}),
