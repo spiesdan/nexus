@@ -361,3 +361,13 @@ corrigiu `/login/forgot` de 38×17 para **44×44** e manteve 5 telas `pendente`
 
 **Filas:** D `fiscal` → varredura de `app/app` → consertos por concentração;
 G o mesmo em `admin`; F fecha público/auth e depois apoia a varredura.
+
+## Regra de memória em varredura longa (21/11/2026)
+
+1. **Varredura longa = fatias de 10 rotas**, com o servidor **morto entre fatias**.
+   Nunca 99 rotas de uma vez (a medição escala em tempo, não em memória).
+2. **Swap > 4 GB é gatilho de parada**: abortar a fatia atual, salvar o parcial e
+   reportar — não é aviso. O D aplicou isso em 6,6 GB e evitou reinício.
+3. O coordenador checa `pgrep -f next-server` + `sysctl vm.swapusage` **a cada 8
+   min** e mata órfãos; cada worker enxerga só o próprio worktree, a máquina é
+   responsabilidade da coordenação.
