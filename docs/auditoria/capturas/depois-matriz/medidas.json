@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T04:14:18.952Z",
+  "gerado": "2026-11-20T10:43:30.859Z",
   "rotulo": "depois",
-  "rotas": 1,
+  "rotas": 13,
   "medidas": [
     {
       "rota": "/carteira",
@@ -1057,13 +1057,11 @@
       "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 2,
+        "seria": 1,
         "ids": [
-          "color-contrast (serious)",
           "label-content-name-mismatch (serious)"
         ],
         "nos": [
-          "color-contrast: .border-accent-600\\/40 :: <a aria-current=\"page\" class=\"shrink-0 rounded-full border px-3 py-1.5 text-sm whitespace-nowrap transition-colors border-accent-600/40 bg-accent-soft text-accent\" href=\"/app/fisca",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
@@ -4214,6 +4212,863 @@
       "overflow": 0,
       "h1": [
         "Webhooks"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal",
+      "url": "/app/fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "NF-e recebidas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .mb-3 > .text-accent.underline-offset-4.hover\\:underline :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/notas\">Ver todas</a>",
+          "color-contrast: .mt-3 :: <a class=\"mt-3 inline-block text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/sincronizacoes\">Histórico completo</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "url": "/app/fiscal/configuracoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Configurações fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/notas?aba=config\">Série, CFOP e endereço da emissão →</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "url": "/app/fiscal/eventos",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Cancelamentos e eventos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "url": "/app/fiscal/fornecedores",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Fornecedores das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "url": "/app/fiscal/manifestacoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Manifestação do destinatário"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "url": "/app/fiscal/pendentes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Pendentes de conferência"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=pendentes\">Ver relatório de pendências</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "url": "/app/fiscal/produtos",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Produtos das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=produtos\">Produtos mais comprados →</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "url": "/app/fiscal/relatorios",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Relatórios de entradas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "url": "/app/fiscal/resumos",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Resumos de notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "url": "/app/fiscal/sincronizacoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Histórico de sincronização"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/xml",
+      "url": "/app/fiscal/xml",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "XML recebidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal",
+      "url": "/app/fiscal",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "NF-e recebidas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "url": "/app/fiscal/configuracoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Configurações fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/notas?aba=config\">Série, CFOP e endereço da emissão →</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "url": "/app/fiscal/eventos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Cancelamentos e eventos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "url": "/app/fiscal/fornecedores",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Fornecedores das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "url": "/app/fiscal/manifestacoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Manifestação do destinatário"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "url": "/app/fiscal/pendentes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Pendentes de conferência"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=pendentes\">Ver relatório de pendências</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "url": "/app/fiscal/produtos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Produtos das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=produtos\">Produtos mais comprados →</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "url": "/app/fiscal/relatorios",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Relatórios de entradas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "url": "/app/fiscal/resumos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Resumos de notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "url": "/app/fiscal/sincronizacoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Histórico de sincronização"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/xml",
+      "url": "/app/fiscal/xml",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "XML recebidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal",
+      "url": "/app/fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "NF-e recebidas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "url": "/app/fiscal/configuracoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Configurações fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "url": "/app/fiscal/eventos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Cancelamentos e eventos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "url": "/app/fiscal/fornecedores",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Fornecedores das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "url": "/app/fiscal/manifestacoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Manifestação do destinatário"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "url": "/app/fiscal/pendentes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Pendentes de conferência"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "url": "/app/fiscal/produtos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Produtos das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "url": "/app/fiscal/relatorios",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Relatórios de entradas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "url": "/app/fiscal/resumos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Resumos de notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "url": "/app/fiscal/sincronizacoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Histórico de sincronização"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal/xml",
+      "url": "/app/fiscal/xml",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "XML recebidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/fiscal",
+      "url": "/app/fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "NF-e recebidas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "url": "/app/fiscal/configuracoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Configurações fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "url": "/app/fiscal/eventos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Cancelamentos e eventos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "url": "/app/fiscal/fornecedores",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Fornecedores das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "url": "/app/fiscal/manifestacoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Manifestação do destinatário"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "url": "/app/fiscal/pendentes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Pendentes de conferência"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "url": "/app/fiscal/produtos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Produtos das notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "url": "/app/fiscal/relatorios",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Relatórios de entradas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "url": "/app/fiscal/resumos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Resumos de notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "url": "/app/fiscal/sincronizacoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Histórico de sincronização"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/fiscal/xml",
+      "url": "/app/fiscal/xml",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "XML recebidos"
       ],
       "consoleErros": [],
       "axe": {

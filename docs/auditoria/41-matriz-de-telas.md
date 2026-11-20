@@ -91,23 +91,23 @@ escrito à mão).
 | 12 | `/tarefas` | — | — | — | pendente |
 | 13 | `/templates` | — | — | — | pendente |
 
-### 3. Fiscal — 13 telas, 2 medidas
+### 3. Fiscal — 13 telas, 13 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/fiscal` | — | — | — | pendente |
-| 2 | `/fiscal/configuracoes` | — | — | — | pendente |
-| 3 | `/fiscal/eventos` | — | — | — | pendente |
-| 4 | `/fiscal/fornecedores` | — | — | — | pendente |
-| 5 | `/fiscal/manifestacoes` | — | — | — | pendente |
-| 6 | `/fiscal/notas` | 0/0 px | 0/2 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | 404 na rota — verificar caminho — o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
-| 8 | `/fiscal/pendentes` | — | — | — | pendente |
-| 9 | `/fiscal/produtos` | — | — | — | pendente |
-| 10 | `/fiscal/relatorios` | — | — | — | pendente |
-| 11 | `/fiscal/resumos` | — | — | — | pendente |
-| 12 | `/fiscal/sincronizacoes` | — | — | — | pendente |
-| 13 | `/fiscal/xml` | — | — | — | pendente |
+| 1 | `/fiscal` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 2 | `/fiscal/configuracoes` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 3 | `/fiscal/eventos` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 4 | `/fiscal/fornecedores` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 5 | `/fiscal/manifestacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 6 | `/fiscal/notas` | 0/0 px | 0/1 | 0 | **pílula da aba ativa corrigida** (`text-accent` → `text-accent-ink`: 3,63:1 no claro); limpo nas outras medidas |
+| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | pulada: sem nota de exemplo no banco local — o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
+| 8 | `/fiscal/pendentes` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 9 | `/fiscal/produtos` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 10 | `/fiscal/relatorios` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 11 | `/fiscal/resumos` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
 
 ### 4. Expedição — 7 telas, 0 medidas
 
