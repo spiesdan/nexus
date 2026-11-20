@@ -45,7 +45,7 @@ export const FATIA_DE_IDS = 100;
 export async function porFatias<T>(
   ids: string[],
   aplicar: (fatia: string[]) => Promise<{ linhas: T[]; erro?: unknown }>,
-): Promise<{ linhas: T[]; falhas: number }> {
+): Promise<{ linhas: T[]; falhas: number; primeiroErro?: unknown }> {
   if (ids.length === 0) return { linhas: [], falhas: 0 };
 
   const fatias: string[][] = [];
@@ -57,9 +57,16 @@ export async function porFatias<T>(
 
   const linhas: T[] = [];
   let falhas = 0;
+  let primeiroErro: unknown;
   for (const r of respostas) {
-    if (r.erro) falhas++;
+    if (r.erro) {
+      falhas++;
+      // O PRIMEIRO erro na ordem das fatias, não o último: quem lança a partir
+      // do helper precisa da mensagem original (ex.: "URI too long") para o log
+      // dizer o que aconteceu — "falhou em bloco" não ajuda ninguém.
+      if (primeiroErro === undefined) primeiroErro = r.erro;
+    }
     linhas.push(...r.linhas);
   }
-  return { linhas, falhas };
+  return { linhas, falhas, primeiroErro };
 }
