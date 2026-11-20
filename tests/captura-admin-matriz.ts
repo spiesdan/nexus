@@ -134,8 +134,9 @@ const MEDIR_CONTRASTE = `
 function lerEnvLocal(): Record<string, string> {
   const env: Record<string, string> = {};
   for (const linha of readFileSync(path.join(process.cwd(), ".env.local"), "utf8").split("\n")) {
-    const m = /^([A-Z0-9_]+)=(.*)$/.exec(linha.trim());
-    if (m) env[m[1]] = m[2].replace(/^"|"$/g, "");
+    const [, chave, valor] = /^([A-Z0-9_]+)=(.*)$/.exec(linha.trim()) ?? [];
+    if (!chave) continue;
+    env[chave] = (valor ?? "").replace(/^"|"$/g, "");
   }
   return env;
 }
@@ -145,11 +146,13 @@ async function cookiesDeSessao(): Promise<Array<{ name: string; value: string }>
   if (!email) throw new Error(".e2e-creds.json sem users.dono");
 
   const envLocal = lerEnvLocal();
+  const url = envLocal.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const anon = envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  if (!url || !anon) {
+    throw new Error(".env.local sem NEXT_PUBLIC_SUPABASE_URL/ANON_KEY");
+  }
   const escritos: Array<{ name: string; value: string }> = [];
-  const supabase = createServerClient(
-    envLocal.NEXT_PUBLIC_SUPABASE_URL,
-    envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
+  const supabase = createServerClient(url, anon, {
       cookies: {
         getAll: () => [],
         setAll: (lista) => {
