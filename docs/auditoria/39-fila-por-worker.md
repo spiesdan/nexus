@@ -371,3 +371,11 @@ G o mesmo em `admin`; F fecha público/auth e depois apoia a varredura.
 3. O coordenador checa `pgrep -f next-server` + `sysctl vm.swapusage` **a cada 8
    min** e mata órfãos; cada worker enxerga só o próprio worktree, a máquina é
    responsabilidade da coordenação.
+
+## Régua — conforme não se redesigna (21/11/2026)
+
+O F mediu `/403`, `/404` e `/500` e registrou **conformes, sem mudança**: a régua
+nova vale para todos. **Se a varredura passou, a linha ganha o veredito e evidência;
+não se cria trabalho de redesign para parecer produtivo.** Só muda o que falhou:
+`/account-suspended` tinha logout por **GET** (agora POST) e link de contato
+139×17 → 147×44. Antídoto para “redesign por obrigação”.
