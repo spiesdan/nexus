@@ -500,3 +500,21 @@ amostras) e agora com a matriz.
 **Correção (D):** a varredura não grava resultado vazio; recálculo; dinâmicas
 voltam a `pendente`; investigar as 3 sem `h1`; consertar o cabeçalho. **#726
 bloqueado** até o número bater.
+## 25. 21/11/2026 — Varredura corrigida: 368 → 341 válidas, e o que ficou de fora tem motivo
+
+Depois da correção do D, o artefato da matriz passou a dizer a verdade:
+
+```
+rotas: 92 · medidas: 368 · válidas: 341 · inválidas: 27 (com motivo)
+overflow/axe: nulos nas inválidas
+```
+
+**O que mudou:** a varredura passou a distinguir **“medido com zero problemas”** de
+**“não medido”**. As **24 entradas de rotas dinâmicas sem id** e as **3 falhas de
+instrumento** saíram do placar (368 → 341); antes, contavam como cobertura.
+
+**Duas práticas que passam a valer para D e G:**
+1. **Esperar o `h1` com timeout** antes de declarar falha de primeiro paint — mesma
+   lição do esqueleto do estoque: ausência observada cedo demais não é ausência.
+2. **Redirect não é tela**: `/titulos → /financeiro` entra como `redirect`, medido no
+   **destino**.
