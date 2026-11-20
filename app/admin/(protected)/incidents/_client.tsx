@@ -65,7 +65,7 @@ export function IncidentsClient() {
             setFilters((f) => ({ ...f, status: v as IncidentStatus }))
           }
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="min-h-10 w-[160px]" aria-label={t("Filtrar por status")}>
             <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
@@ -86,7 +86,7 @@ export function IncidentsClient() {
             }))
           }
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="min-h-10 w-[160px]" aria-label={t("Filtrar por severidade")}>
             <SelectValue placeholder={t("Severidade")} />
           </SelectTrigger>
           <SelectContent>

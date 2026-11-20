@@ -66,7 +66,7 @@ export function IncidentDetailClient({ id }: IncidentDetailClientProps) {
       <div>
         <Link
           href="/admin/incidents"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="-ml-2 inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <CaretLeft size={14} aria-hidden />
           {t("Incidentes")}
@@ -112,7 +112,12 @@ export function IncidentDetailClient({ id }: IncidentDetailClientProps) {
             <CardTitle className="text-sm font-medium">Payload</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="overflow-auto rounded-lg bg-muted p-4 text-xs leading-relaxed max-h-80">
+            <pre
+              role="region"
+              aria-label={t("Payload do incidente")}
+              tabIndex={0}
+              className="overflow-auto rounded-lg bg-muted p-4 text-xs leading-relaxed max-h-80"
+            >
               {JSON.stringify(incident.payload, null, 2)}
             </pre>
           </CardContent>
@@ -129,7 +134,12 @@ export function IncidentDetailClient({ id }: IncidentDetailClientProps) {
                 {t("Nenhuma entrada de auditoria encontrada.")}
               </p>
             ) : (
-              <div className="space-y-3 max-h-80 overflow-auto pr-1">
+              <div
+                role="region"
+                aria-label={t("Auditoria do incidente")}
+                tabIndex={0}
+                className="space-y-3 max-h-80 overflow-auto pr-1"
+              >
                 {incident.audit_trail.map((entry) => (
                   <div
                     key={entry.id}
