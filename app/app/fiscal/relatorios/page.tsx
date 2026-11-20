@@ -96,15 +96,16 @@ export default async function RelatoriosPage({
       .lte("fiscal_entradas.dh_emi", `${ate}T23:59:59.999Z`)
       .limit(20_000);
     produtos = produtosMaisComprados(
-      ((itensRaw ?? []) as unknown as (LinhaDeItem & {
-        fiscal_entradas: { situacao_fiscal: string } | { situacao_fiscal: string }[];
-      })[])
-        .filter((item) => {
-          const e = Array.isArray(item.fiscal_entradas)
-            ? item.fiscal_entradas[0]
-            : item.fiscal_entradas;
-          return e?.situacao_fiscal !== "cancelada" && e?.situacao_fiscal !== "denegada";
-        }),
+      (
+        (itensRaw ?? []) as unknown as (LinhaDeItem & {
+          fiscal_entradas: { situacao_fiscal: string } | { situacao_fiscal: string }[];
+        })[]
+      ).filter((item) => {
+        const e = Array.isArray(item.fiscal_entradas)
+          ? item.fiscal_entradas[0]
+          : item.fiscal_entradas;
+        return e?.situacao_fiscal !== "cancelada" && e?.situacao_fiscal !== "denegada";
+      }),
     );
   }
 
@@ -188,7 +189,9 @@ export default async function RelatoriosPage({
             aria-current={tipo === t.id ? "page" : undefined}
             className={
               tipo === t.id
-                ? "rounded-full border border-accent-600/40 bg-accent-soft px-3 py-1.5 text-sm text-accent"
+                ? // `-ink`: a pílula ativa é `accent-soft`, e o accent puro sobre
+                  // ela reprova AA no claro (a mesma classe do V-54).
+                  "rounded-full border border-accent-600/40 bg-accent-soft px-3 py-1.5 text-sm text-accent-ink"
                 : "rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-muted hover:bg-surface-elevated"
             }
           >
@@ -341,10 +344,7 @@ export default async function RelatoriosPage({
                       {comoMoeda(p.valor_total_cents, "BRL")}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {comoMoeda(
-                        p.icms_cents + p.ipi_cents + p.pis_cents + p.cofins_cents,
-                        "BRL",
-                      )}
+                      {comoMoeda(p.icms_cents + p.ipi_cents + p.pis_cents + p.cofins_cents, "BRL")}
                     </TableCell>
                   </TableRow>
                 ))

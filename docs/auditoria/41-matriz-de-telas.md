@@ -56,42 +56,42 @@ escrito à mão).
 
 <!-- MATRIZ:INICIO -->
 
-### 1. Pedidos e vendas — 12 telas, 0 medidas
+### 1. Pedidos e vendas — 12 telas, 12 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/carteira` | — | — | — | pendente |
-| 2 | `/comissoes` | — | — | — | pendente |
-| 3 | `/compras` | — | — | — | pendente |
-| 4 | `/compras/[id]` · dinâmica | — | — | — | pendente |
-| 5 | `/estoque` | — | — | — | pendente |
-| 6 | `/faturamento` | — | — | — | pendente |
-| 7 | `/notas` | — | — | — | pendente |
-| 8 | `/pedidos` | — | — | — | pendente |
-| 9 | `/pedidos/[id]` · dinâmica | — | — | — | pendente |
-| 10 | `/pedidos/imprimir` | — | — | — | pendente |
-| 11 | `/pedidos/novo` | — | — | — | pendente |
+| 1 | `/carteira` | 0/0 px | 0/1 | 0 | sem passe; 1 contraste (link em card, só no claro) |
+| 2 | `/comissoes` | 0/0 px | 0/1 | 0 | **corrigido**: Select "Vendedor" sem nome acessível (`button-name` crítico) → `aria-label`; contraste de link no claro segue |
+| 3 | `/compras` | 0/0 px | 0/1 | 0 | sem passe; limpo |
+| 4 | `/compras/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sem passe; `scrollable-region-focusable` (sério) na caixa da tabela → `tabIndex` no `Table` |
+| 5 | `/estoque` | 0/0 px | 0/1 | 0 | sem passe; limpo |
+| 6 | `/faturamento` | 0/0 px | 0/1 | 0 | sem passe; 1 contraste (link em card, só no claro) |
+| 7 | `/notas` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 8 | `/pedidos` | 0/0 px | 0/1 | 0 | passe #620: hierarquia da lista; overflow 0 nas 4 combinações |
+| 9 | `/pedidos/[id]` · dinâmica | 0/0 px | 0/1 | 0 | passe #620: h1 12→499px, ações no "Mais opções"; `scrollable-region-focusable` corrigido no `Table` |
+| 10 | `/pedidos/imprimir` | 0/0 px | 0/1 | 0 | sem passe; limpo |
+| 11 | `/pedidos/novo` | 0/0 px | 0/1 | 0 | sem passe (docs 43/44); limpo |
 | 12 | `/titulos` | — (redirect) | — | — | **é redirect** para `/financeiro` (medido lá): Select "Situação" sem nome acessível corrigido → `/financeiro` |
 
-### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 3 medidas
+### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 2 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/agenda` | 0/0 px | 0/2 | **1** | **corrigido**: `aria-valid-attr-value` (crítico) do `Tabs` sem painel → grupo com `aria-pressed`; botões de pessoa sem `label-content-name-mismatch`. **Pendente medido**: contraste dos chips do grid (11px sobre `fundoDaTrilha`) e 422 de `horarios-livres` (a grade se declara bloqueada; falta disponibilidade na org de teste) |
+| 1 | `/agenda` | — | — | — | pendente |
 | 2 | `/busca` | — | — | — | pendente |
-| 3 | `/campanhas` | 0/0 px | 0/1 | 0 | **corrigido no ambiente**: 500 era `prospecting_campaigns.nome_manual` ausente no Supabase LOCAL (migração 0318 não aplicada); `baseline.sql` já tinha a coluna → instalação nova não tem o defeito. 0 erro de console depois |
-| 4 | `/contacts` | — | — | — | pendente |
-| 5 | `/contacts/[id]` · dinâmica | — | — | — | pendente |
+| 3 | `/campanhas` | — | — | — | pendente |
+| 4 | `/contacts` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o shell) |
+| 5 | `/contacts/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o shell) |
 | 6 | `/inbox` | — | — | — | pendente |
 | 7 | `/inbox/[id]` · dinâmica | — | — | — | pendente |
 | 8 | `/kanban` | — | — | — | pendente |
 | 9 | `/leads/[id]` · dinâmica | — | — | — | pendente |
 | 10 | `/meu-dia` | — | — | — | pendente |
 | 11 | `/pipelines/[id]` · dinâmica | — | — | — | pendente |
-| 12 | `/tarefas` | 0/0 px | 0/1 | 0 | **corrigido**: `aria-required-children` (crítico) — `role="tablist"` com botões comuns → grupo + `aria-pressed` |
+| 12 | `/tarefas` | — | — | — | pendente |
 | 13 | `/templates` | — | — | — | pendente |
 
-### 3. Fiscal — 13 telas, 0 medidas
+### 3. Fiscal — 13 telas, 2 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
@@ -100,8 +100,8 @@ escrito à mão).
 | 3 | `/fiscal/eventos` | — | — | — | pendente |
 | 4 | `/fiscal/fornecedores` | — | — | — | pendente |
 | 5 | `/fiscal/manifestacoes` | — | — | — | pendente |
-| 6 | `/fiscal/notas` | — | — | — | pendente |
-| 7 | `/fiscal/notas/[id]` · dinâmica | — | — | — | pendente |
+| 6 | `/fiscal/notas` | 0/0 px | 0/2 | 0 | **corrigido**: pílula de aba ativa com `text-accent` sobre `accent-soft` (3,63:1 no claro) → `text-accent-ink`; mesmo defeito em `/fiscal/relatorios` |
+| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | pulada: sem nota de exemplo no banco local — o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
 | 8 | `/fiscal/pendentes` | — | — | — | pendente |
 | 9 | `/fiscal/produtos` | — | — | — | pendente |
 | 10 | `/fiscal/relatorios` | — | — | — | pendente |

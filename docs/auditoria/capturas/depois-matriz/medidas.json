@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T01:34:29.853Z",
+  "gerado": "2026-11-20T03:48:55.775Z",
   "rotulo": "depois",
-  "rotas": 12,
+  "rotas": 5,
   "medidas": [
     {
       "rota": "/carteira",
@@ -1000,6 +1000,320 @@
         ]
       },
       "captura": "titulos_dark_390.png"
+    },
+    {
+      "rota": "/contacts",
+      "url": "/app/contacts",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "contacts_light_1440.png"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "url": "/app/contacts/70fd026e-6759-4aa1-a55d-4ff2d8b65f4b",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Padaria E2E Entrega"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "contacts_id_light_1440.png"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "url": "/app/fiscal/notas",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Todas as notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .border-accent-600\\/40 :: <a aria-current=\"page\" class=\"shrink-0 rounded-full border px-3 py-1.5 text-sm whitespace-nowrap transition-colors border-accent-600/40 bg-accent-soft text-accent\" href=\"/app/fisca",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "fiscal_notas_light_1440.png"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "url": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_id_light_1440.png"
+    },
+    {
+      "rota": "/contacts",
+      "url": "/app/contacts",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "contacts_light_390.png"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "url": "/app/contacts/70fd026e-6759-4aa1-a55d-4ff2d8b65f4b",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Padaria E2E Entrega"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "contacts_id_light_390.png"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "url": "/app/fiscal/notas",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Todas as notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_light_390.png"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "url": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_id_light_390.png"
+    },
+    {
+      "rota": "/contacts",
+      "url": "/app/contacts",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "contacts_dark_1440.png"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "url": "/app/contacts/70fd026e-6759-4aa1-a55d-4ff2d8b65f4b",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Padaria E2E Entrega"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "contacts_id_dark_1440.png"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "url": "/app/fiscal/notas",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Todas as notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "fiscal_notas_dark_1440.png"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "url": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_id_dark_1440.png"
+    },
+    {
+      "rota": "/contacts",
+      "url": "/app/contacts",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Clientes"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "contacts_dark_390.png"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "url": "/app/contacts/70fd026e-6759-4aa1-a55d-4ff2d8b65f4b",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Padaria E2E Entrega"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "contacts_id_dark_390.png"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "url": "/app/fiscal/notas",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Todas as notas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_dark_390.png"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "url": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "fiscal_notas_id_dark_390.png"
     }
   ]
 }

@@ -59,7 +59,7 @@
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/pedidos",
@@ -123,14 +123,14 @@
       "grupo": "atendimento",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o shell)"
     },
     {
       "rota": "/contacts/[id]",
       "grupo": "atendimento",
       "dinamica": true,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o shell)"
     },
     {
       "rota": "/inbox",
@@ -228,14 +228,15 @@
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "**corrigido**: pílula de aba ativa com `text-accent` sobre `accent-soft` (3,63:1 no claro) → `text-accent-ink`; mesmo defeito em `/fiscal/relatorios`"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "pulada: sem nota de exemplo no banco local",
+      "pular": "o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
     },
     {
       "rota": "/fiscal/pendentes",
