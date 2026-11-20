@@ -684,6 +684,9 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
         identificacao_contato: identificacao,
         leads: ids.slice(0, 20),
         leads_detalhe: detalhes.slice(0, 20),
+        // Link navegável por lead: o painel identifica e leva a pessoa até cada
+        // ficha. Nada é mesclado automaticamente — a decisão é humana.
+        leads_links: ids.slice(0, 20).map((id) => `/app/leads/${id}`),
         ...(grupo.identidade === "telefone" && grupo.valor
           ? { telefone_mascarado: mascararTelefone(grupo.valor) }
           : {}),

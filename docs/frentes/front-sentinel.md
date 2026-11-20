@@ -523,6 +523,22 @@ regra exige decidir o que é referência válida (chave da original, série/núm
 ou vínculo explícito); fica registrada como próxima fatia, sem inventar
 critério.
 
+### v1.12 — lead duplicado: identificar e linkar, nunca mesclar
+
+Decisão de 20/11 (`docs/business-rules/pendencias-do-sentinel.md` §2): as 5
+ocorrências medidas são reais (mesmo contato, dois leads abertos), mas mesclar
+funil é operação comercial — perde histórico e muda dono.
+
+- A evidência de `operacao.lead_duplicado` ganhou `leads_links`
+  (`/app/leads/<id>`), na mesma ordem de `leads_detalhe`
+  (`nome → telefone → e-mail → id curto · etapa · criado_em`).
+- A tela renderiza qualquer string de evidência que comece em `/app/` como link;
+  para uma lista, “abrir 1”, “abrir 2”… A pessoa decide, em dois cliques.
+- **Nenhum merge automático**, nenhum dado tocado. Reversão: remover os links.
+
+**Prova:** `regras-operacao.test.ts` — `leads_links` com o caminho de cada lead,
+na mesma ordem da evidência legível.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 

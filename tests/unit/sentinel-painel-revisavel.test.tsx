@@ -359,4 +359,32 @@ describe("Sentinel — painel revisável", () => {
     expect(within(dialogo).queryByRole("button", { name: "Ignorar" })).not.toBeInTheDocument();
     expect(within(dialogo).queryByRole("button", { name: "Encerrar" })).not.toBeInTheDocument();
   });
+
+  it("lead duplicado: a evidência linka CADA lead e não oferece mesclar", async () => {
+    const duplicado = ocorrencia({
+      id: "oc-duplicado",
+      regra: "operacao.lead_duplicado",
+      titulo: "2 leads abertos para o mesmo contato",
+      evidencia: {
+        identificacao_contato: "Ana · 8888 · ana@loja.test",
+        leads_detalhe: ["Ana · etapa novo · 19/11", "Ana · etapa contato · 19/11"],
+        leads_links: ["/app/leads/l1", "/app/leads/l2"],
+      },
+      href: "/app/leads/l1",
+    });
+
+    renderizar({ ocorrencias: [duplicado] });
+    const dialogo = await abrirDetalheDe(duplicado);
+
+    expect(within(dialogo).getByRole("link", { name: /abrir 1/ })).toHaveAttribute(
+      "href",
+      "/app/leads/l1",
+    );
+    expect(within(dialogo).getByRole("link", { name: /abrir 2/ })).toHaveAttribute(
+      "href",
+      "/app/leads/l2",
+    );
+    // A decisão é humana: a tela identifica e leva, não mescla.
+    expect(within(dialogo).queryByRole("button", { name: /mesclar/i })).not.toBeInTheDocument();
+  });
 });

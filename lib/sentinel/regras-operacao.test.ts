@@ -145,6 +145,11 @@ describe("detectores de operação — caso positivo e negativo", () => {
     );
     expect(primeiro(porTelefone).evidencia.identificacao_contato).toContain("8888");
     expect(primeiro(porTelefone).titulo).toContain("8888");
+    // A evidência leva o link de CADA lead, na mesma ordem de `leads_detalhe`.
+    expect(primeiro(porTelefone).evidencia.leads_links).toEqual([
+      "/app/leads/l1",
+      "/app/leads/l2",
+    ]);
 
     const semTelefone = leadsDuplicados(
       snapshot({
