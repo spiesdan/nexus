@@ -167,7 +167,10 @@ export default async function NotasPage({
   }
   const faturadosComDestinatario = faturadosLista.map((p) => ({
     ...p,
-    destinatario: montarDestinatario(p, p.contact_id ? (contatosPorId.get(p.contact_id) ?? null) : null),
+    destinatario: montarDestinatario(
+      p,
+      p.contact_id ? (contatosPorId.get(p.contact_id) ?? null) : null,
+    ),
   }));
 
   // Pessoa da grade (Odivix): nome do cliente via pedido de origem. Pedidos
@@ -220,10 +223,14 @@ export default async function NotasPage({
 
   const textos = {
     titulo: t("Notas fiscais"),
-    subtitulo: t("Emita a partir do pedido aprovado, concluído, faturado ou expedido e acompanhe o status."),
+    subtitulo: t(
+      "Emita a partir do pedido aprovado, concluído, faturado ou expedido e acompanhe o status.",
+    ),
     abas: t("Abas das notas fiscais"),
     emitir: t("Emitir nota"),
-    subtituloEmitir: t("Gerar a NF-e a partir do pedido que já foi aprovado, concluído, faturado, expedido ou entregue."),
+    subtituloEmitir: t(
+      "Gerar a NF-e a partir do pedido que já foi aprovado, concluído, faturado, expedido ou entregue.",
+    ),
     escolherPedido: t("Pedido aprovado, concluído, faturado ou expedido"),
     selecione: t("Selecione…"),
     notas: t("Notas"),
@@ -264,6 +271,12 @@ export default async function NotasPage({
     certSenha: t("Senha do certificado"),
     certSenhaVazia: t("Vazio = mantém a atual"),
     total: t("Total"),
+    // A natureza vem de `extras_fiscais.finalidade` (1/2/3/4) e é o que separa
+    // venda de devolução no selo e na soma.
+    venda: t("Venda"),
+    devolucao: t("Devolução"),
+    incluiDevolucao: t("inclui devolução"),
+    devolveA: t("devolve a NF"),
     valor: t("Valor"),
     autorizadas: t("Autorizadas"),
     pendentes: t("Pendentes"),
@@ -481,7 +494,9 @@ export default async function NotasPage({
                 {aguardandoNota}
               </Link>
             ) : (
-              <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">{aguardandoNota}</span>
+              <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
+                {aguardandoNota}
+              </span>
             )}
             <span className="min-w-0 truncate text-[11px] text-muted-foreground">
               {aguardandoNota === 1 ? t("pedido aguardando nota") : t("pedidos aguardando nota")}
@@ -492,7 +507,9 @@ export default async function NotasPage({
           <p className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {t("Autorizadas")}
           </p>
-          <p className="mt-0.5 text-2xl font-semibold text-success-fg tabular-nums">{autorizadas}</p>
+          <p className="mt-0.5 text-2xl font-semibold text-success-fg tabular-nums">
+            {autorizadas}
+          </p>
           <p className="mt-1 text-[11px] text-text-subtle">{t("com protocolo da SEFAZ")}</p>
         </div>
         <div className="border-r border-border px-3.5 py-3">
@@ -550,7 +567,10 @@ export default async function NotasPage({
           rotulos={rotuloAba}
           ariaLabel={textos.abas}
         />
-        <TabsList aria-label={textos.abas} className="hidden w-full justify-start overflow-x-auto md:inline-flex">
+        <TabsList
+          aria-label={textos.abas}
+          className="hidden w-full justify-start overflow-x-auto md:inline-flex"
+        >
           {abasVisiveis.map((a) => (
             <TabsTrigger key={a} value={a}>
               {rotuloAba[a]}

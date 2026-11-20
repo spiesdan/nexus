@@ -44,6 +44,10 @@ export interface Textos {
   certSenha: string;
   certSenhaVazia: string;
   total: string;
+  venda: string;
+  devolucao: string;
+  incluiDevolucao: string;
+  devolveA: string;
   valor: string;
   autorizadas: string;
   pendentes: string;

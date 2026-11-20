@@ -112,7 +112,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/lgpd/requests` | lgpd | **pendente** | — | D |
 | `/app/metrics` | metrics | **pendente** | — | D |
 | `/app/meu-dia` | meu-dia | **pendente** | — | D |
-| `/app/notas` | notas | **pendente** | — | D |
+| `/app/notas` | notas | **aplicado** | #655 · `51-notas-natureza.md` · `capturas/{antes,depois}-notas/` | D |
 | `/app` | público | **pendente** | — | D |
 | `/app/pedidos/[id]` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha · `capturas/{antes,depois}-pedidos/` | D |
 | `/app/pedidos/imprimir` | pedidos | **fora de escopo** | documento de impressão — layout de papel, não superfície de operação | D |
@@ -260,7 +260,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/laboratorio` | sim | pendente | — |
 | `/app/venda-automatica` | sim | pendente | — |
 | `/app/fiscal` | sim | pendente | — |
-| `/app/notas` | sim | pendente | — |
+| `/app/notas` | sim | aplicado | #655 · `51-notas-natureza.md` |
 | `/app/fiscal/notas` | sim | pendente | — |
 | `/app/fiscal/pendentes` | sim | pendente | — |
 | `/app/fiscal/xml` | sim | pendente | — |
