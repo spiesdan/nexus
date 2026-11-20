@@ -482,3 +482,5 @@ de toque em repouso.
 
 As demais telas seguem `pendente` para auditoria de **conteúdo** — a casca já
 entrega 44 px em todas. `/admin/audit` ainda tinha 72 no total (conteúdo próprio).
+
+Entregue no **PR #686** (`admin/fila-22`), com `48-admin-dashboard-design.md`.
