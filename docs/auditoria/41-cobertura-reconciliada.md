@@ -160,59 +160,59 @@ base sumiu; duas telas entraram depois dela.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/admin/audit/[entryId]` | admin | **pendente** | — | D |
-| `/admin/audit` | admin | **pendente** | — | D |
-| `/admin/dashboard` | admin | **pendente** | — | D |
-| `/admin/google` | admin | **pendente** | — | D |
-| `/admin/inbox/[conversationId]` | admin | **pendente** | — | D |
-| `/admin/inbox` | admin | **pendente** | — | D |
-| `/admin/incidents/[id]` | admin | **pendente** | — | D |
-| `/admin/incidents` | admin | **pendente** | — | D |
-| `/admin/lgpd` | admin | **pendente** | — | D |
-| `/admin/lgpd/requests/[id]` | admin | **pendente** | — | D |
-| `/admin/marca` | admin | **pendente** | — | D |
-| `/admin/observabilidade` | admin | **pendente** | — | D |
-| `/admin` | admin | **pendente** | — | D |
-| `/admin/platform-admins` | admin | **pendente** | — | D |
-| `/admin/tenants/[id]/health` | admin | **pendente** | — | D |
-| `/admin/tenants/[id]` | admin | **pendente** | — | D |
-| `/admin/tenants/new` | admin | **pendente** | — | D |
-| `/admin/tenants` | admin | **pendente** | — | D |
-| `/admin/usage` | admin | **pendente** | — | D |
-| `/admin/users/[id]` | admin | **pendente** | — | D |
-| `/admin/users` | admin | **pendente** | — | D |
-| `/admin/forbidden` | admin | **pendente** | — | D |
+| `/admin/audit/[entryId]` | admin | **pendente** | — | — |
+| `/admin/audit` | admin | **pendente** | — | — |
+| `/admin/dashboard` | admin | **pendente** | — | — |
+| `/admin/google` | admin | **pendente** | — | — |
+| `/admin/inbox/[conversationId]` | admin | **pendente** | — | — |
+| `/admin/inbox` | admin | **pendente** | — | — |
+| `/admin/incidents/[id]` | admin | **pendente** | — | — |
+| `/admin/incidents` | admin | **pendente** | — | — |
+| `/admin/lgpd` | admin | **pendente** | — | — |
+| `/admin/lgpd/requests/[id]` | admin | **pendente** | — | — |
+| `/admin/marca` | admin | **pendente** | — | — |
+| `/admin/observabilidade` | admin | **pendente** | — | — |
+| `/admin` | admin | **pendente** | — | — |
+| `/admin/platform-admins` | admin | **pendente** | — | — |
+| `/admin/tenants/[id]/health` | admin | **pendente** | — | — |
+| `/admin/tenants/[id]` | admin | **pendente** | — | — |
+| `/admin/tenants/new` | admin | **pendente** | — | — |
+| `/admin/tenants` | admin | **pendente** | — | — |
+| `/admin/usage` | admin | **pendente** | — | — |
+| `/admin/users/[id]` | admin | **pendente** | — | — |
+| `/admin/users` | admin | **pendente** | — | — |
+| `/admin/forbidden` | admin | **pendente** | — | — |
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/login/forgot` | público/auth | **pendente** | — | D |
-| `/login/mfa` | público/auth | **pendente** | — | D |
-| `/login` | público/auth | **pendente** | — | D |
-| `/login/recovery` | público/auth | **pendente** | — | D |
-| `/login/reset` | público/auth | **pendente** | — | D |
-| `/signup` | público/auth | **pendente** | — | D |
-| `/403` | estado/erro | **pendente** | — | D |
-| `/500` | estado/erro | **pendente** | — | D |
-| `/503` | estado/erro | **pendente** | — | D |
-| `/account-suspended` | estado/erro | **pendente** | — | D |
-| `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | D |
-| `/legal/privacy` | público/legal | **pendente** | — | D |
-| `/legal/terms` | público/legal | **pendente** | — | D |
-| `/o/[token]` | público/orçamento | **pendente** | — | D |
-| `/onboarding/connect-nuvemshop` | onboarding | **pendente** | — | D |
-| `/onboarding/connect-whatsapp` | onboarding | **pendente** | — | D |
-| `/onboarding/done` | onboarding | **pendente** | — | D |
-| `/onboarding/funil` | onboarding | **pendente** | — | D |
-| `/onboarding/invite-team` | onboarding | **pendente** | — | D |
-| `/onboarding` | onboarding | **pendente** | — | D |
-| `/onboarding/setup-ai` | onboarding | **pendente** | — | D |
-| `/onboarding/testar` | onboarding | **pendente** | — | D |
-| `/onboarding/welcome` | onboarding | **pendente** | — | D |
-| `/` | público | **pendente** | — | D |
-| `/team/accept-invite/[token]` | público/auth | **pendente** | — | D |
-| `/vitrine-agenda` | público | **pendente** | — | D |
+| `/login/forgot` | público/auth | **pendente** | — | — |
+| `/login/mfa` | público/auth | **pendente** | — | — |
+| `/login` | público/auth | **pendente** | — | — |
+| `/login/recovery` | público/auth | **pendente** | — | — |
+| `/login/reset` | público/auth | **pendente** | — | — |
+| `/signup` | público/auth | **pendente** | — | — |
+| `/403` | estado/erro | **pendente** | — | — |
+| `/500` | estado/erro | **pendente** | — | — |
+| `/503` | estado/erro | **pendente** | — | — |
+| `/account-suspended` | estado/erro | **pendente** | — | — |
+| `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
+| `/legal/privacy` | público/legal | **pendente** | — | — |
+| `/legal/terms` | público/legal | **pendente** | — | — |
+| `/o/[token]` | público/orçamento | **pendente** | — | — |
+| `/onboarding/connect-nuvemshop` | onboarding | **pendente** | — | — |
+| `/onboarding/connect-whatsapp` | onboarding | **pendente** | — | — |
+| `/onboarding/done` | onboarding | **pendente** | — | — |
+| `/onboarding/funil` | onboarding | **pendente** | — | — |
+| `/onboarding/invite-team` | onboarding | **pendente** | — | — |
+| `/onboarding` | onboarding | **pendente** | — | — |
+| `/onboarding/setup-ai` | onboarding | **pendente** | — | — |
+| `/onboarding/testar` | onboarding | **pendente** | — | — |
+| `/onboarding/welcome` | onboarding | **pendente** | — | — |
+| `/` | público | **pendente** | — | — |
+| `/team/accept-invite/[token]` | público/auth | **pendente** | — | — |
+| `/vitrine-agenda` | público | **pendente** | — | — |
 
 ## 3. Registry de navegação (78 rotas `/app`)
 
@@ -408,3 +408,38 @@ Nenhuma outra tela foi marcada como exceção. Páginas de estado (`403`, `500`,
   sem evidência (PR + captura ou doc).
 - **O que este documento não faz:** não decide regra de negócio e não declara
   “conforme” o que não foi aberto.
+
+
+## 9. Superfícies da frente do criador (completadas nesta rodada)
+
+> As rotas e subtelas que nasceram/já foram trabalhadas na frente do criador
+> entram aqui com o estado medido. O que não foi olhado continua na seção 2
+> como `pendente` — esta seção **não** promove nada por proximidade.
+
+| Superfície | Tipo | Estado | Evidência |
+|---|---|---|---|
+| `/app/pedidos/novo` | rota | **aplicado** | `44-criador-de-pedidos-experiencia.md`; E2E da matriz 1.61.0 |
+| Prévia do pedido | modal | existe; vazio (“Nenhum item”), totais, parcelas e aviso de aprovação; leitura | `_editor.tsx` + E2E E.1/E.2 |
+| Conflito de rascunho | modal | existe; só com rascunho de outro cliente; decisão explícita | `_editor.tsx` + `criador-pedido-cliente-do-link.test.tsx` |
+| Adicionar com IA | modal | existe; entrada/processando/erro; permissão de IA | `_ia.tsx` |
+| Cadastro de cliente no pedido | modal | existe; validação e erro preservando o pedido | `components/contacts/NewContactDialog.tsx` |
+| Menu “Enviar” / “Mais opções” | menu | existe; ações de rascunho/email/WhatsApp | `_editor.tsx` |
+| `/app/pedidos` | rota | **aplicado** | #620 (hierarquia na lista) |
+| `/app/pedidos/[id]` | rota | **aplicado** | #620 (hierarquia na ficha) |
+| `/app/pedidos/imprimir` | rota | **fora de escopo** | documento de impressão |
+
+**Não classificado na enumeração de subtelas do `09b`:** os quatro modais e o
+menu acima nasceram depois do JSON de 18/11; ficam listados aqui, não somem.
+Se entrarem no `09b`, a contagem de subtelas sobe (72 → 77 modais e 12 gavetas
+permanecem), o que deve ser remedido — não somado de cabeça.
+
+## 10. Pendentes sem dono (o que a matriz não pode esconder)
+
+- **143 linhas `pendente`** no total: **96** de `app/app` (com **D** como dono
+  do passe de design) + **47** sem dono funcional.
+- **47 `pendente` sem dono**: **22** de `app/admin` e **25** de
+  público/auth/onboarding/legal/estado (o `/design` é a 26ª e está `fora de
+  escopo`). Elas estão com `—` na coluna “Dono” — não têm agente na fila atual.
+  Não são exceção; são lacuna de dono.
+- As **14 aplicadas** são todas de `app/app` (estoque, inbox, expedição,
+  pedidos, compras); o `admin` não tem nenhuma linha `aplicado` ainda.
