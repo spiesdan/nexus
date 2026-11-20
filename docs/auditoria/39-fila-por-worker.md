@@ -246,3 +246,12 @@ veredito + evidência**. Quem não redesenharia por decisão marca
 
 **Fila:** D segue o bloco de 96; G entra pelas 22 de admin; F pelas 25 de
 público/auth/estado. A matriz `41` é o backlog único; cada PR fecha linhas nela.
+
+## PONTO DE PARADA — daemon encerrado por ordem do dono (21/11/2026)
+
+- **main:** `377ddc7d3` (tag `v1.62.3`, deploy verificado em produção).
+- **PR aberto:** **#760** (`docs/40-deploy-1-62-3`, docs puro) — não mergeado por ordem de parada.
+- **D:** estava na **re-varredura fatiada de 99 rotas** (10 por fatia, servidor morto entre elas) — próxima tarefa: retomar essa varredura, salvar parcial por fatia.
+- **G:** estava na **casca global 28/36→44** — próxima: concluir os alvos de toque e a varredura de admin.
+- **F:** estava na **próxima frente da matriz `41`** — próxima: público/auth restante com o padrão “conforme = só registro”.
+- **Máquina:** 0 `next-server`, 0 Chromium, swap **1,6 GB**. Nenhum deploy/ação de produção nesta parada.
