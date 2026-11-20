@@ -69,6 +69,13 @@ function resposta() {
           detalhe: { orgs_em_dia: 1, orgs_ativas: 2 },
         },
       ],
+      motor: {
+        estado: "indisponivel",
+        ultima_falha: "2026-11-20T10:00:00.000Z",
+        detalhe: "fetch failed",
+        falhas: 17,
+        organizacoes_com_falha: 1,
+      },
     },
   };
 }
@@ -89,6 +96,18 @@ describe("Observabilidade — cartões de SLO", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Nenhuma sonda executada ainda.")).toBeInTheDocument();
+  });
+
+  it("motor de decisão fora aparece com estado e última falha", async () => {
+    vi.mocked(apiClient.get).mockResolvedValue(resposta() as never);
+    renderizar();
+
+    await waitFor(() => expect(screen.getByTestId("cartao-motor")).toBeInTheDocument());
+    const cartao = screen.getByTestId("cartao-motor");
+    expect(cartao.textContent).toContain("Motor de decisão (laya)");
+    expect(cartao.textContent).toContain("indisponível");
+    expect(cartao.textContent).toContain("1 organização sem resposta do motor");
+    expect(screen.getByTestId("motor-ultima-falha").textContent).toContain("fetch failed");
   });
 
   it("frescor mostra valor e estado estourado", async () => {

@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClaimConversation } from "@/hooks/inbox/useClaimConversation";
 import { useAtRiskLeads, type AtRiskLead } from "@/hooks/leads/useAtRiskLeads";
+import { useSaudeDoMotor } from "@/hooks/observabilidade/useSaudeDoMotor";
+import { AvisoMotorIndisponivel } from "@/components/observabilidade/AvisoMotorIndisponivel";
 import type { AcaoDaDecisao } from "@/lib/leads/laya-decisao";
 import type { RiskBucket } from "@/lib/leads/risk-radar";
 import {
@@ -73,22 +75,27 @@ function sugestaoTitulo(lead: AtRiskLead, tag: string, t: (texto: string) => str
 export function RiskRadarList() {
   const t = useT();
   const { data, isLoading, isError, refetch } = useAtRiskLeads();
+  const saude = useSaudeDoMotor();
+  const motorFora = saude.data?.estado === "indisponivel";
 
   // Falha NÃO é "nenhuma demanda em risco". Sem este ramo, o `/leads/at-risk`
   // fora do ar (ou 403) caía no `!data` do estado vazio e a tela afirmava que
   // está tudo em dia — o inverso do que o Radar existe para mostrar.
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-warning/40 bg-warning-bg py-10 text-center">
-        <p className="text-sm font-medium text-warning-fg">
-          {t("Não consegui ler as demandas em risco.")}
-        </p>
-        <p className="text-xs text-warning-fg">
-          {t("Isto não quer dizer que está tudo em dia — a leitura falhou.")}
-        </p>
-        <Button size="sm" variant="outline" onClick={() => void refetch()}>
-          {t("Tentar novamente")}
-        </Button>
+      <div className="space-y-4">
+        <AvisoMotorIndisponivel saude={saude.data} contexto="radar" />
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-warning/40 bg-warning-bg py-10 text-center">
+          <p className="text-sm font-medium text-warning-fg">
+            {t("Não consegui ler as demandas em risco.")}
+          </p>
+          <p className="text-xs text-warning-fg">
+            {t("Isto não quer dizer que está tudo em dia — a leitura falhou.")}
+          </p>
+          <Button size="sm" variant="outline" onClick={() => void refetch()}>
+            {t("Tentar novamente")}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -110,21 +117,25 @@ export function RiskRadarList() {
   const semPasso = data?.sem_proximo_passo ?? [];
   if (!data || (data.total === 0 && semPasso.length === 0)) {
     return (
-      <div
-        className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center"
-        data-testid="radar-empty"
-      >
-        <CheckCircle size={28} className="text-success-fg/70" aria-hidden />
-        <p className="text-sm font-medium">{t("Nenhuma demanda em risco")}</p>
-        <p className="text-xs text-muted-foreground">
-          {t("Toda demanda aberta teve atividade recente ou já tem um retorno agendado.")}
-        </p>
+      <div className="flex flex-1 flex-col gap-4">
+        <AvisoMotorIndisponivel saude={saude.data} contexto="radar" />
+        <div
+          className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center"
+          data-testid="radar-empty"
+        >
+          <CheckCircle size={28} className="text-success-fg/70" aria-hidden />
+          <p className="text-sm font-medium">{t("Nenhuma demanda em risco")}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("Toda demanda aberta teve atividade recente ou já tem um retorno agendado.")}
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <AvisoMotorIndisponivel saude={saude.data} contexto="radar" />
       {/* INVARIANTE 4 em forma acionável: o índice de atrito publica a CONTAGEM
           ("N demandas abertas sem próximo passo"); contagem sem lugar para agir
           viola o invariante 5. Esta é a lista que responde "e daí?". */}
@@ -171,14 +182,14 @@ export function RiskRadarList() {
 
       <ul className="divide-y divide-border rounded-lg border border-border">
         {data.items.map((lead) => (
-          <RadarRow key={lead.id} lead={lead} />
+          <RadarRow key={lead.id} lead={lead} motorFora={motorFora} />
         ))}
       </ul>
     </div>
   );
 }
 
-function RadarRow({ lead }: { lead: AtRiskLead }) {
+function RadarRow({ lead, motorFora }: { lead: AtRiskLead; motorFora: boolean }) {
   const t = useT();
   const tagIdioma = useTagDeIdioma();
   const meta = RISK_META[lead.risk as Exclude<RiskBucket, "em_dia">] ?? RISK_META.em_risco;
@@ -241,6 +252,14 @@ function RadarRow({ lead }: { lead: AtRiskLead }) {
           >
             <Sparkle size={12} aria-hidden />
             {t("Sugestão:")} {t(SUGESTAO_META[lead.ia_acao].label)}
+          </Badge>
+        ) : motorFora ? (
+          <Badge
+            variant="neutral"
+            className="mt-0.5 shrink-0"
+            data-testid="radar-sugestao-indisponivel"
+          >
+            {t("Sugestão indisponível")}
           </Badge>
         ) : null}
         <div className="min-w-0 flex-1">
