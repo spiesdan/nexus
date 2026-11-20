@@ -63,3 +63,9 @@ assistente intercepta medição — vale registro.
 O cartão "Alta prioridade" conta **críticas e altas** juntas (`1`). O rótulo diz
 "alta prioridade", não "crítica" — separar os números é decisão de produto
 (o G desenhou o cartão assim), não de desenho.
+
+## Cardinalidade das regras
+
+As relações `order_id`/`contact_id`/`invoice_id` que alimentam estas regras
+foram varridas em `50-sentinel-cardinalidade.md`: nenhuma leitura 1:1 aberta,
+com os sítios e as medições no banco local.
