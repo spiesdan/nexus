@@ -118,6 +118,10 @@ const envE2E = publicarNoProcesso(envDoE2E());
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // A suíte (scripts/test-e2e-suite.ts) passa um diretório único por execução;
+  // quando chamada direto, `test-results` continua o default. O diretório é
+  // config também (e não só CLI) para o env chegar ao worker e ao CI.
+  outputDir: process.env.PLAYWRIGHT_OUTPUT_DIR ?? "test-results",
   // Mede o deslocamento relógio host↔GoTrue e publica E2E_CLOCK_OFFSET_MS
   // antes dos workers nascerem — o TOTP de todos os specs compensa sem cada
   // spec precisar lembrar. Ver `tests/e2e/global-setup.ts`.

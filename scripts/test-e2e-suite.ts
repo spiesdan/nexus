@@ -28,6 +28,8 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 
 const SUITES = ["smoke", "critical", "full"] as const;
@@ -66,7 +68,20 @@ const extras = process.argv.slice(3);
 // DEP0190 por concatenar argumento sem escapar). `@playwright/test/cli` é o
 // bin `playwright`; o processo node puro é o mesmo no Windows e no Linux.
 const cli = createRequire(path.join(process.cwd(), "package.json")).resolve("@playwright/test/cli");
-const resultado = spawnSync(process.execPath, [cli, "test", "--workers=1", ...specs, ...extras], {
+// A suíte apagava `test-results` no meio da execução e o `browserContext.close`
+// recebia ENOENT de trace/network (duas falhas do critical 1.61.1). Cada
+// invocação (ou parte) grava num diretório próprio, fora do alcance de quem
+// limpa a árvore de trabalho.
+const outputDir = path.join(
+  tmpdir(),
+  "nexus-e2e",
+  `${nome}-${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}`,
+);
+mkdirSync(outputDir, { recursive: true });
+const resultado = spawnSync(
+  process.execPath,
+  [cli, "test", "--workers=1", "--output", outputDir, ...specs, ...extras],
+  {
   stdio: "inherit",
   env: {
     ...process.env,
@@ -76,6 +91,7 @@ const resultado = spawnSync(process.execPath, [cli, "test", "--workers=1", ...sp
     // regressão — medido no CI ao subir a suíte de 15 para 29 specs. O teto
     // por CONTA (5 falhas) continua valendo, e é ele que barra brute force.
     AUTH_RATE_LIMIT_LOGIN_IP: process.env.AUTH_RATE_LIMIT_LOGIN_IP ?? "1000",
+    PLAYWRIGHT_OUTPUT_DIR: outputDir,
   },
 });
 

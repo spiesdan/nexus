@@ -118,9 +118,17 @@ async function tentarMfa(page: Page, secret: string, tentativas: number): Promis
       // pararam nesta linha, com a página de volta no formulário de login.
       return false;
     }
-    // O campo desabilita enquanto o código anterior é verificado.
-    for (let espera = 0; espera < 20 && (await digito.isDisabled()); espera++) {
+    // O campo desabilita enquanto o código anterior é verificado OU quando o
+    // fator foi removido/rotacionado por outro seed. Esperar 10s e clicar num
+    // campo disabled queimava 5 min por login (medido no critical da 1.61.1).
+    // Prazo curto: se continuar disabled, devolve `false` para o `loginCom`
+    // re-semear e seguir — com a mensagem dizendo o que aconteceu.
+    for (let espera = 0; espera < 12 && (await digito.isDisabled()); espera++) {
       await page.waitForTimeout(500);
+    }
+    if (await digito.isDisabled()) {
+      console.warn("[e2e] MFA: Dígito 1 continuou disabled; re-semeando as credenciais");
+      return false;
     }
     await digito.click();
     await page.keyboard.type(codigo, { delay: 40 });
@@ -187,6 +195,7 @@ async function loginCom(
       // O segredo em disco não vale mais: outra sessão rodou o seed. Re-semeia
       // UMA vez e tenta de novo — na segunda falha o problema é outro e o teste
       // deve morrer dizendo isso, em vez de re-semear em círculo.
+      console.warn("[e2e] MFA rotacionado; re-semeei as credenciais e sigo");
       atuais = semearCredenciais();
       ultimoCodigoEnviado = null;
     }
@@ -194,7 +203,7 @@ async function loginCom(
 
   expect(
     false,
-    `MFA de ${rotulo} falhou mesmo depois de re-semear as credenciais — o problema não é o fator rotacionado`,
+    `MFA de ${rotulo} continuou disabled mesmo depois de re-semear as credenciais — não é o fator rotacionado`,
   ).toBe(true);
   return atuais;
 }
