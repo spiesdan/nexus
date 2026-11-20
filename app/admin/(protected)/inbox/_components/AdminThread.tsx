@@ -1,10 +1,11 @@
 "use client";
+import Link from "next/link";
 import { useMemo } from "react";
 import { useAdminConversation } from "@/hooks/useAdminConversation";
 import { MessageBubble } from "@/components/inbox/MessageBubble";
 import { TenantBadge } from "@/components/admin/inbox/TenantBadge";
 import { AdminSidePanel } from "./AdminSidePanel";
-import { CircleNotch, Lock } from "@/lib/ui/icons";
+import { CaretLeft, CircleNotch, Lock } from "@/lib/ui/icons";
 import { Badge } from "@/components/ui/badge";
 import type { Message } from "@/lib/types/messaging";
 import { useT } from "@/hooks/i18n/useT";
@@ -64,6 +65,15 @@ export function AdminThreadClient({ conversationId }: Props) {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+          {/* Volta para a lista — só existe no celular, onde a lista sai de
+              cena quando a conversa abre (ver `AdminInboxShell`). */}
+          <Link
+            href="/admin/inbox"
+            aria-label={t("Voltar para a lista")}
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted md:hidden"
+          >
+            <CaretLeft size={16} aria-hidden />
+          </Link>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate text-sm font-semibold">{contactName}</span>

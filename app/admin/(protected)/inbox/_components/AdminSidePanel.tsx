@@ -23,7 +23,7 @@ export function AdminSidePanel({ data }: Props) {
   const { contact, organization } = data;
 
   return (
-    <aside className="flex h-full w-[320px] shrink-0 flex-col gap-6 overflow-y-auto border-l border-border bg-muted/20 px-4 py-4">
+    <aside className="hidden h-full w-[320px] shrink-0 flex-col gap-6 overflow-y-auto border-l border-border bg-muted/20 px-4 py-4 xl:flex">
       {/* ── Contact info ── */}
       <section>
         <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
