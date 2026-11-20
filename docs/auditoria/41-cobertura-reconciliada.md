@@ -172,14 +172,14 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/lgpd/requests/[id]` | admin | **pendente** | — | — |
 | `/admin/marca` | admin | **pendente** | — | — |
 | `/admin/observabilidade` | admin | **pendente** | — | — |
-| `/admin` | admin | **pendente** | — | — |
+| `/admin` | admin | **aplicado no destino** — redirect medido em `/admin/dashboard` (`urlFinal`): axe 1 → 0 a 390, alvos 0 | `60-admin-users-modulo-design.md` · `medidas-admin-index.json` | G |
 | `/admin/platform-admins` | admin | **pendente** | — | — |
 | `/admin/tenants/[id]/health` | admin | **pendente** | — | — |
 | `/admin/tenants/[id]` | admin | **aplicado** — axe crítico 1 → 0; alvos 7/5 → 0 | `58-admin-tenant-ficha-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenant-ficha.json` | G |
 | `/admin/tenants/new` | admin | **pendente** | — | — |
 | `/admin/tenants` | admin | **aplicado** — alvos < 40 px: 20/19 → 0 | `55-admin-tenants-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants.json` | G |
 | `/admin/usage` | admin | **pendente** | — | — |
-| `/admin/users/[id]` | admin | **pendente** | — | — |
+| `/admin/users/[id]` | admin | **aplicado** — axe sério 1 → 0; alvos 4/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390, `h1` esperado) | `60-admin-users-modulo-design.md` · `medidas-user-ficha.json` | G |
 | `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |
 | `/admin/forbidden` | admin | **pendente** | — | — |
 
