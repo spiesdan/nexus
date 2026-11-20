@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecorteDaLista } from "@/components/nexus-ui/navigation/RecorteDaLista";
 import { Badge } from "@/components/ui/badge";
 import { NexusAiApproval } from "@/components/nexus-ui/ai/NexusAiApproval";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
@@ -106,26 +106,30 @@ export function DecisoesList() {
 
   const linhas = q.data ?? [];
   const decididas = new Set(
-    linhas.filter((l) => l.action !== "ai.action.proposed").map((l) => String((l.metadata as Record<string, unknown>).ref_audit_id ?? "")),
+    linhas
+      .filter((l) => l.action !== "ai.action.proposed")
+      .map((l) => String((l.metadata as Record<string, unknown>).ref_audit_id ?? "")),
   );
   const pendentes = linhas.filter((l) => l.action === "ai.action.proposed" && !decididas.has(l.id));
   const historico = linhas.filter((l) => l.action !== "ai.action.proposed");
   const executadas = new Set(
-    linhas.filter((l) => l.action === "ai.action.executed").map((l) => String((l.metadata as Record<string, unknown>).ref_audit_id ?? "")),
+    linhas
+      .filter((l) => l.action === "ai.action.executed")
+      .map((l) => String((l.metadata as Record<string, unknown>).ref_audit_id ?? "")),
   );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PoliticaCard />
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "pending" | "history")}>
-        <TabsList>
-          <TabsTrigger value="pending">
-            {t("Aguardando decisão")}
-            {` (${pendentes.length})`}
-          </TabsTrigger>
-          <TabsTrigger value="history">{t("Já decididas")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <RecorteDaLista
+        rotulo={t("Decisões")}
+        valor={tab}
+        onChange={setTab}
+        opcoes={[
+          { valor: "pending", rotulo: t("Aguardando decisão"), contagem: pendentes.length },
+          { valor: "history", rotulo: t("Já decididas") },
+        ]}
+      />
 
       {tab === "pending" ? (
         pendentes.length === 0 ? (
@@ -143,13 +147,19 @@ export function DecisoesList() {
                   description={`${t("Motivo")}: ${texto(l.metadata, "intencao")} · ${t("Ferramenta")}: ${texto(l.metadata, "ferramenta")} · ${t("Nível")}: ${String(l.metadata.nivel ?? "—")}`}
                   context={
                     <>
-                      {t("Dados")}: {Array.isArray(l.metadata.dados_utilizados) ? (l.metadata.dados_utilizados as string[]).join(", ") : "—"}
+                      {t("Dados")}:{" "}
+                      {Array.isArray(l.metadata.dados_utilizados)
+                        ? (l.metadata.dados_utilizados as string[]).join(", ")
+                        : "—"}
                       {" · "}
                       {t("Política")}: {texto(l.metadata, "politica_aplicada")}
                       {l.resource_id ? (
                         <>
                           {" · "}
-                          <Link href={`/app/contacts/${l.resource_id}`} className="underline underline-offset-4">
+                          <Link
+                            href={`/app/contacts/${l.resource_id}`}
+                            className="underline underline-offset-4"
+                          >
                             {t("Ver cliente")}
                           </Link>
                         </>
@@ -176,8 +186,13 @@ export function DecisoesList() {
       ) : (
         <ul className="space-y-2">
           {historico.map((l) => (
-            <li key={l.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm">
-              <span className="truncate text-muted-foreground">{texto(l.metadata, "acao") || texto(l.metadata, "ref_audit_id")}</span>
+            <li
+              key={l.id}
+              className="flex items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm"
+            >
+              <span className="truncate text-muted-foreground">
+                {texto(l.metadata, "acao") || texto(l.metadata, "ref_audit_id")}
+              </span>
               <span className="flex shrink-0 items-center gap-2">
                 {l.action === "ai.action.approved" && !executadas.has(l.id) ? (
                   <Button
@@ -228,9 +243,13 @@ function PoliticaCard() {
     queryKey: ["ai-politica"],
     queryFn: () =>
       apiClient
-        .get<{ data: { nivel_maximo: number; executar_followup: boolean; default_flow_pointer_id: string | null } }>(
-          `/api/v1/ai/policies`,
-        )
+        .get<{
+          data: {
+            nivel_maximo: number;
+            executar_followup: boolean;
+            default_flow_pointer_id: string | null;
+          };
+        }>(`/api/v1/ai/policies`)
         .then((r) => r.data),
   });
   const fluxos = useFollowupFlows();

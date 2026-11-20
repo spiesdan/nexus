@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-20T04:30:12.779Z",
+  "geradoEm": "2026-11-20T11:18:13.422Z",
   "telas": [
     {
       "rota": "/",
@@ -471,22 +471,10 @@
       "rota": "/app/ai/cases",
       "abas": [
         {
-          "tipo": "aba",
-          "rotulo": "Abertos",
-          "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
-          "linha": 28
-        },
-        {
-          "tipo": "aba",
-          "rotulo": "Concluídos",
-          "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
-          "linha": 29
-        },
-        {
           "tipo": "aba-caseira",
           "rotulo": "Contato sem nome",
           "arquivo": "app/app/ai/cases/_components/CaseList.tsx",
-          "linha": 85
+          "linha": 91
         }
       ],
       "modais": [],
@@ -519,20 +507,7 @@
     },
     {
       "rota": "/app/ai/decisoes",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "Aguardando decisão",
-          "arquivo": "app/app/ai/decisoes/_components/DecisoesList.tsx",
-          "linha": 118
-        },
-        {
-          "tipo": "aba",
-          "rotulo": "Já decididas",
-          "arquivo": "app/app/ai/decisoes/_components/DecisoesList.tsx",
-          "linha": 122
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
@@ -612,20 +587,7 @@
     },
     {
       "rota": "/app/ai/inbox",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "Abertos",
-          "arquivo": "app/app/ai/inbox/_components/AgentInboxList.tsx",
-          "linha": 33
-        },
-        {
-          "tipo": "aba",
-          "rotulo": "Resolvidos",
-          "arquivo": "app/app/ai/inbox/_components/AgentInboxList.tsx",
-          "linha": 36
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
@@ -663,20 +625,7 @@
     },
     {
       "rota": "/app/ai/proposals",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "Aguardando decisão",
-          "arquivo": "app/app/ai/proposals/_components/ProposalsList.tsx",
-          "linha": 37
-        },
-        {
-          "tipo": "aba",
-          "rotulo": "Já decididas",
-          "arquivo": "app/app/ai/proposals/_components/ProposalsList.tsx",
-          "linha": 41
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
@@ -915,7 +864,7 @@
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/compras/[id]/_client.tsx",
-          "linha": 444
+          "linha": 457
         }
       ],
       "gavetas": [],
@@ -1629,7 +1578,7 @@
           "tipo": "aba",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/page.tsx",
-          "linha": 540
+          "linha": 560
         }
       ],
       "modais": [
@@ -1643,13 +1592,13 @@
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 800
+          "linha": 880
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 846
+          "linha": 926
         },
         {
           "tipo": "modal",
@@ -1714,19 +1663,25 @@
           "tipo": "modal",
           "rotulo": "Prévia do pedido",
           "arquivo": "app/app/pedidos/novo/_editor.tsx",
-          "linha": 1255
+          "linha": 1319
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/pedidos/novo/_editor.tsx",
-          "linha": 1395
+          "linha": 1459
         },
         {
           "tipo": "modal",
           "rotulo": "Adicionar produtos com IA / Confira os produtos encontrados",
           "arquivo": "app/app/pedidos/novo/_ia.tsx",
           "linha": 442
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar a tabela muda estes preços",
+          "arquivo": "app/app/pedidos/novo/_reprecificacao.tsx",
+          "linha": 37
         },
         {
           "tipo": "modal",
