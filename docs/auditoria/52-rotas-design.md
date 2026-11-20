@@ -165,5 +165,35 @@ WhatsApp — porque nenhuma delas é reversível pelo botão. Antes, só a de cl
 era dita, e em outra tela.
 
 Sem regra nova: `PATCH /rota/ordem` e `POST /rota/iniciar` já existiam, e o
-aviso ao cliente é o do servidor. A prova visual (estados, contraste, overflow,
-console, matriz 41) usa `tests/captura-rota-publicar.ts` e depende de janela.
+aviso ao cliente é o do servidor.
+
+### Medido — antes (`ad0da6577`) × depois (`6fecd3d8f`), mesma base
+
+Duas cargas do banco de teste: `montando` (#49, 2 paradas) e `em_rota` (#31).
+Capturas em `capturas/{antes,depois}-rota-publicar/`, instrumento
+`tests/captura-rota-publicar.ts`.
+
+| Combinação                        | "Publicar rota" existe | "Modo entregador" existe | Overflow | axe (crít./sério) | Console |
+| --------------------------------- | ---------------------- | ------------------------ | -------- | ----------------- | ------- |
+| antes · montando · claro 1440     | **não**                | não                      | 0 px     | 0/2               | 0       |
+| antes · montando · escuro 1440    | **não**                | não                      | 0 px     | 0/2               | 0       |
+| antes · montando · 390 (2 temas)  | **não**                | não                      | 0 px     | 0/0               | 0       |
+| antes · em-rota · 1440 (2 temas)  | não                    | **não**                  | 0 px     | 0/1               | 0       |
+| depois · montando · claro 1440    | **sim, habilitado**    | não                      | 0 px     | 0/1               | **0**   |
+| depois · montando · escuro 1440   | **sim, habilitado**    | não                      | 0 px     | 0/1               | **0**   |
+| depois · montando · 390 (2 temas) | **sim, habilitado**    | não                      | 0 px     | 0/0               | **0**   |
+| depois · em-rota · 1440 (2 temas) | não                    | **sim**                  | 0 px     | 0/1               | **0**   |
+
+Leituras:
+
+- a ação aparece **exatamente** onde a tabela de decisão manda: montando tem
+  publicar e não tem atalho de entregador; `em_rota` tem o atalho e não tem
+  publicar. Nas quatro combinações, nos dois temas.
+- **overflow 0** e **console 0** em 16 de 16 medições;
+- o `0/1` de 1440 é o seletor de empresa do shell em toda tela; o `0/2` do
+  "antes" trazia também `link-in-text-block` na atribuição do MapLibre, que não
+  apareceu no "depois" — fora do recorte e não reivindicado como ganho.
+
+O "depois" da fatia 2/3 (aviso de falha e mapa vazio) segue sem captura: a
+tabela do "antes" acima é a que foi medida, e o instrumento
+(`tests/captura-rota-falha.ts`) está versionado para quando houver janela.
