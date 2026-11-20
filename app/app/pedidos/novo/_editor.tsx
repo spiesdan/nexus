@@ -52,6 +52,8 @@ import { AfinsNoPedido } from "./_afins";
 import { FORMA_DE_PAGAMENTO_LABEL, type FormaDePagamento } from "@/lib/comercial/pedido-fiscal";
 import { OrderSummary } from "./_resumo";
 import { BlocoDeOverride, type EstadoDoOverride } from "./_override";
+import { DialogReprecificacao } from "./_reprecificacao";
+import { mudancasDePreco, type MudancaDePreco } from "@/lib/comercial/reprecificacao";
 import {
   chaveDoRascunho,
   haQuantoTempo,
@@ -230,6 +232,21 @@ export function OrderEditor({
   }, [tagIdioma]);
   const [tabelaId, setTabelaId] = React.useState("");
   const [tabela, setTabela] = React.useState<PrecoDeTabela | null>(null);
+  // Troca de tabela com itens já lançados: a confirmação linha a linha fica
+  // pendente até a decisão. `anteriorId` é o que o "manter" restaura.
+  const [reprecificacao, setReprecificacao] = React.useState<{
+    nova: PrecoDeTabela | null;
+    novoId: string;
+    anteriorId: string;
+    mudancas: MudancaDePreco[];
+    manuais: number;
+  } | null>(null);
+  const trocaPedida = React.useRef(false);
+  const tabelaAnterior = React.useRef("");
+  const linhasRef = React.useRef<LinhaDoPedido[]>([]);
+  React.useEffect(() => {
+    linhasRef.current = linhas;
+  });
   const [descontoTexto, setDescontoTexto] = React.useState("");
   const [descontoPctTexto, setDescontoPctTexto] = React.useState("");
   const [freteTexto, setFreteTexto] = React.useState("");
@@ -298,20 +315,26 @@ export function OrderEditor({
     );
   }
 
+  // Aplica a tabela nova às linhas — mas, se a troca foi pedida pela pessoa e
+  // há preço a mudar, abre a confirmação antes. A tabela em si (para os
+  // próximos itens) já fica ativa; as linhas existentes esperam a decisão.
+  function aplicarNovaTabela(nova: PrecoDeTabela | null, novoId: string, anteriorId: string) {
+    const { mudancas, manuais } = mudancasDePreco(linhasRef.current, porId, nova);
+    if (trocaPedida.current && mudancas.length > 0) {
+      setReprecificacao({ nova, novoId, anteriorId, mudancas, manuais });
+      trocaPedida.current = false;
+      return;
+    }
+    trocaPedida.current = false;
+    reprecificar(nova);
+  }
+
   // Tabela aplicada: desconto + overrides (para o preço efetivo da busca).
   React.useEffect(() => {
     if (!tabelaId) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTabela(null);
-      // Sem tabela, o preço volta a ser o de catálogo — exceto o manual.
-      setLinhas((ls) =>
-        ls.map((l) => {
-          if (l.origemPreco === "manual") return l;
-          const p = porId.get(l.product_id);
-          if (!p) return l;
-          return { ...l, precoTexto: textoDoPreco(p.preco_cents), origemPreco: "base" };
-        }),
-      );
+      aplicarNovaTabela(null, "", tabelaAnterior.current);
       return;
     }
     let vivo = true;
@@ -332,7 +355,7 @@ export function OrderEditor({
           overrides: new Map(itens.map((i) => [i.product_id, i.preco_cents])),
         };
         setTabela(nova);
-        reprecificar(nova);
+        aplicarNovaTabela(nova, tabelaId, tabelaAnterior.current);
       })
       .catch((e) => {
         if (vivo) showApiError(e);
@@ -340,8 +363,8 @@ export function OrderEditor({
     return () => {
       vivo = false;
     };
-    // `porId`/`tabelas` mudam quando o catálogo chega; `reprecificar` é estável
-    // em comportamento (usa só `porId` do render) e entra aqui de propósito.
+    // `porId`/`tabelas` mudam quando o catálogo chega; `aplicarNovaTabela` usa
+    // o ref das linhas e é estável em comportamento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabelaId, tabelas]);
 
@@ -1024,7 +1047,11 @@ export function OrderEditor({
                   <Label htmlFor="tabela">{textos.tabelaPreco}</Label>
                   <Select
                     value={tabelaId || "__nenhuma"}
-                    onValueChange={(v) => setTabelaId(v === "__nenhuma" ? "" : v)}
+                    onValueChange={(v) => {
+                      tabelaAnterior.current = tabelaId;
+                      trocaPedida.current = true;
+                      setTabelaId(v === "__nenhuma" ? "" : v);
+                    }}
                   >
                     <SelectTrigger id="tabela" className="w-full">
                       <SelectValue placeholder={textos.semTabela} />
@@ -1547,6 +1574,24 @@ export function OrderEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DialogReprecificacao
+        aberto={reprecificacao !== null}
+        mudancas={reprecificacao?.mudancas ?? []}
+        manuais={reprecificacao?.manuais ?? 0}
+        paraNome={
+          tabelas.find((t) => t.id === reprecificacao?.novoId)?.nome ?? t("Preço base")
+        }
+        onConfirmar={() => {
+          if (reprecificacao) reprecificar(reprecificacao.nova);
+          setReprecificacao(null);
+        }}
+        onCancelar={() => {
+          const anterior = reprecificacao?.anteriorId ?? "";
+          setReprecificacao(null);
+          setTabelaId(anterior);
+        }}
+      />
 
       <AdicionarComIa
         aberto={iaAberta}
