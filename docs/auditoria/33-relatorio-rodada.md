@@ -258,3 +258,9 @@ overflow/console, e **linha da matriz com veredito + evidência**. Exceção =
 | p95 da API | `[~]` | 1 amostra **não é p95**; sinal para olhar com série |
 | `operacao.lead_duplicado` | `[!]` **reais** | 5 ocorrências: mesmo contato, dois leads abertos; ação é mesclar (Dono/operação) |
 | `operacao.pedido_preso` | `[!]` decisão | 15 ocorrências; ruído de lote; opções a/b/c em `business-rules/pendencias-do-sentinel.md` |
+
+### Turno noturno — 21/11 ~02:20Z
+
+- **Mergeados:** #673 (rotas), #679 (sessionStorage), #680 (custo no resumo), #675/#681 (decisões e protocolo), #682 (recebimento confirma).
+- **Aberto:** #683 (override com motivo, F) no CI; G iniciando as 22 de admin; D na fatia 2/3 de rotas.
+- **Produção:** 1.61.1 intocada; nenhum build paralelo.
