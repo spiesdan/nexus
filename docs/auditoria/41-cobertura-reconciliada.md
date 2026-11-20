@@ -431,15 +431,45 @@ por conta de contraste**, antes da janela.
 | `platform-admins` linha revogada | `opacity-60` na linha inteira apagava nome/e-mail/motivo | removido; o badge “Revogado” já diz o estado | idem |
 | `platform-admins` aviso de DBA | `bg-blue-50/text-blue-900` fixos: ilha clara no tema escuro | tokens de info (6,11:1 · 6,42:1) | idem |
 
-### 9.2 Linhas e lotes
+### 9.2 Estados por linha (evidência estática; captura ainda pendente)
 
-| Lote | Rotas | Estado |
-|---|---|---|
-| 1 — listas | dashboard, tenants, users, audit, incidents, lgpd | captura pendente de janela |
-| 2 — fichas | tenants/[id], tenants/[id]/health, users/[id], audit/[entryId], incidents/[id], lgpd/requests/[id] | captura pendente |
-| 3 — configuração | marca, observabilidade, usage, platform-admins, google | correções de contraste acima; captura pendente |
-| 4 — inbox + estado | inbox, inbox/[conversa], forbidden | correção de 390 acima; captura pendente |
-| — | `/admin` (redirect) | **fora de escopo** — `redirect("/admin/dashboard")`, não é superfície |
+`C` = carregando · `E` = erro · `V` = vazio · `—` = não se aplica. Onde há
+`E`, o estado existe de verdade no código; a captura dirá se ele é alcançável
+na tela e como se lê.
+
+| Rota | C | E | V | Evidência |
+|---|:-:|:-:|:-:|---|
+| `/admin/dashboard` | ✓ | ✓ | — | `KPISkeleton` + `NexusErrorState` |
+| `/admin/tenants` | ✓ | ✓ | ✓ | `TenantsTableSkeleton` + `AdminDataTable` (vazio) |
+| `/admin/tenants/new` | — | — | — | formulário; erro por campo |
+| `/admin/tenants/[id]` | ✓ | ✓ | — | skeleton + estado de erro próprio (sem retry) |
+| `/admin/tenants/[id]/health` | ✓ | ✓ | — | skeleton + `isError` |
+| `/admin/users` | ✓ | ✓ | ✓ | `UsersTableAdminSkeleton` + `AdminDataTable` |
+| `/admin/users/[id]` | ✓ | ✓ | — | skeleton + “Usuário não encontrado” com volta |
+| `/admin/audit` | ✓ | ✓ | ✓ | `AuditTableSkeleton` + `AdminDataTable` |
+| `/admin/audit/[entryId]` | ✓ | ✓ | — | skeleton + `NexusErrorState` |
+| `/admin/incidents` | ✓ | ✓ | ✓ | `IncidentsTableSkeleton` + `AdminDataTable` |
+| `/admin/incidents/[id]` | ✓ | ✓ | — | skeleton + “Incidente não encontrado” |
+| `/admin/lgpd` | ✓ | ✓ | ✓ | `LgpdRequestsTableSkeleton` + `AdminDataTable` |
+| `/admin/lgpd/requests/[id]` | ✓ | ✓ | ✓ | skeleton + `NexusErrorState` + vazio da auditoria |
+| `/admin/marca` | — | — | — | formulário server action |
+| `/admin/observabilidade` | ✓ | ✓ | — | 3 skeletons + `NexusErrorState` |
+| `/admin/usage` | ✓ | ✓ | ✓ | skeletons + `NexusErrorState` + `UsageTable` vazio |
+| `/admin/platform-admins` | ✓ | ✓ | ✓ | skeleton + `NexusErrorState` + `AdminDataTable` |
+| `/admin/google` | — | — | — | formulário; `notFound()` fora do admin |
+| `/admin/inbox` | ✓ | ✓ | ✓ | spinner + erro + “Nenhuma conversa encontrada” |
+| `/admin/inbox/[conversa]` | ✓ | ✓ | — | spinner + “Falha ao carregar conversa” |
+| `/admin/forbidden` | — | — | — | `StatusPage` (estado, não formulário) |
+| `/admin` | — | — | — | `redirect("/admin/dashboard")` — **fora de escopo** |
+
+**Lotes de captura** (quando a janela abrir):
+
+| Lote | Rotas |
+|---|---|
+| 1 — listas | dashboard, tenants, users, audit, incidents, lgpd |
+| 2 — fichas | tenants/[id], tenants/[id]/health, users/[id], audit/[entryId], incidents/[id], lgpd/requests/[id] |
+| 3 — configuração | marca, observabilidade, usage, platform-admins, google |
+| 4 — inbox + estado | inbox, inbox/[conversa], forbidden |
 
 `/admin/incidents/[id]` não tem fixture no seed local (`incidents = 0`); a
 captura dirá “sem fixture” ou usará uma linha sintética local, nunca produção.
