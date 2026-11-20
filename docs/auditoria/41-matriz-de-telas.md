@@ -109,17 +109,17 @@ escrito à mão).
 | 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
 | 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
 
-### 4. Expedição — 7 telas, 0 medidas
+### 4. Expedição — 7 telas, 7 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/expedicao` | — | — | — | pendente |
-| 2 | `/expedicao/[id]` · dinâmica | — | — | — | pendente |
-| 3 | `/expedicao/[id]/fechamento` · dinâmica | — | — | — | pendente |
-| 4 | `/expedicao/[id]/motorista` · dinâmica | — | — | — | pendente |
-| 5 | `/expedicao/[id]/rota` · dinâmica | — | — | — | pendente |
-| 6 | `/expedicao/nova` | — | — | — | pendente |
-| 7 | `/frota` | — | — | — | pendente |
+| 1 | `/expedicao` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0) |
+| 2 | `/expedicao/[id]` · dinâmica | 0/0 px | 0/2 | 0 | **pendência de contraste no escuro**: «Próximo passo» (10px) e «A rota só sai com tudo conferido.» (12px) em `text-muted-foreground` — axe `color-contrast` a 1440 e 390 |
+| 3 | `/expedicao/[id]/fechamento` · dinâmica | 0/0 px | 0/1 | 0 | limpo (overflow 0, console 0, só o shell) |
+| 4 | `/expedicao/[id]/motorista` · dinâmica | 0/0 px | 0/2 | 0 | **pendência medida**: `link-in-text-block` na atribuição do MapLibre (link OpenStreetMap) — atribuição da biblioteca, regra de CSS escopada |
+| 5 | `/expedicao/[id]/rota` · dinâmica | 0/0 px | 0/1 | 0 | ver a linha `/expedicao/[id]/rota` — aqui só a moldura (limpa) |
+| 6 | `/expedicao/nova` | 0/0 px | 0/2 | 0 | **pendência de contraste no escuro**: «3 · O que vai» (10px, caixa alta) em `text-muted-foreground` |
+| 7 | `/frota` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0) |
 
 ### 5. Financeiro e indicadores — 5 telas, 0 medidas
 

@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T10:43:30.859Z",
+  "gerado": "2026-11-20T11:20:00.410Z",
   "rotulo": "depois",
-  "rotas": 13,
+  "rotas": 7,
   "medidas": [
     {
       "rota": "/carteira",
@@ -5069,6 +5069,558 @@
       "overflow": 0,
       "h1": [
         "XML recebidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao",
+      "url": "/app/expedicao",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/fechamento",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/motorista",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Modo motorista · Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/rota",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/nova",
+      "url": "/app/expedicao/nova",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Nova carga"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/frota",
+      "url": "/app/frota",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Frota"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao",
+      "url": "/app/expedicao",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/fechamento",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/motorista",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Modo motorista · Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "link-in-text-block (serious)"
+        ],
+        "nos": [
+          "link-in-text-block: .maplibregl-ctrl-attrib-inner > a :: <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/rota",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/nova",
+      "url": "/app/expedicao/nova",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Nova carga"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/frota",
+      "url": "/app/frota",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Frota"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao",
+      "url": "/app/expedicao",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-1.min-w-0 > .tracking-\\[0\\.14em\\].uppercase :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">Próximo passo</p>",
+          "color-contrast: .leading-relaxed :: <p class=\"text-xs leading-relaxed text-muted-foreground\">A rota só sai com tudo conferido.</p>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/fechamento",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/motorista",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Modo motorista · Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "label-content-name-mismatch (serious)",
+          "link-in-text-block (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded",
+          "link-in-text-block: .maplibregl-ctrl-attrib-inner > a :: <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/rota",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/nova",
+      "url": "/app/expedicao/nova",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Nova carga"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .py-2\\.5 > div > p :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">3 · O que vai</p>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/frota",
+      "url": "/app/frota",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Frota"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao",
+      "url": "/app/expedicao",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Expedição"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-1.min-w-0 > .tracking-\\[0\\.14em\\].uppercase :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">Próximo passo</p>",
+          "color-contrast: .leading-relaxed :: <p class=\"text-xs leading-relaxed text-muted-foreground\">A rota só sai com tudo conferido.</p>"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/fechamento",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/motorista",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Modo motorista · Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "link-in-text-block (serious)"
+        ],
+        "nos": [
+          "link-in-text-block: .maplibregl-ctrl-attrib-inner > a :: <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/348a67c8-c554-4124-9682-29ff72b1b93f/rota",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carga 049"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/nova",
+      "url": "/app/expedicao/nova",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Nova carga"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/frota",
+      "url": "/app/frota",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Frota"
       ],
       "consoleErros": [],
       "axe": {

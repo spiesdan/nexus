@@ -285,49 +285,49 @@
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/expedicao/[id]",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência de contraste no escuro**: «Próximo passo» (10px) e «A rota só sai com tudo conferido.» (12px) em `text-muted-foreground` — axe `color-contrast` a 1440 e 390"
     },
     {
       "rota": "/expedicao/[id]/fechamento",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo (overflow 0, console 0, só o shell)"
     },
     {
       "rota": "/expedicao/[id]/motorista",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência medida**: `link-in-text-block` na atribuição do MapLibre (link OpenStreetMap) — atribuição da biblioteca, regra de CSS escopada"
     },
     {
       "rota": "/expedicao/[id]/rota",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "ver a linha `/expedicao/[id]/rota` — aqui só a moldura (limpa)"
     },
     {
       "rota": "/expedicao/nova",
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência de contraste no escuro**: «3 · O que vai» (10px, caixa alta) em `text-muted-foreground`"
     },
     {
       "rota": "/frota",
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/financeiro",
