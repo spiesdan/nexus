@@ -495,6 +495,34 @@ Produção 1.61.0: a NF 4629 (13.400) fatura os pedidos 19594 (9.200) e 19597
 9.200+4.200=13.400 (não abre), soma divergente (abre), vínculo ausente (não
 abre) e os três outros detectores.
 
+### v1.10 — evidência legível: natureza fiscal e contato do lead
+
+O mesmo defeito-raiz apareceu em dois lugares: a evidência guardava o ID, não o
+campo que identifica.
+
+- **Nota duplicada:** a evidência passa a trazer `naturezas` legíveis
+  (`venda`, `complementar`, `ajuste`, `devolução`) além dos números; título e
+  resumo dizem “(2 vendas)” ou “(1 venda + 1 complementar)”. A recomendação
+  manda conferir a natureza antes e **não** cancela devolução/complementar como
+  duplicidade.
+- **Lead duplicado:** cada lead vira uma linha legível
+  `nome → telefone (mascarado) → e-mail (mascarado) → id curto`, com `etapa` e
+  `criado_em`. Título/resumo nomeiam o contato; o UUID deixa de ser a única
+  pista.
+- **Regra geral:** toda evidência que aponta para uma entidade precisa de **um
+  campo legível por humano**, não só o id. Vale para leads, pedidos, notas e
+  contatos.
+
+**Prova:** `regras-fiscal.test.ts` 25 verdes (venda+devolução não abre; duas
+vendas abre `(2 vendas)`; venda+complementar abre `(1 venda + 1
+complementar)`); `regras-operacao.test.ts` cobre nome→telefone→e-mail→id curto.
+
+**Proposta, não criada:** `fiscal.devolucao_sem_referencia` — hoje uma
+devolução sem `ref_nfe` não tem regra própria e não é duplicidade. Criar a
+regra exige decidir o que é referência válida (chave da original, série/número
+ou vínculo explícito); fica registrada como próxima fatia, sem inventar
+critério.
+
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
 

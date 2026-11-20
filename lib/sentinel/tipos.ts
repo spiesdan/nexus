@@ -307,9 +307,13 @@ export interface EstoqueRazao {
 export interface LeadAberto {
   id: string;
   pipeline_id: string;
+  stage_id: string | null;
   contact_id: string | null;
   created_at: string;
+  crm_stages: { name: string } | null;
   contatos: {
+    name: string | null;
+    display_name: string | null;
     phone_number: string | null;
     email_normalized: string | null;
   } | null;

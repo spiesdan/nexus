@@ -164,6 +164,29 @@ export function notasAutorizadasSemChave(s: Snapshot): Achado[] {
  * `coalesce(nullif(extras_fiscais->>'finalidade','')::int, 1)`.
  * 4 = devolução; devolução não concorre com a venda e não é duplicidade.
  */
+const ROTULO_DA_FINALIDADE: Record<number, string> = {
+  1: "venda",
+  2: "complementar",
+  3: "ajuste",
+  4: "devolução",
+};
+
+/** Natureza legível da nota — nunca o número cru na evidência. */
+function rotuloDaFinalidade(n: NotaFiscal): string {
+  return ROTULO_DA_FINALIDADE[finalidadeDaNota(n)] ?? "ajuste";
+}
+
+function resumoDasNaturezas(notas: NotaFiscal[]): string {
+  const contagem = new Map<string, number>();
+  for (const nota of notas) {
+    const rotulo = rotuloDaFinalidade(nota);
+    contagem.set(rotulo, (contagem.get(rotulo) ?? 0) + 1);
+  }
+  return [...contagem.entries()]
+    .map(([rotulo, quantidade]) => `${quantidade} ${rotulo}${quantidade > 1 ? "s" : ""}`)
+    .join(" + ");
+}
+
 function finalidadeDaNota(n: NotaFiscal): number {
   const bruto = n.extras_fiscais?.finalidade;
   if (typeof bruto === "number" && Number.isFinite(bruto)) return bruto;
@@ -228,14 +251,16 @@ export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
     .filter(([, ids]) => ids.size > 1)
     .map(([pedidoId, ids]) => {
       const notas = [...ids].map((id) => ativas.get(id)).filter((n): n is NotaFiscal => Boolean(n));
+      const naturezas = resumoDasNaturezas(notas);
       return {
         regra: "fiscal.nota_duplicada_por_pedido" as const,
         categoria: "fiscal" as const,
         entidadeTipo: "commercial_orders",
         entidadeId: pedidoId,
-        titulo: `${notas.length} NF-e ativas para o mesmo pedido`,
+        titulo: `${notas.length} NF-e ativas para o mesmo pedido (${naturezas})`,
         resumo:
-          "Mais de uma nota viva aponta para o mesmo pedido. Emitir de novo pode duplicar o documento fiscal.",
+          `Mais de uma nota viva aponta para o mesmo pedido: ${naturezas}. ` +
+          "Confira a natureza de cada uma antes de tratar como duplicidade — devolução não concorre com a venda.",
         causaProvavel:
           "Retry tratado como emissão nova, duplo clique no faturamento ou nota anterior não cancelada antes da reemissão.",
         severidade: "critica" as const,
@@ -245,6 +270,7 @@ export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
           notas: notas.map((n) => `${n.id}:${n.status}:${n.serie}/${n.numero ?? "s/n"}`),
           valores_cents: notas.map((n) => n.total_cents),
           finalidades: notas.map(finalidadeDaNota),
+          naturezas: notas.map(rotuloDaFinalidade),
         },
       };
     });

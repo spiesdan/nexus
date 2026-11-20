@@ -139,12 +139,12 @@ export const RECOMENDACOES: Record<string, Construtor> = {
 
   "fiscal.nota_duplicada_por_pedido": (achado) =>
     plano(
-      "Escolher UMA nota viva e cancelar as demais com segurança.",
+      "Separar a natureza de cada nota e cancelar só a duplicidade de venda.",
       [
-        "Liste as notas do pedido e o estado de cada uma na SEFAZ.",
-        "Mantenha a nota correta e confirme que as outras não foram transmitidas.",
-        "Cancele/denegue as duplicadas pela via fiscal, com motivo.",
-        "Confira que o pedido ficou com uma única nota ativa.",
+        "Liste as notas do pedido, a natureza (venda/complementar/devolução/ajuste) e o estado na SEFAZ.",
+        "Não cancele devolução ou complementar como se fosse venda duplicada: confira a finalidade e a referência.",
+        "Se houver duas VENDAS vivas, mantenha a correta e cancele a outra pela via fiscal, com motivo.",
+        "Confira que o pedido ficou com uma única nota de venda ativa.",
       ],
       ["nota a manter", "estado de cada duplicada na SEFAZ", "motivo do cancelamento"],
       {
@@ -153,8 +153,8 @@ export const RECOMENDACOES: Record<string, Construtor> = {
         reversibilidade: "irreversivel",
         limitacao: String(
           achado.evidencia.total_notas
-            ? "Cancelamento fiscal é irreversível; a conferência na SEFAZ é obrigatória."
-            : "Confira na SEFAZ antes de cancelar.",
+            ? "Cancelamento fiscal é irreversível; a natureza de cada nota precisa ser conferida antes. Devolução não concorre com a venda."
+            : "Confira a natureza na SEFAZ antes de cancelar; devolução não concorre com a venda.",
         ),
       },
     ),
