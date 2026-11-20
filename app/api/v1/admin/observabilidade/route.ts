@@ -88,8 +88,16 @@ export async function GET(): Promise<Response> {
 
   const admin = createAdminClient();
   const desde = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-  const [orgsRes, settingsRes, resumoApi, rotasApi, contagemRes, primeiraRes, ultimaRes] =
-    await Promise.all([
+  const [
+    orgsRes,
+    settingsRes,
+    resumoApi,
+    rotasApi,
+    contagemRes,
+    primeiraRes,
+    ultimaRes,
+    sondaRes,
+  ] = await Promise.all([
     lerTodasAsPaginas<{ id: string }>((de, ate) =>
       admin
         .from("organizations")
@@ -123,11 +131,13 @@ export async function GET(): Promise<Response> {
     admin
       .from("api_request_samples")
       .select("id", { count: "exact", head: true })
-      .gte("created_at", desde),
+      .gte("created_at", desde)
+      .neq("route", "__sonda__"),
     admin
       .from("api_request_samples")
       .select("created_at")
       .gte("created_at", desde)
+      .neq("route", "__sonda__")
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle(),
@@ -135,6 +145,13 @@ export async function GET(): Promise<Response> {
       .from("api_request_samples")
       .select("created_at")
       .gte("created_at", desde)
+      .neq("route", "__sonda__")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from("api_request_probes")
+      .select("id, created_at, origem, duracao_ms, ok")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -151,7 +168,13 @@ export async function GET(): Promise<Response> {
   if (resumoApi.error) {
     return fail("internal_error", "Não foi possível ler a série de API.", 500, { requestId });
   }
-  if (rotasApi.error || contagemRes.error || primeiraRes.error || ultimaRes.error) {
+  if (
+    rotasApi.error ||
+    contagemRes.error ||
+    primeiraRes.error ||
+    ultimaRes.error ||
+    sondaRes.error
+  ) {
     return fail("internal_error", "Não foi possível diagnosticar a série de API.", 500, {
       requestId,
     });
@@ -265,6 +288,13 @@ export async function GET(): Promise<Response> {
         primeira_em: (primeiraRes.data as { created_at?: string } | null)?.created_at ?? null,
         ultima_em: (ultimaRes.data as { created_at?: string } | null)?.created_at ?? null,
       },
+      sonda: (sondaRes.data as {
+        id: string;
+        created_at: string;
+        origem: string;
+        duracao_ms: number | string;
+        ok: boolean;
+      } | null) ?? null,
       slos,
     },
     { requestId },

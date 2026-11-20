@@ -26,6 +26,7 @@ function resposta() {
   return {
     data: {
       gerado_em: "2026-11-19T20:00:00.000Z",
+      sonda: null,
       serie: {
         amostras: 0,
         rotas: 0,
@@ -87,6 +88,7 @@ describe("Observabilidade — cartões de SLO", () => {
         "A série está ligada, mas nenhuma requisição autenticada passou pelas rotas quentes desde o deploy.",
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText("Nenhuma sonda executada ainda.")).toBeInTheDocument();
   });
 
   it("frescor mostra valor e estado estourado", async () => {

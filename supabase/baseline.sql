@@ -30380,6 +30380,33 @@ grant execute on function public.fn_slo_api_rotas(integer, text[])
 comment on function public.fn_slo_api_rotas(integer, text[]) is
   'SLO por rota (total/5xx/p95) para a evidência do Sentinel; só service_role.';
 
+
+-- ============================================================================
+-- 0332 — sonda da série de API (tabela separada).
+-- Ver supabase/migrations/20261123250000_0332_api_request_probes.sql.
+-- ============================================================================
+
+create table if not exists public.api_request_probes (
+  id uuid primary key default gen_random_uuid(),
+  origem text not null check (origem in ('cron', 'manual')),
+  duracao_ms numeric(10, 1) not null check (duracao_ms >= 0),
+  ok boolean not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists api_request_probes_created_idx
+  on public.api_request_probes (created_at desc);
+
+alter table public.api_request_probes enable row level security;
+
+-- Só service_role escreve/lê (rota interna e painel usam service role atrás do
+-- guard). Nenhuma sessão de tenant precisa desta tabela.
+revoke all on public.api_request_probes from anon, authenticated;
+grant all on public.api_request_probes to service_role;
+
+comment on table public.api_request_probes is
+  'Sonda do instrumento de métricas: prova escrita sem poluir api_request_samples. Só service_role.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
