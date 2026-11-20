@@ -444,7 +444,14 @@ async function main(): Promise<void> {
   writeFileSync(
     SAIDA,
     JSON.stringify(
-      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas: todas },
+      {
+        gerado: new Date().toISOString(),
+        rotulo: ROTULO,
+        // O total do CONJUNTO, não o tamanho do lote: gravar `rotas: 4` num
+        // artefato com 99 rotas é o bug que inflava/deflava o placar da matriz.
+        rotas: new Set(todas.map((m) => m.rota)).size,
+        medidas: todas,
+      },
       null,
       2,
     ),
