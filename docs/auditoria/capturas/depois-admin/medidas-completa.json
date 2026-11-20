@@ -1,0 +1,5392 @@
+[
+  {
+    "rota": "/admin",
+    "tela": "admin-index",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/dashboard",
+    "tela": "dashboard",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants",
+    "tela": "tenants",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 39,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/new",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "tela": "tenant-ficha",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.mt-2.text-2xl",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/600"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.63,
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(169,74,60)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 25,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "tela": "tenant-saude",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 23,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users",
+    "tela": "users",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 43,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.56,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 22,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit",
+    "tela": "audit",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 48,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "tela": "audit-entrada",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents",
+    "tela": "incidents",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "tela": "incident-ficha",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 20,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd",
+    "tela": "lgpd",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 30,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "tela": "lgpd-pedido",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-text-subtle",
+        "razao": 5.02,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-destructive.text-xs",
+        "razao": 5.63,
+        "fg": "rgb(169, 74, 60)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-sm.font-mono",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/marca",
+    "tela": "marca",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/marca",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "LABEL.relative.h-10",
+        "razao": 4.41,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(128,128,128)",
+        "px": "16px/400"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/observabilidade",
+    "tela": "observabilidade",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/observabilidade",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.mt-1.text-2xl",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/600"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/usage",
+    "tela": "usage",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/usage",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 20,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/platform-admins",
+    "tela": "platform-admins",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/platform-admins",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/google",
+    "tela": "google",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/google",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.rounded-lg.border",
+        "razao": 5.99,
+        "fg": "rgb(135, 90, 26)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 22,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.max-w-xs.text-xs",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 40,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "tela": "inbox-conversa",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 41,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin",
+    "tela": "admin-index",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-[11px].font-semibold",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "11px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/dashboard",
+    "tela": "dashboard",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-[11px].font-semibold",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "11px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants",
+    "tela": "tenants",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/new",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 14,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "tela": "tenant-ficha",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "H2.text-sm.font-semibold",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/600"
+      },
+      {
+        "alvo": "P.mt-2.text-2xl",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/600"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.63,
+        "fg": "rgb(255, 255, 255)",
+        "bg": "rgb(169,74,60)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 13,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "tela": "tenant-saude",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 11,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users",
+    "tela": "users",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "TH.h-9.px-3",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.56,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 10,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit",
+    "tela": "audit",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "tela": "audit-entrada",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents",
+    "tela": "incidents",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "tela": "incident-ficha",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 8,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd",
+    "tela": "lgpd",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "tela": "lgpd-pedido",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.leading-tight.text-muted-foreground",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "P.text-xs.text-text-subtle",
+        "razao": 5.02,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-destructive.text-xs",
+        "razao": 5.63,
+        "fg": "rgb(169, 74, 60)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-sm.font-mono",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/marca",
+    "tela": "marca",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/marca",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "LABEL.relative.h-10",
+        "razao": 4.41,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(128,128,128)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/observabilidade",
+    "tela": "observabilidade",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/observabilidade",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.p-6.pt-0",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.mt-1.text-2xl",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/usage",
+    "tela": "usage",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/usage",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H3.mb-4.text-sm",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 8,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/platform-admins",
+    "tela": "platform-admins",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/platform-admins",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/google",
+    "tela": "google",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/google",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.rounded-lg.border",
+        "razao": 5.99,
+        "fg": "rgb(135, 90, 26)",
+        "bg": "rgb(255,255,255)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 10,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.max-w-xs.text-xs",
+        "razao": 4.69,
+        "fg": "rgb(111, 111, 111)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "tela": "inbox-conversa",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.19,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin",
+    "tela": "admin-index",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/dashboard",
+    "tela": "dashboard",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants",
+    "tela": "tenants",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 39,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/new",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "tela": "tenant-ficha",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.mt-2.text-2xl",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/600"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.25,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(200,114,99)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 25,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "tela": "tenant-saude",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 23,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users",
+    "tela": "users",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 43,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 7.63,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 22,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit",
+    "tela": "audit",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 48,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "tela": "audit-entrada",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents",
+    "tela": "incidents",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "tela": "incident-ficha",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 20,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd",
+    "tela": "lgpd",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 30,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "tela": "lgpd-pedido",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-text-subtle",
+        "razao": 5.13,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-destructive.text-xs",
+        "razao": 4.9,
+        "fg": "rgb(200, 114, 99)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-sm.font-mono",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/marca",
+    "tela": "marca",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/marca",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "LABEL.relative.h-10",
+        "razao": 3.59,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(128,128,128)",
+        "px": "16px/400"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/observabilidade",
+    "tela": "observabilidade",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/observabilidade",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.mt-1.text-2xl",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/600"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/usage",
+    "tela": "usage",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/usage",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 20,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/platform-admins",
+    "tela": "platform-admins",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/platform-admins",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 19,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/google",
+    "tela": "google",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/google",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.rounded-lg.border",
+        "razao": 8.45,
+        "fg": "rgb(224, 173, 119)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 22,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.max-w-xs.text-xs",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 40,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "tela": "inbox-conversa",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 41,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin",
+    "tela": "admin-index",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-[11px].font-semibold",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "11px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/dashboard",
+    "tela": "dashboard",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/dashboard",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.text-[11px].font-semibold",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "11px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants",
+    "tela": "tenants",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/new",
+    "tela": "tenants-new",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/new",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 14,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "tela": "tenant-ficha",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "H2.text-sm.font-semibold",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/600"
+      },
+      {
+        "alvo": "P.mt-2.text-2xl",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/600"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.25,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(200,114,99)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 13,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "tela": "tenant-saude",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/tenants/68fe016a-7312-4ee0-8417-2dd07a0ad659/health",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 11,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users",
+    "tela": "users",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "TH.h-9.px-3",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 7.63,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 10,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit",
+    "tela": "audit",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "tela": "audit-entrada",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/audit/f371ecc8-cd25-4ff5-8c64-ffeceddd4d65",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents",
+    "tela": "incidents",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.-mx-2.-my-1",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "tela": "incident-ficha",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/incidents/e09895ad-108e-465b-807d-92348f9dadbe",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 8,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd",
+    "tela": "lgpd",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 18,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "tela": "lgpd-pedido",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.leading-tight.text-muted-foreground",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "P.text-xs.text-text-subtle",
+        "razao": 5.13,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-destructive.text-xs",
+        "razao": 4.9,
+        "fg": "rgb(200, 114, 99)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.text-sm.font-mono",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/marca",
+    "tela": "marca",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/marca",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "LABEL.relative.h-10",
+        "razao": 3.59,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(128,128,128)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/observabilidade",
+    "tela": "observabilidade",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/observabilidade",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.p-6.pt-0",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.mt-1.text-2xl",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/600"
+      }
+    ],
+    "alvos": {
+      "total": 6,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/usage",
+    "tela": "usage",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/usage",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H3.mb-4.text-sm",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 8,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/platform-admins",
+    "tela": "platform-admins",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/platform-admins",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      }
+    ],
+    "alvos": {
+      "total": 7,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/google",
+    "tela": "google",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/google",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "LABEL.inline-block.text-sm",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "P.text-xs.text-muted-foreground",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "P.rounded-lg.border",
+        "razao": 8.45,
+        "fg": "rgb(224, 173, 119)",
+        "bg": "rgb(28,28,28)",
+        "px": "12px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 10,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "P.max-w-xs.text-xs",
+        "razao": 5.5,
+        "fg": "rgb(141, 141, 141)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "tela": "inbox-conversa",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox/97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.sr-only.focus:not-sr-only",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "16px/400"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.inline-flex.min-h-10",
+        "razao": 8.18,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      }
+    ],
+    "alvos": {
+      "total": 27,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/forbidden",
+    "tela": "forbidden",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/forbidden",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "P.mt-3.text-sm",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 2,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/forbidden",
+    "tela": "forbidden",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/forbidden",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 17.43,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(255,255,255)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "P.mt-3.text-sm",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 2,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/forbidden",
+    "tela": "forbidden",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/forbidden",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "P.mt-3.text-sm",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 2,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/forbidden",
+    "tela": "forbidden",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/forbidden",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 15.49,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(28,28,28)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "P.mt-3.text-sm",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/400"
+      },
+      {
+        "alvo": "A.inline-flex.items-center",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 2,
+      "abaixoDoAlvo": 0,
+      "amostra": []
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "ids": [],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  }
+]

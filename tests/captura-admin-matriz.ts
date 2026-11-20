@@ -63,7 +63,7 @@ interface Medida {
   overflow: number;
   culpadoDoOverflow: string | null;
   contraste: Array<{ alvo: string; razao: number; fg: string; bg: string; px: string }>;
-  alvos: { total: number; abaixoDe40: number; amostra: string[] };
+  alvos: { total: number; abaixoDoAlvo: number; amostra: string[] };
   axe: { critica: number; seria: number; ids: string[]; contraste: string[] };
   console: { erros: number; amostra: string[] };
 }
@@ -236,9 +236,8 @@ function rotas(ids: Awaited<ReturnType<typeof idsDoBanco>>): Rota[] {
 }
 
 /**
- * Alvos de toque — a régua que o doc 48 (admin dashboard) fixou em 44 px e
- * que a matriz cobra por tela. Conta só o que está VISÍVEL: `sr-only` (1×1) e
- * o que está fora da dobra não são alvo de dedo.
+ * Alvos de toque — a régua do produto é **44×44**. Conta só o que está
+ * VISÍVEL: `sr-only` (1×1) e o que está fora da dobra não são alvo de dedo.
  */
 const MEDIR_ALVOS = `
 (() => {
@@ -254,7 +253,7 @@ const MEDIR_ALVOS = `
     var s = getComputedStyle(el);
     if (s.visibility === "hidden" || s.display === "none" || s.opacity === "0") continue;
     total++;
-    if (r.width < 40 || r.height < 40) {
+    if (r.width < 44 || r.height < 44) {
       var texto = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 18);
       pequenos.push(
         (el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".")).slice(0, 40) +
@@ -263,7 +262,7 @@ const MEDIR_ALVOS = `
       );
     }
   }
-  return { total: total, abaixoDe40: pequenos.length, amostra: pequenos.slice(0, 6) };
+  return { total: total, abaixoDoAlvo: pequenos.length, amostra: pequenos.slice(0, 6) };
 })()
 `;
 
@@ -399,7 +398,7 @@ async function main(): Promise<void> {
           `${tema}/${tamanho.nome} ${rota.tela.padEnd(16)} status=${medida.status} ` +
             `overflow=${medida.overflow}px axe=${medida.axe.critica}/${medida.axe.seria} ` +
             `erros=${medida.console.erros} contraste_amostrado=${medida.contraste.length} ` +
-            `alvos<40=${medida.alvos.abaixoDe40}/${medida.alvos.total} h1=${medida.h1 ? "ok" : "FALTA"}`
+            `alvos<44=${medida.alvos.abaixoDoAlvo}/${medida.alvos.total} h1=${medida.h1 ? "ok" : "FALTA"}`
             + (medida.urlFinal !== rota.caminho ? ` url=${medida.urlFinal}` : ""),
         );
         for (const a of medida.alvos.amostra.slice(0, 3)) console.info(`   alvo: ${a}`);
@@ -416,7 +415,7 @@ async function main(): Promise<void> {
   // são compartilhadas e um `medidas.json` único fazia a captura de uma linha
   // sobrescrever a evidência da outra (o `/admin/audit` já estava na main).
   writeFileSync(
-    path.join(RAIZ, ALVO ? `medidas-${ALVO}.json` : "medidas.json"),
+    path.join(RAIZ, ALVO ? `medidas-${ALVO}.json` : "medidas-completa.json"),
     JSON.stringify(medidas, null, 2),
   );
   await browser.close();
