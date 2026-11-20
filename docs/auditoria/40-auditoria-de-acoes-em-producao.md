@@ -411,3 +411,39 @@ o caminho.
 rotas (banner + diferença pós-publicação, #693/#698), reprecificação (#687),
 estoque atômico **com `ORDER_STOCK_ATOMIC=false`** (#691), harness E2E (#701) e os
 quatro fragmentos que faltavam.
+
+## 21. 21/11/2026 — Deploy 1.62.0 verificado (verde) e a regressão do embed no Sentinel
+
+**Verde (verificado pelo dono):**
+
+```
+7 containers em 1.62.0 · /health healthy 1.62.0 · /login 200
+api_request_probes ............... existe
+fn_criar_pedido_com_estoque ...... existe
+anon pode executar ............... false
+pedido_preso 15 → 0 detectados, 15 ENCERRADAS (121→1 na vida real: só o com autor)
+```
+
+**Vermelho — regressão do #672, não do deploy:**
+
+```
+coletas_truncadas: ["leads_abertos"]
+falha: "Could not embed because more than one relationship was found
+        for 'crm_leads' and 'crm_stages'"
+```
+
+O embed `crm_stages(name)` que o #672 adicionou é **ambíguo** (duas FKs entre as
+tabelas) → a coleta `leads_abertos` falha → **`operacao.lead_duplicado` está
+cego**: não detecta novo nem resolve os 5 abertos. As 5 ocorrências **não** foram
+encerradas (o mapa de fontes funcionou), mas o detector não roda.
+
+**Lição:** **embed sem hint de FK em tabela com duas FKs é falha silenciosa de
+coleta** — o teste de unidade não pegou porque **mocka a consulta**. O que prova
+coleta é a varredura real com `coletas_truncadas = []`.
+
+**Correção:** G no fix (hint de FK explícito + teste que falharia antes + varredura
+dos outros embeds); entra na **1.62.1** (patch — conserto de regressão nossa, nada
+muda para quem roda).
+
+**Verificação esperada da 1.62.1:** `coletas_truncadas = []`, `leads_abertos` sem
+falha e os **5 leads reafirmados**.
