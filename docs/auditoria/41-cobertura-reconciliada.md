@@ -240,6 +240,18 @@ base sumiu; duas telas entraram depois dela.
 | **Página pública** — `o/[token]` e os destinos de redirect | orçamento inválido, `/`, `vitrine-agenda` | **3 de 3**: estado inválido com 12 textos; `/` e `/vitrine` medidas como **redirect** (destino `/login?next=…`) |
 | **Wizard** — `onboarding/layout` + `Stepper` | 8 telas + roteador | **9 de 9**: 1.380 textos; o callout âmbar foi o único defeito (contraste no escuro, `setup-ai` e `funil`) e está corrigido |
 
+**Régua a partir de 21/11/2026 — h1 por timeout + redirect no destino.** A
+captura passou a exigir, por linha, o **h1** da tela (lido com timeout de 20 s) e,
+quando a rota redireciona, a medição **do destino** (`urlFinal` começa por ele).
+Motivo: a rodada de 20/11 esperava "algum texto da tela", e foi assim que
+`/login/mfa` passou por medido sem ter sido — o texto do `/login`, para onde ele
+redireciona, satisfazia a espera. O instrumento está nessa régua
+(`tests/lib/rotas-publico-auth.ts` + teste que reprova rota sem h1 ou sem
+destino); a re-medição com ela está pendente de janela (swap > 4 GB + servidor de
+outra frente). Até lá, `mfa` segue `pendente`; as demais linhas mantêm a medição
+de 20/11, em que o `urlFinal` confirmou a rota certa — o h1 é a conferência
+adicional, não a primeira.
+
 **Total de texto medido (4 combinações por rota):** 524 nas rotas de acesso/
 estado/legal/público + 1.380 no wizard. A soma inclui o que caiu em `/login` na
 medição do MFA — mas essa linha **não** é contada como MFA medido.

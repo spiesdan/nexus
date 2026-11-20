@@ -28,6 +28,12 @@ export interface Medida {
   console: string[];
   contraste: { total: number; abaixo: number; piores: AchadoDeContraste[] };
   axe: { critica: number; seria: number; ids: string[]; nos: string[] };
+  /** h1 da tela, lido com timeout — a prova de que a TELA certa renderizou. */
+  h1?: string | null;
+  /** O h1 esperado casou e o destino do redirect confere. */
+  medidaOk?: boolean;
+  /** Quando `medidaOk` é falso: por que esta linha NÃO conta como medida. */
+  motivoNaoMedido?: string | null;
 }
 
 /**
