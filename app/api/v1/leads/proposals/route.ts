@@ -102,7 +102,9 @@ export async function GET(req: NextRequest): Promise<Response> {
   if (leadIds.length > 0) {
     const { data: leads, error: leadsErr } = await supabase
       .from("crm_leads")
-      .select("id, title, contact_id, crm_stages(name), contacts(display_name)")
+      .select(
+        "id, title, contact_id, crm_stages!crm_leads_stage_id_fkey(name), contacts!crm_leads_contact_id_fkey(display_name)",
+      )
       .eq("organization_id", orgId)
       .in("id", leadIds);
     if (leadsErr) return fail("internal", leadsErr.message, 500, { requestId });

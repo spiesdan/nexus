@@ -622,3 +622,50 @@ fiscal/financeira real.
 - **Próxima**: medir `contatos_endereco`/`leads` em produção e, se a coleta
   voltar a truncar, decidir entre teto maior ou agregação SQL — com número, não
   no escuro.
+
+## 12. Regressão da 1.62.0 — embed ambíguo cegou o lead duplicado (20/11/2026)
+
+A verificação pós-deploy da 1.62.0 mostrou a rodada de 10:44Z com:
+
+```
+falhas: ["leads_abertos: Could not embed because more than one relationship
+          was found for 'crm_leads' and 'crm_stages'"]
+coletas_truncadas: ["leads_abertos"]
+regras_nao_avaliadas: ["plataforma.slo_estourado"]
+achados: 0
+```
+
+O #672 trocou o select de `crm_leads` para trazer `crm_stages(name)` e
+`contacts(...)`. Sem hint, o PostgREST precisa de **uma** FK entre as tabelas;
+no banco com drift existem duas (a canônica `stage_id` e uma de histórico). A
+coleta inteira ia para `falhas`, `operacao.lead_duplicado` deixava de ser
+avaliada e o detector ficava **cego** — as 5 ocorrências existentes ficaram
+`nova` (o bloqueio por fonte funcionou), mas nenhuma duplicidade nova seria
+vista.
+
+**Correção (sem migration):** o select mora em `lib/sentinel/selects.ts`, com
+hint explícito pelo nome da constraint:
+
+```sql
+crm_stages!crm_leads_stage_id_fkey(name),
+contatos:contacts!crm_leads_contact_id_fkey(name, display_name, phone_number, email_normalized)
+```
+
+O alias `contatos:` também conserta um segundo defeito silencioso do #672: o
+tipo (`LeadAberto.contatos`) e a regra leem `lead.contatos`, mas o PostgREST
+devolvia `contacts` — a evidência caía no fallback de id sem ninguém notar. O
+mesmo hint foi aplicado preventivamente em
+`app/api/v1/leads/proposals/route.ts` (mesmo `crm_leads` + `crm_stages`).
+
+**Testes:** `lib/sentinel/coleta-embed.test.ts` simula o PostgREST ambíguo e
+prova que a coleta devolve linha (não `falha`) e que etapa e contato chegam na
+evidência; `lib/sentinel/selects.test.ts` valida que todo embed tem hint e que a
+constraint citada existe no baseline. Os dois **falham** com o select antigo
+(verificado por sabotagem) e passam com o hint.
+
+**Prova a fazer após a 1.62.1:** rodada com `coletas_truncadas = []`,
+`leads_abertos` sem falha e `operacao.lead_duplicado` reafirmando as 5.
+
+Prova ponta a ponta no PostgREST local (v16, mesma versão do compose): o select
+novo devolve **200** com `crm_stages.name` e `contatos.name` preenchidos. Gate
+`pnpm test:db`: **184 arquivos / 2358 testes** verdes.
