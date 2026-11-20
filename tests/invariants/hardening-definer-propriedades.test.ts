@@ -130,6 +130,8 @@ const CONFIA_NO_CHAMADOR: Readonly<Record<string, string>> = {
     "app/api/v1/sentinel/occurrences/[id]/correcao/conversa/route.ts — admin.rpc com a org da ocorrência aprovada",
   fn_sentinel_reverter_liberacao_conversa:
     "app/api/v1/sentinel/occurrences/[id]/correcao/conversa/reverter/route.ts — admin.rpc com a org da ocorrência corrigida",
+  fn_criar_pedido_com_estoque:
+    "lib/comercial/criar-pedido.ts — admin.rpc com ctx.orgId (org resolvida pela rota a partir de requireRole/JWT, nunca do corpo); rota /api/v1/commercial-orders",
   fn_upsert_wa_contact: "lib/waha/ingest.ts — org resolvida da sessão do canal",
   fn_upsert_wa_conversation: "lib/waha/ingest.ts — org resolvida da sessão do canal",
   fn_aplicar_status_mercos:
