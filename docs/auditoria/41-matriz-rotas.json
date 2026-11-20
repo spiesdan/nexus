@@ -193,92 +193,92 @@
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/configuracoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/eventos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/fornecedores",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/manifestacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/notas",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
+      "veredito": "**pílula da aba ativa corrigida** (`text-accent` → `text-accent-ink`: 3,63:1 no claro); limpo nas outras medidas"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
       "capturar": true,
-      "veredito": "404 na rota — verificar caminho",
-      "pular": "o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
+      "veredito": "pulada: sem nota de exemplo no banco local",
+      "pular": "o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
     },
     {
       "rota": "/fiscal/pendentes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/produtos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/relatorios",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/resumos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/sincronizacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/xml",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/expedicao",
