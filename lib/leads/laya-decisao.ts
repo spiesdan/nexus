@@ -379,8 +379,11 @@ export async function candidatosSemDecisao(
 
   const tem = new Set<string>();
   for (const { data, error } of respostas) {
-    if (error) throw new Error(`decisões gravadas: ${error.message}`);
+    // A mensagem diz o que FALHOU: é leitura. "decisões gravadas" mandava quem
+    // lê o log procurar uma gravação que nunca existiu.
+    if (error) throw new Error(`leitura de decisões falhou: ${error.message}`);
     for (const d of (data ?? []) as DecisaoGravada[]) tem.add(d.lead_id);
   }
+
   return frios.filter((f) => !tem.has(f.leadId)).map((f) => f.leadId);
 }

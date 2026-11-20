@@ -21,7 +21,7 @@ vi.mock("@/lib/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn(), debug: vi.fn() },
 }));
 
-const { decideAcoesDoRadar, motorDeDecisaoLigado, novoOrcamento } = await import(
+const { candidatosSemDecisao, decideAcoesDoRadar, motorDeDecisaoLigado, novoOrcamento } = await import(
   "@/lib/leads/laya-decisao"
 );
 
@@ -283,5 +283,86 @@ describe("motor de decisão do radar", () => {
     // E cada decisão continua no SEU lead: o índice é o do lote, não o da lista.
     expect(gravadas[64]).toMatchObject({ lead_id: "l64" });
     expect(gravadas[69]).toMatchObject({ lead_id: "l69" });
+  });
+});
+
+/**
+ * O `.in("lead_id", …)` do preenchimento de acervo — o defeito que derrubava a
+ * rodada inteira do risk-watcher com 414 (URI too long) a cada 15 minutos.
+ *
+ * O filtro viaja na query string do PostgREST: a lista de frios não tem teto
+ * natural (é o acervo da organização), então a leitura precisa fatiar. Estes
+ * testes fixam as duas metades da regra: 500 ids viram blocos de 100, e lista
+ * pequena continua numa consulta só — fatiar não pode virar custo onde não há
+ * problema.
+ */
+function adminDeDecisoes(opcoes: { gravadas?: Set<string>; erroNoBloco?: number } = {}) {
+  const blocos: string[][] = [];
+  const cliente = {
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          in: (_coluna: string, ids: string[]) => {
+            blocos.push(ids);
+            if (opcoes.erroNoBloco !== undefined && blocos.length === opcoes.erroNoBloco) {
+              return Promise.resolve({ data: null, error: { message: "URI too long" } });
+            }
+            const data = ids
+              .filter((id) => opcoes.gravadas?.has(id))
+              .map((id) => ({ lead_id: id }));
+            return Promise.resolve({ data, error: null });
+          },
+        }),
+      }),
+    }),
+  };
+  return { cliente, blocos };
+}
+
+describe("candidatosSemDecisao — leitura fatiada", () => {
+  it("500 ids viram 5 blocos de 100 e o resultado preserva quem não tem decisão", async () => {
+    const frios = Array.from({ length: 500 }, (_, i) => candidato(`l${i}`));
+    // Um a cada quatro já tem decisão: 125 fora, 375 candidatos.
+    const gravadas = new Set(frios.filter((_, i) => i % 4 === 0).map((f) => f.leadId));
+    const { cliente, blocos } = adminDeDecisoes({ gravadas });
+
+    const restantes = await candidatosSemDecisao(cliente as never, "org", frios);
+
+    expect(blocos).toHaveLength(5);
+    expect(blocos.every((b) => b.length === 100)).toBe(true);
+    expect(blocos.flat()).toEqual(frios.map((f) => f.leadId));
+    expect(restantes).toHaveLength(375);
+    expect(restantes).not.toContain("l0");
+    expect(restantes).toContain("l1");
+  });
+
+  it("lista pequena continua numa consulta só", async () => {
+    const frios = Array.from({ length: 7 }, (_, i) => candidato(`p${i}`));
+    const { cliente, blocos } = adminDeDecisoes();
+
+    const restantes = await candidatosSemDecisao(cliente as never, "org", frios);
+
+    expect(blocos).toHaveLength(1);
+    expect(blocos[0]).toHaveLength(7);
+    expect(restantes).toEqual(frios.map((f) => f.leadId));
+  });
+
+  it("o mesmo lead repetido não consome duas vagas nem vira bloco extra", async () => {
+    const frios = [candidato("a"), candidato("a"), candidato("b")];
+    const { cliente, blocos } = adminDeDecisoes();
+
+    const restantes = await candidatosSemDecisao(cliente as never, "org", frios);
+
+    expect(blocos).toEqual([["a", "b"]]);
+    expect(restantes).toEqual(["a", "a", "b"]);
+  });
+
+  it("falha de leitura diz que foi LEITURA, não gravação", async () => {
+    const frios = Array.from({ length: 150 }, (_, i) => candidato(`e${i}`));
+    const { cliente } = adminDeDecisoes({ erroNoBloco: 2 });
+
+    await expect(candidatosSemDecisao(cliente as never, "org", frios)).rejects.toThrow(
+      "leitura de decisões falhou: URI too long",
+    );
   });
 });
