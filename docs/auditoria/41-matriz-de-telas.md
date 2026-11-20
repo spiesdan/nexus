@@ -109,7 +109,7 @@ escrito à mão).
 | 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
 | 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
 
-### 4. Expedição — 7 telas, 1 medidas
+### 4. Expedição — 7 telas, 0 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
@@ -117,19 +117,19 @@ escrito à mão).
 | 2 | `/expedicao/[id]` · dinâmica | — | — | — | pendente |
 | 3 | `/expedicao/[id]/fechamento` · dinâmica | — | — | — | pendente |
 | 4 | `/expedicao/[id]/motorista` · dinâmica | — | — | — | pendente |
-| 5 | `/expedicao/[id]/rota` · dinâmica | 0/0 px | 0/1 | 0 | **passe em 3 fatias**: #673 (mapa no piso de 50vh, selo de estado) · #685 (aviso de parada fora do mapa e mapa vazio) · #692 (erro de hidratação do `<details>`; 5 → 0 erros de console, com gate) · #694 (publicar a rota como ação da tela). Medido no antes/depois: overflow 0 px, console 0, axe crítico 0 nas 8 combinações; a ação aparece só em carga montando e o atalho do entregador só em `em_rota` |
+| 5 | `/expedicao/[id]/rota` · dinâmica | — | — | — | pendente |
 | 6 | `/expedicao/nova` | — | — | — | pendente |
 | 7 | `/frota` | — | — | — | pendente |
 
-### 5. Financeiro e indicadores — 5 telas, 0 medidas
+### 5. Financeiro e indicadores — 5 telas, 5 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/financeiro` | — | — | — | pendente |
-| 2 | `/indicadores` | — | — | — | pendente |
-| 3 | `/laboratorio` | — | — | — | pendente |
-| 4 | `/metrics` | — | — | — | pendente |
-| 5 | `/relatorios` | — | — | — | pendente |
+| 1 | `/financeiro` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0) |
+| 2 | `/indicadores` | 0/0 px | 0/1 | 0 | **dois críticos corrigidos**: as barras `role="progressbar"` sem nome (`aria-progressbar-name`) ganharam rótulo por contexto, e o gatilho de atendente ganhou `aria-label` (`button-name`). Depois: axe crítico 0, overflow 0, console 0 |
+| 3 | `/laboratorio` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0) |
+| 4 | `/metrics` | 0/0 px | 0/1 | 0 | **mesma tela** de `/indicadores` (h1 «Indicadores»): os dois críticos foram corrigidos lá. Depois: axe crítico 0 |
+| 5 | `/relatorios` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0) |
 
 ### 6. Configuração, time e inteligência de mercado — 38 telas, 36 medidas
 

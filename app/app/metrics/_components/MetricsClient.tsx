@@ -73,7 +73,11 @@ export function MetricsClient({ canCompare, currentUserId }: Props) {
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">{t("Atendente")}</span>
           <Select value={owner} onValueChange={setOwner}>
-            <SelectTrigger className="w-64">
+            {/* O gatilho é um `<button role="combobox">`: sem nome acessível o
+                axe reprova como `button-name` (CRÍTICO) e o leitor de tela
+                anuncia só "botão". O `<span>` ao lado é texto solto, não
+                rótulo associado. */}
+            <SelectTrigger className="w-64" aria-label={t("Filtrar por atendente")}>
               <SelectValue placeholder={t("Todos os atendentes")} />
             </SelectTrigger>
             <SelectContent>

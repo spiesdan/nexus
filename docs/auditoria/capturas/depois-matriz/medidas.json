@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T10:43:30.859Z",
+  "gerado": "2026-11-20T11:48:06.495Z",
   "rotulo": "depois",
-  "rotas": 13,
+  "rotas": 2,
   "medidas": [
     {
       "rota": "/carteira",
@@ -5069,6 +5069,386 @@
       "overflow": 0,
       "h1": [
         "XML recebidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/financeiro",
+      "url": "/app/financeiro",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/indicadores",
+      "url": "/app/indicadores",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/laboratorio",
+      "url": "/app/laboratorio",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Laboratório do agente"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/metrics",
+      "url": "/app/metrics",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/relatorios",
+      "url": "/app/relatorios",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/financeiro",
+      "url": "/app/financeiro",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/indicadores",
+      "url": "/app/indicadores",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/laboratorio",
+      "url": "/app/laboratorio",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Laboratório do agente"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/metrics",
+      "url": "/app/metrics",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/relatorios",
+      "url": "/app/relatorios",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/financeiro",
+      "url": "/app/financeiro",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/indicadores",
+      "url": "/app/indicadores",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/laboratorio",
+      "url": "/app/laboratorio",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Laboratório do agente"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/metrics",
+      "url": "/app/metrics",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/relatorios",
+      "url": "/app/relatorios",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Relatórios"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/financeiro",
+      "url": "/app/financeiro",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/indicadores",
+      "url": "/app/indicadores",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/laboratorio",
+      "url": "/app/laboratorio",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Laboratório do agente"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/metrics",
+      "url": "/app/metrics",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Indicadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/relatorios",
+      "url": "/app/relatorios",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Relatórios"
       ],
       "consoleErros": [],
       "axe": {
