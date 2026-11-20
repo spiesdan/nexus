@@ -51,7 +51,9 @@ export function AvisoMotorIndisponivel({
             )}
       </p>
       {quando ? (
-        <p className="mt-1 text-xs text-warning-fg/80">
+        // Sem `/80`: no Tailwind 4 o alpha PINTA e derrubava o par para
+        // 3,72:1 sobre o bg do tema claro (piso AA 4,5). Sem alpha: 5,59:1.
+        <p className="mt-1 text-xs text-warning-fg">
           {t("Última falha:")} {quando}
           {saude.detalhe ? ` — ${saude.detalhe}` : ""}
         </p>
