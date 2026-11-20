@@ -45,7 +45,7 @@ export function ResolveIncidentDialog({ incidentId }: ResolveIncidentDialogProps
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="default" size="sm">
+        <Button variant="default" size="sm" className="min-h-10">
           {t("Resolver incidente")}
         </Button>
       </AlertDialogTrigger>
