@@ -36,6 +36,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
+import { argumentosDaSuite } from "../../scripts/lib/e2e-suite-args";
+
 import { describe, expect, it } from "vitest";
 
 const RAIZ = process.cwd();
@@ -165,8 +167,36 @@ describe("suítes do e2e (tests/e2e/suites/*.txt)", () => {
     // existe no Playwright e morre com "No tests found"; o comentário do
     // script a cita de propósito como contr exemplo, por isso a asserção é
     // sobre a invocação e não sobre o texto corrido.
-    expect(script, "scripts/test-e2e-suite.ts não invoca o CLI com as specs como argumento").toMatch(
-      /\[cli, "test", "--workers=1", \.\.\.specs/,
+    // A montagem dos argumentos é uma FUNÇÃO (scripts/lib/e2e-suite-args.ts),
+    // não uma string: o gate assere sobre o array. O regex anterior quebrou
+    // quando o `--output` entrou na chamada — regex em código é o instrumento
+    // errado para "as specs são passadas".
+    expect(script, "scripts/test-e2e-suite.ts não usa argumentosDaSuite").toMatch(
+      /argumentosDaSuite\(/,
+    );
+    const args = argumentosDaSuite({
+      cli: "/repo/node_modules/@playwright/test/cli.js",
+      specs: ["auth.spec.ts", "smoke.spec.ts"],
+      outputDir: "/tmp/nexus-e2e/critical-1",
+      extras: ["--reporter=line"],
+    });
+    expect(args.slice(0, 2), "o CLI e o subcomando `test` vêm primeiro").toEqual([
+      "/repo/node_modules/@playwright/test/cli.js",
+      "test",
+    ]);
+    expect(args, "o runner continua single-worker como a lista do CI").toContain("--workers=1");
+    // As specs são passadas UMA A UMA — nada de "todas por omissão".
+    expect(args.filter((a) => a.endsWith(".spec.ts"))).toEqual([
+      "auth.spec.ts",
+      "smoke.spec.ts",
+    ]);
+    // O --output existe e NÃO aponta para test-results (que a suíte apagava).
+    const iOutput = args.indexOf("--output");
+    expect(iOutput, "--output ausente").toBeGreaterThan(-1);
+    expect(args[iOutput + 1]).toBe("/tmp/nexus-e2e/critical-1");
+    expect(args[iOutput + 1]).not.toContain("test-results");
+    expect(args, "nada de @arquivo (sintaxe que não existe no Playwright)").not.toContain(
+      "@tests/e2e/suites/critical.txt",
     );
     for (const [nome, scriptName] of [
       ["smoke", "test:e2e:smoke"],
