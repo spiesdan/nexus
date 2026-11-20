@@ -180,7 +180,7 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/tenants` | admin | **pendente** | — | — |
 | `/admin/usage` | admin | **pendente** | — | — |
 | `/admin/users/[id]` | admin | **pendente** | — | — |
-| `/admin/users` | admin | **pendente** | — | — |
+| `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |
 | `/admin/forbidden` | admin | **pendente** | — | — |
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
