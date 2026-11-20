@@ -5,6 +5,7 @@ import Link from "next/link";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { mensagemDeErro } from "@/lib/ui/erros";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
@@ -303,6 +304,15 @@ export function Roteirizador({
   const [ordem, setOrdem] = React.useState<string[]>([]);
   const [proposta, setProposta] = React.useState<PropostaRota | null>(null);
   const [origemTexto, setOrigemTexto] = React.useState("");
+  /**
+   * ERRO DE GEOCODIFICAÇÃO NÃO SOME COM A LISTA.
+   *
+   * Antes a falha virava toast de 4 s e a tela seguia igual: quem não estava
+   * olhando no segundo do clique ficava sem saber que N endereços continuaram
+   * fora do mapa. Agora a falha tem lugar fixo acima dos painéis, com o texto
+   * do servidor e o botão de tentar de novo.
+   */
+  const [erroGeo, setErroGeo] = React.useState<string | null>(null);
   const [retornar, setRetornar] = React.useState(false);
   const [tempoParada, setTempoParada] = React.useState(8);
   const [trabalhando, setTrabalhando] = React.useState<string | null>(null);
@@ -687,6 +697,7 @@ export function Roteirizador({
       }
       const paradas = ultima?.paradas ?? [];
       const noMapa = paradas.filter((p) => p.latitude != null && p.longitude != null).length;
+      setErroGeo(null);
       if (localizadas > 0 && semResultado === 0) {
         toast.success(`${localizadas} ${t("parada(s) localizada(s) no mapa.")}`);
       } else if (localizadas > 0) {
@@ -706,7 +717,9 @@ export function Roteirizador({
       }
       return noMapa;
     } catch (e) {
-      showApiError(e);
+      // O erro tem lugar na tela: banner acima dos painéis, com retry. Nada de
+      // toast — e a lista de paradas continua exatamente onde estava.
+      setErroGeo(mensagemDeErro(e, t("Não consegui localizar os endereços.")));
       return ultima?.paradas.filter((p) => p.latitude != null && p.longitude != null).length ?? 0;
     } finally {
       setTrabalhando(null);
@@ -1423,6 +1436,24 @@ export function Roteirizador({
         )}
       </div>
 
+      {erroGeo ? (
+        <div
+          role="alert"
+          data-testid="erro-geocodificacao"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-error/40 bg-error-bg px-3.5 py-2.5 text-sm text-error-fg"
+        >
+          <span>{erroGeo}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void geocodificarTudo()}
+            disabled={trabalhando !== null}
+          >
+            {t("Tentar de novo")}
+          </Button>
+        </div>
+      ) : null}
+
       {/* ── OS PAINÉIS, ABAIXO DO MAPA ──────────────────────────────────────
           Depois do desenho, o trabalho: a ordem de entrega, o planejamento e,
           ao lado dele, o que impede a rota de sair (endereço sem confirmação e
@@ -1882,6 +1913,12 @@ export function Roteirizador({
                     title={p.endereco ?? undefined}
                   >
                     {p.endereco ?? t("Sem endereço — corrija o cadastro ou marque no mapa.")}
+                    {p.endereco && p.semNumero ? (
+                      // Sem número é um endereço INCOMPLETO, não um endereço
+                      // errado: o pino fica na rua e o motorista procura o
+                      // número. A linha dizia isso só no balão do mapa.
+                      <span className="ml-1 text-warning-fg">· {t("sem número")}</span>
+                    ) : null}
                   </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
