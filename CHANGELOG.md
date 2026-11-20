@@ -8,6 +8,162 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.62.0] — 2026-11-20
+
+### Adicionado
+
+- **Custo no resumo do recebimento e do pedido (sem mexer no preço)** O recebimento mostrava só "X/Y unidades recebidas" e o resumo do pedido mostrava
+  quantidade e valor, sem custo. Agora:
+
+  - **Recebimento**: unidades **e** valor — o do item da compra (o custo negociado
+    com o fornecedor), tanto do que já entrou quanto do que está sendo digitado.
+  - **Resumo do pedido**: custo e margem, para quem vê margem (a mesma régua do
+    criador). O número é o custo **atual do catálogo** — o item do pedido não
+    guarda o custo da época — e a tela diz isso; quando algum item não tem custo
+    (produto removido), o total é marcado como parcial.
+
+  Em nenhum dos dois o preço do pedido é recalculado. Nada a fazer na VPS.
+
+- **Sonda interna prova o instrumento de métricas sem poluir os SLOs** A série de API podia estar vazia por falta de tráfego ou por instrumento mudo.
+  Agora `POST /api/internal/observabilidade/sonda` (protegida por
+  `INTERNAL_CRON_SECRET`) grava uma sonda em `api_request_probes` e devolve id,
+  instante e duração; a tela de observabilidade mostra a última. A sonda não entra
+  em `api_request_samples` — contagem, idade e retenção da série ficam intactas.
+  Se a sonda funciona e a série continua zero, o problema é tráfego.
+
+- **Gerente libera crédito ou estoque no pedido, com motivo e auditoria** `ignorar_estoque` e `ignorar_credito` existiam só na API: o poder de passar por
+  cima do limite era invisível — quem mandasse a requisição com o cookie certo
+  liberava, e ninguém na tela sabia que aquilo era possível.
+
+  Agora, quando o pedido estoura o limite de crédito do cliente ou falta estoque,
+  o **gerente** vê o bloco "Ignorar um limite", marca o que está liberando e
+  escreve o **motivo**. O motivo é obrigatório: sem ele a tela não gera o pedido e
+  o servidor recusa com 422. Cada override fica na auditoria com o nome de quem
+  liberou, o que foi ignorado e o motivo declarado.
+
+  O preço negociado à mão (`ignorar_preco`) segue com o fluxo próprio de antes.
+  Nada a fazer na VPS.
+
+### Alterado
+
+- **Trocar a tabela de preço mostra o que muda, linha a linha** Trocar a tabela de preço de um pedido já lançado recusava com 422 e não dizia o
+  que mudaria. Agora a troca abre uma **confirmação com a diferença por item** —
+  o operador vê o preço antes e depois antes de aplicar.
+
+  Preço digitado à mão continua marcado como manual e **não é sobrescrito** pela
+  tabela.
+
+  **Nada a fazer na VPS.**
+
+### Corrigido
+
+- **Admin — banner legível e sino sem 403 no console** O banner “MODO PLATAFORMA” usava `text-amber-800/80` e media 4,24:1 no tema
+  claro — abaixo do piso AA de 4,5; sem o `/80` o texto passa. O sino de avisos
+  do shell de plataforma consultava o endpoint do tenant (`/api/v1/ai/inbox`) sem
+  organização ativa e enchia o console com 403 a cada 60 s; agora fica inativo no
+  `AdminShell` e volta a consultar quando houver fonte de alerta de plataforma.
+
+  Nenhuma regra de negócio mudou; a lista de auditoria em si já estava conforme
+  (overflow 0 em 1440/390).
+
+- **Casca do admin passa a ter alvos de toque de 44 px** Sidebar, topbar, busca, menu do usuário e banner do admin ganharam piso de 44 px
+  no desktop (antes 28–36). O dashboard mediu 16 → 1 e 2 → 1 alvos abaixo de 40 px
+  em 1440 e 390 — o que resta é só o skip-link `sr-only` 1×1, nenhum alvo visível —
+  sem overflow, erro de console ou contraste reprovado. As telas
+  filhas herdam a casca; o conteúdo de cada uma segue em auditoria própria.
+
+- **Baixa de estoque atômica existe, mas nasce desligada** A função `fn_criar_pedido_com_estoque` passa a existir no banco: a baixa de
+  estoque pode acontecer **na mesma transação** do pedido, em vez de depois e só
+  com erro no log.
+
+  **Ela entra desligada** (`ORDER_STOCK_ATOMIC=false`): o caminho de criação
+  continua o mesmo enquanto o dono não ligar, depois de ver o `test:db` em
+  produção.
+
+  **Nada a fazer na VPS** — o comportamento desta versão é o mesmo de antes; a
+  função fica pronta para ser ligada.
+
+- **Suíte E2E cai de 26 para 15 minutos e para de inventar vermelho** Quem desenvolve ganha tempo e confiança no gate: a suíte `critical` rodava em
+  **26,4 min** e terminava com **8 falhas** que eram do instrumento, não do
+  produto.
+
+  Duas causas: o teste de MFA esperava 5 minutos um `Dígito 1` **disabled** porque
+  o segredo tinha rotacionado; e o `--output` do Playwright ficava dentro de
+  `test-results`, então a própria suíte apagava os traces que tentava ler no fim
+  (ENOENT).
+
+  Agora roda em **14,7 min**, **0 falhas de infraestrutura**, em uma invocação.
+
+  **Nada a fazer na VPS** — é ferramenta de desenvolvimento.
+
+- **Radar e Prospecção dizem quando o motor de decisão está fora** Quando o motor local (laya) está configurado mas não responde, a sugestão
+  automática some — e até hoje isso aparecia como "nada a sugerir". Agora o cron
+  registra a falha num incidente (`laya.motor_indisponivel`), o Radar e a
+  Prospecção mostram o aviso "Sugestão automática desligada: o motor de decisão não
+  respondeu" com a última falha e o que revisar, e a linha sem sugestão ganha o
+  selo "Sugestão indisponível" em vez de silêncio. O primeiro sucesso fecha o
+  incidente sozinho. `/admin/observabilidade` ganha o cartão do motor com estado e
+  última falha, e `/api/v1/laya/saude` expõe o mesmo fato por organização. Nada
+  desliga sozinho e nada tenta de novo — é visibilidade, não comportamento.
+
+- **Aviso do onboarding no tema escuro passa o contraste mínimo** No wizard, os textos secundários dos avisos âmbar (o de "Ele ainda não tem
+  cérebro", no passo de treinar, e o de sugestão de funil) usavam o cinza de
+  superfície sobre o fundo âmbar do tema escuro: **4,27:1**, abaixo do piso AA de
+  4,5 para texto normal — e o axe classificava como sério em 390 e 1440.
+
+  O aviso já declara a cor de texto própria; os secundários passaram a herdá-la em
+  vez de trocar para o cinza. Os detalhes de erro dos avisos de "atendente ficou
+  como rascunho" tinham o mesmo problema quando aparecessem e foram corrigidos
+  junto.
+
+  Nada a fazer na VPS.
+
+- **Rascunho do pedido tenta a sessão antes de avisar que não salvou** Quando o navegador recusa gravar o rascunho do pedido no armazenamento local
+  (modo privado, cota cheia, política do navegador), a tela avisava "não foi
+  possível salvar" e a venda ficava só na memória — perdida no primeiro recarregar.
+
+  Agora o autosave tenta o armazenamento da **aba** como segunda chance, antes de
+  avisar: o rascunho sobrevive a recarregar (não a fechar a aba). O aviso só
+  aparece quando os dois recusam. Na restauração, vence o rascunho mais novo entre
+  disco e sessão — um rascunho antigo no disco não pode ganhar do fresco na sessão.
+
+  Nada a fazer na VPS.
+
+- **Radar de risco volta a gravar decisões com acervo grande** A leitura das decisões já gravadas mandava a lista inteira de leads frios num
+  `in()` do PostgREST; acima de ~500 ids a URL estourava (414) e derrubava a
+  rodada do risk-watcher **inteira** — a cada 15 minutos, em silêncio, porque a
+  falha acontece dentro do cron. O fatiamento em blocos de 100 entrou na **#697**;
+  aqui ele é mantido, a mensagem passa a dizer que foi **leitura**
+  (`leitura de decisões falhou: …`) e as duas outras consultas do mesmo caminho
+  que montavam `in()` sem teto — `risk-seed` (etapas e contatos de todos os leads
+  abertos) e `radar-de-risco` (dono, etapa e contato) — também passaram pelo
+  mesmo helper. Nenhum dado existente muda; quem já tem decisão continua de fora.
+
+- **Rota avisa quando o provedor de mapa cai — e mostra o que mudou depois de publicada** O provedor de geocodificação podia cair e a rota respondia
+  **HTTP 200 com erro por parada**: o `catch` do cliente nunca disparava e o banner de falha nunca
+  aparecia — a pessoa achava que a rota tinha otimizado.
+
+  Agora a tela separa “o provedor não respondeu” de “o endereço não deu
+  resultado”, e a publicação mostra **o que mudou**: quantas paradas moveram,
+  quantas entraram e quantas saíram.
+
+  **Nada a fazer na VPS.** A correção é de tela; nenhuma configuração nova.
+
+- **Evidência do Sentinel passa a identificar a natureza da nota e o contato do lead** A ocorrência de nota duplicada agora mostra a natureza de cada nota (venda,
+  complementar, ajuste, devolução) no título, no resumo e na evidência, e a
+  recomendação não manda cancelar devolução como duplicidade. A ocorrência de lead
+  duplicado identifica o contato por nome → telefone → e-mail → id curto, com etapa
+  e data de criação de cada lead, em vez de só UUIDs.
+
+  Regra geral registrada: toda evidência que aponta para uma entidade precisa de
+  um campo legível por humano.
+
+- **Pedido preso deixa de contar resíduo de importação sem autor** Rascunho importado do Mercos não tem `created_by` e não é trabalho abandonado.
+  A regra `operacao.pedido_preso` passou a exigir autor humano; com os dados da
+  organização real, as ocorrências caem de 121 para 1. A evidência mostra o autor,
+  e a ocorrência de lead duplicado ganhou link navegável por lead, sem mesclar
+  nada automaticamente.
+
 ## [1.61.1] — 2026-11-20
 
 ### Alterado
@@ -8373,7 +8529,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.61.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.0...HEAD
+[1.62.0]: https://github.com/spiesdan/nexus/compare/v1.61.1...v1.62.0
 [1.61.1]: https://github.com/spiesdan/nexus/compare/v1.61.0...v1.61.1
 [1.61.0]: https://github.com/spiesdan/nexus/compare/v1.60.0...v1.61.0
 [1.60.0]: https://github.com/spiesdan/nexus/compare/v1.59.1...v1.60.0
