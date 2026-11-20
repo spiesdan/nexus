@@ -77,7 +77,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
         no `main` — antes a sidebar e o hambúrguer rolavam para cima e sumiam
         nas páginas longas do admin.
       */}
-      <div className="flex h-screen w-full flex-col overflow-hidden bg-background">
+      <div data-admin-shell className="flex h-screen w-full flex-col overflow-hidden bg-background">
         {/*
           O PRIMEIRO ALVO DO TAB — o admin não tinha.
           

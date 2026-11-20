@@ -34,7 +34,7 @@
     ],
     "alvos": {
       "total": 2,
-      "abaixoDe40": 0,
+      "abaixoDoAlvo": 0,
       "amostra": []
     },
     "axe": {
@@ -83,7 +83,7 @@
     ],
     "alvos": {
       "total": 2,
-      "abaixoDe40": 0,
+      "abaixoDoAlvo": 0,
       "amostra": []
     },
     "axe": {
@@ -132,7 +132,7 @@
     ],
     "alvos": {
       "total": 2,
-      "abaixoDe40": 0,
+      "abaixoDoAlvo": 0,
       "amostra": []
     },
     "axe": {
@@ -181,7 +181,7 @@
     ],
     "alvos": {
       "total": 2,
-      "abaixoDe40": 0,
+      "abaixoDoAlvo": 0,
       "amostra": []
     },
     "axe": {

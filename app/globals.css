@@ -1320,3 +1320,23 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   PISO DE TOQUE 44×44 NO ADMIN — medido nas 22 rotas em 20/11/2026.
+
+   A varredura da matriz 41 achou o mesmo defeito em 19 das 22 telas: alvos
+   entre 40 e 36 px, residual da régua anterior (40 px). Corrigir 19 telas uma
+   a uma recriaria a divergência — cada filtro novo esqueceria o piso. A regra
+   mora na casca, então vale para a peça que ainda vai nascer.
+
+   `!important` é necessário: `h-9`/`h-10` das utilitárias têm a mesma
+   especificidade e vêm depois. Só dentro do admin — o app do tenant tem
+   densidade própria e não é alvo desta medição.
+   ─────────────────────────────────────────────────────────────────────────── */
+[data-admin-shell] :is(a, button, [role="button"]) {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+[data-admin-shell] :is(input:not([type="hidden"]), select, textarea) {
+  min-height: 44px !important;
+}

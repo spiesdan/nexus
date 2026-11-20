@@ -181,7 +181,7 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/usage` | admin | **aplicado** — axe crítico 1 → 0 (`button-name`); alvos 2/1 → 0 (build de produção, claro/escuro × 1440/390) | `63-admin-config-modulo-design.md` · `medidas-usage.json` | G |
 | `/admin/users/[id]` | admin | **aplicado** — axe sério 1 → 0; alvos 4/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390, `h1` esperado) | `60-admin-users-modulo-design.md` · `medidas-user-ficha.json` | G |
 | `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |
-| `/admin/forbidden` | admin | **aplicado** — alvos 2/0 → 0 (botões do StatusPage em 40 px) | `64-admin-inbox-modulo-design.md` · `medidas-forbidden.json` | G |
+| `/admin/forbidden` | admin | **aplicado** — piso 44: alvos 2 → 0 nos 4 contextos (fora do `AdminShell`: primitiva `StatusPage` com 44 px) | `65-varredura-admin-44.md` · `medidas-forbidden.json` | G |
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
@@ -533,3 +533,16 @@ As demais telas seguem `pendente` para auditoria de **conteúdo** — a casca j�
 entrega 44 px em todas. `/admin/audit` ainda tinha 72 no total (conteúdo próprio).
 
 Entregue no **PR #686** (`admin/fila-22`), com `48-admin-dashboard-design.md`.
+
+
+## 13. Varredura completa do admin no piso 44×44 (20/11/2026)
+
+As **22 rotas** foram medidas em build de produção (`next start`), claro/escuro
+× 1440/390, `h1` por timeout, redirect medido no destino e axe/console/contraste
+— **88 medições**, servidor morto ao fim. O defeito dominante era o residual da
+régua de 40 px em **19/22 telas**; corrigido na casca (`data-admin-shell` +
+regra escopada a 44 px), e as 21 rotas dentro da casca passaram a **0 alvos < 44**.
+Mapa por tipo/módulo, antes/depois por rota e o limite de `/admin/forbidden` em
+`docs/auditoria/65-varredura-admin-44.md`. Somente as rotas que a varredura
+mediu têm linha `aplicado` nesta seção — as 22, inclusive `forbidden`, cuja
+quarta medição foi remediada isoladamente quando o swap liberou.
