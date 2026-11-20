@@ -119,17 +119,7 @@ estourava `null value in column "origem"` completa no artefato oficial.
 
 **Rollback:** refixar 1.59.0; banco não é revertido (aditivo).
 
-## 6. O que este documento **não** cobre
-
-- Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
-- Nenhum pagamento, cobrança ou comunicação externa foi disparado.
-- Nenhum dado de cliente real foi apagado; a única exclusão de dado foi o token `NULL` do endereço, com backup.
-
-> Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
-> autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
-> auditoria.
-
-## 9. 20/11/2026 — Deploy 1.61.0 (em execução/verificação)
+## 9. 20/11/2026 — Deploy 1.61.0 — pedido, autorização e execução
 
 **Autorização:** o dono respondeu "continue" à lista de pendências em que o deploy
 da 1.61.0 era a única ação de produção; o processo é o mesmo das versões 1.59.0 e
@@ -139,11 +129,8 @@ da 1.61.0 era a única ação de produção; o processo é o mesmo das versões 
 
 | Verificação | Estado |
 |---|---|
-| 7 containers em 1.61.0 | a confirmar na VPS |
-| `/health` `version 1.61.0` | **ainda 1.60.0** às 2026-11-20T01:51Z (deploy em curso ou não aplicado) |
-| `to_regclass('public.api_request_samples')` (0330) | a confirmar (precisa da conexão de schema) |
-| `fn_slo_api_rotas` / `fn_api_metricas_expurgar` (0331) | a confirmar |
-| `/login` | 200 |
+| `/health` durante a execução | **1.60.0** às 2026-11-20T01:51Z |
+| Verificação final | **consolidada no item 10** (feita depois que o deploy subiu) |
 
 Comandos da verificação (rodar na VPS, com a conexão de schema):
 
@@ -160,40 +147,52 @@ que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) estej
 **Rollback:** refixar as três imagens em `1.60.0` no `.env` e `up -d` com os dois
 `-f`; schema é aditivo.
 
-## 10. 20/11/2026 — Deploy 1.62.0 (planejado; depende do corte)
+## 10. 20/11/2026 — Deploy 1.61.0 — verificado em produção
 
-**Conteúdo previsto:** o fix do Sentinel que fecha a janela de avaliação
-(Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —; o **fix do
-agrupamento de nota** em `fiscal.divergencia_valor_nota` (somar todos os pedidos
-vinculados, não só `order_id`); **#659** (público/auth) e a documentação deste
-item (**#660**), que inclui os dois registros de 20/11: o **achado fiscal real do
-pedido 19560** e a **pendência do `pedido_preso`** (documentação, sem código).
+| Verificação | Resultado |
+|---|---|
+| Containers | **7 em 1.61.0**, healthy |
+| `/health` | `version 1.61.0` |
+| `to_regclass('public.api_request_samples')` (0330) | **presente** |
+| `fn_slo_api_rotas` / `fn_api_metricas_expurgar` (0331) | **presentes** |
+| `/login` | 200 |
 
-**Autorização:** pendente — o coordenador **não** executa deploy; o dono aprova e
-executa.
+**Pendência aberta (medição honesta):** a série do SLO ainda estava com **0
+amostras** 35 min após o deploy; o teste com `GET /api/v1/contacts` **sem auth**
+morreu em **401 na borda** e não alcançou o handler — logo não prova nada. O G
+investiga `after()` no standalone e vai expor contagem/última amostra na tela.
 
-**Verificação esperada depois do deploy (e só nela):**
-- `sentinel_runs.truncado = false` na próxima rodada da organização real;
-- `encerradas > 0`, incluindo **`fiscal.divergencia_valor_nota`** (o falso
-  positivo do pedido 19594) e `fiscal.nota_duplicada_por_pedido` (sem detecção
-  desde 09:15), ambos com `nao_detectada_na_execucao`;
-- `/health` `version 1.62.0`; 7 containers; `to_regclass`/funções de 0330/0331 já
-  presentes desde a 1.61.0.
+## 11. 20/11/2026 — Deploy 1.61.1 — verificado (fecha)
 
-**Rollback:** refixar 1.61.0 nas três imagens; schema aditivo.
+**Ação:** `update.sh --to v1.61.1` → *"Atualização concluída — app no ar e saudável"*.
 
-## 10.1 Pendência aberta — série do SLO ainda sem amostra
+| Verificação | Resultado |
+|---|---|
+| Containers | **7 em 1.61.1**, todos healthy |
+| `/login` | 200 |
+| `/api/v1/health` | `healthy`, `version 1.61.1`; supabase/redis/rate_limit/waha ok |
 
-Medição honesta, não bug declarado: `api_request_samples` tinha **0 linhas** 35
-min após o deploy da 1.61.0. O teste com `GET /api/v1/contacts` **sem auth**
-retornou **401 na borda** e não alcançou o handler — logo **não prova** que a
-amostragem funciona. O G está investigando (`after()` no standalone) e vai expor
-**contagem e última amostra** na tela. Critério para fechar: uma requisição
-autenticada real gerar linha com `rota`, `status` e latência, e a tela mostrar a
-última amostra.
+**Sentinel — rodada forçada na org real `8fb7a21a-3f48-4856-b83c-68d4abdef232`:**
 
+```
+status=sucesso  achados=20  criadas=0  reafirmadas=20  ENCERRADAS=2
+truncado=FALSE  coletas_truncadas=[]  falhas=0  limite=500
+```
 
-## 11. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
+**As duas encerradas são os dois falsos positivos:**
+`fiscal.divergencia_valor_nota` (nota que agrupa dois pedidos) e
+`fiscal.nota_duplicada_por_pedido` (venda + devolução, finalidade 4). As quatro
+exigências do item anterior foram cumpridas.
+
+**Série do SLO viva:** primeira amostra real
+`/api/v1/commercial-orders · 200 · 1428 ms · 03:51Z`. A hipótese de `after()`
+quebrado estava **errada** — era ausência de tráfego. A defesa de escrita que o G
+adicionou fica como **seguro**, não como conserto de bug.
+
+**Nota honesta:** **1428 ms numa única amostra não é p95**; não dá para afirmar
+violação do alvo de 800 ms. Fica como sinal para olhar quando houver série.
+
+## 12. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
 
 **O que foi reportado (errado):** "divergência fiscal/financeira: pedido 19594
 R$ 92,00 × NF-e 4629 R$ 134,00 (+R$ 42,00)". Isso **não** era diferença de
@@ -222,28 +221,26 @@ outras regras 1:1 faz parte da fatia do G.
 cobrir com 5 casos de teste (um pedido, dois pedidos, três, nota sem vínculo e
 valor realmente divergente).
 
-## 12. 20/11/2026 — Achado fiscal REAL: duas NF-e autorizadas para o mesmo pedido
+## 13. 20/11/2026 — Correção: o caso 19560 é venda + devolução, não duplicidade
 
-**Pedido:** **19560** (concluído, R$ 70,00), `order_id`
-`7a7e781b-0904-4279-870c-288154355d35`.
+**O que foi reportado (errado):** duas NF-e autorizadas para o mesmo pedido 19560
+seriam "faturamento declarado em dobro".
 
-| NF-e | Série | Status | cStat | Valor | Data |
-|---|---|---|---|---|---|
-| **4634** | 1 | autorizada | 100 | R$ 70,00 | 13/11 17:40 |
-| **4644** | 1 | autorizada | 100 | R$ 70,00 | 16/11 18:48 |
+**Medição corrigida no banco:** a **NF 4634** é a **venda** (`finalidade = 1`); a
+**NF 4644** é **devolução** (`extras_fiscais.finalidade = 4`, com `ref_nfe`
+apontando a original). O par venda + devolução é **comportamento correto** — não
+há nota duplicada nem valor em dobro.
 
-**Consequência:** duas notas vivas para o mesmo pedido = **faturamento declarado
-em dobro** para a mesma venda. O detector `fiscal.nota_duplicada_por_pedido`
-**procede**; não é falso positivo.
+**Lição:** **ocorrência cuja evidência não carrega a natureza fiscal é ilegível**
+— e levar a conclusão errada é fácil (o próprio coordenador levou). Toda evidência
+de `fiscal.nota_duplicada_por_pedido` precisa mostrar **finalidade** e
+**`ref_nfe`** das notas envolvidas; sem isso, o detector é ambíguo para quem lê.
 
-**Nada foi tocado.** Cancelar/inutilizar NF é operação fiscal e depende de
-autorização do dono. A correção é **cancelamento dentro do prazo legal ou carta de
-correção, conforme o caso** — decisão do dono com o contador.
+**Efeito no detector:** a regra já ignora finalidade 4; o que mantinha a
+ocorrência aberta era o **truncamento** da varredura (corrigido no #661). Por
+isso a exigência pós-deploy é **encerrá-la**, não mantê-la aberta.
 
-**Risco:** declaração em duplicidade; prazo de cancelamento da NF-e é limitado e
-corre por data de autorização (a 4634 é de 13/11).
-
-## 13. 20/11/2026 — `operacao.pedido_preso`: ruído e hipótese derrubada
+## 14. 20/11/2026 — `operacao.pedido_preso`: ruído e hipótese derrubada
 
 Medido: **121 rascunhos** com mais de 7 dias; **120 com o mesmo `updated_at`**
 (2026-11-09 19:38:13.052684), 20 com `total_cents = 0`, e **121 com
@@ -254,3 +251,21 @@ isso é frágil como regra.
 As três opções medidas (a/b/c) e o custo de cada uma estão em
 [`../business-rules/pendencias-do-sentinel.md`](../business-rules/pendencias-do-sentinel.md).
 **Nada foi implementado**: o detector segue como está, e a escolha é do dono.
+
+## 15. O que continua aberto (20/11/2026, com dono)
+
+| Item | Número | Natureza | Dono | Ação |
+|---|---|---|---|---|
+| `operacao.lead_duplicado` | **5** | **reais** (mesmo contato, dois leads abertos; contatos sem nome) | Dono/operação | mesclar — não é bug |
+| `operacao.pedido_preso` | **15** | ruído de operação em lote (120 rascunhos com o mesmo `updated_at`) | Dono | decisão a/b/c em `business-rules/pendencias-do-sentinel.md` |
+| p95 da API | 1 amostra (1428 ms) | sinal, não medição | G | aguardar série antes de afirmar alvo |
+
+## 16. O que este documento **não** cobre
+
+- Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
+- Nenhum pagamento, cobrança ou comunicação externa foi disparado.
+- Nenhum dado de cliente real foi apagado; a única exclusão de dado foi o token `NULL` do endereço, com backup.
+
+> Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
+> autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
+> auditoria.
