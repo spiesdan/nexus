@@ -156,7 +156,7 @@ export async function carregaRadarDeRisco(
   // Janela de esfriamento POR ESTÁGIO (decisão §3.3): "sem resposta há 2 dias" é
   // normal numa negociação e é abandono num agendamento. Uma fonte só —
   // resolveStageWindow — para o radar e o card nunca discordarem do mesmo lead.
-  const stageIds = [...new Set(rows.map((l) => l.stage_id).filter(Boolean))];
+  const stageIds = [...new Set(rows.map((l) => l.stage_id).filter((s): s is string => !!s))];
   const windowByStage = new Map<string, ReturnType<typeof resolveStageWindow>>();
   if (stageIds.length > 0) {
     const { linhas: stages } = await porFatias(stageIds, async (fatia) => {

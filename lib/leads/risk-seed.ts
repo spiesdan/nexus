@@ -113,7 +113,7 @@ async function coletaEClassifica(
   if (leadErr) throw new Error(`seed de risco: ${leadErr.message}`);
   const leads = (leadRows ?? []) as LeadRow[];
 
-  const stageIds = [...new Set(leads.map((l) => l.stage_id).filter(Boolean))];
+  const stageIds = [...new Set(leads.map((l) => l.stage_id).filter((s): s is string => !!s))];
   const janelaPorEstagio = new Map<string, ReturnType<typeof resolveStageWindow>>();
   if (stageIds.length > 0) {
     // Em fatias: a lista sai da organização inteira (o SELECT de leads não tem

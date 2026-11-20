@@ -51,8 +51,7 @@ describe("porFatias", () => {
 
   it("uma fatia que falha não apaga as outras — e é contada", async () => {
     const ids = Array.from({ length: 250 }, (_, i) => `id-${i}`);
-    const aplicar = vi.fn(async (fatia: string[], indice: number) => {
-      void indice;
+    const aplicar = vi.fn(async (fatia: string[]) => {
       return fatia[0] === "id-100"
         ? { linhas: [], erro: { message: "URI too long" } }
         : { linhas: fatia.map((id) => ({ id })) };
