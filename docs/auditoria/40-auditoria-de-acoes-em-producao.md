@@ -162,35 +162,35 @@ amostras** 35 min após o deploy; o teste com `GET /api/v1/contacts` **sem auth*
 morreu em **401 na borda** e não alcançou o handler — logo não prova nada. O G
 investiga `after()` no standalone e vai expor contagem/última amostra na tela.
 
-## 11. 20/11/2026 — Deploy 1.61.1 (planejado; patch da doutrina)
+## 11. 20/11/2026 — Deploy 1.61.1 — verificado (fecha)
 
-**Conteúdo:** os três fixes do Sentinel — janela de avaliação Mercos 7d/teto 500 e
-encerramento **por fonte** (#661), **valor da nota somando os pedidos vinculados**
-em quatro regras 1:1 (#662) e **diagnóstico da série de API** (#663) — mais #659
-(público/auth), #656, #658 e #660.
+**Ação:** `update.sh --to v1.61.1` → *"Atualização concluída — app no ar e saudável"*.
 
-**Por que patch:** nada muda para quem já roda; são consertos — a régua da
-doutrina (`nada_mudou`).
+| Verificação | Resultado |
+|---|---|
+| Containers | **7 em 1.61.1**, todos healthy |
+| `/login` | 200 |
+| `/api/v1/health` | `healthy`, `version 1.61.1`; supabase/redis/rate_limit/waha ok |
 
-**Autorização:** pendente. O coordenador **não** executa deploy; o dono aprova e
-executa.
+**Sentinel — rodada forçada na org real `8fb7a21a-3f48-4856-b83c-68d4abdef232`:**
 
-**Verificação esperada depois do deploy — quatro exigências:**
-1. `sentinel_runs.truncado = false` na próxima rodada da organização real;
-2. `encerradas > 0`;
-3. **`fiscal.divergencia_valor_nota` encerrada** por não-detecção (o falso
-   positivo do pedido 19594);
-4. **`fiscal.nota_duplicada_por_pedido` ENCERRADA** — o caso 19560 é **venda +
-   devolução** (4634 finalidade 1; 4644 finalidade 4 com `ref_nfe`), não
-   duplicidade. A regra já ignora finalidade 4; o que a mantinha aberta era o
-   truncamento. **Se continuar aberta depois do deploy, é bug.**
+```
+status=sucesso  achados=20  criadas=0  reafirmadas=20  ENCERRADAS=2
+truncado=FALSE  coletas_truncadas=[]  falhas=0  limite=500
+```
 
-**Publicada:** tag **`v1.61.1`** em **20/11/2026 ~04:00Z**, commit **`476c07f8`**
-(o PR de release #665 foi mergeado com 14 checks verdes). **Isto é tag, não
-deploy**: o deploy da 1.61.1 **aguarda autorização explícita do dono** — o
-coordenador não executa.
+**As duas encerradas são os dois falsos positivos:**
+`fiscal.divergencia_valor_nota` (nota que agrupa dois pedidos) e
+`fiscal.nota_duplicada_por_pedido` (venda + devolução, finalidade 4). As quatro
+exigências do item anterior foram cumpridas.
 
-**Rollback:** refixar 1.61.0 nas três imagens; schema aditivo.
+**Série do SLO viva:** primeira amostra real
+`/api/v1/commercial-orders · 200 · 1428 ms · 03:51Z`. A hipótese de `after()`
+quebrado estava **errada** — era ausência de tráfego. A defesa de escrita que o G
+adicionou fica como **seguro**, não como conserto de bug.
+
+**Nota honesta:** **1428 ms numa única amostra não é p95**; não dá para afirmar
+violação do alvo de 800 ms. Fica como sinal para olhar quando houver série.
 
 ## 12. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
 
@@ -252,7 +252,15 @@ As três opções medidas (a/b/c) e o custo de cada uma estão em
 [`../business-rules/pendencias-do-sentinel.md`](../business-rules/pendencias-do-sentinel.md).
 **Nada foi implementado**: o detector segue como está, e a escolha é do dono.
 
-## 15. O que este documento **não** cobre
+## 15. O que continua aberto (20/11/2026, com dono)
+
+| Item | Número | Natureza | Dono | Ação |
+|---|---|---|---|---|
+| `operacao.lead_duplicado` | **5** | **reais** (mesmo contato, dois leads abertos; contatos sem nome) | Dono/operação | mesclar — não é bug |
+| `operacao.pedido_preso` | **15** | ruído de operação em lote (120 rascunhos com o mesmo `updated_at`) | Dono | decisão a/b/c em `business-rules/pendencias-do-sentinel.md` |
+| p95 da API | 1 amostra (1428 ms) | sinal, não medição | G | aguardar série antes de afirmar alvo |
+
+## 16. O que este documento **não** cobre
 
 - Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
 - Nenhum pagamento, cobrança ou comunicação externa foi disparado.
