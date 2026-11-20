@@ -59,6 +59,7 @@ interface Medida {
   overflow: number;
   culpadoDoOverflow: string | null;
   contraste: Array<{ alvo: string; razao: number; fg: string; bg: string; px: string }>;
+  alvos: { total: number; abaixoDe40: number; amostra: string[] };
   axe: { critica: number; seria: number; ids: string[]; contraste: string[] };
   console: { erros: number; amostra: string[] };
 }
@@ -230,6 +231,38 @@ function rotas(ids: Awaited<ReturnType<typeof idsDoBanco>>): Rota[] {
   ];
 }
 
+/**
+ * Alvos de toque — a régua que o doc 48 (admin dashboard) fixou em 44 px e
+ * que a matriz cobra por tela. Conta só o que está VISÍVEL: `sr-only` (1×1) e
+ * o que está fora da dobra não são alvo de dedo.
+ */
+const MEDIR_ALVOS = `
+(() => {
+  var seletor = 'a[href], button, [role="button"], input:not([type="hidden"]), select, textarea, [role="tab"], [role="switch"]';
+  var total = 0;
+  var pequenos = [];
+  var els = Array.from(document.querySelectorAll(seletor));
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2) continue;                 // sr-only
+    if (r.bottom < 0 || r.top > innerHeight * 2) continue;      // fora da área útil
+    var s = getComputedStyle(el);
+    if (s.visibility === "hidden" || s.display === "none" || s.opacity === "0") continue;
+    total++;
+    if (r.width < 40 || r.height < 40) {
+      var texto = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 18);
+      pequenos.push(
+        (el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".")).slice(0, 40) +
+          " " + Math.round(r.width) + "x" + Math.round(r.height) +
+          (texto ? ' "' + texto + '"' : ""),
+      );
+    }
+  }
+  return { total: total, abaixoDe40: pequenos.length, amostra: pequenos.slice(0, 6) };
+})()
+`;
+
 async function medir(page: Page, rota: string, tela: string, tema: "light" | "dark"): Promise<Medida> {
   const overflow = await page.evaluate(() => {
     const raiz = document.documentElement;
@@ -248,6 +281,7 @@ async function medir(page: Page, rota: string, tela: string, tema: "light" | "da
   });
 
   const contraste = (await page.evaluate(MEDIR_CONTRASTE)) as Medida["contraste"];
+  const alvos = (await page.evaluate(MEDIR_ALVOS)) as Medida["alvos"];
 
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
   const graves = axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious");
@@ -269,6 +303,7 @@ async function medir(page: Page, rota: string, tela: string, tema: "light" | "da
     overflow: overflow.delta,
     culpadoDoOverflow: overflow.culpado,
     contraste,
+    alvos,
     axe: {
       critica: axe.violations.filter((v) => v.impact === "critical").length,
       seria: axe.violations.filter((v) => v.impact === "serious").length,
@@ -343,8 +378,10 @@ async function main(): Promise<void> {
         console.info(
           `${tema}/${tamanho.nome} ${rota.tela.padEnd(16)} status=${medida.status} ` +
             `overflow=${medida.overflow}px axe=${medida.axe.critica}/${medida.axe.seria} ` +
-            `erros=${medida.console.erros} contraste_amostrado=${medida.contraste.length}`,
+            `erros=${medida.console.erros} contraste_amostrado=${medida.contraste.length} ` +
+            `alvos<40=${medida.alvos.abaixoDe40}/${medida.alvos.total}`,
         );
+        for (const a of medida.alvos.amostra.slice(0, 3)) console.info(`   alvo: ${a}`);
         for (const c of medida.axe.contraste.slice(0, 2)) console.info(`   contraste: ${c}`);
         for (const e of medida.console.amostra.slice(0, 2)) console.info(`   console: ${e}`);
         if (medida.culpadoDoOverflow) console.info(`   overflow: ${medida.culpadoDoOverflow}`);
@@ -354,7 +391,13 @@ async function main(): Promise<void> {
     }
   }
 
-  writeFileSync(path.join(RAIZ, "medidas.json"), JSON.stringify(medidas, null, 2));
+  // Um JSON por TELA quando há filtro: as pastas `antes-admin`/`depois-admin`
+  // são compartilhadas e um `medidas.json` único fazia a captura de uma linha
+  // sobrescrever a evidência da outra (o `/admin/audit` já estava na main).
+  writeFileSync(
+    path.join(RAIZ, ALVO ? `medidas-${ALVO}.json` : "medidas.json"),
+    JSON.stringify(medidas, null, 2),
+  );
   await browser.close();
   console.info(`\n${medidas.length} medições em ${RAIZ}`);
 }
