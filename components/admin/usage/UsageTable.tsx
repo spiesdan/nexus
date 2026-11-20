@@ -146,7 +146,7 @@ export function UsageTable({ tenants, range }: UsageTableProps) {
           variant="outline"
           size="sm"
           onClick={() => exportCSV(tenants, range)}
-          className="gap-1.5 text-xs"
+          className="min-h-10 gap-1.5 text-xs"
         >
           {t("Exportar CSV")}
         </Button>

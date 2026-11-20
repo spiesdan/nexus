@@ -119,7 +119,7 @@ export function FormularioDoGoogle({
           </p>
         ) : null}
 
-        <p className="rounded-lg border border-warning bg-warning-bg p-3 text-xs leading-4 text-text-muted">
+        <p className="rounded-lg border border-warning bg-warning-bg p-3 text-xs leading-4 text-warning-fg">
           {/*
             O efeito colateral que ninguém antecipa: trocar o client id ou a
             chave invalida os refresh tokens que o Google já emitiu para esta
@@ -137,6 +137,7 @@ export function FormularioDoGoogle({
           </span>
           <Button
             data-testid="google-salvar"
+            className="min-h-10"
             disabled={!podeSalvar || salvando}
             onClick={() =>
               iniciar(async () => {
