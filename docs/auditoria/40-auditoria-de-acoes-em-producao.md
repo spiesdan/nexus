@@ -447,3 +447,26 @@ muda para quem roda).
 
 **Verificação esperada da 1.62.1:** `coletas_truncadas = []`, `leads_abertos` sem
 falha e os **5 leads reafirmados**.
+
+## 22. 21/11/2026 — Três consertos provados em produção (1.62.0)
+
+Medido em produção depois do deploy:
+
+```
+URI too long (últimos 40 min) ......... 0   ← eram 16 a cada 6h
+falhas do risk-watcher (40 min) ....... 0
+incidente laya.motor_indisponivel ..... criado (open, falhas 1 e 4, 2 orgs)
+pedido_preso ......................... 15 encerradas, 0 reabertas
+anon executando fn_criar_pedido ...... false
+```
+
+**Três consertos provados no mesmo deploy:** o fatiamento do radar (#695/#697), o
+`pedido_preso` por autor humano (#670) e a visibilidade do motor de IA (#700), que
+já registrou **incidente real** em vez de só logar warning.
+
+**Ainda pendente:** a regressão do embed (`leads_abertos`), com o G no **#712**
+(hint `crm_stages!crm_leads_stage_id_fkey`). Entra na **1.62.1**.
+
+**Lição do dia:** *teste unitário que mocka a consulta não pega ambiguidade de
+embed — só o PostgREST real pega.* O #712 inclui prova no PostgREST local; é esse
+tipo de prova que faltava. Vale para toda consulta com `select` + relação.
