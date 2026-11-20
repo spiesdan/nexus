@@ -17,10 +17,13 @@ três casos em que a rota **não pode** parecer quebrada nem mentir sucesso.
 2. **Mapa vazio não é rota vazia.** O estado "Nenhuma parada no mapa" ganhou a
    linha **"A ordem da lista continua valendo sem o mapa."** — o operador não
    conclui que perdeu o trabalho; a lista abaixo segue com ordem e ações.
-3. **Endereço sem número aparece na linha.** Esse estado já existia **no balão
-   do mapa** (`p.semNumero`); agora a linha da parada diz `· sem número` em
-   âmbar, ao lado do endereço — sem número é endereço **incompleto**, não
-   endereço errado, e o motorista precisa saber antes de sair.
+3. **Endereço sem número: já estava coberto — e eu quase dupliquei.** A linha da
+   parada **já** mostra o selo “sem número no cadastro” (`situacaoDoNumero`,
+   `_roteirizador.tsx:1993`), além do aviso no balão. A primeira versão desta
+   fatia adicionou um segundo rótulo com um campo que não existe no tipo
+   (`p.semNumero`, que é do `PontoParadaMapa`) — o `verify` pegou (TS2551) e o
+   rótulo foi removido. Fica registrado: o estado existia; o que faltava era eu
+   ler antes de acrescentar.
 
 ## O que NÃO foi tocado
 
