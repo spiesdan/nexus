@@ -35,6 +35,7 @@ import {
   tonalidadeStatusCompra,
 } from "@/lib/comercial/rotulo-status-compra";
 import { comoMoeda } from "@/lib/format/moeda";
+import { resumoDoRecebimento } from "@/lib/compras/resumo-do-recebimento";
 import { mensagemDeErro } from "@/lib/ui/erros";
 import {
   linhasParaReceber,
@@ -153,6 +154,12 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
         )
       : [];
   const totalADigitar = linhas().reduce((s, l) => s + l.quantidade, 0);
+  const custoADigitarCents = pedido
+    ? linhas().reduce((s, l) => {
+        const item = pedido.itens.find((i) => i.id === l.item_id);
+        return s + (item ? l.quantidade * item.custo_unit_cents : 0);
+      }, 0)
+    : 0;
   const temProblema = pedido ? pedido.itens.some((i) => problemaDoCampo(i) !== null) : false;
 
   function abrirRecebimento() {
@@ -251,8 +258,11 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
   const fornecedor = fornecedores.find((f) => f.id === pedido.supplier_id)?.nome ?? null;
   const totalCents = pedido.itens.reduce((s, i) => s + i.subtotal_cents, 0);
   const podeAcoes = podeEscrever && ["rascunho", "enviado"].includes(pedido.status);
-  const totalQtd = pedido.itens.reduce((s, i) => s + i.quantidade, 0);
-  const totalRecebido = pedido.itens.reduce((s, i) => s + i.recebido_qtd, 0);
+  // Decisão 6 (20/11): o resumo mostra quantidade E valor. O valor sai do item
+  // da COMPRA (`custo_unit_cents`), não do catálogo.
+  const resumo = resumoDoRecebimento(pedido.itens);
+  const { unidadesPedidas: totalQtd, unidadesRecebidas: totalRecebido } = resumo;
+  const { custoPedidoCents: custoTotalCents, custoRecebidoCents } = resumo;
 
   return (
     <div className="space-y-6 p-6">
@@ -298,7 +308,9 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
         </span>
         {totalRecebido > 0 ? (
           <span className="text-sm text-text-muted">
-            {totalRecebido}/{totalQtd} unidades recebidas
+            {totalRecebido}/{totalQtd} unidades recebidas ·{" "}
+            <span className="tabular-nums">{comoMoeda(custoRecebidoCents, "BRL")}</span> de{" "}
+            <span className="tabular-nums">{comoMoeda(custoTotalCents, "BRL")}</span>
           </span>
         ) : null}
       </div>
@@ -368,7 +380,8 @@ export function CompraDetalheClient({ id, podeEscrever }: { id: string; podeEscr
             </div>
             <p role="status" aria-live="polite" className="text-sm text-text-muted">
               <span className="font-medium text-text tabular-nums">{totalADigitar}</span>{" "}
-              {totalADigitar === 1 ? "unidade" : "unidades"} para receber
+              {totalADigitar === 1 ? "unidade" : "unidades"} para receber ·{" "}
+              <span className="tabular-nums">{comoMoeda(custoADigitarCents, "BRL")}</span>
             </p>
           </div>
 

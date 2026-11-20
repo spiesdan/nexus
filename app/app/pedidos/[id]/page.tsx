@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { enderecoEmLinha } from "@/lib/contacts/endereco-em-linha";
 import { COLUNAS_DO_ITEM, COLUNAS_DO_PEDIDO, type ItemDoPedido, type PedidoComercial } from "@/lib/schemas/pedidos";
+import { custoDoPedido, type CustoDoPedido } from "@/lib/comercial/custo-do-pedido";
 
 import { DetalheDoPedido, type ContatoDoPedido } from "./_detalhe";
 
@@ -78,6 +79,32 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
     }
   }
 
+  /*
+   * CUSTO DO RESUMO (decisão 6, 20/11/2026) — só para quem vê margem.
+   *
+   * O item do pedido NÃO guarda custo; o número é o custo ATUAL do catálogo, e
+   * a tela diz isso. Não recalcula nada do pedido: `total_cents` continua o
+   * gravado. Quem não vê margem não recebe o número — nem no payload.
+   */
+  const veMargem = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
+  let custo: CustoDoPedido | null = null;
+  if (veMargem) {
+    const itensDoPedido = (itens ?? []) as unknown as { product_id: string | null; quantidade: number }[];
+    const ids = [...new Set(itensDoPedido.map((i) => i.product_id).filter((v): v is string => !!v))];
+    const custos = new Map<string, number | null>();
+    if (ids.length > 0) {
+      const { data: produtos } = await supabase
+        .from("catalog_products")
+        .select("id, custo_cents")
+        .eq("organization_id", activeOrg.orgId)
+        .in("id", ids);
+      for (const p of (produtos ?? []) as { id: string; custo_cents: number | null }[]) {
+        custos.set(p.id, p.custo_cents);
+      }
+    }
+    custo = custoDoPedido(itensDoPedido, custos);
+  }
+
   const c = contato as unknown as {
     id: string;
     name: string | null;
@@ -125,6 +152,7 @@ export default async function DetalhePedidoPage({ params }: { params: Promise<{ 
       podeSincronizarMercos={
         user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager
       }
+      custo={custo}
     />
   );
 }
