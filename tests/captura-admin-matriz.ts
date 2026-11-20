@@ -391,7 +391,13 @@ async function main(): Promise<void> {
     }
   }
 
-  writeFileSync(path.join(RAIZ, "medidas.json"), JSON.stringify(medidas, null, 2));
+  // Um JSON por TELA quando há filtro: as pastas `antes-admin`/`depois-admin`
+  // são compartilhadas e um `medidas.json` único fazia a captura de uma linha
+  // sobrescrever a evidência da outra (o `/admin/audit` já estava na main).
+  writeFileSync(
+    path.join(RAIZ, ALVO ? `medidas-${ALVO}.json` : "medidas.json"),
+    JSON.stringify(medidas, null, 2),
+  );
   await browser.close();
   console.info(`\n${medidas.length} medições em ${RAIZ}`);
 }
