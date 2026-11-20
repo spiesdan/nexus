@@ -205,10 +205,10 @@ base sumiu; duas telas entraram depois dela.
 | `/login/recovery` | público/auth | **aplicado** (cartão + toque 44×44) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Recuperar acesso» confirmado** · `56`: link 88×17→96×44, medido antes/depois | D |
 | `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · 20 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/signup` | público/auth | **aplicado** (cartão + toque 44×44) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Criar conta» confirmado** · `56`: link 38×17→46×44, medido antes/depois | D |
-| `/403` | estado/erro | **já conforme** | #659 · 16 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) · **h1 «500 — Erro interno» confirmado** (régua 21/11) | D |
+| `/403` | estado/erro | **já conforme** | #659 · 16 textos, 0 abaixo do AA · overflow 0 · axe 0 · `57`: 4 critérios verificados (ação clicada, sem vazamento, texto próprio, nome + 44), sem mudança | D |
+| `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) · **h1 «500 — Erro interno» confirmado** · `57`: 4 critérios verificados, sem mudança | D |
 | `/503` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/account-suspended` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/account-suspended` | estado/erro | **aplicado** (saída + contato) | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 · `57`: Sair GET→POST (Server Action, redirect /login medido) · contato 139×17→147×44 · antes/depois em `capturas/{antes,depois}-estados-publico-publico-auth/` | D |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
 | `/legal/privacy` | público/legal | **aplicado** (toque 44×44) | #659 · 120 textos, 0 abaixo do AA · overflow 0 · axe 0 · `56`: link 36×20→44×44, medido antes/depois | D |
 | `/legal/terms` | público/legal | **aplicado** (toque 44×44) | #659 · 128 textos, 0 abaixo do AA · overflow 0 · axe 0 · `56`: links 36×20→44×44 e 139×17→147×44, medidos antes/depois | D |
@@ -267,7 +267,7 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 
 | Arquivo | Estado | Evidência |
 |---|---|---|
-| `app/not-found.tsx` (404) | **medido no navegador · sem achado** — 4 combinações (claro/escuro × 1440/390): **0** textos abaixo do AA (4 avaliados), **0** overflow, **0** axe serious/critical · **h1 «404 — Página não encontrada» confirmado** (régua 21/11). Renderiza o `StatusPage` da variante `nao-encontrada`. Rota inexistente **anônima** não chega aqui: o proxy manda para `/login?next=…` (307) — o 404 é para sessão, ou para `/404` direto | `capturas/medido-estado-erro-publico-auth/` (8 PNG + `medidas.json`) |
+| `app/not-found.tsx` (404) | **medido no navegador · sem achado** — 4 combinações (claro/escuro × 1440/390): **0** textos abaixo do AA (4 avaliados), **0** overflow, **0** axe serious/critical · **h1 «404 — Página não encontrada» confirmado** (régua 21/11). Renderiza o `StatusPage` da variante `nao-encontrada`. Rota inexistente **anônima** não chega aqui: o proxy manda para `/login?next=…` (307) — o 404 é para sessão, ou para `/404` direto | `capturas/medido-estado-erro-publico-auth/` (8 PNG + `medidas.json`) · `57`: 4 critérios verificados (ação clicada, sem vazamento, texto próprio, nome + 44), sem mudança |
 | `app/error.tsx` | **medido · unit** — `SegmentError` (root) com título, ID do erro (`digest`) e os dois botões nomeados; “Tentar de novo” chama o `reset`. **Não** medido no navegador: exigiria inventar uma exceção, e não há rota de gatilho no produto | `tests/unit/segment-error-estado.test.tsx` |
 | `app/global-error.tsx` | **medido · unit** — fallback do layout raiz: título, ID e reset provados; cores **inline** de propósito (o layout que falhou é quem carrega o CSS), e por isso ele é **sempre claro** — decisão declarada, não esquecimento do tema | `tests/unit/segment-error-estado.test.tsx` |
 

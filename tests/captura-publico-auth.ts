@@ -47,6 +47,7 @@ const ROTAS = [
   { slug: "login-mfa", path: "/login/mfa", espera: /código|verifica|MFA|Entrar/i },
   { slug: "signup", path: "/signup", espera: /Conta|Criar|cadastro|e-mail/i },
   { slug: "403", path: "/403", espera: /Acesso|permiss/i },
+  { slug: "404", path: "/404", espera: /não encontrada|encontrad/i },
   { slug: "500", path: "/500", espera: /Erro|algo|errado|intern/i },
   { slug: "503", path: "/503", espera: /indispon|manuten|volta/i },
   { slug: "account-suspended", path: "/account-suspended", espera: /suspens|conta/i },

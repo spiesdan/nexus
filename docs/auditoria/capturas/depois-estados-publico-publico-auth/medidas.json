@@ -1,0 +1,466 @@
+{
+  "base": "http://localhost:3002",
+  "rotulo": "depois-estados-publico",
+  "medidas": [
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 0,
+        "exemplos": []
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "404 — Página não encontrada",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "500 — Erro interno",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "toque": {
+        "total": 2,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Conta suspensa",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "404 — Página não encontrada",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "500 — Erro interno",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "toque": {
+        "total": 2,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Conta suspensa",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "404 — Página não encontrada",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "500 — Erro interno",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "toque": {
+        "total": 2,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Conta suspensa",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 0,
+        "exemplos": []
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "404 — Página não encontrada",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "500 — Erro interno",
+      "redirecionou": false,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "toque": {
+        "total": 2,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Conta suspensa",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 1,
+        "exemplos": [
+          "button 40x40"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}
