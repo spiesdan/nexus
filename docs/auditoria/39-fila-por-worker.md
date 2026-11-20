@@ -1,5 +1,51 @@
 # 39 — Fila por worker (viva)
 
+## AGORA
+
+- **D:** #673 (rotas, fatia 1/3) — próxima: fatia 2/3 (estado de falha do mapa/rota).
+- **F:** `critical` + fix de compras — próxima: matriz E §9 na 1.61.1 e as 24 de público/auth.
+- **G:** #672 mergeado e sonda #668 dentro — próxima: as 22 de `admin` na `41`.
+- **Coord:** #667 (rebase/merge); despacho e `## AGORA` a cada relatório.
+
+## PRÓXIMA TAREFA — D
+
+**Fatia 2/3 de rotas** (depois do #673): o mesmo passe do mapa/rotas, agora no
+**estado de falha** — geocodificação que não resolve, endereço ausente e rota
+vazia (`app/app/expedicao/**`). Régua: antes/depois na mesma base, claro/escuro ×
+1440/390, contraste, overflow/console limpos e **linha da matriz `41` com veredito
++ evidência**. Falha de dado não se conserta: registra-se a exceção com motivo.
+
+## PRÓXIMA TAREFA — F
+
+**Fechar a matriz E na 1.61.1**: rodar `criador-de-pedidos-matriz.spec.ts
+--workers=1` no build oficial e gravar em `docs/auditoria/43-criador-de-pedidos.md`
+§9 (E.2/E.4/E.5/E.8/E.9/E.10 → provado ou motivo medido). Depois, as **24**
+restantes de público/auth na matriz `41`, começando por login/signup.
+
+## PRÓXIMA TAREFA — G
+
+**As 22 de `admin` na matriz `41`**: começar por `/admin/tenants` e
+`/admin/usuarios`; identidade existente, antes/depois claro/escuro × 1440/390,
+contraste, overflow/console e **linha da matriz com veredito + evidência**. Uma
+tela por PR.
+
+## PRÓXIMA TAREFA — Coordenação
+
+**#667** (rebase feito, CI e merge), manter `## AGORA` atualizado a cada
+despacho, abrir PR de docs quando a fila mudar e **responder todo relatório de
+worker com a próxima tarefa na mesma mensagem**.
+
+## Regras de encerramento e despacho (20/11/2026)
+
+1. **Nenhum worker encerra fatia sem PR ou bloqueio com pergunta exata.** “Terminei
+   e parei” não é estado válido: ou entrega, ou pergunta.
+2. **Todo relatório de worker recebe a próxima tarefa na mesma resposta** —
+   nunca “aguarde”.
+3. Se a próxima depende de decisão do dono, o coordenador **dá outra** da fila:
+   worker não fica parado por pendência de terceiro.
+4. `## AGORA` é o **ponto de retomada único** — primeiro lugar que qualquer
+   agente lê ao voltar.
+
 > **Regra do dono (18/11/2026):** quando um worker termina, **o coordenador
 > delega a próxima** — e a fila tem sempre **agora + próximo + depois**, escrita
 > aqui. O `próximo` nunca depende do `agora`; se a fila esvaziar, a falha é do
