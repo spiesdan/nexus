@@ -4,8 +4,8 @@
 > Fonte: segmento de rota (`page.tsx` + arquivos locais + imports relativos),
 > com comentários removidos. Não editar à mão.
 
-**159 telas** medidas; **56** têm ao menos uma subtela.
-Total: **98 abas**, **73 modais**, **12 gavetas**.
+**159 telas** medidas; **55** têm ao menos uma subtela.
+Total: **96 abas**, **73 modais**, **12 gavetas**.
 
 > **O que este número é.** Inventário **estático** com nome e arquivo — o que abrir.
 > **O que não é.** Prova de que a subtela abre, renderiza ou está correta: isso exige
@@ -62,8 +62,7 @@ Total: **98 abas**, **73 modais**, **12 gavetas**.
 | `/app/prospeccao` | (rótulo dinâmico) `app/app/prospeccao/_client.tsx:299`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:300`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:307`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:316`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:325`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:335`<br>(rótulo dinâmico) `components/nexus-ui/forms/NexusSteps.tsx:28` | Enviar mensagem para   empresas `app/app/prospeccao/_disparo.tsx:398`<br>Importar arquivo `app/app/prospeccao/_importar-arquivo.tsx:95` | (rótulo dinâmico) `components/shell/ContextualDrawer.tsx:37` |
 | `/app/prospeccao/campanhas/[id]` | — | Enviar mensagem para   empresas `app/app/prospeccao/_disparo.tsx:398` | — |
 | `/app/prospeccao/nova` | (rótulo dinâmico) `components/nexus-ui/forms/NexusSteps.tsx:28` | — | — |
-| `/app/radar` | (rótulo dinâmico) `app/app/radar/_components/RadarCategorias.tsx:216` | Campanha de recuperação `app/app/radar/_components/CampanhaDeRecuperacao.tsx:129` | — |
-| `/app/radar/categorias` | (rótulo dinâmico) `app/app/radar/_components/RadarCategorias.tsx:216` | — | — |
+| `/app/radar` | — | Campanha de recuperação `app/app/radar/_components/CampanhaDeRecuperacao.tsx:129` | — |
 | `/app/radar/recuperacao` | — | Campanha de recuperação `app/app/radar/_components/CampanhaDeRecuperacao.tsx:129` | — |
 | `/app/sentinel` | — | Abrindo ocorrência `app/app/sentinel/_client.tsx:577`<br>(rótulo dinâmico) `app/app/sentinel/_client.tsx:591`<br>(rótulo dinâmico) `app/app/sentinel/_client.tsx:800`<br>Configurações do Sentinel `app/app/sentinel/_client.tsx:841` | — |
 | `/app/settings/api-tokens` | — | Criar novo token `app/app/settings/api-tokens/_components/ApiTokensClient.tsx:219`<br>Token criado `app/app/settings/api-tokens/_components/ApiTokensClient.tsx:285` | — |

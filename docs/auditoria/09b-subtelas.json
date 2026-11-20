@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-20T04:02:35.442Z",
+  "geradoEm": "2026-11-20T04:30:12.779Z",
   "telas": [
     {
       "rota": "/",
@@ -1957,14 +1957,7 @@
     },
     {
       "rota": "/app/radar",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
-          "linha": 216
-        }
-      ],
+      "abas": [],
       "modais": [
         {
           "tipo": "modal",
@@ -1986,14 +1979,7 @@
     },
     {
       "rota": "/app/radar/categorias",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
-          "linha": 216
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
