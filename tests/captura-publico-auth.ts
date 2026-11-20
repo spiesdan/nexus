@@ -19,6 +19,7 @@
 import { chromium } from "@playwright/test";
 
 import { medir, type Medida } from "./lib/medir-pagina";
+import { ROTAS } from "./lib/rotas-publico-auth";
 import { mkdirSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 
@@ -38,28 +39,7 @@ const TAMANHOS = [
  * `espera` é o sinal de que a TELA certa renderizou: sem ele, um redirect para
  * /login geraria captura bonita de outra página. `urlFinal` no registro prova.
  */
-const ROTAS = [
-  { slug: "login", path: "/login", espera: /Entrar/i },
-  { slug: "login-forgot", path: "/login/forgot", espera: /Recuperar|Esqueci|senha/i },
-  { slug: "login-recovery", path: "/login/recovery", espera: /Recupera|senha|código/i },
-  { slug: "login-reset", path: "/login/reset", espera: /senha|Redefinir|inválido/i },
-  { slug: "login-mfa", path: "/login/mfa", espera: /código|verifica|MFA|Entrar/i },
-  { slug: "signup", path: "/signup", espera: /Conta|Criar|cadastro|e-mail/i },
-  { slug: "403", path: "/403", espera: /Acesso|permiss/i },
-  { slug: "500", path: "/500", espera: /Erro|algo|errado|intern/i },
-  { slug: "503", path: "/503", espera: /indispon|manuten|volta/i },
-  { slug: "account-suspended", path: "/account-suspended", espera: /suspens|conta/i },
-  { slug: "legal-privacy", path: "/legal/privacy", espera: /privacidade|dados/i },
-  { slug: "legal-terms", path: "/legal/terms", espera: /termos|uso/i },
-  { slug: "orcamento", path: "/o/token-de-teste", espera: /orçamento|proposta|inválid|expir/i },
-  { slug: "landing", path: "/", espera: /./ },
-  { slug: "vitrine-agenda", path: "/vitrine-agenda", espera: /agenda|vitrine|agendar/i },
-  { slug: "accept-invite", path: "/team/accept-invite/token-de-teste", espera: /convite|inválid|expir|equipe/i },
-  // ESTADO DE ERRO — não é rota, é `not-found.tsx`. Faltava na matriz 41: o 404
-  // existe desde sempre, tem E2E de cópia, e nunca foi medido como superfície.
-  { slug: "404", path: "/404", espera: /não encontr|404|página/i },
-  { slug: "404-rota", path: "/rota-que-nao-existe-matriz", espera: /não encontr|404|página/i },
-] as const;
+
 
 async function main(): Promise<void> {
   mkdirSync(RAIZ, { recursive: true });
@@ -108,20 +88,24 @@ async function main(): Promise<void> {
         page.on("console", aoConsole);
         page.on("pageerror", aoErro);
 
+        let h1: string | null = null;
         const m = await (async (): Promise<Medida> => {
           try {
             await page.goto(`${BASE}${rota.path}`, {
               waitUntil: "domcontentloaded",
               timeout: 120_000,
             });
-            // Espera o sinal da TELA certa. Se não vier, registra e segue: a
-            // captura de um redirect também é evidência (`urlFinal` denuncia).
+            // H1 COM TIMEOUT: é a prova de que a TELA certa renderizou. Texto
+            // solto deixava a captura passar com a tela errada (foi o caso de
+            // `/login/mfa`, que redireciona para `/login`).
             try {
-              await page.getByText(rota.espera).first().waitFor({ timeout: 15_000 });
+              const titulo = page.getByRole("heading", { level: 1 }).first();
+              await titulo.waitFor({ timeout: 20_000 });
+              h1 = (await titulo.textContent())?.trim() ?? null;
             } catch {
-              // sem sinal: mede o que renderizou
+              h1 = null;
             }
-            await page.waitForTimeout(500);
+            await page.waitForTimeout(400);
             await page.screenshot({ path: path.join(RAIZ, `${rota.slug}_${tema}_${tamanho.nome}.png`) });
             return await medir(page, rota.slug, tema);
           } catch (e) {
@@ -139,6 +123,19 @@ async function main(): Promise<void> {
             };
           }
         })();
+        // A RÉGUA: h1 esperado + destino. Sem os dois, a linha NÃO foi medida.
+        m.h1 = h1 ?? null;
+        const url = m.urlFinal;
+        const redirecionouCerto = "destino" in rota && rota.destino
+          ? url.startsWith(rota.destino)
+          : url.startsWith(rota.path);
+        const h1Certo = h1 !== null && rota.h1.test(h1);
+        m.medidaOk = h1Certo && redirecionouCerto;
+        m.motivoNaoMedido = m.medidaOk
+          ? null
+          : !h1Certo
+            ? `h1 inesperado: ${h1 === null ? "(ausente no timeout)" : JSON.stringify(h1)}`
+            : `destino inesperado: ${url}`;
         m.console = [...m.console, ...erros];
         medidas.push(m);
 
@@ -148,6 +145,8 @@ async function main(): Promise<void> {
           `contraste=${m.contraste.abaixo}/${m.contraste.total}`,
           `axe=${m.axe.critica}/${m.axe.seria}`,
           `console=${m.console.length}`,
+          `h1=${m.h1 ?? "—"}`,
+          `medida=${m.medidaOk ? "ok" : "NAO"}${m.motivoNaoMedido ? ` (${m.motivoNaoMedido})` : ""}`,
           `url=${m.urlFinal}`,
         ];
         console.info(linhas.join("  "));

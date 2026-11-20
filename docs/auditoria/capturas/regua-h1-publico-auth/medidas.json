@@ -1,0 +1,550 @@
+{
+  "base": "http://localhost:3311",
+  "rotulo": "regua-h1",
+  "medidas": [
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Recuperar acesso",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": false,
+      "motivoNaoMedido": "h1 inesperado: \"Entrar\""
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Criar conta",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "500 — Erro interno",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "404 — Página não encontrada",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Recuperar acesso",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": false,
+      "motivoNaoMedido": "h1 inesperado: \"Entrar\""
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Criar conta",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "500 — Erro interno",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "404 — Página não encontrada",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Recuperar acesso",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": false,
+      "motivoNaoMedido": "h1 inesperado: \"Entrar\""
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Criar conta",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "500 — Erro interno",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "404 — Página não encontrada",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Recuperar acesso",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Entrar",
+      "medidaOk": false,
+      "motivoNaoMedido": "h1 inesperado: \"Entrar\""
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "Criar conta",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "500 — Erro interno",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    },
+    {
+      "rota": "404",
+      "urlFinal": "/404",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "h1": "404 — Página não encontrada",
+      "medidaOk": true,
+      "motivoNaoMedido": null
+    }
+  ]
+}
