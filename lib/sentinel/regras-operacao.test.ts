@@ -255,14 +255,36 @@ describe("detectores de operação — caso positivo e negativo", () => {
     ).toHaveLength(0);
   });
 
-  it("pedido preso: rascunho há 8 dias dispara; há 1 dia não", () => {
+  it("pedido preso: rascunho COM autor há 8 dias dispara; sem autor não", () => {
+    const velho = (over: Parameters<typeof pedido>[0] = {}) =>
+      pedido({
+        status: "rascunho",
+        updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 8 * DIA).toISOString(),
+        ...over,
+      });
+
+    const comAutor = pedidosPresos(snapshot({ pedidos: [velho()] }));
+    expect(comAutor).toHaveLength(1);
+    expect(primeiro(comAutor).evidencia.autor_user_id).toBe("usuario-1");
+
+    // Importado do Mercos: created_by NULL. É resíduo de importação, não
+    // trabalho abandonado — mesmo com itens/valor.
     expect(
       pedidosPresos(
         snapshot({
-          pedidos: [pedido({ status: "rascunho", updated_at: new Date(Date.parse("2026-11-18T12:00:00.000Z") - 8 * DIA).toISOString() })],
+          pedidos: [
+            velho({
+              created_by: null,
+              total_cents: 138_700,
+              subtotal_cents: 138_700,
+              contact_id: "contato-importado",
+            }),
+          ],
         }),
       ),
-    ).toHaveLength(1);
+    ).toHaveLength(0);
+
+    // Recente não abre nem com autor.
     expect(pedidosPresos(snapshot({ pedidos: [pedido({ status: "rascunho" })] }))).toHaveLength(0);
   });
 
