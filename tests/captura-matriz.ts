@@ -325,14 +325,32 @@ async function main(): Promise<void> {
   const rotasIdx = ARGS.indexOf("--rotas");
   const lista = rotasIdx >= 0 ? ARGS[rotasIdx + 1]!.split(",") : null;
   const soCapturar = ARGS.includes("--so-capturar");
+  const deIdx = ARGS.indexOf("--de");
+  const ateIdx = ARGS.indexOf("--ate");
+  const de = deIdx >= 0 ? Number(ARGS[deIdx + 1]) : 0;
+  const ate = ateIdx >= 0 ? Number(ARGS[ateIdx + 1]) : Number.MAX_SAFE_INTEGER;
 
-  const alvo = matriz.rotas.filter(
-    (r) =>
-      (grupo ? r.grupo === grupo : true) &&
-      (lista ? lista.includes(r.rota) : true) &&
-      (soCapturar ? r.capturar : true),
-  );
+  const alvo = matriz.rotas
+    .filter(
+      (r) =>
+        (grupo ? r.grupo === grupo : true) &&
+        (lista ? lista.includes(r.rota) : true) &&
+        (soCapturar ? r.capturar : true),
+    )
+    .slice(de, ate);
   if (alvo.length === 0) throw new Error("nenhuma rota selecionada");
+
+  /** Memória a cada 10 rotas (40 combinações). 8 s/rota é o tempo; a
+   *  memória por rota é o que derrubou a varredura em 70 de 99. */
+  let medicoes = 0;
+  const mem = (onde: string) => {
+    const m = process.memoryUsage();
+    console.info(
+      `MEM ${onde} rss=${Math.round(m.rss / 1048576)}MB ` +
+        `heap=${Math.round(m.heapUsed / 1048576)}MB ext=${Math.round(m.external / 1048576)}MB`,
+    );
+  };
+  mem("inicio");
 
   mkdirSync(RAIZ, { recursive: true });
   const browser = await chromium.launch();
@@ -400,6 +418,8 @@ async function main(): Promise<void> {
             m = await medir(page, linha, tema, tamanho.width, erros);
           }
           medidas.push(m);
+          medicoes += 1;
+          if (medicoes % 40 === 0) mem(`apos ${medicoes / 4} rotas`);
           console.info(
             `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
               `axe=${m.axe.critica}/${m.axe.seria} h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
@@ -441,8 +461,14 @@ async function main(): Promise<void> {
   for (const m of medidas) porChave.set(chave(m), m);
   const todas = [...porChave.values()];
 
+  // Cada fatia grava o SEU arquivo: se o Chromium morrer na fatia 7, as
+  // outras 6 não são perdidas e não é preciso recomeçar do zero.
+  const arquivoFatia =
+    ate === Number.MAX_SAFE_INTEGER
+      ? SAIDA
+      : path.join(RAIZ, `medidas-${ROTULO}-${de}-${ate}.json`);
   writeFileSync(
-    SAIDA,
+    arquivoFatia,
     JSON.stringify(
       {
         gerado: new Date().toISOString(),
@@ -457,7 +483,8 @@ async function main(): Promise<void> {
     ),
   );
   await browser.close();
-  console.info(`\n${medidas.length} medições neste lote; ${todas.length} no total, em ${SAIDA}`);
+  mem("fim");
+  console.info(`\n${medidas.length} medições neste lote; ${todas.length} no total, em ${arquivoFatia}`);
 }
 
 main().catch((e) => {
