@@ -37,7 +37,40 @@ function onde(trecho: string | RegExp, aPartirDe = 0): number {
   return i < 0 ? -1 : aPartirDe + i;
 }
 
+/**
+ * `<details>` DENTRO DE `<p>` = ERRO DE HIDRATAÇÃO.
+ *
+ * Medido na rota em 20/11/2026: o "Detalhes do cálculo" nasceu dentro do
+ * parágrafo do subtítulo. O navegador fecha o `<p>` sozinho ao encontrar um
+ * filho que não cabe nele, o HTML do servidor e a árvore do React divergem, e
+ * o console acusa **cinco** erros por carga ("In HTML, <summary> cannot be a
+ * descendant of <p>"), nos dois temas.
+ *
+ * A varredura é a mesma ideia do gate de layout: lê o FONTE e procura o par
+ * errado. O caso de MUTAÇÃO garante que ela enxerga o defeito de verdade — sem
+ * ele, um regex que nunca casa passaria verde.
+ */
+function detailsDentroDeParagrafo(fonte: string): boolean {
+  const semComentario = fonte.replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
+  return /<p[^>]*>(?:(?!<\/p>)[\s\S])*?<details/.test(semComentario);
+}
+
 describe("página de rota — mapa grande em cima, painéis abaixo", () => {
+  it("o texto recolhido do cálculo NÃO fica dentro de um parágrafo", () => {
+    expect(
+      detailsDentroDeParagrafo(FONTE),
+      "`<details>` dentro de `<p>` quebra a hidratação (cinco erros de console por carga): " +
+        "o navegador fecha o parágrafo sozinho. O recolhido tem de ser irmão do texto, num `<div>`.",
+    ).toBe(false);
+  });
+
+  it("MUTAÇÃO: o par <p><details> é reconhecido", () => {
+    const comDefeito = `<p className="text-xs">{t("A ordem da lista é a ordem da rua.")}{" "}
+      <details><summary>Detalhes</summary></details>
+    </p>`;
+    expect(detailsDentroDeParagrafo(comDefeito)).toBe(true);
+  });
+
   it("o cabeçalho da seção tem o peso do cabeçalho de seção da ficha", () => {
     // A ficha da carga já tem um `h1` (o número). Esta seção usa `h2` com o
     // mesmo tamanho da seção "Paradas" (`text-base`): um segundo título de

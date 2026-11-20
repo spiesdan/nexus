@@ -1213,9 +1213,17 @@ export function Roteirizador({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div className="min-w-0">
           <h2 className="text-base font-medium text-text">{t("Mapa e ordem de entrega")}</h2>
-          <p className="text-xs text-muted-foreground">
-            {t("A ordem da lista é a ordem da rua.")}{" "}
-            <details className="mt-0.5 inline-block">
+          {/*
+            O `<details>` É IRMÃO DO `<p>` — nunca filho.
+            Medido na captura da rota em 20/11/2026: com o recolhido dentro do
+            parágrafo, o navegador fecha o `<p>` sozinho e o React acusa
+            "In HTML, <summary> cannot be a descendant of <p>" — erro de
+            HIDRATAÇÃO, cinco ocorrências por carga, nos dois temas. O texto
+            curto fica no parágrafo; o detalhe recolhido fica ao lado dele.
+          */}
+          <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
+            <p>{t("A ordem da lista é a ordem da rua.")}</p>
+            <details className="inline-block">
               <summary className="cursor-pointer text-[11px] text-text-muted hover:text-text">
                 {t("Detalhes do cálculo")}
               </summary>
@@ -1230,7 +1238,7 @@ export function Roteirizador({
                   : ""}
               </p>
             </details>
-          </p>
+          </div>
         </div>
         {/* UM SELO, UM ESTADO — e o jargão do provedor sai da frente.
             Antes o selo dizia "Sem rota calculada" / "Ordem aproximada" /
