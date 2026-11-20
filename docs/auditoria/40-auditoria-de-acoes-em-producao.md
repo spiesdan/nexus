@@ -544,3 +544,21 @@ alheios`).
 vermelho**. Quando a `main` quebrar, quem tem PR aberto precisa **rebase** — não só
 esperar o conserto; e quem quebrou conserta **antes** de qualquer outra coisa.
 Rodar o teste dirigido antes do push encurta a janela.
+
+## 27. 21/11/2026 — Deploy 1.62.2 verificado (exit 124 do stream não é falha)
+
+`update.sh --to v1.62.2` → concluído. **7 containers em 1.62.2**, 18 healthy,
+`/api/v1/health` `healthy 1.62.2`, `/login` 200.
+
+```
+URI too long (60 min) = 0            ← radar continua sadio
+Sentinel: achados=5 · reafirmadas=5 · truncado=false   ← os 5 leads reais seguem vistos
+```
+
+**Sem migration nesta versão** → rollback é só refixar **1.62.1**.
+
+**Nota operacional para o próximo operador:** o comando saiu com **exit 124**
+(timeout do stream SSH), mas o `update.sh` **terminou** — verificado: zero
+`update.sh` rodando, 7 containers na versão, health ok. É o mesmo comportamento do
+stream visto na **1.60.0**; **não** é deploy parcial. Conferir o servidor antes de
+concluir falha.
