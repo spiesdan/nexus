@@ -129,7 +129,7 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
                 <SearchTrigger />
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <NotificationCenter />
+                <NotificationCenter ativo={false} />
                 <UserMenu />
               </div>
             </header>

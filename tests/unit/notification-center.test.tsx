@@ -8,7 +8,7 @@
  *    `kindLabel`, e todo item leva a `/app/ai/inbox` (sem ação própria);
  *  - vazio diz que está vazio; carregando não mente.
  */
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { NotificationCenter } from "@/components/shell/NotificationCenter";
@@ -29,17 +29,24 @@ const inbox = vi.hoisted(() => ({
   }>,
 }));
 
+const chamadas = vi.hoisted(() => ({ opcoes: [] as Array<{ enabled?: boolean }> }));
+
 vi.mock("@/hooks/ai/useAgentInbox", () => ({
-  useAgentInbox: () =>
-    inbox.loading
+  useAgentInbox: (_status: string, opcoes: { enabled?: boolean } = {}) => {
+    chamadas.opcoes.push(opcoes);
+    return inbox.loading
       ? { data: undefined, isLoading: true }
-      : { data: { items: inbox.items, open_count: inbox.count }, isLoading: false },
+      : { data: { items: inbox.items, open_count: inbox.count }, isLoading: false };
+  },
 }));
 
 function abrir(): void {
   fireEvent.click(screen.getByTestId("alerts-bell"));
 }
 
+beforeEach(() => {
+  chamadas.opcoes = [];
+});
 afterEach(cleanup);
 
 describe("Central de avisos no shell", () => {
@@ -95,5 +102,15 @@ describe("Central de avisos no shell", () => {
     expect(screen.queryByText("Nenhum aviso em aberto")).toBeNull();
     cleanup();
     inbox.loading = false;
+  });
+
+  it("no shell do tenant o sino consulta o inbox", () => {
+    render(<NotificationCenter />);
+    expect(chamadas.opcoes.at(-1)).toMatchObject({ enabled: true });
+  });
+
+  it("no shell de plataforma o sino NÃO consulta o inbox do tenant (403)", () => {
+    render(<NotificationCenter ativo={false} />);
+    expect(chamadas.opcoes.at(-1)).toMatchObject({ enabled: false });
   });
 });
