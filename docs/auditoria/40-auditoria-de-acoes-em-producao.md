@@ -470,3 +470,27 @@ já registrou **incidente real** em vez de só logar warning.
 **Lição do dia:** *teste unitário que mocka a consulta não pega ambiguidade de
 embed — só o PostgREST real pega.* O #712 inclui prova no PostgREST local; é esse
 tipo de prova que faltava. Vale para toda consulta com `select` + relação.
+
+## 23. 21/11/2026 — Deploy 1.62.1 — regressão do embed fechada
+
+**Ação:** `update.sh --to v1.62.1` → *"Atualização concluída — app no ar e saudável"*.
+Backup: db **20M** + waha + uploads (11:47).
+
+| Verificação | Resultado |
+|---|---|
+| Containers | **7 em 1.62.1** |
+| `/health` | `healthy`, `version 1.62.1` |
+| `/login` | 200 |
+| `coletas_truncadas` | **[]** |
+| `falhas` | **[]** |
+| `operacao.lead_duplicado` | **5 reafirmadas** (vivas, ultima_vista 11:51) |
+| `risk-watcher` (70 min) | `URI too long` **0**, falhas **0** |
+
+Execução Sentinel `3248b21d`: `achados=5 · reafirmadas=5 · encerradas=0 ·
+truncado=FALSE`.
+
+**Três provas em uma:** o detector de leads voltou a enxergar (reafirmou os 5
+reais), nenhuma coleta trunca e o radar não morre mais.
+
+**Rollback:** refixar **1.62.0** (sem migration nova nesta versão). Produção agora:
+**1.62.1**.
