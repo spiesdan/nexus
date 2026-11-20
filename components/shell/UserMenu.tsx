@@ -40,7 +40,7 @@ export function UserMenu() {
           <Button
             variant="ghost"
             size="icon"
-            className="rounded-full"
+            className="rounded-full lg:h-11 lg:w-11"
             /* O nome acessível inclui as iniciais visíveis: sem isso o axe
                reprova em `label-content-name-mismatch` (texto na tela que não
                faz parte do nome do botão). */

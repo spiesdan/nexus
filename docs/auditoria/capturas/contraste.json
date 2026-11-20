@@ -1,6 +1,6 @@
 {
-  "geradoEm": "2026-11-18T17:30:02.425Z",
-  "base": "http://localhost:3021",
+  "geradoEm": "2026-11-20T05:58:28.014Z",
+  "base": "http://localhost:3002",
   "resultados": [
     {
       "rota": "/admin",
@@ -38,6 +38,26 @@
       "medida": {
         "medidos": 243,
         "naoMedidosPorImagem": 3,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/dashboard",
+      "tema": "dark",
+      "medida": {
+        "medidos": 33,
+        "naoMedidosPorImagem": 4,
+        "reprovados": 0,
+        "piores": []
+      }
+    },
+    {
+      "rota": "/admin/dashboard",
+      "tema": "light",
+      "medida": {
+        "medidos": 33,
+        "naoMedidosPorImagem": 4,
         "reprovados": 0,
         "piores": []
       }

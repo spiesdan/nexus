@@ -162,7 +162,7 @@ base sumiu; duas telas entraram depois dela.
 |---|---|---|---|---|
 | `/admin/audit/[entryId]` | admin | **pendente** | — | — |
 | `/admin/audit` | admin | **pendente** | — | — |
-| `/admin/dashboard` | admin | **pendente** | — | — |
+| `/admin/dashboard` | admin | **aplicado** | `48-admin-dashboard-design.md` · `capturas/admin-dashboard-{antes,depois}/` | G |
 | `/admin/google` | admin | **pendente** | — | — |
 | `/admin/inbox/[conversationId]` | admin | **pendente** | — | — |
 | `/admin/inbox` | admin | **pendente** | — | — |
@@ -470,3 +470,15 @@ conteúdo isolado do shell.
 A página inteira ainda conta ~30 por causa da sidebar/topbar globais; ver
 `40-expedicao-design.md` §Pendências. TalkBack: locale do sistema e TTS em
 pt-BR provados por `getprop`/`settings`; áudio não, AVD `-no-audio`.
+
+## 12. Admin — casca de 44 px (aplicado)
+
+A casca compartilhada das 22 rotas ganhou piso de 44 px nos alvos (sidebar,
+topbar, busca, menu do usuário, banner). O `/admin/dashboard` foi medido antes/
+depois: **16 → 1** alvos <40 em 1440 e **2 → 1** em 390 (o que resta é o
+skip-link `sr-only`; nenhum alvo visível); overflow e console 0;
+contraste 0/33 em dark e light. O skip-link `sr-only` 1×1 permanece e não é alvo
+de toque em repouso.
+
+As demais telas seguem `pendente` para auditoria de **conteúdo** — a casca já
+entrega 44 px em todas. `/admin/audit` ainda tinha 72 no total (conteúdo próprio).
