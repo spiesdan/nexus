@@ -172,7 +172,7 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/lgpd/requests/[id]` | admin | **pendente** | — | D |
 | `/admin/marca` | admin | **pendente** | — | D |
 | `/admin/observabilidade` | admin | **pendente** | — | D |
-| `/admin` | admin | **pendente** | — | D |
+| `/admin` | admin | **fora de escopo** (redireciona para `/admin/dashboard`; não é superfície) | `app/admin/(protected)/page.tsx` | G |
 | `/admin/platform-admins` | admin | **pendente** | — | D |
 | `/admin/tenants/[id]/health` | admin | **pendente** | — | D |
 | `/admin/tenants/[id]` | admin | **pendente** | — | D |
@@ -408,3 +408,38 @@ Nenhuma outra tela foi marcada como exceção. Páginas de estado (`403`, `500`,
   sem evidência (PR + captura ou doc).
 - **O que este documento não faz:** não decide regra de negócio e não declara
   “conforme” o que não foi aberto.
+
+## 9. Passe do `app/admin` — aberto em 20/11 (G)
+
+**Base:** `nexus/main` de 20/11, mesma base para “antes” e “depois”. **Método:**
+`tests/captura-admin-matriz.ts` — um passe para as 22 rotas, em claro/escuro ×
+1440/390, medindo overflow (com o elemento culpado), contraste WCAG no texto
+que a tela mostra, axe (critical/serious) e console (`console.error`/pageerror).
+O JSON (`medidas.json`) é a prova; os PNGs são a evidência.
+
+**Regra desta seção:** nenhuma linha de 2.1 vira `aplicado`/`já conforme` sem a
+captura antes/depois. O que está abaixo é o que já foi **medido por código ou
+por conta de contraste**, antes da janela.
+
+### 9.1 Correções já commitadas (medidas, sem captura ainda)
+
+| Onde | Defeito medido | Correção | Prova |
+|---|---|---|---|
+| `/admin/inbox`, `/admin/inbox/[id]` | lista `w-[360px]` + painel `w-[320px]` sempre visíveis → **30 px** para o fio a 390 | casco decide pela URL: uma coluna no celular, “Voltar” `md:hidden`, painel só em ≥ xl | `tests/unit/admin-inbox-uma-coluna-no-celular.test.tsx` (3) |
+| `inbox` (nota), `lgpd/requests/[id]` (data e “por”), `tenants/[id]` (“em breve”) | véu de opacidade sobre muted: **2,91:1** claro · **3,43:1** escuro (`opacity-70`); **2,44/2,86** (`opacity-60`) | `text-text-subtle` (4,69:1 · 5,50:1) | conta do par efetivo (composição do alpha sobre o fundo) |
+| `platform-admins` badge “Ativo” | `text-green-700` fixo: **3,40:1** no escuro | `Badge variant="success"` (5,66:1 · 6,13:1) | idem |
+| `platform-admins` linha revogada | `opacity-60` na linha inteira apagava nome/e-mail/motivo | removido; o badge “Revogado” já diz o estado | idem |
+| `platform-admins` aviso de DBA | `bg-blue-50/text-blue-900` fixos: ilha clara no tema escuro | tokens de info (6,11:1 · 6,42:1) | idem |
+
+### 9.2 Linhas e lotes
+
+| Lote | Rotas | Estado |
+|---|---|---|
+| 1 — listas | dashboard, tenants, users, audit, incidents, lgpd | captura pendente de janela |
+| 2 — fichas | tenants/[id], tenants/[id]/health, users/[id], audit/[entryId], incidents/[id], lgpd/requests/[id] | captura pendente |
+| 3 — configuração | marca, observabilidade, usage, platform-admins, google | correções de contraste acima; captura pendente |
+| 4 — inbox + estado | inbox, inbox/[conversa], forbidden | correção de 390 acima; captura pendente |
+| — | `/admin` (redirect) | **fora de escopo** — `redirect("/admin/dashboard")`, não é superfície |
+
+`/admin/incidents/[id]` não tem fixture no seed local (`incidents = 0`); a
+captura dirá “sem fixture” ou usará uma linha sintética local, nunca produção.
