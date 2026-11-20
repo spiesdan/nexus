@@ -226,3 +226,23 @@ consolidar em um e fechar os demais com motivo.
 - **D**: #638 (lista) mergeado; **#640 (thread) aberto — ele está com os arquivos
   do inbox em uso**, e o F não toca neles.
 - **G**: `/admin/observabilidade` **mergeado** (#623).
+
+## Cobertura 41 — divisão de donos (19/11/2026)
+
+**Conta honesta medida:** **159 superfícies** → **14 aplicadas**, **143 pendentes**.
+Das pendentes, **96 são `app/app`** e **47 não tinham dono funcional** (22 admin +
+25 público/auth/estado). O coordenador distribuiu as 47:
+
+| Bloco | Dono | Escopo | Regra |
+|---|---|---|---|
+| **96 `app/app`** | **D** | telas de operação, em ordem de uso diário (pedidos, inbox, fiscal, expedição, financeiro → config) | uma linha da matriz por tela, veredito + evidência |
+| **22 admin** | **G** | `app/admin/**` (já fez `/admin/observabilidade`, conhece o guard `platform_admin`) | idem |
+| **25 público/auth/estado** | **F** | login, signup, recuperação, 404/500, `/design` (exceção declarada) | idem |
+
+**Régua comum aos três:** antes/depois **na mesma base**; captura **claro/escuro ×
+1440/390**; contraste medido; overflow e console limpos; **linha da matriz com
+veredito + evidência**. Quem não redesenharia por decisão marca
+`fora de escopo com motivo` — nada desaparece.
+
+**Fila:** D segue o bloco de 96; G entra pelas 22 de admin; F pelas 25 de
+público/auth/estado. A matriz `41` é o backlog único; cada PR fecha linhas nela.

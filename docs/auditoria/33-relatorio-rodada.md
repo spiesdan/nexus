@@ -231,3 +231,18 @@ descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambígu
 | **#640** (inbox thread, D) | `[~]` | aberto; merge quando o CI fechar (congelamento acabou) |
 | Matriz E do F na 1.60.0 | `[~]` | reexecutar `criador-de-pedidos-matriz.spec.ts` no build oficial e registrar §9 |
 | Sentinel: encerrar devolução na próxima varredura | `[~]` | confirmar `nao_detectada_na_execucao` na varredura de 6h; se não, é bug |
+
+
+### Cobertura reconciliada — 159 superfícies, donos definidos (19/11/2026)
+
+| Bloco | Superfícies | Dono |
+|---|---:|---|
+| Aplicadas | **14** | D/F/G (evidência na matriz) |
+| Pendentes `app/app` | **96** | **D** |
+| Pendentes `admin` | **22** | **G** |
+| Pendentes público/auth/estado | **25** | **F** |
+| **Total pendente** | **143** | — |
+
+Régua: antes/depois na mesma base, claro/escuro × 1440/390, contraste medido,
+overflow/console, e **linha da matriz com veredito + evidência**. Exceção =
+`fora de escopo com motivo`.
