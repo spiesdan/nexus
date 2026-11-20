@@ -212,6 +212,13 @@ Depois de qualquer deploy, confirme que o domínio responde **307** (redireciona
 pro login) e não 404. Verificações e o caso de build local em
 `docs/runbooks/deploy.md`.
 
+**Deploy de versão publicada tem autorização permanente do dono desde 20/11/2026**
+(“pode sempre! grave isso”), com escopo e limites em
+[`docs/auditoria/40-auditoria-de-acoes-em-producao.md`](docs/auditoria/40-auditoria-de-acoes-em-producao.md)
+§0 — operação fiscal/financeira, configuração de provedor, exclusão de dado e
+migration destrutiva **continuam** exigindo autorização explícita, e o deploy
+segue exigindo backup, verificação e registro.
+
 O caminho normal **não constrói nada na VPS**: commit → push → PR → merge na
 `main` → o CI publica no GHCR → a VPS puxa. Imagem construída na VPS é exceção
 de emergência e é dívida: existe só naquele disco e qualquer `up -d` sem

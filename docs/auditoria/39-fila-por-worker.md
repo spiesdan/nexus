@@ -175,3 +175,15 @@ correto, agora escrito:
 
 Cortar antes de congelar produz release que persegue merge e obliga fechar PR de
 release (aconteceu com #639 e #664).
+
+## Regra de release e deploy (20/11/2026)
+
+- **Congelar merges primeiro**, confirmar, e só então disparar o corte; o PR de
+  release é a única exceção ao congelamento.
+- **Deploy não espera mais “pode”**: subir versão publicada (`update.sh --to vX.Y.Z`)
+  tem autorização permanente do dono desde 20/11/2026 (“pode sempre! grave isso”),
+  com escopo e limites no `40` §0.
+- **Continua exigindo**: backup, `update.sh` (nunca compose na mão), verificação
+  com números, rollback armado e **item novo no `40`**. Autorização não dispensa
+  prova — operação fiscal/financeira, provedor, exclusão de dado e migration
+  destrutiva seguem pedindo “pode” caso a caso.
