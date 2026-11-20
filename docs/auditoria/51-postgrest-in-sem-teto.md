@@ -2,7 +2,7 @@
 
 > **Origem:** o risk-watcher falhava a cada 15 min na organização real com
 > `decisões gravadas: URI too long` (414). A causa era um `.in("lead_id", …)`
-> com a lista de frios inteira (`lib/leads/laya-decisao.ts:347`). Este doc
+> com a lista de frios inteira (`lib/leads/laya-decisao.ts:376`). Este doc
 > registra a família inteira: todo `.in(` em `workers/`, `app/api/v1/cron/` e
 > `lib/leads/`, com o teto de cada um.
 >
@@ -18,22 +18,25 @@ caracteres e vira `%2C`-separado; acima de ~8 kB o gateway responde **414 antes
 de a consulta chegar ao Postgres**. Medido: 500 UUIDs ≈ 18 kB. Por isso “tem
 `.limit(500)`” **não** é proteção de URL — é o mesmo tamanho que quebra.
 
-A regra mora num helper só — `lib/db/por-fatias.ts` (`FATIA_DE_IDS = 100`) —,
-com teste próprio em `lib/db/por-fatias.test.ts` (lista vazia, lista < 100,
-350 ids em 4 fatias, falha parcial contada e primeiro erro preservado).
+Para `risk-seed` e `radar-de-risco` a regra mora num helper só —
+`lib/db/por-fatias.ts` (`FATIA_DE_IDS = 100`) —, com teste próprio em
+`lib/db/por-fatias.test.ts` (lista vazia, lista < 100, 350 ids em 4 fatias,
+falha parcial contada e primeiro erro preservado). O `laya-decisao` **já tinha
+sido fatiado pela #697** (blocos de 100 em paralelo, `LOTE_DE_IDS`), antes de
+este PR existir; aqui ele foi **preservado** e só a mensagem foi corrigida.
 
-## Corrigido (3 módulos, 8 sítios)
+## Corrigido (3 módulos, 8 sítios — 2 pela #697, o resto aqui)
 
 | Arquivo:linha | Array | Antes | Depois |
 |---|---|---|---|
-| `lib/leads/laya-decisao.ts:347` | `frios.map(f => f.leadId)` — acervo inteiro | 1 consulta com N ids | `porFatias`; dedup antes; falha de bloco **lança** (não decide de novo o que já decidiu) |
-| `lib/leads/risk-seed.ts:122` | `stageIds` de **todos** os leads abertos | 1 consulta, sem `.limit` | `porFatias`; união em `Map` |
-| `lib/leads/risk-seed.ts:141` | `contactIds` idem | 1 consulta | `porFatias`; união em `Set` |
-| `lib/leads/radar-de-risco.ts:141` | `agentIds` do scan | `SCAN_CAP = 500` | `porFatias`; mapa idêntico |
-| `lib/leads/radar-de-risco.ts:157` | `stageIds` do scan | 500 | `porFatias` |
-| `lib/leads/radar-de-risco.ts:184` | `contact_id` (follow-ups) | 500 | `porFatias` |
-| `lib/leads/radar-de-risco.ts:189` | `contact_id` (conversas) | 500 | `porFatias` |
-| `lib/leads/radar-de-risco.ts:194` | `id` (contatos) | 500 | `porFatias` |
+| `lib/leads/laya-decisao.ts:376` | `frios.map(f => f.leadId)` — acervo inteiro | 1 consulta com N ids | fatiado pela **#697** (blocos de 100, em paralelo); este PR **mantém** e corrige a mensagem para `leitura de decisões falhou: …` |
+| `lib/leads/risk-seed.ts:116` | `stageIds` de **todos** os leads abertos | 1 consulta, sem `.limit` | `porFatias`; união em `Map` |
+| `lib/leads/risk-seed.ts:140` | `contactIds` idem | 1 consulta | `porFatias`; união em `Set` |
+| `lib/leads/radar-de-risco.ts:133` | `agentIds` do scan | `SCAN_CAP = 500` | `porFatias`; mapa idêntico |
+| `lib/leads/radar-de-risco.ts:159` | `stageIds` do scan | 500 | `porFatias` |
+| `lib/leads/radar-de-risco.ts:197` | `contact_id` (follow-ups) | 500 | `porFatias` |
+| `lib/leads/radar-de-risco.ts:208` | `contact_id` (conversas) | 500 | `porFatias` |
+| `lib/leads/radar-de-risco.ts:218` | `id` (contatos) | 500 | `porFatias` |
 
 Provas: `tests/unit/risk-em-blocos.test.ts` roda **5 e 350 ids** nos dois
 módulos, compara o resultado com o da lista curta e exige 4 consultas por
@@ -74,7 +77,7 @@ Quatro módulos concentram o resto: `meu-dia-alertas` (6), `recover-stuck`
 | `app/api/v1/cron/meu-dia-alertas/route.ts:313, 346, 419, 437` | arrays literais de status |
 | `lib/leads/laya-decisao.ts:168` | `lote` ≤ `LAYA_DECISAO_POR_TICK` (32) |
 | `lib/leads/laya-decisao.ts:176` | `contatos` derivados do mesmo `lote` ≤ 32 |
-| `lib/leads/radar-de-risco.ts:316` | `itens` = `radar.slice(0, limit)`, padrão 50 |
+| `lib/leads/radar-de-risco.ts:357` | `itens` = `radar.slice(0, limit)`, padrão 50 |
 
 ## Ordem proposta (não executada)
 
