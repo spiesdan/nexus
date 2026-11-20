@@ -264,3 +264,10 @@ overflow/console, e **linha da matriz com veredito + evidência**. Exceção =
 - **Mergeados:** #673 (rotas), #679 (sessionStorage), #680 (custo no resumo), #675/#681 (decisões e protocolo), #682 (recebimento confirma).
 - **Aberto:** #683 (override com motivo, F) no CI; G iniciando as 22 de admin; D na fatia 2/3 de rotas.
 - **Produção:** 1.61.1 intocada; nenhum build paralelo.
+
+### Turno noturno — 21/11 ~08:40Z
+
+- **Mergeados:** #682, #683, #686, #688, #689, #690, #692; antes #673/#675/#679/#680/#681.
+- **Critical local (1.61.1):** **70 passaram · 6 falharam · 2 skipped · 4 não rodaram** (exit 1). Falhas em triagem: `credenciais-de-ia` (provável ambiente), `entrada-do-endereco`, jornada fiscal, J14 CSV, recuperar senha.
+- **Aberto:** #691 (invariants, F), #694 (rotas publicar, D), #687/#693 `dirty`.
+- **Produção:** 1.61.1 healthy.
