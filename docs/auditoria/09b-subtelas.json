@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-20T11:18:13.422Z",
+  "geradoEm": "2026-11-20T12:08:20.610Z",
   "telas": [
     {
       "rota": "/",
@@ -225,17 +225,17 @@
     },
     {
       "rota": "/admin/tenants/[id]",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "em breve",
-          "arquivo": "app/admin/(protected)/tenants/[id]/_tab-nav.tsx",
-          "linha": 39
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
-      "rotasIrmaes": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "em breve",
+          "arquivo": "app/admin/(protected)/tenants/[id]/_tab-nav.tsx",
+          "linha": 42
+        }
+      ],
       "semTitulo": 0
     },
     {
