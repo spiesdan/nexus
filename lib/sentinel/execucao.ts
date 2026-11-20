@@ -23,6 +23,7 @@ import {
   sentinelLigadoNoAmbiente,
   type ConfiguracaoSentinel,
 } from "./config";
+import { regraBloqueadaPorFontes } from "./fontes";
 import { executarDetectores } from "./motor";
 import { fingerprint, type Achado } from "./tipos";
 
@@ -216,19 +217,23 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
       else reafirmadas += 1;
     }
 
-    // Encerra por REGRA AVALIADA, não por rodada completa. A garantia que
-    // importa é "não fechar sem ter avaliado a regra": quem não rodou (corte de
-    // tempo, falha) fica de fora. Coleta truncada continua bloqueando tudo —
-    // nela o snapshot está incompleto para TODAS as regras, inclusive as que
-    // rodaram. Achado que não coube no teto da org também protege a sua regra:
-    // fechar por ausência quando o achado existe mas foi descartado seria mentira.
+    // Encerra por REGRA AVALIADA e pela FONTE que ela lê, não por rodada
+    // completa. A garantia é "não fechar sem ter lido a fonte da regra": quem
+    // não rodou (tempo/falha) ou depende de uma coleta truncada fica de fora.
+    // Uma fonte de alto volume (importações Mercos, webhooks) não pode silenciar
+    // fiscal/estoque que não a leem. Achado que não coube no teto da org também
+    // protege a sua regra: fechar por ausência quando o achado existe mas foi
+    // descartado seria mentira.
     let encerradas = 0;
     const regrasComAchadoForaDoTeto = new Set(
       deteccao.achados.slice(config.limiteOcorrencias).map((a) => a.regra),
     );
-    if (!coleta.truncado) {
+    {
       const regrasSeguras = deteccao.regrasAvaliadas.filter(
-        (r) => !regrasComErro.has(r) && !regrasComAchadoForaDoTeto.has(r),
+        (r) =>
+          !regrasComErro.has(r) &&
+          !regrasComAchadoForaDoTeto.has(r) &&
+          !regraBloqueadaPorFontes(r, coleta.truncados),
       );
       if (regrasSeguras.length > 0) {
         const { data: n, error } = await admin.rpc("fn_sentinel_encerrar_ausentes", {
