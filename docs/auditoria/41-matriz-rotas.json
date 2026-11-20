@@ -1,0 +1,786 @@
+{
+  "gerado": "2026-11-20",
+  "total": 110,
+  "ordemDosGrupos": [
+    "pedidos-e-vendas",
+    "atendimento",
+    "fiscal",
+    "expedicao",
+    "financeiro",
+    "config-e-inteligencia",
+    "ia",
+    "outros"
+  ],
+  "rotas": [
+    {
+      "rota": "/carteira",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/comissoes",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/compras",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/compras/[id]",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": true,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/estoque",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/faturamento",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/notas",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/pedidos",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": true,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/titulos",
+      "grupo": "pedidos-e-vendas",
+      "dinamica": false,
+      "capturar": true,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/agenda",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/busca",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/campanhas",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/contacts",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "grupo": "atendimento",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/inbox",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/inbox/[id]",
+      "grupo": "atendimento",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/kanban",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/leads/[id]",
+      "grupo": "atendimento",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/meu-dia",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "grupo": "atendimento",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/tarefas",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/templates",
+      "grupo": "atendimento",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "grupo": "fiscal",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/fiscal/xml",
+      "grupo": "fiscal",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao",
+      "grupo": "expedicao",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "grupo": "expedicao",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "grupo": "expedicao",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "grupo": "expedicao",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "grupo": "expedicao",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/expedicao/nova",
+      "grupo": "expedicao",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/frota",
+      "grupo": "expedicao",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/financeiro",
+      "grupo": "financeiro",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/indicadores",
+      "grupo": "financeiro",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/laboratorio",
+      "grupo": "financeiro",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/metrics",
+      "grupo": "financeiro",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/relatorios",
+      "grupo": "financeiro",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/audit",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/connections",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/integrations/nuvemshop",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/inteligencia",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/lgpd/requests",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "grupo": "config-e-inteligencia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/products",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/prospeccao",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "grupo": "config-e-inteligencia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar/categorias",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/radar/risco",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/recuperacao",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/sentinel",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/atendimento",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/atualizacao",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/billing",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/canal-oficial",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/devices",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/marca",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/notifications",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/profile",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/security",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/templates",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/tenant",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/tenant/agenda",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/tenant/pipelines",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/settings/tenant/whatsapp",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/team",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/team/invite",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/venda-automatica",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/webhooks",
+      "grupo": "config-e-inteligencia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/agents",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "grupo": "ia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/cases",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/controle",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/credentials",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/decisoes",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/evolution",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/followups",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "grupo": "ia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "grupo": "ia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/inbox",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/memory",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/proposals",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/providers",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/routers",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "grupo": "ia",
+      "dinamica": true,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/runs",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/skills",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    },
+    {
+      "rota": "/ai/usage",
+      "grupo": "ia",
+      "dinamica": false,
+      "capturar": false,
+      "veredito": "pendente"
+    }
+  ]
+}
