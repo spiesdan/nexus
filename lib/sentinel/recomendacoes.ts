@@ -626,6 +626,24 @@ export const RECOMENDACOES: Record<string, Construtor> = {
       },
     ),
 
+  "plataforma.slo_estourado": (achado) =>
+    plano(
+      "Confirmar a rota que puxou o SLO e só então mexer em índice, teto ou código.",
+      [
+        "Abra /admin/observabilidade e confira a janela, o total e as rotas da evidência.",
+        "Se for 5xx, siga o request id até o log api.5xx da rota que concentra.",
+        "Se for p95, compare a rota lenta com o volume — consulta cara e volume pedem decisões diferentes.",
+        "Registre a decisão; a próxima rodada atualiza a mesma ocorrência.",
+      ],
+      ["rota responsável", "causa (consulta x volume)", "decisão tomada"],
+      {
+        fonte: ["api_request_samples"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        limitacao: String(achado.evidencia.janela_dias ?? 7) + " dias de série; sem amostra não há ocorrência.",
+      },
+    ),
+
   "operacao.conversa_claim_parado": () =>
     plano(
       "Devolver a conversa para a fila — ou confirmar que o responsável ainda vai atender.",

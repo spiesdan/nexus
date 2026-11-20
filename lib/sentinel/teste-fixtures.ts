@@ -299,6 +299,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     correcoes: [],
     contatosEndereco: [],
     conversasParadas: [],
+    sloApi: null,
     ...over,
   };
 }

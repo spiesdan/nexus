@@ -30338,6 +30338,48 @@ grant execute on function public.fn_slo_api_resumo(integer, text[])
 comment on function public.fn_slo_api_resumo(integer, text[]) is
   'Agregado de disponibilidade e p95 das rotas quentes na janela (mínimo 7 dias), só service_role.';
 
+
+-- ============================================================================
+-- 0331 — SLO por rota para a evidência do Sentinel.
+-- Ver supabase/migrations/20261123240000_0331_slo_por_rota.sql.
+-- ============================================================================
+
+alter table public.sentinel_occurrences
+  drop constraint if exists sentinel_occurrences_categoria_check;
+alter table public.sentinel_occurrences
+  add constraint sentinel_occurrences_categoria_check
+  check (categoria in ('fiscal', 'operacao', 'financeiro', 'campanha', 'plataforma'));
+
+create or replace function public.fn_slo_api_rotas(
+  p_dias integer,
+  p_rotas text[]
+)
+returns table (route text, total bigint, erros bigint, p95 numeric)
+language sql
+security definer
+set search_path = public, pg_temp
+as $fn$
+  select
+    route,
+    count(*)::bigint as total,
+    count(*) filter (where status >= 500)::bigint as erros,
+    percentile_cont(0.95) within group (order by duration_ms)
+      filter (where status < 400) as p95
+  from public.api_request_samples
+  where created_at >= now() - make_interval(days => greatest(coalesce(p_dias, 7), 7))
+    and route = any(coalesce(p_rotas, array[]::text[]))
+  group by route
+  order by route;
+$fn$;
+
+revoke execute on function public.fn_slo_api_rotas(integer, text[])
+  from public, anon, authenticated;
+grant execute on function public.fn_slo_api_rotas(integer, text[])
+  to service_role;
+
+comment on function public.fn_slo_api_rotas(integer, text[]) is
+  'SLO por rota (total/5xx/p95) para a evidência do Sentinel; só service_role.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

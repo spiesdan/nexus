@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas";
+import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
 
 export const dynamic = "force-dynamic";
 

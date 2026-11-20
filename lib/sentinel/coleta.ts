@@ -11,6 +11,7 @@
  *    marca a execução como truncada. Rodada truncada não encerra ocorrências
  *    por ausência — lista incompleta não é prova de nada.
  */
+import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import type {
@@ -462,6 +463,28 @@ export async function coletarSnapshot(
     { nome: "jobs_correcao", coleta: jobsCorrecao },
   ];
 
+  const [resumoApi, rotasApi] = await Promise.all([
+    admin.rpc("fn_slo_api_resumo", { p_dias: 7, p_rotas: [...ROTAS_DO_SLO] }),
+    admin.rpc("fn_slo_api_rotas", { p_dias: 7, p_rotas: [...ROTAS_DO_SLO] }),
+  ]);
+  const falhaSlo = resumoApi.error ?? rotasApi.error;
+  if (falhaSlo) coletas.push({ nome: "slo_api", coleta: { dados: [], truncado: true, falha: `slo_api: ${falhaSlo.message}` } });
+  const resumo = (resumoApi.data ?? null) as { total?: number; erros?: number; p95?: number | string | null } | null;
+  const sloApi = falhaSlo || !resumo
+    ? null
+    : {
+        janela_dias: 7,
+        total: Number(resumo.total ?? 0),
+        erros: Number(resumo.erros ?? 0),
+        p95: resumo.p95 === null || resumo.p95 === undefined ? null : Math.round(Number(resumo.p95)),
+        rotas: ((rotasApi.data ?? []) as Array<{ route: string; total: number; erros: number; p95: number | string | null }>).map((r) => ({
+          route: r.route,
+          total: Number(r.total),
+          erros: Number(r.erros),
+          p95: r.p95 === null || r.p95 === undefined ? null : Math.round(Number(r.p95)),
+        })),
+      };
+
   return {
     snapshot: {
       organizationId,
@@ -484,6 +507,7 @@ export async function coletarSnapshot(
       correcoes,
       contatosEndereco: contatosEndereco.dados,
       conversasParadas: conversasParadas.dados,
+      sloApi,
     },
     truncado: coletas.some((c) => c.coleta.truncado),
     truncados: coletas.filter((c) => c.coleta.truncado).map((c) => c.nome),

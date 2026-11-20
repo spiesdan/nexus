@@ -35,7 +35,9 @@ const DIRETORIOS = [
 ];
 
 const TABELA_DE_ESCRITA_PERMITIDA = /^sentinel_/;
-const RPC_PERMITIDO = /^fn_sentinel_/;
+// `fn_slo_api_*` são AGREGAÇÕES somente leitura da série de API (0330/0331);
+// não corrigem nada. O contrato segue fechado: qualquer outro nome reprova.
+const RPC_PERMITIDO = /^(fn_sentinel_|fn_slo_api_(resumo|rotas)$)/;
 
 interface Fonte {
   nome: string;
