@@ -338,3 +338,26 @@ módulo`).
 2. quem tem PR aberto **rebase** na `main` verde — não basta esperar;
 3. ninguém mergeia sobre vermelho (espalha a falha para mais branches);
 4. a janela medida nesta rodada foi de **~20 min** e custou 4 PRs e uma rodada.
+
+
+## Estratégia — medir primeiro, consertar por concentração (21/11/2026)
+
+**Medição do F:** 13 rotas em **104 s** = **8 s/rota** na varredura em lote. As **96
+telas de `app/app`** levam **~13 minutos** para medir — não semanas.
+
+**Ordem nova, para D e G:**
+1. **Medir primeiro** — varredura completa do domínio (D `app/app`, G `admin`;
+   F já mediu público/auth).
+2. **Mapa de defeitos** por tipo e por módulo: contraste, overflow, alvo <44×44,
+   console, axe.
+3. **Consertar por concentração**: o defeito presente em mais telas primeiro —
+   um componente consertado resolve N rotas.
+4. **Matriz com veredito real**: `aplicado` só onde a varredura passou; `pendente`
+   com o defeito escrito.
+
+**Régua de alvo: mínimo 44×44** (`40-expedicao-design.md:104`, `41` §12). O F
+corrigiu `/login/forgot` de 38×17 para **44×44** e manteve 5 telas `pendente`
+(links de 17–20 px) em vez de marcá-las aplicadas — **esse é o padrão**.
+
+**Filas:** D `fiscal` → varredura de `app/app` → consertos por concentração;
+G o mesmo em `admin`; F fecha público/auth e depois apoia a varredura.

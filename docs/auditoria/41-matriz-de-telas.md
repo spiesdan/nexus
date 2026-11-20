@@ -215,3 +215,14 @@ escrito à mão).
 | 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 
 <!-- MATRIZ:FIM -->
+
+
+## 12. Estratégia de medição (21/11/2026)
+
+Varredura em lote: **13 rotas em 104 s (~8 s/rota)**; as 96 de `app/app` levam
+**~13 min**. Ordem: medir o domínio inteiro → mapa de defeitos por tipo/módulo →
+consertar pelo defeito mais concentrado → veredito real na matriz.
+
+**Alvo de toque: mínimo 44×44.** Referência: `40-expedicao-design.md:104` e esta
+matriz §12. `/login/forgot` saiu de 38×17 para **44×44**; 5 telas ficaram
+`pendente` com o defeito escrito (links de 17–20 px) em vez de “aplicadas”.
