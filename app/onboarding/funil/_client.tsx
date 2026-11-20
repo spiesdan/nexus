@@ -98,7 +98,7 @@ export function QuadroClient({
             {sugestao.porque ? <> — {t(sugestao.porque)}</> : null}. {t("Comecei por um quadro pronto de")}{" "}
             <strong>{t(sugestao.pacote.comoSeApresenta)}</strong>.
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs">
             {t(
               "Isso não trava nada: escolha outro modelo abaixo ou ajuste as colunas na mão. Dá para mudar tudo depois, quando quiser.",
             )}

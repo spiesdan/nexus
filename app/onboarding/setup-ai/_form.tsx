@@ -211,7 +211,7 @@ export function SetupAiForm({ capacidades, conferencias }: Props) {
             {t("não foram gravadas. Copie o que você escreveu antes de sair — e salve de novo em")}{" "}
             <strong>{t("IA › Memória")}</strong>.
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs">
             {t("Erro do banco de dados:")} <code className="break-all">{regrasNaoSalvas}</code>
           </p>
         </div>
@@ -310,7 +310,7 @@ export function SetupAiForm({ capacidades, conferencias }: Props) {
               "não consegui ler os números de WhatsApp desta instalação, então não dá pra dizer em qual número ele atenderia — e rascunho não responde mensagem.",
             )}
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs">
             {t("Erro do banco de dados:")} <code className="break-all">{naoPublicado}</code>
           </p>
           <p className="text-sm">

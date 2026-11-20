@@ -185,13 +185,14 @@ base sumiu; duas telas entraram depois dela.
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
-> **20/11/2026 — passe de público/auth/estado (16 de 26).** Medido em
+> **20/11/2026 — passe de público/auth/estado e onboarding (25 de 26).** Medido em
 > `next dev` nas duas pontas (antes/depois na mesma base): 64 medições por
 > lado, **0** textos abaixo do AA, **0** overflow, **0** axe serious. O que
 > mudou: as 6 telas de acesso ganharam o cartão das telas de estado e o
 > orçamento inválido deixou de ser beco. Detalhe e números em
-> `50-publico-auth-estado-design.md`. As **9 de onboarding seguem
-> `pendente`** (fixture de organização não finalizada, passe próprio).
+> `50-publico-auth-estado-design.md` e `51-onboarding-design.md`. As 9 de
+> onboarding foram medidas em passe próprio, com fixture de organização nova;
+> `/design` segue exceção declarada.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
@@ -209,15 +210,15 @@ base sumiu; duas telas entraram depois dela.
 | `/legal/privacy` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/legal/terms` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/onboarding/connect-nuvemshop` | onboarding | **pendente** | — | — |
-| `/onboarding/connect-whatsapp` | onboarding | **pendente** | — | — |
-| `/onboarding/done` | onboarding | **pendente** | — | — |
-| `/onboarding/funil` | onboarding | **pendente** | — | — |
-| `/onboarding/invite-team` | onboarding | **pendente** | — | — |
-| `/onboarding` | onboarding | **pendente** | — | — |
-| `/onboarding/setup-ai` | onboarding | **pendente** | — | — |
-| `/onboarding/testar` | onboarding | **pendente** | — | — |
-| `/onboarding/welcome` | onboarding | **pendente** | — | — |
+| `/onboarding/connect-nuvemshop` | onboarding | **medido · alcançável só por URL** (passo desligado) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/connect-whatsapp` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/done` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/funil` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/invite-team` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding` | onboarding | **medido · redireciona** (→ primeiro passo pendente) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/setup-ai` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/testar` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
+| `/onboarding/welcome` | onboarding | **medido · sem achado** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
 | `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |

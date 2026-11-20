@@ -104,7 +104,7 @@ export function InteligenciaDele({ inicial }: { inicial: EstadoDaChave }) {
       <section className="space-y-3 rounded-lg border border-warning/40 bg-warning-bg p-5 text-warning-fg">
         <div>
           <h3 className="text-sm font-medium">{t("Ele ainda não tem cérebro")}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm">
             {t(
               "Seu funcionário pensa com a inteligência artificial que você contratar. A instalação não trouxe nenhuma chave — cole a sua aqui e ele já nasce funcionando.",
             )}
@@ -166,7 +166,7 @@ export function InteligenciaDele({ inicial }: { inicial: EstadoDaChave }) {
           >
             {salvando ? t("Guardando...") : t("Guardar a chave")}
           </Button>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs">
             {t("Ela é guardada cifrada — nem nós conseguimos lê-la depois.")}
           </span>
         </div>
