@@ -8,7 +8,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RecorteDaLista } from "@/components/nexus-ui/navigation/RecorteDaLista";
 import { useAgentInbox, useUpdateInboxItem, type AgentInboxItem } from "@/hooks/ai/useAgentInbox";
 import { kindLabel, SEVERITY_LABEL, type AgentInboxSeverity } from "@/lib/ai/agent-inbox-copy";
 import { Bell, Check } from "@/lib/ui/icons";
@@ -28,14 +28,15 @@ export function AgentInboxList({ canResolve }: { canResolve: boolean }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <Tabs value={tab} onValueChange={(v) => setTab(v as "open" | "resolved")}>
-        <TabsList>
-          <TabsTrigger value="open">
-            {t("Abertos")}{data ? ` (${data.open_count})` : ""}
-          </TabsTrigger>
-          <TabsTrigger value="resolved">{t("Resolvidos")}</TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <RecorteDaLista
+        rotulo={t("Avisos do agente")}
+        valor={tab}
+        onChange={setTab}
+        opcoes={[
+          { valor: "open", rotulo: t("Abertos"), contagem: data?.open_count ?? null },
+          { valor: "resolved", rotulo: t("Resolvidos") },
+        ]}
+      />
 
       {isLoading ? (
         <div className="space-y-2">
