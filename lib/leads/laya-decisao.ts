@@ -334,21 +334,44 @@ function interpretaResposta(
  * de negócios parados) apareceria no radar sem sugestão nenhuma — invisível
  * justamente para quem chegou agora.
  */
+/**
+ * Teto de ids por consulta. O PostgREST monta o `in (…)` na URL; 100 UUIDs
+ * (36 chars cada) ficam em ~3,8 KB, abaixo do limite de URL do HTTP/1.1.
+ * Acima disso a consulta morria com `URI too long` — era o erro de 15 em
+ * 15 min no risk-watcher de uma org com acervo frio grande, e o efeito era
+ * pior que o log: NENHUMA decisão era gravada enquanto o acervo passasse do
+ * limite, porque a exceção derrubava o tick inteiro.
+ */
+const LOTE_DE_IDS = 100;
+
 export async function candidatosSemDecisao(
   admin: SupabaseClient,
   organizationId: string,
   frios: Array<{ leadId: string; contactId: string; bucket: "em_risco" | "critico"; esfriouEm: Date }>,
 ): Promise<string[]> {
   if (frios.length === 0) return [];
-  const { data, error } = await admin
-    .from("crm_lead_risk_decisions")
-    .select("lead_id")
-    .eq("organization_id", organizationId)
-    .in(
-      "lead_id",
-      frios.map((f) => f.leadId),
-    );
-  if (error) throw new Error(`decisões gravadas: ${error.message}`);
-  const tem = new Set(((data ?? []) as DecisaoGravada[]).map((d) => d.lead_id));
+
+  // Dedup antes de fatiar: lead repetido não deve ocupar duas vagas do lote.
+  const ids = [...new Set(frios.map((f) => f.leadId))];
+  const lotes: string[][] = [];
+  for (let i = 0; i < ids.length; i += LOTE_DE_IDS) {
+    lotes.push(ids.slice(i, i + LOTE_DE_IDS));
+  }
+
+  const respostas = await Promise.all(
+    lotes.map((lote) =>
+      admin
+        .from("crm_lead_risk_decisions")
+        .select("lead_id")
+        .eq("organization_id", organizationId)
+        .in("lead_id", lote),
+    ),
+  );
+
+  const tem = new Set<string>();
+  for (const { data, error } of respostas) {
+    if (error) throw new Error(`decisões gravadas: ${error.message}`);
+    for (const d of (data ?? []) as DecisaoGravada[]) tem.add(d.lead_id);
+  }
   return frios.filter((f) => !tem.has(f.leadId)).map((f) => f.leadId);
 }
