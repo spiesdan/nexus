@@ -1,0 +1,132 @@
+[
+  {
+    "carga": "montando",
+    "tema": "light",
+    "largura": 1440,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 2,
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_",
+        "link-in-text-block: .maplibregl-ctrl-attrib-inner > a"
+      ]
+    }
+  },
+  {
+    "carga": "em-rota",
+    "tema": "light",
+    "largura": 1440,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "carga": "montando",
+    "tema": "light",
+    "largura": 390,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "nos": []
+    }
+  },
+  {
+    "carga": "em-rota",
+    "tema": "light",
+    "largura": 390,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "nos": []
+    }
+  },
+  {
+    "carga": "montando",
+    "tema": "dark",
+    "largura": 1440,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 2,
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_",
+        "link-in-text-block: .maplibregl-ctrl-attrib-inner > a"
+      ]
+    }
+  },
+  {
+    "carga": "em-rota",
+    "tema": "dark",
+    "largura": 1440,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "nos": [
+        "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+      ]
+    }
+  },
+  {
+    "carga": "montando",
+    "tema": "dark",
+    "largura": 390,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "nos": []
+    }
+  },
+  {
+    "carga": "em-rota",
+    "tema": "dark",
+    "largura": 390,
+    "overflow": 0,
+    "temPublicar": false,
+    "publicarHabilitado": null,
+    "temModoEntregador": false,
+    "consoleErros": [],
+    "axe": {
+      "critica": 0,
+      "seria": 0,
+      "nos": []
+    }
+  }
+]
