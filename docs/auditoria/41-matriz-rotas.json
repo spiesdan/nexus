@@ -193,49 +193,49 @@
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/configuracoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/eventos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/fornecedores",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/manifestacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/notas",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": true,
-      "veredito": "**pílula da aba ativa corrigida** (`text-accent` → `text-accent-ink`: 3,63:1 no claro); limpo nas outras medidas"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
       "capturar": true,
-      "veredito": "pulada: sem nota de exemplo no banco local",
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/0 (regras: nenhuma)",
       "pular": "o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
     },
     {
@@ -243,42 +243,42 @@
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/produtos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/relatorios",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/resumos",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/sincronizacoes",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/fiscal/xml",
       "grupo": "fiscal",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/expedicao",
@@ -637,21 +637,21 @@
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/agents",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/agents/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -659,56 +659,57 @@
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**403 por papel**: rota exige admin e a medição usa `manager` (esperado)"
+      "veredito": "**inválida** — a rota responde 403 como destino; a linha não conta como aplicada",
+      "pular": "a rota responde 403 como destino"
     },
     {
       "rota": "/ai/cases",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "limpo após o #716"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/controle",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/2 (regras: color-contrast (serious), label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/credentials",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/decisoes",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "limpo após o #716"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/evolution",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/followups",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/followups/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -716,7 +717,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -724,49 +725,49 @@
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "limpo após o #716 (a aba fantasma era o crítico desta tela)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/knowledge/sources",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/memory",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/proposals",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "limpo após o #716"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/providers",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/routers",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/routers/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -774,21 +775,21 @@
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/skills",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**corrigido**: aviso informativo em `text-text-muted` sobre `accent-soft` não passava AA no escuro (`color-contrast`) → `text-text`"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/usage",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "**corrigido**: barra `role=\"progressbar\"` sem nome no cartão de orçamento (`aria-progressbar-name`) → `aria-label`; depois, axe sério 0 fora o shell"
+      "veredito": "**aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     }
   ]
 }

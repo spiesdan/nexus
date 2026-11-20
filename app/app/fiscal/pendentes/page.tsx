@@ -37,7 +37,7 @@ export default async function PendentesPage() {
           podeGerir ? (
             <Link
               href="/app/fiscal/relatorios?tipo=pendentes"
-              className="text-sm text-accent underline-offset-4 hover:underline"
+              className="text-sm text-accent-ink underline-offset-4 hover:underline"
             >
               Ver relatório de pendências
             </Link>

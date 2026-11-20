@@ -30,13 +30,11 @@ interface Evento {
   protocolo: string | null;
   dh_evento: string | null;
   created_at: string;
-  fiscal_entradas:
-    | {
-        numero: number | null;
-        serie: string | null;
-        emitente_nome: string;
-      }
-    | null;
+  fiscal_entradas: {
+    numero: number | null;
+    serie: string | null;
+    emitente_nome: string;
+  } | null;
 }
 
 const ROTULO_TIPO: Record<string, string> = {
@@ -118,7 +116,7 @@ export default async function EventosPage() {
                     {ev.entrada_id ? (
                       <Link
                         href={`/app/fiscal/notas/${ev.entrada_id}`}
-                        className="text-accent underline-offset-4 hover:underline"
+                        className="text-accent-ink underline-offset-4 hover:underline"
                       >
                         {ev.fiscal_entradas
                           ? identificacaoDaEntrada(

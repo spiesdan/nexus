@@ -166,8 +166,7 @@ export default async function FiscalVisaoGeralPage() {
         <div className="space-y-2">
           {!cfg && (
             <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm">
-              <strong>Fiscal não configurado.</strong> Preencha o CNPJ, a UF e o certificado A1
-              em{" "}
+              <strong>Fiscal não configurado.</strong> Preencha o CNPJ, a UF e o certificado A1 em{" "}
               <Link href="/app/fiscal/configuracoes" className="underline underline-offset-4">
                 Configurações Fiscais
               </Link>
@@ -185,8 +184,8 @@ export default async function FiscalVisaoGeralPage() {
           )}
           {emBackoff && (
             <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm">
-              <strong>A SEFAZ pediu para aguardar.</strong> A próxima tentativa automática é
-              depois de{" "}
+              <strong>A SEFAZ pediu para aguardar.</strong> A próxima tentativa automática é depois
+              de{" "}
               {cur?.proxima_tentativa
                 ? new Date(cur.proxima_tentativa).toLocaleString(tagIdioma)
                 : "1 hora"}
@@ -204,7 +203,9 @@ export default async function FiscalVisaoGeralPage() {
             <p className="rounded-lg border border-warning/40 bg-warning-bg px-4 py-3 text-sm">
               <strong>Certificado A1 vencendo.</strong>{" "}
               {cert?.titular ?? "Titular não identificado"} — validade{" "}
-              {cert?.validade ? new Date(cert.validade).toLocaleDateString(tagIdioma) : "desconhecida"}
+              {cert?.validade
+                ? new Date(cert.validade).toLocaleDateString(tagIdioma)
+                : "desconhecida"}
               . Troque em Configurações Fiscais.
             </p>
           )}
@@ -217,7 +218,7 @@ export default async function FiscalVisaoGeralPage() {
             <h2 className="text-sm font-medium">Últimas notas recebidas</h2>
             <Link
               href="/app/fiscal/notas"
-              className="text-sm text-accent underline-offset-4 hover:underline"
+              className="text-sm text-accent-ink underline-offset-4 hover:underline"
             >
               Ver todas
             </Link>
@@ -278,8 +279,8 @@ export default async function FiscalVisaoGeralPage() {
                     <li key={log.id} className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate">
-                          {log.origem === "cron" ? "Automática" : "Manual"} ·{" "}
-                          {log.docs_importados} importada(s)
+                          {log.origem === "cron" ? "Automática" : "Manual"} · {log.docs_importados}{" "}
+                          importada(s)
                           {log.docs_erro > 0 ? ` · ${log.docs_erro} erro(s)` : ""}
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -307,7 +308,7 @@ export default async function FiscalVisaoGeralPage() {
             )}
             <Link
               href="/app/fiscal/sincronizacoes"
-              className="mt-3 inline-block text-sm text-accent underline-offset-4 hover:underline"
+              className="mt-3 inline-block text-sm text-accent-ink underline-offset-4 hover:underline"
             >
               Histórico completo
             </Link>

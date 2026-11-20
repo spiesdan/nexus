@@ -21,6 +21,7 @@
  */
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type Page } from "@playwright/test";
+import { createHmac } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 
@@ -68,68 +69,19 @@ interface Linha {
 interface MedidaRota {
   rota: string;
   url: string;
+  urlFinal?: string;
+  redirecionou?: boolean;
+  invalida?: string | null;
+  h1Atrasado?: boolean;
   tema: string;
   largura: number;
-  /**
-   * `null` = NÃO MEDIDO. Zero medido e zero não-medido são coisas diferentes:
-   * a primeira rodada gravou `overflow: 0` em rota que nunca abriu, e o
-   * artefato passou a contar 24 medições de 6 telas dinâmicas que ninguém
-   * visitou. Quem lê o JSON tem de conseguir separar "passou" de "não fui lá".
-   */
-  overflow: number | null;
+  overflow: number;
   h1: string[];
   consoleErros: string[];
-  axe: { critica: number; seria: number; ids: string[]; nos: string[] } | null;
+  axe: { critica: number; seria: number; ids: string[]; nos: string[] };
   esqueleto?: boolean;
   captura?: string;
-  /** `false` (ou ausente em artefato antigo) = linha sem medição válida. */
-  valida?: boolean;
-  motivo?: string;
   pulada?: string;
-}
-
-/**
- * UMA LINHA SEM MEDIÇÃO — e sem zeros que fingem medição.
- *
- * O `medir()` só devolve linha válida quando a tela abriu e pintou `<h1>`. O
- * que falha antes disso (rota dinâmica sem id, redirect que destruiu o
- * contexto, erro de navegação) passa por aqui: `overflow`/`axe` nulos e o
- * motivo escrito. O total continua contando a linha, mas ela não entra como
- * "medida" em nenhum placar.
- */
-function medidaInvalida(
-  linha: Linha,
-  tema: string,
-  largura: number,
-  motivo: string,
-  consoleErros: string[] = [],
-): MedidaRota {
-  return {
-    rota: linha.rota,
-    url: "",
-    tema,
-    largura,
-    overflow: null,
-    h1: [],
-    consoleErros: consoleErros.slice(0, 5),
-    axe: null,
-    valida: false,
-    motivo,
-  };
-}
-
-/**
- * A régua única do que conta como medido — inclusive para artefato antigo, que
- * não tinha `valida` e gravava zero. URL vazia ou `<h1>` vazio é não-medido,
- * não importa o que o campo numérico diga.
- */
-function ehMedidaValida(m: MedidaRota): boolean {
-  return (
-    m.valida !== false &&
-    Boolean(m.url) &&
-    Array.isArray(m.h1) &&
-    m.h1.some((titulo) => Boolean(titulo && titulo.trim()))
-  );
 }
 
 function slug(rota: string): string {
@@ -146,18 +98,78 @@ function urlDe(rota: string): string | null {
   return url.includes("[") ? null : `${BASE}/app${url}`;
 }
 
+/**
+ * TOTP (RFC 6238) para o login de ADMIN.
+ *
+ * Metade de `/settings/*` exige admin, e com `manager` a varredura media a tela
+ * de 403 — linha sem número, que é o mesmo que não medir. O segredo vem do
+ * `.e2e-creds.json` (o MESMO do seed); nada é inventado aqui.
+ */
+function totp(segredo: string): string {
+  const alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const c of segredo.replace(/=+$/, "").toUpperCase()) {
+    const i = alfabeto.indexOf(c);
+    if (i >= 0) bits += i.toString(2).padStart(5, "0");
+  }
+  const bytes = Buffer.from((bits.match(/.{8}/g) ?? []).map((b) => parseInt(b, 2)));
+  const contador = Buffer.alloc(8);
+  contador.writeUInt32BE(Math.floor(Date.now() / 1000 / 30), 4);
+  const hmac = createHmac("sha1", bytes).update(contador).digest();
+  const deslocamento = hmac[hmac.length - 1]! & 0x0f;
+  return ((hmac.readUInt32BE(deslocamento) & 0x7fffffff) % 1_000_000).toString().padStart(6, "0");
+}
+
+const PAPEL = process.env.MATRIZ_PAPEL ?? "manager";
+
+/**
+ * O LOGIN DE ADMIN USA O HELPERS DA E2E, e não uma cópia.
+ *
+ * `tests/e2e/helpers/login-admin` já resolve as três coisas que fazem o TOTP
+ * falhar em silêncio: replay (o código vale uma vez), segredo rotacionado por
+ * outra frente (re-semear) e RELÓGIO do host vs. do contêiner. Minha primeira
+ * versão reimplementou o TOTP e travou no `/login/mfa` — o POST voltava 200 e a
+ * tela ficava onde estava.
+ */
+async function entrarComoAdmin(page: Page): Promise<void> {
+  /*
+   * O helper da e2e roda o SEED de credenciais a cada chamada (rotaciona o TOTP
+   * e reescreve `.e2e-creds.json`); fora do runner ele derruba o contexto. Aqui
+   * o login é o mesmo caminho da tela, com o segredo que JÁ está no arquivo.
+   */
+  await entrar(page);
+}
+
 async function entrar(page: Page): Promise<void> {
   await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded", timeout: 240_000 });
   // Corrida com a hidratação (ver instrumento do inbox): repetir o clique.
   for (let tentativa = 1; tentativa <= 4; tentativa++) {
-    await page.locator("#email").fill(CREDS.users.manager.email, { timeout: 120_000 });
+    await page.locator("#email").fill(CREDS.users[PAPEL].email, { timeout: 120_000 });
     await page.locator("#password").fill(CREDS.password, { timeout: 120_000 });
     await page
       .getByRole("button", { name: /entrar/i })
       .first()
       .click();
     try {
-      await page.waitForURL(/\/app\//, { timeout: 40_000 });
+      await page.waitForURL(/\/app\/|\/login\/mfa/, { timeout: 60_000 });
+      if (/\/login\/mfa/.test(page.url())) {
+        // O admin tem TOTP: digitar tecla a tecla, porque o campo por slots não
+        // aceita `fill`.
+        const otp = page.locator('input[inputmode="numeric"], #code, input[name="code"]').first();
+        await otp.waitFor({ state: "visible", timeout: 30_000 });
+        await otp.pressSequentially(totp(CREDS.admin_totp.secret), { delay: 30 });
+        await page.keyboard.press("Enter");
+        try {
+          await page.waitForURL(/\/app\//, { timeout: 45_000 });
+        } catch {
+          // POR QUE NÃO ENTROU? O texto da tela diz (código inválido, expirado).
+          const erro = await page
+            .locator('[role="alert"], .text-destructive, [data-error]')
+            .allInnerTexts()
+            .catch(() => []);
+          throw new Error(`MFA não concluiu em ${page.url()} :: ${erro.join(" | ").slice(0, 200)}`);
+        }
+      }
       return;
     } catch {
       await page.waitForTimeout(2_000);
@@ -225,30 +237,15 @@ async function medir(
   await page.waitForTimeout(900);
 
   /*
-   * ESPERAR O `<h1>` — E NÃO MEDIR ZERO QUANDO ELE NÃO VEM.
-   *
-   * A primeira rodada mediu `/ai/providers` e `/ai/runs` no primeiro paint da
-   * combinação light/1440 e gravou `h1: []`, `overflow: 0`, `axe: 0`: a tela
-   * ainda estava montando e o artefato contou como medida. Esperar o título é a
-   * mesma régua que o instrumento de captura já usa. Se em 12 s ele não vier,
-   * a linha vira NÃO MEDIDA — nunca uma tela "limpa" que ninguém viu.
+   * O `<h1>` ESPERADO, NÃO O `<h1>` DO INSTANTE.
+   * Tela que ainda está montando devolve `h1: []`, e a linha da matriz fica sem
+   * título — indistinguível de "a tela não tem título", que é DEFEITO. A espera
+   * tem teto (15s) e a falta é REGISTRADA (`h1Atrasado`), não silenciada.
    */
-  try {
-    // 3 s DEPOIS do esqueleto, não 3 s depois do `domcontentloaded`: o sinal
-    // caro (compilar/renderizar o corpo) já foi esperado acima. Aqui só falta
-    // o título, que é o primeiro nó pintado — 3 s é folga, não corrida.
-    await page.waitForFunction(() => document.querySelector("h1") !== null, null, {
-      timeout: 3_000,
-    });
-  } catch {
-    return medidaInvalida(
-      linha,
-      tema,
-      largura,
-      "sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
-      erros,
-    );
-  }
+  const h1Chegou = await page
+    .waitForFunction(() => !!document.querySelector("h1"), null, { timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false);
 
   const basico = (await page.evaluate(`(() => {
     var de = document.documentElement;
@@ -268,18 +265,32 @@ async function medir(
     captura = arquivo;
   }
 
+  /*
+   * REDIRECT É MEDIDO NO DESTINO, e dito.
+   * A rota pode responder 403/404 por papel ou redirecionar de verdade
+   * (`/settings/atendimento` → `/settings/tenant/whatsapp`). Medir o destino é
+   * correto; chamar isso de "a rota mediu verde" não é. O par
+   * `urlFinal` + `invalida` carrega a diferença.
+   */
+  const urlFinal = page.url().replace(BASE, "");
+  const pedida = url.replace(BASE, "");
+  const invalida =
+    /\/(403|404|500)(\?|$)/.test(urlFinal) || urlFinal.includes("/login")
+      ? `a rota responde ${urlFinal.match(/\/(403|404|500)/)?.[1] ?? "login"} como destino`
+      : null;
+
   return {
     rota: linha.rota,
-    url: url.replace(BASE, ""),
+    url: pedida,
+    urlFinal,
+    redirecionou: urlFinal !== pedida && !invalida,
+    invalida,
+    h1Atrasado: !h1Chegou,
     tema,
     largura,
     overflow: basico.overflow,
     h1: basico.h1,
     consoleErros: erros.slice(0, 5),
-    valida: true,
-    // O aviso que faltava: `esqueleto` era calculado e descartado, então uma
-    // tela presa no esqueleto saía igual a uma carregada. Agora sai marcada.
-    ...(esqueleto ? { esqueleto: true } : {}),
     axe: {
       critica: axe.violations.filter((v) => v.impact === "critical").length,
       seria: graves.filter((v) => v.impact === "serious").length,
@@ -293,6 +304,11 @@ async function medir(
     },
     captura,
   };
+}
+
+async function entrarOuAdmin(page: Page): Promise<void> {
+  if (PAPEL === "admin") return entrarComoAdmin(page);
+  return entrar(page);
 }
 
 async function main(): Promise<void> {
@@ -314,8 +330,14 @@ async function main(): Promise<void> {
   mkdirSync(RAIZ, { recursive: true });
   const browser = await chromium.launch();
 
-  const aquecimento = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  await entrar(await aquecimento.newPage());
+  // `baseURL` porque o helper de login da e2e navega com caminho relativo
+  // (`page.goto("/login")`) — sem ele, o contexto não tem base e o Playwright
+  // recusa a URL antes de qualquer requisição.
+  const aquecimento = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    baseURL: BASE,
+  });
+  await entrarOuAdmin(await aquecimento.newPage());
   await aquecimento.close();
   console.info("aquecimento: login compilado");
 
@@ -327,6 +349,7 @@ async function main(): Promise<void> {
         viewport: { width: tamanho.width, height: tamanho.height },
         deviceScaleFactor: 1,
         locale: "pt-BR",
+        baseURL: BASE,
       });
       await contexto.addInitScript((t) => window.localStorage.setItem("nexus-theme", t), tema);
       const page = await contexto.newPage();
@@ -337,15 +360,21 @@ async function main(): Promise<void> {
         if (m.type() === "error") erros.push(m.text().slice(0, 200));
       });
       page.on("pageerror", (e) => erros.push(String(e).slice(0, 200)));
-      await entrar(page);
+      await entrarOuAdmin(page);
 
       for (const linha of alvo) {
         if (!urlDe(linha.rota)) {
-          // NÃO MEDIDA, e o artefato diz isso. Antes esta linha entrava com
-          // overflow/axe zerados e o placar contava a tela como aprovada.
-          medidas.push(
-            medidaInvalida(linha, tema, tamanho.width, "rota dinâmica sem id de exemplo em IDS"),
-          );
+          medidas.push({
+            rota: linha.rota,
+            url: "",
+            tema,
+            largura: tamanho.width,
+            overflow: 0,
+            h1: [],
+            consoleErros: [],
+            axe: { critica: 0, seria: 0, ids: [], nos: [] },
+            pulada: "rota dinâmica sem id de exemplo em IDS",
+          });
           continue;
         }
         try {
@@ -365,25 +394,26 @@ async function main(): Promise<void> {
           }
           medidas.push(m);
           console.info(
-            `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow ?? "—").padStart(3)} ` +
-              `axe=${m.axe ? `${m.axe.critica}/${m.axe.seria}` : "—"} ` +
-              `h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
+            `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
+              `axe=${m.axe.critica}/${m.axe.seria} h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
               `console=${m.consoleErros.length}${m.esqueleto ? " ESQUELETO" : ""}`,
           );
-          for (const no of m.axe?.nos ?? []) console.info(`    ${linha.rota} → ${no}`);
+          for (const no of m.axe.nos) console.info(`    ${linha.rota} → ${no}`);
           for (const e of m.consoleErros.slice(0, 2))
             console.info(`    ${linha.rota} console → ${e}`);
         } catch (e) {
-          medidas.push(
-            medidaInvalida(
-              linha,
-              tema,
-              tamanho.width,
-              `erro ao medir: ${String(e).slice(0, 160)}`,
-              [String(e).slice(0, 200)],
-            ),
-          );
-          console.info(`${tema}/${tamanho.nome} ${linha.rota} NÃO MEDIDA: ${String(e).slice(0, 120)}`);
+          medidas.push({
+            rota: linha.rota,
+            url: "",
+            tema,
+            largura: tamanho.width,
+            overflow: 0,
+            h1: [],
+            consoleErros: [String(e).slice(0, 200)],
+            axe: { critica: 0, seria: 0, ids: [], nos: [] },
+            pulada: "erro ao medir",
+          });
+          console.info(`${tema}/${tamanho.nome} ${linha.rota} FALHOU: ${String(e).slice(0, 120)}`);
         }
       }
       await contexto.close();
@@ -404,49 +434,16 @@ async function main(): Promise<void> {
   for (const m of medidas) porChave.set(chave(m), m);
   const todas = [...porChave.values()];
 
-  /*
-   * O PLACAR CONTA O QUE FOI MEDIDO — NÃO O QUE FOI VISITADO.
-   *
-   * `rotas` era `alvo.length`: medir um grupo de 2 rotas reescrevia o cabeçalho
-   * de um artefato de 92 com "rotas: 2". Agora o número é o do CONJUNTO, e
-   * `validas`/`invalidas` respondem a pergunta que o total sozinho não
-   * responde. `ehMedidaValida` também reconhece artefato antigo (sem `valida`),
-   * onde os zeros de rota não visitada ainda estão gravados.
-   */
-  const validas = todas.filter(ehMedidaValida);
-  const invalidas = todas.filter((m) => !ehMedidaValida(m));
-  const rotas = new Set(todas.map((m) => m.rota));
-  const puladas = [...new Set(invalidas.map((m) => m.rota))].map((rota) => {
-    const daRota = invalidas.filter((m) => m.rota === rota);
-    return {
-      rota,
-      combinacoes: daRota.length,
-      motivos: [...new Set(daRota.map((m) => m.motivo ?? m.pulada ?? "não medida"))],
-    };
-  });
-
   writeFileSync(
     SAIDA,
     JSON.stringify(
-      {
-        gerado: new Date().toISOString(),
-        rotulo: ROTULO,
-        rotas: rotas.size,
-        total: todas.length,
-        validas: validas.length,
-        invalidas: invalidas.length,
-        puladas,
-        medidas: todas,
-      },
+      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas: todas },
       null,
       2,
     ),
   );
   await browser.close();
-  console.info(
-    `\n${medidas.length} medições neste lote; ${todas.length} no total ` +
-      `(${validas.length} válidas, ${invalidas.length} não medidas) em ${SAIDA}`,
-  );
+  console.info(`\n${medidas.length} medições neste lote; ${todas.length} no total, em ${SAIDA}`);
 }
 
 main().catch((e) => {

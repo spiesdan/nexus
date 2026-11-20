@@ -32,15 +32,13 @@ interface Item {
   valor_total_cents: number;
   icms_cents: number;
   ipi_cents: number;
-  fiscal_entradas:
-    | {
-        chave: string;
-        numero: number | null;
-        serie: string | null;
-        emitente_nome: string;
-        dh_emi: string | null;
-      }
-    | null;
+  fiscal_entradas: {
+    chave: string;
+    numero: number | null;
+    serie: string | null;
+    emitente_nome: string;
+    dh_emi: string | null;
+  } | null;
 }
 
 /**
@@ -76,7 +74,7 @@ export default async function ProdutosDasNotasPage() {
         actions={
           <Link
             href="/app/fiscal/relatorios?tipo=produtos"
-            className="text-sm text-accent underline-offset-4 hover:underline"
+            className="text-sm text-accent-ink underline-offset-4 hover:underline"
           >
             Produtos mais comprados →
           </Link>
@@ -119,7 +117,7 @@ export default async function ProdutosDasNotasPage() {
                     {item.fiscal_entradas ? (
                       <Link
                         href={`/app/fiscal/notas/${item.entrada_id}`}
-                        className="text-accent underline-offset-4 hover:underline"
+                        className="text-accent-ink underline-offset-4 hover:underline"
                       >
                         {identificacaoDaEntrada(
                           item.fiscal_entradas.numero,
@@ -142,7 +140,7 @@ export default async function ProdutosDasNotasPage() {
                   <TableCell className="text-right tabular-nums">
                     {comoMoeda(item.valor_total_cents, "BRL")}
                   </TableCell>
-                  <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
+                  <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
                     {comoMoeda(item.icms_cents, "BRL")} / {comoMoeda(item.ipi_cents, "BRL")}
                   </TableCell>
                 </TableRow>

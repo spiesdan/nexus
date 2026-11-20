@@ -381,7 +381,7 @@ export default async function RelatoriosPage({
                     <TableCell>
                       <Link
                         href={`/app/fiscal/notas/${l.id}`}
-                        className="text-accent underline-offset-4 hover:underline"
+                        className="text-accent-ink underline-offset-4 hover:underline"
                       >
                         {identificacaoDaEntrada(l.numero ?? null, l.serie ?? null)}
                       </Link>
