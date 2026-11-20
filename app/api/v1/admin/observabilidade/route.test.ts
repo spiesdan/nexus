@@ -18,7 +18,7 @@ function builder(fonte: Fonte) {
   const q: Record<string, unknown> = {};
   let de = 0;
   let ate = Number.POSITIVE_INFINITY;
-  for (const metodo of ["select", "is", "eq", "limit", "order", "gte"]) q[metodo] = () => q;
+  for (const metodo of ["select", "is", "eq", "limit", "order", "gte", "neq"]) q[metodo] = () => q;
   q.range = (novoDe: number, novoAte: number) => {
     de = novoDe;
     ate = novoAte;
@@ -45,6 +45,9 @@ function montar(
   settings: Array<Record<string, unknown>>,
 ) {
   from.mockImplementation((tabela: string) => {
+    if (tabela === "api_request_probes") {
+      return builder({ data: null, error: null });
+    }
     if (tabela === "api_request_samples") {
       return builder({
         data: { created_at: "2026-11-20T00:00:00.000Z" },
@@ -67,6 +70,13 @@ function montar(
 async function corpo(res: Response) {
   return (await res.json()) as {
     data: {
+      sonda: {
+        id: string;
+        created_at: string;
+        origem: string;
+        duracao_ms: number;
+        ok: boolean;
+      } | null;
       serie: {
         amostras: number;
         rotas: number;
@@ -97,7 +107,8 @@ describe("GET /api/v1/admin/observabilidade", () => {
     const res = await GET();
     expect(res.status).toBe(200);
 
-    const { slos, serie } = (await corpo(res)).data;
+    const { slos, serie, sonda } = (await corpo(res)).data;
+    expect(sonda).toBeNull();
     expect(serie).toEqual({
       amostras: 0,
       rotas: 0,

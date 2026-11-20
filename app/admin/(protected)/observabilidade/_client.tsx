@@ -33,9 +33,18 @@ interface SerieDaApi {
   ultima_em: string | null;
 }
 
+interface Sonda {
+  id: string;
+  created_at: string;
+  origem: string;
+  duracao_ms: number;
+  ok: boolean;
+}
+
 interface Resposta {
   gerado_em: string;
   serie: SerieDaApi;
+  sonda: Sonda | null;
   slos: Slo[];
 }
 
@@ -105,7 +114,7 @@ function CartaoDeSlo({ slo }: { slo: Slo }) {
   );
 }
 
-function SerieDaApiCartao({ serie }: { serie: SerieDaApi }) {
+function SerieDaApiCartao({ serie, sonda }: { serie: SerieDaApi; sonda: Sonda | null }) {
   const t = useT();
   const tag = useTagDeIdioma();
   return (
@@ -129,6 +138,13 @@ function SerieDaApiCartao({ serie }: { serie: SerieDaApi }) {
             {serie.ultima_em ? new Date(serie.ultima_em).toLocaleString(tag) : "—"}.
           </p>
         )}
+        <p className="mt-2">
+          {sonda
+            ? `${t("Última sonda")}: ${sonda.ok ? t("ok") : t("falhou")} ${
+                sonda.ok ? `${Number(sonda.duracao_ms).toLocaleString(tag)} ms` : ""
+              } ${t("às")} ${new Date(sonda.created_at).toLocaleString(tag)}.`
+            : t("Nenhuma sonda executada ainda.")}
+        </p>
       </CardContent>
     </Card>
   );
@@ -176,7 +192,7 @@ export function ObservabilidadeClient() {
         )
       ) : (
         <>
-          <SerieDaApiCartao serie={data.serie} />
+          <SerieDaApiCartao serie={data.serie} sonda={data.sonda} />
           <div className="grid gap-4 md:grid-cols-3">
             {data.slos.map((slo) => (
               <CartaoDeSlo key={slo.id} slo={slo} />

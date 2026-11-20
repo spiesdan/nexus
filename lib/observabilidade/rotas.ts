@@ -78,6 +78,58 @@ function logarFalhaDaMetrica(amostra: Amostra, erro: unknown): void {
   });
 }
 
+export interface SondaRegistrada {
+  id: string;
+  created_at: string;
+  duracao_ms: number;
+  origem: "cron" | "manual";
+  ok: true;
+}
+
+/**
+ * Prova o caminho de escrita sem depender de tráfego humano e SEM entrar na
+ * série de SLO. Usa a mesma admin client/insert que `persistir`; a diferença é
+ * a tabela, de propósito (uma linha `__sonda__` na série mudaria contagem,
+ * idade e retenção do diagnóstico).
+ */
+export async function registrarSonda(origem: "cron" | "manual"): Promise<SondaRegistrada> {
+  const admin = createAdminClient();
+  const inicio = performance.now();
+  const { data, error } = await admin
+    .from("api_request_probes")
+    .insert({ origem, duracao_ms: 0, ok: false })
+    .select("id, created_at")
+    .single();
+
+  if (error || !data) {
+    logger.error("observabilidade.sonda_falhou", {
+      origem,
+      erro: error?.message ?? "insert sem linha",
+    });
+    throw new Error(error?.message ?? "sonda sem linha");
+  }
+
+  const duracao = Math.round((performance.now() - inicio) * 10) / 10;
+  const { error: erroUpdate } = await admin
+    .from("api_request_probes")
+    .update({ duracao_ms: duracao, ok: true })
+    .eq("id", (data as { id: string }).id);
+
+  if (erroUpdate) {
+    // A linha fica `ok=false`: o insert passou, mas a sonda não fechou.
+    logger.error("observabilidade.sonda_falhou", { origem, erro: erroUpdate.message });
+    throw new Error(erroUpdate.message);
+  }
+
+  return {
+    id: (data as { id: string }).id,
+    created_at: (data as { created_at: string }).created_at,
+    duracao_ms: duracao,
+    origem,
+    ok: true,
+  };
+}
+
 /**
  * Envolve o GET de uma rota quente. Em teste (fora do contexto do Next),
  * `after()` lança e a amostra é descartada — o teste de rota não escreve no
