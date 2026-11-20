@@ -104,7 +104,7 @@ export function AuditDetailClient({ entryId }: AuditDetailClientProps) {
   return (
     <div className="space-y-6">
       {/* Back */}
-      <Button asChild variant="ghost" size="sm" className="gap-1.5 -ml-2">
+      <Button asChild variant="ghost" size="sm" className="min-h-10 gap-1.5 -ml-2">
         <Link href="/admin/audit">
           <CaretLeft size={14} aria-hidden />
           {t("Audit Log")}
