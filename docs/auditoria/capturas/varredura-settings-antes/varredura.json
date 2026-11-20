@@ -1,0 +1,3913 @@
+{
+  "geradoEm": "2026-11-20T12:26:59.517Z",
+  "base": "http://localhost:3021",
+  "resumo": [
+    {
+      "rota": "/app/settings/api-tokens",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 5
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 9
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 4
+    },
+    {
+      "rota": "/app/settings/billing",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 3
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 9,
+      "redirecionaPara": "/app/connections?aba=oficial"
+    },
+    {
+      "rota": "/app/settings/devices",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 6
+    },
+    {
+      "rota": "/app/settings/marca",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 6
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "combinacoes": 4,
+      "falhas": 4,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 4,
+      "overflowMax": 0,
+      "alvosPequenosMax": 18
+    },
+    {
+      "rota": "/app/settings",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 3
+    },
+    {
+      "rota": "/app/settings/profile",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 6
+    },
+    {
+      "rota": "/app/settings/security",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 7
+    },
+    {
+      "rota": "/app/settings/templates",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 9,
+      "redirecionaPara": "/app/connections?aba=oficial&sub=templates"
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 22
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 6
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 143
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "combinacoes": 4,
+      "falhas": 0,
+      "status": [
+        200
+      ],
+      "contrasteReprovados": 0,
+      "errosDeConsole": 0,
+      "overflowMax": 0,
+      "alvosPequenosMax": 36,
+      "redirecionaPara": "/app/connections"
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/app/settings/api-tokens",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_api-tokens_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/api-tokens",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "API Tokens"
+        ],
+        "textos": 71,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Criar token",
+            "largura": 110,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Revogar",
+            "largura": 70,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_api-tokens_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/api-tokens",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "API Tokens"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_api-tokens_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/api-tokens",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "API Tokens"
+        ],
+        "textos": 71,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Criar token",
+            "largura": 110,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Revogar",
+            "largura": 70,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/api-tokens",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_api-tokens_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/api-tokens",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "API Tokens"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_atendimento_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atendimento",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Distribuição de atendimento"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Cada um pega o que quiser",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Rodízio automático entre os atendentes",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Todos veem tudo",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Os seus, mais os que ainda não têm dono",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Só os seus",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_atendimento_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atendimento",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Distribuição de atendimento"
+        ],
+        "textos": 23,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Cada um pega o que quiser",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Rodízio automático entre os atendentes",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Todos veem tudo",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Os seus, mais os que ainda não têm dono",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Só os seus",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_atendimento_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atendimento",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Distribuição de atendimento"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Cada um pega o que quiser",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Rodízio automático entre os atendentes",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Todos veem tudo",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Os seus, mais os que ainda não têm dono",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Só os seus",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atendimento",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_atendimento_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atendimento",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Distribuição de atendimento"
+        ],
+        "textos": 23,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Cada um pega o que quiser",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Rodízio automático entre os atendentes",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Todos veem tudo",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Os seus, mais os que ainda não têm dono",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "radio",
+            "texto": "Só os seus",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_atualizacao_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atualizacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Atualização automática indisponível"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Copiar",
+            "largura": 63,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_atualizacao_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atualizacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Atualização automática indisponível"
+        ],
+        "textos": 11,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_atualizacao_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atualizacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Atualização automática indisponível"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Copiar",
+            "largura": 63,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/atualizacao",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_atualizacao_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/atualizacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Atualização automática indisponível"
+        ],
+        "textos": 11,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_billing_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/billing",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Billing"
+        ],
+        "textos": 41,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_billing_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/billing",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Billing"
+        ],
+        "textos": 10,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_billing_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/billing",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Billing"
+        ],
+        "textos": 41,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/billing",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_billing_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/billing",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Billing"
+        ],
+        "textos": 10,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_canal-oficial_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 51,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial"
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_canal-oficial_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 22,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial"
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_canal-oficial_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 51,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial"
+    },
+    {
+      "rota": "/app/settings/canal-oficial",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_canal-oficial_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 22,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial"
+    },
+    {
+      "rota": "/app/settings/devices",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_devices_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/devices",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Dispositivos offline"
+        ],
+        "textos": 60,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Eu mesmo",
+            "largura": 349,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "30 dias90 dias180 dias365 dias",
+            "largura": 349,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Gerar código de pareamento",
+            "largura": 221,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/devices",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_devices_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/devices",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Dispositivos offline"
+        ],
+        "textos": 29,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Eu mesmoE2E AdminE2E ManagerE2E AgentE2E",
+            "largura": 310,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "30 dias90 dias180 dias365 dias",
+            "largura": 310,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/devices",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_devices_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/devices",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Dispositivos offline"
+        ],
+        "textos": 60,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Eu mesmoE2E AdminE2E ManagerE2E AgentE2E",
+            "largura": 349,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "30 dias90 dias180 dias365 dias",
+            "largura": 349,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Gerar código de pareamento",
+            "largura": 221,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/devices",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_devices_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/devices",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Dispositivos offline"
+        ],
+        "textos": 29,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Eu mesmoE2E AdminE2E ManagerE2E AgentE2E",
+            "largura": 310,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "30 dias90 dias180 dias365 dias",
+            "largura": 310,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_marca_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/marca",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Marca"
+        ],
+        "textos": 67,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "color",
+            "texto": "",
+            "largura": 38,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "",
+            "largura": 284,
+            "altura": 34
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_marca_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/marca",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Marca"
+        ],
+        "textos": 36,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "color",
+            "texto": "",
+            "largura": 38,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "",
+            "largura": 284,
+            "altura": 34
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_marca_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/marca",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Marca"
+        ],
+        "textos": 67,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "color",
+            "texto": "",
+            "largura": 38,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "",
+            "largura": 284,
+            "altura": 34
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/marca",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_marca_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/marca",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Marca"
+        ],
+        "textos": 36,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "color",
+            "texto": "",
+            "largura": 38,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "",
+            "largura": 284,
+            "altura": 34
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_notifications_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/notifications",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Notificações"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via in_app",
+            "largura": 36,
+            "altura": 20
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ]
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_notifications_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/notifications",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Notificações"
+        ],
+        "textos": 25,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 15,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead ganho via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead ganho via in_app",
+            "largura": 36,
+            "altura": 20
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ]
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_notifications_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/notifications",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Notificações"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via in_app",
+            "largura": 36,
+            "altura": 20
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ]
+    },
+    {
+      "rota": "/app/settings/notifications",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_notifications_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/notifications",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Notificações"
+        ],
+        "textos": 25,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 15,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nova mensagem via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via in_app",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead atribuído a você via push",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead ganho via email",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lead ganho via in_app",
+            "largura": 36,
+            "altura": 20
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ]
+    },
+    {
+      "rota": "/app/settings",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 71,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 71,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_profile_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/profile",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Perfil"
+        ],
+        "textos": 49,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Seguir o idioma da empresa",
+            "largura": 255,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 255,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_profile_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/profile",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Perfil"
+        ],
+        "textos": 18,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Seguir o idioma da empresa",
+            "largura": 114,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 114,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_profile_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/profile",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Perfil"
+        ],
+        "textos": 49,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Seguir o idioma da empresa",
+            "largura": 255,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 255,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/profile",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_profile_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/profile",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Perfil"
+        ],
+        "textos": 18,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Seguir o idioma da empresa",
+            "largura": 114,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 114,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_security_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/security",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Segurança"
+        ],
+        "textos": 52,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Ativar",
+            "largura": 56,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Regenerar códigos de recuperação",
+            "largura": 264,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sair de todos os dispositivos",
+            "largura": 223,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_security_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/security",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Segurança"
+        ],
+        "textos": 21,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_security_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/security",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Segurança"
+        ],
+        "textos": 52,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Ativar",
+            "largura": 56,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Regenerar códigos de recuperação",
+            "largura": 264,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sair de todos os dispositivos",
+            "largura": 223,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/security",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_security_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/security",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Segurança"
+        ],
+        "textos": 21,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/templates",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_templates_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial&sub=templates",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 52,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial&sub=templates"
+    },
+    {
+      "rota": "/app/settings/templates",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_templates_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial&sub=templates",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 23,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial&sub=templates"
+    },
+    {
+      "rota": "/app/settings/templates",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_templates_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial&sub=templates",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 52,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial&sub=templates"
+    },
+    {
+      "rota": "/app/settings/templates",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_templates_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections?aba=oficial&sub=templates",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 23,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conexão",
+            "largura": 80,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Templates da Meta",
+            "largura": 144,
+            "altura": 38
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections?aba=oficial&sub=templates"
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_agenda_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/agenda",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Tipos de agendamento"
+        ],
+        "textos": 96,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo tipo de agendamento",
+            "largura": 174,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar",
+            "largura": 57,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Desativar",
+            "largura": 77,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar",
+            "largura": 57,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Desativar",
+            "largura": 77,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_agenda_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/agenda",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Tipos de agendamento"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_agenda_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/agenda",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Tipos de agendamento"
+        ],
+        "textos": 96,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo tipo de agendamento",
+            "largura": 174,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar",
+            "largura": 57,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Desativar",
+            "largura": 77,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar",
+            "largura": 57,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Desativar",
+            "largura": 77,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/agenda",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_agenda_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/agenda",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Tipos de agendamento"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 62,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 303,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Português (BR)",
+            "largura": 303,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 31,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 114,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Português (BR)",
+            "largura": 114,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 62,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 303,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Português (BR)",
+            "largura": 303,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "submit",
+            "texto": "Salvar",
+            "largura": 79,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 31,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 114,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Português (BR)",
+            "largura": 114,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_pipelines_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/pipelines",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Etapas do funil"
+        ],
+        "textos": 267,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 143,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Novo» uma coluna para trás",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Novo» uma coluna para frente",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Novo» no funil",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Arquivar",
+            "largura": 104,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Em andamento» uma coluna para trá",
+            "largura": 36,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_pipelines_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/pipelines",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Etapas do funil"
+        ],
+        "textos": 295,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 52,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Novo» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Em andamento» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Ganho» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Perdido» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Novo lead»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Primeiro contato»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Em qualificação»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Qualificado»",
+            "largura": 210,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_pipelines_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/pipelines",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Etapas do funil"
+        ],
+        "textos": 267,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 143,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Novo» uma coluna para trás",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Novo» uma coluna para frente",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Novo» no funil",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Arquivar",
+            "largura": 104,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Mover «Em andamento» uma coluna para trá",
+            "largura": 36,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/pipelines",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_pipelines_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/settings/tenant/pipelines",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Etapas do funil"
+        ],
+        "textos": 295,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 52,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Novo» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Em andamento» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Ganho» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Papel de «Perdido» no funil",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Novo lead»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Primeiro contato»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Em qualificação»",
+            "largura": 210,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Etapa para «Qualificado»",
+            "largura": 210,
+            "altura": 36
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": []
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_whatsapp_light_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 95,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 36,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Atualizar saúde",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Conectar novo WhatsApp",
+            "largura": 190,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections"
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_whatsapp_light_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 66,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número e2e-escalacao-179338558183",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Follow-up Agent E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Radar E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número conectado (E2E)",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Nascimento E2E",
+            "largura": 164,
+            "altura": 28
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections"
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": "app_settings_tenant_whatsapp_dark_1440.png",
+      "status": 200,
+      "urlFinal": "/app/connections",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 96,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 36,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresa atual: E2E Test Org. Trocar de e",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Atualizar saúde",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Conectar novo WhatsApp",
+            "largura": 190,
+            "altura": 32
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections"
+    },
+    {
+      "rota": "/app/settings/tenant/whatsapp",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": "app_settings_tenant_whatsapp_dark_390.png",
+      "status": 200,
+      "urlFinal": "/app/connections",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 66,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Números por QR",
+            "largura": 129,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "API Oficial (Meta)",
+            "largura": 135,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Provedor parceiro",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número e2e-escalacao-179338558183",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Follow-up Agent E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Radar E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número conectado (E2E)",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Nascimento E2E",
+            "largura": 164,
+            "altura": 28
+          }
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "redirecionaPara": "/app/connections"
+    }
+  ]
+}

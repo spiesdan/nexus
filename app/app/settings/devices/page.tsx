@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { ROLE_RANK } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/server";
 import { DevicesClient, type AparelhoOffline } from "./_components/DevicesClient";
@@ -32,15 +33,16 @@ export default async function DevicesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">Dispositivos offline</h1>
-        <p className="text-sm text-muted-foreground">
+    <PaginaDeConfiguracao
+      titulo="Dispositivos offline"
+      descricao={
+        <>
           Aparelhos que enviam pedidos capturados sem internet. O código de pareamento aparece{" "}
           <strong>uma única vez</strong>; a fila do celular nunca é apagada ao desconectar.
-        </p>
-      </header>
+        </>
+      }
+    >
       <DevicesClient inicial={(data ?? []) as unknown as AparelhoOffline[]} />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

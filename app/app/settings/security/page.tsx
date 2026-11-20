@@ -1,4 +1,5 @@
-import { requireAuth, isMfaEnrolled, resolveActiveOrg, requiresMfa } from "@/lib/auth/server";
+import { requireAuth, isMfaEnrolled, resolveActiveOrg, requiresMfa } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { empresaExigeMfa } from "@/lib/auth/politica-mfa";
 import { SecurityClient } from "./_client";
@@ -52,16 +53,13 @@ export default async function SecurityPage() {
   const idioma = user.idioma;
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Segurança", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir(
-            "A verificação em duas etapas da sua conta, os códigos de recuperação e as sessões abertas.",
-            idioma,
-          )}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo={traduzir("Segurança", idioma)}
+      descricao={traduzir(
+        "A verificação em duas etapas da sua conta, os códigos de recuperação e as sessões abertas.",
+        idioma,
+      )}
+    >
 
       <SecurityClient
         mfaEnrolled={enrolled}
@@ -69,6 +67,6 @@ export default async function SecurityPage() {
         podeExigirDaEquipe={org?.role === "admin"}
         empresaExige={empresaExige}
       />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

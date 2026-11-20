@@ -31,11 +31,12 @@
  * alguém clicar em Salvar, e perder o arquivo em toda navegação acidental.
  */
 
-import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { Button } from "@/components/ui/button";
+import { CampoDeArquivo } from "@/components/nexus-ui/forms/campo-de-arquivo";
 import { Label } from "@/components/ui/label";
 import { melhorFrenteSobre } from "@/lib/branding/contraste";
 import { TAMANHO_MAXIMO_DO_LOGO } from "@/lib/branding/logo";
@@ -104,7 +105,6 @@ export function CampoDeLogo({
 }: Props) {
   const t = useT();
   const router = useRouter();
-  const entrada = useRef<HTMLInputElement>(null);
   const [enviando, setEnviando] = useState(false);
   /**
    * Marcador de HIDRATAÇÃO, lido pelo e2e antes de `setInputFiles`.
@@ -231,7 +231,6 @@ export function CampoDeLogo({
       setEnviando(false);
       // Sem isto, escolher o MESMO arquivo de novo (depois de uma falha) não
       // dispara `change` e a tela parece travada.
-      if (entrada.current) entrada.current.value = "";
     }
   }
 
@@ -259,20 +258,16 @@ export function CampoDeLogo({
       <div className="space-y-2">
         <Label htmlFor={`logo-${escopo}`}>{t("Logo")}</Label>
         <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={entrada}
+          {/*
+            `image/png,image/jpeg` FILTRA o seletor de arquivos, não decide
+            nada: quem decide é o farejador de bytes do servidor. O atributo
+            existe para a pessoa não navegar até um arquivo que será recusado.
+          */}
+          <CampoDeArquivo
             id={`logo-${escopo}`}
-            type="file"
-            // `image/png,image/jpeg` FILTRA o seletor de arquivos, não decide
-            // nada: quem decide é o farejador de bytes do servidor. O atributo
-            // existe para a pessoa não navegar até um arquivo que será recusado.
             accept="image/png,image/jpeg"
             disabled={enviando}
-            onChange={(e) => {
-              const arquivo = e.target.files?.[0];
-              if (arquivo) void enviar(arquivo);
-            }}
-            className="max-w-xs text-sm file:mr-3 file:cursor-pointer file:rounded-sm file:border file:border-border file:bg-surface-elevated file:px-3 file:py-1.5 file:text-sm"
+            aoEscolher={(arquivo) => void enviar(arquivo)}
           />
           {logoGravado ? (
             <Button type="button" variant="outline" onClick={() => void remover()} disabled={enviando}>

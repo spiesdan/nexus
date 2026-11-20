@@ -2,7 +2,7 @@
 
 import { useT } from "@/hooks/i18n/useT";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +20,7 @@ import {
   canalLigado,
   gravarCanal,
   lerPrefs,
+  prefsIniciais,
   type NotifyCategory,
   type NotifyChannelPref,
   type NotifyPrefs,
@@ -36,7 +37,13 @@ const LABELS: Record<NotifyCategory, string> = {
 export function NotificationPrefsClient() {
   const t = useT();
   const { permission, request } = useNotificationPermission();
-  const [prefs, setPrefs] = useState<NotifyPrefs>(() => lerPrefs());
+  // O primeiro render (SSR + hidratação) usa o padrão SEM storage; o valor
+  // gravado entra num efeito, depois de o HTML casar. Ler `lerPrefs()` aqui
+  // fazia o cliente discordar do servidor quando `alerts.enabled` estava "0".
+  const [prefs, setPrefs] = useState<NotifyPrefs>(prefsIniciais);
+  useEffect(() => {
+    setPrefs(lerPrefs());
+  }, []);
   const denied = permission === "denied";
   const unsupported = permission === "unsupported";
 
@@ -60,7 +67,15 @@ export function NotificationPrefsClient() {
         <TableHeader>
           <TableRow>
             <TableHead className="px-4 py-3">{t("Categoria")}</TableHead>
-            <TableHead className="px-4 py-3 text-center">Email</TableHead>
+            {/*
+              Email fica FORA do celular: ele é o único canal ainda sem envio
+              (o switch abaixo é `disabled` desde sempre), e no 390 a quarta
+              coluna empurrava "Push" para fora da tela — medido na captura de
+              20/11/2026. Esconder um controle que não funciona devolve a
+              coluna que a pessoa usa; o aviso do topo continua dizendo que
+              email não está disponível.
+            */}
+            <TableHead className="hidden px-4 py-3 text-center sm:table-cell">Email</TableHead>
             <TableHead className="px-4 py-3 text-center">In-app</TableHead>
             <TableHead className="px-4 py-3 text-center">Push</TableHead>
           </TableRow>
@@ -78,7 +93,7 @@ export function NotificationPrefsClient() {
                   </p>
                 ) : null}
               </TableCell>
-              <TableCell className="px-4 py-3 text-center">
+              <TableCell className="hidden px-4 py-3 text-center sm:table-cell">
                 <Switch checked={false} disabled aria-label={`${t(LABELS[cat])} via email`} />
               </TableCell>
               <TableCell className="px-4 py-3 text-center">

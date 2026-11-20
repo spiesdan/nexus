@@ -1,4 +1,5 @@
-import { requireAuth } from "@/lib/auth/server";
+import { requireAuth } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { traduzir } from "@/lib/i18n/dicionario";
 import { normalizarIdioma } from "@/lib/i18n/idiomas";
 import { SEM_PREFERENCIA_DE_IDIOMA } from "@/lib/schemas/settings";
@@ -27,13 +28,16 @@ export default async function ProfilePage() {
   //                    a troca de idioma da empresa passaria por cima dela.
   const idioma = user.idioma;
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Perfil", idioma)}</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir("Informações pessoais. Email só pode ser trocado em breve.", idioma)}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo={traduzir("Perfil", idioma)}
+      // "Email só pode ser trocado em breve" era promessa sem dono nem data.
+      // A tela não tem troca de email; dizer isso é fato, e o botão desabilitado
+      // do campo logo abaixo já é a mesma resposta.
+      descricao={traduzir(
+        "Informações pessoais. O email desta conta não pode ser trocado por aqui.",
+        idioma,
+      )}
+    >
       <ProfileForm
         email={user.email}
         initialFullName={meta.full_name}
@@ -41,6 +45,6 @@ export default async function ProfilePage() {
         initialLocale={user.locale ? normalizarIdioma(user.locale) : SEM_PREFERENCIA_DE_IDIOMA}
         initialTimezone={meta.timezone ?? "America/Sao_Paulo"}
       />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

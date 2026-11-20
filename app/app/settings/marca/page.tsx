@@ -29,7 +29,8 @@
  */
 import { redirect } from "next/navigation";
 
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { ROLE_RANK } from "@/lib/auth/types";
 import { marcaDaInstalacao } from "@/lib/branding/instalacao";
 import { marcaDaOrganizacaoDeSettings } from "@/lib/branding/organizacao";
@@ -66,13 +67,13 @@ export default async function MarcaDaOrganizacaoPage() {
   const idioma = user.idioma;
 
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{traduzir("Marca", idioma)}</h1>
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          {traduzir("O nome e a cor que a sua empresa mostra para quem trabalha aqui dentro.", idioma)}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo={traduzir("Marca", idioma)}
+      descricao={traduzir(
+        "O nome e a cor que a sua empresa mostra para quem trabalha aqui dentro.",
+        idioma,
+      )}
+    >
 
       <FormularioDaMarcaDaOrganizacao
         gravada={{
@@ -104,6 +105,6 @@ export default async function MarcaDaOrganizacaoPage() {
           APP_ACCENT_HEX: env.APP_ACCENT_HEX,
         }}
       />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

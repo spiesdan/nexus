@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
-import { Button } from "@/components/ui/button";
+import { RodapeDeSalvamento, useAvisoDeSaida } from "@/components/nexus-ui/forms/rodape-de-salvamento";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/nexus-ui/forms/form-field";
@@ -31,10 +31,32 @@ const TIMEZONES = [
   "UTC",
 ];
 
+/** A string de "motivos de perda" vira o MESMO array que vai no payload. */
+function instantaneoDosMotivos(texto: string): string[] {
+  return texto
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/** O formulário inteiro numa string comparável — a régua do "sujo". */
+function instantaneo(form: TenantInput, motivos: string[]): string {
+  return JSON.stringify({ ...form, lost_reasons_extra: motivos });
+}
+
 export function TenantForm({ initial }: Props) {
   const t = useT();
   const [form, setForm] = useState<TenantInput>(initial);
   const [reasonsText, setReasonsText] = useState((initial.lost_reasons_extra ?? []).join(", "));
+  /**
+   * O QUE ESTÁ GRAVADO × O QUE ESTÁ NA TELA.
+   *
+   * Sem isto o "Salvar" nascia habilitado numa tela intocada e continuava
+   * habilitado depois de salvar — quem editava e saía pela sidebar perdia o
+   * texto sem um sinal. O instantâneo é a MESMA serialização do payload, para
+   * "motivos de perda" (que moram numa string separada) não mentirem.
+   */
+  const [salvo, setSalvo] = useState(() => instantaneo(initial, instantaneoDosMotivos(reasonsText)));
   const [isPending, startTransition] = useTransition();
   const rotulos: Record<string, string> = {
     display_name: t("Nome de exibição"),
@@ -46,6 +68,9 @@ export function TenantForm({ initial }: Props) {
     locale: t("Idioma"),
     lost_reasons_extra: t("Motivos de perda"),
   };
+
+  const sujo = instantaneo(form, instantaneoDosMotivos(reasonsText)) !== salvo;
+  useAvisoDeSaida(sujo && !isPending);
 
   function set<K extends keyof TenantInput>(key: K, value: TenantInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -65,7 +90,11 @@ export function TenantForm({ initial }: Props) {
     }
     startTransition(async () => {
       const r = await updateTenant(parsed.data);
-      if (r.ok) toast.success(t("Organização atualizada."));
+      if (r.ok) {
+        setForm(parsed.data);
+        setSalvo(instantaneo(parsed.data, instantaneoDosMotivos(reasonsText)));
+        toast.success(t("Organização atualizada."));
+      }
       else {
         const padrao = `${t("Erro")}: ${r.error}`;
         toast.error(
@@ -80,7 +109,7 @@ export function TenantForm({ initial }: Props) {
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl">
       <Card className="hover-raise space-y-4 p-6">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t("Nome de exibição")} id="display_name">
             <Input
               value={form.display_name}
@@ -165,8 +194,8 @@ export function TenantForm({ initial }: Props) {
               {t("Impresso no cabeçalho do pedido, ao lado do telefone. Vazio não imprime.")}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField label={t("Logradouro")} id="logradouro" className="col-span-2">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField label={t("Logradouro")} id="logradouro" className="sm:col-span-2">
               <Input
                 value={form.logradouro ?? ""}
                 onChange={(e) => set("logradouro", e.target.value || null)}
@@ -226,11 +255,7 @@ export function TenantForm({ initial }: Props) {
           />
         </FormField>
 
-        <div className="flex sm:justify-end">
-          <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-            {isPending ? t("Salvando…") : t("Salvar")}
-          </Button>
-        </div>
+        <RodapeDeSalvamento sujo={sujo} salvando={isPending} />
       </Card>
     </form>
   );

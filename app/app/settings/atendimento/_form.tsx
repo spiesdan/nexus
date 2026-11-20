@@ -10,7 +10,7 @@
 import { useState, useTransition } from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
-import { Button } from "@/components/ui/button";
+import { RodapeDeSalvamento } from "@/components/nexus-ui/forms/rodape-de-salvamento";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/nexus-ui/forms/form-field";
@@ -229,16 +229,7 @@ export function AtendimentoForm({ initial }: { initial: AtendimentoConfig }) {
         ) : null}
       </Card>
 
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={isPending || !sujo}>
-          {isPending ? t("Salvando…") : t("Salvar")}
-        </Button>
-        {sujo ? (
-          <span className="text-xs text-muted-foreground">
-            {t("Há mudanças não salvas.")}
-          </span>
-        ) : null}
-      </div>
+      <RodapeDeSalvamento sujo={sujo} salvando={isPending} />
     </form>
   );
 }

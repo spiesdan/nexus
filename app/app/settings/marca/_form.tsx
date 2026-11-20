@@ -25,7 +25,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { updateMarcaDaOrganizacao } from "@/app/actions/settings/updateMarcaDaOrganizacao";
 import { CampoDeLogo } from "@/components/branding/CampoDeLogo";
 import { TiraDeTons, type ItemDaLegenda } from "@/components/branding/TiraDeTons";
-import { Button } from "@/components/ui/button";
+import { RodapeDeSalvamento, useAvisoDeSaida } from "@/components/nexus-ui/forms/rodape-de-salvamento";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/nexus-ui/forms/form-field";
@@ -127,11 +127,17 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
   const [nome, setNome] = useState(gravada.app_name ?? "");
   const [hex, setHex] = useState(gravada.accent_hex ?? "");
   const [erroTecnico, setErroTecnico] = useState<string | null>(null);
+  const [salvo, setSalvo] = useState({
+    nome: (gravada.app_name ?? "").trim(),
+    hex: (gravada.accent_hex ?? "").trim(),
+  });
   const [isPending, startTransition] = useTransition();
 
   const nomeLimpo = nome.trim();
   const hexLimpo = hex.trim();
   const hexValido = hexLimpo.length === 0 || ehHexValido(hexLimpo);
+  const sujo = nomeLimpo !== salvo.nome || hexLimpo !== salvo.hex;
+  useAvisoDeSaida(sujo && !isPending);
 
   // As duas camadas de baixo, montadas uma vez. `abaixo` sozinho responde "o que
   // aparece se eu não definir nada"; com a camada da organização na frente,
@@ -234,6 +240,7 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
     startTransition(async () => {
       const resultado = await updateMarcaDaOrganizacao(lido.data);
       if (resultado.ok) {
+        setSalvo({ nome: nomeLimpo, hex: hexLimpo });
         toast.success(t("Marca salva."));
         // O bloco de cor e o nome no menu são emitidos pelo LAYOUT de `/app`, e a
         // action já revalidou `/app` como layout. O refresh é o que traz esse
@@ -469,14 +476,12 @@ export function FormularioDaMarcaDaOrganizacao({ gravada, instalacao, ambiente }
         </ul>
       </Card>
 
-      <div className="flex items-center justify-end gap-3">
-        {erroTecnico ? (
-          <span className="font-mono text-xs text-text-muted">{erroTecnico}</span>
-        ) : null}
-        <Button type="submit" disabled={isPending || !hexValido}>
-          {isPending ? t("Salvando…") : t("Salvar")}
-        </Button>
-      </div>
+      <RodapeDeSalvamento
+        sujo={sujo}
+        salvando={isPending}
+        podeSalvar={hexValido}
+        erroTecnico={erroTecnico}
+      />
     </form>
   );
 }

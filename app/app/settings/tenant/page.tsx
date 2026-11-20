@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { createClient } from "@/lib/supabase/server";
@@ -55,15 +56,16 @@ export default async function TenantSettingsPage() {
   const idioma = user.idioma;
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">
-          {traduzir("Organização", idioma)}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir("Dados da empresa, retenção de mídia, DPO. Admin only.", idioma)}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo={traduzir("Organização", idioma)}
+      // "Admin only." era inglês no meio de uma frase em português. A frase
+      // agora diz a mesma coisa no idioma da tela — e "só administradores
+      // editam" é fato do gate acima, não promessa.
+      descricao={traduzir(
+        "Dados da empresa, retenção de mídia e DPO. Só administradores editam.",
+        idioma,
+      )}
+    >
       {row && (
         <TenantForm
           initial={{
@@ -89,6 +91,6 @@ export default async function TenantSettingsPage() {
           }}
         />
       )}
-    </div>
+    </PaginaDeConfiguracao>
   );
 }
