@@ -10,6 +10,39 @@ Ambiente em todas as linhas: VPS `vps` (200.141.17.185), projeto `crm`, Postgres
 
 ---
 
+## 0. Autorização permanente de deploy (20/11/2026)
+
+**Frase do dono, palavra por palavra:** *“pode sempre! grave isso”*.
+
+**Data:** 2026-11-20. **Contexto:** depois de 1.56.0 → **1.61.1** em produção, todas
+verificadas (containers, `/health`, funções, `to_regclass`).
+
+**Escopo autorizado — e só ele:** **deploy de versão publicada** (tag `v*` com as
+imagens construídas pelo CI) em produção, pelo caminho do kit:
+
+```bash
+bash hostgator-setup-kit/update.sh --to vX.Y.Z
+```
+
+**Continua exigindo autorização explícita (caso a caso):**
+
+- **operação fiscal** — emitir, cancelar, inutilizar, manifestar NF-e;
+- **operação financeira** — baixa, estorno, ajuste de recebível/pagamento;
+- **mudança de configuração de provedor** — WAHA, Mercos, e-mail/Resend;
+- **exclusão de dados** (qualquer tabela, qualquer volume);
+- **migration destrutiva** (drop/truncate/coluna removida);
+- **qualquer ação que não seja “subir a versão publicada”**.
+
+**O que a autorização NÃO dispensa:** backup antes (`update.sh` já faz — não usar
+`--skip-backup`), aplicar schema pelo `update.sh` (**nunca** `docker compose` na
+mão), **verificação com números** depois (containers, `/health`, tabelas/funções
+da versão), **rollback armado** (versão anterior refixável) e **registro neste
+documento como item novo**. **Autorização para agir não é dispensa de prova.**
+
+---
+
+
+
 ## 1. NF-e 4655 rejeitada (SEFAZ 176) → 4656 autorizada
 
 | Campo | Valor |
