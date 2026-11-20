@@ -140,6 +140,9 @@ export function AdminShell({ userEmail, children }: AdminShellProps) {
             <main
               id="conteudo"
               className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6"
+              // Região rolável precisa ser alcançável por teclado (axe
+              // `scrollable-region-focusable`); o skip-link continua levando aqui.
+              tabIndex={0}
             >
               {children}
             </main>

@@ -1,0 +1,290 @@
+[
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.text-sm.font-medium",
+        "razao": 5.56,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDe40": 4,
+      "amostra": [
+        "a.inline-flex.items-center 72x20 \"Usuários\"",
+        "a.text-sm.font-medium 794x20 \"E2E Segunda Org\"",
+        "a.text-sm.font-medium 794x20 \"E2E Segunda Organi\"",
+        "a.text-sm.font-medium 794x20 \"E2E Test Org\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "scrollable-region-focusable (serious)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 5.5,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(250,250,250)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "TH.h-9.px-3",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.text-sm.font-medium",
+        "razao": 5.56,
+        "fg": "rgb(98, 93, 184)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDe40": 1,
+      "amostra": [
+        "a.inline-flex.items-center 72x20 \"Usuários\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "scrollable-region-focusable (serious)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "A.text-sm.font-medium",
+        "razao": 7.63,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 21,
+      "abaixoDe40": 4,
+      "amostra": [
+        "a.inline-flex.items-center 72x20 \"Usuários\"",
+        "a.text-sm.font-medium 794x20 \"E2E Segunda Org\"",
+        "a.text-sm.font-medium 794x20 \"E2E Segunda Organi\"",
+        "a.text-sm.font-medium 794x20 \"E2E Test Org\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "scrollable-region-focusable (serious)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "tela": "user-ficha",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/users/b7412824-7cce-4528-b893-9a7d44000eb3",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "H1.text-2xl.font-medium",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "24px/500"
+      },
+      {
+        "alvo": "DIV.inline-flex.items-center",
+        "razao": 4.74,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(38,38,38)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "TH.h-9.px-3",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "10px/500"
+      },
+      {
+        "alvo": "A.text-sm.font-medium",
+        "razao": 7.63,
+        "fg": "rgb(164, 165, 255)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      }
+    ],
+    "alvos": {
+      "total": 9,
+      "abaixoDe40": 1,
+      "amostra": [
+        "a.inline-flex.items-center 72x20 \"Usuários\""
+      ]
+    },
+    "axe": {
+      "critica": 0,
+      "seria": 1,
+      "ids": [
+        "scrollable-region-focusable (serious)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  }
+]

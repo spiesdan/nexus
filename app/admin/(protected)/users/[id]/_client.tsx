@@ -118,7 +118,7 @@ export function UserDetailClient({ id }: UserDetailClientProps) {
       <div>
         <Link
           href="/admin/users"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="-ml-2 inline-flex min-h-10 items-center gap-1 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <CaretLeft size={14} aria-hidden />
           {t("Usuários")}
@@ -203,7 +203,7 @@ export function UserDetailClient({ id }: UserDetailClientProps) {
                       <div className="flex flex-col gap-0.5">
                         <Link
                           href={`/admin/tenants/${m.organization_id}`}
-                          className="text-sm font-medium text-accent-ink hover:underline"
+                          className="inline-flex min-h-10 items-center text-sm font-medium text-accent-ink hover:underline"
                         >
                           {m.tenant_name ?? m.organization_id}
                         </Link>
@@ -248,7 +248,12 @@ export function UserDetailClient({ id }: UserDetailClientProps) {
               {t("Nenhuma entrada de auditoria encontrada para este usuário.")}
             </p>
           ) : (
-            <div className="space-y-3 max-h-96 overflow-auto pr-1">
+            <div
+              role="region"
+              aria-label={t("Auditoria recente do usuário")}
+              tabIndex={0}
+              className="space-y-3 max-h-96 overflow-auto pr-1"
+            >
               {recent_audit.map((entry) => (
                 <div key={entry.id} className="flex items-start gap-2 text-xs">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50" />
