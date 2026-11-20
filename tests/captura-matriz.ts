@@ -46,6 +46,14 @@ const IDS: Record<string, Record<string, string>> = {
   "/leads/[id]": { id: process.env.ID_LEAD ?? "56563958-a491-416f-8ec8-db3fe251f636" },
   "/pipelines/[id]": { id: process.env.ID_PIPELINE ?? "714dbeb6-8873-4771-9b72-6c5240109f34" },
   "/fiscal/notas/[id]": { id: process.env.ID_NOTA ?? "a6d2935c-8ada-49da-a33b-957642f4c3a2" },
+  "/expedicao/[id]": { id: process.env.ID_CARGA ?? "348a67c8-c554-4124-9682-29ff72b1b93f" },
+  "/expedicao/[id]/rota": { id: process.env.ID_CARGA ?? "348a67c8-c554-4124-9682-29ff72b1b93f" },
+  "/expedicao/[id]/fechamento": {
+    id: process.env.ID_CARGA ?? "348a67c8-c554-4124-9682-29ff72b1b93f",
+  },
+  "/expedicao/[id]/motorista": {
+    id: process.env.ID_CARGA ?? "348a67c8-c554-4124-9682-29ff72b1b93f",
+  },
 };
 
 interface Linha {
