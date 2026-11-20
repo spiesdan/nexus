@@ -159,3 +159,31 @@ que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) estej
 
 **Rollback:** refixar as três imagens em `1.60.0` no `.env` e `up -d` com os dois
 `-f`; schema é aditivo.
+
+## 10. 20/11/2026 — Deploy 1.62.0 (planejado; depende do corte)
+
+**Conteúdo previsto:** o fix do Sentinel que fecha a janela de avaliação
+(Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —, mais **#659**
+(público/auth) e a documentação deste item (**#660**).
+
+**Autorização:** pendente — o coordenador **não** executa deploy; o dono aprova e
+executa.
+
+**Verificação esperada depois do deploy (e só nela):**
+- `sentinel_runs.truncado = false` na próxima rodada da organização real;
+- `encerradas > 0`, incluindo `fiscal.nota_duplicada_por_pedido` (sem detecção
+  desde 09:15) com `nao_detectada_na_execucao`;
+- `/health` `version 1.62.0`; 7 containers; `to_regclass`/funções de 0330/0331 já
+  presentes desde a 1.61.0.
+
+**Rollback:** refixar 1.61.0 nas três imagens; schema aditivo.
+
+## 10.1 Pendência aberta — série do SLO ainda sem amostra
+
+Medição honesta, não bug declarado: `api_request_samples` tinha **0 linhas** 35
+min após o deploy da 1.61.0. O teste com `GET /api/v1/contacts` **sem auth**
+retornou **401 na borda** e não alcançou o handler — logo **não prova** que a
+amostragem funciona. O G está investigando (`after()` no standalone) e vai expor
+**contagem e última amostra** na tela. Critério para fechar: uma requisição
+autenticada real gerar linha com `rota`, `status` e latência, e a tela mostrar a
+última amostra.
