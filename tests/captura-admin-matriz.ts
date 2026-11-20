@@ -56,6 +56,10 @@ interface Medida {
   largura: number;
   tema: "light" | "dark";
   status: number;
+  /** Para onde a navegação foi de fato (redirect medido no destino). */
+  urlFinal: string;
+  /** O primeiro paint tem cabeçalho? Falso = a tela não pintou o h1. */
+  h1: boolean;
   overflow: number;
   culpadoDoOverflow: string | null;
   contraste: Array<{ alvo: string; razao: number; fg: string; bg: string; px: string }>;
@@ -300,6 +304,8 @@ async function medir(page: Page, rota: string, tela: string, tema: "light" | "da
     largura: page.viewportSize()?.width ?? 0,
     tema,
     status: 200,
+    urlFinal: rota,
+    h1: false,
     overflow: overflow.delta,
     culpadoDoOverflow: overflow.culpado,
     contraste,
@@ -362,12 +368,26 @@ async function main(): Promise<void> {
         // aconteceu na primeira rodada válida. `networkidle` não conta o
         // WebSocket do HMR; o timeout é rede de segurança.
         await page.waitForLoadState("networkidle", { timeout: 25_000 }).catch(() => undefined);
+        // PRIMEIRO PAINT: espera o h1 antes de fotografar. Sem isto, uma tela
+        // que ainda está montando entra como "skeleton limpo" — overflow 0,
+        // axe 0 — e o veredito mede a si mesmo. 15 s é folga de build frio.
+        const temH1 = await page
+          .locator("h1")
+          .first()
+          .waitFor({ timeout: 15_000 })
+          .then(() => true)
+          .catch(() => false);
+        if (!temH1) {
+          console.info(`   SEM H1: ${rota.caminho} parou em ${page.url()}`);
+        }
         await page.waitForTimeout(800);
         await page.screenshot({
           path: path.join(RAIZ, `${rota.tela}_${tema}_${tamanho.nome}.png`),
           fullPage: false,
         });
         const medida = await medir(page, rota.caminho, rota.tela, tema);
+        medida.urlFinal = page.url();
+        medida.h1 = temH1;
         medida.status = resposta?.status() ?? 0;
         medida.console = {
           erros: erros.length - antesDoErro,
@@ -379,7 +399,8 @@ async function main(): Promise<void> {
           `${tema}/${tamanho.nome} ${rota.tela.padEnd(16)} status=${medida.status} ` +
             `overflow=${medida.overflow}px axe=${medida.axe.critica}/${medida.axe.seria} ` +
             `erros=${medida.console.erros} contraste_amostrado=${medida.contraste.length} ` +
-            `alvos<40=${medida.alvos.abaixoDe40}/${medida.alvos.total}`,
+            `alvos<40=${medida.alvos.abaixoDe40}/${medida.alvos.total} h1=${medida.h1 ? "ok" : "FALTA"}`
+            + (medida.urlFinal !== rota.caminho ? ` url=${medida.urlFinal}` : ""),
         );
         for (const a of medida.alvos.amostra.slice(0, 3)) console.info(`   alvo: ${a}`);
         for (const c of medida.axe.contraste.slice(0, 2)) console.info(`   contraste: ${c}`);
