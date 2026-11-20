@@ -163,16 +163,19 @@ que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) estej
 ## 10. 20/11/2026 — Deploy 1.62.0 (planejado; depende do corte)
 
 **Conteúdo previsto:** o fix do Sentinel que fecha a janela de avaliação
-(Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —, mais **#659**
-(público/auth) e a documentação deste item (**#660**).
+(Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —; o **fix do
+agrupamento de nota** em `fiscal.divergencia_valor_nota` (somar todos os pedidos
+vinculados, não só `order_id`); **#659** (público/auth) e a documentação deste
+item (**#660**).
 
 **Autorização:** pendente — o coordenador **não** executa deploy; o dono aprova e
 executa.
 
 **Verificação esperada depois do deploy (e só nela):**
 - `sentinel_runs.truncado = false` na próxima rodada da organização real;
-- `encerradas > 0`, incluindo `fiscal.nota_duplicada_por_pedido` (sem detecção
-  desde 09:15) com `nao_detectada_na_execucao`;
+- `encerradas > 0`, incluindo **`fiscal.divergencia_valor_nota`** (o falso
+  positivo do pedido 19594) e `fiscal.nota_duplicada_por_pedido` (sem detecção
+  desde 09:15), ambos com `nao_detectada_na_execucao`;
 - `/health` `version 1.62.0`; 7 containers; `to_regclass`/funções de 0330/0331 já
   presentes desde a 1.61.0.
 
@@ -187,3 +190,33 @@ amostragem funciona. O G está investigando (`after()` no standalone) e vai expo
 **contagem e última amostra** na tela. Critério para fechar: uma requisição
 autenticada real gerar linha com `rota`, `status` e latência, e a tela mostrar a
 última amostra.
+
+
+## 11. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
+
+**O que foi reportado (errado):** "divergência fiscal/financeira: pedido 19594
+R$ 92,00 × NF-e 4629 R$ 134,00 (+R$ 42,00)". Isso **não** era diferença de
+dinheiro.
+
+**Medição read-only em produção:**
+
+```
+pedido 19594  total 9200
+pedido 19597  total 4200
+NF-e 4629     total 13400   (autorizada, cStat 100)
+invoice_orders: NF 4629 → DOIS pedidos
+9200 + 4200 = 13400  ← fecha exatamente
+```
+
+A nota **agrupa dois pedidos**, o que é legítimo. O detector
+`fiscal.divergencia_valor_nota` comparava o total da nota com **um** pedido
+(`order_id`) e ignorava os vínculos de `notasPedidos` — daí o falso positivo.
+
+**Lição (mesma família da devolução):** **detector que assume 1:1 erra em
+agrupamento**, e o custo é o dono investigar dinheiro que não sumiu. Toda regra
+que liga nota a pedido precisa somar **todos** os vínculos — e a varredura de
+outras regras 1:1 faz parte da fatia do G.
+
+**Correção do detector:** somar os pedidos vinculados, corrigir a evidência e
+cobrir com 5 casos de teste (um pedido, dois pedidos, três, nota sem vínculo e
+valor realmente divergente).
