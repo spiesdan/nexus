@@ -106,7 +106,7 @@ function SlaTimelineInline({ received_at, due_at, request_type }: SlaTimelinePro
                 <p className="leading-tight text-muted-foreground">
                   D+{m.day} — {m.label}
                 </p>
-                <p className="text-xs text-muted-foreground opacity-70">
+                <p className="text-xs text-text-subtle">
                   {format(milestoneDate, "dd 'de' MMM yyyy", { locale: localeDaData })}
                 </p>
               </div>
@@ -160,7 +160,7 @@ function AuditTrailInline({ entries }: { entries: AuditEntry[] }) {
               <p className="text-xs text-muted-foreground">
                 {format(new Date(entry.created_at), "dd/MM/yyyy HH:mm:ss", { locale: localeDaData })}
                 {entry.actor_user_id && (
-                  <span className="ml-2 opacity-60">
+                  <span className="ml-2 text-text-subtle">
                     {t("por")} {entry.actor_user_id.slice(0, 8)}…
                   </span>
                 )}

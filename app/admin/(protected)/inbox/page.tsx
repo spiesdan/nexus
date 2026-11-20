@@ -25,7 +25,9 @@ export default async function AdminInboxIndexPage() {
       <p className="text-sm font-medium">
         {traduzir("Selecione uma conversa para visualizar", idioma)}
       </p>
-      <p className="max-w-xs text-xs opacity-70">
+      {/* `text-text-subtle` em vez de `opacity-70`: o véu de opacidade sobre o
+          muted media 2,91:1 no claro e 3,43:1 no escuro — abaixo do piso AA. */}
+      <p className="max-w-xs text-xs text-text-subtle">
         {traduzir(
           "Modo somente-leitura. Use “Impersonate” para responder como atendente do tenant.",
           idioma,

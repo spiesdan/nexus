@@ -141,10 +141,9 @@ function colunasAdmin(
             {t("Revogado")}
           </Badge>
         ) : (
-          <Badge
-            variant="outline"
-            className="border-green-500 text-[10px] text-green-700"
-          >
+          // Token de sucesso, não `green-700`: no escuro aquele hex dava
+          // 3,40:1 sobre `--color-surface` — abaixo do piso AA para 10 px.
+          <Badge variant="success" className="text-[10px]">
             {t("Ativo")}
           </Badge>
         ),
@@ -179,6 +178,8 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
   const localeDaData = useLocaleDeData();
   const t = useT();
 
+  // Sem `opacity` na linha revogada: o estado já é dito pelo badge "Revogado",
+  // e escurecer o texto inteiro derrubava o resto abaixo do piso AA.
   return (
     <AdminDataTable
       colunas={colunasAdmin(t, localeDaData)}
@@ -189,7 +190,6 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
         headline: "Nenhum platform admin encontrado",
         subcopy: "Platform admins são configurados exclusivamente via DBA.",
       }}
-      classeLinha={(row) => (row.revoked_at ? "opacity-60" : undefined)}
     />
   );
 }

@@ -52,7 +52,7 @@ export function TabNav({ basePath, tabs }: TabNavProps) {
               <Link href={tab.disabled ? "#" : href} aria-disabled={tab.disabled}>
                 {t(tab.label)}
                 {tab.disabled && (
-                  <span className="ml-1.5 text-[10px] font-normal opacity-60">
+                  <span className="ml-1.5 text-[10px] font-normal text-text-subtle">
                     {t("em breve")}
                   </span>
                 )}
