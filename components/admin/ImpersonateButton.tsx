@@ -67,7 +67,7 @@ export function ImpersonateButton({
   return (
     <>
       <Button
-        className="w-full"
+        className="min-h-10 w-full"
         variant="outline"
         disabled={disabled}
         onClick={() => setOpen(true)}

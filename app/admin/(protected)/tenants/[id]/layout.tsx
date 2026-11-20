@@ -62,7 +62,7 @@ export default async function TenantDetailLayout({
       {/* Back nav */}
       <Link
         href="/admin/tenants"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="-ml-2 inline-flex min-h-10 items-center gap-1.5 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
         <CaretLeft size={14} aria-hidden />
         {traduzir("Tenants", idioma)}
