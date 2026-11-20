@@ -1,4 +1,5 @@
 import { marcaDaSaida } from "@/lib/branding/saida";
+import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
 
@@ -44,8 +45,18 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <IdiomaProvider locale={locale}>
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <div className="w-full max-w-sm space-y-6">
+      <div className="flex min-h-screen items-center justify-center bg-bg p-6">
+        {/*
+          O CARTÃO É A MESMA LÍNGUA DAS TELAS DE ESTADO.
+
+          Antes, as seis telas de acesso flutuavam soltas sobre o canvas — e a
+          `/503`, a um passo dali, já era um `Card`. Sem superfície, o formulário
+          de entrar não tinha onde "pousar": no desktop virava texto solto no
+          vazio, e o contraste entre a marca do revendedor (logo acima) e o
+          campo era o único desenho. `Card` traz `bg-surface` + borda hairline +
+          raio, o mesmo vocabulário de `StatusPage` e do resto do produto.
+        */}
+        <Card className="w-full max-w-sm space-y-6 p-8">
           {marca.logoUrl && (
             <div className="flex justify-center">
               {/*
@@ -74,7 +85,7 @@ export default async function PublicLayout({ children }: { children: React.React
             </div>
           )}
           {children}
-        </div>
+        </Card>
       </div>
     </IdiomaProvider>
   );

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { carregarOrcamentoPublico } from "@/lib/comercial/orcamento-publico";
+import { branding } from "@/lib/branding";
 import { tagDeIdioma } from "@/lib/i18n/datas";
 import type { Idioma } from "@/lib/i18n/idiomas";
 import { formatCentsBRL } from "@/lib/money";
@@ -43,12 +44,27 @@ export default async function OrcamentoPublicoPage({
 
   if (!orcamento) {
     return (
-      <main className="mx-auto flex min-h-svh max-w-lg flex-col items-center justify-center gap-3 px-6 text-center">
-        <h1 className="text-xl font-semibold">Link inválido ou vencido</h1>
-        <p className="text-sm text-muted-foreground">
-          Peça um novo link para quem enviou o orçamento. Links antigos param de funcionar por
-          segurança.
-        </p>
+      /*
+        ESTADO INVÁLIDO TAMBÉM É TELA — não um beco.
+
+        O link chega pelo WhatsApp e é aberto no celular, às vezes dias depois.
+        Antes, o vencido era texto solto no canvas: sem a marca de quem mandou,
+        sem cartão, sem nada que dissesse "isto é o orçamento de alguém" — e o
+        cliente não tinha como saber se o link estava errado ou se o sistema
+        tinha caído. O cartão e o nome da instalação dão o mesmo contexto que a
+        página válida (que já usa `bg-card` e o nome da organização).
+      */
+      <main className="mx-auto flex min-h-svh w-full max-w-lg flex-col items-center justify-center px-5 py-8">
+        <div className="w-full rounded-xl border bg-card p-6 text-center">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {branding().name}
+          </p>
+          <h1 className="mt-2 text-xl font-semibold">Link inválido ou vencido</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Peça um novo link para quem enviou o orçamento. Links antigos param de funcionar por
+            segurança.
+          </p>
+        </div>
       </main>
     );
   }

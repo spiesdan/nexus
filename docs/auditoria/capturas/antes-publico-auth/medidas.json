@@ -1,0 +1,1230 @@
+{
+  "base": "http://127.0.0.1:3311",
+  "rotulo": "antes",
+  "medidas": [
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "503",
+      "urlFinal": "/503",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "orcamento",
+      "urlFinal": "/o/token-de-teste",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "landing",
+      "urlFinal": "/login?next=%2Fapp",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "vitrine-agenda",
+      "urlFinal": "/login?next=%2Fvitrine-agenda",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "accept-invite",
+      "urlFinal": "/team/accept-invite/token-de-teste",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "503",
+      "urlFinal": "/503",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "orcamento",
+      "urlFinal": "/o/token-de-teste",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "landing",
+      "urlFinal": "/login?next=%2Fapp",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "vitrine-agenda",
+      "urlFinal": "/login?next=%2Fvitrine-agenda",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "accept-invite",
+      "urlFinal": "/team/accept-invite/token-de-teste",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "503",
+      "urlFinal": "/503",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "orcamento",
+      "urlFinal": "/o/token-de-teste",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "landing",
+      "urlFinal": "/login?next=%2Fapp",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "vitrine-agenda",
+      "urlFinal": "/login?next=%2Fvitrine-agenda",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "accept-invite",
+      "urlFinal": "/team/accept-invite/token-de-teste",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-recovery",
+      "urlFinal": "/login/recovery",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 7,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-mfa",
+      "urlFinal": "/login",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "signup",
+      "urlFinal": "/signup",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 9,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "500",
+      "urlFinal": "/500",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)"
+      ],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "503",
+      "urlFinal": "/503",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "account-suspended",
+      "urlFinal": "/account-suspended",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 3,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-privacy",
+      "urlFinal": "/legal/privacy",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 30,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "legal-terms",
+      "urlFinal": "/legal/terms",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 32,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "orcamento",
+      "urlFinal": "/o/token-de-teste",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "landing",
+      "urlFinal": "/login?next=%2Fapp",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "vitrine-agenda",
+      "urlFinal": "/login?next=%2Fvitrine-agenda",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 8,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "accept-invite",
+      "urlFinal": "/team/accept-invite/token-de-teste",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 2,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}
