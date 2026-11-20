@@ -34,7 +34,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `fiscal.nota_sem_vinculo` | autorizada com `order_id` nulo | media |
 | `fiscal.nota_sem_chave` | autorizada sem `chave_acesso` | alta |
 | `fiscal.nota_duplicada_por_pedido` | 2+ notas **de venda** vivas no mesmo pedido (principal **ou** secundário); `finalidade=4` (devolução) não concorre, como na 0326 | crítica |
-| `fiscal.divergencia_valor_nota` | total da nota ≠ total do pedido | alta |
+| `fiscal.divergencia_valor_nota` | total da nota ≠ **soma de todos os pedidos vinculados** (principal + `invoice_orders`) | alta |
 | `fiscal.nota_autorizada_pedido_nao_faturado` | nota autorizada + pedido em rascunho/análise/aprovado | media |
 | `fiscal.pedido_com_nf_sem_nota` | `exige_nf` + status avançado sem nota ativa (janela 1 h/24 h) | crítica/alta |
 | `fiscal.job_fiscal_travado` | job `processando` > 30 min ou `pendente` atrasado | alta |
@@ -476,6 +476,24 @@ alimentar regras de 45 min/24 h; 137 execuções em 30 dias (42 em 7) estouravam
 
 **Prova:** 102 testes de `lib/sentinel` (Mercos truncado não impede fiscal/lead;
 fonte truncada impede a regra dependente) + `test:db` com 137/42 e 600/501.
+
+### v1.9 — agrupamento fiscal não é divergência
+
+Produção 1.61.0: a NF 4629 (13.400) fatura os pedidos 19594 (9.200) e 19597
+(4.200); a soma fecha. `divergenciaDeValorDaNota` comparava com **um** pedido via
+`n.order_id` e acusava 4.200 de diferença.
+
+- A regra soma `n.order_id` + todos os vínculos de `notasPedidos`; nota com N
+  pedidos só diverge se a soma diferir.
+- Evidência traz cada pedido (`numero: total`), `soma_pedidos_cents`, total da
+  nota e diferença. Pedido vinculado ausente do snapshot **não abre** (coleta
+  incompleta).
+- O mesmo 1:1 foi corrigido em `fiscal.nota_autorizada_pedido_nao_faturado`,
+  `fiscal.nota_sem_vinculo` e `fiscal.pedido_com_nf_sem_nota`.
+
+**Prova:** `lib/sentinel/regras-fiscal.test.ts` — 25 verdes, incluindo o caso real
+9.200+4.200=13.400 (não abre), soma divergente (abre), vínculo ausente (não
+abre) e os três outros detectores.
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.
