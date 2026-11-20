@@ -46,6 +46,61 @@ export function rascunhoDeOutroCliente(
   return (rascunho.contatoId ?? null) !== contatoDoLink;
 }
 
+/**
+ * SALVAR NA ABA QUANDO O DISCO RECUSA (decisão 5, 20/11/2026).
+ *
+ * `localStorage` falha em modo privado, com a cota cheia e por política do
+ * navegador. Antes, a única resposta era avisar "não foi possível salvar" — e a
+ * venda ficava só na memória, perdida no primeiro reload. `sessionStorage` é a
+ * segunda chance: sobrevive a recarregar a aba (não a fechá-la), que é o caso
+ * comum de quem recarrega no meio da venda.
+ *
+ * Ordem: disco primeiro (é o que sobrevive ao navegador), sessão depois. A
+ * LEITURA escolhe o rascunho mais NOVO entre os dois — se o disco está cheio, o
+ * da sessão é o fresco, e um par antigo no disco não pode ganhar por estar no
+ * lugar "preferido".
+ */
+function gravar(chave: string, valor: string): boolean {
+  try {
+    window.localStorage.setItem(chave, valor);
+    return true;
+  } catch {
+    // cota/modo privado: tenta a aba
+  }
+  try {
+    window.sessionStorage.setItem(chave, valor);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function ler(chave: string): RascunhoSalvo | null {
+  const candidatos: RascunhoSalvo[] = [];
+  for (const armazenamento of [window.localStorage, window.sessionStorage]) {
+    try {
+      const cru = armazenamento.getItem(chave);
+      if (!cru) continue;
+      const parsed = JSON.parse(cru) as RascunhoSalvo;
+      if (typeof parsed?.salvoEm === "number") candidatos.push(parsed);
+    } catch {
+      // armazenamento bloqueado ou conteúdo corrompido: tenta o próximo
+    }
+  }
+  if (candidatos.length === 0) return null;
+  return candidatos.reduce((maisNovo, c) => (c.salvoEm > maisNovo.salvoEm ? c : maisNovo));
+}
+
+function apagar(chave: string): void {
+  for (const armazenamento of [window.localStorage, window.sessionStorage]) {
+    try {
+      armazenamento.removeItem(chave);
+    } catch {
+      // silêncio de propósito: limpar é cortesia, não pode quebrar o fluxo
+    }
+  }
+}
+
 export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, ativo: boolean) {
   const [salvoEm, setSalvoEm] = React.useState<number | null>(null);
   const [restaurou, setRestaurou] = React.useState(false);
@@ -59,9 +114,8 @@ export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, 
 
   const carregar = React.useCallback((): Record<string, unknown> | null => {
     try {
-      const cru = window.localStorage.getItem(chave);
-      if (!cru) return null;
-      const parsed = JSON.parse(cru) as RascunhoSalvo;
+      const parsed = ler(chave);
+      if (!parsed) return null;
       setSalvoEm(parsed.salvoEm);
       setRestaurou(true);
       return parsed.dados;
@@ -74,27 +128,23 @@ export function useAutosaveDraft(chave: string, dados: Record<string, unknown>, 
   React.useEffect(() => {
     if (!ativo) return;
     const timer = setTimeout(() => {
-      try {
-        const agora = Date.now();
-        window.localStorage.setItem(chave, JSON.stringify({ salvoEm: agora, dados: ref.current }));
+      const agora = Date.now();
+      const gravou = gravar(chave, JSON.stringify({ salvoEm: agora, dados: ref.current }));
+      if (gravou) {
         setSalvoEm(agora);
         setFalhaAoSalvar(false);
-      } catch {
-        // Quota cheia ou privado: autosave é cortesia, mas o vendedor PRECISA
-        // saber que o rascunho não está no disco. A tela mostra o aviso e deixa
-        // continuar (o pedido ainda pode ser gerado).
-        setFalhaAoSalvar(true);
+        return;
       }
+      // As DUAS recusaram: autosave é cortesia, mas o vendedor PRECISA saber
+      // que o rascunho não está em lugar nenhum. A tela avisa e deixa continuar
+      // (o pedido ainda pode ser gerado).
+      setFalhaAoSalvar(true);
     }, 2000);
     return () => clearTimeout(timer);
   }, [chave, ativo, assinatura]);
 
   const limpar = React.useCallback(() => {
-    try {
-      window.localStorage.removeItem(chave);
-    } catch {
-      // Silêncio de propósito (ver acima).
-    }
+    apagar(chave);
     setSalvoEm(null);
     setRestaurou(false);
   }, [chave]);
