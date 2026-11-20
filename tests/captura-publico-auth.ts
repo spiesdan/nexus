@@ -55,10 +55,25 @@ const ROTAS = [
   { slug: "landing", path: "/", espera: /./ },
   { slug: "vitrine-agenda", path: "/vitrine-agenda", espera: /agenda|vitrine|agendar/i },
   { slug: "accept-invite", path: "/team/accept-invite/token-de-teste", espera: /convite|inválid|expir|equipe/i },
+  // ESTADO DE ERRO — não é rota, é `not-found.tsx`. Faltava na matriz 41: o 404
+  // existe desde sempre, tem E2E de cópia, e nunca foi medido como superfície.
+  { slug: "404", path: "/404", espera: /não encontr|404|página/i },
+  { slug: "404-rota", path: "/rota-que-nao-existe-matriz", espera: /não encontr|404|página/i },
 ] as const;
 
 async function main(): Promise<void> {
   mkdirSync(RAIZ, { recursive: true });
+  /*
+   * `SO_ROTAS=404,404-rota` limita a captura às superfícies pedidas. Existe
+   * porque medir uma superfície nova não justifica 72 cargas no servidor de
+   * quem está rodando outra frente — a regra de memória da máquina vale
+   * também para o servidor dos outros.
+   */
+  const so = (process.env.SO_ROTAS ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const rotas = so.length > 0 ? ROTAS.filter((r) => so.includes(r.slug)) : ROTAS;
   const browser = await chromium.launch();
   const medidas: Medida[] = [];
 
@@ -74,7 +89,7 @@ async function main(): Promise<void> {
       }, tema);
 
       const page = await contexto.newPage();
-      for (const rota of ROTAS) {
+      for (const rota of rotas) {
         const erros: string[] = [];
         // RUÍDO DE INSTRUMENTO, não da tela: o alvo é um `next dev`, e cada
         // contexto novo abre um HMR que o servidor (ocupado) recusa. Sem este
