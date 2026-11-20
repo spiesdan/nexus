@@ -29,7 +29,7 @@ export default async function LegalLayout({ children }: { children: React.ReactN
       <header className="border-b bg-background">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 px-6 py-4">
           <p className="text-xs uppercase tracking-wider text-muted-foreground">{marca.name}</p>
-          <Link href="/login" className="text-sm underline underline-offset-2">
+          <Link href="/login" className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-sm underline underline-offset-2">
             {traduzir("Voltar", idioma)}
           </Link>
         </div>

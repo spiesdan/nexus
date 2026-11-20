@@ -34,7 +34,7 @@ export default async function RecoveryPage({
       <div className="text-center text-sm">
         <Link
           href={next ? `/login?next=${encodeURIComponent(next)}` : "/login"}
-          className="text-muted-foreground underline-offset-4 hover:underline"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center px-1 text-muted-foreground underline-offset-4 hover:underline"
         >
           {t("Voltar ao login")}
         </Link>
