@@ -24,6 +24,8 @@ import * as path from "node:path";
 
 import { Client } from "pg";
 
+import { carregarEnvLocal } from "../scripts/lib/env-de-teste";
+
 
 const BASE = process.env.BASE ?? "http://localhost:3311";
 const ROTULO = process.argv[2] ?? "antes";
@@ -131,21 +133,11 @@ const MEDIR_CONTRASTE = `
  * O dono tem TOTP, mas `platform_admins.mfa_required = false`: a sessão aal1
  * já passa em `requirePlatformAdmin`, que só exige aal2 quando o banco pede.
  */
-function lerEnvLocal(): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const linha of readFileSync(path.join(process.cwd(), ".env.local"), "utf8").split("\n")) {
-    const [, chave, valor] = /^([A-Z0-9_]+)=(.*)$/.exec(linha.trim()) ?? [];
-    if (!chave) continue;
-    env[chave] = (valor ?? "").replace(/^"|"$/g, "");
-  }
-  return env;
-}
-
 async function cookiesDeSessao(): Promise<Array<{ name: string; value: string }>> {
   const email = CREDS.users.dono?.email;
   if (!email) throw new Error(".e2e-creds.json sem users.dono");
 
-  const envLocal = lerEnvLocal();
+  const envLocal = carregarEnvLocal();
   const url = envLocal.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const anon = envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
   if (!url || !anon) {
@@ -184,11 +176,10 @@ async function idsDoBanco(): Promise<{
   conversa: string | null;
   org: string;
 }> {
-  const linha = readFileSync(path.join(process.cwd(), ".env.local"), "utf8")
-    .split("\n")
-    .find((l) => l.startsWith("SUPABASE_DB_URL="));
-  if (!linha) throw new Error("SUPABASE_DB_URL ausente em .env.local");
-  const c = new Client({ connectionString: linha.slice("SUPABASE_DB_URL=".length).trim().replace(/^"|"$/g, "") });
+  const envLocal = carregarEnvLocal();
+  const dbUrl = envLocal.SUPABASE_DB_URL ?? "";
+  if (!dbUrl) throw new Error("SUPABASE_DB_URL ausente (use process.env ou .env.local)");
+  const c = new Client({ connectionString: dbUrl });
   await c.connect();
   await c.query("set default_transaction_read_only = on");
   const um = async (q: string): Promise<string | null> =>
