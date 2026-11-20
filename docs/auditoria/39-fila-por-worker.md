@@ -281,3 +281,14 @@ lead com links (feito no #678) → próximos detectores.
 **Coordenação:** mergear #673/#679/#680 quando verdes; congelar e cortar quando o
 bloco fechar; relatório único ao amanhecer (entregas por worker, aberto com dono,
 decisões autônomas com reversão, estado de produção).
+
+## Janela de build e memória — regra permanente (21/11/2026)
+
+- **Janela = recurso exclusivo**: quem tem a janela tem a máquina. Ninguém mais
+  abre servidor, Playwright ou `tsc` grande enquanto ela durar.
+- **No máximo 1 servidor de dev + 1 processo pesado** na máquina inteira. Servidor
+  de captura **morre ao fim da rodada**.
+- **Swap acima de 4 GB usados = pare tudo e avise o dono.** Antes de qualquer
+  captura, `sysctl vm.swapusage`.
+- Medição desta rodada: 2 `next-server` (3311 do G e 3313 do D) + `tsc` mortos;
+  swap **5,2 → 2,3 GB**; janela concedida ao F (build + `critical` da 1.61.1).
