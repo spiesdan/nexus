@@ -10,9 +10,9 @@
 
 ## Método
 
-1. `grep -rn 'order_id\|contact_id\|invoice_id' lib/sentinel/*.ts` (sem testes) —
-   **102 ocorrências** em 4 arquivos: `coleta.ts`, `regras-fiscal.ts`,
-   `regras-operacao.ts`, `tipos.ts`.
+1. `grep -rn 'order_id\|contact_id\|invoice_id' lib/sentinel/*.ts`, excluindo
+   `*.test.ts` e `teste-fixtures.ts` — **45 ocorrências** em 4 arquivos:
+   `coleta.ts`, `regras-fiscal.ts`, `regras-operacao.ts`, `tipos.ts`.
 2. `grep -rn 'maybeSingle\|\.single()' lib/sentinel/*.ts` — 3 ocorrências, todas
    em chave única (`sentinel_settings` por org, `organizations` por id,
    `insert ... returning id`), nenhuma por `order_id`/`contact_id`/`invoice_id`.
