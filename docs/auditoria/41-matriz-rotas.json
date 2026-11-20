@@ -404,7 +404,8 @@
       "grupo": "config-e-inteligencia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
+      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo; no estado atual também redireciona para a home"
     },
     {
       "rota": "/products",
@@ -425,7 +426,8 @@
       "grupo": "config-e-inteligencia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
+      "veredito": "pendente — bloqueada: sem id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo; no estado atual também redireciona para a home"
     },
     {
       "rota": "/prospeccao/nova",
@@ -649,7 +651,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: falta id de exemplo",
+      "veredito": "pendente — bloqueada: sem id de exemplo",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -706,7 +708,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: falta id de exemplo",
+      "veredito": "pendente — bloqueada: sem id de exemplo",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -714,7 +716,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: falta id de exemplo",
+      "veredito": "pendente — bloqueada: sem id de exemplo",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
@@ -764,7 +766,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: falta id de exemplo",
+      "veredito": "pendente — bloqueada: sem id de exemplo",
       "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {

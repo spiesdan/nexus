@@ -62,13 +62,66 @@ interface MedidaRota {
   url: string;
   tema: string;
   largura: number;
-  overflow: number;
+  /**
+   * `null` = NÃO MEDIDO. Zero medido e zero não-medido são coisas diferentes:
+   * a primeira rodada gravou `overflow: 0` em rota que nunca abriu, e o
+   * artefato passou a contar 24 medições de 6 telas dinâmicas que ninguém
+   * visitou. Quem lê o JSON tem de conseguir separar "passou" de "não fui lá".
+   */
+  overflow: number | null;
   h1: string[];
   consoleErros: string[];
-  axe: { critica: number; seria: number; ids: string[]; nos: string[] };
+  axe: { critica: number; seria: number; ids: string[]; nos: string[] } | null;
   esqueleto?: boolean;
   captura?: string;
+  /** `false` (ou ausente em artefato antigo) = linha sem medição válida. */
+  valida?: boolean;
+  motivo?: string;
   pulada?: string;
+}
+
+/**
+ * UMA LINHA SEM MEDIÇÃO — e sem zeros que fingem medição.
+ *
+ * O `medir()` só devolve linha válida quando a tela abriu e pintou `<h1>`. O
+ * que falha antes disso (rota dinâmica sem id, redirect que destruiu o
+ * contexto, erro de navegação) passa por aqui: `overflow`/`axe` nulos e o
+ * motivo escrito. O total continua contando a linha, mas ela não entra como
+ * "medida" em nenhum placar.
+ */
+function medidaInvalida(
+  linha: Linha,
+  tema: string,
+  largura: number,
+  motivo: string,
+  consoleErros: string[] = [],
+): MedidaRota {
+  return {
+    rota: linha.rota,
+    url: "",
+    tema,
+    largura,
+    overflow: null,
+    h1: [],
+    consoleErros: consoleErros.slice(0, 5),
+    axe: null,
+    valida: false,
+    motivo,
+  };
+}
+
+/**
+ * A régua única do que conta como medido — inclusive para artefato antigo, que
+ * não tinha `valida` e gravava zero. URL vazia ou `<h1>` vazio é não-medido,
+ * não importa o que o campo numérico diga.
+ */
+function ehMedidaValida(m: MedidaRota): boolean {
+  return (
+    m.valida !== false &&
+    Boolean(m.url) &&
+    Array.isArray(m.h1) &&
+    m.h1.some((titulo) => Boolean(titulo && titulo.trim()))
+  );
 }
 
 function slug(rota: string): string {
@@ -163,6 +216,29 @@ async function medir(
   }
   await page.waitForTimeout(900);
 
+  /*
+   * ESPERAR O `<h1>` — E NÃO MEDIR ZERO QUANDO ELE NÃO VEM.
+   *
+   * A primeira rodada mediu `/ai/providers` e `/ai/runs` no primeiro paint da
+   * combinação light/1440 e gravou `h1: []`, `overflow: 0`, `axe: 0`: a tela
+   * ainda estava montando e o artefato contou como medida. Esperar o título é a
+   * mesma régua que o instrumento de captura já usa. Se em 12 s ele não vier,
+   * a linha vira NÃO MEDIDA — nunca uma tela "limpa" que ninguém viu.
+   */
+  try {
+    await page.waitForFunction(() => document.querySelector("h1") !== null, null, {
+      timeout: 12_000,
+    });
+  } catch {
+    return medidaInvalida(
+      linha,
+      tema,
+      largura,
+      "sem <h1> após 12 s — a tela não terminou de renderizar",
+      erros,
+    );
+  }
+
   const basico = (await page.evaluate(`(() => {
     var de = document.documentElement;
     return {
@@ -189,6 +265,10 @@ async function medir(
     overflow: basico.overflow,
     h1: basico.h1,
     consoleErros: erros.slice(0, 5),
+    valida: true,
+    // O aviso que faltava: `esqueleto` era calculado e descartado, então uma
+    // tela presa no esqueleto saía igual a uma carregada. Agora sai marcada.
+    ...(esqueleto ? { esqueleto: true } : {}),
     axe: {
       critica: axe.violations.filter((v) => v.impact === "critical").length,
       seria: graves.filter((v) => v.impact === "serious").length,
@@ -250,17 +330,11 @@ async function main(): Promise<void> {
 
       for (const linha of alvo) {
         if (!urlDe(linha.rota)) {
-          medidas.push({
-            rota: linha.rota,
-            url: "",
-            tema,
-            largura: tamanho.width,
-            overflow: 0,
-            h1: [],
-            consoleErros: [],
-            axe: { critica: 0, seria: 0, ids: [], nos: [] },
-            pulada: "rota dinâmica sem id de exemplo em IDS",
-          });
+          // NÃO MEDIDA, e o artefato diz isso. Antes esta linha entrava com
+          // overflow/axe zerados e o placar contava a tela como aprovada.
+          medidas.push(
+            medidaInvalida(linha, tema, tamanho.width, "rota dinâmica sem id de exemplo em IDS"),
+          );
           continue;
         }
         try {
@@ -280,26 +354,25 @@ async function main(): Promise<void> {
           }
           medidas.push(m);
           console.info(
-            `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
-              `axe=${m.axe.critica}/${m.axe.seria} h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
+            `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow ?? "—").padStart(3)} ` +
+              `axe=${m.axe ? `${m.axe.critica}/${m.axe.seria}` : "—"} ` +
+              `h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
               `console=${m.consoleErros.length}${m.esqueleto ? " ESQUELETO" : ""}`,
           );
-          for (const no of m.axe.nos) console.info(`    ${linha.rota} → ${no}`);
+          for (const no of m.axe?.nos ?? []) console.info(`    ${linha.rota} → ${no}`);
           for (const e of m.consoleErros.slice(0, 2))
             console.info(`    ${linha.rota} console → ${e}`);
         } catch (e) {
-          medidas.push({
-            rota: linha.rota,
-            url: "",
-            tema,
-            largura: tamanho.width,
-            overflow: 0,
-            h1: [],
-            consoleErros: [String(e).slice(0, 200)],
-            axe: { critica: 0, seria: 0, ids: [], nos: [] },
-            pulada: "erro ao medir",
-          });
-          console.info(`${tema}/${tamanho.nome} ${linha.rota} FALHOU: ${String(e).slice(0, 120)}`);
+          medidas.push(
+            medidaInvalida(
+              linha,
+              tema,
+              tamanho.width,
+              `erro ao medir: ${String(e).slice(0, 160)}`,
+              [String(e).slice(0, 200)],
+            ),
+          );
+          console.info(`${tema}/${tamanho.nome} ${linha.rota} NÃO MEDIDA: ${String(e).slice(0, 120)}`);
         }
       }
       await contexto.close();
@@ -320,16 +393,49 @@ async function main(): Promise<void> {
   for (const m of medidas) porChave.set(chave(m), m);
   const todas = [...porChave.values()];
 
+  /*
+   * O PLACAR CONTA O QUE FOI MEDIDO — NÃO O QUE FOI VISITADO.
+   *
+   * `rotas` era `alvo.length`: medir um grupo de 2 rotas reescrevia o cabeçalho
+   * de um artefato de 92 com "rotas: 2". Agora o número é o do CONJUNTO, e
+   * `validas`/`invalidas` respondem a pergunta que o total sozinho não
+   * responde. `ehMedidaValida` também reconhece artefato antigo (sem `valida`),
+   * onde os zeros de rota não visitada ainda estão gravados.
+   */
+  const validas = todas.filter(ehMedidaValida);
+  const invalidas = todas.filter((m) => !ehMedidaValida(m));
+  const rotas = new Set(todas.map((m) => m.rota));
+  const puladas = [...new Set(invalidas.map((m) => m.rota))].map((rota) => {
+    const daRota = invalidas.filter((m) => m.rota === rota);
+    return {
+      rota,
+      combinacoes: daRota.length,
+      motivos: [...new Set(daRota.map((m) => m.motivo ?? m.pulada ?? "não medida"))],
+    };
+  });
+
   writeFileSync(
     SAIDA,
     JSON.stringify(
-      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas: todas },
+      {
+        gerado: new Date().toISOString(),
+        rotulo: ROTULO,
+        rotas: rotas.size,
+        total: todas.length,
+        validas: validas.length,
+        invalidas: invalidas.length,
+        puladas,
+        medidas: todas,
+      },
       null,
       2,
     ),
   );
   await browser.close();
-  console.info(`\n${medidas.length} medições neste lote; ${todas.length} no total, em ${SAIDA}`);
+  console.info(
+    `\n${medidas.length} medições neste lote; ${todas.length} no total ` +
+      `(${validas.length} válidas, ${invalidas.length} não medidas) em ${SAIDA}`,
+  );
 }
 
 main().catch((e) => {
