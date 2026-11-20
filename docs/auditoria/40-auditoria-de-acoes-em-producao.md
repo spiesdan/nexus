@@ -562,3 +562,13 @@ Sentinel: achados=5 · reafirmadas=5 · truncado=false   ← os 5 leads reais se
 `update.sh` rodando, 7 containers na versão, health ok. É o mesmo comportamento do
 stream visto na **1.60.0**; **não** é deploy parcial. Conferir o servidor antes de
 concluir falha.
+
+## 28. 21/11/2026 — Achado de ferramenta: “8 s/rota” media só o tempo
+
+A varredura de `app/app` escalava em **tempo** (8 s/rota) mas não em **memória**:
+estourou em ~70 de 99 rotas (swap 6,6 GB) e quase apagou a varredura inteira. O D
+abortou a fatia, matou servidor/Chromium e o swap voltou a 2,0 GB.
+
+**Lição:** **métrica incompleta é uma forma de mentira.** “8 s/rota” descrevia só o
+tempo; o limite real era **memória por rota**. O instrumento passa a gravar o
+artefato por fatia de 10 rotas, liberar buffers e matar o servidor entre fatias.
