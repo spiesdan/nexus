@@ -299,21 +299,28 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 >    provocado pela tabela que muda **no servidor** com a tela já carregada —
 >    o caso que sobra de verdade.
 >
+> **Reexecução oficial em 1.61.0 (`cfb79ce4`, 20/11/2026):** build de produção do
+> tag, `--max-failures=0`, **6/6 passed em 2,5 min**. E.1/E.2 (520 contatos +
+> 2.100 produtos), E.3 (tabela/override/422), E.4 (estoque), E.5
+> (crédito/aprovação), E.8/E.9 (resposta perdida/reconciliação) e E.10
+> (320/390/tablet/desktop, foco e axe). O defeito que derrubava E.1/E.2 — produto
+> remoto descartado por `porId` — foi corrigido no #637 e está no tag.
+>
 > Medido em 19/11/2026. Cada linha nomeia o arquivo de prova; o que é unitário
 > não se apresenta como E2E.
 
 | # | Cenário | Estado | Prova |
 |---|---|---|---|
-| 1 | EAN/SKU/scanner: código casa produto; EAN inexistente não inventa; SKU ambíguo não escolhe sozinho | **PROVADO no navegador (1.60.0)** — código, nome, marca e scanner; `Enter` só lança identidade inequívoca; produto **fora do lote de 2.000** entra pelo servidor | `criador-busca-scanner.test.tsx`, `products-busca-codigo-exato.test.ts` + E2E “E.1/E.2” |
-| 2 | Escala: 600 produtos e 600 contatos; busca responde; catálogo não vai inteiro | **PROVADO no navegador (1.60.0) + unit** — E2E semeia **520 contatos e 2.100 produtos**, alvo fora do lote; carregando e erro visíveis; unit mede a rajada (teto de 8, uma consulta remota) | `criador-escala-busca.test.tsx` + E2E “E.1/E.2” |
+| 1 | EAN/SKU/scanner: código casa produto; EAN inexistente não inventa; SKU ambíguo não escolhe sozinho | **PROVADO no navegador (1.61.0)** — código, nome, marca e scanner; `Enter` só lança identidade inequívoca; produto **fora do lote de 2.000** entra pelo servidor | `criador-busca-scanner.test.tsx`, `products-busca-codigo-exato.test.ts` + E2E “E.1/E.2” |
+| 2 | Escala: 600 produtos e 600 contatos; busca responde; catálogo não vai inteiro | **PROVADO no navegador (1.61.0) + unit** — E2E semeia **520 contatos e 2.100 produtos**, alvo fora do lote; carregando e erro visíveis; unit mede a rajada (teto de 8, uma consulta remota) | `criador-escala-busca.test.tsx` + E2E “E.1/E.2” |
 | 3 | Tabela/override reflete nos itens; preço manual marcado e preservado | **DEFEITO ACHADO no 1.60.0 e corrigido** — a tabela **nunca ativava** (`d.itens` × `{ data: { itens } }`) e o item entrava a preço de catálogo rotulado de tabela; trocar reprecifica e o manual é preservado | `criador-tabela-credito-parcelas.test.tsx` (teste novo, falha sem a correção) + E2E “E.3” **verde** |
-| 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **PROVADO no navegador (1.60.0)** — suficiente, insuficiente (422), desatualizado (saldo muda antes do POST) e não controlado; a tela declara a ausência de reserva | E2E “E.4” + `criador-itens-estoque-unidade.test.tsx` |
-| 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **PROVADO no navegador (1.60.0)** — limite estourado recusa 422 sem gravar, sem limite cria, acima do teto vai a `em_analise` com “Aprovar pedido”; gate do servidor provado no unit | E2E “E.5” + `commercial-orders-credito-gate.test.ts` |
+| 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **PROVADO no navegador (1.61.0)** — suficiente, insuficiente (422), desatualizado (saldo muda antes do POST) e não controlado; a tela declara a ausência de reserva | E2E “E.4” + `criador-itens-estoque-unidade.test.tsx` |
+| 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **PROVADO no navegador (1.61.0)** — limite estourado recusa 422 sem gravar, sem limite cria, acima do teto vai a `em_analise` com “Aprovar pedido”; gate do servidor provado no unit | E2E “E.5” + `commercial-orders-credito-gate.test.ts` |
 | 6 | Quantidade inteira (B.14); parcelas somam o total; fração/granel não quebra | **OK** (fração segue **DEPENDE DE REGRA**) | `criador-tabela-credito-parcelas.test.tsx`, `parcelas-fecham.test.ts` |
 | 7 | Rascunho entre org/usuário não é retomado; `descontoTexto` volta | **DEFEITO CORRIGIDO** — chave única do navegador | `criador-rascunho-escopo.test.tsx`, `criador-pedido-cliente-do-link.test.tsx` |
-| 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **PROVADO no navegador (1.60.0)** — `route.fetch()` commita, `abort` derruba a resposta; reenviar cria **1 pedido**, mesmos itens, sem número queimado; e na rota (`commercial-orders-timeout-retry`) | E2E “E.8/E.9” + `commercial-orders-timeout-retry.test.ts` |
-| 9 | Reconciliação: itens/parcelas somam no banco de teste | **PROVADO no navegador (1.60.0) + invariante** — pedido criado pela tela: itens = subtotal, subtotal − desconto + frete = total, `chave_sincronizacao` e 1 item no banco | E2E “E.8/E.9” + `tests/invariants/pedido-reconciliacao.test.ts` |
-| 10 | 320 px, teclado e leitor de tela | **PROVADO no navegador (1.60.0)** — 320/390/768/1440 sem overflow; Tab do cliente chega à busca; axe sem `serious`/`critical` em 390 e 1440 (a violação `definition-list` do `<dl>` foi achada e corrigida aqui) | E2E “E.10” + `criador-acessivel.test.tsx`, `criador-pedido-acessivel-320.spec.ts` |
+| 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **PROVADO no navegador (1.61.0)** — `route.fetch()` commita, `abort` derruba a resposta; reenviar cria **1 pedido**, mesmos itens, sem número queimado; e na rota (`commercial-orders-timeout-retry`) | E2E “E.8/E.9” + `commercial-orders-timeout-retry.test.ts` |
+| 9 | Reconciliação: itens/parcelas somam no banco de teste | **PROVADO no navegador (1.61.0) + invariante** — pedido criado pela tela: itens = subtotal, subtotal − desconto + frete = total, `chave_sincronizacao` e 1 item no banco | E2E “E.8/E.9” + `tests/invariants/pedido-reconciliacao.test.ts` |
+| 10 | 320 px, teclado e leitor de tela | **PROVADO no navegador (1.61.0)** — 320/390/768/1440 sem overflow; Tab do cliente chega à busca; axe sem `serious`/`critical` em 390 e 1440 (a violação `definition-list` do `<dl>` foi achada e corrigida aqui) | E2E “E.10” + `criador-acessivel.test.tsx`, `criador-pedido-acessivel-320.spec.ts` |
 
 ### O que mudou no produto por causa desta matriz
 
