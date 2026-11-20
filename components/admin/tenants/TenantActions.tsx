@@ -52,7 +52,7 @@ export function TenantActions({
         {/* Suspend */}
         {canSuspend && (
           <Button
-            className="w-full"
+            className="min-h-10 w-full"
             variant="destructive"
             onClick={() => setSuspendOpen(true)}
             aria-label={t("Suspender tenant")}
@@ -64,7 +64,7 @@ export function TenantActions({
         {/* Reactivate */}
         {isSuspended && (
           <Button
-            className="w-full"
+            className="min-h-10 w-full"
             variant="outline"
             onClick={() => setReactivateOpen(true)}
             aria-label={t("Reativar tenant")}

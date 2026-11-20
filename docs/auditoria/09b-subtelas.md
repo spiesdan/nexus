@@ -4,8 +4,8 @@
 > Fonte: segmento de rota (`page.tsx` + arquivos locais + imports relativos),
 > com comentários removidos. Não editar à mão.
 
-**159 telas** medidas; **52** têm ao menos uma subtela.
-Total: **88 abas**, **74 modais**, **12 gavetas**.
+**159 telas** medidas; **51** têm ao menos uma subtela.
+Total: **87 abas**, **74 modais**, **12 gavetas**.
 
 > **O que este número é.** Inventário **estático** com nome e arquivo — o que abrir.
 > **O que não é.** Prova de que a subtela abre, renderiza ou está correta: isso exige
@@ -18,7 +18,6 @@ Total: **88 abas**, **74 modais**, **12 gavetas**.
 |---|---|---|---|
 | `/admin` | — | — | Menu de navegação `components/admin/AdminShell.tsx:49` |
 | `/admin/inbox` | (rótulo dinâmico) `app/admin/(protected)/inbox/_components/InboxList.tsx:176` | — | — |
-| `/admin/tenants/[id]` | em breve `app/admin/(protected)/tenants/[id]/_tab-nav.tsx:39` | — | — |
 | `/app/agenda` | — | — | Remarcar agendamento / Novo agendamento `app/app/agenda/_client.tsx:375`<br>Cancelar agendamento `app/app/agenda/_client.tsx:501` |
 | `/app/ai/agents` | — | Renomear agent `app/app/ai/agents/_components/RenameAgentDialog.tsx:55` | — |
 | `/app/ai/agents/[id]` | (rótulo dinâmico) `app/app/ai/agents/[id]/_components/AgentForm.tsx:527`<br>Configuração `app/app/ai/agents/[id]/_components/AgentTabs.tsx:55`<br>Teste `app/app/ai/agents/[id]/_components/AgentTabs.tsx:56`<br>Capacidades `app/app/ai/agents/[id]/_components/AgentTabs.tsx:59`<br>Execuções `app/app/ai/agents/[id]/_components/AgentTabs.tsx:60`<br>Histórico `app/app/ai/agents/[id]/_components/AgentTabs.tsx:61`<br>Propostas `app/app/ai/agents/[id]/_components/AgentTabs.tsx:62`<br>Geral `components/ai/AgentEditor.tsx:196`<br>Modelo `components/ai/AgentEditor.tsx:197`<br>RAG `components/ai/AgentEditor.tsx:198`<br>Guardrails `components/ai/AgentEditor.tsx:199` | Diff `app/app/ai/agents/[id]/_components/VersionHistory.tsx:158` | Execução `app/app/ai/agents/[id]/_components/RunDetailDrawer.tsx:54` |

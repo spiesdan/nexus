@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import { useT } from "@/hooks/i18n/useT";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 interface TabItem {
   label: string;
@@ -17,11 +18,18 @@ interface TabNavProps {
 }
 
 /**
- * Sub-nav de rota do detalhe do tenant. Navegação por URL — os gatilhos são
- * `Link` (Fase 5c: markup canônico de `ui/tabs` via `asChild`), não estado
- * interno: deep-link, ctrl+click e botão voltar do browser continuam
- * funcionando. O valor controlado sai do `pathname` — quem decide a aba ativa
- * é a URL, não um `useState`.
+ * Sub-nav de rota do detalhe do tenant — NAVEGAÇÃO, não `Tabs`.
+ *
+ * Era `Tabs`/`TabsList`/`TabsTrigger asChild` sem nenhum `TabsContent`: cada
+ * gatilho saía com `aria-controls="…-content-<valor>"` apontando para um painel
+ * que não existe. O axe reprovava como `aria-valid-attr-value` **crítico** nas
+ * quatro combinações (claro/escuro × 1440/390) — o leitor de tela anunciava um
+ * controle quebrado.
+ *
+ * O padrão certo para trocar de ROTA é `<nav>` com links e `aria-current`; o
+ * estado ativo continua vindo do `pathname`, então deep-link, ctrl+click e
+ * voltar seguem funcionando. O desenho (borda inferior, tracking, “em breve”)
+ * é o mesmo do `TabsTrigger` — o que muda é a semântica.
  */
 export function TabNav({ basePath, tabs }: TabNavProps) {
   const t = useT();
@@ -33,34 +41,38 @@ export function TabNav({ basePath, tabs }: TabNavProps) {
       ? pathname === basePath || pathname === basePath + "/"
       : pathname.startsWith(basePath + tab.href),
   );
-  const valorAtivo = ativo ? basePath + ativo.href : basePath;
 
   return (
-    <Tabs value={valorAtivo}>
-      <TabsList>
-        {tabs.map((tab) => {
-          const href = basePath + tab.href;
+    <nav
+      aria-label={t("Seções do tenant")}
+      className="inline-flex h-10 max-w-full items-center justify-start gap-1 overflow-x-auto border-b border-border p-0"
+    >
+      {tabs.map((tab) => {
+        const href = basePath + tab.href;
+        const atual = ativo?.label === tab.label;
 
-          return (
-            <TabsTrigger
-              key={tab.label}
-              value={href}
-              asChild
-              disabled={tab.disabled}
-              className={tab.disabled ? "text-muted-foreground" : undefined}
-            >
-              <Link href={tab.disabled ? "#" : href} aria-disabled={tab.disabled}>
-                {t(tab.label)}
-                {tab.disabled && (
-                  <span className="ml-1.5 text-[10px] font-normal opacity-60">
-                    {t("em breve")}
-                  </span>
-                )}
-              </Link>
-            </TabsTrigger>
-          );
-        })}
-      </TabsList>
-    </Tabs>
+        return (
+          <Link
+            key={tab.label}
+            href={tab.disabled ? "#" : href}
+            aria-current={atual ? "page" : undefined}
+            aria-disabled={tab.disabled || undefined}
+            className={cn(
+              // `min-h-10`: o gatilho media 38 px; a casca do admin usa 40.
+              "inline-flex min-h-10 items-center justify-center gap-1 whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-medium tracking-[-0.02em] text-text-subtle transition-colors hover:text-text",
+              atual && "border-accent text-text",
+              tab.disabled && "pointer-events-none",
+            )}
+          >
+            {t(tab.label)}
+            {tab.disabled && (
+              <span className="ml-1.5 text-[10px] font-normal text-text-subtle">
+                {t("em breve")}
+              </span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
