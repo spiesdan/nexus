@@ -81,7 +81,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/expedicao/[id]/fechamento` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
 | `/app/expedicao/[id]/motorista` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
 | `/app/expedicao/[id]` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
-| `/app/expedicao/[id]/rota` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
+| `/app/expedicao/[id]/rota` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` · #673 (`52-rotas-design.md`) · fatia 2: `53-rotas-falhas.md` | D |
 | `/app/expedicao/nova` | expedicao | **pendente** | — | D |
 | `/app/expedicao` | expedicao | **aplicado** | #607 · `40-expedicao-design.md` | D |
 | `/app/faturamento` | faturamento | **aplicado** | #649 · `48-faturamento-design.md` · `capturas/{antes,depois}-faturamento/` | D |

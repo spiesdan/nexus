@@ -776,6 +776,12 @@ export function MapaRota({
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
                   {t("Geocodifique os endereços ou marque a posição no mapa para desenhar a rota.")}
                 </p>
+                {/* O mapa vazio não é a rota vazia. A lista abaixo continua na
+                    ordem certa e o motorista consegue sair — dizer isso evita
+                    que o operador conclua que perdeu o trabalho. */}
+                <p className="mt-1.5 text-[11px] text-text-subtle">
+                  {t("A ordem da lista continua valendo sem o mapa.")}
+                </p>
               </div>
             </div>
           )}
