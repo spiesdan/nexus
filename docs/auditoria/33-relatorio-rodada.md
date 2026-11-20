@@ -229,3 +229,13 @@ descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambígu
   "rascunho"), não resíduo de importação.
 - Proposta registrada e **não implementada**: superfície “Orçamentos parados” com
   idade, valor e próximo passo por orçamento.
+
+
+### Radar — dois problemas diferentes (21/11/2026)
+
+- **`URI too long`**: corrigido no **#695** (consulta do risk-watcher).
+- **Motor LAYA ausente**: `LAYA_URL` definido para serviço que não existe; 50×
+  qualificação, 17× risk-watcher e 17× radar em 6h. Tela mostra “sem sugestão”.
+  **Decisão do dono**: (a) subir `laya-serve` (funcionalidade volta; custo:
+  container/CPU/conversa fora do banco) ou (b) limpar `LAYA_URL` (desliga limpo;
+  sem sugestão). Ambas reversíveis, nenhuma toca dado.

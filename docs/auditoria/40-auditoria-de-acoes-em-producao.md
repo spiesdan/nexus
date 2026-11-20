@@ -324,3 +324,56 @@ de construir é do dono; nada foi implementado.
 > Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
 > autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
 > auditoria.
+
+## 17. 21/11/2026 — Achado: rota responde HTTP 200 com `estado: "erro"` e a tela nunca avisa
+
+**Medido pela prova visual do D:** quando o provedor de geocodificação caía, o
+`POST /api/v1/.../rota/otimizar` respondia **HTTP 200** com `estado: "erro"` **por
+parada**. O `catch` do cliente nunca disparava — porque não houve erro HTTP — e o
+**banner de falha nunca aparecia no caso mais comum** (provedor fora do ar).
+
+**Por que é grave:** falha silenciosa é o pior estado do Sistema Vivo — a pessoa
+acha que a rota otimizou, e cada parada ficou sem coordenada. O caminho de erro
+existia, mas era inalcançável justamente no cenário que ele deveria cobrir.
+
+**Correção (#693, só cliente):** o cliente passou a tratar `estado: "erro"` por
+parada como falha visível (banner), além do erro HTTP. Sem mudança de regra de
+negócio e sem migration.
+
+**Lição:** **status HTTP não é o contrato.** Quando o corpo carrega estado, o
+cliente precisa olhar o estado — e a prova visual tem de exercitar o provedor
+morto, não só o caminho feliz.
+
+
+## 18. 21/11/2026 — LAYA ligado e quebrado: motor ausente (decisão do dono)
+
+**Medido nos logs de produção:**
+
+```
+LAYA_URL=http://laya:8000   (definido)
+LAYA_API_KEY                (definido, 64 chars)
+serviço "laya" em execução  (NÃO EXISTE)
+
+6 horas de logs:
+  [prospeccao] motor de qualificação indisponível ... 50×
+  [risk-watcher] motor de decisão indisponível ...... 17×
+  [radar] motor de decisão indisponível ............. 17×
+  erro: fetch failed → http://laya:8000/v1/systemone/batch
+```
+
+**Consequência:** a sugestão de ação do Radar e a qualificação automática de
+prospects **não funcionam** — e a tela mostra “sem sugestão”, como se não houvesse
+nada a sugerir. O `.env.example` promete que, sem `LAYA_URL`, o recurso fica
+**desligado e nada mais muda**; aqui ele está **ligado e quebrado**, que é o pior
+dos dois estados.
+
+**Duas opções (decisão do dono; ambas reversíveis e nenhuma toca dado):**
+
+| Opção | Efeito | Custo |
+|---|---|---|
+| **(a) subir o `laya-serve`** na mesma VPS, na rede interna como o `.env.example` manda | funcionalidade volta (Radar sugere, prospecção qualifica) | mais um container; inferência em CPU; a conversa sai do banco para o serviço local |
+| **(b) limpar `LAYA_URL`** | desliga limpo: para de tentar 17×/15 min e a tela diz que está desligado | sem sugestão automática |
+
+**Nota para o relatório da manhã:** são **dois problemas diferentes no mesmo
+radar** — o `URI too long` (corrigido no **#695**) e o **motor ausente** (decisão
+acima). Sem separar os dois, parece que o fix do #695 resolveu o radar inteiro.

@@ -19,10 +19,10 @@
 
 ## AGORA
 
-- **D:** #673 com `verify` vermelho → corrigir e mergear; depois rotas fatia 2/3 e o **cartão agrupado** do `pedido_preso`.
-- **F:** (5) `sessionStorage` e (6) custo no resumo → (3) `ignorar_*` só gerente → (1) baixa atômica → (2) reprecificação.
-- **G:** **#686** (casca admin 44 px + dashboard 16→1/2→1) e **#689** (varredura de cardinalidade do Sentinel: 0 suspeitas abertas). Capturas das outras 21 telas **bloqueadas** por load/swap da máquina — só reabrem depois do build do F; próxima é `/admin/audit`.
-- **Coord:** PR das decisões de 20/11; despacho e `## AGORA` a cada relatório.
+- **F:** janela 1 encerrada — agora corrige o `invariants` do #691 (sem build). **Critical: 70 passa / 6 falha / 2 skip / 4 não rodou.**
+- **D:** janela 2 — prova visual do banner de falha de geocodificação (`rotas-falha-real.mjs`, provedor em porta morta): única lacuna da fatia 2.
+- **G:** prioridade = bug do `risk-watcher` (`URI too long` a cada 15 min, `lib/leads/laya-decisao.ts:351`); depois janela 3 para `/admin/audit` e demais telas.
+- **Coord:** mergear #687/#693/#696; uma janela por vez; swap >4 GB encerra.
 
 ## PRÓXIMA TAREFA — D
 
@@ -292,3 +292,13 @@ decisões autônomas com reversão, estado de produção).
   captura, `sysctl vm.swapusage`.
 - Medição desta rodada: 2 `next-server` (3311 do G e 3313 do D) + `tsc` mortos;
   swap **5,2 → 2,3 GB**; janela concedida ao F (build + `critical` da 1.61.1).
+
+
+## Janelas de máquina — ordem (21/11/2026)
+
+1. **F** — e2e/`critical` no `e2e-1611` (encerrada).
+2. **D** — prova visual da falha de geocodificação (provedor em porta morta).
+3. **G** — capturas de `/admin/audit` e demais admin.
+
+Uma janela por vez; a janela termina quando o dono mata o servidor; **swap > 4 GB
+encerra na hora**.
