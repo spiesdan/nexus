@@ -113,7 +113,7 @@ describe("candidatosSemDecisao — consulta fatiada", () => {
   it("erro de um lote vira erro da função, não silêncio", async () => {
     const { client } = adminFalso(new Set(), "banco fora");
     await expect(candidatosSemDecisao(client, "org-1", frios(3))).rejects.toThrow(
-      /decisões gravadas: banco fora/,
+      /leitura de decisões falhou: banco fora/,
     );
   });
 });
