@@ -29,6 +29,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
+import { argumentosDaSuite } from "./lib/e2e-suite-args";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -78,10 +79,8 @@ const outputDir = path.join(
   `${nome}-${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}`,
 );
 mkdirSync(outputDir, { recursive: true });
-const resultado = spawnSync(
-  process.execPath,
-  [cli, "test", "--workers=1", "--output", outputDir, ...specs, ...extras],
-  {
+const args = argumentosDaSuite({ cli, specs, outputDir, extras });
+const resultado = spawnSync(process.execPath, args, {
   stdio: "inherit",
   env: {
     ...process.env,
