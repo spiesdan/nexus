@@ -84,7 +84,7 @@ escrito à mão).
 | 9 | `/pedidos/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
 | 10 | `/pedidos/imprimir` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 11 | `/pedidos/novo` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 12 | `/titulos` | — (redirect) | — | — | **redirect → `/financeiro`, medido lá** — **3/4**: a combinação light/1440 perdeu o contexto no redirect e ficou fora |
+| 12 | `/titulos` | — (redirect) | — | — | redirect → /financeiro, medido lá → `/financeiro` |
 
 ### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 2 medidas
 
@@ -108,19 +108,19 @@ escrito à mão).
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/fiscal` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 2 | `/fiscal/configuracoes` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 3 | `/fiscal/eventos` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 4 | `/fiscal/fornecedores` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 5 | `/fiscal/manifestacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 6 | `/fiscal/notas` | 0/0 px | 0/1 | 0 | **pílula da aba ativa corrigida** (`text-accent` → `text-accent-ink`: 3,63:1 no claro); limpo nas outras medidas |
-| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | pulada: sem nota de exemplo no banco local — o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
-| 8 | `/fiscal/pendentes` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 9 | `/fiscal/produtos` | 0/0 px | 0/2 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 10 | `/fiscal/relatorios` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 11 | `/fiscal/resumos` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | sem passe; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 1 | `/fiscal` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 2 | `/fiscal/configuracoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 3 | `/fiscal/eventos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 4 | `/fiscal/fornecedores` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 5 | `/fiscal/manifestacoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 6 | `/fiscal/notas` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/0 (regras: nenhuma) — o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
+| 8 | `/fiscal/pendentes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 9 | `/fiscal/produtos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 10 | `/fiscal/relatorios` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 11 | `/fiscal/resumos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 
 ### 4. Expedição — 7 telas, 7 medidas
 
@@ -153,10 +153,10 @@ escrito à mão).
 | 3 | `/integrations/nuvemshop` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
 | 4 | `/inteligencia` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 5 | `/lgpd/requests` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
-| 6 | `/lgpd/requests/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo; no estado atual também redireciona para a home |
+| 6 | `/lgpd/requests/[id]` · dinâmica | — (pulada) | — | — | pendente — bloqueada: sem id de exemplo — rota dinâmica sem id de exemplo; no estado atual também redireciona para a home |
 | 7 | `/products` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 8 | `/prospeccao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 9 | `/prospeccao/campanhas/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo; no estado atual também redireciona para a home |
+| 9 | `/prospeccao/campanhas/[id]` · dinâmica | — (pulada) | — | — | pendente — bloqueada: sem id de exemplo — rota dinâmica sem id de exemplo; no estado atual também redireciona para a home |
 | 10 | `/prospeccao/nova` | 0/0 px | 0/2 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 11 | `/radar` | 0/0 px | 0/2 | 0 | `label-content-name-mismatch` em 2 botões de atalho (aria-label x texto visível) |
 | 12 | `/radar/categorias` | 0/0 px | 0/1 | 0 | **corrigido**: `Tabs` sem painel (`aria-valid-attr-value`, CRÍTICO) → grupo com `aria-pressed` |
@@ -191,27 +191,27 @@ escrito à mão).
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/ai` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 2 | `/ai/agents` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 3 | `/ai/agents/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
-| 4 | `/ai/agents/new` | 0/0 px | 0/0 | 0 | **403 por papel**: rota exige admin e a medição usa `manager` (esperado) |
-| 5 | `/ai/cases` | 0/0 px | 0/1 | 0 | limpo após o #716 |
-| 6 | `/ai/controle` | 0/0 px | 0/2 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 7 | `/ai/credentials` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 8 | `/ai/decisoes` | 0/0 px | 0/1 | 0 | limpo após o #716 |
-| 9 | `/ai/evolution` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 10 | `/ai/followups` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 11 | `/ai/followups/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
-| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
-| 13 | `/ai/inbox` | 0/0 px | 0/1 | 0 | limpo após o #716 (a aba fantasma era o crítico desta tela) |
-| 14 | `/ai/knowledge/sources` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 15 | `/ai/memory` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 16 | `/ai/proposals` | 0/0 px | 0/1 | 0 | limpo após o #716 |
-| 17 | `/ai/providers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) — **3/4**: a combinação light/1440 não pintou `<h1>` e ficou fora |
-| 18 | `/ai/routers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
-| 19 | `/ai/routers/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
-| 20 | `/ai/runs` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) — **3/4**: a combinação light/1440 não pintou `<h1>` e ficou fora |
-| 21 | `/ai/skills` | 0/0 px | 0/1 | 0 | **corrigido**: aviso informativo em `text-text-muted` sobre `accent-soft` não passava AA no escuro (`color-contrast`) → `text-text` |
-| 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **corrigido**: barra `role="progressbar"` sem nome no cartão de orçamento (`aria-progressbar-name`) → `aria-label`; depois, axe sério 0 fora o shell |
+| 1 | `/ai` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 2 | `/ai/agents` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 3 | `/ai/agents/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 4 | `/ai/agents/new` | — (pulada) | — | — | **inválida** — a rota responde 403 como destino; a linha não conta como aplicada — a rota responde 403 como destino |
+| 5 | `/ai/cases` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 6 | `/ai/controle` | 0/0 px | 0/2 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/2 (regras: color-contrast (serious), label-content-name-mismatch (serious)) |
+| 7 | `/ai/credentials` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 8 | `/ai/decisoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 9 | `/ai/evolution` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 10 | `/ai/followups` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 11 | `/ai/followups/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 13 | `/ai/inbox` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 14 | `/ai/knowledge/sources` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 15 | `/ai/memory` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 16 | `/ai/proposals` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 17 | `/ai/providers` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 18 | `/ai/routers` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 19 | `/ai/routers/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 20 | `/ai/runs` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 21 | `/ai/skills` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 
 <!-- MATRIZ:FIM -->

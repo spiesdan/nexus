@@ -117,11 +117,7 @@ interface PagavelDaLinha {
  * que ela vai lançar — e desabilitada enquanto a conferência não estiver
  * aprovada.
  */
-export default async function NotaDeEntradaPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function NotaDeEntradaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { org, podeGerir, podeOperar, user } = await contextoFiscal();
   const tagIdioma = tagDeIdioma(user.idioma);
@@ -210,12 +206,11 @@ export default async function NotaDeEntradaPage({
   // nada e só criaria a impressão de que move.
   const associacaoBloqueada = entrada.status === "importada" || entrada.status === "ignorada";
 
-  const temXml = !!entrada.xml && Array.isArray(entrada.itens_json) && entrada.itens_json.length > 0;
+  const temXml =
+    !!entrada.xml && Array.isArray(entrada.itens_json) && entrada.itens_json.length > 0;
   const t = entrada.totais_json ?? {};
-  const data = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleDateString(tagIdioma) : "—";
-  const dataHora = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleString(tagIdioma) : "—";
+  const data = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString(tagIdioma) : "—");
+  const dataHora = (iso: string | null) => (iso ? new Date(iso).toLocaleString(tagIdioma) : "—");
 
   return (
     <div className="space-y-6">
@@ -225,7 +220,7 @@ export default async function NotaDeEntradaPage({
         actions={
           <Link
             href="/app/fiscal/notas"
-            className="text-sm text-accent underline-offset-4 hover:underline"
+            className="text-sm text-accent-ink underline-offset-4 hover:underline"
           >
             ← Todas as notas
           </Link>
@@ -250,7 +245,7 @@ export default async function NotaDeEntradaPage({
             <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-muted-foreground">Chave de acesso</dt>
-                <dd className="break-all font-mono text-xs">{entrada.chave}</dd>
+                <dd className="font-mono text-xs break-all">{entrada.chave}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Protocolo</dt>
@@ -278,7 +273,7 @@ export default async function NotaDeEntradaPage({
                   {fornecedor ? (
                     <Link
                       href="/app/fiscal/fornecedores"
-                      className="text-accent underline-offset-4 hover:underline"
+                      className="text-accent-ink underline-offset-4 hover:underline"
                     >
                       {fornecedor.nome}
                     </Link>
@@ -314,7 +309,7 @@ export default async function NotaDeEntradaPage({
               {entrada.xml && (
                 <a
                   href={`/api/v1/fiscal-entradas/${entrada.id}/xml`}
-                  className="text-sm text-accent underline-offset-4 hover:underline"
+                  className="text-sm text-accent-ink underline-offset-4 hover:underline"
                 >
                   Baixar XML
                 </a>
@@ -349,9 +344,7 @@ export default async function NotaDeEntradaPage({
                           <span className="block max-w-72 truncate" title={item.descricao}>
                             {item.descricao}
                           </span>
-                          <span className="block text-xs text-muted-foreground">
-                            {item.codigo}
-                          </span>
+                          <span className="block text-xs text-muted-foreground">{item.codigo}</span>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {item.ncm ?? "—"} / {item.cfop ?? "—"}
@@ -362,7 +355,9 @@ export default async function NotaDeEntradaPage({
                             itemId={item.id}
                             produtoId={item.produto_id}
                             produtoNome={
-                              item.produto_id ? (nomesPorProduto.get(item.produto_id) ?? null) : null
+                              item.produto_id
+                                ? (nomesPorProduto.get(item.produto_id) ?? null)
+                                : null
                             }
                             podeGerir={podeGerir}
                             bloqueado={associacaoBloqueada}
@@ -377,7 +372,7 @@ export default async function NotaDeEntradaPage({
                         <TableCell className="text-right tabular-nums">
                           {comoMoeda(item.valor_total_cents, "BRL")}
                         </TableCell>
-                        <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
+                        <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
                           {comoMoeda(
                             item.icms_cents + item.ipi_cents + item.pis_cents + item.cofins_cents,
                             "BRL",

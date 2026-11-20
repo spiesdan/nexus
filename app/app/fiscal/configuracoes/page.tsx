@@ -39,8 +39,8 @@ export default async function ConfiguracoesFiscaisPage() {
   const tagIdioma = tagDeIdioma(user.idioma);
   const supabase = await createClient();
 
-  const [{ data: configRaw }, { data: certRaw }, { data: cursorRaw }, presente] =
-    await Promise.all([
+  const [{ data: configRaw }, { data: certRaw }, { data: cursorRaw }, presente] = await Promise.all(
+    [
       supabase.from("fiscal_settings").select("*").eq("organization_id", org.orgId).maybeSingle(),
       supabase
         .from("fiscal_certificates")
@@ -54,7 +54,8 @@ export default async function ConfiguracoesFiscaisPage() {
         .eq("organization_id", org.orgId)
         .maybeSingle(),
       certificadoPresenteNoServidor(org.orgId),
-    ]);
+    ],
+  );
 
   const config = configRaw as unknown as ConfigFiscalSalva | null;
   const certificado = certRaw as unknown as {
@@ -80,7 +81,7 @@ export default async function ConfiguracoesFiscaisPage() {
         actions={
           <Link
             href="/app/notas?aba=config"
-            className="text-sm text-accent underline-offset-4 hover:underline"
+            className="text-sm text-accent-ink underline-offset-4 hover:underline"
           >
             Série, CFOP e endereço da emissão →
           </Link>

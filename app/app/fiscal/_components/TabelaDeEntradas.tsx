@@ -231,7 +231,7 @@ export function TabelaDeEntradas({
                     <Link
                       href={`/app/fiscal/notas/${e.id}`}
                       aria-label={t("Abrir a nota")}
-                      className="inline-flex items-center text-accent hover:underline"
+                      className="inline-flex items-center text-accent-ink hover:underline"
                     >
                       <ArrowRight size={16} />
                     </Link>

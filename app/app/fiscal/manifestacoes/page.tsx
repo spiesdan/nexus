@@ -29,14 +29,12 @@ interface Linha {
   resultado: string;
   mensagem: string | null;
   created_at: string;
-  fiscal_entradas:
-    | {
-        chave: string;
-        numero: number | null;
-        serie: string | null;
-        emitente_nome: string;
-      }
-    | null;
+  fiscal_entradas: {
+    chave: string;
+    numero: number | null;
+    serie: string | null;
+    emitente_nome: string;
+  } | null;
 }
 
 /**
@@ -72,11 +70,7 @@ export default async function ManifestacoesPage() {
         subtitle="Ciência, confirmação, desconhecimento e não realizada — com protocolo e retorno da SEFAZ."
       />
 
-      <RecorteDaLista
-        mostrados={linhas.length}
-        total={count ?? null}
-        descricao="manifestações"
-      />
+      <RecorteDaLista mostrados={linhas.length} total={count ?? null} descricao="manifestações" />
       {linhas.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-6 text-sm text-muted-foreground">
           Nenhuma manifestação enviada ainda. Abra uma nota em Pendentes de Conferência e declare a
@@ -101,12 +95,9 @@ export default async function ManifestacoesPage() {
                     {m.fiscal_entradas ? (
                       <Link
                         href={`/app/fiscal/notas/${m.entrada_id}`}
-                        className="text-accent underline-offset-4 hover:underline"
+                        className="text-accent-ink underline-offset-4 hover:underline"
                       >
-                        {identificacaoDaEntrada(
-                          m.fiscal_entradas.numero,
-                          m.fiscal_entradas.serie,
-                        )}{" "}
+                        {identificacaoDaEntrada(m.fiscal_entradas.numero, m.fiscal_entradas.serie)}{" "}
                         · {m.fiscal_entradas.emitente_nome}
                       </Link>
                     ) : (
