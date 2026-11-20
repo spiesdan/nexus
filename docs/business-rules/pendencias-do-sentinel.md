@@ -3,31 +3,38 @@
 > Itens medidos em produção que **não** podem virar regra por suposição. Cada um
 > traz as opções medidas e o custo; a escolha é do dono.
 
-## 1. `operacao.pedido_preso` — 121 rascunhos antigos, ruído de operação em lote
+## 1. `operacao.pedido_preso` — DECIDIDO (delegado pelo dono, 2026-11-20)
 
-**Medido em 20/11/2026:** 121 rascunhos com mais de 7 dias. Mas:
+**Medição:** 121 rascunhos > 7 dias; **119 são `origem='mercos'`**, **118 sem
+`created_by`**, 20 com valor zero, 99 com itens. Dos 126 rascunhos totais, **apenas
+1 tem autor humano**.
 
-```
-121 rascunhos presos
-120 com o MESMO updated_at: 2026-11-09 19:38:13.052684
- 20 com total_cents = 0
-121 têm updated_at > created_at  ← "nunca editado" NÃO discrimina (um backfill tocou todos)
-```
+**Decisão:** a regra abre **só rascunho com `created_by IS NOT NULL`** (autor
+humano). Rascunho importado e nunca tocado é **resíduo de importação**, não
+trabalho abandonado. **Sem coluna nova e sem migration** — `created_by` já existe.
+Apresentação: ocorrências repetidas da mesma regra viram **um cartão com
+contagem** ("121 rascunhos antigos"), não 15 linhas.
 
-A hipótese "nunca editado = artefato de importação" **caiu**: um backfill atualizou
-`updated_at` de todos. A única assinatura de operação em lote que resta é o
-**timestamp idêntico em 120 registros** — e isso é frágil como regra (o próximo
-backfill muda o valor).
+**Justificativa:** o discriminador confiável não é `updated_at` (um backfill tocou
+todos os 121) nem "nunca editado"; é **quem começou**. Autor humano separa trabalho
+abandonado de resíduo de importação.
 
-### Opções medidas (escolha do dono)
+**Reversão:** uma linha de SQL no filtro (voltar a abrir sem `created_by`).
 
-| Opção | Efeito medido hoje | Custo |
-|---|---|---|
-| **(a)** sinalizar só rascunho com valor (`total_cents > 0`) | 121 → **101** ocorrências | baixo: uma condição no detector; continua ruído de 101 |
-| **(b)** sinalizar só o que teve edição **humana** após a importação | reduz ao que é de fato abandono | alto: exige marca de origem/edição que **não existe** — coluna nova + backfill |
-| **(c)** manter a regra e resolver por **apresentação** (agrupar as N da mesma regra num cartão "121 rascunhos antigos") | 121 ocorrências viram **1 cartão** | baixo: só UI do painel; a regra não muda |
+**Pergunta ao dono (observação, não alerta):** existem **119 rascunhos vindos do
+Mercos que ninguém nunca abriu** — não é falha do Sentinel; é a importação criando
+rascunho para pedido que talvez devesse entrar em outro estado. A resposta não foi
+inventada e a decisão de mudar a importação é do dono.
 
-**Recomendação registrada (não decisão):** (c) + (a) juntas — o cartão resolve o
-ruído visual e o corte por valor elimina os 20 sem valor. A palavra final é do dono.
+## 2. `operacao.lead_duplicado` — DECIDIDO (delegado pelo dono, 2026-11-20)
 
-**Não implementar antes da decisão.** O detector segue como está.
+**Decisão:** **nenhum merge automático.** Mesclar funil é operação comercial —
+perde histórico e muda dono. O painel passa a **identificar** (nome → telefone →
+e-mail → id) e **linkar** cada lead; a decisão é humana. Fechar lead duplicado é
+ação de pessoa, não do vigia.
+
+**Justificativa:** as 5 ocorrências medidas são reais (mesmo contato, dois leads
+abertos) e a ação tem consequência comercial irreversível — automação aqui seria
+poder invisível.
+
+**Reversão:** remover os links/identificação do painel; nenhum dado é tocado.
