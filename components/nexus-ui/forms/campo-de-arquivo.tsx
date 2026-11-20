@@ -64,7 +64,7 @@ export function CampoDeArquivo({
         */}
         <span
           aria-hidden="true"
-          className="pointer-events-none inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 text-sm font-medium text-text lg:h-9"
+          className={`pointer-events-none inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 text-sm font-medium text-text lg:h-9 ${disabled ? "opacity-50" : ""}`}
         >
           {t(rotulo)}
         </span>
