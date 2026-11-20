@@ -30344,6 +30344,12 @@ comment on function public.fn_slo_api_resumo(integer, text[]) is
 -- Ver supabase/migrations/20261123240000_0331_slo_por_rota.sql.
 -- ============================================================================
 
+alter table public.sentinel_occurrences
+  drop constraint if exists sentinel_occurrences_categoria_check;
+alter table public.sentinel_occurrences
+  add constraint sentinel_occurrences_categoria_check
+  check (categoria in ('fiscal', 'operacao', 'financeiro', 'campanha', 'plataforma'));
+
 create or replace function public.fn_slo_api_rotas(
   p_dias integer,
   p_rotas text[]

@@ -9,6 +9,13 @@
 -- `created_at >= ...`; a consulta com 1.000 amostras ficou abaixo de 200 ms no
 -- teste da 0330. Não há índice novo nesta migration.
 
+-- Categoria nova no CHECK de sentinel_occurrences (a 0316 fechou as quatro).
+alter table public.sentinel_occurrences
+  drop constraint if exists sentinel_occurrences_categoria_check;
+alter table public.sentinel_occurrences
+  add constraint sentinel_occurrences_categoria_check
+  check (categoria in ('fiscal', 'operacao', 'financeiro', 'campanha', 'plataforma'));
+
 create or replace function public.fn_slo_api_rotas(
   p_dias integer,
   p_rotas text[]
