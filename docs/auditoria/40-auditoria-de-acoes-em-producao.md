@@ -293,7 +293,29 @@ As três opções medidas (a/b/c) e o custo de cada uma estão em
 | `operacao.pedido_preso` | **15** | ruído de operação em lote (120 rascunhos com o mesmo `updated_at`) | Dono | decisão a/b/c em `business-rules/pendencias-do-sentinel.md` |
 | p95 da API | 1 amostra (1428 ms) | sinal, não medição | G | aguardar série antes de afirmar alvo |
 
-## 16. O que este documento **não** cobre
+## 16. 20/11/2026 — Observação comercial: R$ 218 mil em orçamentos parados no Mercos
+
+**Não é alerta, não é bug.** Medição read-only em produção:
+
+```
+124 rascunhos origem='mercos'
+R$ 218.003,63 no total
+primeiro 2024-10-23 · último 2026-11-19 (ontem)
+0 com previsão de entrega
+```
+
+`workers/mercos/status.mjs:44` mapeia `"Em orçamento": "rascunho"`: esses rascunhos
+são **orçamentos abertos no ERP**, espelhados aqui — não lixo de importação. Por
+isso `operacao.pedido_preso` passa a abrir só com **autor humano**
+(`created_by IS NOT NULL`): orçamento do ERP não é trabalho abandonado pelo nosso
+operador.
+
+**Superfície proposta (não implementada):** “**Orçamentos parados**” — lista com
+**idade**, **valor** e **próximo passo** por orçamento (cobrar, expirar, converter
+em pedido). É o 7º invariante pedindo: nenhuma demanda sem próximo passo. Decisão
+de construir é do dono; nada foi implementado.
+
+## 17. O que este documento **não** cobre
 
 - Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
 - Nenhum pagamento, cobrança ou comunicação externa foi disparado.

@@ -219,3 +219,13 @@ dump pré-deploy cobre o resto.
 próprio: **46 códigos / 422 itens** dependem do **#588** (importador grava
 descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambíguos**
 (decisão humana produto a produto).
+
+
+### Observação comercial — orçamentos parados no Mercos (20/11/2026)
+
+- **124 rascunhos** `origem='mercos'`, **R$ 218.003,63**, primeiro **2024-10-23**,
+  último **2026-11-19**, **0 com previsão de entrega**.
+- São **orçamentos abertos no ERP** (`status.mjs:44` mapeia "Em orçamento" →
+  "rascunho"), não resíduo de importação.
+- Proposta registrada e **não implementada**: superfície “Orçamentos parados” com
+  idade, valor e próximo passo por orçamento.

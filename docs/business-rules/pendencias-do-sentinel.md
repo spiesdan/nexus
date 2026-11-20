@@ -10,10 +10,18 @@
 1 tem autor humano**.
 
 **Decisão:** a regra abre **só rascunho com `created_by IS NOT NULL`** (autor
-humano). Rascunho importado e nunca tocado é **resíduo de importação**, não
-trabalho abandonado. **Sem coluna nova e sem migration** — `created_by` já existe.
+humano). **Sem coluna nova e sem migration** — `created_by` já existe.
 Apresentação: ocorrências repetidas da mesma regra viram **um cartão com
 contagem** ("121 rascunhos antigos"), não 15 linhas.
+
+**Correção de interpretação (medida no código):** os rascunhos `origem='mercos'`
+**não são resíduo de importação** — `workers/mercos/status.mjs:44` mapeia
+`"Em orçamento": "rascunho"`, ou seja, são **orçamentos abertos no ERP**
+espelhados aqui. Medido: **124 rascunhos**, **R$ 218.003,63**, primeiro em
+**2024-10-23**, último em **2026-11-19**, **0 com previsão de entrega**. Não é
+trabalho abandonado pelo operador nem alerta operacional; é **orçamento do ERP**
+com idade. A decisão A continua correta e fica mais forte: autor humano separa
+trabalho do nosso operador de espelho do ERP.
 
 **Justificativa:** o discriminador confiável não é `updated_at` (um backfill tocou
 todos os 121) nem "nunca editado"; é **quem começou**. Autor humano separa trabalho
