@@ -1,0 +1,352 @@
+{
+  "base": "http://localhost:3001",
+  "rotulo": "varredura-2026-11-20",
+  "medidas": [
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Recuperar senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "input#email 318x40",
+          "button 318x36",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Definir nova senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "input#password 318x40",
+          "input#password_confirm 318x40",
+          "button 318x36"
+        ]
+      },
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 2,
+        "exemplos": [
+          "a 79x36",
+          "a 140x36"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Recuperar senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 2,
+        "exemplos": [
+          "input#email 276x40",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Definir nova senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 2,
+        "exemplos": [
+          "input#password 276x40",
+          "input#password_confirm 276x40"
+        ]
+      },
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 0,
+        "exemplos": []
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Recuperar senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "input#email 318x40",
+          "button 318x36",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "Definir nova senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 3,
+        "exemplos": [
+          "input#password 318x40",
+          "input#password_confirm 318x40",
+          "button 318x36"
+        ]
+      },
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 2,
+        "exemplos": [
+          "a 79x36",
+          "a 140x36"
+        ]
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-forgot",
+      "urlFinal": "/login/forgot",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Recuperar senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 2,
+        "exemplos": [
+          "input#email 276x40",
+          "a 38x17"
+        ]
+      },
+      "contraste": {
+        "total": 6,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "login-reset",
+      "urlFinal": "/login/reset",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "Definir nova senha",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 3,
+        "pequenos": 2,
+        "exemplos": [
+          "input#password 276x40",
+          "input#password_confirm 276x40"
+        ]
+      },
+      "contraste": {
+        "total": 5,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "403",
+      "urlFinal": "/403",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": "403 — Sem permissão",
+      "redirecionou": false,
+      "console": [],
+      "toque": {
+        "total": 2,
+        "pequenos": 0,
+        "exemplos": []
+      },
+      "contraste": {
+        "total": 4,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}
