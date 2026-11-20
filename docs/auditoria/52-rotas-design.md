@@ -72,7 +72,8 @@ Captura `capturas/rota-antes-light-1440.png` (carga 010, 3 paradas):
 | Overflow horizontal | **0** em 1440 e 390 |
 | Console | **0** |
 | Texto de algoritmo na superfície | **0** (era 3 rótulos) |
-| Lista de paradas na 1ª dobra (1440) | **não** — topo em ~940 px com o mapa no piso de 50vh; é a fatia 2 que a traz |
+| Lista de paradas na 1ª dobra (1440×900) | **não** com 50vh (topo em ~940 px) · **73 px** com 42vh (topo em 828) |
+| Lista de paradas na 1ª dobra (1280×800) | **0 px nos dois** (topo em ~970 com 58vh, ~842 com 42vh) |
 
 Capturas: `capturas/rota-antes-*-1440.png` e `capturas/rota-depois-*-1440.png`.
 
@@ -94,3 +95,18 @@ Capturas: `capturas/rota-antes-*-1440.png` e `capturas/rota-depois-*-1440.png`.
 ## Fora do escopo
 
 Nenhuma regra de capacidade, janela, prioridade ou arredondamento foi tocada.
+
+### Por que o mapa ficou em 50vh (decisão medida)
+
+| Altura do mapa | 1440×900 | 1280×800 |
+| --- | --- | --- |
+| `min(58vh, 640px)` | mapa 522 · painel em 972 · **0 px visível** | mapa 464 · painel em 970 · **0 px** |
+| `min(42vh, 460px)` | mapa 378 · painel em 828 · **73 px visível** | mapa 336 · painel em 842 · **0 px** |
+| `min(50vh, 520px)` (atual) | mapa 450 · painel em 900 · **0 px** | mapa 400 · painel em 906 · **0 px** |
+
+Os 42vh ganham **73 px** de painel num tamanho e **nada** no outro — e custam
+42 px de mapa na tela em que o despachante trabalha. Não é troca que se pague:
+o que falta para a lista entrar na dobra são os ~90 px da faixa de cinco
+métricas, e isso é a **fatia 2** — encolher o mapa é o jeito caro de resolver.
+O gate `expedicao-pagina-de-rota-layout` (piso de 50vh) fica como está; o
+número agora tem a medição ao lado.
