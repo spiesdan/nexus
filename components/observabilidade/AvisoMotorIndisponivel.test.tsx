@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (texto: string) => texto }));
+vi.mock("@/hooks/i18n/useLocaleDeData", () => ({ useTagDeIdioma: () => "pt-BR" }));
 
 import { AvisoMotorIndisponivel } from "@/components/observabilidade/AvisoMotorIndisponivel";
 import type { SaudeDoMotor } from "@/lib/laya/saude";

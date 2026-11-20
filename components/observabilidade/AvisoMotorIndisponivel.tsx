@@ -1,6 +1,7 @@
 "use client";
 
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import type { SaudeDoMotor } from "@/hooks/observabilidade/useSaudeDoMotor";
 import { Warning } from "@/lib/ui/icons";
 
@@ -22,10 +23,11 @@ export function AvisoMotorIndisponivel({
   contexto: "radar" | "prospeccao";
 }) {
   const t = useT();
+  const tag = useTagDeIdioma();
   if (!saude || saude.estado !== "indisponivel") return null;
 
   const quando = saude.ultima_falha
-    ? new Date(saude.ultima_falha).toLocaleString()
+    ? new Date(saude.ultima_falha).toLocaleString(tag)
     : null;
 
   return (
