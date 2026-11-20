@@ -518,3 +518,26 @@ instrumento** saíram do placar (368 → 341); antes, contavam como cobertura.
    lição do esqueleto do estoque: ausência observada cedo demais não é ausência.
 2. **Redirect não é tela**: `/titulos → /financeiro` entra como `redirect`, medido no
    **destino**.
+
+## 26. 21/11/2026 — Regressão do passe de `settings` deixou a `main` vermelha
+
+**Medido:** quatro PRs de frentes diferentes (**#733 D, #736/#737/#738 G**) falhavam
+**os mesmos três testes** de configuração de notificação:
+
+- `controle-decorativo` — botão sem `onClick`;
+- `permissao-lida-no-primeiro-render` — permissão concedida e interruptor nascendo
+  desabilitado;
+- push desabilitado sem VAPID — “conserto exagerado”, que tira o aviso com a aba
+  aberta junto.
+
+Falha idêntica em branches independentes = **a regressão mora na `main`**, no
+passe de `settings` (#732, do D). A `main` (`65bea4ccb`) ficou com `verify`
+**failure**.
+
+**Custo:** 4 PRs parados, uma rodada perdida e todo mundo re-testando o mesmo.
+Correção no **#740** (`fix(settings): destrava o verify da main em dois gates
+alheios`).
+
+**Lição:** **teste de invariante de UI que quebra na `main` bloqueia a fila
+inteira**; rodar `pnpm test:unit` local antes do push (ou o teste dirigido do
+arquivo) teria evitado. Mergear em cima de vermelho só espalha a falha.
