@@ -131,7 +131,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/radar/risco` | radar | **pendente** | — | D |
 | `/app/recuperacao` | recuperacao | **pendente** | — | D |
 | `/app/relatorios` | relatorios | **pendente** | — | D |
-| `/app/sentinel` | sentinel | **pendente** | — | D |
+| `/app/sentinel` | sentinel | **aplicado** | #652 · `49-sentinel-design.md` · `capturas/{antes,depois}-sentinel/` + `sentinel-detalhe-*` | D |
 | `/app/settings/api-tokens` | settings | **pendente** | — | D |
 | `/app/settings/atendimento` | settings | **pendente** | — | D |
 | `/app/settings/atualizacao` | settings | **pendente** | — | D |
@@ -247,7 +247,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/compras` | sim | pendente | — |
 | `/app/expedicao` | sim | aplicado | #607 · `40-expedicao-design.md` |
 | `/app/frota` | sim | pendente | — |
-| `/app/sentinel` | sim | pendente | — |
+| `/app/sentinel` | sim | aplicado | #652 · `49-sentinel-design.md` · `capturas/{antes,depois}-sentinel/` |
 | `/app/campanhas` | sim | pendente | — |
 | `/app/laboratorio` | sim | pendente | — |
 | `/app/venda-automatica` | sim | pendente | — |

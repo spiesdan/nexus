@@ -87,10 +87,7 @@ const ROTULO_SEVERIDADE: Record<Severidade, string> = {
   critica: "Crítica",
 };
 
-const VARIANTE_SEVERIDADE: Record<
-  Severidade,
-  "neutral" | "info" | "warning" | "error"
-> = {
+const VARIANTE_SEVERIDADE: Record<Severidade, "neutral" | "info" | "warning" | "error"> = {
   info: "neutral",
   baixa: "neutral",
   media: "info",
@@ -169,10 +166,7 @@ const ROTULO_REVERSIBILIDADE: Record<Recomendacao["reversibilidade"], string> = 
   irreversivel: "Irreversível",
 };
 
-const VARIANTE_RISCO: Record<
-  Recomendacao["risco"],
-  "success" | "warning" | "error"
-> = {
+const VARIANTE_RISCO: Record<Recomendacao["risco"], "success" | "warning" | "error"> = {
   baixo: "success",
   medio: "warning",
   alto: "error",
@@ -223,8 +217,7 @@ export function SentinelClient({
     const abertas = ocorrencias.filter((o) => !TERMINAIS.has(o.estado));
     return {
       abertas: abertas.length,
-      criticas: abertas.filter((o) => o.severidade === "critica" || o.severidade === "alta")
-        .length,
+      criticas: abertas.filter((o) => o.severidade === "critica" || o.severidade === "alta").length,
       acao: abertas.filter((o) => o.estado === "acao_necessaria").length,
       recorrentes: abertas.filter((o) => o.estado === "recorrente").length,
     };
@@ -232,29 +225,41 @@ export function SentinelClient({
 
   const filtradas = React.useMemo(() => {
     const texto = busca.trim().toLowerCase();
-    return ocorrencias
-      .filter((o) => {
-        if (estadoFiltro === "abertas" && TERMINAIS.has(o.estado)) return false;
-        if (estadoFiltro === "fechadas" && !TERMINAIS.has(o.estado)) return false;
-        if (
-          estadoFiltro !== "abertas" &&
-          estadoFiltro !== "fechadas" &&
-          estadoFiltro !== "todas" &&
-          o.estado !== estadoFiltro
-        ) {
-          return false;
-        }
-        if (severidadeFiltro !== "todas" && o.severidade !== severidadeFiltro) return false;
-        if (categoriaFiltro !== "todas" && o.categoria !== categoriaFiltro) return false;
-        if (texto === "") return true;
-        const alvo = `${o.titulo} ${o.resumo ?? ""} ${o.regra} ${o.entidade_id}`.toLowerCase();
-        return alvo.includes(texto);
-      })
-      .sort((a, b) => {
-        const peso = PESO_SEVERIDADE[b.severidade] - PESO_SEVERIDADE[a.severidade];
-        if (peso !== 0) return peso;
-        return Date.parse(b.ultima_vista_em) - Date.parse(a.ultima_vista_em);
-      });
+    return (
+      ocorrencias
+        .filter((o) => {
+          if (estadoFiltro === "abertas" && TERMINAIS.has(o.estado)) return false;
+          if (estadoFiltro === "fechadas" && !TERMINAIS.has(o.estado)) return false;
+          if (
+            estadoFiltro !== "abertas" &&
+            estadoFiltro !== "fechadas" &&
+            estadoFiltro !== "todas" &&
+            o.estado !== estadoFiltro
+          ) {
+            return false;
+          }
+          if (severidadeFiltro !== "todas" && o.severidade !== severidadeFiltro) return false;
+          if (categoriaFiltro !== "todas" && o.categoria !== categoriaFiltro) return false;
+          if (texto === "") return true;
+          const alvo = `${o.titulo} ${o.resumo ?? ""} ${o.regra} ${o.entidade_id}`.toLowerCase();
+          return alvo.includes(texto);
+        })
+        /*
+         * A MAIS NOVA PRIMEIRO — e a severidade continua mandando no peso visual.
+         *
+         * Antes a lista era ordenada por peso de severidade: uma crítica de
+         * ontem ficava acima de uma crítica de agora, e quem abre o painel no
+         * meio do dia via primeiro o que já foi visto. A pergunta operacional é
+         * "o que apareceu agora"; a severidade responde "quanto isso importa",
+         * e ela é lida na cor do selo e na faixa da linha, não na posição.
+         * Empate de horário cai no peso, para a ordem ser estável.
+         */
+        .sort((a, b) => {
+          const quando = Date.parse(b.ultima_vista_em) - Date.parse(a.ultima_vista_em);
+          if (quando !== 0) return quando;
+          return PESO_SEVERIDADE[b.severidade] - PESO_SEVERIDADE[a.severidade];
+        })
+    );
   }, [ocorrencias, busca, estadoFiltro, severidadeFiltro, categoriaFiltro]);
 
   async function abrirDetalhe(ocorrencia: OcorrenciaSentinel) {
@@ -345,9 +350,7 @@ export function SentinelClient({
   }
 
   const alvosPermitidos = (ocorrencia: OcorrenciaSentinel): EstadoOcorrencia[] =>
-    TRANSICOES[ocorrencia.estado].filter(
-      (para) => podeGerir || !ALVOS_DE_GESTOR.includes(para),
-    );
+    TRANSICOES[ocorrencia.estado].filter((para) => podeGerir || !ALVOS_DE_GESTOR.includes(para));
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
@@ -403,7 +406,11 @@ export function SentinelClient({
           tom={contagem.criticas > 0 ? "erro" : undefined}
         />
         <Indicador rotulo="Ação necessária" valor={contagem.acao} detalhe="esperando decisão" />
-        <Indicador rotulo="Recorrentes" valor={contagem.recorrentes} detalhe="já aconteceram antes" />
+        <Indicador
+          rotulo="Recorrentes"
+          valor={contagem.recorrentes}
+          detalhe="já aconteceram antes"
+        />
       </div>
 
       <Card>
@@ -485,10 +492,14 @@ export function SentinelClient({
           {filtradas.length === 0 ? (
             <NexusEmptyState
               icon={CheckCircle}
-              headline={ocorrencias.length === 0 ? "Nenhuma ocorrência ainda" : "Nada com esse filtro"}
+              headline={
+                ocorrencias.length === 0
+                  ? "Nenhuma ocorrência — e isso é boa notícia"
+                  : "Nada com esse filtro"
+              }
               subcopy={
                 ocorrencias.length === 0
-                  ? "Execute uma varredura para conferir notas, pedidos, estoque, recebíveis, filas e campanhas."
+                  ? "A última varredura não encontrou inconsistência em notas, pedidos, estoque, recebíveis, filas ou campanhas. Se quiser conferir de novo, execute uma varredura."
                   : "Ajuste os filtros para ver outras ocorrências."
               }
             />
@@ -507,9 +518,28 @@ export function SentinelClient({
                 </TableHeader>
                 <TableBody>
                   {filtradas.map((o) => (
-                    <TableRow key={o.id}>
+                    <TableRow key={o.id} className="relative">
+                      {/* A FAIXA À ESQUERDA: a severidade tem que ser lida de
+                          longe, antes do texto. Crítica pinta a borda inteira;
+                          alta, meia; média, um traço. */}
+                      <span
+                        aria-hidden
+                        className={
+                          "absolute inset-y-0 left-0 w-0.5 " +
+                          (o.severidade === "critica"
+                            ? "bg-error"
+                            : o.severidade === "alta"
+                              ? "bg-warning"
+                              : o.severidade === "media"
+                                ? "bg-info"
+                                : "bg-border")
+                        }
+                      />
                       <TableCell>
-                        <Badge variant={VARIANTE_SEVERIDADE[o.severidade]}>
+                        <Badge
+                          variant={VARIANTE_SEVERIDADE[o.severidade]}
+                          className={o.severidade === "critica" ? "font-semibold" : undefined}
+                        >
                           {ROTULO_SEVERIDADE[o.severidade]}
                         </Badge>
                       </TableCell>
@@ -529,7 +559,7 @@ export function SentinelClient({
                           </span>
                         </button>
                       </TableCell>
-                      <TableCell className="hidden capitalize text-text-muted md:table-cell">
+                      <TableCell className="hidden text-text-muted capitalize md:table-cell">
                         {o.categoria}
                       </TableCell>
                       <TableCell>
@@ -552,7 +582,10 @@ export function SentinelClient({
         </CardContent>
       </Card>
 
-      <Dialog open={detalhe !== null || abrindo} onOpenChange={(aberto) => !aberto && setDetalhe(null)}>
+      <Dialog
+        open={detalhe !== null || abrindo}
+        onOpenChange={(aberto) => !aberto && setDetalhe(null)}
+      >
         <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
           {abrindo || !detalhe ? (
             <div className="flex items-center gap-2 py-8 text-sm text-text-muted">
@@ -610,8 +643,12 @@ export function SentinelClient({
                     <section className="rounded-lg border border-border bg-surface-elevated/50 p-4">
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <h3 className="font-medium text-text">Plano de correção (revisável)</h3>
-                        <Badge variant={VARIANTE_RISCO[plano.risco]}>{ROTULO_RISCO[plano.risco]}</Badge>
-                        <Badge variant="neutral">{ROTULO_REVERSIBILIDADE[plano.reversibilidade]}</Badge>
+                        <Badge variant={VARIANTE_RISCO[plano.risco]}>
+                          {ROTULO_RISCO[plano.risco]}
+                        </Badge>
+                        <Badge variant="neutral">
+                          {ROTULO_REVERSIBILIDADE[plano.reversibilidade]}
+                        </Badge>
                         <Badge variant="info">Confiança {plano.confianca}</Badge>
                         {plano.exige_aprovacao ? (
                           <Badge variant="warning">Exige aprovação</Badge>
@@ -620,7 +657,7 @@ export function SentinelClient({
 
                       <p className="text-sm text-text">{plano.resumo}</p>
 
-                      <h4 className="mt-3 text-xs font-medium uppercase tracking-wide text-text-muted">
+                      <h4 className="mt-3 text-xs font-medium tracking-wide text-text-muted uppercase">
                         Passos
                       </h4>
                       <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-text-muted">
@@ -631,7 +668,7 @@ export function SentinelClient({
 
                       {plano.campos_pendentes.length > 0 ? (
                         <>
-                          <h4 className="mt-3 text-xs font-medium uppercase tracking-wide text-text-muted">
+                          <h4 className="mt-3 text-xs font-medium tracking-wide text-text-muted uppercase">
                             Campos pendentes
                           </h4>
                           <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-text-muted">
@@ -671,15 +708,29 @@ export function SentinelClient({
                 ) : null}
 
                 <section>
+                  {/* A EVIDÊNCIA É O CORAÇÃO DA TELA — e era um bloco de JSON.
+                      Quem investiga precisa ler campo por campo ("qual nota?",
+                      "qual valor?", "qual cst?") sem decodificar chaves. Os
+                      campos vêm rotulados e o JSON bruto continua disponível,
+                      recolhido, para quem quiser conferir a origem. */}
                   <h3 className="mb-1 font-medium text-text">Evidência</h3>
-                  <pre className="max-h-64 overflow-auto rounded-md border border-border bg-surface-elevated p-3 text-xs text-text-muted">
-                    {JSON.stringify(detalhe.ocorrencia.evidencia, null, 2)}
-                  </pre>
+                  <CamposDaEvidencia evidencia={detalhe.ocorrencia.evidencia} />
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs text-text-muted hover:text-text">
+                      Ver JSON bruto
+                    </summary>
+                    <pre className="mt-1 max-h-64 overflow-auto rounded-md border border-border bg-surface-elevated p-3 text-xs text-text-muted">
+                      {JSON.stringify(detalhe.ocorrencia.evidencia, null, 2)}
+                    </pre>
+                  </details>
                 </section>
 
                 <section className="grid gap-2 text-xs text-text-muted sm:grid-cols-2">
                   <span>Entidade: {detalhe.ocorrencia.entidade_tipo}</span>
-                  <span>Vista pela primeira vez: {quando(detalhe.ocorrencia.primeira_vista_em, tagDeIdioma)}</span>
+                  <span>
+                    Vista pela primeira vez:{" "}
+                    {quando(detalhe.ocorrencia.primeira_vista_em, tagDeIdioma)}
+                  </span>
                   <span>Última vez: {quando(detalhe.ocorrencia.ultima_vista_em, tagDeIdioma)}</span>
                   <span>Repetições: {detalhe.ocorrencia.vezes_vista}×</span>
                   {detalhe.ocorrencia.ignorada_motivo ? (
@@ -733,7 +784,9 @@ export function SentinelClient({
                       <Button
                         key={para}
                         size="sm"
-                        variant={para === "encerrada" || para === "ignorada" ? "outline" : "default"}
+                        variant={
+                          para === "encerrada" || para === "ignorada" ? "outline" : "default"
+                        }
                         onClick={() => {
                           setMotivo("");
                           setAcao({ ocorrencia: detalhe.ocorrencia, para });
@@ -871,13 +924,17 @@ export function SentinelClient({
             </div>
 
             <p className="text-xs text-text-muted">
-              A retenção só apaga ocorrências em estado terminal (corrigida, ignorada ou
-              encerrada) e tem piso de 30 dias no banco. Ocorrência aberta nunca é apagada.
+              A retenção só apaga ocorrências em estado terminal (corrigida, ignorada ou encerrada)
+              e tem piso de 30 dias no banco. Ocorrência aberta nunca é apagada.
             </p>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfigAberta(false)} disabled={salvandoConfig}>
+            <Button
+              variant="outline"
+              onClick={() => setConfigAberta(false)}
+              disabled={salvandoConfig}
+            >
               Cancelar
             </Button>
             <Button onClick={() => void salvarConfig()} disabled={salvandoConfig}>
@@ -905,7 +962,7 @@ function Indicador({
   return (
     <Card>
       <CardContent className="pt-5">
-        <p className="text-xs font-medium uppercase tracking-wide text-text-muted">{rotulo}</p>
+        <p className="text-xs font-medium tracking-wide text-text-muted uppercase">{rotulo}</p>
         <p
           className={
             tom === "erro" && valor > 0
@@ -918,5 +975,65 @@ function Indicador({
         <p className="text-xs text-text-muted">{detalhe}</p>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * EVIDÊNCIA EM CAMPOS, NÃO EM PARÁGRAFO.
+ *
+ * O motor determinístico grava `evidencia` como objeto (nota, pedido, valores,
+ * cst…). Renderizar `JSON.stringify` num `<pre>` preserva o dado e esconde a
+ * leitura: quem investiga rola, decodifica chave e tenta achar o número que
+ * importa. Aqui cada chave vira rótulo e cada valor vira valor — com números e
+ * identificadores em `tabular-nums`/mono, que é onde o olho confere dígito.
+ *
+ * Nada é calculado: campo ausente não vira zero, e valor aninhado é mostrado
+ * como JSON curto em vez de virar "[object Object]".
+ */
+function CamposDaEvidencia({ evidencia }: { evidencia: unknown }) {
+  if (evidencia === null || evidencia === undefined) {
+    return <p className="text-sm text-text-muted">Sem evidência registrada.</p>;
+  }
+  if (typeof evidencia !== "object" || Array.isArray(evidencia)) {
+    return (
+      <pre className="max-h-48 overflow-auto rounded-md border border-border bg-surface-elevated p-3 text-xs text-text-muted">
+        {JSON.stringify(evidencia, null, 2)}
+      </pre>
+    );
+  }
+
+  const rotulo = (chave: string) =>
+    chave
+      .replace(/[_.]/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/^./, (c) => c.toUpperCase());
+
+  const valor = (v: unknown) => {
+    if (v === null || v === undefined) return <span className="text-text-subtle">—</span>;
+    if (typeof v === "boolean") return v ? "sim" : "não";
+    if (typeof v === "number") return <span className="tabular-nums">{v}</span>;
+    if (typeof v === "string") {
+      return /^[A-Za-z0-9_-]{8,}$/.test(v) && !/\s/.test(v) ? (
+        <span className="font-mono text-xs">{v}</span>
+      ) : (
+        v
+      );
+    }
+    return <span className="font-mono text-xs">{JSON.stringify(v)}</span>;
+  };
+
+  const entradas = Object.entries(evidencia as Record<string, unknown>);
+
+  return (
+    <dl className="grid gap-x-4 gap-y-1.5 rounded-md border border-border bg-surface-elevated/40 p-3 text-sm sm:grid-cols-2">
+      {entradas.map(([chave, v]) => (
+        <div key={chave} className="min-w-0">
+          <dt className="text-[10px] font-semibold tracking-[0.1em] text-text-muted uppercase">
+            {rotulo(chave)}
+          </dt>
+          <dd className="truncate text-text">{valor(v)}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
