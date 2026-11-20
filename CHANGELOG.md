@@ -8,6 +8,55 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.61.1] — 2026-11-20
+
+### Alterado
+
+- **Telas de acesso pousam no mesmo cartão das telas de estado** As seis telas de acesso (entrar, cadastro, esqueci minha senha, recuperação,
+  redefinir e MFA) flutuavam soltas sobre o fundo. No desktop, o formulário de
+  entrar era texto no vazio — sem superfície que dissesse onde se digita — enquanto
+  a `/503`, a um passo dali, já era um cartão com borda e raio. Agora as seis
+  compartilham o mesmo cartão do resto do produto, definido uma vez no layout do
+  grupo (não seis cópias que divergem na primeira manutenção).
+
+  O orçamento aberto por link vencido também virou cartão, com o nome da
+  instalação. Antes era texto solto: o cliente que recebe o link por WhatsApp não
+  sabia se o endereço estava errado ou se o sistema tinha caído.
+
+  Nada a fazer na VPS.
+
+### Corrigido
+
+- **Expedição ganha alvos de toque de 44 px no conteúdo** As cinco telas de expedição (lista, detalhe, rota, fechamento e motorista)
+  passaram a garantir 44 px para links, botões e campos dentro do `main`. O
+  instrumento do D media 12/11/11/1/1 alvos abaixo de 40 px no conteúdo; agora
+  mede **0** em todas. A casca global (sidebar de 28 px e topbar de 36 px) não foi
+  tocada para não mudar a densidade de todo o produto — fica como dívida própria.
+
+- **Observabilidade distingue série ligada e ociosa de instrumento mudo** A tela de SLO passou a mostrar quantas amostras existem na janela, a mais antiga,
+  a mais recente e quantas rotas. Zero amostra agora tem texto próprio — “a série
+  está ligada, mas nenhuma requisição autenticada passou pelas rotas quentes desde
+  o deploy” — em vez de se confundir com “sem histórico” de uma série curta.
+
+  O caminho de escrita ganhou defesa: se `after()` lançar, a amostra é persistida
+  direto; se o insert também falhar, sai uma linha de erro `definitivo`. O
+  primeiro caminho continua fora do 200.
+
+- **Nota que fatura vários pedidos não é mais acusada como divergência** Quando uma NF-e fatura dois pedidos, o Sentinel comparava o total da nota com o
+  total de um único pedido e acusava diferença. Agora soma todos os pedidos
+  vinculados (principal e agrupamento) e só abre se a soma divergir; a evidência
+  mostra a decomposição. Pedido ausente do snapshot não abre.
+
+  O mesmo erro de tratar `invoices.order_id` como 1:1 foi corrigido em
+  `nota_autorizada_pedido_nao_faturado`, `nota_sem_vinculo` e
+  `pedido_com_nf_sem_nota`.
+
+- **Sentinel para de truncar por histórico Mercos e encerra por fonte** A coleta Mercos lia 30 dias para regras de 45 minutos e 24 horas; 137 execuções
+  em 30 dias estouravam o teto de 100 e bloqueavam o encerramento de todas as
+  regras. A janela passou a 7 dias (o horizonte das regras) e o teto a 500.
+  O bloqueio por truncamento agora é por fonte: importações Mercos truncadas
+  param só as regras Mercos, e fiscal/estoque/lead continuam encerrando.
+
 ## [1.61.0] — 2026-11-20
 
 ### Adicionado
@@ -8324,7 +8373,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.61.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.61.1...HEAD
+[1.61.1]: https://github.com/spiesdan/nexus/compare/v1.61.0...v1.61.1
 [1.61.0]: https://github.com/spiesdan/nexus/compare/v1.60.0...v1.61.0
 [1.60.0]: https://github.com/spiesdan/nexus/compare/v1.59.1...v1.60.0
 [1.59.1]: https://github.com/spiesdan/nexus/compare/v1.59.0...v1.59.1
