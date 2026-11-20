@@ -8,6 +8,69 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.62.3] — 2026-11-20
+
+### Corrigido
+
+- **Seletor de empresa com nome acessível em 82 rotas** O seletor de empresa (`tenant-switcher`) aparecia para leitores de tela como um
+  controle sem nome: o rótulo visível não iniciava o nome acessível e a inicial era
+  `aria-hidden`, mas ainda entrava no `textContent`.
+  Foram **163 violações sérias** em 82 rotas, medida **6 → 0** depois do conserto.
+
+  O nome acessível agora começa pelo rótulo visível e a inicial decorativa sai do
+  `textContent`. Nenhuma regra de negócio mudou.
+
+  **Nada a fazer na VPS.**
+
+- **Admin — inbox com filtros nomeados, linha legível e h1 estável** Os filtros do inbox não tinham nome acessível, a linha selecionada media
+  1,55:1 no escuro e a conversa não tinha `h1` em nenhuma combinação. O texto de
+  “somente-leitura” e o “Abrir tenant” também reprovavam contraste. Região de
+  mensagens focável, alvos em 40 px e os botões do `StatusPage` idem.
+
+- **Admin passa a ter piso de toque de 44 px em todas as telas da casca** Varredura de 22 rotas de admin (88 medições em build de produção, claro/escuro
+  × 1440/390): 19 telas tinham alvos de 40–36 px, residual da régua anterior. O
+  piso de 44×44 agora mora na casca (`data-admin-shell` + regra escopada), então
+  vale para os filtros que ainda vão nascer. As 22 rotas mediram **0 alvos < 44**, com h1, overflow, axe, console e
+  contraste limpos. Fora da casca, a primitiva `StatusPage` também subiu para
+  44 px; `/admin/forbidden` foi remediado nos 4 contextos depois que o swap
+  liberou (a primeira tentativa foi interrompida pela regra de máquina).
+
+- **Conta suspensa — Sair encerra a sessao e contato ganha alvo de 44 px** O botao Sair da tela de conta suspensa era um link GET para /login: mostrava o
+  formulario de entrada sem encerrar a sessao antiga. Agora e um formulario que
+  chama a mesma Server Action de logout do menu do usuario, com POST medido e
+  redirect para /login.
+
+  O link de contato do operador, quando SUPPORT_EMAIL esta configurado, passou de
+  139x17 para 147x44. As telas 403, 404 e 500 foram verificadas nos quatro
+  criterios (acao que funciona, sem detalhe tecnico, texto proprio e alvo com nome
+  acessivel) e nao precisaram de mudanca.
+
+  Nada a fazer na VPS.
+
+- **Matriz 41 fecha público/auth 25 de 25 — a tela de MFA foi medida** A matriz de cobertura dizia "aplicado" para `/login/mfa` sem nunca ter visto a
+  tela: sem sessão parcial, a rota redireciona para `/login`, e a captura media a
+  tela de login. A régua passou a exigir o **h1** de cada rota, e o item virou
+  pendente com motivo.
+
+  Agora ele foi medido de verdade: login com o admin do E2E parado **antes do segundo fator**. Nas quatro combinações (claro/escuro × 1440/390): h1
+  "Verificação em duas etapas" confirmado, **0** textos abaixo do contraste mínimo,
+  **0** overflow e **0** violação séria no axe.
+
+  Com isso a §2.2 fecha **25 medidas + `/design` como exceção declarada**.
+
+  Nada a fazer na VPS.
+
+- **Links das telas de acesso medidos em 44x44 antes e depois** Sete links de cinco telas publicas (entrar, esqueci a senha, recuperacao,
+  criar conta, voltar e politica de privacidade) tinham a altura do texto:
+  17 a 20 px no celular. Ganharam area de toque de 44x44 com a mesma densidade
+  de antes — o texto e o sublinhado nao mudaram.
+
+  A medicao foi feita nas duas bases: antes e depois, claro/escuro x 1440/390.
+  Nenhum dos sete links ficou abaixo de 44x44. As linhas da matriz 41 so foram
+  fechadas com a medida anexa.
+
+  Nada a fazer na VPS.
+
 ## [1.62.2] — 2026-11-20
 
 ### Alterado
@@ -8647,7 +8710,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.3...HEAD
+[1.62.3]: https://github.com/spiesdan/nexus/compare/v1.62.2...v1.62.3
 [1.62.2]: https://github.com/spiesdan/nexus/compare/v1.62.1...v1.62.2
 [1.62.1]: https://github.com/spiesdan/nexus/compare/v1.62.0...v1.62.1
 [1.62.0]: https://github.com/spiesdan/nexus/compare/v1.61.1...v1.62.0
