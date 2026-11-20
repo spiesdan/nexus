@@ -180,9 +180,10 @@ executa.
 2. `encerradas > 0`;
 3. **`fiscal.divergencia_valor_nota` encerrada** por não-detecção (o falso
    positivo do pedido 19594);
-4. **`fiscal.nota_duplicada_por_pedido` ABERTA** — é achado **real** (pedido
-   19560, NF 4634 + 4644) e **não** deve ser encerrada; a decisão é do
-   dono/contador.
+4. **`fiscal.nota_duplicada_por_pedido` ENCERRADA** — o caso 19560 é **venda +
+   devolução** (4634 finalidade 1; 4644 finalidade 4 com `ref_nfe`), não
+   duplicidade. A regra já ignora finalidade 4; o que a mantinha aberta era o
+   truncamento. **Se continuar aberta depois do deploy, é bug.**
 
 **Publicada:** tag **`v1.61.1`** em **20/11/2026 ~04:00Z**, commit **`476c07f8`**
 (o PR de release #665 foi mergeado com 14 checks verdes). **Isto é tag, não
@@ -220,26 +221,24 @@ outras regras 1:1 faz parte da fatia do G.
 cobrir com 5 casos de teste (um pedido, dois pedidos, três, nota sem vínculo e
 valor realmente divergente).
 
-## 13. 20/11/2026 — Achado fiscal REAL: duas NF-e autorizadas para o mesmo pedido
+## 13. 20/11/2026 — Correção: o caso 19560 é venda + devolução, não duplicidade
 
-**Pedido:** **19560** (concluído, R$ 70,00), `order_id`
-`7a7e781b-0904-4279-870c-288154355d35`.
+**O que foi reportado (errado):** duas NF-e autorizadas para o mesmo pedido 19560
+seriam "faturamento declarado em dobro".
 
-| NF-e | Série | Status | cStat | Valor | Data |
-|---|---|---|---|---|---|
-| **4634** | 1 | autorizada | 100 | R$ 70,00 | 13/11 17:40 |
-| **4644** | 1 | autorizada | 100 | R$ 70,00 | 16/11 18:48 |
+**Medição corrigida no banco:** a **NF 4634** é a **venda** (`finalidade = 1`); a
+**NF 4644** é **devolução** (`extras_fiscais.finalidade = 4`, com `ref_nfe`
+apontando a original). O par venda + devolução é **comportamento correto** — não
+há nota duplicada nem valor em dobro.
 
-**Consequência:** duas notas vivas para o mesmo pedido = **faturamento declarado
-em dobro** para a mesma venda. O detector `fiscal.nota_duplicada_por_pedido`
-**procede**; não é falso positivo.
+**Lição:** **ocorrência cuja evidência não carrega a natureza fiscal é ilegível**
+— e levar a conclusão errada é fácil (o próprio coordenador levou). Toda evidência
+de `fiscal.nota_duplicada_por_pedido` precisa mostrar **finalidade** e
+**`ref_nfe`** das notas envolvidas; sem isso, o detector é ambíguo para quem lê.
 
-**Nada foi tocado.** Cancelar/inutilizar NF é operação fiscal e depende de
-autorização do dono. A correção é **cancelamento dentro do prazo legal ou carta de
-correção, conforme o caso** — decisão do dono com o contador.
-
-**Risco:** declaração em duplicidade; prazo de cancelamento da NF-e é limitado e
-corre por data de autorização (a 4634 é de 13/11).
+**Efeito no detector:** a regra já ignora finalidade 4; o que mantinha a
+ocorrência aberta era o **truncamento** da varredura (corrigido no #661). Por
+isso a exigência pós-deploy é **encerrá-la**, não mantê-la aberta.
 
 ## 14. 20/11/2026 — `operacao.pedido_preso`: ruído e hipótese derrubada
 
