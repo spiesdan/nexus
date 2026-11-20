@@ -18,7 +18,7 @@
  * Mede também o que o PR prometeu: a lista NÃO se move quando o banner aparece.
  * Fecha o navegador no mesmo processo.
  */
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 import { chromium } from "@playwright/test";
@@ -27,6 +27,8 @@ const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3021";
 const ESTADO = process.env.AUDIT_ESTADO ?? "/tmp/state-rotas.json";
 const CARGA = process.env.AUDIT_CARGA ?? "dd3e6cbf-8e05-4d23-a551-9bf5e35db52d";
 const SAIDA = path.join(process.cwd(), "docs", "auditoria", "capturas");
+const JSON_SAIDA = process.env.AUDIT_JSON ?? "/tmp/rotas-falha-real.json";
+const resultados = [];
 
 mkdirSync(SAIDA, { recursive: true });
 
@@ -78,8 +80,23 @@ for (const tema of ["light", "dark"]) {
       };
     });
 
+    const registro = {
+      tema,
+      largura: largura.nome,
+      bannerApareceu: Boolean(depois.banner),
+      bannerTexto: depois.banner,
+      botaoRetry: depois.botao,
+      topoAntes: antes,
+      topoDepois: depois.topoLista,
+      // "Não pula" = a lista não se move quando o banner entra. O banner é
+      // inserido ACIMA dela, então ela desce por ~1 linha — o que NÃO pode é
+      // sumir/rolar a tela. 80px é o teto de um banner de 2 linhas.
+      listaPulou:
+        antes !== null && depois.topoLista !== null ? Math.abs(depois.topoLista - antes) > 80 : null,
+    };
+    resultados.push(registro);
     console.log(
-      `${tema} ${largura.nome}: banner=${depois.banner ? JSON.stringify(depois.banner.slice(0, 90)) : "AUSENTE"} · botao=${depois.botao} · lista ${antes}→${depois.topoLista}`,
+      `${tema} ${largura.nome}: banner=${registro.bannerApareceu ? JSON.stringify((registro.bannerTexto ?? "").slice(0, 80)) : "AUSENTE"} · botao=${registro.botaoRetry} · topo ${antes}→${registro.topoDepois} · pulou=${registro.listaPulou}`,
     );
 
     await pagina.screenshot({
@@ -88,5 +105,8 @@ for (const tema of ["light", "dark"]) {
     await contexto.close();
   }
 }
+
+writeFileSync(JSON_SAIDA, JSON.stringify({ base: BASE, carga: CARGA, resultados }, null, 2) + "\n");
+console.log(`\nJSON: ${JSON_SAIDA}`);
 
 await navegador.close();

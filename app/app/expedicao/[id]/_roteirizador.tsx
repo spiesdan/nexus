@@ -6,6 +6,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { mensagemDeErro } from "@/lib/ui/erros";
+import { diferencaDaOrdem } from "@/lib/rotas/diferenca-da-ordem";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
@@ -507,6 +508,16 @@ export function Roteirizador({
    * A decisão do que mostrar é tabela (`lib/rotas/publicacao`, testada sem
    * browser): publicar, já publicada, encerrada ou vazia. Aqui só se aplica.
    */
+  /**
+   * O QUE JÁ FOI PUBLICADO × O QUE ESTÁ NA TELA.
+   *
+   * `ordemMudou` dizia só "mudou". Depois de publicado, quem despacha precisa
+   * de **quantas** e **quais**: o motorista recebe a mudança como VERSÃO NOVA e
+   * só aplica quando confirma no aparelho (0231) — a tela diz isso em vez de
+   * fingir que a alteração já chegou.
+   */
+  const diferenca = diferencaDaOrdem(ordem, ordemSalva);
+
   const publicacao = estadoDaPublicacao({
     statusDaCarga: rota.carga.status,
     ordemMudou,
@@ -986,7 +997,7 @@ export function Roteirizador({
       );
       setRota(corpo.data);
       setProposta(null);
-      toast.success(t("Rota salva."));
+      toast.success(`${t("Rota salva.")} ${t("Versão")} ${corpo.data.carga.rota_versao}`);
       aoMudar();
     } catch (e) {
       showApiError(e);
@@ -1385,6 +1396,12 @@ export function Roteirizador({
             {trabalhando === "publicar" ? t("Publicando…") : t("Publicar rota")}
           </Button>
         )}
+        {publicacao.tipo === "publicada" && rota.carga.rota_em ? (
+          <p className="text-xs text-text-muted tabular-nums">
+            {t("Publicada em")} {new Date(rota.carga.rota_em).toLocaleString(tagDeIdioma)} ·{" "}
+            {t("versão")} {rota.carga.rota_versao}
+          </p>
+        ) : null}
         {publicacao.tipo === "publicada" && (
           <Button asChild size="sm" variant="outline" className="gap-1.5">
             <Link href={`/app/expedicao/${cargaId}/motorista`}>
@@ -1580,6 +1597,33 @@ export function Roteirizador({
           </div>
         )}
       </div>
+
+      {rota.carga.status === "em_rota" && diferenca.mudou ? (
+        <div
+          role="status"
+          data-testid="alteracoes-nao-publicadas"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-warning/40 bg-warning-bg px-3.5 py-2.5 text-sm text-warning-fg"
+        >
+          <span>
+            {t("A rota está publicada e tem alterações que o motorista ainda não recebeu:")}{" "}
+            <strong className="font-semibold tabular-nums">
+              {diferenca.moveram} {t("moveram")}
+              {diferenca.novas > 0 ? ` · ${diferenca.novas} ${t("novas")}` : ""}
+              {diferenca.sairam > 0 ? ` · ${diferenca.sairam} ${t("saíram")}` : ""}
+            </strong>
+            {". "}
+            {t("Ao salvar, a versão sobe e o motorista confirma a nova sequência no aparelho.")}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void salvarOrdem()}
+            disabled={trabalhando !== null || ordem.length === 0}
+          >
+            {t("Publicar nova versão")}
+          </Button>
+        </div>
+      ) : null}
 
       {erroGeo ? (
         <div
