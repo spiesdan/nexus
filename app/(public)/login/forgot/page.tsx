@@ -28,7 +28,10 @@ export default async function ForgotPasswordPage() {
       <ForgotPasswordForm />
       <p className="text-center text-sm text-muted-foreground">
         {t("Lembrou a senha?")}{" "}
-        <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
+        <Link
+          href="/login"
+          className="inline-flex min-h-11 items-center font-medium text-foreground underline underline-offset-4"
+        >
           {t("Entrar")}
         </Link>
       </p>
