@@ -26,8 +26,16 @@ interface Slo {
   detalhe?: Record<string, number | string | boolean | null>;
 }
 
+interface SerieDaApi {
+  amostras: number;
+  rotas: number;
+  primeira_em: string | null;
+  ultima_em: string | null;
+}
+
 interface Resposta {
   gerado_em: string;
+  serie: SerieDaApi;
   slos: Slo[];
 }
 
@@ -97,6 +105,35 @@ function CartaoDeSlo({ slo }: { slo: Slo }) {
   );
 }
 
+function SerieDaApiCartao({ serie }: { serie: SerieDaApi }) {
+  const t = useT();
+  const tag = useTagDeIdioma();
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t("Série de API (7 dias)")}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-text-muted">
+        {serie.amostras === 0 ? (
+          <p>
+            {t(
+              "A série está ligada, mas nenhuma requisição autenticada passou pelas rotas quentes desde o deploy.",
+            )}
+          </p>
+        ) : (
+          <p>
+            {serie.amostras.toLocaleString(tag)} {t("amostras")} · {serie.rotas}{" "}
+            {t("rotas")} · {t("de")}{" "}
+            {serie.primeira_em ? new Date(serie.primeira_em).toLocaleString(tag) : "—"}{" "}
+            {t("até")}{" "}
+            {serie.ultima_em ? new Date(serie.ultima_em).toLocaleString(tag) : "—"}.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ObservabilidadeClient() {
   const t = useT();
   const tag = useTagDeIdioma();
@@ -139,6 +176,7 @@ export function ObservabilidadeClient() {
         )
       ) : (
         <>
+          <SerieDaApiCartao serie={data.serie} />
           <div className="grid gap-4 md:grid-cols-3">
             {data.slos.map((slo) => (
               <CartaoDeSlo key={slo.id} slo={slo} />

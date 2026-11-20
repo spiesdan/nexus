@@ -26,6 +26,12 @@ function resposta() {
   return {
     data: {
       gerado_em: "2026-11-19T20:00:00.000Z",
+      serie: {
+        amostras: 0,
+        rotas: 0,
+        primeira_em: null,
+        ultima_em: null,
+      },
       slos: [
         {
           id: "disponibilidade",
@@ -76,6 +82,11 @@ describe("Observabilidade — cartões de SLO", () => {
     expect(screen.getByText("Frescor da varredura do Sentinel")).toBeInTheDocument();
     expect(screen.getAllByText("sem histórico ainda")).toHaveLength(2);
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "A série está ligada, mas nenhuma requisição autenticada passou pelas rotas quentes desde o deploy.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("frescor mostra valor e estado estourado", async () => {

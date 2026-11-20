@@ -190,6 +190,33 @@ real de 7 dias a partir do primeiro deploy da 0330; até lá, os cartões dizem
 “sem histórico”. O doc 42 §2 (medição local) continua sendo régua de latência,
 não série de produção.
 
+### 3.2 Diagnóstico da série (19/11/2026)
+
+A tela mostra, acima dos SLOs, **quantas amostras existem na janela, a mais
+antiga, a mais recente e quantas rotas**. Com zero, o texto é explícito: *“a
+série está ligada, mas nenhuma requisição autenticada passou pelas rotas
+quentes desde o deploy”*. Antes, zero virava o mesmo “sem histórico” de uma
+série com 99 amostras — o dono não distinguia **ligado e ocioso** de **ligado e
+mudo**.
+
+O instrumento também ganhou um segundo caminho: se `after()` lançar (hipótese
+aberta no standalone), a amostra é persistida direto com
+`void persistir(...).catch(...)`; se o insert também falhar, sai **uma** linha
+por outage — não por requisição — `observabilidade.metrica_falhou` com `definitivo: true`; a trava reabre no primeiro insert bem-sucedido. O primeiro caminho
+(`after` ok) continua sem somar latência ao 200.
+
+**Sonda (proposta, não implementada):** um `POST
+/api/internal/observabilidade/sonda` com `INTERNAL_CRON_SECRET` chamaria a
+mesma `persistir` com `route='__sonda__'` e devolveria o id. A sonda na mesma
+tabela **polui** contagem/idade do diagnóstico e a retenção; como as consultas
+de SLO já filtram as cinco rotas quentes, ela não mexe em disponibilidade/p95,
+mas ainda aparece na série. Alternativa preferida: tabela
+`api_request_probes` separada (migration 0332), com a mesma retenção; a sonda
+não toca `api_request_samples`. Se for para manter uma tabela só, a sonda
+precisa gravar, ler e **apagar** no mesmo request, e o diagnóstico precisa
+excluir `route='__sonda__'` — o resíduo de um delete falho não pode virar
+histórico.
+
 ## 4. Erros e recuperação (o que o produto faz hoje)
 
 ### 5xx

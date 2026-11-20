@@ -87,7 +87,9 @@ export async function GET(): Promise<Response> {
   }
 
   const admin = createAdminClient();
-  const [orgsRes, settingsRes, resumoApi] = await Promise.all([
+  const desde = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const [orgsRes, settingsRes, resumoApi, rotasApi, contagemRes, primeiraRes, ultimaRes] =
+    await Promise.all([
     lerTodasAsPaginas<{ id: string }>((de, ate) =>
       admin
         .from("organizations")
@@ -114,6 +116,28 @@ export async function GET(): Promise<Response> {
       p_dias: 7,
       p_rotas: [...ROTAS_DO_SLO],
     }),
+    admin.rpc("fn_slo_api_rotas", {
+      p_dias: 7,
+      p_rotas: [...ROTAS_DO_SLO],
+    }),
+    admin
+      .from("api_request_samples")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", desde),
+    admin
+      .from("api_request_samples")
+      .select("created_at")
+      .gte("created_at", desde)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    admin
+      .from("api_request_samples")
+      .select("created_at")
+      .gte("created_at", desde)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (orgsRes.erro) {
@@ -126,6 +150,11 @@ export async function GET(): Promise<Response> {
   }
   if (resumoApi.error) {
     return fail("internal_error", "Não foi possível ler a série de API.", 500, { requestId });
+  }
+  if (rotasApi.error || contagemRes.error || primeiraRes.error || ultimaRes.error) {
+    return fail("internal_error", "Não foi possível diagnosticar a série de API.", 500, {
+      requestId,
+    });
   }
 
   const amostras = Number((resumoApi.data as { total?: number } | null)?.total ?? 0);
@@ -230,6 +259,12 @@ export async function GET(): Promise<Response> {
   return ok(
     {
       gerado_em: new Date(agoraMs).toISOString(),
+      serie: {
+        amostras: Number(contagemRes.count ?? 0),
+        rotas: Array.isArray(rotasApi.data) ? rotasApi.data.length : 0,
+        primeira_em: (primeiraRes.data as { created_at?: string } | null)?.created_at ?? null,
+        ultima_em: (ultimaRes.data as { created_at?: string } | null)?.created_at ?? null,
+      },
       slos,
     },
     { requestId },

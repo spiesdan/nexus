@@ -51,15 +51,31 @@ async function codigoDoErro(res: Response): Promise<string | null> {
   }
 }
 
+let falhaDaMetricaLogada = false;
+
+/** Só para teste: isola a trava de log entre casos. */
+export function __resetFalhaDaMetrica(): void {
+  falhaDaMetricaLogada = false;
+}
+
 async function persistir(amostra: Amostra): Promise<void> {
   const { error } = await createAdminClient().from("api_request_samples").insert(amostra);
-  if (error) {
-    // Métrica não pode derrubar a requisição que já respondeu; fica o aviso.
-    logger.warn("observabilidade.metrica_falhou", {
-      rota: amostra.route,
-      erro: error.message,
-    });
-  }
+  if (error) throw new Error(error.message);
+  // Voltou a gravar: a próxima falha merece uma linha nova.
+  falhaDaMetricaLogada = false;
+}
+
+function logarFalhaDaMetrica(amostra: Amostra, erro: unknown): void {
+  // UMA linha por OUTAGE, não por requisição: se o instrumento está mudo, cada
+  // request falharia e o log viraria o novo silêncio. A trava reabre no
+  // primeiro insert bem-sucedido.
+  if (falhaDaMetricaLogada) return;
+  falhaDaMetricaLogada = true;
+  logger.error("observabilidade.metrica_falhou", {
+    rota: amostra.route,
+    erro: erro instanceof Error ? erro.message : String(erro),
+    definitivo: true,
+  });
 }
 
 /**
@@ -84,10 +100,22 @@ export function comMetricas(rota: string, handler: Handler): Handler {
       request_id: res.headers.get("x-request-id"),
     };
 
+    let agendouNoAfter = false;
     try {
-      after(() => persistir(amostra));
+      after(async () => {
+        try {
+          await persistir(amostra);
+        } catch (erro) {
+          logarFalhaDaMetrica(amostra, erro);
+        }
+      });
+      agendouNoAfter = true;
     } catch {
-      // Fora do request context (teste/CLI): não inventa escrita.
+      // `after()` indisponível (standalone/teste/CLI): segundo caminho.
+    }
+
+    if (!agendouNoAfter) {
+      void persistir(amostra).catch((erro) => logarFalhaDaMetrica(amostra, erro));
     }
 
     return res;

@@ -9,7 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { GET } from "./route";
 
 type Intervalo = { de: number; ate: number };
-type Resultado = { data: unknown[] | null; error: { message: string } | null };
+type Resultado = { data: unknown; count?: number; error: { message: string } | null };
 type Fonte = Resultado | ((intervalo: Intervalo) => Resultado);
 
 /** O builder falso honra `range(de, ate)`: sem isso o teste não enxerga
@@ -18,7 +18,7 @@ function builder(fonte: Fonte) {
   const q: Record<string, unknown> = {};
   let de = 0;
   let ate = Number.POSITIVE_INFINITY;
-  for (const metodo of ["select", "is", "eq", "limit", "order"]) q[metodo] = () => q;
+  for (const metodo of ["select", "is", "eq", "limit", "order", "gte"]) q[metodo] = () => q;
   q.range = (novoDe: number, novoAte: number) => {
     de = novoDe;
     ate = novoAte;
@@ -45,17 +45,34 @@ function montar(
   settings: Array<Record<string, unknown>>,
 ) {
   from.mockImplementation((tabela: string) => {
+    if (tabela === "api_request_samples") {
+      return builder({
+        data: { created_at: "2026-11-20T00:00:00.000Z" },
+        count: 0,
+        error: null,
+      });
+    }
     const linhas =
       tabela === "organizations" ? (orgs as unknown[]) : (settings as unknown[]);
     return builder(({ de, ate }) => ({ data: linhas.slice(de, ate + 1), error: null }));
   });
-  rpc.mockResolvedValue({ data: { total: 0, erros: 0, p95: null }, error: null });
+  rpc.mockImplementation(async (fn: string) =>
+    fn === "fn_slo_api_rotas"
+      ? { data: [], error: null }
+      : { data: { total: 0, erros: 0, p95: null }, error: null },
+  );
   vi.mocked(createAdminClient).mockReturnValue({ from, rpc } as never);
 }
 
 async function corpo(res: Response) {
   return (await res.json()) as {
     data: {
+      serie: {
+        amostras: number;
+        rotas: number;
+        primeira_em: string | null;
+        ultima_em: string | null;
+      };
       slos: Array<{
         id: string;
         valor: number | null;
@@ -80,7 +97,13 @@ describe("GET /api/v1/admin/observabilidade", () => {
     const res = await GET();
     expect(res.status).toBe(200);
 
-    const { slos } = (await corpo(res)).data;
+    const { slos, serie } = (await corpo(res)).data;
+    expect(serie).toEqual({
+      amostras: 0,
+      rotas: 0,
+      primeira_em: "2026-11-20T00:00:00.000Z",
+      ultima_em: "2026-11-20T00:00:00.000Z",
+    });
     expect(slos).toHaveLength(3);
     for (const id of ["disponibilidade", "latencia"]) {
       const slo = slos.find((s) => s.id === id);
@@ -131,7 +154,11 @@ describe("GET /api/v1/admin/observabilidade", () => {
 
   it("com amostras suficientes calcula disponibilidade e p95 reais", async () => {
     montar([{ id: "org-a" }], []);
-    rpc.mockResolvedValue({ data: { total: 1_000, erros: 2, p95: 450.4 }, error: null });
+    rpc.mockImplementation(async (fn: string) =>
+      fn === "fn_slo_api_rotas"
+        ? { data: [{ route: "/api/v1/contacts", total: 1_000, erros: 2, p95: 450 }], error: null }
+        : { data: { total: 1_000, erros: 2, p95: 450.4 }, error: null },
+    );
 
     const res = await GET();
     const { slos } = (await corpo(res)).data;
