@@ -46,7 +46,7 @@ importação Mercos, shell offline (`lib/offline/outbox.ts`, enfileira com
 | 2.6 | Busca por código/nome/marca | **EXISTE** | `_produtos.tsx:60-72` (exato primeiro, depois trecho) |
 | 2.7 | Busca por EAN/SKU/scanner | **CORRIGIDO (matriz E)** | EAN mora em `codigo` (identidade única da org; DIRC recusa uma segunda). O `Enter` agora só lança código **exato** ou resultado **único**; a rota devolve a linha exata na frente do `limit=12`. Provas: `tests/unit/criador-busca-scanner.test.tsx`, `tests/unit/products-busca-codigo-exato.test.ts` |
 | 2.8 | Quantidade inteira | **EXISTE** | `itemCreateSchema.quantidade: int().min(1)`; steppers em `_itens.tsx` |
-| 2.9 | Quantidade fracionária / venda a granel | **PARCIAL / DEPENDE DE REGRA** | o schema só aceita inteiro (`int().min(1)`) e a tela agora trunca (não deixa digitar 1,5 e descobrir no fim); `unidade` aparece e `multiplo` é informado. Não há regra escrita de fração nem validação de múltiplo |
+| 2.9 | Quantidade fracionária / venda a granel | **DECIDIDO: inteiro** | o schema só aceita inteiro (`int().min(1)`) e a tela trunca; `unidade` aparece e `multiplo` é **informativo, não bloqueia**. Decisão do dono (20/11): fração/granel **não será implementada** |
 | 2.10 | Tabela de preço no add | **EXISTE** | `page.tsx` carrega tabelas; `_produtos.tsx` aplica `precoEfetivo`; servidor recalcula (`criar-pedido.ts:217-230`) |
 | 2.11 | Troca de tabela depois de adicionar itens | **CORRIGIDO (matriz E)** | a troca reprecifica os itens (override > desconto da tabela > base) e preserva o preço **manual**. Prova: `tests/unit/criador-tabela-credito-parcelas.test.tsx` |
 | 2.12 | Preço manual / negociado | **EXISTE com alçada e agora visível** | cada linha diz “preço base/tabela/manual”; editar o preço marca manual. Servidor: preço diferente do efetivo só passa com `podeIgnorar` (manager+) — `criar-pedido.ts:222-230` |
@@ -238,9 +238,9 @@ mapa e os riscos que aquelas etapas precisam cobrir, sem antecipar conclusão.
   “vendido em múltiplos de N” — **informativo**.
 - **Prova:** `tests/unit/criador-itens-estoque-unidade.test.tsx` (unidade no
   rótulo, truncamento e múltiplo).
-- **Pendente (regra):** bloquear/arredondar para o múltiplo e permitir fração
-  para produtos a granel. `multiplo` existe no banco (0275); **não há regra
-  escrita** de como o pedido deve se comportar. Documentado, não inventado.
+- **DECIDIDO (20/11/2026 pelo dono):** manter **quantidade inteira**; `multiplo`
+  é informativo e **não bloqueia**; fração/granel **não será implementada**.
+  O schema e a tela já refletem isso (truncamento + rótulo com unidade).
 
 ### B.15 — falha ao persistir o rascunho
 
@@ -316,7 +316,7 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 | 3 | Tabela/override reflete nos itens; preço manual marcado e preservado | **DEFEITO ACHADO no 1.60.0 e corrigido** — a tabela **nunca ativava** (`d.itens` × `{ data: { itens } }`) e o item entrava a preço de catálogo rotulado de tabela; trocar reprecifica e o manual é preservado | `criador-tabela-credito-parcelas.test.tsx` (teste novo, falha sem a correção) + E2E “E.3” **verde** |
 | 4 | Estoque: quatro estados de B.10; **não há reserva** (declarado) | **PROVADO no navegador (1.61.0)** — suficiente, insuficiente (422), desatualizado (saldo muda antes do POST) e não controlado; a tela declara a ausência de reserva | E2E “E.4” + `criador-itens-estoque-unidade.test.tsx` |
 | 5 | Crédito avisa **antes** de gerar; `ignorar_credito` só manager | **PROVADO no navegador (1.61.0)** — limite estourado recusa 422 sem gravar, sem limite cria, acima do teto vai a `em_analise` com “Aprovar pedido”; gate do servidor provado no unit | E2E “E.5” + `commercial-orders-credito-gate.test.ts` |
-| 6 | Quantidade inteira (B.14); parcelas somam o total; fração/granel não quebra | **OK** (fração segue **DEPENDE DE REGRA**) | `criador-tabela-credito-parcelas.test.tsx`, `parcelas-fecham.test.ts` |
+| 6 | Quantidade inteira (B.14); parcelas somam o total; fração/granel não quebra | **OK + DECIDIDO** — inteiro; `multiplo` informativo; fração/granel não será implementada | `criador-tabela-credito-parcelas.test.tsx`, `parcelas-fecham.test.ts` |
 | 7 | Rascunho entre org/usuário não é retomado; `descontoTexto` volta | **DEFEITO CORRIGIDO** — chave única do navegador | `criador-rascunho-escopo.test.tsx`, `criador-pedido-cliente-do-link.test.tsx` |
 | 8 | Timeout com resposta perdida não duplica (idempotência/CAS) | **PROVADO no navegador (1.61.0)** — `route.fetch()` commita, `abort` derruba a resposta; reenviar cria **1 pedido**, mesmos itens, sem número queimado; e na rota (`commercial-orders-timeout-retry`) | E2E “E.8/E.9” + `commercial-orders-timeout-retry.test.ts` |
 | 9 | Reconciliação: itens/parcelas somam no banco de teste | **PROVADO no navegador (1.61.0) + invariante** — pedido criado pela tela: itens = subtotal, subtotal − desconto + frete = total, `chave_sincronizacao` e 1 item no banco | E2E “E.8/E.9” + `tests/invariants/pedido-reconciliacao.test.ts` |
@@ -344,7 +344,8 @@ pnpm exec vitest run tests/unit/criador-pedido-cliente-do-link.test.tsx \
 - EAN/GTIN: sem coluna, sem validação, sem busca; a lacuna é explícita.
 - TTL do rascunho local: não existe; 30 dias ainda restaura.
 - Reserva de estoque / baixa atômica: não existe.
-- Fração/granel e bloqueio por múltiplo: `multiplo` informado, não validado.
+- **Fração/granel: decidido (20/11) — não implementar**; `multiplo` segue
+  informativo e não bloqueia.
 - Multimoeda: sem seletor nem cotação.
 - E.10: leitor de tela real (NVDA/VoiceOver) segue fora do automatizado —
   a régua é axe + nomes acessíveis + Tab.
