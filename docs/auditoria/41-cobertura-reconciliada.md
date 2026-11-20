@@ -164,8 +164,8 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/audit` | admin | **aplicado** | `54-admin-audit-design.md` · `capturas/{antes,depois}-admin/` · `medidas.json` | G |
 | `/admin/dashboard` | admin | **aplicado** | `48-admin-dashboard-design.md` · `capturas/admin-dashboard-{antes,depois}/` | G |
 | `/admin/google` | admin | **aplicado** — contraste 3,92:1 no escuro → 0; alvos 1/0 → 0 | `63-admin-config-modulo-design.md` · `medidas-google.json` | G |
-| `/admin/inbox/[conversationId]` | admin | **pendente** | — | — |
-| `/admin/inbox` | admin | **pendente** | — | — |
+| `/admin/inbox/[conversationId]` | admin | **aplicado** — axe crítico 1 → 0, contraste 1,55 → 0, série de regiões roláveis → 0; **h1 faltava**, agora ok; alvos 3/3 → 0 | `64-admin-inbox-modulo-design.md` · `medidas-inbox-conversa.json` | G |
+| `/admin/inbox` | admin | **aplicado** — axe crítico 1 → 0; contraste 2,91/3,42 → 0; alvos 2/2 → 0 (build de produção, claro/escuro × 1440/390) | `64-admin-inbox-modulo-design.md` · `medidas-inbox.json` | G |
 | `/admin/incidents/[id]` | admin | **aplicado** — axe sério 1 → 0; alvos 2/1 → 0 (mesma rodada; fixture local sintética) | `61-admin-incidents-modulo-design.md` · `medidas-incident-ficha.json` | G |
 | `/admin/incidents` | admin | **aplicado** — axe crítico 1 → 0; alvos 3/3 → 0 (build de produção + `next start`, claro/escuro × 1440/390, `h1` por timeout) | `61-admin-incidents-modulo-design.md` · `medidas-incidents.json` | G |
 | `/admin/lgpd` | admin | **aplicado** — axe crítico 1 → 0; alvos 12/12 → 0 (build de produção + `next start`, claro/escuro × 1440/390) | `62-admin-lgpd-modulo-design.md` · `medidas-lgpd.json` | G |
@@ -181,7 +181,7 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/usage` | admin | **aplicado** — axe crítico 1 → 0 (`button-name`); alvos 2/1 → 0 (build de produção, claro/escuro × 1440/390) | `63-admin-config-modulo-design.md` · `medidas-usage.json` | G |
 | `/admin/users/[id]` | admin | **aplicado** — axe sério 1 → 0; alvos 4/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390, `h1` esperado) | `60-admin-users-modulo-design.md` · `medidas-user-ficha.json` | G |
 | `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |
-| `/admin/forbidden` | admin | **pendente** | — | — |
+| `/admin/forbidden` | admin | **aplicado** — alvos 2/0 → 0 (botões do StatusPage em 40 px) | `64-admin-inbox-modulo-design.md` · `medidas-forbidden.json` | G |
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 

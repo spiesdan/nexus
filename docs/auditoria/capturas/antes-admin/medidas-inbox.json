@@ -1,0 +1,224 @@
+[
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 1440,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.74,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(255,255,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 4.8,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(126,119,240)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.flex.w-full",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 39,
+      "abaixoDe40": 2,
+      "amostra": [
+        "input.flex.w-full 335x32",
+        "button.flex.w-full 335x32 \"Todos\""
+      ]
+    },
+    "axe": {
+      "critica": 1,
+      "seria": 1,
+      "ids": [
+        "button-name (critical)",
+        "color-contrast (serious)"
+      ],
+      "contraste": [
+        ".max-w-xs :: #919292 sobre #f6f7f9 = 2.91:1 (9.0pt (12px))"
+      ]
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 390,
+    "tema": "light",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.36,
+        "fg": "rgb(102, 102, 102)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.flex.w-full",
+        "razao": 16.26,
+        "fg": "rgb(24, 25, 37)",
+        "bg": "rgb(246,247,249)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDe40": 2,
+      "amostra": [
+        "input.flex.w-full 335x32",
+        "button.flex.w-full 335x32 \"Todos\""
+      ]
+    },
+    "axe": {
+      "critica": 1,
+      "seria": 0,
+      "ids": [
+        "button-name (critical)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 1440,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 5.34,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(28,28,28)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "A.flex.min-h-11",
+        "razao": 8.18,
+        "fg": "rgb(21, 21, 21)",
+        "bg": "rgb(164,165,255)",
+        "px": "14px/500"
+      },
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.flex.w-full",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 39,
+      "abaixoDe40": 2,
+      "amostra": [
+        "input.flex.w-full 335x32",
+        "button.flex.w-full 335x32 \"Todos\""
+      ]
+    },
+    "axe": {
+      "critica": 1,
+      "seria": 1,
+      "ids": [
+        "button-name (critical)",
+        "color-contrast (serious)"
+      ],
+      "contraste": [
+        ".max-w-xs :: #6b6b6b sobre #151515 = 3.42:1 (9.0pt (12px))"
+      ]
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  },
+  {
+    "rota": "/admin/inbox",
+    "tela": "inbox",
+    "largura": 390,
+    "tema": "dark",
+    "status": 200,
+    "urlFinal": "http://127.0.0.1:3311/admin/inbox",
+    "h1": true,
+    "overflow": 0,
+    "culpadoDoOverflow": null,
+    "contraste": [
+      {
+        "alvo": "BUTTON.inline-flex.items-center",
+        "razao": 5.72,
+        "fg": "rgb(144, 144, 144)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/500"
+      },
+      {
+        "alvo": "BUTTON.flex.w-full",
+        "razao": 16.6,
+        "fg": "rgb(244, 244, 244)",
+        "bg": "rgb(21,21,21)",
+        "px": "12px/400"
+      }
+    ],
+    "alvos": {
+      "total": 26,
+      "abaixoDe40": 2,
+      "amostra": [
+        "input.flex.w-full 335x32",
+        "button.flex.w-full 335x32 \"Todos\""
+      ]
+    },
+    "axe": {
+      "critica": 1,
+      "seria": 0,
+      "ids": [
+        "button-name (critical)"
+      ],
+      "contraste": []
+    },
+    "console": {
+      "erros": 0,
+      "amostra": []
+    }
+  }
+]

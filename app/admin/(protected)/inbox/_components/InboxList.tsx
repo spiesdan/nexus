@@ -122,7 +122,7 @@ export function InboxList() {
             value={rawSearch}
             onChange={(e) => setRawSearch(e.target.value)}
             placeholder={t("Buscar mensagem...")}
-            className="h-8 pl-8 text-xs"
+            className="h-10 pl-8 text-xs"
           />
         </div>
         <Select
@@ -131,7 +131,7 @@ export function InboxList() {
             setStatusFilter(v as "all" | "pending" | "open" | "resolved")
           }
         >
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-10 text-xs" aria-label={t("Filtrar por status")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -185,7 +185,14 @@ export function InboxList() {
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-medium">{name}</span>
-                <span className="shrink-0 text-[10px] text-muted-foreground">{time}</span>
+                <span
+                  className={cn(
+                    "shrink-0 text-[10px]",
+                    isSelected ? "text-text" : "text-muted-foreground",
+                  )}
+                >
+                  {time}
+                </span>
               </div>
 
               {org && (
@@ -195,7 +202,12 @@ export function InboxList() {
               )}
 
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-xs text-muted-foreground">
+                <p
+                  className={cn(
+                    "truncate text-xs",
+                    isSelected ? "text-text" : "text-muted-foreground",
+                  )}
+                >
                   {preview.length > 55 ? `${preview.slice(0, 55)}…` : preview}
                 </p>
                 {unread > 0 && (

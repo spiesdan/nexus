@@ -156,6 +156,7 @@ export function StatusPage({
               key={botao.href + botao.rotulo}
               asChild
               variant={botao.variante === "outline" ? "outline" : "default"}
+              className="min-h-10"
             >
               <Link href={botao.href}>{traduzir(botao.rotulo, idioma)}</Link>
             </Button>
