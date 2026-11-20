@@ -85,7 +85,7 @@ export function LgpdAdminClient() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <Select onValueChange={setStatus} value={filters.status ?? NONE}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
+          <SelectTrigger className="h-10 w-[160px] text-xs" aria-label={t("Filtrar por status")}>
             <SelectValue placeholder={t("Status")} />
           </SelectTrigger>
           <SelectContent>
@@ -99,7 +99,7 @@ export function LgpdAdminClient() {
         </Select>
 
         <Select onValueChange={setType} value={filters.request_type ?? NONE}>
-          <SelectTrigger className="h-8 w-[200px] text-xs">
+          <SelectTrigger className="h-10 w-[200px] text-xs" aria-label={t("Filtrar por tipo")}>
             <SelectValue placeholder={t("Tipo")} />
           </SelectTrigger>
           <SelectContent>
@@ -111,7 +111,7 @@ export function LgpdAdminClient() {
         </Select>
 
         <Select onValueChange={setRisk} value={filters.risk_level ?? NONE}>
-          <SelectTrigger className="h-8 w-[160px] text-xs">
+          <SelectTrigger className="h-10 w-[160px] text-xs" aria-label={t("Filtrar por risco")}>
             <SelectValue placeholder={t("Risco")} />
           </SelectTrigger>
           <SelectContent>

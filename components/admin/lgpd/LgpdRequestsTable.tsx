@@ -172,7 +172,7 @@ function colunasAdmin(
       cabecalho: "",
       classeCabecalho: "w-[60px]",
       celula: (row) => (
-        <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+        <Button asChild variant="ghost" size="sm" className="min-h-10 min-w-10 px-2 text-xs">
           <Link href={`/admin/lgpd/requests/${row.id}`}>{t("Ver")}</Link>
         </Button>
       ),

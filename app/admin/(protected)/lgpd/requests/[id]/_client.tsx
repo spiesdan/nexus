@@ -75,6 +75,7 @@ function SlaTimelineInline({ received_at, due_at, request_type }: SlaTimelinePro
             className={`h-full rounded-full transition-all ${progressColor}`}
             style={{ width: `${progressPct}%` }}
             role="progressbar"
+            aria-label={t("Progresso do prazo LGPD")}
             aria-valuenow={progressPct}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -106,7 +107,7 @@ function SlaTimelineInline({ received_at, due_at, request_type }: SlaTimelinePro
                 <p className="leading-tight text-muted-foreground">
                   D+{m.day} — {m.label}
                 </p>
-                <p className="text-xs text-muted-foreground opacity-70">
+                <p className="text-xs text-text-subtle">
                   {format(milestoneDate, "dd 'de' MMM yyyy", { locale: localeDaData })}
                 </p>
               </div>
@@ -160,7 +161,7 @@ function AuditTrailInline({ entries }: { entries: AuditEntry[] }) {
               <p className="text-xs text-muted-foreground">
                 {format(new Date(entry.created_at), "dd/MM/yyyy HH:mm:ss", { locale: localeDaData })}
                 {entry.actor_user_id && (
-                  <span className="ml-2 opacity-60">
+                  <span className="ml-2 text-text-subtle">
                     {t("por")} {entry.actor_user_id.slice(0, 8)}…
                   </span>
                 )}
@@ -263,7 +264,7 @@ export function LgpdRequestAdminDetail({ id }: Props) {
           variant="ghost"
           size="sm"
           asChild
-          className="-ml-2 gap-1 text-muted-foreground"
+          className="-ml-2 min-h-10 gap-1 text-muted-foreground"
         >
           <Link href="/admin/lgpd">
             <CaretLeft size={14} aria-hidden />

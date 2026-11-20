@@ -168,8 +168,8 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/inbox` | admin | **pendente** | — | — |
 | `/admin/incidents/[id]` | admin | **pendente** | — | — |
 | `/admin/incidents` | admin | **pendente** | — | — |
-| `/admin/lgpd` | admin | **pendente** | — | — |
-| `/admin/lgpd/requests/[id]` | admin | **pendente** | — | — |
+| `/admin/lgpd` | admin | **aplicado** — axe crítico 1 → 0; alvos 12/12 → 0 (build de produção + `next start`, claro/escuro × 1440/390) | `62-admin-lgpd-modulo-design.md` · `medidas-lgpd.json` | G |
+| `/admin/lgpd/requests/[id]` | admin | **aplicado** — axe sério 2 → 0 (progressbar sem nome + contraste 2,52–3,29:1); alvos 1/0 → 0 | `62-admin-lgpd-modulo-design.md` · `medidas-lgpd-pedido.json` | G |
 | `/admin/marca` | admin | **pendente** | — | — |
 | `/admin/observabilidade` | admin | **pendente** | — | — |
 | `/admin` | admin | **aplicado no destino** — redirect medido em `/admin/dashboard` (`urlFinal`): axe 1 → 0 a 390, alvos 0 | `60-admin-users-modulo-design.md` · `medidas-admin-index.json` | G |
