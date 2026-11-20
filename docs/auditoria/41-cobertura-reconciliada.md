@@ -195,20 +195,20 @@ base sumiu; duas telas entraram depois dela.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/login/reset` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/signup` | público/auth | **aplicado** (cartão da casca) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/403` | estado/erro | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/500` | estado/erro | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/503` | estado/erro | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/account-suspended` | estado/erro | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/403` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/500` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/503` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/account-suspended` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
-| `/legal/privacy` | público/legal | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/legal/terms` | público/legal | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/legal/privacy` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/legal/terms` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/onboarding/connect-nuvemshop` | onboarding | **pendente** | — | — |
 | `/onboarding/connect-whatsapp` | onboarding | **pendente** | — | — |
 | `/onboarding/done` | onboarding | **pendente** | — | — |
@@ -218,9 +218,9 @@ base sumiu; duas telas entraram depois dela.
 | `/onboarding/setup-ai` | onboarding | **pendente** | — | — |
 | `/onboarding/testar` | onboarding | **pendente** | — | — |
 | `/onboarding/welcome` | onboarding | **pendente** | — | — |
-| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
-| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 
 ## 3. Registry de navegação (78 rotas `/app`)
 
