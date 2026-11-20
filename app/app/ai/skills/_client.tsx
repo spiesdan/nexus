@@ -51,7 +51,9 @@ export function SkillsClient({ initialState }: Props) {
     setPendingName(name);
     install.mutate(name, {
       onSuccess: () => {
-        toast.success(`Skill "${name}" ${t("instalada — já vale para os agentes desta organização.")}`);
+        toast.success(
+          `Skill "${name}" ${t("instalada — já vale para os agentes desta organização.")}`,
+        );
         setPendingName(null);
       },
       onError: (err) => {
@@ -115,7 +117,8 @@ export function SkillsClient({ initialState }: Props) {
                   disabled={importSkill.isPending}
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <UploadSimple /> {importSkill.isPending ? t("Enviando…") : t("Enviar skill (.zip)")}
+                  <UploadSimple />{" "}
+                  {importSkill.isPending ? t("Enviando…") : t("Enviar skill (.zip)")}
                 </Button>
               </>
             )}
@@ -124,7 +127,9 @@ export function SkillsClient({ initialState }: Props) {
         <CardContent className="flex flex-col gap-4">
           {installed.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-              {t('Nenhuma skill instalada ainda. Instale uma pronta do catálogo abaixo ou envie a sua em "Enviar skill (.zip)".')}
+              {t(
+                'Nenhuma skill instalada ainda. Instale uma pronta do catálogo abaixo ou envie a sua em "Enviar skill (.zip)".',
+              )}
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -136,7 +141,10 @@ export function SkillsClient({ initialState }: Props) {
                   <div className="flex flex-wrap items-center gap-2">
                     <PuzzlePiece className="text-accent-ink" aria-hidden />
                     <span className="font-medium">{skill.name}</span>
-                    <Badge variant={skill.source === "catalog" ? "info" : "neutral"} className="text-[10px]">
+                    <Badge
+                      variant={skill.source === "catalog" ? "info" : "neutral"}
+                      className="text-[10px]"
+                    >
                       {skill.source === "catalog" ? t("do catálogo") : t("manual")}
                     </Badge>
                     <span className="ml-auto text-xs text-muted-foreground">
@@ -162,7 +170,11 @@ export function SkillsClient({ initialState }: Props) {
             </ul>
           )}
 
-          <div className="flex items-start gap-2 rounded-2xl bg-accent-soft p-3 text-xs text-text-muted">
+          {/* Texto gritante no claro, ilegível no escuro: `text-text-muted`
+              sobre `accent-soft` não alcança AA no tema escuro (medido:
+              `color-contrast` em /ai/skills a 1440). O aviso é informativo, mas
+              informação que não se lê não informa — vai na tinta do texto. */}
+          <div className="flex items-start gap-2 rounded-2xl bg-accent-soft p-3 text-xs text-text">
             <Info className="mt-0.5 shrink-0" aria-hidden />
             <p>
               {t(
@@ -177,13 +189,17 @@ export function SkillsClient({ initialState }: Props) {
         <CardHeader>
           <CardTitle>{t("Catálogo")}</CardTitle>
           <CardDescription>
-            {t("Skills prontas, mantidas pela plataforma, disponíveis para instalar com um clique.")}
+            {t(
+              "Skills prontas, mantidas pela plataforma, disponíveis para instalar com um clique.",
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {catalog.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-4 text-sm text-muted-foreground">
-              {t("Nenhuma skill nova no catálogo — você já instalou tudo que a plataforma oferece hoje.")}
+              {t(
+                "Nenhuma skill nova no catálogo — você já instalou tudo que a plataforma oferece hoje.",
+              )}
             </p>
           ) : (
             <ul className="flex flex-col gap-2">
@@ -206,7 +222,9 @@ export function SkillsClient({ initialState }: Props) {
                         className="w-full sm:w-auto"
                       >
                         <DownloadSimple />
-                        {install.isPending && pendingName === skill.name ? t("Instalando…") : t("Instalar")}
+                        {install.isPending && pendingName === skill.name
+                          ? t("Instalando…")
+                          : t("Instalar")}
                       </Button>
                     </div>
                   )}

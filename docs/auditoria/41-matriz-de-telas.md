@@ -22,6 +22,16 @@ O que ela **não** mede: contraste par a par (isso é o instrumento do
 `docs/auditoria/11-auditoria-visual.md`, que lê a cor composta), tempo de
 interação e fidelidade de dado. Uma tela pode passar aqui e continuar feia.
 
+## Medido ≠ visitado
+
+O `medidas.json` de cada lado tem `total`, `validas` e `invalidas` — e a linha
+de uma tela que não abriu é `valida: false` com `motivo`, `overflow: null` e
+`axe: null`. **Zero medido e zero não-medido são coisas diferentes**: até
+20/11/2026 o instrumento gravava zero nas duas e o placar contava 6 rotas
+dinâmicas que ninguém visitou como aprovadas. No artefato de 20/11: **368
+linhas, 341 válidas, 27 não medidas** (24 das 6 dinâmicas sem id + 3 falhas de
+instrumento em `/titulos`, `/ai/providers` e `/ai/runs`).
+
 ## Regra do antes/depois
 
 - **Antes** é o estado do commit ANTERIOR ao passe de design daquela tela;
@@ -74,7 +84,7 @@ escrito à mão).
 | 9 | `/pedidos/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
 | 10 | `/pedidos/imprimir` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 11 | `/pedidos/novo` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 12 | `/titulos` | — (redirect) | — | — | redireciona para a home no estado atual (recurso desligado ou sem permissão) → `/financeiro` |
+| 12 | `/titulos` | — (redirect) | — | — | **redirect → `/financeiro`, medido lá** — **3/4**: a combinação light/1440 perdeu o contexto no redirect e ficou fora |
 
 ### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 2 medidas
 
@@ -143,10 +153,10 @@ escrito à mão).
 | 3 | `/integrations/nuvemshop` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
 | 4 | `/inteligencia` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 5 | `/lgpd/requests` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
-| 6 | `/lgpd/requests/[id]` · dinâmica | — | — | — | pendente |
+| 6 | `/lgpd/requests/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo; no estado atual também redireciona para a home |
 | 7 | `/products` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 8 | `/prospeccao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 9 | `/prospeccao/campanhas/[id]` · dinâmica | — | — | — | pendente |
+| 9 | `/prospeccao/campanhas/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo; no estado atual também redireciona para a home |
 | 10 | `/prospeccao/nova` | 0/0 px | 0/2 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 11 | `/radar` | 0/0 px | 0/2 | 0 | `label-content-name-mismatch` em 2 botões de atalho (aria-label x texto visível) |
 | 12 | `/radar/categorias` | 0/0 px | 0/1 | 0 | **corrigido**: `Tabs` sem painel (`aria-valid-attr-value`, CRÍTICO) → grupo com `aria-pressed` |
@@ -177,31 +187,31 @@ escrito à mão).
 | 37 | `/venda-automatica` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 38 | `/webhooks` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 
-### 7. IA (agentes, runs, conhecimento) — 22 telas, 0 medidas
+### 7. IA (agentes, runs, conhecimento) — 22 telas, 18 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/ai` | — | — | — | pendente |
-| 2 | `/ai/agents` | — | — | — | pendente |
-| 3 | `/ai/agents/[id]` · dinâmica | — | — | — | pendente |
-| 4 | `/ai/agents/new` | — | — | — | pendente |
-| 5 | `/ai/cases` | — | — | — | pendente |
-| 6 | `/ai/controle` | — | — | — | pendente |
-| 7 | `/ai/credentials` | — | — | — | pendente |
-| 8 | `/ai/decisoes` | — | — | — | pendente |
-| 9 | `/ai/evolution` | — | — | — | pendente |
-| 10 | `/ai/followups` | — | — | — | pendente |
-| 11 | `/ai/followups/[id]` · dinâmica | — | — | — | pendente |
-| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — | — | — | pendente |
-| 13 | `/ai/inbox` | — | — | — | pendente |
-| 14 | `/ai/knowledge/sources` | — | — | — | pendente |
-| 15 | `/ai/memory` | — | — | — | pendente |
-| 16 | `/ai/proposals` | — | — | — | pendente |
-| 17 | `/ai/providers` | — | — | — | pendente |
-| 18 | `/ai/routers` | — | — | — | pendente |
-| 19 | `/ai/routers/[id]` · dinâmica | — | — | — | pendente |
-| 20 | `/ai/runs` | — | — | — | pendente |
-| 21 | `/ai/skills` | — | — | — | pendente |
-| 22 | `/ai/usage` | — | — | — | pendente |
+| 1 | `/ai` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 2 | `/ai/agents` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 3 | `/ai/agents/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
+| 4 | `/ai/agents/new` | 0/0 px | 0/0 | 0 | **403 por papel**: rota exige admin e a medição usa `manager` (esperado) |
+| 5 | `/ai/cases` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 6 | `/ai/controle` | 0/0 px | 0/2 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 7 | `/ai/credentials` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 8 | `/ai/decisoes` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 9 | `/ai/evolution` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 10 | `/ai/followups` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 11 | `/ai/followups/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
+| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
+| 13 | `/ai/inbox` | 0/0 px | 0/1 | 0 | limpo após o #716 (a aba fantasma era o crítico desta tela) |
+| 14 | `/ai/knowledge/sources` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 15 | `/ai/memory` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 16 | `/ai/proposals` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 17 | `/ai/providers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) — **3/4**: a combinação light/1440 não pintou `<h1>` e ficou fora |
+| 18 | `/ai/routers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 19 | `/ai/routers/[id]` · dinâmica | — (não medida) | — | — | **pendente** — bloqueada: sem id de exemplo |
+| 20 | `/ai/runs` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) — **3/4**: a combinação light/1440 não pintou `<h1>` e ficou fora |
+| 21 | `/ai/skills` | 0/0 px | 0/1 | 0 | **corrigido**: aviso informativo em `text-text-muted` sobre `accent-soft` não passava AA no escuro (`color-contrast`) → `text-text` |
+| 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **corrigido**: barra `role="progressbar"` sem nome no cartão de orçamento (`aria-progressbar-name`) → `aria-label`; depois, axe sério 0 fora o shell |
 
 <!-- MATRIZ:FIM -->

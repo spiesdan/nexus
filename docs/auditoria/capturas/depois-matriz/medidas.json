@@ -1,7 +1,77 @@
 {
-  "gerado": "2026-11-20T11:48:06.495Z",
+  "gerado": "2026-11-20T12:18:12.690Z",
   "rotulo": "depois",
-  "rotas": 2,
+  "rotas": 92,
+  "total": 368,
+  "validas": 341,
+  "invalidas": 27,
+  "puladas": [
+    {
+      "rota": "/ai/agents/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "combinacoes": 4,
+      "motivos": [
+        "rota dinâmica sem id de exemplo em IDS"
+      ]
+    }
+  ],
+  "falhas_de_instrumento": [
+    {
+      "rota": "/ai/providers",
+      "combinacoes": 1,
+      "motivos": [
+        "sem <h1> após 12 s — a tela não terminou de renderizar"
+      ]
+    },
+    {
+      "rota": "/ai/runs",
+      "combinacoes": 1,
+      "motivos": [
+        "sem <h1> após 12 s — a tela não terminou de renderizar"
+      ]
+    },
+    {
+      "rota": "/titulos",
+      "combinacoes": 1,
+      "motivos": [
+        "erro ao medir: Execution context was destroyed no redirect para /financeiro"
+      ]
+    }
+  ],
   "medidas": [
     {
       "rota": "/carteira",
@@ -19,7 +89,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "carteira_light_1440.png"
+      "captura": "carteira_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/comissoes",
@@ -37,7 +108,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "comissoes_light_1440.png"
+      "captura": "comissoes_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/compras",
@@ -55,7 +127,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "compras_light_1440.png"
+      "captura": "compras_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/compras/[id]",
@@ -73,7 +146,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "compras_id_light_1440.png"
+      "captura": "compras_id_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/estoque",
@@ -91,7 +165,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "estoque_light_1440.png"
+      "captura": "estoque_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/faturamento",
@@ -109,7 +184,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "faturamento_light_1440.png"
+      "captura": "faturamento_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/notas",
@@ -127,7 +203,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "notas_light_1440.png"
+      "captura": "notas_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos",
@@ -145,7 +222,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_light_1440.png"
+      "captura": "pedidos_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/[id]",
@@ -163,7 +241,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_id_light_1440.png"
+      "captura": "pedidos_id_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/imprimir",
@@ -181,7 +260,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_imprimir_light_1440.png"
+      "captura": "pedidos_imprimir_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/novo",
@@ -199,25 +279,22 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_novo_light_1440.png"
+      "captura": "pedidos_novo_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/titulos",
       "url": "",
       "tema": "light",
       "largura": 1440,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [
         "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
       ],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+      "axe": null,
+      "valida": false,
+      "motivo": "erro ao medir: Execution context was destroyed no redirect para /financeiro"
     },
     {
       "rota": "/carteira",
@@ -235,7 +312,8 @@
           "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.gap-2.flex:nth-child(1) > .truncate.text-primary.underline-offset-4 :: <a class=\"truncate font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/b9125735-d326-4a62-9358-c6de191ce1f7\">Cliente Jornada Venda 1795122155436</a>"
         ]
       },
-      "captura": "carteira_light_390.png"
+      "captura": "carteira_light_390.png",
+      "valida": true
     },
     {
       "rota": "/comissoes",
@@ -253,7 +331,8 @@
           "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.flex.gap-2:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d\">PED-0158</a>"
         ]
       },
-      "captura": "comissoes_light_390.png"
+      "captura": "comissoes_light_390.png",
+      "valida": true
     },
     {
       "rota": "/compras",
@@ -269,7 +348,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "compras_light_390.png"
+      "captura": "compras_light_390.png",
+      "valida": true
     },
     {
       "rota": "/compras/[id]",
@@ -287,7 +367,8 @@
           "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
         ]
       },
-      "captura": "compras_id_light_390.png"
+      "captura": "compras_id_light_390.png",
+      "valida": true
     },
     {
       "rota": "/estoque",
@@ -303,7 +384,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "estoque_light_390.png"
+      "captura": "estoque_light_390.png",
+      "valida": true
     },
     {
       "rota": "/faturamento",
@@ -322,7 +404,8 @@
           "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(2) > .space-y-1.text-sm > .justify-between.gap-2.flex > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/9f219430-865a-473a-9982-c94112b0701e\">PED-0103</a>"
         ]
       },
-      "captura": "faturamento_light_390.png"
+      "captura": "faturamento_light_390.png",
+      "valida": true
     },
     {
       "rota": "/notas",
@@ -338,7 +421,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "notas_light_390.png"
+      "captura": "notas_light_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos",
@@ -354,7 +438,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_light_390.png"
+      "captura": "pedidos_light_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/[id]",
@@ -372,7 +457,8 @@
           "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
         ]
       },
-      "captura": "pedidos_id_light_390.png"
+      "captura": "pedidos_id_light_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/imprimir",
@@ -388,7 +474,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_imprimir_light_390.png"
+      "captura": "pedidos_imprimir_light_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/novo",
@@ -404,7 +491,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_novo_light_390.png"
+      "captura": "pedidos_novo_light_390.png",
+      "valida": true
     },
     {
       "rota": "/titulos",
@@ -423,7 +511,8 @@
           "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
         ]
       },
-      "captura": "titulos_light_390.png"
+      "captura": "titulos_light_390.png",
+      "valida": true
     },
     {
       "rota": "/carteira",
@@ -441,7 +530,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "carteira_dark_1440.png"
+      "captura": "carteira_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/comissoes",
@@ -459,7 +549,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "comissoes_dark_1440.png"
+      "captura": "comissoes_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/compras",
@@ -477,7 +568,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "compras_dark_1440.png"
+      "captura": "compras_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/compras/[id]",
@@ -495,7 +587,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "compras_id_dark_1440.png"
+      "captura": "compras_id_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/estoque",
@@ -513,7 +606,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "estoque_dark_1440.png"
+      "captura": "estoque_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/faturamento",
@@ -531,7 +625,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "faturamento_dark_1440.png"
+      "captura": "faturamento_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/notas",
@@ -549,7 +644,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "notas_dark_1440.png"
+      "captura": "notas_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos",
@@ -567,7 +663,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_dark_1440.png"
+      "captura": "pedidos_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/[id]",
@@ -585,7 +682,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_id_dark_1440.png"
+      "captura": "pedidos_id_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/imprimir",
@@ -603,7 +701,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_imprimir_dark_1440.png"
+      "captura": "pedidos_imprimir_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/novo",
@@ -621,7 +720,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "pedidos_novo_dark_1440.png"
+      "captura": "pedidos_novo_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/titulos",
@@ -641,7 +741,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "titulos_dark_1440.png"
+      "captura": "titulos_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/carteira",
@@ -657,7 +758,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "carteira_dark_390.png"
+      "captura": "carteira_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/comissoes",
@@ -673,7 +775,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "comissoes_dark_390.png"
+      "captura": "comissoes_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/compras",
@@ -689,7 +792,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "compras_dark_390.png"
+      "captura": "compras_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/compras/[id]",
@@ -707,7 +811,8 @@
           "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
         ]
       },
-      "captura": "compras_id_dark_390.png"
+      "captura": "compras_id_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/estoque",
@@ -723,7 +828,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "estoque_dark_390.png"
+      "captura": "estoque_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/faturamento",
@@ -739,7 +845,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "faturamento_dark_390.png"
+      "captura": "faturamento_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/notas",
@@ -755,7 +862,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "notas_dark_390.png"
+      "captura": "notas_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos",
@@ -771,7 +879,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_dark_390.png"
+      "captura": "pedidos_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/[id]",
@@ -789,7 +898,8 @@
           "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
         ]
       },
-      "captura": "pedidos_id_dark_390.png"
+      "captura": "pedidos_id_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/imprimir",
@@ -805,7 +915,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_imprimir_dark_390.png"
+      "captura": "pedidos_imprimir_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/pedidos/novo",
@@ -821,7 +932,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "pedidos_novo_dark_390.png"
+      "captura": "pedidos_novo_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/titulos",
@@ -840,7 +952,8 @@
           "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
         ]
       },
-      "captura": "titulos_dark_390.png"
+      "captura": "titulos_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/contacts",
@@ -858,7 +971,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "contacts_light_1440.png"
+      "captura": "contacts_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/contacts/[id]",
@@ -876,7 +990,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "contacts_id_light_1440.png"
+      "captura": "contacts_id_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas",
@@ -894,7 +1009,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "fiscal_notas_light_1440.png"
+      "captura": "fiscal_notas_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas/[id]",
@@ -910,7 +1026,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_id_light_1440.png"
+      "captura": "fiscal_notas_id_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/contacts",
@@ -926,7 +1043,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "contacts_light_390.png"
+      "captura": "contacts_light_390.png",
+      "valida": true
     },
     {
       "rota": "/contacts/[id]",
@@ -942,7 +1060,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "contacts_id_light_390.png"
+      "captura": "contacts_id_light_390.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas",
@@ -958,7 +1077,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_light_390.png"
+      "captura": "fiscal_notas_light_390.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas/[id]",
@@ -974,7 +1094,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_id_light_390.png"
+      "captura": "fiscal_notas_id_light_390.png",
+      "valida": true
     },
     {
       "rota": "/contacts",
@@ -992,7 +1113,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "contacts_dark_1440.png"
+      "captura": "contacts_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/contacts/[id]",
@@ -1010,7 +1132,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "contacts_id_dark_1440.png"
+      "captura": "contacts_id_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas",
@@ -1028,7 +1151,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "fiscal_notas_dark_1440.png"
+      "captura": "fiscal_notas_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas/[id]",
@@ -1044,7 +1168,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_id_dark_1440.png"
+      "captura": "fiscal_notas_id_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/contacts",
@@ -1060,7 +1185,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "contacts_dark_390.png"
+      "captura": "contacts_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/contacts/[id]",
@@ -1076,7 +1202,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "contacts_id_dark_390.png"
+      "captura": "contacts_id_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas",
@@ -1092,7 +1219,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_dark_390.png"
+      "captura": "fiscal_notas_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/fiscal/notas/[id]",
@@ -1108,7 +1236,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "fiscal_notas_id_dark_390.png"
+      "captura": "fiscal_notas_id_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/audit",
@@ -1125,7 +1254,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/connections",
@@ -1140,7 +1270,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/integrations/nuvemshop",
@@ -1157,7 +1288,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/inteligencia",
@@ -1174,7 +1306,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests",
@@ -1191,23 +1324,20 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests/[id]",
       "url": "",
       "tema": "light",
       "largura": 1440,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/products",
@@ -1224,7 +1354,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao",
@@ -1241,23 +1372,20 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
       "url": "",
       "tema": "light",
       "largura": 1440,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/prospeccao/nova",
@@ -1274,7 +1402,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar",
@@ -1294,7 +1423,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded",
           "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/categorias",
@@ -1311,7 +1441,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/oportunidades",
@@ -1330,7 +1461,8 @@
           "color-contrast: li:nth-child(2) > .h-full.space-y-2.rounded-2xl > .flex-wrap.gap-2.flex:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/4048ce92-4d17-4bdf-9c9b-52c4ff144a96\">Padaria E2E Voo</a>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/prospeccao",
@@ -1347,7 +1479,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/recuperacao",
@@ -1364,7 +1497,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/risco",
@@ -1381,7 +1515,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/recuperacao",
@@ -1398,7 +1533,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/sentinel",
@@ -1419,7 +1555,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/settings",
@@ -1437,7 +1574,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_light_1440.png"
+      "captura": "settings_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/api-tokens",
@@ -1453,7 +1591,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_api-tokens_light_1440.png"
+      "captura": "settings_api-tokens_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/atendimento",
@@ -1471,7 +1610,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_atendimento_light_1440.png"
+      "captura": "settings_atendimento_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/atualizacao",
@@ -1487,7 +1627,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atualizacao_light_1440.png"
+      "captura": "settings_atualizacao_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/billing",
@@ -1503,7 +1644,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_billing_light_1440.png"
+      "captura": "settings_billing_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/canal-oficial",
@@ -1519,7 +1661,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_canal-oficial_light_1440.png"
+      "captura": "settings_canal-oficial_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/devices",
@@ -1535,7 +1678,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_devices_light_1440.png"
+      "captura": "settings_devices_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/marca",
@@ -1551,7 +1695,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_marca_light_1440.png"
+      "captura": "settings_marca_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/notifications",
@@ -1571,7 +1716,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_notifications_light_1440.png"
+      "captura": "settings_notifications_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/profile",
@@ -1589,7 +1735,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_profile_light_1440.png"
+      "captura": "settings_profile_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/security",
@@ -1607,7 +1754,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_security_light_1440.png"
+      "captura": "settings_security_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/templates",
@@ -1623,7 +1771,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_templates_light_1440.png"
+      "captura": "settings_templates_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant",
@@ -1639,7 +1788,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_light_1440.png"
+      "captura": "settings_tenant_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -1659,7 +1809,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_tenant_agenda_light_1440.png"
+      "captura": "settings_tenant_agenda_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -1677,7 +1828,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_tenant_pipelines_light_1440.png"
+      "captura": "settings_tenant_pipelines_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1693,7 +1845,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_whatsapp_light_1440.png"
+      "captura": "settings_tenant_whatsapp_light_1440.png",
+      "valida": true
     },
     {
       "rota": "/team",
@@ -1710,7 +1863,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/team/invite",
@@ -1725,7 +1879,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/venda-automatica",
@@ -1742,7 +1897,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/webhooks",
@@ -1759,7 +1915,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/audit",
@@ -1774,7 +1931,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/connections",
@@ -1789,7 +1947,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/integrations/nuvemshop",
@@ -1804,7 +1963,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/inteligencia",
@@ -1819,7 +1979,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests",
@@ -1834,23 +1995,20 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests/[id]",
       "url": "",
       "tema": "light",
       "largura": 390,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/products",
@@ -1865,7 +2023,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao",
@@ -1880,23 +2039,20 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
       "url": "",
       "tema": "light",
       "largura": 390,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/prospeccao/nova",
@@ -1911,7 +2067,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar",
@@ -1929,7 +2086,8 @@
           "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
           "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/categorias",
@@ -1944,7 +2102,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/oportunidades",
@@ -1961,7 +2120,8 @@
         "nos": [
           "color-contrast: li:nth-child(1) > .h-full.space-y-2.rounded-2xl > .flex-wrap.gap-2.flex:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/6abb35ef-66a9-4950-a269-98aab6041dc2\">Mercado E2E Recompra</a>"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/prospeccao",
@@ -1976,7 +2136,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/recuperacao",
@@ -1991,7 +2152,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/risco",
@@ -2006,7 +2168,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/recuperacao",
@@ -2021,7 +2184,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/sentinel",
@@ -2040,7 +2204,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/settings",
@@ -2056,7 +2221,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_light_390.png"
+      "captura": "settings_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/api-tokens",
@@ -2072,7 +2238,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_api-tokens_light_390.png"
+      "captura": "settings_api-tokens_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/atendimento",
@@ -2088,7 +2255,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atendimento_light_390.png"
+      "captura": "settings_atendimento_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/atualizacao",
@@ -2104,7 +2272,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atualizacao_light_390.png"
+      "captura": "settings_atualizacao_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/billing",
@@ -2120,7 +2289,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_billing_light_390.png"
+      "captura": "settings_billing_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/canal-oficial",
@@ -2136,7 +2306,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_canal-oficial_light_390.png"
+      "captura": "settings_canal-oficial_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/devices",
@@ -2152,7 +2323,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_devices_light_390.png"
+      "captura": "settings_devices_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/marca",
@@ -2168,7 +2340,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_marca_light_390.png"
+      "captura": "settings_marca_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/notifications",
@@ -2186,7 +2359,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_notifications_light_390.png"
+      "captura": "settings_notifications_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/profile",
@@ -2202,7 +2376,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_profile_light_390.png"
+      "captura": "settings_profile_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/security",
@@ -2218,7 +2393,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_security_light_390.png"
+      "captura": "settings_security_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/templates",
@@ -2234,7 +2410,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_templates_light_390.png"
+      "captura": "settings_templates_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant",
@@ -2250,7 +2427,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_light_390.png"
+      "captura": "settings_tenant_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -2266,7 +2444,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_agenda_light_390.png"
+      "captura": "settings_tenant_agenda_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -2282,7 +2461,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_pipelines_light_390.png"
+      "captura": "settings_tenant_pipelines_light_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -2298,7 +2478,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_whatsapp_light_390.png"
+      "captura": "settings_tenant_whatsapp_light_390.png",
+      "valida": true
     },
     {
       "rota": "/team",
@@ -2313,7 +2494,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/team/invite",
@@ -2328,7 +2510,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/venda-automatica",
@@ -2343,7 +2526,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/webhooks",
@@ -2358,7 +2542,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/audit",
@@ -2375,7 +2560,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/connections",
@@ -2390,7 +2576,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/integrations/nuvemshop",
@@ -2407,7 +2594,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/inteligencia",
@@ -2424,7 +2612,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests",
@@ -2441,23 +2630,20 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests/[id]",
       "url": "",
       "tema": "dark",
       "largura": 1440,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/products",
@@ -2474,7 +2660,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao",
@@ -2491,23 +2678,20 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
       "url": "",
       "tema": "dark",
       "largura": 1440,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/prospeccao/nova",
@@ -2526,7 +2710,8 @@
           "color-contrast: .sm\\:grid-cols-3 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Recomendado: empresas já cadastradas, sem gastar busca.</p>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar",
@@ -2544,7 +2729,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded",
           "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/categorias",
@@ -2561,7 +2747,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/oportunidades",
@@ -2578,7 +2765,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/prospeccao",
@@ -2595,7 +2783,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/recuperacao",
@@ -2612,7 +2801,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/risco",
@@ -2629,7 +2819,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/recuperacao",
@@ -2646,7 +2837,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/sentinel",
@@ -2667,7 +2859,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/settings",
@@ -2685,7 +2878,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_dark_1440.png"
+      "captura": "settings_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/api-tokens",
@@ -2701,7 +2895,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_api-tokens_dark_1440.png"
+      "captura": "settings_api-tokens_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/atendimento",
@@ -2719,7 +2914,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_atendimento_dark_1440.png"
+      "captura": "settings_atendimento_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/atualizacao",
@@ -2735,7 +2931,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atualizacao_dark_1440.png"
+      "captura": "settings_atualizacao_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/billing",
@@ -2751,7 +2948,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_billing_dark_1440.png"
+      "captura": "settings_billing_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/canal-oficial",
@@ -2767,7 +2965,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_canal-oficial_dark_1440.png"
+      "captura": "settings_canal-oficial_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/devices",
@@ -2783,7 +2982,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_devices_dark_1440.png"
+      "captura": "settings_devices_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/marca",
@@ -2799,7 +2999,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_marca_dark_1440.png"
+      "captura": "settings_marca_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/notifications",
@@ -2821,7 +3022,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_notifications_dark_1440.png"
+      "captura": "settings_notifications_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/profile",
@@ -2839,7 +3041,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_profile_dark_1440.png"
+      "captura": "settings_profile_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/security",
@@ -2857,7 +3060,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_security_dark_1440.png"
+      "captura": "settings_security_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/templates",
@@ -2873,7 +3077,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_templates_dark_1440.png"
+      "captura": "settings_templates_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant",
@@ -2889,7 +3094,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_dark_1440.png"
+      "captura": "settings_tenant_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -2909,7 +3115,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_tenant_agenda_dark_1440.png"
+      "captura": "settings_tenant_agenda_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -2927,7 +3134,8 @@
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
-      "captura": "settings_tenant_pipelines_dark_1440.png"
+      "captura": "settings_tenant_pipelines_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -2943,7 +3151,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_whatsapp_dark_1440.png"
+      "captura": "settings_tenant_whatsapp_dark_1440.png",
+      "valida": true
     },
     {
       "rota": "/team",
@@ -2960,7 +3169,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/team/invite",
@@ -2975,7 +3185,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/venda-automatica",
@@ -2992,7 +3203,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/webhooks",
@@ -3009,7 +3221,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/audit",
@@ -3024,7 +3237,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/connections",
@@ -3039,7 +3253,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/integrations/nuvemshop",
@@ -3054,7 +3269,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/inteligencia",
@@ -3069,7 +3285,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests",
@@ -3084,23 +3301,20 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/lgpd/requests/[id]",
       "url": "",
       "tema": "dark",
       "largura": 390,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/products",
@@ -3115,7 +3329,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao",
@@ -3130,23 +3345,20 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
       "url": "",
       "tema": "dark",
       "largura": 390,
-      "overflow": 0,
+      "overflow": null,
       "h1": [],
       "consoleErros": [],
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
     },
     {
       "rota": "/prospeccao/nova",
@@ -3164,7 +3376,8 @@
           "color-contrast: .sm\\:grid-cols-2 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Garimpa empresas que ainda não são clientes.</p>",
           "color-contrast: .sm\\:grid-cols-3 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Recomendado: empresas já cadastradas, sem gastar busca.</p>"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar",
@@ -3182,7 +3395,8 @@
           "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
           "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/categorias",
@@ -3197,7 +3411,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/oportunidades",
@@ -3212,7 +3427,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/prospeccao",
@@ -3227,7 +3443,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/recuperacao",
@@ -3242,7 +3459,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/radar/risco",
@@ -3257,7 +3475,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/recuperacao",
@@ -3272,7 +3491,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/sentinel",
@@ -3291,7 +3511,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/settings",
@@ -3307,7 +3528,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_dark_390.png"
+      "captura": "settings_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/api-tokens",
@@ -3323,7 +3545,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_api-tokens_dark_390.png"
+      "captura": "settings_api-tokens_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/atendimento",
@@ -3339,7 +3562,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atendimento_dark_390.png"
+      "captura": "settings_atendimento_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/atualizacao",
@@ -3355,7 +3579,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_atualizacao_dark_390.png"
+      "captura": "settings_atualizacao_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/billing",
@@ -3371,7 +3596,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_billing_dark_390.png"
+      "captura": "settings_billing_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/canal-oficial",
@@ -3387,7 +3613,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_canal-oficial_dark_390.png"
+      "captura": "settings_canal-oficial_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/devices",
@@ -3403,7 +3630,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_devices_dark_390.png"
+      "captura": "settings_devices_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/marca",
@@ -3419,7 +3647,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_marca_dark_390.png"
+      "captura": "settings_marca_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/notifications",
@@ -3440,7 +3669,8 @@
           "color-contrast: .mt-2:nth-child(4) :: <p class=\"mt-2 text-muted-foreground\">O resultado vai no arquivo <code>.env</code>, em <code>VAPID_PUBLIC_KEY</code> e <code>VAPID_PRIVATE_KEY</code>. Email ainda não está disponív"
         ]
       },
-      "captura": "settings_notifications_dark_390.png"
+      "captura": "settings_notifications_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/profile",
@@ -3456,7 +3686,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_profile_dark_390.png"
+      "captura": "settings_profile_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/security",
@@ -3472,7 +3703,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_security_dark_390.png"
+      "captura": "settings_security_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/templates",
@@ -3488,7 +3720,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_templates_dark_390.png"
+      "captura": "settings_templates_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant",
@@ -3504,7 +3737,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_dark_390.png"
+      "captura": "settings_tenant_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -3520,7 +3754,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_agenda_dark_390.png"
+      "captura": "settings_tenant_agenda_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -3536,7 +3771,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_pipelines_dark_390.png"
+      "captura": "settings_tenant_pipelines_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -3552,7 +3788,8 @@
         "ids": [],
         "nos": []
       },
-      "captura": "settings_tenant_whatsapp_dark_390.png"
+      "captura": "settings_tenant_whatsapp_dark_390.png",
+      "valida": true
     },
     {
       "rota": "/team",
@@ -3567,7 +3804,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/team/invite",
@@ -3582,7 +3820,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/venda-automatica",
@@ -3597,7 +3836,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/webhooks",
@@ -3612,7 +3852,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal",
@@ -3631,7 +3872,8 @@
           "color-contrast: .mt-3 :: <a class=\"mt-3 inline-block text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/sincronizacoes\">Histórico completo</a>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/configuracoes",
@@ -3649,7 +3891,8 @@
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/notas?aba=config\">Série, CFOP e endereço da emissão →</a>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/eventos",
@@ -3666,7 +3909,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/fornecedores",
@@ -3683,7 +3927,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/manifestacoes",
@@ -3700,7 +3945,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/pendentes",
@@ -3718,7 +3964,8 @@
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=pendentes\">Ver relatório de pendências</a>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/produtos",
@@ -3736,7 +3983,8 @@
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=produtos\">Produtos mais comprados →</a>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/relatorios",
@@ -3753,7 +4001,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/resumos",
@@ -3770,7 +4019,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/sincronizacoes",
@@ -3787,7 +4037,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/xml",
@@ -3804,7 +4055,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal",
@@ -3819,7 +4071,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/configuracoes",
@@ -3836,7 +4089,8 @@
         "nos": [
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/notas?aba=config\">Série, CFOP e endereço da emissão →</a>"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/eventos",
@@ -3851,7 +4105,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/fornecedores",
@@ -3866,7 +4121,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/manifestacoes",
@@ -3881,7 +4137,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/pendentes",
@@ -3898,7 +4155,8 @@
         "nos": [
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=pendentes\">Ver relatório de pendências</a>"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/produtos",
@@ -3915,7 +4173,8 @@
         "nos": [
           "color-contrast: .text-accent :: <a class=\"text-sm text-accent underline-offset-4 hover:underline\" href=\"/app/fiscal/relatorios?tipo=produtos\">Produtos mais comprados →</a>"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/relatorios",
@@ -3930,7 +4189,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/resumos",
@@ -3945,7 +4205,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/sincronizacoes",
@@ -3960,7 +4221,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/xml",
@@ -3975,7 +4237,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal",
@@ -3992,7 +4255,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/configuracoes",
@@ -4009,7 +4273,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/eventos",
@@ -4026,7 +4291,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/fornecedores",
@@ -4043,7 +4309,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/manifestacoes",
@@ -4060,7 +4327,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/pendentes",
@@ -4077,7 +4345,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/produtos",
@@ -4094,7 +4363,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/relatorios",
@@ -4111,7 +4381,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/resumos",
@@ -4128,7 +4399,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/sincronizacoes",
@@ -4145,7 +4417,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/xml",
@@ -4162,7 +4435,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal",
@@ -4177,7 +4451,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/configuracoes",
@@ -4192,7 +4467,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/eventos",
@@ -4207,7 +4483,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/fornecedores",
@@ -4222,7 +4499,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/manifestacoes",
@@ -4237,7 +4515,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/pendentes",
@@ -4252,7 +4531,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/produtos",
@@ -4267,7 +4547,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/relatorios",
@@ -4282,7 +4563,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/resumos",
@@ -4297,7 +4579,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/sincronizacoes",
@@ -4312,7 +4595,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/fiscal/xml",
@@ -4327,7 +4611,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/financeiro",
@@ -4344,7 +4629,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/indicadores",
@@ -4361,7 +4647,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/laboratorio",
@@ -4378,7 +4665,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/metrics",
@@ -4395,7 +4683,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/relatorios",
@@ -4412,7 +4701,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/financeiro",
@@ -4427,7 +4717,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/indicadores",
@@ -4442,7 +4733,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/laboratorio",
@@ -4457,7 +4749,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/metrics",
@@ -4472,7 +4765,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/relatorios",
@@ -4487,7 +4781,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/financeiro",
@@ -4504,7 +4799,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/indicadores",
@@ -4521,7 +4817,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/laboratorio",
@@ -4538,7 +4835,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/metrics",
@@ -4555,7 +4853,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/relatorios",
@@ -4572,7 +4871,8 @@
         "nos": [
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/financeiro",
@@ -4587,7 +4887,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/indicadores",
@@ -4602,7 +4903,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/laboratorio",
@@ -4617,7 +4919,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/metrics",
@@ -4632,7 +4935,8 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
     },
     {
       "rota": "/relatorios",
@@ -5106,7 +5410,1620 @@
         "seria": 0,
         "ids": [],
         "nos": []
-      }
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai",
+      "url": "/app/ai",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents",
+      "url": "/app/ai/agents",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Agents de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "url": "/app/ai/agents/new",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/cases",
+      "url": "/app/ai/cases",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Casos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/controle",
+      "url": "/app/ai/controle",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Controle de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: a[href$=\"decisoes\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/ai/decisoes\">Abrir decisões</a>",
+          "color-contrast: .mt-2.inline-block[href$=\"inteligencia\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/inteligencia\">Abrir inteligência</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/credentials",
+      "url": "/app/ai/credentials",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/decisoes",
+      "url": "/app/ai/decisoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/evolution",
+      "url": "/app/ai/evolution",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Evolução da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups",
+      "url": "/app/ai/followups",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/inbox",
+      "url": "/app/ai/inbox",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "url": "/app/ai/knowledge/sources",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/memory",
+      "url": "/app/ai/memory",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/proposals",
+      "url": "/app/ai/proposals",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/providers",
+      "url": "/app/ai/providers",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "sem <h1> após 12 s — a tela não terminou de renderizar"
+    },
+    {
+      "rota": "/ai/routers",
+      "url": "/app/ai/routers",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/runs",
+      "url": "/app/ai/runs",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "sem <h1> após 12 s — a tela não terminou de renderizar"
+    },
+    {
+      "rota": "/ai/skills",
+      "url": "/app/ai/skills",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Skills da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/usage",
+      "url": "/app/ai/usage",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai",
+      "url": "/app/ai",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents",
+      "url": "/app/ai/agents",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Agents de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "url": "/app/ai/agents/new",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/cases",
+      "url": "/app/ai/cases",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Casos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/controle",
+      "url": "/app/ai/controle",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Controle de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: a[href$=\"decisoes\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/ai/decisoes\">Abrir decisões</a>",
+          "color-contrast: .mt-2.inline-block[href$=\"inteligencia\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/inteligencia\">Abrir inteligência</a>"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/credentials",
+      "url": "/app/ai/credentials",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/decisoes",
+      "url": "/app/ai/decisoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/evolution",
+      "url": "/app/ai/evolution",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Evolução da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups",
+      "url": "/app/ai/followups",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/inbox",
+      "url": "/app/ai/inbox",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "url": "/app/ai/knowledge/sources",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/memory",
+      "url": "/app/ai/memory",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/proposals",
+      "url": "/app/ai/proposals",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/providers",
+      "url": "/app/ai/providers",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Provedores de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers",
+      "url": "/app/ai/routers",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/runs",
+      "url": "/app/ai/runs",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Execuções de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/skills",
+      "url": "/app/ai/skills",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Skills da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/usage",
+      "url": "/app/ai/usage",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai",
+      "url": "/app/ai",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents",
+      "url": "/app/ai/agents",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Agents de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "url": "/app/ai/agents/new",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/cases",
+      "url": "/app/ai/cases",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Casos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/controle",
+      "url": "/app/ai/controle",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Controle de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/credentials",
+      "url": "/app/ai/credentials",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/decisoes",
+      "url": "/app/ai/decisoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/evolution",
+      "url": "/app/ai/evolution",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Evolução da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups",
+      "url": "/app/ai/followups",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/inbox",
+      "url": "/app/ai/inbox",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "url": "/app/ai/knowledge/sources",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/memory",
+      "url": "/app/ai/memory",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/proposals",
+      "url": "/app/ai/proposals",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/providers",
+      "url": "/app/ai/providers",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Provedores de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers",
+      "url": "/app/ai/routers",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/runs",
+      "url": "/app/ai/runs",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Execuções de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/skills",
+      "url": "/app/ai/skills",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Skills da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/usage",
+      "url": "/app/ai/usage",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai",
+      "url": "/app/ai",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Agente de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents",
+      "url": "/app/ai/agents",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Agents de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "url": "/app/ai/agents/new",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "403 — Sem permissão"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/cases",
+      "url": "/app/ai/cases",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Casos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/controle",
+      "url": "/app/ai/controle",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Controle de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/credentials",
+      "url": "/app/ai/credentials",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Chaves de acesso à IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/decisoes",
+      "url": "/app/ai/decisoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Decisões da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/evolution",
+      "url": "/app/ai/evolution",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Evolução da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups",
+      "url": "/app/ai/followups",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Follow-ups"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/inbox",
+      "url": "/app/ai/inbox",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Central de avisos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "url": "/app/ai/knowledge/sources",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "O que o agente sabe"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/memory",
+      "url": "/app/ai/memory",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Memória da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/proposals",
+      "url": "/app/ai/proposals",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Propostas"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/providers",
+      "url": "/app/ai/providers",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Provedores de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers",
+      "url": "/app/ai/routers",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Roteadores"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": null,
+      "h1": [],
+      "consoleErros": [],
+      "axe": null,
+      "valida": false,
+      "motivo": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/runs",
+      "url": "/app/ai/runs",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Execuções de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/skills",
+      "url": "/app/ai/skills",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Skills da IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
+    },
+    {
+      "rota": "/ai/usage",
+      "url": "/app/ai/usage",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Uso de IA"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "valida": true
     }
   ]
 }
