@@ -248,7 +248,7 @@ As três opções medidas (a/b/c) e o custo de cada uma estão em
 [`../business-rules/pendencias-do-sentinel.md`](../business-rules/pendencias-do-sentinel.md).
 **Nada foi implementado**: o detector segue como está, e a escolha é do dono.
 
-## 6. O que este documento **não** cobre
+## 15. O que este documento **não** cobre
 
 - Operações fiscais de **cliente** (emissão, cancelamento, inutilização) fora da 4655/4656 — nenhuma foi feita.
 - Nenhum pagamento, cobrança ou comunicação externa foi disparado.
