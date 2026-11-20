@@ -17,84 +17,85 @@
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; 1 contraste (link em card, só no claro)"
     },
     {
       "rota": "/comissoes",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "**corrigido**: Select \"Vendedor\" sem nome acessível (`button-name` crítico) → `aria-label`; contraste de link no claro segue"
     },
     {
       "rota": "/compras",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/compras/[id]",
       "grupo": "pedidos-e-vendas",
       "dinamica": true,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; `scrollable-region-focusable` (sério) na caixa da tabela → `tabIndex` no `Table`"
     },
     {
       "rota": "/estoque",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/faturamento",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; 1 contraste (link em card, só no claro)"
     },
     {
       "rota": "/notas",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/pedidos",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "passe #620: hierarquia da lista; overflow 0 nas 4 combinações"
     },
     {
       "rota": "/pedidos/[id]",
       "grupo": "pedidos-e-vendas",
       "dinamica": true,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "passe #620: h1 12→499px, ações no \"Mais opções\"; `scrollable-region-focusable` corrigido no `Table`"
     },
     {
       "rota": "/pedidos/imprimir",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/pedidos/novo",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "sem passe (docs 43/44); limpo"
     },
     {
       "rota": "/titulos",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "pendente"
+      "veredito": "**é redirect** para `/financeiro` (medido lá): Select \"Situação\" sem nome acessível corrigido",
+      "redireciona": "/financeiro"
     },
     {
       "rota": "/agenda",

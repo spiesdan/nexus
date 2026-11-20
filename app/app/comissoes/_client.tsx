@@ -225,7 +225,11 @@ export function ComissoesClient({
             value={vendedor || "__todos"}
             onValueChange={(v) => mudarVendedor(v === "__todos" ? "" : v)}
           >
-            <SelectTrigger className="w-52">
+            {/* O gatilho é um `<button>`: sem nome acessível ele é anunciado
+                como "botão" e nada mais — o `<span>` "Vendedor" acima é texto
+                solto, não rótulo associado. O axe reprovava como `button-name`
+                (crítico, WCAG 4.1.2) nas quatro combinações da matriz. */}
+            <SelectTrigger className="w-52" aria-label={t("Vendedor")}>
               <SelectValue placeholder={t("Todos")} />
             </SelectTrigger>
             <SelectContent>

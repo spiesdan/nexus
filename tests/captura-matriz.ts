@@ -125,8 +125,18 @@ async function medir(
    */
   let esqueleto = false;
   try {
+    /*
+     * DOIS sinais de "tela pronta", porque o produto tem dois esqueletos: o
+     * componente `Skeleton` (`animate-pulse`) e o esqueleto caseiro
+     * `bg-primary/10 text-transparent` (as telas financeiras usam o segundo).
+     * Medido: sem o segundo sinal, o axe acusava `color-contrast` em textos
+     * que são PLACEHOLDER ("Rótulo", "R$ 0,00") — defeito que não existe na
+     * tela carregada.
+     */
     await page.waitForFunction(
-      () => document.querySelectorAll(".animate-pulse").length === 0,
+      () =>
+        document.querySelectorAll(".animate-pulse").length === 0 &&
+        document.querySelectorAll('[class*="text-transparent"]').length === 0,
       null,
       { timeout: 45_000 },
     );
@@ -165,7 +175,12 @@ async function medir(
       critica: axe.violations.filter((v) => v.impact === "critical").length,
       seria: graves.filter((v) => v.impact === "serious").length,
       ids: graves.map((v) => `${v.id} (${v.impact})`),
-      nos: graves.flatMap((v) => v.nodes.slice(0, 2).map((n) => `${v.id}: ${n.target.join(" ")}`)),
+      // O HTML curto junto do alvo: `button-name` em `.h-9` não diz QUAL botão.
+      nos: graves.flatMap((v) =>
+        v.nodes
+          .slice(0, 2)
+          .map((n) => `${v.id}: ${n.target.join(" ")} :: ${(n.html ?? "").slice(0, 180)}`),
+      ),
     },
     captura,
   };

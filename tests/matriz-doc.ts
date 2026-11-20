@@ -37,6 +37,8 @@ interface Linha {
   dinamica: boolean;
   capturar: boolean;
   veredito: string;
+  /** Rota que só redireciona: a linha mede o DESTINO, e diz qual é. */
+  redireciona?: string;
 }
 
 const GRUPOS: Record<string, string> = {
@@ -75,10 +77,18 @@ function pior(medidas: Medida[], rota: string) {
     })
     .join("/");
   const pulada = medidas.find((m) => m.rota === rota && m.pulada);
-  return { overflow, overflowPorLargura, critica, seria, console: console_, pulada: pulada?.pulada };
+  return {
+    overflow,
+    overflowPorLargura,
+    critica,
+    seria,
+    console: console_,
+    pulada: pulada?.pulada,
+  };
 }
 
-function celula(rota: string): string {
+function celula(rota: string, redireciona?: string): string {
+  if (redireciona) return `— (redirect) | — | — | REDIRECT`;
   const d = pior(depois, rota);
   if (!d) return "— | — | — | pendente";
   if (d.pulada) return `— | — | — | **pulada**: ${d.pulada}`;
@@ -86,7 +96,8 @@ function celula(rota: string): string {
   const overflow = `${d.overflowPorLargura} px`;
   const axe = `${d.critica}/${d.seria}`;
   const cons = d.console === 0 ? "0" : `**${d.console}**`;
-  const antesTxt = a && !a.pulada ? ` (antes ${a.overflowPorLargura} px, axe ${a.critica}/${a.seria})` : "";
+  const antesTxt =
+    a && !a.pulada ? ` (antes ${a.overflowPorLargura} px, axe ${a.critica}/${a.seria})` : "";
   return `${overflow}${antesTxt} | ${axe} | ${cons} | VEREDITO`;
 }
 
@@ -101,7 +112,9 @@ for (const [grupo, titulo] of Object.entries(GRUPOS)) {
   bloco += `| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |\n`;
   bloco += `|---|---|---|---|---|---|\n`;
   rotas.forEach((r, i) => {
-    const linha = celula(r.rota).replace("VEREDITO", vereditos.get(r.rota) ?? "pendente");
+    const linha = celula(r.rota, r.redireciona)
+      .replace("VEREDITO", vereditos.get(r.rota) ?? "pendente")
+      .replace("REDIRECT", `${vereditos.get(r.rota) ?? ""} → \`${r.redireciona}\``);
     bloco += `| ${i + 1} | \`${r.rota}\`${r.dinamica ? " · dinâmica" : ""} | ${linha} |\n`;
   });
 }
@@ -114,4 +127,6 @@ const f = doc.indexOf(fim);
 if (i < 0 || f < 0) throw new Error(`marcadores ausentes em ${DOC}`);
 const novo = `${doc.slice(0, i + inicio.length)}\n${bloco}\n${doc.slice(f)}`;
 writeFileSync(DOC, novo);
-console.log(`matriz atualizada: ${matriz.rotas.length} rotas, ${depois.length} medições de depois, ${antes.length} de antes`);
+console.log(
+  `matriz atualizada: ${matriz.rotas.length} rotas, ${depois.length} medições de depois, ${antes.length} de antes`,
+);

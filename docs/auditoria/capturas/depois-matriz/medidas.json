@@ -1,0 +1,1005 @@
+{
+  "gerado": "2026-11-20T01:34:29.853Z",
+  "rotulo": "depois",
+  "rotas": 12,
+  "medidas": [
+    {
+      "rota": "/carteira",
+      "url": "/app/carteira",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carteira"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "carteira_light_1440.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "comissoes_light_1440.png"
+    },
+    {
+      "rota": "/compras",
+      "url": "/app/compras",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Compras"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "compras_light_1440.png"
+    },
+    {
+      "rota": "/compras/[id]",
+      "url": "/app/compras/1595e588-f87d-4323-b434-13039b4938a7",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Compra #4"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "compras_id_light_1440.png"
+    },
+    {
+      "rota": "/estoque",
+      "url": "/app/estoque",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "estoque_light_1440.png"
+    },
+    {
+      "rota": "/faturamento",
+      "url": "/app/faturamento",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Faturamento"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "faturamento_light_1440.png"
+    },
+    {
+      "rota": "/notas",
+      "url": "/app/notas",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "notas_light_1440.png"
+    },
+    {
+      "rota": "/pedidos",
+      "url": "/app/pedidos",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_light_1440.png"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "url": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "PED-0158"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_id_light_1440.png"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "url": "/app/pedidos/imprimir",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_imprimir_light_1440.png"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "url": "/app/pedidos/novo",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_novo_light_1440.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [
+        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      ],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "erro ao medir"
+    },
+    {
+      "rota": "/carteira",
+      "url": "/app/carteira",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carteira"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.gap-2.flex:nth-child(1) > .truncate.text-primary.underline-offset-4 :: <a class=\"truncate font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/b9125735-d326-4a62-9358-c6de191ce1f7\">Cliente Jornada Venda 1795122155436</a>"
+        ]
+      },
+      "captura": "carteira_light_390.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.flex.gap-2:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d\">PED-0158</a>"
+        ]
+      },
+      "captura": "comissoes_light_390.png"
+    },
+    {
+      "rota": "/compras",
+      "url": "/app/compras",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Compras"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "compras_light_390.png"
+    },
+    {
+      "rota": "/compras/[id]",
+      "url": "/app/compras/1595e588-f87d-4323-b434-13039b4938a7",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Compra #4"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "scrollable-region-focusable (serious)"
+        ],
+        "nos": [
+          "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
+        ]
+      },
+      "captura": "compras_id_light_390.png"
+    },
+    {
+      "rota": "/estoque",
+      "url": "/app/estoque",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "estoque_light_390.png"
+    },
+    {
+      "rota": "/faturamento",
+      "url": "/app/faturamento",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Faturamento"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.gap-2.flex > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/efd73a44-d265-4c04-908e-c1a09fc4480c\">PED-0104</a>",
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(2) > .space-y-1.text-sm > .justify-between.gap-2.flex > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/9f219430-865a-473a-9982-c94112b0701e\">PED-0103</a>"
+        ]
+      },
+      "captura": "faturamento_light_390.png"
+    },
+    {
+      "rota": "/notas",
+      "url": "/app/notas",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "notas_light_390.png"
+    },
+    {
+      "rota": "/pedidos",
+      "url": "/app/pedidos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_light_390.png"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "url": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "PED-0158"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "scrollable-region-focusable (serious)"
+        ],
+        "nos": [
+          "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
+        ]
+      },
+      "captura": "pedidos_id_light_390.png"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "url": "/app/pedidos/imprimir",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_imprimir_light_390.png"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "url": "/app/pedidos/novo",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_novo_light_390.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-\\[11px\\].tracking-\\[0\\.12em\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
+        ]
+      },
+      "captura": "titulos_light_390.png"
+    },
+    {
+      "rota": "/carteira",
+      "url": "/app/carteira",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Carteira"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "carteira_dark_1440.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "comissoes_dark_1440.png"
+    },
+    {
+      "rota": "/compras",
+      "url": "/app/compras",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Compras"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "compras_dark_1440.png"
+    },
+    {
+      "rota": "/compras/[id]",
+      "url": "/app/compras/1595e588-f87d-4323-b434-13039b4938a7",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Compra #4"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "compras_id_dark_1440.png"
+    },
+    {
+      "rota": "/estoque",
+      "url": "/app/estoque",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "estoque_dark_1440.png"
+    },
+    {
+      "rota": "/faturamento",
+      "url": "/app/faturamento",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Faturamento"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "faturamento_dark_1440.png"
+    },
+    {
+      "rota": "/notas",
+      "url": "/app/notas",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "notas_dark_1440.png"
+    },
+    {
+      "rota": "/pedidos",
+      "url": "/app/pedidos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_dark_1440.png"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "url": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "PED-0158"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_id_dark_1440.png"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "url": "/app/pedidos/imprimir",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_imprimir_dark_1440.png"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "url": "/app/pedidos/novo",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "pedidos_novo_dark_1440.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .tracking-\\[0\\.12em\\].text-\\[11px\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "titulos_dark_1440.png"
+    },
+    {
+      "rota": "/carteira",
+      "url": "/app/carteira",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Carteira"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "carteira_dark_390.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "comissoes_dark_390.png"
+    },
+    {
+      "rota": "/compras",
+      "url": "/app/compras",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Compras"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "compras_dark_390.png"
+    },
+    {
+      "rota": "/compras/[id]",
+      "url": "/app/compras/1595e588-f87d-4323-b434-13039b4938a7",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Compra #4"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "scrollable-region-focusable (serious)"
+        ],
+        "nos": [
+          "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
+        ]
+      },
+      "captura": "compras_id_dark_390.png"
+    },
+    {
+      "rota": "/estoque",
+      "url": "/app/estoque",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Estoque"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "estoque_dark_390.png"
+    },
+    {
+      "rota": "/faturamento",
+      "url": "/app/faturamento",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Faturamento"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "faturamento_dark_390.png"
+    },
+    {
+      "rota": "/notas",
+      "url": "/app/notas",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Notas fiscais"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "notas_dark_390.png"
+    },
+    {
+      "rota": "/pedidos",
+      "url": "/app/pedidos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_dark_390.png"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "url": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "PED-0158"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "scrollable-region-focusable (serious)"
+        ],
+        "nos": [
+          "scrollable-region-focusable: .overflow-auto.w-full.relative :: <div class=\"relative w-full overflow-auto\">"
+        ]
+      },
+      "captura": "pedidos_id_dark_390.png"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "url": "/app/pedidos/imprimir",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Imprimir pedidos"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_imprimir_dark_390.png"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "url": "/app/pedidos/novo",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Novo pedido"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "pedidos_novo_dark_390.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-\\[11px\\].tracking-\\[0\\.12em\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
+        ]
+      },
+      "captura": "titulos_dark_390.png"
+    }
+  ]
+}

@@ -186,7 +186,11 @@ export function AbaTitulos({
               void carregar(prox, busca);
             }}
           >
-            <SelectTrigger className="w-44">
+            {/* O `<span>` "Situação" acima é texto solto, não rótulo: o gatilho
+                é um `<button role="combobox">` e sem `aria-label` ficava sem
+                nome — `button-name` crítico (WCAG 4.1.2) nas quatro
+                combinações medidas em `/financeiro`. */}
+            <SelectTrigger className="w-44" aria-label={t("Situação")}>
               <SelectValue placeholder={t("Todas")} />
             </SelectTrigger>
             <SelectContent>
