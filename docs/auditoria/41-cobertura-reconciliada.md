@@ -44,7 +44,7 @@ base sumiu; duas telas entraram depois dela.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/app/agenda` | agenda | **pendente** | — | D |
+| `/app/agenda` | agenda | **aplicado** | #653 · `50-agenda-design.md` · `capturas/{antes,depois}-agenda/` | D |
 | `/app/ai/agents/[id]` | ai | **pendente** | — | D |
 | `/app/ai/agents/new` | ai | **pendente** | — | D |
 | `/app/ai/agents` | ai | **pendente** | — | D |
@@ -231,7 +231,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/inbox` | sim | aplicado | #638/#640 · `45-inbox-design.md` |
 | `/app/radar` | sim | pendente | — |
 | `/app/ai/followups` | sim | pendente | — |
-| `/app/agenda` | sim | pendente | — |
+| `/app/agenda` | sim | aplicado | #653 · `50-agenda-design.md` |
 | `/app/templates` | sim | pendente | — |
 | `/app/pedidos` | sim | aplicado | #620 · hierarquia na lista e na ficha |
 | `/app/contacts` | sim | pendente | — |
