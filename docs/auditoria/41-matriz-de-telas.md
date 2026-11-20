@@ -58,147 +58,147 @@ escrito à mão).
 
 ### 1. Pedidos e vendas — 12 telas, 12 medidas
 
-| #   | Tela                       | Overflow 1440/390 | axe crítico/sério | Console | Veredito                                                                                                                     |
-| --- | -------------------------- | ----------------- | ----------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| 1   | `/carteira`                | 0/0 px            | 0/1               | 0       | sem passe; 1 contraste (link em card, só no claro)                                                                           |
-| 2   | `/comissoes`               | 0/0 px            | 0/1               | 0       | **corrigido**: Select "Vendedor" sem nome acessível (`button-name` crítico) → `aria-label`; contraste de link no claro segue |
-| 3   | `/compras`                 | 0/0 px            | 0/1               | 0       | sem passe; limpo                                                                                                             |
-| 4   | `/compras/[id]` · dinâmica | 0/0 px            | 0/1               | 0       | sem passe; `scrollable-region-focusable` (sério) na caixa da tabela → `tabIndex` no `Table`                                  |
-| 5   | `/estoque`                 | 0/0 px            | 0/1               | 0       | sem passe; limpo                                                                                                             |
-| 6   | `/faturamento`             | 0/0 px            | 0/1               | 0       | sem passe; 1 contraste (link em card, só no claro)                                                                           |
-| 7   | `/notas`                   | 0/0 px            | 0/1               | 0       | sem passe; limpo                                                                                                             |
-| 8   | `/pedidos`                 | 0/0 px            | 0/1               | 0       | passe #620: hierarquia da lista; overflow 0 nas 4 combinações                                                                |
-| 9   | `/pedidos/[id]` · dinâmica | 0/0 px            | 0/1               | 0       | passe #620: h1 12→499px, ações no "Mais opções"; `scrollable-region-focusable` corrigido no `Table`                          |
-| 10  | `/pedidos/imprimir`        | 0/0 px            | 0/1               | 0       | sem passe; limpo                                                                                                             |
-| 11  | `/pedidos/novo`            | 0/0 px            | 0/1               | 0       | sem passe (docs 43/44); limpo                                                                                                |
-| 12  | `/titulos`                 | — (redirect)      | —                 | —       | **é redirect** para `/financeiro` (medido lá): Select "Situação" sem nome acessível corrigido → `/financeiro`                |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/carteira` | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
+| 2 | `/comissoes` | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
+| 3 | `/compras` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 4 | `/compras/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
+| 5 | `/estoque` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 6 | `/faturamento` | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
+| 7 | `/notas` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 8 | `/pedidos` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 9 | `/pedidos/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
+| 10 | `/pedidos/imprimir` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 11 | `/pedidos/novo` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 12 | `/titulos` | — (redirect) | — | — | redireciona para a home no estado atual (recurso desligado ou sem permissão) → `/financeiro` |
 
-### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 0 medidas
+### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 2 medidas
 
-| #   | Tela                         | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | ---------------------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/agenda`                    | —                 | —                 | —       | pendente |
-| 2   | `/busca`                     | —                 | —                 | —       | pendente |
-| 3   | `/campanhas`                 | —                 | —                 | —       | pendente |
-| 4   | `/contacts`                  | —                 | —                 | —       | pendente |
-| 5   | `/contacts/[id]` · dinâmica  | —                 | —                 | —       | pendente |
-| 6   | `/inbox`                     | —                 | —                 | —       | pendente |
-| 7   | `/inbox/[id]` · dinâmica     | —                 | —                 | —       | pendente |
-| 8   | `/kanban`                    | —                 | —                 | —       | pendente |
-| 9   | `/leads/[id]` · dinâmica     | —                 | —                 | —       | pendente |
-| 10  | `/meu-dia`                   | —                 | —                 | —       | pendente |
-| 11  | `/pipelines/[id]` · dinâmica | —                 | —                 | —       | pendente |
-| 12  | `/tarefas`                   | —                 | —                 | —       | pendente |
-| 13  | `/templates`                 | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/agenda` | — | — | — | pendente |
+| 2 | `/busca` | — | — | — | pendente |
+| 3 | `/campanhas` | — | — | — | pendente |
+| 4 | `/contacts` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 5 | `/contacts/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 6 | `/inbox` | — | — | — | pendente |
+| 7 | `/inbox/[id]` · dinâmica | — | — | — | pendente |
+| 8 | `/kanban` | — | — | — | pendente |
+| 9 | `/leads/[id]` · dinâmica | — | — | — | pendente |
+| 10 | `/meu-dia` | — | — | — | pendente |
+| 11 | `/pipelines/[id]` · dinâmica | — | — | — | pendente |
+| 12 | `/tarefas` | — | — | — | pendente |
+| 13 | `/templates` | — | — | — | pendente |
 
-### 3. Fiscal — 13 telas, 0 medidas
+### 3. Fiscal — 13 telas, 2 medidas
 
-| #   | Tela                            | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | ------------------------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/fiscal`                       | —                 | —                 | —       | pendente |
-| 2   | `/fiscal/configuracoes`         | —                 | —                 | —       | pendente |
-| 3   | `/fiscal/eventos`               | —                 | —                 | —       | pendente |
-| 4   | `/fiscal/fornecedores`          | —                 | —                 | —       | pendente |
-| 5   | `/fiscal/manifestacoes`         | —                 | —                 | —       | pendente |
-| 6   | `/fiscal/notas`                 | —                 | —                 | —       | pendente |
-| 7   | `/fiscal/notas/[id]` · dinâmica | —                 | —                 | —       | pendente |
-| 8   | `/fiscal/pendentes`             | —                 | —                 | —       | pendente |
-| 9   | `/fiscal/produtos`              | —                 | —                 | —       | pendente |
-| 10  | `/fiscal/relatorios`            | —                 | —                 | —       | pendente |
-| 11  | `/fiscal/resumos`               | —                 | —                 | —       | pendente |
-| 12  | `/fiscal/sincronizacoes`        | —                 | —                 | —       | pendente |
-| 13  | `/fiscal/xml`                   | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/fiscal` | — | — | — | pendente |
+| 2 | `/fiscal/configuracoes` | — | — | — | pendente |
+| 3 | `/fiscal/eventos` | — | — | — | pendente |
+| 4 | `/fiscal/fornecedores` | — | — | — | pendente |
+| 5 | `/fiscal/manifestacoes` | — | — | — | pendente |
+| 6 | `/fiscal/notas` | 0/0 px | 0/2 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | 404 na rota — verificar caminho — o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
+| 8 | `/fiscal/pendentes` | — | — | — | pendente |
+| 9 | `/fiscal/produtos` | — | — | — | pendente |
+| 10 | `/fiscal/relatorios` | — | — | — | pendente |
+| 11 | `/fiscal/resumos` | — | — | — | pendente |
+| 12 | `/fiscal/sincronizacoes` | — | — | — | pendente |
+| 13 | `/fiscal/xml` | — | — | — | pendente |
 
 ### 4. Expedição — 7 telas, 0 medidas
 
-| #   | Tela                                    | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | --------------------------------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/expedicao`                            | —                 | —                 | —       | pendente |
-| 2   | `/expedicao/[id]` · dinâmica            | —                 | —                 | —       | pendente |
-| 3   | `/expedicao/[id]/fechamento` · dinâmica | —                 | —                 | —       | pendente |
-| 4   | `/expedicao/[id]/motorista` · dinâmica  | —                 | —                 | —       | pendente |
-| 5   | `/expedicao/[id]/rota` · dinâmica       | —                 | —                 | —       | pendente |
-| 6   | `/expedicao/nova`                       | —                 | —                 | —       | pendente |
-| 7   | `/frota`                                | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/expedicao` | — | — | — | pendente |
+| 2 | `/expedicao/[id]` · dinâmica | — | — | — | pendente |
+| 3 | `/expedicao/[id]/fechamento` · dinâmica | — | — | — | pendente |
+| 4 | `/expedicao/[id]/motorista` · dinâmica | — | — | — | pendente |
+| 5 | `/expedicao/[id]/rota` · dinâmica | — | — | — | pendente |
+| 6 | `/expedicao/nova` | — | — | — | pendente |
+| 7 | `/frota` | — | — | — | pendente |
 
 ### 5. Financeiro e indicadores — 5 telas, 0 medidas
 
-| #   | Tela           | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | -------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/financeiro`  | —                 | —                 | —       | pendente |
-| 2   | `/indicadores` | —                 | —                 | —       | pendente |
-| 3   | `/laboratorio` | —                 | —                 | —       | pendente |
-| 4   | `/metrics`     | —                 | —                 | —       | pendente |
-| 5   | `/relatorios`  | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/financeiro` | — | — | — | pendente |
+| 2 | `/indicadores` | — | — | — | pendente |
+| 3 | `/laboratorio` | — | — | — | pendente |
+| 4 | `/metrics` | — | — | — | pendente |
+| 5 | `/relatorios` | — | — | — | pendente |
 
-### 6. Configuração, time e inteligência de mercado — 38 telas, 0 medidas
+### 6. Configuração, time e inteligência de mercado — 38 telas, 36 medidas
 
-| #   | Tela                                    | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | --------------------------------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/audit`                                | —                 | —                 | —       | pendente |
-| 2   | `/connections`                          | —                 | —                 | —       | pendente |
-| 3   | `/integrations/nuvemshop`               | —                 | —                 | —       | pendente |
-| 4   | `/inteligencia`                         | —                 | —                 | —       | pendente |
-| 5   | `/lgpd/requests`                        | —                 | —                 | —       | pendente |
-| 6   | `/lgpd/requests/[id]` · dinâmica        | —                 | —                 | —       | pendente |
-| 7   | `/products`                             | —                 | —                 | —       | pendente |
-| 8   | `/prospeccao`                           | —                 | —                 | —       | pendente |
-| 9   | `/prospeccao/campanhas/[id]` · dinâmica | —                 | —                 | —       | pendente |
-| 10  | `/prospeccao/nova`                      | —                 | —                 | —       | pendente |
-| 11  | `/radar`                                | —                 | —                 | —       | pendente |
-| 12  | `/radar/categorias`                     | —                 | —                 | —       | pendente |
-| 13  | `/radar/oportunidades`                  | —                 | —                 | —       | pendente |
-| 14  | `/radar/prospeccao`                     | —                 | —                 | —       | pendente |
-| 15  | `/radar/recuperacao`                    | —                 | —                 | —       | pendente |
-| 16  | `/radar/risco`                          | —                 | —                 | —       | pendente |
-| 17  | `/recuperacao`                          | —                 | —                 | —       | pendente |
-| 18  | `/sentinel`                             | —                 | —                 | —       | pendente |
-| 19  | `/settings`                             | —                 | —                 | —       | pendente |
-| 20  | `/settings/api-tokens`                  | —                 | —                 | —       | pendente |
-| 21  | `/settings/atendimento`                 | —                 | —                 | —       | pendente |
-| 22  | `/settings/atualizacao`                 | —                 | —                 | —       | pendente |
-| 23  | `/settings/billing`                     | —                 | —                 | —       | pendente |
-| 24  | `/settings/canal-oficial`               | —                 | —                 | —       | pendente |
-| 25  | `/settings/devices`                     | —                 | —                 | —       | pendente |
-| 26  | `/settings/marca`                       | —                 | —                 | —       | pendente |
-| 27  | `/settings/notifications`               | —                 | —                 | —       | pendente |
-| 28  | `/settings/profile`                     | —                 | —                 | —       | pendente |
-| 29  | `/settings/security`                    | —                 | —                 | —       | pendente |
-| 30  | `/settings/templates`                   | —                 | —                 | —       | pendente |
-| 31  | `/settings/tenant`                      | —                 | —                 | —       | pendente |
-| 32  | `/settings/tenant/agenda`               | —                 | —                 | —       | pendente |
-| 33  | `/settings/tenant/pipelines`            | —                 | —                 | —       | pendente |
-| 34  | `/settings/tenant/whatsapp`             | —                 | —                 | —       | pendente |
-| 35  | `/team`                                 | —                 | —                 | —       | pendente |
-| 36  | `/team/invite`                          | —                 | —                 | —       | pendente |
-| 37  | `/venda-automatica`                     | —                 | —                 | —       | pendente |
-| 38  | `/webhooks`                             | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/audit` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 2 | `/connections` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 3 | `/integrations/nuvemshop` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
+| 4 | `/inteligencia` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 5 | `/lgpd/requests` | 0/0 px | 0/1 | 0 | redireciona para a home no estado atual (recurso desligado ou sem permissão) |
+| 6 | `/lgpd/requests/[id]` · dinâmica | — | — | — | pendente |
+| 7 | `/products` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 8 | `/prospeccao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 9 | `/prospeccao/campanhas/[id]` · dinâmica | — | — | — | pendente |
+| 10 | `/prospeccao/nova` | 0/0 px | 0/2 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 11 | `/radar` | 0/0 px | 0/2 | 0 | `label-content-name-mismatch` em 2 botões de atalho (aria-label x texto visível) |
+| 12 | `/radar/categorias` | 0/0 px | 0/1 | 0 | **corrigido**: `Tabs` sem painel (`aria-valid-attr-value`, CRÍTICO) → grupo com `aria-pressed` |
+| 13 | `/radar/oportunidades` | 0/0 px | 0/2 | 0 | contraste medido: links em `text-primary` dentro do cartão (classe do V-54) |
+| 14 | `/radar/prospeccao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 15 | `/radar/recuperacao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 16 | `/radar/risco` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 17 | `/recuperacao` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 18 | `/sentinel` | 0/0 px | 0/1 | **3** | console: 3 erros de aninhamento HTML inválido (`<%s>` dentro de `%s`) |
+| 19 | `/settings` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 20 | `/settings/api-tokens` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 21 | `/settings/atendimento` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 22 | `/settings/atualizacao` | 0/0 px | 0/0 | 0 | 404 na rota — verificar se é feature flag ou caminho morto |
+| 23 | `/settings/billing` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 24 | `/settings/canal-oficial` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 25 | `/settings/devices` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 26 | `/settings/marca` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 27 | `/settings/notifications` | 0/0 px | 0/2 | **1** | 1 erro de console medido |
+| 28 | `/settings/profile` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 29 | `/settings/security` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 30 | `/settings/templates` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 31 | `/settings/tenant` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 32 | `/settings/tenant/agenda` | 0/0 px | 0/2 | 0 | contraste medido: texto mudo dentro de bloco `opacity-60` (11px/12px) |
+| 33 | `/settings/tenant/pipelines` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 34 | `/settings/tenant/whatsapp` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 35 | `/team` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 36 | `/team/invite` | 0/0 px | 0/0 | 0 | 403 por papel: a rota exige admin e a medição usa `manager` (esperado) |
+| 37 | `/venda-automatica` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
+| 38 | `/webhooks` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 
 ### 7. IA (agentes, runs, conhecimento) — 22 telas, 0 medidas
 
-| #   | Tela                                        | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
-| --- | ------------------------------------------- | ----------------- | ----------------- | ------- | -------- |
-| 1   | `/ai`                                       | —                 | —                 | —       | pendente |
-| 2   | `/ai/agents`                                | —                 | —                 | —       | pendente |
-| 3   | `/ai/agents/[id]` · dinâmica                | —                 | —                 | —       | pendente |
-| 4   | `/ai/agents/new`                            | —                 | —                 | —       | pendente |
-| 5   | `/ai/cases`                                 | —                 | —                 | —       | pendente |
-| 6   | `/ai/controle`                              | —                 | —                 | —       | pendente |
-| 7   | `/ai/credentials`                           | —                 | —                 | —       | pendente |
-| 8   | `/ai/decisoes`                              | —                 | —                 | —       | pendente |
-| 9   | `/ai/evolution`                             | —                 | —                 | —       | pendente |
-| 10  | `/ai/followups`                             | —                 | —                 | —       | pendente |
-| 11  | `/ai/followups/[id]` · dinâmica             | —                 | —                 | —       | pendente |
-| 12  | `/ai/followups/enrollments/[id]` · dinâmica | —                 | —                 | —       | pendente |
-| 13  | `/ai/inbox`                                 | —                 | —                 | —       | pendente |
-| 14  | `/ai/knowledge/sources`                     | —                 | —                 | —       | pendente |
-| 15  | `/ai/memory`                                | —                 | —                 | —       | pendente |
-| 16  | `/ai/proposals`                             | —                 | —                 | —       | pendente |
-| 17  | `/ai/providers`                             | —                 | —                 | —       | pendente |
-| 18  | `/ai/routers`                               | —                 | —                 | —       | pendente |
-| 19  | `/ai/routers/[id]` · dinâmica               | —                 | —                 | —       | pendente |
-| 20  | `/ai/runs`                                  | —                 | —                 | —       | pendente |
-| 21  | `/ai/skills`                                | —                 | —                 | —       | pendente |
-| 22  | `/ai/usage`                                 | —                 | —                 | —       | pendente |
+| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
+|---|---|---|---|---|---|
+| 1 | `/ai` | — | — | — | pendente |
+| 2 | `/ai/agents` | — | — | — | pendente |
+| 3 | `/ai/agents/[id]` · dinâmica | — | — | — | pendente |
+| 4 | `/ai/agents/new` | — | — | — | pendente |
+| 5 | `/ai/cases` | — | — | — | pendente |
+| 6 | `/ai/controle` | — | — | — | pendente |
+| 7 | `/ai/credentials` | — | — | — | pendente |
+| 8 | `/ai/decisoes` | — | — | — | pendente |
+| 9 | `/ai/evolution` | — | — | — | pendente |
+| 10 | `/ai/followups` | — | — | — | pendente |
+| 11 | `/ai/followups/[id]` · dinâmica | — | — | — | pendente |
+| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — | — | — | pendente |
+| 13 | `/ai/inbox` | — | — | — | pendente |
+| 14 | `/ai/knowledge/sources` | — | — | — | pendente |
+| 15 | `/ai/memory` | — | — | — | pendente |
+| 16 | `/ai/proposals` | — | — | — | pendente |
+| 17 | `/ai/providers` | — | — | — | pendente |
+| 18 | `/ai/routers` | — | — | — | pendente |
+| 19 | `/ai/routers/[id]` · dinâmica | — | — | — | pendente |
+| 20 | `/ai/runs` | — | — | — | pendente |
+| 21 | `/ai/skills` | — | — | — | pendente |
+| 22 | `/ai/usage` | — | — | — | pendente |
 
 <!-- MATRIZ:FIM -->

@@ -39,6 +39,8 @@ interface Linha {
   veredito: string;
   /** Rota que só redireciona: a linha mede o DESTINO, e diz qual é. */
   redireciona?: string;
+  /** Rota que não pode ser medida aqui, com o motivo declarado. */
+  pular?: string;
 }
 
 const GRUPOS: Record<string, string> = {
@@ -87,7 +89,8 @@ function pior(medidas: Medida[], rota: string) {
   };
 }
 
-function celula(rota: string, redireciona?: string): string {
+function celula(rota: string, redireciona?: string, pular?: string): string {
+  if (pular) return `— (pulada) | — | — | PULADA`;
   if (redireciona) return `— (redirect) | — | — | REDIRECT`;
   const d = pior(depois, rota);
   if (!d) return "— | — | — | pendente";
@@ -112,9 +115,10 @@ for (const [grupo, titulo] of Object.entries(GRUPOS)) {
   bloco += `| # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |\n`;
   bloco += `|---|---|---|---|---|---|\n`;
   rotas.forEach((r, i) => {
-    const linha = celula(r.rota, r.redireciona)
+    const linha = celula(r.rota, r.redireciona, r.pular)
       .replace("VEREDITO", vereditos.get(r.rota) ?? "pendente")
-      .replace("REDIRECT", `${vereditos.get(r.rota) ?? ""} → \`${r.redireciona}\``);
+      .replace("REDIRECT", `${vereditos.get(r.rota) ?? ""} → \`${r.redireciona}\``)
+      .replace("PULADA", `${vereditos.get(r.rota) ?? ""} — ${r.pular}`);
     bloco += `| ${i + 1} | \`${r.rota}\`${r.dinamica ? " · dinâmica" : ""} | ${linha} |\n`;
   });
 }

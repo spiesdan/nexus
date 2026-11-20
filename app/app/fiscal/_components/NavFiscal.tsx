@@ -77,26 +77,30 @@ export function NavFiscal() {
         aria-label="Subtelas de notas fiscais"
         className="hidden gap-1 overflow-x-auto pb-1 md:flex"
       >
-      {ABAS_DO_FISCAL.map((aba) => {
-        // `/app/fiscal/notas/[id]` pertence a "Todas as Notas": o detalhe é
-        // uma continuação da lista, não uma aba própria.
-        const ativa = ativaDe(aba.href);
-        return (
-          <Link
-            key={aba.href}
-            href={aba.href}
-            aria-current={ativa ? "page" : undefined}
-            className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
-              ativa
-                ? "border-accent-600/40 bg-accent-soft text-accent"
-                : "border-border bg-surface text-text-muted hover:bg-surface-elevated",
-            )}
-          >
-            {aba.label}
-          </Link>
-        );
-      })}
+        {ABAS_DO_FISCAL.map((aba) => {
+          // `/app/fiscal/notas/[id]` pertence a "Todas as Notas": o detalhe é
+          // uma continuação da lista, não uma aba própria.
+          const ativa = ativaDe(aba.href);
+          return (
+            <Link
+              key={aba.href}
+              href={aba.href}
+              aria-current={ativa ? "page" : undefined}
+              className={cn(
+                "shrink-0 rounded-full border px-3 py-1.5 text-sm whitespace-nowrap transition-colors",
+                // `text-accent-ink` e NÃO `text-accent`: no tema claro o accent
+                // puro dá 3,63:1 sobre o `accent-soft` desta pílula ativa, e o
+                // axe reprova o contraste na tela de notas (medido na matriz).
+                // O `-ink` é a tinta criada justamente para texto na marca.
+                ativa
+                  ? "border-accent-600/40 bg-accent-soft text-accent-ink"
+                  : "border-border bg-surface text-text-muted hover:bg-surface-elevated",
+              )}
+            >
+              {aba.label}
+            </Link>
+          );
+        })}
       </nav>
     </>
   );

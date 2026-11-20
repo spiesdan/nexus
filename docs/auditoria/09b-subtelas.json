@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-18T05:38:14.229Z",
+  "geradoEm": "2026-11-20T04:30:12.779Z",
   "telas": [
     {
       "rota": "/",
@@ -98,7 +98,7 @@
           "tipo": "gaveta",
           "rotulo": "Menu de navegação",
           "arquivo": "components/admin/AdminShell.tsx",
-          "linha": 42
+          "linha": 49
         }
       ],
       "rotasIrmaes": [],
@@ -193,6 +193,14 @@
     },
     {
       "rota": "/admin/marca",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/observabilidade",
       "abas": [],
       "modais": [],
       "gavetas": [],
@@ -313,27 +321,20 @@
     },
     {
       "rota": "/app/agenda",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "components/agenda/HistoricoDaAgenda.tsx",
-          "linha": 98
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [
         {
           "tipo": "gaveta",
           "rotulo": "Remarcar agendamento / Novo agendamento",
           "arquivo": "app/app/agenda/_client.tsx",
-          "linha": 371
+          "linha": 375
         },
         {
           "tipo": "gaveta",
           "rotulo": "Cancelar agendamento",
           "arquivo": "app/app/agenda/_client.tsx",
-          "linha": 495
+          "linha": 501
         }
       ],
       "rotasIrmaes": [],
@@ -879,13 +880,13 @@
           "tipo": "aba-caseira",
           "rotulo": "Pedidos",
           "arquivo": "app/app/compras/_client.tsx",
-          "linha": 114
+          "linha": 121
         },
         {
           "tipo": "aba-caseira",
           "rotulo": "Fornecedores",
           "arquivo": "app/app/compras/_client.tsx",
-          "linha": 122
+          "linha": 129
         }
       ],
       "modais": [
@@ -893,13 +894,13 @@
           "tipo": "modal",
           "rotulo": "Nova compra",
           "arquivo": "app/app/compras/_client.tsx",
-          "linha": 498
+          "linha": 523
         },
         {
           "tipo": "modal",
           "rotulo": "Novo fornecedor",
           "arquivo": "app/app/compras/_client.tsx",
-          "linha": 654
+          "linha": 702
         }
       ],
       "gavetas": [],
@@ -914,7 +915,7 @@
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/compras/[id]/_client.tsx",
-          "linha": 285
+          "linha": 444
         }
       ],
       "gavetas": [],
@@ -1096,13 +1097,20 @@
     },
     {
       "rota": "/app/estoque",
-      "abas": [],
+      "abas": [
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/estoque/_client.tsx",
+          "linha": 146
+        }
+      ],
       "modais": [
         {
           "tipo": "modal",
           "rotulo": "Novo movimento",
           "arquivo": "app/app/estoque/_client.tsx",
-          "linha": 650
+          "linha": 688
         }
       ],
       "gavetas": [],
@@ -1125,13 +1133,13 @@
           "tipo": "modal",
           "rotulo": "Adicionar pedido à carga",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1292
+          "linha": 1384
         },
         {
           "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1381
+          "linha": 1473
         },
         {
           "tipo": "modal",
@@ -1152,7 +1160,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 782
+          "linha": 874
         }
       ],
       "semTitulo": 0
@@ -1165,13 +1173,13 @@
           "tipo": "modal",
           "rotulo": "Adicionar pedido à carga",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1292
+          "linha": 1384
         },
         {
           "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1381
+          "linha": 1473
         },
         {
           "tipo": "modal",
@@ -1192,7 +1200,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 782
+          "linha": 874
         }
       ],
       "semTitulo": 0
@@ -1205,13 +1213,13 @@
           "tipo": "modal",
           "rotulo": "Adicionar pedido à carga",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1292
+          "linha": 1384
         },
         {
           "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1381
+          "linha": 1473
         },
         {
           "tipo": "modal",
@@ -1232,7 +1240,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 782
+          "linha": 874
         }
       ],
       "semTitulo": 0
@@ -1245,13 +1253,13 @@
           "tipo": "modal",
           "rotulo": "Adicionar pedido à carga",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1292
+          "linha": 1384
         },
         {
           "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1381
+          "linha": 1473
         },
         {
           "tipo": "modal",
@@ -1272,7 +1280,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 782
+          "linha": 874
         }
       ],
       "semTitulo": 0
@@ -1441,7 +1449,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/fiscal/relatorios/page.tsx",
-          "linha": 178
+          "linha": 179
         }
       ],
       "semTitulo": 0
@@ -1500,13 +1508,13 @@
           "tipo": "gaveta",
           "rotulo": "Ficha do contato",
           "arquivo": "components/inbox/InboxLayout.tsx",
-          "linha": 349
+          "linha": 359
         },
         {
           "tipo": "gaveta",
           "rotulo": "Ficha do contato",
           "arquivo": "components/inbox/InboxLayout.tsx",
-          "linha": 368
+          "linha": 378
         }
       ],
       "rotasIrmaes": [],
@@ -1635,13 +1643,13 @@
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 701
+          "linha": 800
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 747
+          "linha": 846
         },
         {
           "tipo": "modal",
@@ -1706,7 +1714,13 @@
           "tipo": "modal",
           "rotulo": "Prévia do pedido",
           "arquivo": "app/app/pedidos/novo/_editor.tsx",
-          "linha": 1020
+          "linha": 1255
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/pedidos/novo/_editor.tsx",
+          "linha": 1395
         },
         {
           "tipo": "modal",
@@ -1789,19 +1803,19 @@
           "tipo": "aba-caseira",
           "rotulo": "Produtos e tabelas",
           "arquivo": "app/app/products/_client.tsx",
-          "linha": 932
+          "linha": 929
         },
         {
           "tipo": "aba-caseira",
           "rotulo": "Importar fotos",
           "arquivo": "app/app/products/_client.tsx",
-          "linha": 952
+          "linha": 949
         },
         {
           "tipo": "aba-caseira",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/products/_client.tsx",
-          "linha": 1235
+          "linha": 1240
         },
         {
           "tipo": "aba",
@@ -1943,14 +1957,7 @@
     },
     {
       "rota": "/app/radar",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
-          "linha": 216
-        }
-      ],
+      "abas": [],
       "modais": [
         {
           "tipo": "modal",
@@ -1972,14 +1979,7 @@
     },
     {
       "rota": "/app/radar/categorias",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "app/app/radar/_components/RadarCategorias.tsx",
-          "linha": 216
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
@@ -2048,25 +2048,25 @@
           "tipo": "modal",
           "rotulo": "Abrindo ocorrência",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 509
+          "linha": 577
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 523
+          "linha": 591
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 639
+          "linha": 800
         },
         {
           "tipo": "modal",
           "rotulo": "Configurações do Sentinel",
           "arquivo": "app/app/sentinel/_client.tsx",
-          "linha": 680
+          "linha": 841
         }
       ],
       "gavetas": [],
@@ -2089,13 +2089,13 @@
           "tipo": "modal",
           "rotulo": "Criar novo token",
           "arquivo": "app/app/settings/api-tokens/_components/ApiTokensClient.tsx",
-          "linha": 184
+          "linha": 219
         },
         {
           "tipo": "modal",
           "rotulo": "Token criado",
           "arquivo": "app/app/settings/api-tokens/_components/ApiTokensClient.tsx",
-          "linha": 250
+          "linha": 285
         }
       ],
       "gavetas": [],
@@ -2128,6 +2128,14 @@
     },
     {
       "rota": "/app/settings/canal-oficial",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/devices",
       "abas": [],
       "modais": [],
       "gavetas": [],
@@ -2260,13 +2268,13 @@
           "tipo": "modal",
           "rotulo": "Números que enxerga",
           "arquivo": "app/app/team/_components/TeamMembersClient.tsx",
-          "linha": 253
+          "linha": 287
         },
         {
           "tipo": "modal",
           "rotulo": "Revogar acesso",
           "arquivo": "app/app/team/_components/TeamMembersClient.tsx",
-          "linha": 359
+          "linha": 393
         }
       ],
       "gavetas": [],
@@ -2492,14 +2500,7 @@
     },
     {
       "rota": "/vitrine-agenda",
-      "abas": [
-        {
-          "tipo": "aba",
-          "rotulo": "(rótulo dinâmico)",
-          "arquivo": "components/agenda/HistoricoDaAgenda.tsx",
-          "linha": 98
-        }
-      ],
+      "abas": [],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],

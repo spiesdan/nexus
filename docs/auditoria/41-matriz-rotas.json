@@ -17,176 +17,176 @@
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; 1 contraste (link em card, só no claro)"
+      "veredito": "sério de contraste medido (claro, 390)"
     },
     {
       "rota": "/comissoes",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "**corrigido**: Select \"Vendedor\" sem nome acessível (`button-name` crítico) → `aria-label`; contraste de link no claro segue"
+      "veredito": "sério de contraste medido (claro, 390)"
     },
     {
       "rota": "/compras",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/compras/[id]",
       "grupo": "pedidos-e-vendas",
       "dinamica": true,
       "capturar": true,
-      "veredito": "sem passe; `scrollable-region-focusable` (sério) na caixa da tabela → `tabIndex` no `Table`"
+      "veredito": "sério de contraste medido (claro, 390)"
     },
     {
       "rota": "/estoque",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/faturamento",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; 1 contraste (link em card, só no claro)"
+      "veredito": "sério de contraste medido (claro, 390)"
     },
     {
       "rota": "/notas",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/pedidos",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "passe #620: hierarquia da lista; overflow 0 nas 4 combinações"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/pedidos/[id]",
       "grupo": "pedidos-e-vendas",
       "dinamica": true,
       "capturar": true,
-      "veredito": "passe #620: h1 12→499px, ações no \"Mais opções\"; `scrollable-region-focusable` corrigido no `Table`"
+      "veredito": "sério de contraste medido (claro, 390)"
     },
     {
       "rota": "/pedidos/imprimir",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe; limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/pedidos/novo",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "sem passe (docs 43/44); limpo"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/titulos",
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "**é redirect** para `/financeiro` (medido lá): Select \"Situação\" sem nome acessível corrigido",
+      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)",
       "redireciona": "/financeiro"
     },
     {
       "rota": "/agenda",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido**: `aria-valid-attr-value` (crítico) do `Tabs` sem painel → grupo com `aria-pressed`; botões de pessoa sem `label-content-name-mismatch`. **Pendente medido**: contraste dos chips do grid (11px sobre `fundoDaTrilha`) e 422 de `horarios-livres` (a grade se declara bloqueada; falta disponibilidade na org de teste)"
     },
     {
       "rota": "/busca",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o shell)"
     },
     {
       "rota": "/campanhas",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido no ambiente**: 500 era `prospecting_campaigns.nome_manual` ausente no Supabase LOCAL (migração 0318 não aplicada); `baseline.sql` já tinha a coluna → instalação nova não tem o defeito. 0 erro de console depois"
     },
     {
       "rota": "/contacts",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/contacts/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/inbox",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "passe #638: filtros 272→256px (1440) e 240→224px (390), linha 105px, overflow 0"
     },
     {
       "rota": "/inbox/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "passe #640: cabeçalho 195→191px (1440) e 267→263px (390), 7 ações com nome acessível"
     },
     {
       "rota": "/kanban",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/leads/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**pulada**: o id de contato do seed não resolve esta rota (h1 404) — precisa de um id de lead válido"
     },
     {
       "rota": "/meu-dia",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/pipelines/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (a linha abre o funil \"Pedidos\")"
     },
     {
       "rota": "/tarefas",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido**: `aria-required-children` (crítico) — `role=\"tablist\"` com botões comuns → grupo + `aria-pressed`"
     },
     {
       "rota": "/templates",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/fiscal",
@@ -227,15 +227,16 @@
       "rota": "/fiscal/notas",
       "grupo": "fiscal",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "404 na rota — verificar caminho",
+      "pular": "o banco de teste não tem nenhuma linha em `fiscal_entradas` — a rota responde 404 para qualquer id"
     },
     {
       "rota": "/fiscal/pendentes",
@@ -368,266 +369,266 @@
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/connections",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/integrations/nuvemshop",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
     },
     {
       "rota": "/inteligencia",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/lgpd/requests",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
     },
     {
       "rota": "/lgpd/requests/[id]",
       "grupo": "config-e-inteligencia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
     },
     {
       "rota": "/products",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/prospeccao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
       "grupo": "config-e-inteligencia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)"
     },
     {
       "rota": "/prospeccao/nova",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/radar",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "`label-content-name-mismatch` em 2 botões de atalho (aria-label x texto visível)"
     },
     {
       "rota": "/radar/categorias",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**corrigido**: `Tabs` sem painel (`aria-valid-attr-value`, CRÍTICO) → grupo com `aria-pressed`"
     },
     {
       "rota": "/radar/oportunidades",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "contraste medido: links em `text-primary` dentro do cartão (classe do V-54)"
     },
     {
       "rota": "/radar/prospeccao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/radar/recuperacao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/radar/risco",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/recuperacao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/sentinel",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "console: 3 erros de aninhamento HTML inválido (`<%s>` dentro de `%s`)"
     },
     {
       "rota": "/settings",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/settings/api-tokens",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/atendimento",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/settings/atualizacao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "404 na rota — verificar se é feature flag ou caminho morto"
     },
     {
       "rota": "/settings/billing",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/canal-oficial",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/devices",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/marca",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/notifications",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "1 erro de console medido"
     },
     {
       "rota": "/settings/profile",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/settings/security",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/settings/templates",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/tenant",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/settings/tenant/agenda",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "contraste medido: texto mudo dentro de bloco `opacity-60` (11px/12px)"
     },
     {
       "rota": "/settings/tenant/pipelines",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/settings/tenant/whatsapp",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/team",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/team/invite",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "403 por papel: a rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/venda-automatica",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/webhooks",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (fora o seletor de empresa do shell)"
     },
     {
       "rota": "/ai",

@@ -193,11 +193,29 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
         title={t("Tarefas")}
         subtitle={t("Agendadas, check-in de visita e atividades realizadas.")}
         navigation={
-          <div className="flex gap-2" role="tablist" aria-label={t("Visões de tarefas")}>
-            <Button size="sm" variant={aba === "tarefas" ? "default" : "outline"} onClick={() => setAba("tarefas")}>
+          /*
+            FILTRO, NÃO ABA — e a diferença é de acessibilidade, não de gosto.
+            `role="tablist"` exige filhos `role="tab"` com `aria-selected` e o
+            painel que cada aba controla; com `<Button>` comuns o axe reprova
+            `aria-required-children` (CRÍTICO) nas quatro combinações medidas na
+            matriz. O padrão para "escolher um recorte da MESMA lista" é grupo
+            rotulado com `aria-pressed` — o mesmo que `InboxFilters` já usa.
+          */
+          <div className="flex gap-2" role="group" aria-label={t("Visões de tarefas")}>
+            <Button
+              size="sm"
+              variant={aba === "tarefas" ? "default" : "outline"}
+              aria-pressed={aba === "tarefas"}
+              onClick={() => setAba("tarefas")}
+            >
               {t("Tarefas")} ({pendentes.length})
             </Button>
-            <Button size="sm" variant={aba === "atividades" ? "default" : "outline"} onClick={() => setAba("atividades")}>
+            <Button
+              size="sm"
+              variant={aba === "atividades" ? "default" : "outline"}
+              aria-pressed={aba === "atividades"}
+              onClick={() => setAba("atividades")}
+            >
               {t("Atividades")}
             </Button>
           </div>
@@ -217,7 +235,11 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
             <Card className="hover-raise flex flex-wrap items-end gap-2 p-3">
               <label className="min-w-52 flex-1 text-sm">
                 <span className="mb-1 block text-muted-foreground">{t("Nova tarefa")}</span>
-                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder={t("Visitar cliente X…")} />
+                <Input
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  placeholder={t("Visitar cliente X…")}
+                />
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block text-muted-foreground">{t("Data")}</span>
@@ -229,7 +251,9 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
             </Card>
           )}
           {tarefas.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("Nenhuma tarefa. Crie a primeira acima.")}</p>
+            <p className="text-sm text-muted-foreground">
+              {t("Nenhuma tarefa. Crie a primeira acima.")}
+            </p>
           ) : (
             <div className="space-y-2">
               {tarefas.map((tarefa) => (
@@ -237,7 +261,8 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
                   <div className="min-w-48 flex-1">
                     <p className="font-medium">{tarefa.titulo}</p>
                     <p className="text-xs text-muted-foreground">
-                      {ROTULO_TIPO_TAREFA[tarefa.tipo as keyof typeof ROTULO_TIPO_TAREFA] ?? tarefa.tipo}
+                      {ROTULO_TIPO_TAREFA[tarefa.tipo as keyof typeof ROTULO_TIPO_TAREFA] ??
+                        tarefa.tipo}
                       {tarefa.contato_nome ? ` · ${tarefa.contato_nome}` : ""}
                       {tarefa.agendada_para
                         ? ` · ${new Date(`${tarefa.agendada_para}T12:00:00Z`).toLocaleDateString(tagIdioma)}`
@@ -246,7 +271,8 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
                     </p>
                   </div>
                   <Badge variant={PILL_STATUS[tarefa.status] ?? "warning"}>
-                    {ROTULO_STATUS_TAREFA[tarefa.status as keyof typeof ROTULO_STATUS_TAREFA] ?? tarefa.status}
+                    {ROTULO_STATUS_TAREFA[tarefa.status as keyof typeof ROTULO_STATUS_TAREFA] ??
+                      tarefa.status}
                   </Badge>
                   {podeRegistrar && tarefa.status === "pendente" && (
                     <>
@@ -256,13 +282,21 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
                       <Button size="sm" onClick={() => void mudarStatus(tarefa.id, "concluida")}>
                         {t("Concluir")}
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => void mudarStatus(tarefa.id, "cancelada")}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void mudarStatus(tarefa.id, "cancelada")}
+                      >
                         {t("Cancelar")}
                       </Button>
                     </>
                   )}
                   {podeRegistrar && tarefa.status !== "pendente" && (
-                    <Button size="sm" variant="outline" onClick={() => void mudarStatus(tarefa.id, "pendente")}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void mudarStatus(tarefa.id, "pendente")}
+                    >
                       {t("Reabrir")}
                     </Button>
                   )}
@@ -299,7 +333,11 @@ export function TarefasClient({ podeRegistrar }: { podeRegistrar: boolean }) {
               </label>
               <label className="min-w-40 flex-1 text-sm">
                 <span className="mb-1 block text-muted-foreground">{t("Observação")}</span>
-                <Input value={obsAtv} onChange={(e) => setObsAtv(e.target.value)} placeholder={t("Detalhe…")} />
+                <Input
+                  value={obsAtv}
+                  onChange={(e) => setObsAtv(e.target.value)}
+                  placeholder={t("Detalhe…")}
+                />
               </label>
               <Button size="sm" onClick={() => void registrarAtividade()}>
                 {t("Registrar atividade")}

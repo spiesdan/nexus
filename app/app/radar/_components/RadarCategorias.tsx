@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { ROTULO_RECOMPRA, type SituacaoRecompra } from "@/lib/comercial/radar-compras";
@@ -209,28 +208,39 @@ export function RadarCategorias({
       <p className="text-xs text-muted-foreground">
         {t("Risco, recompra, oportunidade, follow-up, perda e cobrança — com próxima ação.")}
       </p>
-      <Tabs
-        value={categoria}
-        onValueChange={(v) => setCategoria(v as CategoriaId)}
-        className="mt-3"
+      {/*
+        FILTRO, NÃO ABA — a mesma decisão de `InboxFilters` e do histórico da
+        agenda, pelo mesmo motivo medido: `Tabs` do Radix sem `TabsContent` deixa
+        cada gatilho com `aria-controls` apontando para um painel que não existe,
+        e o axe reprova como `aria-valid-attr-value` (CRÍTICO). O recorte é o
+        MESMO bloco abaixo, filtrado por `categoria`.
+      */}
+      <div
+        role="group"
+        aria-label={t("Categorias")}
+        className="mt-3 inline-flex w-fit flex-wrap gap-1 rounded-lg bg-surface-elevated p-0.5"
       >
-        <TabsList aria-label={t("Categorias")}>
-          {CATEGORIAS.map((c) => {
-            const qtd = contagens[c.id];
-            return (
-              <TabsTrigger key={c.id} value={c.id} className="gap-1.5">
-                <span
-                  aria-hidden
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: c.cor }}
-                />
-                {ROTULO_CATEGORIA[c.id]}
-                <span className="tabular-nums">{qtd === null ? "…" : qtd}</span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
+        {CATEGORIAS.map((c) => {
+          const qtd = contagens[c.id];
+          return (
+            <button
+              key={c.id}
+              type="button"
+              aria-pressed={categoria === c.id}
+              onClick={() => setCategoria(c.id)}
+              className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium text-text-muted transition-colors hover:text-text aria-pressed:bg-surface aria-pressed:text-text aria-pressed:shadow-[inset_0_0_0_1px_var(--color-border)]"
+            >
+              <span
+                aria-hidden
+                className="h-2 w-2 rounded-full"
+                style={{ backgroundColor: c.cor }}
+              />
+              {ROTULO_CATEGORIA[c.id]}
+              <span className="tabular-nums">{qtd === null ? "…" : qtd}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="mt-3">
         {(categoria === "risco" ||

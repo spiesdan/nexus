@@ -21,7 +21,7 @@
  */
 import AxeBuilder from "@axe-core/playwright";
 import { chromium, type Page } from "@playwright/test";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 
 const BASE = process.env.BASE ?? "http://localhost:3311";
@@ -41,8 +41,11 @@ const TAMANHOS = [
 const IDS: Record<string, Record<string, string>> = {
   "/pedidos/[id]": { id: process.env.ID_PEDIDO ?? "f0597235-ba27-4d32-98c5-e0f881dc667d" },
   "/compras/[id]": { id: process.env.ID_COMPRA ?? "1595e588-f87d-4323-b434-13039b4938a7" },
-  "/inbox/[id]": { id: process.env.ID_CONVERSA ?? "c88831e8-0f77-4b45-8ff9-5b6b5e3ff3ff" },
+  "/inbox/[id]": { id: process.env.ID_CONVERSA ?? "75119f51-edee-47ff-a968-71094203b5a3" },
   "/contacts/[id]": { id: process.env.ID_CONTATO ?? "70fd026e-6759-4aa1-a55d-4ff2d8b65f4b" },
+  "/leads/[id]": { id: process.env.ID_LEAD ?? "56563958-a491-416f-8ec8-db3fe251f636" },
+  "/pipelines/[id]": { id: process.env.ID_PIPELINE ?? "714dbeb6-8873-4771-9b72-6c5240109f34" },
+  "/fiscal/notas/[id]": { id: process.env.ID_NOTA ?? "a6d2935c-8ada-49da-a33b-957642f4c3a2" },
 };
 
 interface Linha {
@@ -111,7 +114,22 @@ async function medir(
 ): Promise<MedidaRota> {
   const url = urlDe(linha.rota)!;
   erros.length = 0;
+
+  /*
+   * NAVEGA ATÉ PARAR — porque metade das telas de configuração REDIRECIONA.
+   *
+   * Medido no lote de configurações: `goto` seguido de `evaluate` estoura com
+   * "Execution context was destroyed" e "Navigation is interrupted by another
+   * navigation" quando a própria tela leva para outra rota (`/settings/atendimento`
+   * → `/settings/tenant/whatsapp`, `/team` → 403, e assim por diante). O sinal de
+   * "parou" é a URL não mudar por 700ms.
+   */
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  let anterior = "";
+  for (let i = 0; i < 25 && page.url() !== anterior; i++) {
+    anterior = page.url();
+    await page.waitForTimeout(700);
+  }
 
   /*
    * ESPERAR O ESQUELETO SUMIR — não um relógio fixo.
@@ -246,7 +264,20 @@ async function main(): Promise<void> {
           continue;
         }
         try {
-          const m = await medir(page, linha, tema, tamanho.width, erros);
+          let m: MedidaRota;
+          try {
+            m = await medir(page, linha, tema, tamanho.width, erros);
+          } catch (e) {
+            // A tela redirecionou DURANTE a medição (contexto destruído). Uma
+            // segunda passada, com a navegação já assentada, é a diferença
+            // entre "a tela falhou" e "o instrumento correu atrás do redirect".
+            if (
+              !/Execution context was destroyed|interrupted by another navigation/i.test(String(e))
+            ) {
+              throw e;
+            }
+            m = await medir(page, linha, tema, tamanho.width, erros);
+          }
           medidas.push(m);
           console.info(
             `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
@@ -275,16 +306,30 @@ async function main(): Promise<void> {
     }
   }
 
+  /*
+   * MESCLA, NÃO SOBRESCREVE. Cada lote mede um grupo, e a matriz é o conjunto:
+   * gravar só o lote apagou as 48 medições do grupo anterior na primeira
+   * rodada. A chave é `rota+tema+largura` — a mesma linha medida de novo
+   * substitui a antiga, que é o que se quer ao reconferir um conserto.
+   */
+  const antigas: MedidaRota[] = existsSync(SAIDA)
+    ? (JSON.parse(readFileSync(SAIDA, "utf8")) as { medidas: MedidaRota[] }).medidas
+    : [];
+  const chave = (m: MedidaRota) => `${m.rota}|${m.tema}|${m.largura}`;
+  const porChave = new Map(antigas.map((m) => [chave(m), m]));
+  for (const m of medidas) porChave.set(chave(m), m);
+  const todas = [...porChave.values()];
+
   writeFileSync(
     SAIDA,
     JSON.stringify(
-      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas },
+      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas: todas },
       null,
       2,
     ),
   );
   await browser.close();
-  console.info(`\n${medidas.length} medições em ${SAIDA}`);
+  console.info(`\n${medidas.length} medições neste lote; ${todas.length} no total, em ${SAIDA}`);
 }
 
 main().catch((e) => {
