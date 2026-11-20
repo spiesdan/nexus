@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { ROLE_RANK } from "@/lib/auth/types";
 import { emailDeSuporte } from "@/lib/branding/saida";
 import { Card } from "@/components/ui/card";
@@ -24,13 +25,10 @@ export default async function BillingPage() {
   const suporte = emailDeSuporte();
   const idioma = user.idioma;
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">Billing</h1>
-        <p className="text-sm text-muted-foreground">
-          {traduzir("Planos, faturas e cobrança.", idioma)}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo="Billing"
+      descricao={traduzir("Planos, faturas e cobrança.", idioma)}
+    >
       <Card className="hover-raise max-w-xl p-6">
         <h2 className="text-sm font-semibold">{traduzir("Em breve — Fase 2", idioma)}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -48,6 +46,6 @@ export default async function BillingPage() {
           )}
         </p>
       </Card>
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

@@ -60,7 +60,15 @@ export function useNotificationPermission(): {
    * primeiro PR a mudar o timing o bastante para perder a corrida ficou vermelho
    * sem ter quebrado nada.
    */
-  const permission = useSyncExternalStore(assinarPermissao, getPermission, getPermission);
+  const permission = useSyncExternalStore(
+    assinarPermissao,
+    getPermission,
+    // Durante a HIDRATAÇÃO o React usa esta função, e ela roda no CLIENTE. Passar
+    // `getPermission` aqui devolvia "granted" onde o HTML do servidor dizia
+    // "unsupported" — e o React registrava "Hydration failed". A constante é a
+    // verdade do HTML; depois de hidratar, o snapshot real assume.
+    () => "unsupported" as const,
+  );
   const [enabled, setEnabledState] = useState(false);
 
   useEffect(() => {

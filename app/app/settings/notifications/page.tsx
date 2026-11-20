@@ -1,4 +1,5 @@
-import { requireAuth } from "@/lib/auth/server";
+import { requireAuth } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { traduzir } from "@/lib/i18n/dicionario";
 import { Card } from "@/components/ui/card";
 import { vapidPronto } from "@/lib/notifications/vapid";
@@ -49,11 +50,7 @@ export default async function NotificationsPage() {
   const pushPronto = vapidPronto();
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">{t("Notificações")}</h1>
-        <p className="text-sm text-muted-foreground">{t("Canais e categorias.")}</p>
-      </header>
+    <PaginaDeConfiguracao titulo={t("Notificações")} descricao={t("Canais e categorias.")}>
 
       {pushPronto ? (
         <Card
@@ -93,6 +90,6 @@ export default async function NotificationsPage() {
       )}
 
       <NotificationPrefsClient />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

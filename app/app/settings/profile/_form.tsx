@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
-import { Button } from "@/components/ui/button";
+import { RodapeDeSalvamento, useAvisoDeSaida } from "@/components/nexus-ui/forms/rodape-de-salvamento";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/nexus-ui/forms/form-field";
@@ -27,6 +27,16 @@ const TIMEZONES = [
   "UTC",
 ];
 
+/** Os quatro campos numa string comparável — a régua do "sujo". */
+function instantaneo(valores: {
+  fullName: string;
+  locale: string;
+  timezone: string;
+  avatarUrl: string;
+}): string {
+  return JSON.stringify(valores);
+}
+
 interface Props {
   email: string;
   initialFullName: string | null;
@@ -47,7 +57,13 @@ export function ProfileForm({
   const [locale, setLocale] = useState<Locale | typeof SEM_PREFERENCIA_DE_IDIOMA>(initialLocale);
   const [timezone, setTimezone] = useState(initialTimezone);
   const [avatarUrl, setAvatarUrl] = useState(initialAvatarUrl ?? "");
+  const [salvo, setSalvo] = useState(() =>
+    instantaneo({ fullName: initialFullName ?? "", locale: initialLocale, timezone: initialTimezone, avatarUrl: initialAvatarUrl ?? "" }),
+  );
   const [isPending, startTransition] = useTransition();
+  const sujo =
+    instantaneo({ fullName, locale, timezone, avatarUrl }) !== salvo;
+  useAvisoDeSaida(sujo && !isPending);
   const rotulos: Record<string, string> = {
     full_name: t("Nome completo"),
     locale: t("Idioma"),
@@ -69,7 +85,17 @@ export function ProfileForm({
     }
     startTransition(async () => {
       const r = await updateProfile(parsed.data);
-      if (r.ok) toast.success(t("Perfil atualizado."));
+      if (r.ok) {
+        setSalvo(
+          instantaneo({
+            fullName: parsed.data.full_name ?? "",
+            locale: parsed.data.locale,
+            timezone: parsed.data.timezone,
+            avatarUrl: parsed.data.avatar_url ?? "",
+          }),
+        );
+        toast.success(t("Perfil atualizado."));
+      }
       else {
         const padrao = `${t("Erro")}: ${r.error}`;
         toast.error(
@@ -84,13 +110,13 @@ export function ProfileForm({
   return (
     <form onSubmit={handleSubmit} className="max-w-xl">
       <Card className="hover-raise space-y-4 p-6">
-        <FormField label={t("Email")} id="email" hint={t("Trocar email — em breve.")}>
+        <FormField label={t("Email")} id="email" hint={t("O email não pode ser alterado por aqui.")}>
           <Input value={email} disabled />
         </FormField>
         <FormField label={t("Nome completo")} id="full_name">
           <Input value={fullName} onChange={(e) => setFullName(e.target.value)} maxLength={120} />
         </FormField>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField label={t("Idioma")} id="locale">
             <Select value={locale} onValueChange={(v) => setLocale(v as Locale)}>
               <SelectTrigger id="locale">
@@ -122,7 +148,7 @@ export function ProfileForm({
         <FormField
           label="Avatar URL"
           id="avatar_url"
-          hint={t("Upload de arquivo — em breve. Cole uma URL pública.")}
+          hint={t("O upload ainda não está disponível: cole a URL pública de uma imagem.")}
         >
           <Input
             type="url"
@@ -131,11 +157,7 @@ export function ProfileForm({
             onChange={(e) => setAvatarUrl(e.target.value)}
           />
         </FormField>
-        <div className="flex sm:justify-end">
-          <Button type="submit" disabled={isPending} className="w-full sm:w-auto">
-            {isPending ? t("Salvando…") : t("Salvar")}
-          </Button>
-        </div>
+        <RodapeDeSalvamento sujo={sujo} salvando={isPending} />
       </Card>
     </form>
   );

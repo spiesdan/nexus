@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+
 import { traduzir } from "@/lib/i18n/dicionario";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { createClient } from "@/lib/supabase/server";
@@ -74,13 +75,12 @@ export default async function TiposDeAgendamentoPage() {
   const nomes = await nomesDosAtendentes((pessoas ?? []).map((p) => String(p.user_id)));
 
   return (
-    <div className="flex h-full flex-col gap-6 p-6">
-      <header>
-        <h1 className="text-2xl font-medium tracking-tight text-text">Tipos de agendamento</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          {t("O que se pode marcar, quanto dura e quem atende. É isto que a tela de marcar e o agente de IA oferecem ao cliente.")}
-        </p>
-      </header>
+    <PaginaDeConfiguracao
+      titulo="Tipos de agendamento"
+      descricao={t(
+        "O que se pode marcar, quanto dura e quem atende. É isto que a tela de marcar e o agente de IA oferecem ao cliente.",
+      )}
+    >
       <TiposDeAgendamentoClient
         tiposIniciais={(tipos ?? []) as TipoRow[]}
         pessoas={(pessoas ?? []).map((p) => ({
@@ -92,6 +92,6 @@ export default async function TiposDeAgendamentoPage() {
         usuarioAtualId={user.id}
         podeEditar={podeEditar}
       />
-    </div>
+    </PaginaDeConfiguracao>
   );
 }

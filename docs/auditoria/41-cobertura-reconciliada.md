@@ -132,22 +132,22 @@ base sumiu; duas telas entraram depois dela.
 | `/app/recuperacao` | recuperacao | **pendente** | — | D |
 | `/app/relatorios` | relatorios | **pendente** | — | D |
 | `/app/sentinel` | sentinel | **aplicado** | #652 · `49-sentinel-design.md` · `capturas/{antes,depois}-sentinel/` + `sentinel-detalhe-*` | D |
-| `/app/settings/api-tokens` | settings | **pendente** | — | D |
-| `/app/settings/atendimento` | settings | **pendente** | — | D |
-| `/app/settings/atualizacao` | settings | **pendente** | — | D |
-| `/app/settings/billing` | settings | **pendente** | — | D |
-| `/app/settings/canal-oficial` | settings | **pendente** | — | D |
-| `/app/settings/devices` | settings | **pendente** | — | D |
-| `/app/settings/marca` | settings | **pendente** | — | D |
-| `/app/settings/notifications` | settings | **pendente** | — | D |
-| `/app/settings` | settings | **pendente** | — | D |
-| `/app/settings/profile` | settings | **pendente** | — | D |
-| `/app/settings/security` | settings | **pendente** | — | D |
-| `/app/settings/templates` | settings | **pendente** | — | D |
-| `/app/settings/tenant/agenda` | settings | **pendente** | — | D |
-| `/app/settings/tenant` | settings | **pendente** | — | D |
-| `/app/settings/tenant/pipelines` | settings | **pendente** | — | D |
-| `/app/settings/tenant/whatsapp` | settings | **pendente** | — | D |
+| `/app/settings/api-tokens` | settings | **aplicado** — cabeçalho canônico | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/atendimento` | settings | **aplicado** — moldura + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/atualizacao` | settings | **medido; sem mudança** — superfície do dono (`UpdatePanel`); medida como platform admin | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/billing` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/canal-oficial` | settings | **redirect → `/app/connections?aba=oficial`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/devices` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/marca` | settings | **aplicado** — moldura + seletor de arquivo em pt-BR | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/notifications` | settings | **aplicado** — hidratação (4→0 console) + coluna Email fora do 390 | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings` | settings | **medido; sem mudança** — hub usa NavHub; medido, sem cabeçalho duplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/profile` | settings | **aplicado** — 1 coluna no 390 + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/security` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/templates` | settings | **redirect → `/app/connections?aba=oficial&sub=templates`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/tenant/agenda` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/tenant` | settings | **aplicado** — 1 coluna no 390 + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/tenant/pipelines` | settings | **medido; sem mudança** — já usa `NexusPageHeader`; 390 alvos de reordenação declarados | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/tenant/whatsapp` | settings | **redirect → `/app/connections`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
 | `/app/tarefas` | tarefas | **pendente** | — | D |
 | `/app/team/invite` | team | **pendente** | — | D |
 | `/app/team` | team | **pendente** | — | D |
@@ -266,7 +266,7 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 | Rota do registry | Tem `page.tsx`? | Design | Evidência |
 |---|---|---|---|
 | `/app/ai` | sim | pendente | — |
-| `/app/settings` | sim | pendente | — |
+| `/app/settings` | sim | medido; sem mudança | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
 | `/app` | sim | pendente | — |
 | `/app/meu-dia` | sim | pendente | — |
 | `/app/indicadores` | sim | pendente | — |
@@ -308,8 +308,8 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 | `/app/fiscal/sincronizacoes` | sim | pendente | — |
 | `/app/fiscal/configuracoes` | sim | pendente | — |
 | `/app/recuperacao` | sim | pendente | — |
-| `/app/settings/tenant/agenda` | sim | pendente | — |
-| `/app/settings/tenant/pipelines` | sim | pendente | — |
+| `/app/settings/tenant/agenda` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/tenant/pipelines` | sim | medido; sem mudança | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
 | `/app/ai/agents` | sim | pendente | — |
 | `/app/ai/routers` | sim | pendente | — |
 | `/app/ai/credentials` | sim | pendente | — |
@@ -329,17 +329,17 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 | `/app/audit` | sim | pendente | — |
 | `/app/relatorios` | sim | pendente | — |
 | `/app/inteligencia` | sim | pendente | — |
-| `/app/settings/profile` | sim | pendente | — |
-| `/app/settings/security` | sim | pendente | — |
-| `/app/settings/notifications` | sim | pendente | — |
+| `/app/settings/profile` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/security` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/notifications` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
 | `/app/team` | sim | pendente | — |
-| `/app/settings/atendimento` | sim | pendente | — |
-| `/app/settings/tenant` | sim | pendente | — |
-| `/app/settings/marca` | sim | pendente | — |
-| `/app/settings/billing` | sim | pendente | — |
+| `/app/settings/atendimento` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/tenant` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/marca` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/billing` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
 | `/app/lgpd/requests` | sim | pendente | — |
-| `/app/settings/api-tokens` | sim | pendente | — |
-| `/app/settings/devices` | sim | pendente | — |
+| `/app/settings/api-tokens` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
+| `/app/settings/devices` | sim | aplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
 | `/app/connections` | sim | pendente | — |
 | `/app/integrations/nuvemshop` | sim | pendente | — |
 | `/app/webhooks` | sim | pendente | — |
