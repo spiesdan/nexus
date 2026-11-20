@@ -26,6 +26,15 @@ export function TenantSwitcher() {
 
   if (user.organizations.length <= 1) return null;
 
+  // O nome visível do botão é o nome da empresa ativa. `label-content-name-
+  // mismatch` (axe, serious) reprova quando esse texto NÃO ABRE o nome
+  // acessível — a busca do axe é `accessibleName.indexOf(visibleText) === 0`.
+  // Dizer "Empresa atual: E2E Test Org..." punha a AÇÃO na frente do RÓTULO e
+  // acusava a mesma violação em 82 rotas do shell. A inicial é `aria-hidden`:
+  // no mobile é a única coisa vista, e começa com a mesma letra do nome.
+  const nomeVisivel = active?.name ?? "Selecionar org";
+  const inicial = [...nomeVisivel][0]?.toUpperCase() ?? "?";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -36,26 +45,23 @@ export function TenantSwitcher() {
           className="gap-2"
           data-testid="tenant-switcher"
           /*
-           * O NOME ACESSÍVEL DIZ ONDE A PESSOA ESTÁ, não só o que o botão faz.
-           *
-           * Era só "Trocar de empresa": quem tem duas organizações ouvia a AÇÃO
-           * e nunca o ESTADO — e o nome da empresa ativa aparecia apenas como
-           * texto visual (e escondido abaixo de `sm`, onde sobra só a inicial).
-           * Agora o rótulo compõe estado + ação; o texto visível continua o
-           * mesmo.
+           * O NOME ACESSÍVEL COMEÇA PELO QUE ESTÁ NA TELA e só depois diz o
+           * estado e a ação. Nada muda no desenho do botão.
            */
-          aria-label={
-            active?.name
-              ? `${t("Empresa atual")}: ${active.name}. ${t("Trocar de empresa")}`
-              : t("Trocar de empresa")
-          }
+          aria-label={`${nomeVisivel} · ${t("Empresa atual")}. ${t("Trocar de empresa")}`}
         >
+          {/*
+            A inicial é CONTEÚDO GERADO POR CSS, não um nó de texto. Axe mede o
+            `textContent` como "texto visível" e, com a letra dentro do botão,
+            o rótulo lido ("E2E Test Org") nunca continha o texto visto
+            ("EE2E Test Org") — daí 163 violações no shell. `attr(data-inicial)`
+            mantém o desenho idêntico e tira a letra do textContent.
+          */}
           <span
             aria-hidden
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent-ink"
-          >
-            {[...(active?.name ?? "?")][0]?.toUpperCase()}
-          </span>
+            data-inicial={inicial}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-accent-soft text-xs font-semibold text-accent-ink before:content-[attr(data-inicial)]"
+          />
           {/* O nome só a partir de `sm`: no mobile ele empurrava a busca e o
               bloco de ações para fora da largura de 390px. A inicial continua
               dizendo qual empresa está ativa, e o menu aberto mostra o nome

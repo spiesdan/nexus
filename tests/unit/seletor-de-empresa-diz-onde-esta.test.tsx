@@ -10,8 +10,15 @@
  * contexto visual socorria.
  *
  * O usuário de duas organizações é exatamente quem precisa saber "onde estou"
- * antes de trocar: o rótulo passa a compor estado + ação
- * ("Empresa atual: X. Trocar de empresa").
+ * antes de trocar: o rótulo passa a compor estado + ação. A PROPRIEDADE que
+ * importa (e o que este teste guarda) não é a string exata: é o nome acessível
+ * COMEÇAR pelo texto visível, conter a ação e NÃO repetir a inicial.
+ *
+ * A ordem virou defeito medido: `label-content-name-mismatch` (axe, serious)
+ * acusava o mesmo nó em 82 rotas — `accessibleName.indexOf(visibleText) === 0`
+ * falhava porque "Empresa atual: X..." punha a ação antes do rótulo. A inicial
+ * `aria-hidden` também entra no `textContent` visível, então passou a ser
+ * conteúdo gerado por CSS, fora do nome.
  *
  * A segunda asserção é o item ativo. `aria-current` em `menuitem` tem suporte
  * irregular entre leitores de tela, e o check é `aria-hidden` — então "qual
@@ -48,12 +55,16 @@ describe("TenantSwitcher", () => {
   it("o nome acessível do gatilho carrega a empresa ativa", () => {
     render(<TenantSwitcher />);
 
-    // A asserção é pelo NOME COMPLETO: um `getByRole` com /Trocar de empresa/
-    // continuaria verde se o estado voltasse a sumir.
-    const gatilho = screen.getByRole("button", {
-      name: "Empresa atual: Alfa Distribuidora. Trocar de empresa",
-    });
-    expect(gatilho).toBeInTheDocument();
+    // Pela PROPRIEDADE, não pela frase: começar pelo rótulo visível é o que o
+    // axe exige e o que evita a regressão em massa no shell.
+    const gatilho = screen.getByRole("button", { name: /^Alfa Distribuidora/ });
+    const nome = gatilho.getAttribute("aria-label") ?? "";
+    expect(nome).toMatch(/^Alfa Distribuidora/);
+    expect(nome).toContain("Trocar de empresa");
+    // A inicial `aria-hidden` não entra no nome: "EE2E Test Org" era o outro
+    // lado do mesmo defeito (texto visível fora do nome acessível).
+    expect(nome).not.toContain("EE2E");
+    expect(nome).not.toMatch(/^E\s?E2E/);
     // O texto visível continua o mesmo — o rótulo acessível não mudou a tela.
     expect(screen.getByText("Alfa Distribuidora")).toBeInTheDocument();
   });

@@ -1,84 +1,150 @@
 /**
- * VARREDURA DE UM MÓDULO — as quatro perguntas de uma vez, em toda rota.
+ * VARREDURA DE `app/app` — o mapa de defeitos de uma vez.
  *
- * ─── POR QUE UM INSTRUMENTO POR MÓDULO ────────────────────────────────────
+ * ─── POR QUE UMA VARREDURA, E NÃO 96 PASSES ────────────────────────────────
  *
- * `captura-publica.mjs` prova que a tela abre; `contraste.mjs` conta a cor de
- * cada texto. Faltava o instrumento que responde, numa rodada só, o que a
- * matriz `41` cobra de uma superfície: **abriu? transbordou? reclamou no
- * console? tem alvo pequeno demais? tem texto ilegível?**
- *
- * Fazer isso tela a tela foi o caminho de meses. Aqui a unidade é o MÓDULO:
- * uma lista de rotas, dois temas, duas larguras — e um JSON por rota, para a
- * linha da matriz só virar `aplicado` quando houver medição daquela rota.
- *
- * ─── O QUE ELE NÃO PROVA ──────────────────────────────────────────────────
- *
- * Não prova que o fluxo funciona (isso é e2e), nem que o texto é bom. Prova
- * que a superfície renderizou e que as quatro réguas mecânicas passaram —
- * nada além disso é declarado como medido.
+ * Medido em 20/11/2026: 13 rotas em 104 s (~8 s/rota). As 96 restantes do
+ * `app/app` cabem numa rodada — e o mapa que sai dela responde "qual defeito
+ * aparece em mais telas?" antes de alguém desenhar a primeira. Consertar por
+ * concentração é o que transforma 30 telas num componente.
  *
  * ─── AS RÉGUAS ────────────────────────────────────────────────────────────
  *
- *   contraste  WCAG 2.1 AA: 4.5:1 (normal) e 3:1 (grande ≥ 24 px ou ≥ 18.66
- *              em negrito). Fundo composto com alfa, como o olho vê. Gradiente
- *              e `opacity < 0.95` ficam FORA da conta e são contados como
- *              "não medidos" — aprovar o que não se mediu é o defeito que esta
- *              auditoria mais combate.
- *   overflow   `scrollWidth - clientWidth` da raiz. Se houver, o elemento que
- *              estoura é nomeado: número sem culpado não se conserta.
- *   console    `console.error` e exceção de página. Ruído de dev server
- *              (`Fast Refresh`, HMR) é filtrado e listado no rodapé do JSON.
- *   toque      alvo interativo visível < 40 px em qualquer dimensão. Links
- *              dentro de parágrafo ficam de fora (são texto, não controle);
- *              botões, switches, inputs, selects e `summary` entram.
+ *   contraste  WCAG 2.1 AA: 4,5:1 normal / 3:1 grande (≥24 px, ou ≥18,66 em
+ *              negrito). Fundo composto com alfa. Gradiente e `opacity < 0,95`
+ *              ficam FORA e são contados como não medidos.
+ *   overflow   `scrollWidth - clientWidth` da raiz; o elemento que estoura é
+ *              nomeado.
+ *   console    `console.error` + `pageerror`. Ruído de HMR é filtrado.
+ *   alvo       44×44 px (regra da casa: `40-expedicao-design.md:104` e `41`
+ *              §12) em qualquer controle visível: botão, switch, tab, input,
+ *              select, summary. Links de parágrafo ficam fora — são texto.
+ *   axe        `critical` e `serious` do `@axe-core/playwright`, com o alvo.
  *
- * Uso (app rodando e sessão salva):
+ * ─── MEDIDO ≠ VISITADO ────────────────────────────────────────────────────
+ *
+ * Linha sem `url` ou sem `<h1>` é `valida: false` com `motivo`, e as métricas
+ * ficam `null` — nunca zero. Rota dinâmica sem id, sessão vencida, redirect
+ * para `/login` e tela que não pintou o título não entram como "limpa".
+ * Redirect legítimo é medido no DESTINO e marcado com `redirecionaPara`.
+ *
+ * Uso:
  *   node scripts/auditoria/varredura-de-modulo.mjs \
- *     --estado /tmp/state-admin.json \
- *     --rotas /app/settings,/app/settings/profile \
- *     --saida docs/auditoria/capturas/varredura-settings
+ *     --estado /tmp/state-sweep.json \
+ *     --grupo fiscal \
+ *     --saida docs/auditoria/capturas/varredura-fiscal
  *
- * `--rotas` aceita vírgula. `--saida` é o diretório das PNGs e do JSON; o nome
- * do arquivo diz tema e largura, então "antes" e "depois" são pastas distintas.
+ *   … --excluir-grupo fiscal --saida docs/auditoria/capturas/varredura-app
+ *   … --rotas /app/pedidos,/app/contacts
+ *
+ * `--capturar` grava PNG por combinação; sem ele, só o JSON (o padrão — 97
+ * rotas × 4 combinações de PNG é peso que ninguém abre).
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "@playwright/test";
 
 const RAIZ = process.cwd();
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3001";
+const MATRIZ = path.join(RAIZ, "docs/auditoria/41-matriz-rotas.json");
 
 const args = new Map();
 {
   const argv = process.argv.slice(2);
   for (let i = 0; i < argv.length; i += 1) {
-    if (argv[i].startsWith("--")) args.set(argv[i], argv[i + 1]);
+    if (argv[i].startsWith("--")) {
+      const proximo = argv[i + 1];
+      args.set(argv[i], proximo && !proximo.startsWith("--") ? proximo : true);
+    }
   }
 }
 
 const estado = args.get("--estado");
-if (!estado) {
+if (!estado || estado === true || !existsSync(estado)) {
   console.error("falta --estado <storageState.json>");
   process.exit(2);
 }
-const rotas = String(args.get("--rotas") ?? "").split(",").filter(Boolean);
+
+const matriz = JSON.parse(readFileSync(MATRIZ, "utf8"));
+const grupoPorRota = new Map(matriz.rotas.map((r) => [r.rota, r.grupo]));
+const grupo = args.get("--grupo");
+const excluirGrupo = args.get("--excluir-grupo");
+const lista = args.get("--rotas");
+
+let rotas = matriz.rotas.map((r) => r.rota);
+if (grupo && grupo !== true) rotas = rotas.filter((r) => grupoPorRota.get(r) === grupo);
+if (excluirGrupo && excluirGrupo !== true)
+  rotas = rotas.filter((r) => grupoPorRota.get(r) !== excluirGrupo);
+if (lista && lista !== true) {
+  const pedidas = String(lista).split(",").filter(Boolean);
+  rotas = pedidas.filter((r) => rotas.includes(r));
+}
 if (rotas.length === 0) {
-  console.error("falta --rotas /a,/b");
+  console.error("nenhuma rota selecionada");
   process.exit(2);
 }
+
+/** Ids reais do banco de teste, para as dinâmicas que têm fixture. */
+const IDS = {
+  "/pedidos/[id]": { id: process.env.ID_PEDIDO ?? "f0597235-ba27-4d32-98c5-e0f881dc667d" },
+  "/compras/[id]": { id: process.env.ID_COMPRA ?? "1595e588-f87d-4323-b434-13039b4938a7" },
+  "/inbox/[id]": { id: process.env.ID_CONVERSA ?? "75119f51-edee-47ff-a968-71094203b5a3" },
+  "/contacts/[id]": { id: process.env.ID_CONTATO ?? "70fd026e-6759-4aa1-a55d-4ff2d8b65f4b" },
+  "/leads/[id]": { id: process.env.ID_LEAD ?? "56563958-a491-416f-8ec8-db3fe251f636" },
+  "/pipelines/[id]": { id: process.env.ID_PIPELINE ?? "714dbeb6-8873-4771-9b72-6c5240109f34" },
+  "/fiscal/notas/[id]": { id: process.env.ID_NOTA ?? "a6d2935c-8ada-49da-a33b-957642f4c3a2" },
+};
+
+function urlDe(rota) {
+  if (!rota.includes("[")) return `/app${rota}`;
+  const patch = IDS[rota];
+  if (!patch) return null;
+  let url = rota;
+  for (const [chave, valor] of Object.entries(patch)) url = url.replace(`[${chave}]`, valor);
+  return url.includes("[") ? null : `/app${url}`;
+}
+
 const larguras = [1440, 390];
 const temas = ["light", "dark"];
 const saida = path.join(RAIZ, args.get("--saida") ?? "docs/auditoria/capturas/varredura");
+const capturar = args.has("--capturar");
 mkdirSync(saida, { recursive: true });
 
 const navegador = await chromium.launch();
 const registros = [];
+const comecou = Date.now();
+
+function invalida(rota, tema, largura, motivo, consoleErros = []) {
+  return {
+    rota,
+    tema,
+    largura,
+    valida: false,
+    motivo,
+    urlFinal: "",
+    overflow: null,
+    contraste: null,
+    alvosPequenos: null,
+    axe: null,
+    consoleErros: consoleErros.slice(0, 6),
+    errosDePagina: [],
+  };
+}
 
 for (const rota of rotas) {
+  const caminho = urlDe(rota);
   for (const tema of temas) {
     for (const largura of larguras) {
+      if (!caminho) {
+        registros.push(invalida(rota, tema, largura, "rota dinâmica sem id de exemplo em IDS"));
+        process.stdout.write(
+          `${rota.padEnd(40)} ${tema} ${largura} · NÃO MEDIDA (sem id)\n`,
+        );
+        continue;
+      }
+
       const altura = largura >= 1000 ? 900 : 844;
       const contexto = await navegador.newContext({
         storageState: estado,
@@ -99,69 +165,65 @@ for (const rota of rotas) {
       pagina.on("console", (msg) => {
         if (msg.type() !== "error") return;
         const texto = msg.text();
-        // Ruído do dev server e de recurso externo bloqueado não é defeito da
-        // tela; fica no registro bruto e sai da régua.
         if (/\[Fast Refresh\]|Download the React DevTools|favicon|net::ERR_/i.test(texto)) return;
         consoleErros.push(texto.slice(0, 220));
       });
       pagina.on("pageerror", (err) => paginaErros.push(String(err).slice(0, 220)));
 
       const nome = `${rota.replace(/^\//, "").replace(/[/?=]+/g, "_") || "raiz"}_${tema}_${largura}.png`;
-      const registro = { rota, tema, largura, arquivo: nome };
+      const registro = {
+        rota,
+        modulo: grupoPorRota.get(rota) ?? null,
+        tema,
+        largura,
+        arquivo: capturar ? nome : null,
+      };
+      const t0 = Date.now();
       try {
-        const resposta = await pagina.goto(`${BASE}${rota}`, {
+        const resposta = await pagina.goto(`${BASE}${caminho}`, {
           waitUntil: "domcontentloaded",
           timeout: 120_000,
         });
         registro.status = resposta?.status() ?? null;
         await pagina.evaluate(() => document.fonts?.ready).catch(() => {});
-        // Mesma espera do instrumento de captura: título e fim do esqueleto.
-        await pagina
-          .waitForFunction(() => document.querySelector("h1") !== null, undefined, { timeout: 10_000 })
-          .catch(() => {});
+
+        // Esqueleto primeiro: é o sinal caro (compilar/renderizar o corpo).
         await pagina
           .waitForFunction(
             () =>
               !/Carregando|Compilando|Preparando/.test(document.body.innerText ?? "") &&
               document.querySelector('[class*="animate-pulse"]') === null,
             undefined,
-            { timeout: 30_000 },
+            { timeout: 45_000 },
           )
           .catch(() => {});
-        await pagina.waitForTimeout(1200);
-        registro.urlFinal = pagina.url().replace(BASE, "");
 
-        /*
-         * REDIRECT NÃO É TELA — a rota que respondeu é outra.
-         *
-         * `/settings/canal-oficial`, `/settings/templates` e
-         * `/settings/tenant/whatsapp` são aliases para `/app/connections`; a
-         * varredura media `Conexões` e gravava com o nome do alias. O mesmo
-         * vale para `/titulos` → `/financeiro`. Aqui a diferença fica escrita;
-         * quem lê a matriz sabe que a linha aponta para outro lugar.
-         */
-        {
-          const pedido = new URL(`${BASE}${rota}`);
-          const final = new URL(pagina.url());
-          const caminho = (u) => `${u.pathname}${u.search}`;
-          if (caminho(final) !== caminho(pedido)) {
-            registro.redirecionaPara = caminho(final);
-          }
+        // Depois o título, com timeout curto — 3 s é folga, não corrida.
+        let temH1 = false;
+        try {
+          await pagina.waitForFunction(() => document.querySelector("h1") !== null, undefined, {
+            timeout: 3_000,
+          });
+          temH1 = true;
+        } catch {
+          /* sem título */
         }
 
-        /*
-         * SESSÃO VENCIDA NÃO É TELA VERDE.
-         *
-         * A primeira varredura de notificações pós-conserto rodou com o cookie
-         * de uma hora antes, caiu no `/login` e registrou "8 textos, 0
-         * contraste, 0 console" — um resultado limpo da tela ERRADA. O mesmo
-         * defeito que o `contraste.mjs` já fechava e este instrumento não.
-         */
-        if (
-          (rota.startsWith("/app") || rota.startsWith("/admin")) &&
-          /\/login/.test(registro.urlFinal)
-        ) {
-          throw new Error(`sessão inválida: ${rota} redirecionou para ${registro.urlFinal}`);
+        await pagina.waitForTimeout(600);
+        registro.urlFinal = pagina.url().replace(BASE, "");
+
+        {
+          const pedido = new URL(`${BASE}${caminho}`);
+          const final = new URL(pagina.url());
+          const url = (u) => `${u.pathname}${u.search}`;
+          if (url(final) !== url(pedido)) registro.redirecionaPara = url(final);
+        }
+
+        if (/\/login/.test(registro.urlFinal)) {
+          throw new Error(`sessão inválida: redirecionou para ${registro.urlFinal}`);
+        }
+        if (!temH1) {
+          throw new Error("sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar");
         }
 
         registro.medida = await pagina.evaluate(() => {
@@ -204,7 +266,6 @@ for (const rota of rotas) {
             return acumulado ?? { r: 255, g: 255, b: 255 };
           };
 
-          // ── contraste ─────────────────────────────────────────────────
           const textos = [];
           const foraPorImagem = [];
           for (const el of document.querySelectorAll("body *")) {
@@ -242,7 +303,6 @@ for (const rota of rotas) {
           }
           const ruins = textos.filter((t) => !t.passa).sort((a, b) => a.razao - b.razao);
 
-          // ── overflow ──────────────────────────────────────────────────
           const raiz = document.documentElement;
           const overflow = Math.max(0, raiz.scrollWidth - raiz.clientWidth);
           let estoura = null;
@@ -265,7 +325,7 @@ for (const rota of rotas) {
             }
           }
 
-          // ── alvos de toque ────────────────────────────────────────────
+          // Alvo da casa: 44×44, não o mínimo WCAG de 24.
           const controles = [
             ...document.querySelectorAll(
               'button, [role="button"], [role="switch"], [role="tab"], input, select, summary',
@@ -278,9 +338,7 @@ for (const rota of rotas) {
             if (cs.display === "none" || cs.visibility === "hidden") continue;
             const r = el.getBoundingClientRect();
             if (r.width < 1 || r.height < 1) continue;
-            // Input de texto dentro de formulário tem 36–40px; abaixo de 40 é
-            // achado, mas o alvo real é o rótulo — registramos o número.
-            if (r.width < 40 || r.height < 40) {
+            if (r.width < 44 || r.height < 44) {
               pequenos.push({
                 tag: el.tagName.toLowerCase(),
                 tipo: el.getAttribute("type") ?? el.getAttribute("role") ?? null,
@@ -313,31 +371,67 @@ for (const rota of rotas) {
           };
         });
 
+        // axe: crítico/sério, com o alvo. Roda depois do corpo montado.
+        try {
+          const axe = await new AxeBuilder({ page: pagina }).analyze();
+          const graves = axe.violations.filter(
+            (v) => v.impact === "critical" || v.impact === "serious",
+          );
+          registro.axe = {
+            critica: axe.violations.filter((v) => v.impact === "critical").length,
+            seria: graves.filter((v) => v.impact === "serious").length,
+            ids: graves.map((v) => `${v.id} (${v.impact})`),
+            nos: graves.flatMap((v) =>
+              v.nodes
+                .slice(0, 2)
+                .map((n) => `${v.id}: ${n.target.join(" ")} :: ${(n.html ?? "").slice(0, 180)}`),
+            ),
+          };
+        } catch (erro) {
+          registro.axeErro = String(erro).slice(0, 160);
+        }
+
         registro.consoleErros = [...new Set(consoleErros)].slice(0, 6);
         registro.errosDePagina = [...new Set(paginaErros)].slice(0, 4);
-
-        await pagina.screenshot({ path: path.join(saida, nome), fullPage: false });
+        registro.valida = true;
+        registro.tempoMs = Date.now() - t0;
         registros.push(registro);
 
         const m = registro.medida;
-        const errosDeConsole = registro.consoleErros.length + registro.errosDePagina.length;
+        const erros = registro.consoleErros.length + registro.errosDePagina.length;
         const veredito =
-          registro.status >= 400
+          (registro.status ?? 200) >= 400
             ? `HTTP ${registro.status}`
-            : m.contrasteReprovados > 0 || m.overflow > 0 || errosDeConsole > 0
-              ? "FALHOU"
+            : m.contrasteReprovados > 0 ||
+                m.overflow > 0 ||
+                erros > 0 ||
+                m.alvosPequenos > 0 ||
+                (registro.axe?.critica ?? 0) + (registro.axe?.seria ?? 0) > 0
+              ? "DEFEITO"
               : "ok";
         process.stdout.write(
-          `${rota.replace("/app", "~/app").padEnd(34)} ${tema.padEnd(5)} ${String(largura).padStart(4)} ` +
+          `${rota.replace("/app", "~/app").padEnd(40)} ${tema.padEnd(5)} ${String(largura).padStart(4)} ` +
             `· ${veredito.padEnd(8)} · contraste ${m.contrasteReprovados}/${m.textos}` +
-            ` · overflow ${m.overflow}` +
-            ` · console ${errosDeConsole}` +
-            ` · alvos<40 ${m.alvosPequenos}\n`,
+            ` · overflow ${m.overflow} · console ${erros}` +
+            ` · alvos<44 ${m.alvosPequenos} · axe ${registro.axe?.critica ?? "?"}/${registro.axe?.seria ?? "?"}\n`,
         );
+        if (capturar) {
+          await pagina.screenshot({ path: path.join(saida, nome) });
+        }
       } catch (erro) {
-        registro.erro = String(erro).slice(0, 200);
+        registro.valida = false;
+        registro.motivo = String(erro).slice(0, 200);
+        registro.consoleErros = [...new Set(consoleErros)].slice(0, 6);
+        registro.errosDePagina = [...new Set(paginaErros)].slice(0, 4);
+        registro.overflow = null;
+        registro.contraste = null;
+        registro.alvosPequenos = null;
+        registro.axe = null;
+        registro.tempoMs = Date.now() - t0;
         registros.push(registro);
-        process.stdout.write(`${rota} ${tema} ${largura} · ERRO ${String(erro).slice(0, 120)}\n`);
+        process.stdout.write(
+          `${rota.replace("/app", "~/app").padEnd(40)} ${tema} ${largura} · NÃO MEDIDA: ${String(erro).slice(0, 90)}\n`,
+        );
       } finally {
         await contexto.close();
       }
@@ -347,43 +441,104 @@ for (const rota of rotas) {
 
 await navegador.close();
 
+const tempoTotalMs = Date.now() - comecou;
 const resumo = rotas.map((rota) => {
-  const daRota = registros.filter((r) => r.rota === rota);
-  const falhas = daRota.filter(
-    (r) =>
-      r.erro ||
-      (r.status ?? 200) >= 400 ||
-      (r.medida?.contrasteReprovados ?? 0) > 0 ||
-      (r.medida?.overflow ?? 0) > 0 ||
-      (r.consoleErros?.length ?? 0) + (r.errosDePagina?.length ?? 0) > 0,
+  const da = registros.filter((r) => r.rota === rota);
+  const validas = da.filter((r) => r.valida);
+  const invalidas = da.filter((r) => !r.valida);
+  const contraste = validas.reduce((n, r) => n + (r.medida?.contrasteReprovados ?? 0), 0);
+  const overflow = Math.max(0, ...validas.map((r) => r.medida?.overflow ?? 0));
+  const consoleErros = validas.reduce(
+    (n, r) => n + (r.consoleErros?.length ?? 0) + (r.errosDePagina?.length ?? 0),
+    0,
   );
+  const alvos = Math.max(0, ...validas.map((r) => r.medida?.alvosPequenos ?? 0));
+  const critica = validas.reduce((n, r) => n + (r.axe?.critica ?? 0), 0);
+  const seria = validas.reduce((n, r) => n + (r.axe?.seria ?? 0), 0);
+  const http = validas.some((r) => (r.status ?? 200) >= 400);
   return {
     rota,
-    combinacoes: daRota.length,
-    falhas: falhas.length,
-    status: [...new Set(daRota.map((r) => r.status))],
-    contrasteReprovados: daRota.reduce((n, r) => n + (r.medida?.contrasteReprovados ?? 0), 0),
-    errosDeConsole: daRota.reduce(
-      (n, r) => n + (r.consoleErros?.length ?? 0) + (r.errosDePagina?.length ?? 0),
-      0,
-    ),
-    overflowMax: Math.max(0, ...daRota.map((r) => r.medida?.overflow ?? 0)),
-    alvosPequenosMax: Math.max(0, ...daRota.map((r) => r.medida?.alvosPequenos ?? 0)),
+    modulo: grupoPorRota.get(rota) ?? null,
+    redirecionaPara: [...new Set(da.map((r) => r.redirecionaPara).filter(Boolean))][0] ?? null,
+    combinacoes: da.length,
+    validas: validas.length,
+    invalidas: invalidas.length,
+    motivo: invalidas.map((r) => r.motivo).filter(Boolean)[0] ?? null,
+    status: [...new Set(validas.map((r) => r.status))],
+    contraste,
+    overflow,
+    consoleErros,
+    alvosPequenos: alvos,
+    axeCritica: critica,
+    axeSeria: seria,
+    defeitos: {
+      http,
+      contraste: contraste > 0,
+      overflow: overflow > 0,
+      console: consoleErros > 0,
+      alvo: alvos > 0,
+      axe: critica + seria > 0,
+    },
+    falhas: validas.filter(
+      (r) =>
+        (r.status ?? 200) >= 400 ||
+        (r.medida?.contrasteReprovados ?? 0) > 0 ||
+        (r.medida?.overflow ?? 0) > 0 ||
+        (r.consoleErros?.length ?? 0) + (r.errosDePagina?.length ?? 0) > 0 ||
+        (r.medida?.alvosPequenos ?? 0) > 0 ||
+        (r.axe?.critica ?? 0) + (r.axe?.seria ?? 0) > 0,
+    ).length,
+    tempoMs: da.reduce((n, r) => n + (r.tempoMs ?? 0), 0),
   };
 });
+
+const porModulo = {};
+for (const r of resumo) {
+  const m = (porModulo[r.modulo ?? "sem-grupo"] ??= {
+    rotas: 0,
+    medidas: 0,
+    ok: 0,
+    contraste: 0,
+    overflow: 0,
+    console: 0,
+    alvo: 0,
+    axe: 0,
+    http: 0,
+  });
+  m.rotas += 1;
+  if (r.validas > 0) m.medidas += 1;
+  if (r.invalidas === 0 && r.falhas === 0) m.ok += 1;
+  for (const d of ["contraste", "overflow", "console", "alvo", "axe", "http"])
+    if (r.defeitos[d]) m[d] += 1;
+}
 
 const arquivo = path.join(saida, "varredura.json");
 writeFileSync(
   arquivo,
-  JSON.stringify({ geradoEm: new Date().toISOString(), base: BASE, resumo, registros }, null, 2) + "\n",
+  JSON.stringify(
+    {
+      geradoEm: new Date().toISOString(),
+      base: BASE,
+      tempoTotalMs,
+      rotas: rotas.length,
+      medidas: registros.length,
+      validas: registros.filter((r) => r.valida).length,
+      invalidas: registros.filter((r) => !r.valida).length,
+      porModulo,
+      resumo,
+      registros,
+    },
+    null,
+    2,
+  ) + "\n",
 );
 
-process.stdout.write(`\n${rotas.length} rotas · ${registros.length} combinações\n`);
+process.stdout.write(`\n${rotas.length} rotas · ${registros.length} combinações · ${Math.round(tempoTotalMs / 1000)} s\n`);
 for (const r of resumo) {
   process.stdout.write(
-    `${r.falhas === 0 ? "OK    " : "FALHA "} ${r.rota.padEnd(36)} ` +
-      `status=${r.status.join("/")} contraste=${r.contrasteReprovados} ` +
-      `console=${r.errosDeConsole} overflow=${r.overflowMax} alvos<40=${r.alvosPequenosMax}\n`,
+    `${r.falhas === 0 && r.invalidas === 0 ? "OK    " : "FALHA "} ${r.rota.padEnd(40)} ` +
+      `validas=${r.validas}/${r.combinacoes} contraste=${r.contraste} console=${r.consoleErros} ` +
+      `overflow=${r.overflow} alvos<44=${r.alvosPequenos} axe=${r.axeCritica}/${r.axeSeria}\n`,
   );
 }
 process.stdout.write(`\n→ ${path.relative(RAIZ, arquivo)}\n`);
