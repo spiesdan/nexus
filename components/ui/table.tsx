@@ -13,7 +13,19 @@ import { cn } from "@/lib/utils";
 
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+    /*
+     * A CAIXA QUE ROLA PRECISA RECEBER FOCO.
+     *
+     * Quando a tabela é mais larga que a coluna (no celular, quase sempre), o
+     * `overflow-auto` cria uma região rolável. Sem `tabIndex`, quem navega por
+     * teclado não alcança essa região e as colunas da direita existem só para o
+     * mouse — o axe reprova como `scrollable-region-focusable` (sério), medido
+     * em `/pedidos/<id>` e `/compras/<id>` a 390px na matriz das telas.
+     *
+     * `tabIndex={0}` é o padrão do WAI-ARIA para região rolável; o anel de foco
+     * vem do `:focus-visible` global (2px do accent), não de classe local.
+     */
+    <div className="relative w-full overflow-auto" tabIndex={0}>
       <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   ),

@@ -1,0 +1,293 @@
+/**
+ * MATRIZ DE TELAS — mede uma tela por vez, no MESMO build, e grava o veredito.
+ *
+ * O instrumento dos recortes (lista/thread do inbox) media uma tela com detalhe.
+ * Este mede MUITAS: cada rota de `docs/auditoria/41-matriz-rotas.json` passa
+ * pelas quatro combinações (claro/escuro × 1440/390) e devolve, por combinação:
+ *
+ *   - overflow horizontal da página (`scrollWidth - clientWidth`);
+ *   - erros de console e de página;
+ *   - axe: quantas violações críticas e sérias, com o ALVO de cada uma;
+ *   - o `<h1>` que a tela pinta (ou a ausência dele).
+ *
+ * Captura de tela só quando a linha pede (`capturar: true`) — 110 telas × 4
+ * combinações × 2 lados são 880 PNGs, e evidência que ninguém abre é peso no
+ * repositório. O número vale para todas; a FOTO vale para quem mudou.
+ *
+ * Uso:
+ *   BASE=http://localhost:3311 npx tsx tests/captura-matriz.ts <rotulo> --grupo pedidos-e-vendas
+ *   BASE=http://localhost:3311 npx tsx tests/captura-matriz.ts <rotulo> --rotas /pedidos,/pedidos/novo
+ *   …/tests/captura-matriz.ts <rotulo> --so-capturar     (só as linhas com capturar=true)
+ */
+import AxeBuilder from "@axe-core/playwright";
+import { chromium, type Page } from "@playwright/test";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import * as path from "node:path";
+
+const BASE = process.env.BASE ?? "http://localhost:3311";
+const ROTULO = process.argv[2] ?? "depois";
+const ARGS = process.argv.slice(3);
+const CREDS = JSON.parse(readFileSync(path.join(process.cwd(), ".e2e-creds.json"), "utf8"));
+const MATRIZ = path.join(process.cwd(), "docs/auditoria/41-matriz-rotas.json");
+const RAIZ = path.join(process.cwd(), "docs/auditoria/capturas", `${ROTULO}-matriz`);
+const SAIDA = path.join(RAIZ, "medidas.json");
+
+const TAMANHOS = [
+  { nome: "1440", width: 1440, height: 900 },
+  { nome: "390", width: 390, height: 844 },
+] as const;
+
+/** Ids reais do banco de teste, para as rotas dinâmicas. */
+const IDS: Record<string, Record<string, string>> = {
+  "/pedidos/[id]": { id: process.env.ID_PEDIDO ?? "f0597235-ba27-4d32-98c5-e0f881dc667d" },
+  "/compras/[id]": { id: process.env.ID_COMPRA ?? "1595e588-f87d-4323-b434-13039b4938a7" },
+  "/inbox/[id]": { id: process.env.ID_CONVERSA ?? "c88831e8-0f77-4b45-8ff9-5b6b5e3ff3ff" },
+  "/contacts/[id]": { id: process.env.ID_CONTATO ?? "70fd026e-6759-4aa1-a55d-4ff2d8b65f4b" },
+};
+
+interface Linha {
+  rota: string;
+  grupo: string;
+  dinamica: boolean;
+  capturar: boolean;
+  veredito: string;
+  exemplo?: string;
+}
+
+interface MedidaRota {
+  rota: string;
+  url: string;
+  tema: string;
+  largura: number;
+  overflow: number;
+  h1: string[];
+  consoleErros: string[];
+  axe: { critica: number; seria: number; ids: string[]; nos: string[] };
+  esqueleto?: boolean;
+  captura?: string;
+  pulada?: string;
+}
+
+function slug(rota: string): string {
+  return rota.replace(/^\//, "").replace(/\//g, "_").replace(/\[|\]/g, "") || "raiz";
+}
+
+/** Troca `[id]` pelo id real; sem id, a rota é PULADA com motivo declarado. */
+function urlDe(rota: string): string | null {
+  if (!rota.includes("[")) return `${BASE}/app${rota}`;
+  const patch = IDS[rota];
+  if (!patch) return null;
+  let url = rota;
+  for (const [chave, valor] of Object.entries(patch)) url = url.replace(`[${chave}]`, valor);
+  return url.includes("[") ? null : `${BASE}/app${url}`;
+}
+
+async function entrar(page: Page): Promise<void> {
+  await page.goto(`${BASE}/login`, { waitUntil: "domcontentloaded", timeout: 240_000 });
+  // Corrida com a hidratação (ver instrumento do inbox): repetir o clique.
+  for (let tentativa = 1; tentativa <= 4; tentativa++) {
+    await page.locator("#email").fill(CREDS.users.manager.email, { timeout: 120_000 });
+    await page.locator("#password").fill(CREDS.password, { timeout: 120_000 });
+    await page
+      .getByRole("button", { name: /entrar/i })
+      .first()
+      .click();
+    try {
+      await page.waitForURL(/\/app\//, { timeout: 40_000 });
+      return;
+    } catch {
+      await page.waitForTimeout(2_000);
+    }
+  }
+  throw new Error("login não concluiu após 4 tentativas");
+}
+
+async function medir(
+  page: Page,
+  linha: Linha,
+  tema: string,
+  largura: number,
+  erros: string[],
+): Promise<MedidaRota> {
+  const url = urlDe(linha.rota)!;
+  erros.length = 0;
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
+
+  /*
+   * ESPERAR O ESQUELETO SUMIR — não um relógio fixo.
+   *
+   * Medido na primeira rodada: com 1,8 s de espera, `/compras` foi fotografada
+   * em SKELETON (a rota ainda compilava em dev) — o instrumento teria registrado
+   * "tela sem conteúdo" e um `overflow: 0` que não é da tela. O `Skeleton` do
+   * produto é `animate-pulse`; o sinal de "tela pronta" é esse seletor zerar.
+   * Se em 45 s ainda houver esqueleto, a linha é registrada com `skeleton: true`
+   * em vez de mentir que mediu.
+   */
+  let esqueleto = false;
+  try {
+    /*
+     * DOIS sinais de "tela pronta", porque o produto tem dois esqueletos: o
+     * componente `Skeleton` (`animate-pulse`) e o esqueleto caseiro
+     * `bg-primary/10 text-transparent` (as telas financeiras usam o segundo).
+     * Medido: sem o segundo sinal, o axe acusava `color-contrast` em textos
+     * que são PLACEHOLDER ("Rótulo", "R$ 0,00") — defeito que não existe na
+     * tela carregada.
+     */
+    await page.waitForFunction(
+      () =>
+        document.querySelectorAll(".animate-pulse").length === 0 &&
+        document.querySelectorAll('[class*="text-transparent"]').length === 0,
+      null,
+      { timeout: 45_000 },
+    );
+  } catch {
+    esqueleto = true;
+  }
+  await page.waitForTimeout(900);
+
+  const basico = (await page.evaluate(`(() => {
+    var de = document.documentElement;
+    return {
+      overflow: Math.max(0, de.scrollWidth - de.clientWidth),
+      h1: Array.from(document.querySelectorAll('h1')).map(function (h) { return (h.textContent || '').trim(); })
+    };
+  })()`)) as { overflow: number; h1: string[] };
+
+  const axe = await new AxeBuilder({ page }).analyze();
+  const graves = axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious");
+
+  let captura: string | undefined;
+  if (linha.capturar) {
+    const arquivo = `${slug(linha.rota)}_${tema}_${largura}.png`;
+    await page.screenshot({ path: path.join(RAIZ, arquivo) });
+    captura = arquivo;
+  }
+
+  return {
+    rota: linha.rota,
+    url: url.replace(BASE, ""),
+    tema,
+    largura,
+    overflow: basico.overflow,
+    h1: basico.h1,
+    consoleErros: erros.slice(0, 5),
+    axe: {
+      critica: axe.violations.filter((v) => v.impact === "critical").length,
+      seria: graves.filter((v) => v.impact === "serious").length,
+      ids: graves.map((v) => `${v.id} (${v.impact})`),
+      // O HTML curto junto do alvo: `button-name` em `.h-9` não diz QUAL botão.
+      nos: graves.flatMap((v) =>
+        v.nodes
+          .slice(0, 2)
+          .map((n) => `${v.id}: ${n.target.join(" ")} :: ${(n.html ?? "").slice(0, 180)}`),
+      ),
+    },
+    captura,
+  };
+}
+
+async function main(): Promise<void> {
+  const matriz = JSON.parse(readFileSync(MATRIZ, "utf8")) as { rotas: Linha[] };
+  const grupoIdx = ARGS.indexOf("--grupo");
+  const grupo = grupoIdx >= 0 ? ARGS[grupoIdx + 1] : null;
+  const rotasIdx = ARGS.indexOf("--rotas");
+  const lista = rotasIdx >= 0 ? ARGS[rotasIdx + 1]!.split(",") : null;
+  const soCapturar = ARGS.includes("--so-capturar");
+
+  const alvo = matriz.rotas.filter(
+    (r) =>
+      (grupo ? r.grupo === grupo : true) &&
+      (lista ? lista.includes(r.rota) : true) &&
+      (soCapturar ? r.capturar : true),
+  );
+  if (alvo.length === 0) throw new Error("nenhuma rota selecionada");
+
+  mkdirSync(RAIZ, { recursive: true });
+  const browser = await chromium.launch();
+
+  const aquecimento = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await entrar(await aquecimento.newPage());
+  await aquecimento.close();
+  console.info("aquecimento: login compilado");
+
+  const medidas: MedidaRota[] = [];
+
+  for (const tema of ["light", "dark"] as const) {
+    for (const tamanho of TAMANHOS) {
+      const contexto = await browser.newContext({
+        viewport: { width: tamanho.width, height: tamanho.height },
+        deviceScaleFactor: 1,
+        locale: "pt-BR",
+      });
+      await contexto.addInitScript((t) => window.localStorage.setItem("nexus-theme", t), tema);
+      const page = await contexto.newPage();
+      // Os listeners são UM por página: presos à medição, cada rota somaria
+      // listeners e os erros da rota anterior apareceriam na seguinte.
+      const erros: string[] = [];
+      page.on("console", (m) => {
+        if (m.type() === "error") erros.push(m.text().slice(0, 200));
+      });
+      page.on("pageerror", (e) => erros.push(String(e).slice(0, 200)));
+      await entrar(page);
+
+      for (const linha of alvo) {
+        if (!urlDe(linha.rota)) {
+          medidas.push({
+            rota: linha.rota,
+            url: "",
+            tema,
+            largura: tamanho.width,
+            overflow: 0,
+            h1: [],
+            consoleErros: [],
+            axe: { critica: 0, seria: 0, ids: [], nos: [] },
+            pulada: "rota dinâmica sem id de exemplo em IDS",
+          });
+          continue;
+        }
+        try {
+          const m = await medir(page, linha, tema, tamanho.width, erros);
+          medidas.push(m);
+          console.info(
+            `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
+              `axe=${m.axe.critica}/${m.axe.seria} h1=${m.h1[0] ? `"${m.h1[0].slice(0, 22)}"` : "—"} ` +
+              `console=${m.consoleErros.length}${m.esqueleto ? " ESQUELETO" : ""}`,
+          );
+          for (const no of m.axe.nos) console.info(`    ${linha.rota} → ${no}`);
+          for (const e of m.consoleErros.slice(0, 2))
+            console.info(`    ${linha.rota} console → ${e}`);
+        } catch (e) {
+          medidas.push({
+            rota: linha.rota,
+            url: "",
+            tema,
+            largura: tamanho.width,
+            overflow: 0,
+            h1: [],
+            consoleErros: [String(e).slice(0, 200)],
+            axe: { critica: 0, seria: 0, ids: [], nos: [] },
+            pulada: "erro ao medir",
+          });
+          console.info(`${tema}/${tamanho.nome} ${linha.rota} FALHOU: ${String(e).slice(0, 120)}`);
+        }
+      }
+      await contexto.close();
+    }
+  }
+
+  writeFileSync(
+    SAIDA,
+    JSON.stringify(
+      { gerado: new Date().toISOString(), rotulo: ROTULO, rotas: alvo.length, medidas },
+      null,
+      2,
+    ),
+  );
+  await browser.close();
+  console.info(`\n${medidas.length} medições em ${SAIDA}`);
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
