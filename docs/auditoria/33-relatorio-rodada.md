@@ -239,3 +239,22 @@ descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambígu
   **Decisão do dono**: (a) subir `laya-serve` (funcionalidade volta; custo:
   container/CPU/conversa fora do banco) ou (b) limpar `LAYA_URL` (desliga limpo;
   sem sugestão). Ambas reversíveis, nenhuma toca dado.
+
+
+### Critical 1.61.1 — número final (corrigido)
+
+O número anterior (70/6) era a **execução quebrada** do harness. Depois do fix
+(**#701**), em **uma invocação**:
+
+```
+antes:  26,4 min · 72 passed · 8 failed
+depois: 14,7 min · 80 passed · 0 failed · 2 skipped
+```
+
+**As 8 falhas eram de infraestrutura, não de produto:**
+1. `Dígito 1` **disabled esperando 5 min** — MFA rotacionado entre a seed e o teste;
+2. `--output` dentro de `test-results` — a própria suíte apagava os traces/network
+   que o `browserContext.close` tentava ler (ENOENT).
+
+Falsos alarmes que treinavam o time a ignorar vermelho. **Nenhuma falha de
+produto.**
