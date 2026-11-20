@@ -56,14 +56,14 @@ export function TenantsFilters({ filters, onChange }: TenantsFiltersProps) {
         placeholder={t("Buscar por nome, slug ou CNPJ...")}
         value={inputValue}
         onChange={(e) => handleSearch(e.target.value)}
-        className="sm:w-80"
+        className="min-h-10 sm:w-80"
         aria-label={t("Buscar tenants")}
       />
       <Select
         value={filters.status ?? "all"}
         onValueChange={handleStatus}
       >
-        <SelectTrigger className="sm:w-44" aria-label={t("Filtrar por status")}>
+        <SelectTrigger className="min-h-10 sm:w-44" aria-label={t("Filtrar por status")}>
           <SelectValue placeholder={t("Status")} />
         </SelectTrigger>
         <SelectContent>
