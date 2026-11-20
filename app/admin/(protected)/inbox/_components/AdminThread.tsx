@@ -59,14 +59,18 @@ export function AdminThreadClient({ conversationId }: Props) {
   const statusVariant = STATUS_VARIANT[conversation.status] ?? "outline";
 
   return (
-    <div className="flex min-w-0 flex-1 overflow-hidden">
+    <div className="relative flex min-w-0 flex-1 overflow-hidden">
+      {/* Nível 1 da página — o mesmo `sr-only` da lista: fora do flex do
+          cabeçalho, para o leitor de tela ter um h1 estável em 1440 e 390. */}
+      <h1 className="sr-only">{t("Conversa da plataforma")}</h1>
       {/* ── Thread area ── */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-semibold">{contactName}</span>
+              {/* Nível 1 da página: a ficha da conversa não tinha h1 nenhum. */}
+              <span className="min-w-0 flex-1 truncate text-sm font-semibold">{contactName}</span>
               <Badge variant={statusVariant} className="h-5 px-2 text-[10px] capitalize">
                 {conversation.status}
               </Badge>
@@ -84,7 +88,12 @@ export function AdminThreadClient({ conversationId }: Props) {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto py-2">
+        <div
+          role="region"
+          aria-label={t("Mensagens da conversa")}
+          tabIndex={0}
+          className="flex-1 overflow-y-auto py-2"
+        >
           {messages.length === 0 ? (
             <p className="p-4 text-center text-xs text-muted-foreground">
               {t("Sem mensagens nesta conversa.")}
