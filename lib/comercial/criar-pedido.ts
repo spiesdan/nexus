@@ -65,6 +65,15 @@ interface PoliticaEfetiva {
   permite_estoque_negativo: boolean;
 }
 
+/**
+ * A flag que decide o caminho de escrita. Desligada (default), o fluxo antigo
+ * continua exatamente igual; ligada, pedido + itens + baixa vão para
+ * `fn_criar_pedido_com_estoque` na mesma transação. Só o dono liga em produção.
+ */
+export function estoqueAtomicoHabilitado(): boolean {
+  return process.env.ORDER_STOCK_ATOMIC === "true";
+}
+
 export async function criarPedidoComercial(
   supabase: SupabaseClient,
   admin: SupabaseClient,
@@ -343,6 +352,70 @@ export async function criarPedidoComercial(
       ok: false,
       code: "validation_failed",
       message: "As parcelas não fecham com o total do pedido.",
+    };
+  }
+
+  if (estoqueAtomicoHabilitado()) {
+    const { data, error } = await admin.rpc("fn_criar_pedido_com_estoque", {
+      p_org: ctx.orgId,
+      p_numero: numero,
+      p_pedido: {
+        contact_id: entrada.contact_id ?? null,
+        cliente_nome: nomeDoClienteDoPedido,
+        cliente_documento: entrada.cliente_documento ?? null,
+        vendedor_user_id: vendedorDoPedido(entrada, ctx.userId),
+        status: statusFinal,
+        origem: entrada.origem,
+        moeda: entrada.moeda,
+        subtotal_cents: subtotal,
+        desconto_cents: descontoGeralCents,
+        desconto_pct: descontoPctGeral > 0 ? descontoPctGeral : null,
+        frete_cents: entrada.frete_cents,
+        total_cents: total,
+        condicao_pagamento: entrada.condicao_pagamento ?? null,
+        exige_nf: entrada.exige_nf ?? false,
+        forma_pagamento: entrada.forma_pagamento ?? null,
+        price_table_id: entrada.price_table_id ?? null,
+        informacoes_fiscais: entrada.informacoes_fiscais ?? null,
+        observacoes: entrada.observacoes ?? null,
+        obs_interna: entrada.obs_interna ?? null,
+        endereco_entrega: entrada.endereco_entrega ?? null,
+        transportadora_nome: entrada.transportadora_nome ?? null,
+        modalidade_frete: entrada.modalidade_frete,
+        previsao_entrega: entrada.previsao_entrega ?? null,
+        parcelas: parcelasDoPedido,
+        created_by: ctx.userId,
+      },
+      p_itens: itensMontados.map((item, posicao) => ({ ...item, posicao })),
+      p_chave: entrada.chave_sincronizacao ?? null,
+      p_baixar_estoque: statusFinal !== "rascunho",
+      p_ignorar_estoque: Boolean(entrada.ignorar_estoque && ctx.podeIgnorar),
+      p_permitir_negativo: politica.permite_estoque_negativo,
+    });
+
+    if (error) {
+      const detalhe = error.message ?? "";
+      const falta = /estoque_insuficiente:(.+)/.exec(detalhe);
+      if (falta) {
+        return {
+          ok: false,
+          code: "validation_failed",
+          message: `Estoque insuficiente para "${falta[1]}".`,
+        };
+      }
+      return { ok: false, code: "internal_error", message: "Erro ao salvar o pedido." };
+    }
+
+    const corpo = (data ?? {}) as {
+      ja_existia?: boolean;
+      pedido?: Record<string, unknown>;
+    };
+    return {
+      ok: true,
+      pedido: corpo.pedido ?? {},
+      itens: itensMontados.length,
+      aprovacao_necessaria: corpo.ja_existia ? false : aprovacaoNecessaria,
+      ja_existia: Boolean(corpo.ja_existia),
     };
   }
 
