@@ -2,7 +2,6 @@
 
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { useT } from "@/hooks/i18n/useT";
 
 /**
@@ -52,17 +51,23 @@ export function CampoDeArquivo({
   return (
     <div className="flex flex-wrap items-center gap-3">
       <span className="relative inline-flex shrink-0">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={disabled}
-          tabIndex={-1}
+        {/*
+          A PINTURA É UM `<span>`, NÃO UM `<button>` — e o gate
+          `controle-decorativo` é quem exigiu a diferença.
+
+          Aqui quem tem comportamento é o `<input type="file">` invisível por
+          cima; este retângulo só desenha o rótulo. Usando o primitivo de botão,
+          ele era um controle SEM handler e sem `disabled`: parecia ativo, com
+          cursor de mão, e o clique não fazia nada — exatamente o "Ver na
+          agenda" da v1.8.0 que aquele teste tranca. Um `<span>` com a geometria
+          do botão diz a verdade: é rótulo, não controle.
+        */}
+        <span
           aria-hidden="true"
-          // A pintura não recebe o clique — quem recebe é o input por cima.
-          className="pointer-events-none"
+          className="pointer-events-none inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 text-sm font-medium text-text lg:h-9"
         >
           {t(rotulo)}
-        </Button>
+        </span>
         <input
           ref={entrada}
           id={id}
