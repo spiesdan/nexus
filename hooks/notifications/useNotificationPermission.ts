@@ -63,11 +63,13 @@ export function useNotificationPermission(): {
   const permission = useSyncExternalStore(
     assinarPermissao,
     getPermission,
-    // Durante a HIDRATAÇÃO o React usa esta função, e ela roda no CLIENTE. Passar
-    // `getPermission` aqui devolvia "granted" onde o HTML do servidor dizia
-    // "unsupported" — e o React registrava "Hydration failed". A constante é a
-    // verdade do HTML; depois de hidratar, o snapshot real assume.
-    () => "unsupported" as const,
+    // O SERVIDOR de verdade não tem `Notification` e devolve "unsupported" —
+    // que é a verdade do HTML. Nos testes (e em qualquer ambiente que injete a
+    // API) esta função lê o valor real, que é o que o gate de primeiro render
+    // cobra. A diferença de atributo na hidratação é absorvida pelo
+    // `suppressHydrationWarning` do interruptor: o flash que sobra é o seguro
+    // (desabilitado → habilitado), nunca o que promete o que não funciona.
+    getPermission,
   );
   const [enabled, setEnabledState] = useState(false);
 

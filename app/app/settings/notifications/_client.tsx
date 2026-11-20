@@ -106,6 +106,7 @@ export function NotificationPrefsClient() {
               <TableCell className="px-4 py-3 text-center">
                 <Switch
                   checked={prefs[cat].push}
+                  suppressHydrationWarning
                   disabled={denied || unsupported}
                   onCheckedChange={(on) => void onToggle(cat, "push", on)}
                   aria-label={`${t(LABELS[cat])} via push`}
