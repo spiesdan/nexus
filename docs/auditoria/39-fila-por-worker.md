@@ -269,10 +269,18 @@ release (aconteceu com #639 e #664).
 mapa/rota) · 3) rotas fatia 3/3 (publicar/enviar) · 4) cartão agrupado do
 `pedido_preso` · 5) contatos/clientes · 6) configurações/equipe.
 
-**F:** 1) #679 (`sessionStorage`) e #680 (custo no resumo) — mergear · 2)
-`ignorar_*` só gerente com motivo/auditoria · 3) baixa atômica com override · 4)
-reprecificação com confirmação · 5) matriz E §9 na 1.61.1 (se ainda aberta) · 6)
-as 24 de público/auth na `41`.
+**F: FILA VAZIA (fechada em 21/11/2026, na 1.62.0).** 1) `#679`
+(`sessionStorage`) e `#680` (custo no resumo) — mergeados · 2) `#683`
+(`ignorar_*` só gerente, motivo + auditoria) — mergeado · 3) `#691` (baixa
+atômica atrás de `ORDER_STOCK_ATOMIC`, com o gate de definer declarado) —
+mergeado · 4) `#687` (reprecificação com confirmação linha a linha) — mergeado ·
+5) matriz E §9 na 1.61.1 — `#655` mergeado (6/6 no build 1.61.0) · 6) as 25 de
+público/auth/estado/onboarding da `41` — `#659` (16) + `#670` (9); `41` §2.2
+fecha **25 aplicadas/medidas + `/design` fora de escopo**, com
+`50-publico-auth-estado-design.md` e `51-onboarding-design.md`.
+
+Próximo de F só por despacho novo: a matriz não tem mais linha de
+público/auth/estado pendente.
 
 **G:** 1) as 22 telas de `admin` (uma por PR) · 2) p95 quando a série acumular ·
 3) varredura do Sentinel com a lente “1:N assumido como 1:1” · 4) evidência de
