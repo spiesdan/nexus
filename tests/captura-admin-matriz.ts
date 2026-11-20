@@ -251,7 +251,12 @@ const MEDIR_ALVOS = `
     if (s.visibility === "hidden" || s.display === "none" || s.opacity === "0") continue;
     total++;
     if (r.width < 40 || r.height < 40) {
-      pequenos.push((el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".")).slice(0, 50) + " " + Math.round(r.width) + "x" + Math.round(r.height));
+      var texto = (el.textContent || "").replace(/\\s+/g, " ").trim().slice(0, 18);
+      pequenos.push(
+        (el.tagName.toLowerCase() + "." + String(el.className).split(" ").slice(0, 2).join(".")).slice(0, 40) +
+          " " + Math.round(r.width) + "x" + Math.round(r.height) +
+          (texto ? ' "' + texto + '"' : ""),
+      );
     }
   }
   return { total: total, abaixoDe40: pequenos.length, amostra: pequenos.slice(0, 6) };
