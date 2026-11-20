@@ -2,38 +2,43 @@
 
 ## AGORA
 
-- **D:** #673 (rotas, fatia 1/3) — próxima: fatia 2/3 (estado de falha do mapa/rota).
-- **F:** `critical` + fix de compras — próxima: matriz E §9 na 1.61.1 e as 24 de público/auth.
-- **G:** #672 mergeado e sonda #668 dentro — próxima: as 22 de `admin` na `41`.
-- **Coord:** #667 (rebase/merge); despacho e `## AGORA` a cada relatório.
+- **D:** #673 com `verify` vermelho → corrigir e mergear; depois rotas fatia 2/3 e o **cartão agrupado** do `pedido_preso`.
+- **F:** (5) `sessionStorage` e (6) custo no resumo → (3) `ignorar_*` só gerente → (1) baixa atômica → (2) reprecificação.
+- **G:** (A) regra do `pedido_preso` por `created_by` + links na evidência de lead.
+- **Coord:** PR das decisões de 20/11; despacho e `## AGORA` a cada relatório.
 
 ## PRÓXIMA TAREFA — D
 
-**Fatia 2/3 de rotas** (depois do #673): o mesmo passe do mapa/rotas, agora no
-**estado de falha** — geocodificação que não resolve, endereço ausente e rota
-vazia (`app/app/expedicao/**`). Régua: antes/depois na mesma base, claro/escuro ×
-1440/390, contraste, overflow/console limpos e **linha da matriz `41` com veredito
-+ evidência**. Falha de dado não se conserta: registra-se a exceção com motivo.
+1. **#673**: corrigir o `verify` (é o mapa/rotas), sem afrouxar gate, e mergear.
+2. **Rotas, fatia 2/3**: estado de falha (geocodificação que não resolve, endereço
+   ausente, rota vazia) — antes/depois, claro/escuro × 1440/390, contraste,
+   overflow/console, linha da matriz `41`.
+3. **`pedido_preso` — apresentação**: agrupar as ocorrências da mesma regra num
+   **cartão com contagem** ("121 rascunhos antigos"), sem mudar a regra (a regra
+   por `created_by` é do G). PR de UI, com teste de componente.
 
 ## PRÓXIMA TAREFA — F
 
-**Fechar a matriz E na 1.61.1**: rodar `criador-de-pedidos-matriz.spec.ts
---workers=1` no build oficial e gravar em `docs/auditoria/43-criador-de-pedidos.md`
-§9 (E.2/E.4/E.5/E.8/E.9/E.10 → provado ou motivo medido). Depois, as **24**
-restantes de público/auth na matriz `41`, começando por login/signup.
+Na ordem decidida: **(5)** `sessionStorage` como segunda tentativa no rascunho
+(avisar só quando as duas falharem) → **(6)** custo no resumo de
+recebimento/faturamento (quantidade **e** valor; não recalcular preço) →
+**(3)** `ignorar_estoque`/`ignorar_credito` na UI **só para gerente**, motivo
+obrigatório e auditoria → **(1)** baixa de estoque na transação do pedido, com
+override de gerente como escape → **(2)** reprecificação ao trocar tabela, com
+confirmação linha a linha. Cada um com teste dirigido e PR próprio.
 
 ## PRÓXIMA TAREFA — G
 
-**As 22 de `admin` na matriz `41`**: começar por `/admin/tenants` e
-`/admin/usuarios`; identidade existente, antes/depois claro/escuro × 1440/390,
-contraste, overflow/console e **linha da matriz com veredito + evidência**. Uma
-tela por PR.
+**(A)** `operacao.pedido_preso`: implementar a decisão — abrir só com
+`created_by IS NOT NULL` e manter os importados fora do ruído (sem coluna, sem
+migration). **(B)** `lead_duplicado`: painel **identifica e linka** (nome →
+telefone → e-mail → id), **sem merge automático**, e a evidência passa a levar os
+links. Testes: autor humano × importado; lead com dois ids linkados.
 
 ## PRÓXIMA TAREFA — Coordenação
 
-**#667** (rebase feito, CI e merge), manter `## AGORA` atualizado a cada
-despacho, abrir PR de docs quando a fila mudar e **responder todo relatório de
-worker com a próxima tarefa na mesma mensagem**.
+PR `docs/decisoes-2026-11-20` (decisões A/B/C com justificativa e reversão),
+merge do #673 quando D fechar, e `## AGORA` atualizado a cada relatório.
 
 ## Regras de encerramento e despacho (20/11/2026)
 
