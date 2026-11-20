@@ -109,7 +109,7 @@ escrito à mão).
 | 12 | `/fiscal/sincronizacoes` | — | — | — | pendente |
 | 13 | `/fiscal/xml` | — | — | — | pendente |
 
-### 4. Expedição — 7 telas, 0 medidas
+### 4. Expedição — 7 telas, 1 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
@@ -117,7 +117,7 @@ escrito à mão).
 | 2 | `/expedicao/[id]` · dinâmica | — | — | — | pendente |
 | 3 | `/expedicao/[id]/fechamento` · dinâmica | — | — | — | pendente |
 | 4 | `/expedicao/[id]/motorista` · dinâmica | — | — | — | pendente |
-| 5 | `/expedicao/[id]/rota` · dinâmica | — | — | — | pendente |
+| 5 | `/expedicao/[id]/rota` · dinâmica | 0/0 px | 0/1 | 0 | **passe em 3 fatias**: #673 (mapa no piso de 50vh, selo de estado) · #685 (aviso de parada fora do mapa e mapa vazio) · #692 (erro de hidratação do `<details>`; 5 → 0 erros de console, com gate) · #694 (publicar a rota como ação da tela). Medido no antes/depois: overflow 0 px, console 0, axe crítico 0 nas 8 combinações; a ação aparece só em carga montando e o atalho do entregador só em `em_rota` |
 | 6 | `/expedicao/nova` | — | — | — | pendente |
 | 7 | `/frota` | — | — | — | pendente |
 

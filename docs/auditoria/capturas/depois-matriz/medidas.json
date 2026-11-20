@@ -4222,6 +4222,66 @@
         "ids": [],
         "nos": []
       }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/<id>/rota",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/<id>/rota",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "nos": []
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/<id>/rota",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_"
+        ]
+      }
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "url": "/app/expedicao/<id>/rota",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "nos": []
+      }
     }
   ]
 }

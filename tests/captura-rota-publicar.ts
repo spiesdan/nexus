@@ -102,7 +102,23 @@ async function main(): Promise<void> {
           anterior = page.url();
           await page.waitForTimeout(700);
         }
-        await page.waitForTimeout(1_200);
+        /*
+         * ESPERA A SEÇÃO EXISTIR — e não um relógio.
+         * Medido na primeira rodada: em 1440 o `[data-testid="publicar-rota"]`
+         * saiu `false` num tema e `true` no outro, porque a medição rodou antes
+         * do cabeçalho hidratar. O sinal de "tela pronta" é o `h2` da seção.
+         */
+        await page
+          .waitForFunction(
+            () =>
+              Array.from(document.querySelectorAll("h2")).some((h) =>
+                /Mapa e ordem de entrega/i.test(h.textContent ?? ""),
+              ),
+            null,
+            { timeout: 30_000 },
+          )
+          .catch(() => {});
+        await page.waitForTimeout(900);
 
         const estado = await page.evaluate(() => {
           const publicar = document.querySelector('[data-testid="publicar-rota"]');

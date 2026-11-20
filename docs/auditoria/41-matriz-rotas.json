@@ -312,8 +312,8 @@
       "rota": "/expedicao/[id]/rota",
       "grupo": "expedicao",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**passe em 3 fatias**: #673 (mapa no piso de 50vh, selo de estado) · #685 (aviso de parada fora do mapa e mapa vazio) · #692 (erro de hidratação do `<details>`; 5 → 0 erros de console, com gate) · #694 (publicar a rota como ação da tela). Medido no antes/depois: overflow 0 px, console 0, axe crítico 0 nas 8 combinações; a ação aparece só em carga montando e o atalho do entregador só em `em_rota`"
     },
     {
       "rota": "/expedicao/nova",
