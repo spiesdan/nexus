@@ -66,7 +66,7 @@ export function FiltroDePessoas({
                 isolada === p.id ? "-translate-y-0.5" : "hover:-translate-y-0.5",
               )}
             >
-              <AvatarDaPessoa pessoa={p} ativo={ativo} />
+              <AvatarDaPessoa pessoa={p} ativo={ativo} decorativo />
             </button>
           );
         })}

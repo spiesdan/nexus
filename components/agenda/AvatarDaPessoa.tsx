@@ -24,15 +24,27 @@ export function AvatarDaPessoa({
   tamanho = "md",
   ativo = true,
   className,
+  decorativo = false,
 }: {
   pessoa: Pessoa;
   tamanho?: keyof typeof TAMANHOS;
   /** Fora do filtro: a cor recua e a letra permanece. */
   ativo?: boolean;
   className?: string;
+  /**
+   * DENTRO DE UM CONTROLE JÁ ROTULADO, a inicial sai do nome acessível.
+   *
+   * No filtro de pessoas o botão tem `aria-label="Ver só a agenda de <nome>"` e
+   * o único texto visível é a inicial ("EA"). O axe reprova isso como
+   * `label-content-name-mismatch` (sério): o nome acessível não contém o texto
+   * visível. Como o rótulo já diz o nome INTEIRO, esconder a inicial do nome
+   * acessível não tira informação de ninguém — e a letra continua na tela.
+   */
+  decorativo?: boolean;
 }) {
   return (
     <span
+      aria-hidden={decorativo || undefined}
       data-testid={`avatar-pessoa-${pessoa.id}`}
       data-trilha={pessoa.trilha}
       data-ativo={ativo}

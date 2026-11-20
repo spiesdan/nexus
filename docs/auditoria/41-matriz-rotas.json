@@ -101,92 +101,92 @@
       "rota": "/agenda",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido**: `aria-valid-attr-value` (crítico) do `Tabs` sem painel → grupo com `aria-pressed`; botões de pessoa sem `label-content-name-mismatch`. **Pendente medido**: contraste dos chips do grid (11px sobre `fundoDaTrilha`) e 422 de `horarios-livres` (a grade se declara bloqueada; falta disponibilidade na org de teste)"
     },
     {
       "rota": "/busca",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (fora o shell)"
     },
     {
       "rota": "/campanhas",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido no ambiente**: 500 era `prospecting_campaigns.nome_manual` ausente no Supabase LOCAL (migração 0318 não aplicada); `baseline.sql` já tinha a coluna → instalação nova não tem o defeito. 0 erro de console depois"
     },
     {
       "rota": "/contacts",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/contacts/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/inbox",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "passe #638: filtros 272→256px (1440) e 240→224px (390), linha 105px, overflow 0"
     },
     {
       "rota": "/inbox/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "passe #640: cabeçalho 195→191px (1440) e 267→263px (390), 7 ações com nome acessível"
     },
     {
       "rota": "/kanban",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/leads/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**pulada**: o id de contato do seed não resolve esta rota (h1 404) — precisa de um id de lead válido"
     },
     {
       "rota": "/meu-dia",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/pipelines/[id]",
       "grupo": "atendimento",
       "dinamica": true,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo (a linha abre o funil \"Pedidos\")"
     },
     {
       "rota": "/tarefas",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "**corrigido**: `aria-required-children` (crítico) — `role=\"tablist\"` com botões comuns → grupo + `aria-pressed`"
     },
     {
       "rota": "/templates",
       "grupo": "atendimento",
       "dinamica": false,
-      "capturar": false,
-      "veredito": "pendente"
+      "capturar": true,
+      "veredito": "sem passe; limpo"
     },
     {
       "rota": "/fiscal",
@@ -227,14 +227,14 @@
       "rota": "/fiscal/notas",
       "grupo": "fiscal",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/fiscal/notas/[id]",
       "grupo": "fiscal",
       "dinamica": true,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
@@ -493,112 +493,112 @@
       "rota": "/settings",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/api-tokens",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/atendimento",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/atualizacao",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/billing",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/canal-oficial",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/devices",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/marca",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/notifications",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/profile",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/security",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/templates",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/tenant",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/tenant/agenda",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/tenant/pipelines",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {
       "rota": "/settings/tenant/whatsapp",
       "grupo": "config-e-inteligencia",
       "dinamica": false,
-      "capturar": false,
+      "capturar": true,
       "veredito": "pendente"
     },
     {

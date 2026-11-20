@@ -1,0 +1,186 @@
+{
+  "gerado": "2026-11-20T01:29:51.518Z",
+  "rotulo": "sonda",
+  "rotas": 2,
+  "medidas": [
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "comissoes_light_1440.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [
+        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      ],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "erro ao medir"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.flex.gap-2:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d\">PED-0158</a>"
+        ]
+      },
+      "captura": "comissoes_light_390.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 1,
+        "seria": 1,
+        "ids": [
+          "button-name (critical)",
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "button-name: .h-9 :: <button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex h-9 items-cente...\">",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .tracking-\\[0\\.12em\\].text-\\[11px\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
+        ]
+      },
+      "captura": "titulos_light_390.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "comissoes_dark_1440.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 1,
+        "seria": 2,
+        "ids": [
+          "button-name (critical)",
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "button-name: .h-9 :: <button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex h-9 items-cente...\">",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .tracking-\\[0\\.12em\\].text-\\[11px\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      },
+      "captura": "titulos_dark_1440.png"
+    },
+    {
+      "rota": "/comissoes",
+      "url": "/app/comissoes",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Comissões"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "captura": "comissoes_dark_390.png"
+    },
+    {
+      "rota": "/titulos",
+      "url": "/app/titulos",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Financeiro"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 1,
+        "seria": 1,
+        "ids": [
+          "button-name (critical)",
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "button-name: .h-9 :: <button type=\"button\" role=\"combobox\" aria-expanded=\"false\" aria-autocomplete=\"none\" dir=\"ltr\" data-state=\"closed\" class=\"flex h-9 items-cente...\">",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-\\[11px\\].tracking-\\[0\\.12em\\].uppercase > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">Rótulo</span>",
+          "color-contrast: .rounded-card.p-5.bg-card:nth-child(1) > .items-start.justify-between.gap-2 > .min-w-0 > .text-foreground.mt-2.tracking-tight > .text-transparent.rounded-md.bg-primary\\/10 :: <span class=\"rounded-md bg-primary/10 text-transparent\">R$ 0,00</span>"
+        ]
+      },
+      "captura": "titulos_dark_390.png"
+    }
+  ]
+}

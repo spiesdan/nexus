@@ -9,7 +9,6 @@ import * as React from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 import { AvatarDaPessoa } from "./AvatarDaPessoa";
@@ -59,14 +58,23 @@ const VARIANTE_DA_SITUACAO: Record<
 
 function separar(agendamentos: Agendamento[], agora: Date): Record<AbaDoHistorico, Agendamento[]> {
   const vazio: Record<AbaDoHistorico, Agendamento[]> = {
-    proximos: [], aguardando: [], passados: [], cancelados: [],
+    proximos: [],
+    aguardando: [],
+    passados: [],
+    cancelados: [],
   };
   for (const a of agendamentos) {
     // Cancelado sai das outras abas SEMPRE, mesmo sendo futuro: quem abre
     // "Próximos" está perguntando o que vai acontecer, e um cancelado ali seria
     // uma resposta errada com cara de certa.
-    if (a.situacao === "cancelled") { vazio.cancelados.push(a); continue; }
-    if (a.situacao === "pending") { vazio.aguardando.push(a); continue; }
+    if (a.situacao === "cancelled") {
+      vazio.cancelados.push(a);
+      continue;
+    }
+    if (a.situacao === "pending") {
+      vazio.aguardando.push(a);
+      continue;
+    }
     (isBefore(new Date(a.comeca), agora) ? vazio.passados : vazio.proximos).push(a);
   }
   return vazio;
@@ -121,31 +129,52 @@ export function HistoricoDaAgenda({
   if (agendamentos.length === 0) return null;
 
   return (
-    <div data-testid="historico-da-agenda" data-aba={aba} className={cn("flex min-h-0 flex-col", className)}>
-      <Tabs value={aba} onValueChange={(v) => setAba(v as AbaDoHistorico)}>
-        <TabsList aria-label={t("Filtrar o histórico")}>
-          {ABAS.map((a) => {
-            const n = grupos[a.id].length;
-            return (
-              <TabsTrigger key={a.id} value={a.id} data-testid={`aba-${a.id}`}>
-                <span>{t(a.rotulo)}</span>
-                {/* O contador vem SEMPRE, inclusive zero: "Cancelados 0" responde a
+    <div
+      data-testid="historico-da-agenda"
+      data-aba={aba}
+      className={cn("flex min-h-0 flex-col", className)}
+    >
+      {/*
+        FILTRO, NÃO ABA — mesma decisão (e mesmo motivo) de `InboxFilters`:
+        `Tabs` do Radix sem `TabsContent` deixa cada gatilho com
+        `aria-controls="…-content-proximos"` apontando para um painel que não
+        existe, e o axe reprova como `aria-valid-attr-value` (CRÍTICO) — medido
+        nas quatro combinações da matriz. O conteúdo continua sendo o MESMO
+        `<ul>` abaixo, recortado por `aba`.
+      */}
+      <div
+        role="group"
+        aria-label={t("Filtrar o histórico")}
+        className="inline-flex w-fit flex-wrap gap-1 rounded-lg bg-surface-elevated p-0.5"
+      >
+        {ABAS.map((a) => {
+          const n = grupos[a.id].length;
+          return (
+            <button
+              key={a.id}
+              type="button"
+              aria-pressed={aba === a.id}
+              data-testid={`aba-${a.id}`}
+              onClick={() => setAba(a.id)}
+              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium text-text-muted transition-colors hover:text-text aria-pressed:bg-surface aria-pressed:text-text aria-pressed:shadow-[inset_0_0_0_1px_var(--color-border)]"
+            >
+              <span>{t(a.rotulo)}</span>
+              {/* O contador vem SEMPRE, inclusive zero: "Cancelados 0" responde a
                     pergunta sem gastar um clique, e some-lo faria a aba vazia
                     parecer não carregada. */}
-                <span
-                  data-testid={`contador-${a.id}`}
-                  className={cn(
-                    "rounded-full px-1.5 text-[10px] tabular-nums",
-                    aba === a.id ? "bg-accent-fg/20" : "bg-surface-elevated text-text-subtle",
-                  )}
-                >
-                  {n}
-                </span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
+              <span
+                data-testid={`contador-${a.id}`}
+                className={cn(
+                  "rounded-full px-1.5 text-[10px] tabular-nums",
+                  aba === a.id ? "bg-accent-fg/20" : "bg-surface-elevated text-text-subtle",
+                )}
+              >
+                {n}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       <div className="hover-raise mt-3 min-h-0 flex-1 overflow-auto rounded-lg border border-border bg-surface">
         {daAba.length === 0 ? (
@@ -176,7 +205,7 @@ export function HistoricoDaAgenda({
                     <div className="text-sm font-medium tabular-nums first-letter:uppercase">
                       {format(comeca, t("d 'de' MMM"), { locale: localeDaData })}
                     </div>
-                    <div className="text-[11px] tabular-nums text-text-muted">
+                    <div className="text-[11px] text-text-muted tabular-nums">
                       {format(comeca, "HH:mm")}
                       {" – "}
                       {format(new Date(a.termina), "HH:mm")}
@@ -209,7 +238,11 @@ export function HistoricoDaAgenda({
                           size="sm"
                           data-testid={`remarcar-${a.id}`}
                           disabled={!onRemarcar}
-                          title={onRemarcar ? undefined : t("Disponível quando a agenda estiver conectada")}
+                          title={
+                            onRemarcar
+                              ? undefined
+                              : t("Disponível quando a agenda estiver conectada")
+                          }
                           onClick={() => onRemarcar?.(a.id)}
                         >
                           {t("Remarcar")}
@@ -219,19 +252,25 @@ export function HistoricoDaAgenda({
                           size="sm"
                           data-testid={`cancelar-${a.id}`}
                           disabled={!onCancelar}
-                          title={onCancelar ? undefined : t("Disponível quando a agenda estiver conectada")}
+                          title={
+                            onCancelar
+                              ? undefined
+                              : t("Disponível quando a agenda estiver conectada")
+                          }
                           onClick={() => onCancelar?.(a.id)}
                         >
                           {t("Cancelar")}
                         </Button>
                       </>
                     )}
-                    {aba === "passados" && a.situacao !== "completed" && a.situacao !== "no_show" && (
-                      // Decisão 17. Só enquanto o desfecho NÃO foi registrado:
-                      // oferecer "Realizado" num que já está realizado seria
-                      // pedir de novo o que a pessoa já respondeu.
-                      <>
-                        {/*
+                    {aba === "passados" &&
+                      a.situacao !== "completed" &&
+                      a.situacao !== "no_show" && (
+                        // Decisão 17. Só enquanto o desfecho NÃO foi registrado:
+                        // oferecer "Realizado" num que já está realizado seria
+                        // pedir de novo o que a pessoa já respondeu.
+                        <>
+                          {/*
                           SEM `title` DE DESCULPA. Os dois diziam "Disponível
                           quando a agenda estiver conectada" — falso, e pior que
                           o silêncio: o PATCH de status não toca o Google. Quem
@@ -243,26 +282,26 @@ export function HistoricoDaAgenda({
                           Se um dia o botão puder ficar cinza de novo, o motivo
                           tem de ser verdadeiro.
                         */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          data-testid={`realizado-${a.id}`}
-                          disabled={!onRealizado}
-                          onClick={() => onRealizado?.(a.id)}
-                        >
-                          {t("Realizado")}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          data-testid={`faltou-${a.id}`}
-                          disabled={!onFaltou}
-                          onClick={() => onFaltou?.(a.id)}
-                        >
-                          {t("Faltou")}
-                        </Button>
-                      </>
-                    )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            data-testid={`realizado-${a.id}`}
+                            disabled={!onRealizado}
+                            onClick={() => onRealizado?.(a.id)}
+                          >
+                            {t("Realizado")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            data-testid={`faltou-${a.id}`}
+                            disabled={!onFaltou}
+                            onClick={() => onFaltou?.(a.id)}
+                          >
+                            {t("Faltou")}
+                          </Button>
+                        </>
+                      )}
                   </div>
                 </li>
               );
