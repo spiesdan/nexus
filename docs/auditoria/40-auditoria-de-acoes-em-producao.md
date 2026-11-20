@@ -389,3 +389,61 @@ usa** a RPC enquanto `ORDER_STOCK_ATOMIC=false`. O dono liga depois de ver o
 no log) até a flag ser ligada; a função existe para ser provada antes de virar
 caminho. **Reversão:** desligar a flag (já desligada) ou remover a função em
 migration futura.
+
+## 20. 21/11/2026 — O número é 1.62.0, não 1.61.2 — e isso é a doutrina funcionando
+
+**Fato:** o corte derivou **`v1.62.0`** (tag no commit `3866cf4e`), não o patch que
+o pedido inicial supunha. **Decisão do dono: 1.62.0 fica.**
+
+**Justificativa:** existe **um fragmento `capacidade_nova`** na release — a
+`observabilidade-sonda`, o endpoint interno que prova o instrumento de medição.
+Os outros 14 são `nada_mudou`. Pela doutrina (`docs/doctrine/versionamento.md`), o
+número é **calculado** do que os PRs declararam, nunca digitado: reclassificar a
+sonda para `nada_mudou` só para virar 1.61.2 seria **mentir no CHANGELOG** — e o
+CHANGELOG é a tela que o dono da VPS lê para decidir atualizar.
+
+**Lição:** quando o número derivado diverge do número esperado, o defeito está na
+classificação dos fragmentos, não no cálculo. Corrigir o cálculo (ou o rótulo) para
+bater com a expectativa é o erro; corrigir o fragmento **se** ele estiver errado é
+o caminho.
+
+**Conteúdo da 1.62.0:** radar fatiado (#695/#697), motor mudo visível (#700),
+rotas (banner + diferença pós-publicação, #693/#698), reprecificação (#687),
+estoque atômico **com `ORDER_STOCK_ATOMIC=false`** (#691), harness E2E (#701) e os
+quatro fragmentos que faltavam.
+
+## 21. 21/11/2026 — Deploy 1.62.0 verificado (verde) e a regressão do embed no Sentinel
+
+**Verde (verificado pelo dono):**
+
+```
+7 containers em 1.62.0 · /health healthy 1.62.0 · /login 200
+api_request_probes ............... existe
+fn_criar_pedido_com_estoque ...... existe
+anon pode executar ............... false
+pedido_preso 15 → 0 detectados, 15 ENCERRADAS (121→1 na vida real: só o com autor)
+```
+
+**Vermelho — regressão do #672, não do deploy:**
+
+```
+coletas_truncadas: ["leads_abertos"]
+falha: "Could not embed because more than one relationship was found
+        for 'crm_leads' and 'crm_stages'"
+```
+
+O embed `crm_stages(name)` que o #672 adicionou é **ambíguo** (duas FKs entre as
+tabelas) → a coleta `leads_abertos` falha → **`operacao.lead_duplicado` está
+cego**: não detecta novo nem resolve os 5 abertos. As 5 ocorrências **não** foram
+encerradas (o mapa de fontes funcionou), mas o detector não roda.
+
+**Lição:** **embed sem hint de FK em tabela com duas FKs é falha silenciosa de
+coleta** — o teste de unidade não pegou porque **mocka a consulta**. O que prova
+coleta é a varredura real com `coletas_truncadas = []`.
+
+**Correção:** G no fix (hint de FK explícito + teste que falharia antes + varredura
+dos outros embeds); entra na **1.62.1** (patch — conserto de regressão nossa, nada
+muda para quem roda).
+
+**Verificação esperada da 1.62.1:** `coletas_truncadas = []`, `leads_abertos` sem
+falha e os **5 leads reafirmados**.
