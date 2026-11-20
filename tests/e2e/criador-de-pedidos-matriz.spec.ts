@@ -93,7 +93,7 @@ async function adicionarProduto(page: Page, busca: string, viaEnter = false): Pr
   if (viaEnter) {
     await page.locator("#busca-produto").press("Enter");
   } else {
-    await page.getByRole("button", { name: new RegExp(busca) }).first().click({ timeout: 20_000 });
+    await page.getByRole("option", { name: new RegExp(busca) }).first().click({ timeout: 20_000 });
   }
   await expect(page.getByRole("spinbutton", { name: /Quantidade/ }).first()).toBeVisible({
     timeout: 15_000,
@@ -237,6 +237,7 @@ test("E.3 — tabela de preço: aplicar, trocar (422), override de gerente e pre
     data: { nome: `${P} Tabela 20`, desconto_pct: 20 },
   });
   expect(t2.status()).toBe(201);
+  const t2Id = ((await t2.json()) as { data: { id: string } }).data.id;
 
   const prodCodigo = codigo("TAB");
   await criarProduto(page, { nome: `${P} Produto Tabela`, codigo: prodCodigo, preco: 10000 });
@@ -258,7 +259,8 @@ test("E.3 — tabela de preço: aplicar, trocar (422), override de gerente e pre
   await expect(page.getByText("R$ 90,00").first()).toBeVisible();
   await expect(page.getByText("preço da tabela").first()).toBeVisible();
 
-  // Trocar para 20% mantém o preço antigo na linha; o servidor recusa (422).
+  // Trocar para 20% REPRECIFICA a linha (era o defeito: mantinha o preço
+  // antigo e o servidor recusava no fim). 90,00 → 80,00, mesma origem.
   const carregouT2 = page.waitForResponse(
     (r) => r.url().includes("/api/v1/price-tables/") && r.request().method() === "GET",
     { timeout: 20_000 },
@@ -266,13 +268,25 @@ test("E.3 — tabela de preço: aplicar, trocar (422), override de gerente e pre
   await page.locator("#tabela").click();
   await page.getByRole("option", { name: new RegExp(`${P} Tabela 20`) }).click();
   await carregouT2;
+  await expect(page.getByText("R$ 80,00").first()).toBeVisible({ timeout: 10_000 });
+
+  // Preço fora da tabela continua sendo recusado pelo SERVIDOR — o caso real
+  // que sobra depois da reprecificação é a tabela mudar embaixo do editor
+  // (outro gerente edita, a tela já carregada fica velha). A tela não tem como
+  // adivinhar; o servidor recusa com 422 e nada é gravado.
+  const patch = await page.request.patch(`/api/v1/price-tables/${t2Id}`, {
+    data: { desconto_pct: 30 },
+  });
+  expect(patch.status()).toBe(200);
   await gerar(page);
   await expect(page.getByText(/Preço fora da tabela/i)).toBeVisible({ timeout: 20_000 });
   expect(await contaPedidos(cliente)).toBe(0);
 
-  // Override manual de gerente: digitar 80,00 e gerar passa (flag próprio).
+  // Override manual de gerente: digitar um preço DIFERENTE do da linha (a
+  // linha está em 80,00; `fill` com o mesmo valor não muda o DOM e não há
+  // evento) e gerar passa — o flag é próprio.
   const preco = page.getByRole("textbox", { name: "Preço" }).first();
-  await preco.fill("80,00");
+  await preco.fill("75,00");
   await expect(page.getByText("preço manual").first()).toBeVisible();
   await gerar(page);
   await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Pedido criado" })).toBeVisible({
@@ -511,8 +525,13 @@ test("E.10 — 320/390/tablet/desktop sem overflow, foco e nome acessível", asy
   await adicionarProduto(page, prodCodigo);
 
   // Nome acessível do fluxo (label → input; botão de item; spinbutton).
-  await expect(page.getByRole("textbox", { name: "Cliente" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Produtos" })).toBeVisible();
+  // `exact` é obrigatório: "Cliente" por substring também casa "Contato no
+  // cliente" — os dois são textbox e o seletor vira ambíguo (strict mode).
+  await expect(page.getByRole("textbox", { name: "Cliente", exact: true })).toBeVisible();
+  // O campo de produto se chama pelo que FAZ desde a mudança de acessibilidade
+  // ("Buscar produto, código ou EAN") e é um `combobox` com `listbox` de
+  // opções — "Produtos" é o nome da seção, não do campo.
+  await expect(page.getByRole("combobox", { name: /Buscar produto/ })).toBeVisible();
   await expect(page.getByRole("spinbutton", { name: /Quantidade/ }).first()).toBeVisible();
 
   // Ordem de foco: do campo de cliente chega ao campo de produto pelo Tab.

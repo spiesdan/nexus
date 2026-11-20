@@ -181,7 +181,7 @@ beforeEach(() => {
   // reclamou (comportamento real) e sem o stub isso vira unhandled rejection.
   Element.prototype.scrollIntoView = vi.fn();
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
-    if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ itens: [] }) as never;
+    if (url.startsWith("/api/v1/price-tables/")) return Promise.resolve({ data: { itens: [] } }) as never;
     return Promise.resolve({ data: [] }) as never;
   });
   container = montar().container;
