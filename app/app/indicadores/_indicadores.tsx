@@ -94,13 +94,25 @@ function brl(cents: number): string {
   return comoMoeda(cents, "BRL");
 }
 
-function Barra({ pct, cor }: { pct: number | null; cor: string }) {
+/**
+ * `role="progressbar"` EXIGE NOME ACESSÍVEL.
+ *
+ * O axe reprovou as duas barras desta tela como `aria-progressbar-name`
+ * (CRÍTICO): sem `aria-label`, o leitor de tela anuncia "barra de progresso,
+ * 98%" sem dizer de quê — e há duas na mesma dobra (positivação e
+ * faturado × não faturado). O rótulo vem de quem conhece o contexto, como
+ * prop: a barra não adivinha.
+ */
+function Barra({ pct, cor, rotulo }: { pct: number | null; cor: string; rotulo: string }) {
   const v = pct == null ? 0 : Math.min(100, Math.max(0, pct));
   return (
     <div
       className="h-2 w-full overflow-hidden rounded-full bg-muted"
       role="progressbar"
+      aria-label={rotulo}
       aria-valuenow={Math.round(v)}
+      aria-valuemin={0}
+      aria-valuemax={100}
     >
       <div className={`${cor} h-full rounded-full`} style={{ width: `${v}%` }} />
     </div>
@@ -553,7 +565,11 @@ export function IndicadoresClient({
               {t("clientes compraram no mês")}
             </p>
             <div className="mt-1">
-              <Barra pct={dados.positivacao.pct} cor="bg-green-500" />
+              <Barra
+                pct={dados.positivacao.pct}
+                cor="bg-green-500"
+                rotulo={t("Positivação da carteira no mês")}
+              />
             </div>
           </div>
           <div className="border-t pt-4">
@@ -567,6 +583,7 @@ export function IndicadoresClient({
                 <Barra
                   pct={totalFaturamento > 0 ? (dados.faturado / totalFaturamento) * 100 : 0}
                   cor="bg-success"
+                  rotulo={t("Faturado sobre o total do mês")}
                 />
               </div>
               <div className="flex justify-between">
@@ -608,6 +625,7 @@ export function IndicadoresClient({
                   <Barra
                     pct={f.pct}
                     cor={["bg-violet-500", "bg-sky-500", "bg-slate-400"][i % 3] ?? "bg-slate-400"}
+                    rotulo={`${t("Curva")} ${f.faixa}: ${f.pct.toFixed(1)}% ${t("do faturamento")}`}
                   />
                 </div>
               </div>

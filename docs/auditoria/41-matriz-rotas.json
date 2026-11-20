@@ -334,35 +334,35 @@
       "grupo": "financeiro",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/indicadores",
       "grupo": "financeiro",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**dois críticos corrigidos**: as barras `role=\"progressbar\"` sem nome (`aria-progressbar-name`) ganharam rótulo por contexto, e o gatilho de atendente ganhou `aria-label` (`button-name`). Depois: axe crítico 0, overflow 0, console 0"
     },
     {
       "rota": "/laboratorio",
       "grupo": "financeiro",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/metrics",
       "grupo": "financeiro",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**mesma tela** de `/indicadores` (h1 «Indicadores»): os dois críticos foram corrigidos lá. Depois: axe crítico 0"
     },
     {
       "rota": "/relatorios",
       "grupo": "financeiro",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/audit",
