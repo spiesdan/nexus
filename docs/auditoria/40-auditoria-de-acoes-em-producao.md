@@ -128,3 +128,129 @@ estourava `null value in column "origem"` completa no artefato oficial.
 > Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
 > autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
 > auditoria.
+
+## 9. 20/11/2026 — Deploy 1.61.0 (em execução/verificação)
+
+**Autorização:** o dono respondeu "continue" à lista de pendências em que o deploy
+da 1.61.0 era a única ação de produção; o processo é o mesmo das versões 1.59.0 e
+1.60.0 por ele aprovadas. Registrado como autorização interpretada, com esta nota.
+
+**Ação:** `update.sh --to v1.61.0` (backup automático do `update.sh` antes do schema).
+
+| Verificação | Estado |
+|---|---|
+| 7 containers em 1.61.0 | a confirmar na VPS |
+| `/health` `version 1.61.0` | **ainda 1.60.0** às 2026-11-20T01:51Z (deploy em curso ou não aplicado) |
+| `to_regclass('public.api_request_samples')` (0330) | a confirmar (precisa da conexão de schema) |
+| `fn_slo_api_rotas` / `fn_api_metricas_expurgar` (0331) | a confirmar |
+| `/login` | 200 |
+
+Comandos da verificação (rodar na VPS, com a conexão de schema):
+
+```bash
+psql "$SUPABASE_DB_ADMIN_URL" -Atc \
+  "select to_regclass('public.api_request_samples'), to_regprocedure('public.fn_slo_api_rotas()'), to_regprocedure('public.fn_api_metricas_expurgar()')"
+curl -s https://<dominio>/api/v1/health | jq '.data.version'
+```
+
+**Sentinel (próxima rodada da org real):** conferir `sentinel_runs.truncado = f` e
+que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) esteja
+**encerrada** com `nao_detectada_na_execucao`; se não, abrir bug com a evidência.
+
+**Rollback:** refixar as três imagens em `1.60.0` no `.env` e `up -d` com os dois
+`-f`; schema é aditivo.
+
+## 10. 20/11/2026 — Deploy 1.62.0 (planejado; depende do corte)
+
+**Conteúdo previsto:** o fix do Sentinel que fecha a janela de avaliação
+(Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —; o **fix do
+agrupamento de nota** em `fiscal.divergencia_valor_nota` (somar todos os pedidos
+vinculados, não só `order_id`); **#659** (público/auth) e a documentação deste
+item (**#660**), que inclui os dois registros de 20/11: o **achado fiscal real do
+pedido 19560** e a **pendência do `pedido_preso`** (documentação, sem código).
+
+**Autorização:** pendente — o coordenador **não** executa deploy; o dono aprova e
+executa.
+
+**Verificação esperada depois do deploy (e só nela):**
+- `sentinel_runs.truncado = false` na próxima rodada da organização real;
+- `encerradas > 0`, incluindo **`fiscal.divergencia_valor_nota`** (o falso
+  positivo do pedido 19594) e `fiscal.nota_duplicada_por_pedido` (sem detecção
+  desde 09:15), ambos com `nao_detectada_na_execucao`;
+- `/health` `version 1.62.0`; 7 containers; `to_regclass`/funções de 0330/0331 já
+  presentes desde a 1.61.0.
+
+**Rollback:** refixar 1.61.0 nas três imagens; schema aditivo.
+
+## 10.1 Pendência aberta — série do SLO ainda sem amostra
+
+Medição honesta, não bug declarado: `api_request_samples` tinha **0 linhas** 35
+min após o deploy da 1.61.0. O teste com `GET /api/v1/contacts` **sem auth**
+retornou **401 na borda** e não alcançou o handler — logo **não prova** que a
+amostragem funciona. O G está investigando (`after()` no standalone) e vai expor
+**contagem e última amostra** na tela. Critério para fechar: uma requisição
+autenticada real gerar linha com `rota`, `status` e latência, e a tela mostrar a
+última amostra.
+
+
+## 11. 20/11/2026 — Correção de registro: não existia divergência de R$ 42
+
+**O que foi reportado (errado):** "divergência fiscal/financeira: pedido 19594
+R$ 92,00 × NF-e 4629 R$ 134,00 (+R$ 42,00)". Isso **não** era diferença de
+dinheiro.
+
+**Medição read-only em produção:**
+
+```
+pedido 19594  total 9200
+pedido 19597  total 4200
+NF-e 4629     total 13400   (autorizada, cStat 100)
+invoice_orders: NF 4629 → DOIS pedidos
+9200 + 4200 = 13400  ← fecha exatamente
+```
+
+A nota **agrupa dois pedidos**, o que é legítimo. O detector
+`fiscal.divergencia_valor_nota` comparava o total da nota com **um** pedido
+(`order_id`) e ignorava os vínculos de `notasPedidos` — daí o falso positivo.
+
+**Lição (mesma família da devolução):** **detector que assume 1:1 erra em
+agrupamento**, e o custo é o dono investigar dinheiro que não sumiu. Toda regra
+que liga nota a pedido precisa somar **todos** os vínculos — e a varredura de
+outras regras 1:1 faz parte da fatia do G.
+
+**Correção do detector:** somar os pedidos vinculados, corrigir a evidência e
+cobrir com 5 casos de teste (um pedido, dois pedidos, três, nota sem vínculo e
+valor realmente divergente).
+
+## 12. 20/11/2026 — Achado fiscal REAL: duas NF-e autorizadas para o mesmo pedido
+
+**Pedido:** **19560** (concluído, R$ 70,00), `order_id`
+`7a7e781b-0904-4279-870c-288154355d35`.
+
+| NF-e | Série | Status | cStat | Valor | Data |
+|---|---|---|---|---|---|
+| **4634** | 1 | autorizada | 100 | R$ 70,00 | 13/11 17:40 |
+| **4644** | 1 | autorizada | 100 | R$ 70,00 | 16/11 18:48 |
+
+**Consequência:** duas notas vivas para o mesmo pedido = **faturamento declarado
+em dobro** para a mesma venda. O detector `fiscal.nota_duplicada_por_pedido`
+**procede**; não é falso positivo.
+
+**Nada foi tocado.** Cancelar/inutilizar NF é operação fiscal e depende de
+autorização do dono. A correção é **cancelamento dentro do prazo legal ou carta de
+correção, conforme o caso** — decisão do dono com o contador.
+
+**Risco:** declaração em duplicidade; prazo de cancelamento da NF-e é limitado e
+corre por data de autorização (a 4634 é de 13/11).
+
+## 13. 20/11/2026 — `operacao.pedido_preso`: ruído e hipótese derrubada
+
+Medido: **121 rascunhos** com mais de 7 dias; **120 com o mesmo `updated_at`**
+(2026-11-09 19:38:13.052684), 20 com `total_cents = 0`, e **121 com
+`updated_at > created_at`** — ou seja, "nunca editado" não discrimina, porque um
+backfill tocou todos. A assinatura de operação em lote é o timestamp idêntico, e
+isso é frágil como regra.
+
+As três opções medidas (a/b/c) e o custo de cada uma estão em
+[`../business-rules/pendencias-do-sentinel.md`](../business-rules/pendencias-do-sentinel.md).
+**Nada foi implementado**: o detector segue como está, e a escolha é do dono.
