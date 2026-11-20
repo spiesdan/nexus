@@ -8,6 +8,39 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.61.0] — 2026-11-20
+
+### Adicionado
+
+- **Disponibilidade e latência dos SLOs passam a ter série de verdade** As duas primeiras metas do doc 42 não tinham série: 5xx era só log e duração não
+  era persistida. Agora as cinco rotas quentes gravam uma amostra por requisição
+  em `api_request_samples` — rota, status, duração, código de 5xx, request id e a
+  organização quando há — sem body/PII/mensagem, depois da resposta. A tela
+  `/admin/observabilidade` calcula 5xx/total e p95 da janela de 7 dias e continua
+  dizendo “sem histórico” enquanto não houver 100 amostras. A retenção de 7 dias
+  roda em lotes no cron diário.
+
+- **Sentinel vigia os SLOs de disponibilidade e latência** A série de API criada na 0330 agora fecha o laço: a regra
+  `plataforma.slo_estourado` lê a janela de 7 dias por rota e abre uma ocorrência
+  para disponibilidade abaixo de 99,5% ou p95 acima de 800 ms, com pelo menos 100
+  amostras. A evidência traz janela, total, 5xx, p95 e as rotas que puxaram o
+  número. Sem amostra suficiente não abre nada; reexecutar atualiza a mesma
+  ocorrência pelo fingerprint estável.
+
+### Corrigido
+
+- **Pedido com tabela de preço ativa cobrava o preço de catálogo** Quem escolhia a tabela de preço **antes** de lançar os itens — o caminho comum —
+  recebia o item pelo preço de catálogo, e a linha ainda dizia "preço da tabela".
+  O `adicionar` montava o preço a partir de `produto.preco_cents` e só rotulava a
+  origem por existir tabela; o desconto da tabela (e o override por produto) só
+  apareciam quando a tabela era trocada **depois** do item lançado.
+
+  Agora o preço da linha é o que a tabela ativa manda: override do produto, senão
+  o desconto da tabela, senão o preço de catálogo — e a origem exibida é a que
+  vale. Quem digita preço à mão continua marcado como manual e não é sobrescrito.
+
+  Nada a fazer na VPS.
+
 ## [1.60.0] — 2026-11-19
 
 ### Adicionado
@@ -8291,7 +8324,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.60.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.61.0...HEAD
+[1.61.0]: https://github.com/spiesdan/nexus/compare/v1.60.0...v1.61.0
 [1.60.0]: https://github.com/spiesdan/nexus/compare/v1.59.1...v1.60.0
 [1.59.1]: https://github.com/spiesdan/nexus/compare/v1.59.0...v1.59.1
 [1.59.0]: https://github.com/spiesdan/nexus/compare/v1.58.0...v1.59.0
