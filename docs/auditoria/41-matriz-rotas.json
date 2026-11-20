@@ -651,8 +651,7 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
-      "pular": "rota dinâmica sem id de exemplo no instrumento"
+      "veredito": "**aplicado** — varredura medida (4 combinações, id de exemplo do banco): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/agents/new",
@@ -709,16 +708,15 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
-      "pular": "rota dinâmica sem id de exemplo no instrumento"
+      "veredito": "**inválida** — o id de exemplo (enrollment) responde 404 nesta rota: ela espera id de follow-up, não de inscrição. A linha não conta como aplicada até haver fixture",
+      "pular": "**inválida** — o id de exemplo (enrollment) responde 404 nesta rota: ela espera id de follow-up, não de inscrição. A linha não conta como aplicada até haver fixture"
     },
     {
       "rota": "/ai/followups/enrollments/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
-      "pular": "rota dinâmica sem id de exemplo no instrumento"
+      "veredito": "**aplicado** — varredura medida (4 combinações, id de exemplo do banco): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious))"
     },
     {
       "rota": "/ai/inbox",
@@ -767,8 +765,8 @@
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pulada: rota dinâmica sem id de exemplo no instrumento",
-      "pular": "rota dinâmica sem id de exemplo no instrumento"
+      "veredito": "pulada: o banco de teste não tem nenhuma linha em `ai_routers` — sem roteador, não há o que abrir",
+      "pular": "pulada: o banco de teste não tem nenhuma linha em `ai_routers` — sem roteador, não há o que abrir"
     },
     {
       "rota": "/ai/runs",

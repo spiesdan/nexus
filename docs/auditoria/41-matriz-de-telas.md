@@ -187,13 +187,13 @@ escrito à mão).
 | 37 | `/venda-automatica` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 38 | `/webhooks` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 
-### 7. IA (agentes, runs, conhecimento) — 22 telas, 18 medidas
+### 7. IA (agentes, runs, conhecimento) — 22 telas, 21 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
 | 1 | `/ai` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 2 | `/ai/agents` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 3 | `/ai/agents/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 3 | `/ai/agents/[id]` · dinâmica | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações, id de exemplo do banco): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 4 | `/ai/agents/new` | — (pulada) | — | — | **inválida** — a rota responde 403 como destino; a linha não conta como aplicada — a rota responde 403 como destino |
 | 5 | `/ai/cases` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 6 | `/ai/controle` | 0/0 px | 0/2 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/2 (regras: color-contrast (serious), label-content-name-mismatch (serious)) |
@@ -201,15 +201,15 @@ escrito à mão).
 | 8 | `/ai/decisoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 9 | `/ai/evolution` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 10 | `/ai/followups` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 11 | `/ai/followups/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
-| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 11 | `/ai/followups/[id]` · dinâmica | — (pulada) | — | — | **inválida** — o id de exemplo (enrollment) responde 404 nesta rota: ela espera id de follow-up, não de inscrição. A linha não conta como aplicada até haver fixture — **inválida** — o id de exemplo (enrollment) responde 404 nesta rota: ela espera id de follow-up, não de inscrição. A linha não conta como aplicada até haver fixture |
+| 12 | `/ai/followups/enrollments/[id]` · dinâmica | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações, id de exemplo do banco): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 13 | `/ai/inbox` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 14 | `/ai/knowledge/sources` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 15 | `/ai/memory` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 16 | `/ai/proposals` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 17 | `/ai/providers` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 18 | `/ai/routers` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 19 | `/ai/routers/[id]` · dinâmica | — (pulada) | — | — | pulada: rota dinâmica sem id de exemplo no instrumento — rota dinâmica sem id de exemplo no instrumento |
+| 19 | `/ai/routers/[id]` · dinâmica | — (pulada) | — | — | pulada: o banco de teste não tem nenhuma linha em `ai_routers` — sem roteador, não há o que abrir — pulada: o banco de teste não tem nenhuma linha em `ai_routers` — sem roteador, não há o que abrir |
 | 20 | `/ai/runs` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 21 | `/ai/skills` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
 | 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
