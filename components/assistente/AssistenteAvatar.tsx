@@ -53,7 +53,7 @@ export function AssistenteAvatar({ aberto, onToggle }: AssistenteAvatarProps) {
       aria-controls="assistente-painel"
       title={aberto ? "Fechar assistente" : "Abrir assistente"}
       className={cn(
-        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95 lg:h-9 lg:w-9",
+        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition duration-150 hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95",
         aberto && "bg-muted text-foreground",
       )}
     >

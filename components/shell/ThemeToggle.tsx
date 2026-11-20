@@ -27,7 +27,7 @@ export function ThemeToggle() {
       aria-label={rotulo}
       title={rotulo}
       data-testid="theme-toggle"
-      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:h-9 lg:w-9"
+      className="inline-flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       {noEscuro ? (
         <Sun size={18} aria-hidden weight="bold" />

@@ -49,7 +49,7 @@ export function SearchTrigger() {
       <Button
         variant="outline"
         size="sm"
-        className="h-11 w-11 justify-center gap-0 border-0 bg-transparent px-0 text-muted-foreground md:h-9 md:w-64 md:justify-start md:gap-2 md:border md:border-input md:bg-background md:px-3 lg:w-80 xl:w-96"
+        className="h-11 w-11 justify-center gap-0 border-0 bg-transparent px-0 text-muted-foreground md:h-11 md:w-64 lg:h-11 md:justify-start md:gap-2 md:border md:border-input md:bg-background md:px-3 lg:w-80 xl:w-96"
         aria-label={t("Buscar em todo o sistema")}
         title={t("Buscar")}
         aria-keyshortcuts="Meta+K Control+K"

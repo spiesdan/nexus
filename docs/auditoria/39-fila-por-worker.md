@@ -21,7 +21,7 @@
 
 - **D:** #673 com `verify` vermelho → corrigir e mergear; depois rotas fatia 2/3 e o **cartão agrupado** do `pedido_preso`.
 - **F:** (5) `sessionStorage` e (6) custo no resumo → (3) `ignorar_*` só gerente → (1) baixa atômica → (2) reprecificação.
-- **G:** (A) regra do `pedido_preso` por `created_by` + links na evidência de lead.
+- **G:** **#686** (casca admin 44 px + dashboard 16→1/2→1) e **#689** (varredura de cardinalidade do Sentinel: 0 suspeitas abertas). Capturas das outras 21 telas **bloqueadas** por load/swap da máquina — só reabrem depois do build do F; próxima é `/admin/audit`.
 - **Coord:** PR das decisões de 20/11; despacho e `## AGORA` a cada relatório.
 
 ## PRÓXIMA TAREFA — D
@@ -46,11 +46,18 @@ confirmação linha a linha. Cada um com teste dirigido e PR próprio.
 
 ## PRÓXIMA TAREFA — G
 
-**(A)** `operacao.pedido_preso`: implementar a decisão — abrir só com
-`created_by IS NOT NULL` e manter os importados fora do ruído (sem coluna, sem
-migration). **(B)** `lead_duplicado`: painel **identifica e linka** (nome →
-telefone → e-mail → id), **sem merge automático**, e a evidência passa a levar os
-links. Testes: autor humano × importado; lead com dois ids linkados.
+**(A)** `operacao.pedido_preso` e **(B)** `lead_duplicado` **entregues** (#674).
+Agora, nesta ordem:
+
+1. **Telas de admin, 21 restantes** — casca já em 44 px (#686); cada tela mede
+   **conteúdo próprio** (antes/depois, contraste, overflow, console, linha na
+   matriz `41`). Próxima: `/admin/audit` (72 alvos, `h-9`/`h-7` de conteúdo).
+   **Bloqueado** até o build do F liberar a máquina (load/swap).
+2. **p95 real** — depende de `api_request_samples` acumular amostras após o
+   deploy da sonda 0332; 1 amostra de 1.428 ms não é p95.
+3. **S1 da cardinalidade** (proposta em `50-sentinel-cardinalidade.md`):
+   `pedido_id` singular nas 4 evidências de nota — só muda com caso real de nota
+   agrupada.
 
 ## PRÓXIMA TAREFA — Coordenação
 
