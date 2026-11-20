@@ -16,7 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
-import { FONTE_ENTRADA, FONTE_MANUAL, precisaDeEntrada, situacaoDoNumero } from "@/lib/rotas/entradas";
+import {
+  FONTE_ENTRADA,
+  FONTE_MANUAL,
+  precisaDeEntrada,
+  situacaoDoNumero,
+} from "@/lib/rotas/entradas";
 import { horaDoMinuto, minutosDoDia } from "@/lib/rotas/janelas";
 import {
   formatarDistancia,
@@ -1196,16 +1201,40 @@ export function Roteirizador({
         <div className="min-w-0">
           <h2 className="text-base font-medium text-text">{t("Mapa e ordem de entrega")}</h2>
           <p className="text-xs text-muted-foreground">
-            {t("A ordem da lista é a ordem da rua. Use as setas para ajustar.")}
+            {t("A ordem da lista é a ordem da rua.")}{" "}
+            <details className="mt-0.5 inline-block">
+              <summary className="cursor-pointer text-[11px] text-text-muted hover:text-text">
+                {t("Detalhes do cálculo")}
+              </summary>
+              <p className="mt-1 text-[11px] text-text-muted">
+                {provedorRota
+                  ? provedorRota.ruas
+                    ? t("O trajeto segue as ruas (OSRM).")
+                    : t("Ordem aproximada por distância em linha reta.")
+                  : t("Nenhum cálculo aplicado ainda.")}
+                {selecionados.length > 0
+                  ? ` ${t("Distribuição com OR-Tools: respeita capacidade e jornada.")}`
+                  : ""}
+              </p>
+            </details>
           </p>
         </div>
-        <Badge variant={provedorRota?.ruas ? "success" : provedorRota ? "warning" : "neutral"}>
-          {provedorRota
-            ? provedorRota.ruas
-              ? t("Pelas ruas")
-              : t("Ordem aproximada")
-            : t("Sem rota calculada")}
-        </Badge>
+        {/* UM SELO, UM ESTADO — e o jargão do provedor sai da frente.
+            Antes o selo dizia "Sem rota calculada" / "Ordem aproximada" /
+            "Pelas ruas": três nomes de ALGORITMO no lugar onde o operador
+            precisa saber se a rota está publicada. O detalhe do cálculo vai
+            para baixo, recolhido. */}
+        {(() => {
+          const estado =
+            rota.carga.status === "concluida"
+              ? { rotulo: t("Concluída"), variante: "success" as const }
+              : rota.carga.status === "em_rota"
+                ? { rotulo: t("Em andamento"), variante: "info" as const }
+                : ordemMudou || ordemSalva.length === 0
+                  ? { rotulo: t("Proposta"), variante: "warning" as const }
+                  : { rotulo: t("Publicada"), variante: "success" as const };
+          return <Badge variant={estado.variante}>{estado.rotulo}</Badge>;
+        })()}
       </div>
 
       {/* ── OS NÚMEROS DA CARGA, NUMA FAIXA SÓ ──────────────────────────────
@@ -1297,7 +1326,7 @@ export function Roteirizador({
           virava a menor coisa nela. */}
       <div className="min-w-0">
         <MapaRota
-          altura="min(58vh, 640px)"
+          altura="min(42vh, 460px)"
           paradas={pontosMapa}
           geometria={geometria}
           rotas={rotasMapa}
@@ -1584,7 +1613,10 @@ export function Roteirizador({
                       {t(
                         "Nenhum veículo na frota. Sem placa e capacidade cadastradas, a carga continua saindo num veículo só.",
                       )}{" "}
-                      <Link href="/app/frota" className="text-accent-ink underline underline-offset-2">
+                      <Link
+                        href="/app/frota"
+                        className="text-accent-ink underline underline-offset-2"
+                      >
                         {t("Cadastrar frota")}
                       </Link>
                     </p>
@@ -1958,15 +1990,14 @@ export function Roteirizador({
                                 : t("Marcar no mapa")}
                           </button>
                         ) : null}
-                        {p.contact_id &&
-                          (p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
-                            <Link
-                              href={`/app/contacts/${p.contact_id}`}
-                              className="text-muted-foreground underline underline-offset-2 hover:text-text"
-                            >
-                              {t("Corrigir endereço")}
-                            </Link>
-                          )}
+                        {p.contact_id && (p.geo_status !== "ok" || pinoAproximado(p.geo_fonte)) && (
+                          <Link
+                            href={`/app/contacts/${p.contact_id}`}
+                            className="text-muted-foreground underline underline-offset-2 hover:text-text"
+                          >
+                            {t("Corrigir endereço")}
+                          </Link>
+                        )}
                       </>
                     )}
                   </div>
