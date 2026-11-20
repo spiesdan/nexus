@@ -447,3 +447,32 @@ muda para quem roda).
 
 **Verificação esperada da 1.62.1:** `coletas_truncadas = []`, `leads_abertos` sem
 falha e os **5 leads reafirmados**.
+
+## 22. 21/11/2026 — Três consertos provados em produção (1.62.0)
+
+```
+URI too long (40 min) ................. 0   ← eram 16 a cada 6h
+falhas do risk-watcher (40 min) ....... 0
+incidente laya.motor_indisponivel ..... criado (open, 2 orgs)
+pedido_preso ......................... 15 encerradas, 0 reabertas
+anon executando fn_criar_pedido ...... false
+```
+
+Três consertos no mesmo deploy: fatiamento do radar (#695/#697), `pedido_preso`
+por autor (#670) e motor de IA visível (#700). **Lição:** teste unitário que mocka
+a consulta não pega ambiguidade de embed — só o PostgREST real pega (#712).
+
+## 23. 21/11/2026 — Deploy 1.62.1 — regressão do embed fechada
+
+`update.sh --to v1.62.1` → *"Atualização concluída — app no ar e saudável"*.
+Backup: db **20M** + waha + uploads (11:47).
+
+| Verificação | Resultado |
+|---|---|
+| Containers / health / login | **7 em 1.62.1** · healthy 1.62.1 · 200 |
+| `coletas_truncadas` / `falhas` | **[]** / **[]** |
+| `operacao.lead_duplicado` | **5 reafirmadas** (vivas, 11:51) |
+| `risk-watcher` (70 min) | `URI too long` **0**, falhas **0** |
+
+Execução Sentinel `3248b21d`: `achados=5 · reafirmadas=5 · encerradas=0 ·
+truncado=FALSE`. **Rollback:** refixar 1.62.0 (sem migration nova).
