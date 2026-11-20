@@ -572,3 +572,21 @@ abortou a fatia, matou servidor/Chromium e o swap voltou a 2,0 GB.
 **Lição:** **métrica incompleta é uma forma de mentira.** “8 s/rota” descrevia só o
 tempo; o limite real era **memória por rota**. O instrumento passa a gravar o
 artefato por fatia de 10 rotas, liberar buffers e matar o servidor entre fatias.
+
+## 29. 21/11/2026 — Deploy 1.62.3 verificado; sinal do observador ≠ estado do observado
+
+`/tmp/deploy-1623.log`: *"Atualização concluída — app no ar e saudável"*.
+
+```
+7 containers em 1.62.3 · 18 healthy
+/health healthy 1.62.3 · /login 200
+URI too long (60 min) = 0 · risk-watcher falhas (60 min) = 0
+Sentinel: achados=5 · reafirmadas=5 · truncado=false
+```
+
+**Lição operacional:** o **exit 124** do SSH não foi falha — o `update.sh` terminou no
+servidor e o health responde 1.62.3. O comando agora grava o log em arquivo na VPS
+e lê o `EXIT` de lá: **sinal do observador ≠ estado do observado**. Timeout do stream
+não é timeout do deploy; conferir o artefato antes de declarar falha parcial.
+
+**Sem migration nova nesta versão** (rollback = refixar 1.62.2).
