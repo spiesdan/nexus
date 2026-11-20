@@ -1324,9 +1324,17 @@ export function Roteirizador({
           controles. Antes eram três colunas lado a lado com o mapa espremido
           no meio e cinco cartões à direita — a rota, que é a razão da tela,
           virava a menor coisa nela. */}
+      {/* O PISO DO MAPA É 50vh — e ele não é preferência de estilo: o gate
+          `expedicao-pagina-de-rota-layout` exige altura em vh ≥ 50, porque abaixo
+          disso o mapa deixa de ser o motivo da tela e vira miniatura. A primeira
+          versão desta fatia tentou 42vh para trazer a lista à primeira dobra, e o
+          gate reprovou — corretamente. O que sobra é descer do 58vh original até
+          o piso: 50vh, com o teto em 520px (antes 640px). Trazer a lista para a
+          primeira dobra é trabalho da fatia 2 (ação primária e ordem sincronizada),
+          não de encolher o mapa abaixo do que a tela precisa. */}
       <div className="min-w-0">
         <MapaRota
-          altura="min(42vh, 460px)"
+          altura="min(50vh, 520px)"
           paradas={pontosMapa}
           geometria={geometria}
           rotas={rotasMapa}

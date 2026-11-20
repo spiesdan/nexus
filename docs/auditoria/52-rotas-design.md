@@ -49,9 +49,14 @@ Captura `capturas/rota-antes-light-1440.png` (carga 010, 3 paradas):
 
 ## O que mudou nesta fatia (1 de 3)
 
-- **O mapa não come a dobra**: altura `min(58vh, 640px)` → `min(42vh, 460px)`.
-  A “Ordem de entrega” passa a aparecer na primeira tela a 1440 (medido: topo em
-  ~868 px, contra fora da dobra antes).
+- **O mapa desce até o piso**: altura `min(58vh, 640px)` → `min(50vh, 520px)`.
+  O primeiro corte foi `min(42vh, 460px)`, e o gate
+  `expedicao-pagina-de-rota-layout` reprovou: abaixo de **50vh** o mapa deixa de
+  ser o motivo da tela. O piso venceu — e está certo: encolher o mapa não é como
+  se traz a lista para a primeira dobra. Com 50vh a “Ordem de entrega” começa em
+  ~940 px num viewport de 900, ou seja, **logo abaixo da dobra**; trazê-la para
+  dentro é a fatia 2 (ação primária única e ordem sincronizada), não um mapa
+  menor.
 - **Um selo, um estado**: `Proposta` · `Publicada` · `Em andamento` ·
   `Concluída`, derivado de `ordemMudou`/`ordemSalva` e do status da carga.
 - **Jargão fora da vista**: “OSRM”, “OR-Tools”, “ordem aproximada” e “sem rota
@@ -67,7 +72,7 @@ Captura `capturas/rota-antes-light-1440.png` (carga 010, 3 paradas):
 | Overflow horizontal | **0** em 1440 e 390 |
 | Console | **0** |
 | Texto de algoritmo na superfície | **0** (era 3 rótulos) |
-| Lista de paradas na 1ª dobra (1440) | **sim** (antes: não) |
+| Lista de paradas na 1ª dobra (1440) | **não** — topo em ~940 px com o mapa no piso de 50vh; é a fatia 2 que a traz |
 
 Capturas: `capturas/rota-antes-*-1440.png` e `capturas/rota-depois-*-1440.png`.
 
