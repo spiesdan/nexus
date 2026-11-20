@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T13:22:47.235Z",
+  "gerado": "2026-11-20T14:33:49.830Z",
   "rotulo": "depois",
-  "rotas": 13,
+  "rotas": 4,
   "medidas": [
     {
       "rota": "/carteira",
@@ -6249,19 +6249,28 @@
     },
     {
       "rota": "/ai/agents/[id]",
-      "url": "",
+      "url": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "urlFinal": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Bot Padrão E2E"
+      ],
       "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/ai/agents/new",
@@ -6431,19 +6440,24 @@
     },
     {
       "rota": "/ai/agents/[id]",
-      "url": "",
+      "url": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "urlFinal": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Bot Padrão E2E"
+      ],
       "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      }
     },
     {
       "rota": "/ai/agents/new",
@@ -6607,19 +6621,28 @@
     },
     {
       "rota": "/ai/agents/[id]",
-      "url": "",
+      "url": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "urlFinal": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Bot Padrão E2E"
+      ],
       "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/ai/agents/new",
@@ -6786,19 +6809,24 @@
     },
     {
       "rota": "/ai/agents/[id]",
-      "url": "",
+      "url": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "urlFinal": "/app/ai/agents/ca865873-2c44-4886-8e54-dd00cfc1e682",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Bot Padrão E2E"
+      ],
       "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "rota dinâmica sem id de exemplo em IDS"
+      }
     },
     {
       "rota": "/ai/agents/new",
@@ -7916,6 +7944,246 @@
         "ids": [],
         "nos": []
       }
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "rota dinâmica sem id de exemplo em IDS"
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "url": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "404 — Página não encontrada"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "url": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "urlFinal": "/app/ai/followups/enrollments/aaa728db-684d-46a3-8830-f32c80d86ceb",
+      "redirecionou": false,
+      "invalida": null,
+      "h1Atrasado": false,
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [
+        "Cliente Dossiê mgr 1794804120850"
+      ],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "url": "",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "h1": [],
+      "consoleErros": [],
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "pulada": "rota dinâmica sem id de exemplo em IDS"
     }
   ]
 }
