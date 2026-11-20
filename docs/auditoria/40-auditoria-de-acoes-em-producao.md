@@ -166,7 +166,8 @@ que a ocorrência `fiscal.nota_duplicada_por_pedido` (última vista 09:15) estej
 (Mercos 7 dias, teto 500, encerramento **por fonte**) — **#661** —; o **fix do
 agrupamento de nota** em `fiscal.divergencia_valor_nota` (somar todos os pedidos
 vinculados, não só `order_id`); **#659** (público/auth) e a documentação deste
-item (**#660**).
+item (**#660**), que inclui os dois registros de 20/11: o **achado fiscal real do
+pedido 19560** e a **pendência do `pedido_preso`** (documentação, sem código).
 
 **Autorização:** pendente — o coordenador **não** executa deploy; o dono aprova e
 executa.
@@ -220,3 +221,36 @@ outras regras 1:1 faz parte da fatia do G.
 **Correção do detector:** somar os pedidos vinculados, corrigir a evidência e
 cobrir com 5 casos de teste (um pedido, dois pedidos, três, nota sem vínculo e
 valor realmente divergente).
+
+## 12. 20/11/2026 — Achado fiscal REAL: duas NF-e autorizadas para o mesmo pedido
+
+**Pedido:** **19560** (concluído, R$ 70,00), `order_id`
+`7a7e781b-0904-4279-870c-288154355d35`.
+
+| NF-e | Série | Status | cStat | Valor | Data |
+|---|---|---|---|---|---|
+| **4634** | 1 | autorizada | 100 | R$ 70,00 | 13/11 17:40 |
+| **4644** | 1 | autorizada | 100 | R$ 70,00 | 16/11 18:48 |
+
+**Consequência:** duas notas vivas para o mesmo pedido = **faturamento declarado
+em dobro** para a mesma venda. O detector `fiscal.nota_duplicada_por_pedido`
+**procede**; não é falso positivo.
+
+**Nada foi tocado.** Cancelar/inutilizar NF é operação fiscal e depende de
+autorização do dono. A correção é **cancelamento dentro do prazo legal ou carta de
+correção, conforme o caso** — decisão do dono com o contador.
+
+**Risco:** declaração em duplicidade; prazo de cancelamento da NF-e é limitado e
+corre por data de autorização (a 4634 é de 13/11).
+
+## 13. 20/11/2026 — `operacao.pedido_preso`: ruído e hipótese derrubada
+
+Medido: **121 rascunhos** com mais de 7 dias; **120 com o mesmo `updated_at`**
+(2026-11-09 19:38:13.052684), 20 com `total_cents = 0`, e **121 com
+`updated_at > created_at`** — ou seja, "nunca editado" não discrimina, porque um
+backfill tocou todos. A assinatura de operação em lote é o timestamp idêntico, e
+isso é frágil como regra.
+
+As três opções medidas (a/b/c) e o custo de cada uma estão em
+[`../business-rules/pendencias-do-sentinel.md`](../business-rules/pendencias-do-sentinel.md).
+**Nada foi implementado**: o detector segue como está, e a escolha é do dono.
