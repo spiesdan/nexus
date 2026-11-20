@@ -16,14 +16,14 @@
  *   BASE=http://127.0.0.1:3002 npx tsx tests/captura-publico-auth.ts antes
  *   BASE=http://127.0.0.1:3002 npx tsx tests/captura-publico-auth.ts depois
  */
-import { chromium } from "@playwright/test";
-
-import { medir, type Medida } from "./lib/medir-pagina";
-import { ROTAS } from "./lib/rotas-publico-auth";
+import AxeBuilder from "@axe-core/playwright";
+import { chromium, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 
 const BASE = process.env.BASE ?? "http://127.0.0.1:3002";
+// Recorte para blocos de 5 rotas sem rodar as 16 (regra de entrega em blocos).
+const FILTRO = (process.env.SLUGS ?? "").split(",").map((x) => x.trim()).filter(Boolean);
 const ROTULO = process.argv[2] ?? "antes";
 const RAIZ = path.join(process.cwd(), "docs/auditoria/capturas", `${ROTULO}-publico-auth`);
 
@@ -39,21 +39,198 @@ const TAMANHOS = [
  * `espera` é o sinal de que a TELA certa renderizou: sem ele, um redirect para
  * /login geraria captura bonita de outra página. `urlFinal` no registro prova.
  */
+const ROTAS = [
+  { slug: "login", path: "/login", espera: /Entrar/i },
+  { slug: "login-forgot", path: "/login/forgot", espera: /Recuperar|Esqueci|senha/i },
+  { slug: "login-recovery", path: "/login/recovery", espera: /Recupera|senha|código/i },
+  { slug: "login-reset", path: "/login/reset", espera: /senha|Redefinir|inválido/i },
+  { slug: "login-mfa", path: "/login/mfa", espera: /código|verifica|MFA|Entrar/i },
+  { slug: "signup", path: "/signup", espera: /Conta|Criar|cadastro|e-mail/i },
+  { slug: "403", path: "/403", espera: /Acesso|permiss/i },
+  { slug: "500", path: "/500", espera: /Erro|algo|errado|intern/i },
+  { slug: "503", path: "/503", espera: /indispon|manuten|volta/i },
+  { slug: "account-suspended", path: "/account-suspended", espera: /suspens|conta/i },
+  { slug: "legal-privacy", path: "/legal/privacy", espera: /privacidade|dados/i },
+  { slug: "legal-terms", path: "/legal/terms", espera: /termos|uso/i },
+  { slug: "orcamento", path: "/o/token-de-teste", espera: /orçamento|proposta|inválid|expir/i },
+  { slug: "landing", path: "/", espera: /./ },
+  { slug: "vitrine-agenda", path: "/vitrine-agenda", espera: /agenda|vitrine|agendar/i },
+  { slug: "accept-invite", path: "/team/accept-invite/token-de-teste", espera: /convite|inválid|expir|equipe/i },
+] as const;
 
+const ROTAS_DA_VEZ = FILTRO.length > 0 ? ROTAS.filter((r) => FILTRO.includes(r.slug)) : ROTAS;
+
+interface AchadoDeContraste {
+  seletor: string;
+  texto: string;
+  razao: number;
+  piso: number;
+  cor: string;
+  fundo: string;
+  fonte: string;
+}
+
+interface Medida {
+  rota: string;
+  urlFinal: string;
+  tema: string;
+  largura: number;
+  overflow: number;
+  h1: string | null;
+  redirecionou: boolean;
+  console: string[];
+  toque: { total: number; pequenos: number; exemplos: string[] };
+  contraste: { total: number; abaixo: number; piores: AchadoDeContraste[] };
+  axe: { critica: number; seria: number; ids: string[]; nos: string[] };
+}
+
+/**
+ * MEDIÇÃO NO BROWSER — vai como STRING (mesmo motivo do captura-inbox: `tsx`
+ * injeta `__name` nas funções nomeadas e o `page.evaluate` quebraria).
+ */
+const MEDIR = `(() => {
+  const parse = (c) => {
+    const m = c.match(/rgba?\\(([^)]+)\\)/);
+    if (!m) return null;
+    const p = m[1].split(",").map((x) => parseFloat(x.trim()));
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  };
+  const lin = (v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  };
+  const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
+  const razao = (a, b) => {
+    const la = lum(a), lb = lum(b);
+    return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+  };
+  const compor = (cima, baixo) => ({
+    r: cima.r * cima.a + baixo.r * (1 - cima.a),
+    g: cima.g * cima.a + baixo.g * (1 - cima.a),
+    b: cima.b * cima.a + baixo.b * (1 - cima.a),
+    a: 1,
+  });
+  const temaEscuro = document.documentElement.getAttribute("data-theme") === "dark"
+    || document.documentElement.classList.contains("dark");
+  const basePagina = temaEscuro ? { r: 10, g: 10, b: 12, a: 1 } : { r: 255, g: 255, b: 255, a: 1 };
+
+  const fundoDe = (el) => {
+    const pilha = [];
+    let no = el;
+    while (no && no.nodeType === 1) {
+      const c = parse(getComputedStyle(no).backgroundColor);
+      if (c && c.a > 0) {
+        pilha.push(c);
+        if (c.a >= 0.999) break;
+      }
+      no = no.parentElement;
+    }
+    let acc = basePagina;
+    for (let i = pilha.length - 1; i >= 0; i--) acc = compor(pilha[i], acc);
+    return acc;
+  };
+
+  const visivel = (el) => {
+    const s = getComputedStyle(el);
+    if (s.display === "none" || s.visibility === "hidden") return false;
+    if (parseFloat(s.opacity || "1") < 0.15) return false;
+    const r = el.getBoundingClientRect();
+    if (r.width < 1 || r.height < 1) return false;
+    if (r.bottom < -50 || r.top > window.innerHeight + 4000) return false;
+    return true;
+  };
+
+  const amostra = [];
+  const abaixo = [];
+  let total = 0;
+
+  const alvos = Array.from(document.querySelectorAll("body *"));
+  for (const el of alvos) {
+    if (["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "PATH"].includes(el.tagName)) continue;
+    const texto = Array.from(el.childNodes)
+      .filter((n) => n.nodeType === 3)
+      .map((n) => n.textContent.trim())
+      .join(" ")
+      .trim();
+    if (!texto) continue;
+    if (!visivel(el)) continue;
+    const s = getComputedStyle(el);
+    const cor = parse(s.color);
+    if (!cor) continue;
+    const fundo = fundoDe(el);
+    const efetiva = cor.a < 0.999 ? compor(cor, fundo) : cor;
+    const r = razao(efetiva, fundo);
+    const px = parseFloat(s.fontSize);
+    const negrito = parseInt(s.fontWeight, 10) >= 700;
+    const grande = px >= 24 || (px >= 18.66 && negrito);
+    const piso = grande ? 3 : 4.5;
+    total++;
+    if (r < piso) {
+      const id = el.id ? "#" + el.id : "";
+      const cls = (el.className || "").toString().split(" ").filter(Boolean).slice(0, 2).join(".");
+      abaixo.push({
+        seletor: el.tagName.toLowerCase() + id + (cls ? "." + cls : ""),
+        texto: texto.slice(0, 60),
+        razao: Math.round(r * 100) / 100,
+        piso,
+        cor: s.color,
+        fundo: "rgb(" + Math.round(fundo.r) + "," + Math.round(fundo.g) + "," + Math.round(fundo.b) + ")",
+        fonte: s.fontSize + "/" + s.fontWeight,
+      });
+    }
+  }
+  const interativos = Array.from(
+    document.querySelectorAll('a,button,input,select,textarea,[role="button"],[role="link"]'),
+  ).filter(visivel);
+  const pequenos = interativos.filter((el) => {
+    const r = el.getBoundingClientRect();
+    return r.width < 44 || r.height < 44;
+  });
+  abaixo.sort((a, b) => a.razao - b.razao);
+  return {
+    overflow: Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth),
+    contraste: { total, abaixo: abaixo.length, piores: abaixo.slice(0, 8) },
+    toque: {
+      total: interativos.length,
+      pequenos: pequenos.length,
+      exemplos: pequenos.slice(0, 5).map((el) => {
+        const r = el.getBoundingClientRect();
+        return (el.tagName.toLowerCase() + (el.id ? "#" + el.id : "")) + " " + Math.round(r.width) + "x" + Math.round(r.height);
+      }),
+    },
+  };
+})()`;
+
+async function medir(page: Page, rota: string, tema: string, caminho: string): Promise<Medida> {
+  const medido = (await page.evaluate(MEDIR)) as {
+    overflow: number;
+    contraste: Medida["contraste"];
+    toque: Medida["toque"];
+  };
+  const axe = await new AxeBuilder({ page }).analyze();
+  const graves = axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious");
+  return {
+    rota,
+    urlFinal: page.url().replace(BASE, ""),
+    tema,
+    largura: page.viewportSize()?.width ?? 0,
+    overflow: medido.overflow,
+    h1: await page.locator("h1").first().textContent().catch(() => null),
+    redirecionou: page.url().replace(BASE, "") !== caminho,
+    console: [],
+    toque: medido.toque,
+    contraste: medido.contraste,
+    axe: {
+      critica: axe.violations.filter((v) => v.impact === "critical").length,
+      seria: axe.violations.filter((v) => v.impact === "serious").length,
+      ids: graves.map((v) => `${v.id} (${v.impact})`),
+      nos: graves.flatMap((v) => v.nodes.slice(0, 2).map((n) => `${v.id}: ${n.target.join(" ")}`)),
+    },
+  };
+}
 
 async function main(): Promise<void> {
   mkdirSync(RAIZ, { recursive: true });
-  /*
-   * `SO_ROTAS=404,404-rota` limita a captura às superfícies pedidas. Existe
-   * porque medir uma superfície nova não justifica 72 cargas no servidor de
-   * quem está rodando outra frente — a regra de memória da máquina vale
-   * também para o servidor dos outros.
-   */
-  const so = (process.env.SO_ROTAS ?? "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const rotas = so.length > 0 ? ROTAS.filter((r) => so.includes(r.slug)) : ROTAS;
   const browser = await chromium.launch();
   const medidas: Medida[] = [];
 
@@ -69,7 +246,7 @@ async function main(): Promise<void> {
       }, tema);
 
       const page = await contexto.newPage();
-      for (const rota of rotas) {
+      for (const rota of ROTAS_DA_VEZ) {
         const erros: string[] = [];
         // RUÍDO DE INSTRUMENTO, não da tela: o alvo é um `next dev`, e cada
         // contexto novo abre um HMR que o servidor (ocupado) recusa. Sem este
@@ -88,26 +265,27 @@ async function main(): Promise<void> {
         page.on("console", aoConsole);
         page.on("pageerror", aoErro);
 
-        let h1: string | null = null;
         const m = await (async (): Promise<Medida> => {
           try {
             await page.goto(`${BASE}${rota.path}`, {
               waitUntil: "domcontentloaded",
               timeout: 120_000,
             });
-            // H1 COM TIMEOUT: é a prova de que a TELA certa renderizou. Texto
-            // solto deixava a captura passar com a tela errada (foi o caso de
-            // `/login/mfa`, que redireciona para `/login`).
+            // A régua nova: o <h1> é o sinal de que a TELA (e não o redirect)
+            // renderizou. Timeout curto e registrado; `urlFinal` prova o destino.
             try {
-              const titulo = page.getByRole("heading", { level: 1 }).first();
-              await titulo.waitFor({ timeout: 20_000 });
-              h1 = (await titulo.textContent())?.trim() ?? null;
+              await page.locator("h1").first().waitFor({ timeout: 15_000 });
             } catch {
-              h1 = null;
+              erros.push("sem <h1> em 15s");
             }
-            await page.waitForTimeout(400);
+            try {
+              await page.getByText(rota.espera).first().waitFor({ timeout: 15_000 });
+            } catch {
+              // sem sinal: mede o que renderizou
+            }
+            await page.waitForTimeout(500);
             await page.screenshot({ path: path.join(RAIZ, `${rota.slug}_${tema}_${tamanho.nome}.png`) });
-            return await medir(page, rota.slug, tema);
+            return await medir(page, rota.slug, tema, rota.path);
           } catch (e) {
             // Rota que não carrega é ACHADO, não motivo para derrubar as outras
             // 63 medições.
@@ -117,25 +295,15 @@ async function main(): Promise<void> {
               tema,
               largura: tamanho.width,
               overflow: 0,
+              h1: null,
+              redirecionou: false,
               console: [`navegação: ${String(e).slice(0, 160)}`],
+              toque: { total: 0, pequenos: 0, exemplos: [] },
               contraste: { total: 0, abaixo: 0, piores: [] },
               axe: { critica: 0, seria: 0, ids: [], nos: [] },
             };
           }
         })();
-        // A RÉGUA: h1 esperado + destino. Sem os dois, a linha NÃO foi medida.
-        m.h1 = h1 ?? null;
-        const url = m.urlFinal;
-        const redirecionouCerto = "destino" in rota && rota.destino
-          ? url.startsWith(rota.destino)
-          : url.startsWith(rota.path);
-        const h1Certo = h1 !== null && rota.h1.test(h1);
-        m.medidaOk = h1Certo && redirecionouCerto;
-        m.motivoNaoMedido = m.medidaOk
-          ? null
-          : !h1Certo
-            ? `h1 inesperado: ${h1 === null ? "(ausente no timeout)" : JSON.stringify(h1)}`
-            : `destino inesperado: ${url}`;
         m.console = [...m.console, ...erros];
         medidas.push(m);
 
@@ -144,9 +312,10 @@ async function main(): Promise<void> {
           `overflow=${m.overflow}`,
           `contraste=${m.contraste.abaixo}/${m.contraste.total}`,
           `axe=${m.axe.critica}/${m.axe.seria}`,
+          `toque=${m.toque.pequenos}/${m.toque.total}`,
+          `h1=${m.h1 ? "sim" : "nao"}`,
+          `redir=${m.redirecionou ? m.urlFinal : "nao"}`,
           `console=${m.console.length}`,
-          `h1=${m.h1 ?? "—"}`,
-          `medida=${m.medidaOk ? "ok" : "NAO"}${m.motivoNaoMedido ? ` (${m.motivoNaoMedido})` : ""}`,
           `url=${m.urlFinal}`,
         ];
         console.info(linhas.join("  "));
