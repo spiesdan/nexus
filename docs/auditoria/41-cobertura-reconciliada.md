@@ -185,43 +185,64 @@ base sumiu; duas telas entraram depois dela.
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
-> **20/11/2026 — passe de público/auth/estado e onboarding (25 de 26).** Medido em
-> `next dev` nas duas pontas (antes/depois na mesma base): 64 medições por
-> lado, **0** textos abaixo do AA, **0** overflow, **0** axe serious. O que
-> mudou: as 6 telas de acesso ganharam o cartão das telas de estado e o
-> orçamento inválido deixou de ser beco. Detalhe e números em
-> `50-publico-auth-estado-design.md` e `51-onboarding-design.md`. As 9 de
-> onboarding foram medidas em passe próprio, com fixture de organização nova;
-> `/design` segue exceção declarada.
+> **21/11/2026 — passe por PRIMITIVA (24 medidas · 1 pendente · 1 exceção).**
+> Medido em `next dev` nas duas pontas (antes/depois na mesma base): 64 medições
+> por lado, **0** textos abaixo do AA, **0** overflow, **0** axe serious. O
+> recorte por peça (§2.2.1) é o que pega divergência entre irmãs — uma tela que
+> ganha cartão e a outra não.
+>
+> **Uma linha não fecha por medição, e está dita:** `/login/mfa` redireciona
+> para `/login` sem sessão parcial (1º fator), então a captura mediu a tela de
+> login, não a de MFA. Fica `pendente · motivo medido` até haver login com MFA
+> interrompido antes do 2º fator. `/design` segue exceção declarada (§5).
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/403` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/500` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/503` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/account-suspended` | estado/erro | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · 24 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/login/mfa` | público/auth | **pendente · motivo medido** | a captura caiu em `/login`: sem sessão parcial (1º fator) a rota redireciona. Medir exige usuário com MFA e parar antes do 2º fator — não medido | D |
+| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 (claro/escuro × 1440/390) | D |
+| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · 20 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/403` | estado/erro | **já conforme** | #659 · 16 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) | D |
+| `/503` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/account-suspended` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
-| `/legal/privacy` | público/legal | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/legal/terms` | público/legal | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/onboarding/connect-nuvemshop` | onboarding | **já conforme** (passo desligado) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/connect-whatsapp` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/done` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/funil` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/invite-team` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding` | onboarding | **já conforme** (roteador) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | — |
-| `/onboarding/setup-ai` | onboarding | **aplicado** (contraste no callout escuro) | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/testar` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/onboarding/welcome` | onboarding | **já conforme** | `51-onboarding-design.md` · `capturas/{antes,depois}-onboarding/` | F |
-| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/team/accept-invite/[token]` | público/auth | **já conforme** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
-| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | D |
+| `/legal/privacy` | público/legal | **já conforme** | #659 · 120 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/legal/terms` | público/legal | **já conforme** | #659 · 128 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 — estado inválido; válido exige token real | D |
+| `/onboarding/connect-nuvemshop` | onboarding | **já conforme** (passo desligado) | #670 · 88 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/connect-whatsapp` | onboarding | **já conforme** | #670 · 108 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/done` | onboarding | **já conforme** | #670 · 360 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/funil` | onboarding | **aplicado** (contraste no callout escuro) | #670 · 196 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/invite-team` | onboarding | **já conforme** | #670 · 100 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding` | onboarding | **já conforme** (roteador) | #670 · redireciona ao primeiro passo pendente; 4 combos do destino medidos em `welcome` | — |
+| `/onboarding/setup-ai` | onboarding | **aplicado** (contraste no callout escuro) | #670 · 292 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/testar` | onboarding | **já conforme** | #670 · 84 textos, 0 abaixo do AA · overflow 0 · axe 0 | F |
+| `/onboarding/welcome` | onboarding | **já conforme** | #670 · 152 textos, 0 abaixo do AA · overflow 0 · axe 0 (1 aviso de hidratação de tema, declarado) | F |
+| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · 4 combos, destino `/login?next=%2Fapp`; 32 textos, 0 abaixo do AA | D |
+| `/team/accept-invite/[token]` | público/auth | **já conforme** | #659 · 8 textos, 0 abaixo do AA · overflow 0 · axe 0 — estado de token inválido | D |
+| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · 4 combos, destino `/login?next=%2Fvitrine-agenda`; 32 textos, 0 abaixo do AA | D |
+
+### 2.2.1 As primitivas por trás das 26 — o passe foi por peça, não por tela
+
+> Medir tela a tela responde "esta rota está boa"; não responde "as telas de
+> acesso são a MESMA tela". O recorte por primitiva é o que pega irmã que
+> divergiu (uma ganha cartão, a outra não) e o que permite medir 5 rotas
+> pagando uma.
+
+| Primitiva | Onde é usada | Medição |
+|---|---|---|
+| **Cartão de acesso** — `Card` no layout de `(public)` | login, forgot, recovery, reset, **mfa***, signup | **5 de 6** medidas: 140 textos, 0 abaixo do AA, overflow 0, axe 0. \* mfa redireciona sem sessão parcial — pendente com motivo |
+| **Cartão de status** — `StatusPage` | 403, 500, 503, account-suspended e 404 (`not-found`) | **5 de 5**: 52 textos (16+12+12+12) nas 4 rotas + 16 no 404 (§2.3), 0 abaixo do AA |
+| **Documento legal** — `legal/layout` (medida de leitura `3xl`) | privacy, terms | **2 de 2**: 248 textos, 0 abaixo do AA, overflow 0 |
+| **Página pública** — `o/[token]` e os destinos de redirect | orçamento inválido, `/`, `vitrine-agenda` | **3 de 3**: estado inválido com 12 textos; `/` e `/vitrine` medidas como **redirect** (destino `/login?next=…`) |
+| **Wizard** — `onboarding/layout` + `Stepper` | 8 telas + roteador | **9 de 9**: 1.380 textos; o callout âmbar foi o único defeito (contraste no escuro, `setup-ai` e `funil`) e está corrigido |
+
+**Total de texto medido (4 combinações por rota):** 524 nas rotas de acesso/
+estado/legal/público + 1.380 no wizard. A soma inclui o que caiu em `/login` na
+medição do MFA — mas essa linha **não** é contada como MFA medido.
 
 ## 2.3 Estado de erro fora de rota (3 arquivos)
 
