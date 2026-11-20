@@ -160,7 +160,7 @@ base sumiu; duas telas entraram depois dela.
 
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/admin/audit/[entryId]` | admin | **pendente** | — | — |
+| `/admin/audit/[entryId]` | admin | **aplicado** — alvos < 40 px: 1 → 0 | `57-admin-audit-ficha-design.md` · `capturas/{antes,depois}-admin/` · `medidas-audit-entrada.json` | G |
 | `/admin/audit` | admin | **aplicado** | `54-admin-audit-design.md` · `capturas/{antes,depois}-admin/` · `medidas.json` | G |
 | `/admin/dashboard` | admin | **aplicado** | `48-admin-dashboard-design.md` · `capturas/admin-dashboard-{antes,depois}/` | G |
 | `/admin/google` | admin | **pendente** | — | — |
