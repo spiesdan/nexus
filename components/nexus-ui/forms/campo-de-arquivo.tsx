@@ -64,7 +64,10 @@ export function CampoDeArquivo({
         */}
         <span
           aria-hidden="true"
-          className="pointer-events-none inline-flex h-11 items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 text-sm font-medium text-text lg:h-9"
+          // A pintura não recebe o clique — quem recebe é o input por cima.
+          // `min-h-10` (40 px) no lugar de `h-11 lg:h-9`, que caía para 36 px
+          // no desktop: a geometria do botão sem voltar a ser um botão.
+          className="pointer-events-none inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-border bg-surface px-5 text-sm font-medium text-text"
         >
           {t(rotulo)}
         </span>

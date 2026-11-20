@@ -362,7 +362,7 @@ export function FormularioDaMarca({
         {erroTecnico ? (
           <span className="font-mono text-xs text-text-muted">{erroTecnico}</span>
         ) : null}
-        <Button type="submit" disabled={isPending || !hexValido}>
+        <Button type="submit" disabled={isPending || !hexValido} className="min-h-10">
           {isPending ? t("Salvando…") : t("Salvar")}
         </Button>
       </div>

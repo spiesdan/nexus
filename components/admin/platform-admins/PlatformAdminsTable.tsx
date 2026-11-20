@@ -141,10 +141,7 @@ function colunasAdmin(
             {t("Revogado")}
           </Badge>
         ) : (
-          <Badge
-            variant="outline"
-            className="border-green-500 text-[10px] text-green-700"
-          >
+          <Badge variant="success" className="text-[10px]">
             {t("Ativo")}
           </Badge>
         ),
@@ -189,7 +186,6 @@ export function PlatformAdminsTable({ data }: PlatformAdminsTableProps) {
         headline: "Nenhum platform admin encontrado",
         subcopy: "Platform admins são configurados exclusivamente via DBA.",
       }}
-      classeLinha={(row) => (row.revoked_at ? "opacity-60" : undefined)}
     />
   );
 }

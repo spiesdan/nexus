@@ -36,7 +36,7 @@ export function UsageClient() {
         subtitle={t("Consumo de mensagens, conversas e AI por tenant")}
         actions={
           <Select value={range} onValueChange={(v) => setRange(v as UsageRange)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="min-h-10 w-[180px]" aria-label={t("Período")}>
               <SelectValue placeholder={t("Período")} />
             </SelectTrigger>
             <SelectContent>

@@ -163,22 +163,22 @@ base sumiu; duas telas entraram depois dela.
 | `/admin/audit/[entryId]` | admin | **aplicado** — alvos < 40 px: 1 → 0 | `57-admin-audit-ficha-design.md` · `capturas/{antes,depois}-admin/` · `medidas-audit-entrada.json` | G |
 | `/admin/audit` | admin | **aplicado** | `54-admin-audit-design.md` · `capturas/{antes,depois}-admin/` · `medidas.json` | G |
 | `/admin/dashboard` | admin | **aplicado** | `48-admin-dashboard-design.md` · `capturas/admin-dashboard-{antes,depois}/` | G |
-| `/admin/google` | admin | **pendente** | — | — |
+| `/admin/google` | admin | **aplicado** — contraste 3,92:1 no escuro → 0; alvos 1/0 → 0 | `63-admin-config-modulo-design.md` · `medidas-google.json` | G |
 | `/admin/inbox/[conversationId]` | admin | **pendente** | — | — |
 | `/admin/inbox` | admin | **pendente** | — | — |
 | `/admin/incidents/[id]` | admin | **pendente** | — | — |
 | `/admin/incidents` | admin | **pendente** | — | — |
 | `/admin/lgpd` | admin | **aplicado** — axe crítico 1 → 0; alvos 12/12 → 0 (build de produção + `next start`, claro/escuro × 1440/390) | `62-admin-lgpd-modulo-design.md` · `medidas-lgpd.json` | G |
 | `/admin/lgpd/requests/[id]` | admin | **aplicado** — axe sério 2 → 0 (progressbar sem nome + contraste 2,52–3,29:1); alvos 1/0 → 0 | `62-admin-lgpd-modulo-design.md` · `medidas-lgpd-pedido.json` | G |
-| `/admin/marca` | admin | **pendente** | — | — |
-| `/admin/observabilidade` | admin | **pendente** | — | — |
+| `/admin/marca` | admin | **aplicado** — alvos 2/0 → 0 (primitiva do campo de arquivo + Salvar) | `63-admin-config-modulo-design.md` · `medidas-marca.json` | G |
+| `/admin/observabilidade` | admin | **aplicado** — alvos 1/0 → 0; 500 inicial era schema local (ver doc §Nota) | `63-admin-config-modulo-design.md` · `medidas-observabilidade.json` | G |
 | `/admin` | admin | **aplicado no destino** — redirect medido em `/admin/dashboard` (`urlFinal`): axe 1 → 0 a 390, alvos 0 | `60-admin-users-modulo-design.md` · `medidas-admin-index.json` | G |
-| `/admin/platform-admins` | admin | **pendente** | — | — |
+| `/admin/platform-admins` | admin | **aplicado** — contraste 3,69:1 no escuro → 0; alvos 1/1 → 0 | `63-admin-config-modulo-design.md` · `medidas-platform-admins.json` | G |
 | `/admin/tenants/[id]/health` | admin | **já conforme** — 0 alvos < 40 px; overflow/axe/console limpos (mesma rodada de captura) | `59-admin-tenants-modulo-design.md` · `medidas-tenant-saude.json` | G |
 | `/admin/tenants/[id]` | admin | **aplicado** — axe crítico 1 → 0; alvos 7/5 → 0 | `58-admin-tenant-ficha-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenant-ficha.json` | G |
 | `/admin/tenants/new` | admin | **aplicado** — alvos < 40 px: 3/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390) | `59-admin-tenants-modulo-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants-new.json` | G |
 | `/admin/tenants` | admin | **aplicado** — alvos < 40 px: 20/19 → 0 | `55-admin-tenants-design.md` · `capturas/{antes,depois}-admin/` · `medidas-tenants.json` | G |
-| `/admin/usage` | admin | **pendente** | — | — |
+| `/admin/usage` | admin | **aplicado** — axe crítico 1 → 0 (`button-name`); alvos 2/1 → 0 (build de produção, claro/escuro × 1440/390) | `63-admin-config-modulo-design.md` · `medidas-usage.json` | G |
 | `/admin/users/[id]` | admin | **aplicado** — axe sério 1 → 0; alvos 4/1 → 0 (captura: build de produção + `next start`, claro/escuro × 1440/390, `h1` esperado) | `60-admin-users-modulo-design.md` · `medidas-user-ficha.json` | G |
 | `/admin/users` | admin | **aplicado** — alvos < 40 px: 24/20 → 0 | `56-admin-users-design.md` · `capturas/{antes,depois}-admin/` · `medidas-users.json` | G |
 | `/admin/forbidden` | admin | **pendente** | — | — |
