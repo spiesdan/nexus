@@ -158,6 +158,10 @@ function linkDoMapa(endereco: string | null): string | null {
  * redirecionados no servidor; `#rota` e `#fechamento` caem aqui e são
  * redirecionados no cliente, antes de a pessoa rolar uma tela que não existe.
  */
+/** Mesmo piso de 44 px da lista; ver `app/app/expedicao/_client.tsx`. */
+const ALVOS_DE_TOQUE =
+  "[&_a]:min-h-11 [&_button]:min-h-11 [&_a]:min-w-11 [&_button]:min-w-11 [&_input]:min-h-11";
+
 export function CargaClient({
   cargaId,
   secao,
@@ -509,7 +513,7 @@ export function CargaClient({
     const cargaDaMoldura = cargaInicial;
     return (
       <div aria-busy="true" aria-live="polite">
-        <div className="border-b bg-background px-4 pt-3 pb-0 sm:px-6">
+        <div className={cn("border-b bg-background px-4 pt-3 pb-0 sm:px-6", ALVOS_DE_TOQUE)}>
           <Link
             href="/app/expedicao"
             className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-text"
@@ -718,7 +722,7 @@ export function CargaClient({
     // Tela cheia: o mapa é o aplicativo. Sem "Painel da carga" (o entregador não
     // tem painel) e sem padding — a casca já entrega a altura toda.
     return (
-      <div className="h-full">
+      <div className={cn("h-full", ALVOS_DE_TOQUE)}>
         {/*
           O NÍVEL 1 QUE FALTAVA. As três subtelas de expedição devolvem ANTES do
           cabeçalho do painel (que é quem tem o `<h1>`), então a cabine do
@@ -741,7 +745,7 @@ export function CargaClient({
 
   if (secao === "motorista") {
     return (
-      <div className="-mx-6 -mt-6 min-h-full">
+      <div className={cn("-mx-6 -mt-6 min-h-full", ALVOS_DE_TOQUE)}>
         <h1 className="sr-only">
           {t("Modo motorista")} · {numeroDaCarga(carga.numero)}
         </h1>
@@ -772,7 +776,7 @@ export function CargaClient({
   }
 
   return (
-    <div className="space-y-5">
+    <div className={cn("space-y-5", ALVOS_DE_TOQUE)}>
       {/* Cabeçalho fixo: na ficha longa, número e ações acompanham a rolagem
         em vez de sumirem para cima.
         A ficha NÃO declara padding próprio: quem inseta é o `main` do AppShell

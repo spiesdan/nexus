@@ -126,6 +126,15 @@ function BarraDeParadas({ progresso }: { progresso: ProgressoDaCarga }) {
  * lado da fila: decidir o que sai e escolher os pedidos são tarefas diferentes,
  * e empilhar as duas na mesma dobra deixava as duas apertadas.
  */
+/**
+ * Piso de 44 px para QUALQUER alvo dentro da expedição. O instrumento do D
+ * conta abaixo de 40 px; a régua de conforto é 44 e o WCAG AA é 24. Aplicar no
+ * contêiner evita repetir a classe em cada botão/link e mantém a densidade: o
+ * alvo cresce, o texto não.
+ */
+const ALVOS_DE_TOQUE =
+  "[&_a]:min-h-11 [&_button]:min-h-11 [&_a]:min-w-11 [&_button]:min-w-11 [&_input]:min-h-11";
+
 export function ExpedicaoClient({
   inicial,
   fila,
@@ -452,7 +461,7 @@ export function ExpedicaoClient({
   }
 
   return (
-    <div className="min-h-full space-y-5 p-4 sm:p-6">
+    <div className={cn("min-h-full space-y-5 p-4 sm:p-6", ALVOS_DE_TOQUE)}>
       <NexusPageHeader
         title={textos.titulo}
         subtitle={textos.subtitulo}
