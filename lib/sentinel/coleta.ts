@@ -13,6 +13,7 @@
  */
 import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { SELECT_LEAD_ABERTO } from "@/lib/sentinel/selects";
 
 import type {
   CampanhaProspeccao,
@@ -250,9 +251,7 @@ export async function coletarSnapshot(
       "leads_abertos",
       admin
         .from("crm_leads")
-        .select(
-          "id, pipeline_id, stage_id, contact_id, created_at, crm_stages(name), contacts(name, display_name, phone_number, email_normalized)",
-        )
+        .select(SELECT_LEAD_ABERTO)
         .eq("organization_id", organizationId)
         .eq("status", "open")
         .not("contact_id", "is", null)
