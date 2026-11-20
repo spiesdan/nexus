@@ -21,9 +21,15 @@ export interface AgentInboxData {
 }
 
 /** Central de avisos do runtime (F1). Polling 60s — avisos nascem no worker. */
-export function useAgentInbox(status: "open" | "resolved" = "open") {
+export function useAgentInbox(
+  status: "open" | "resolved" = "open",
+  opcoes: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: ["agent-inbox", status],
+    // O endpoint é do TENANT. No shell de plataforma não há organização ativa:
+    // a chamada volta 403 e o navegador registra o erro no console a cada 60 s.
+    enabled: opcoes.enabled ?? true,
     refetchInterval: 60_000,
     queryFn: () =>
       apiClient

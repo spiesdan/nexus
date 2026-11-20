@@ -30,10 +30,13 @@ const SEVERITY_VARIANT: Record<AgentInboxSeverity, "info" | "warning" | "error">
 
 const MAX_NO_PAINEL = 8;
 
-export function NotificationCenter() {
+export function NotificationCenter({ ativo = true }: { ativo?: boolean } = {}) {
   const t = useT();
   const [aberto, setAberto] = useState(false);
-  const { data, isLoading } = useAgentInbox("open");
+  // `ativo={false}` no shell de PLATAFORMA: o endpoint é do tenant e devolve
+  // 403 sem organização ativa. Sem a query, o sino não polui o console — e o
+  // dia em que houver fonte de alerta de plataforma, ela entra aqui.
+  const { data, isLoading } = useAgentInbox("open", { enabled: ativo });
   const count = data?.open_count ?? 0;
   const itens = (data?.items ?? []).slice(0, MAX_NO_PAINEL);
   /**

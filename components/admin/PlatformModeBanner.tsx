@@ -19,7 +19,9 @@ export function PlatformModeBanner() {
       <div className="flex items-center gap-2 text-sm">
         <Buildings size={18} weight="fill" aria-hidden />
         <span className="font-semibold tracking-tight">{t("MODO PLATAFORMA")}</span>
-        <span className="hidden text-amber-800/80 sm:inline">{t("— operação cross-tenant")}</span>
+        {/* Sem `/80`: no Tailwind 4 o alpha PINTA e media 4,24:1 sobre o
+            `amber-100` (piso AA 4,5). Sem alpha o mesmo texto passa. */}
+        <span className="hidden text-amber-800 sm:inline">{t("— operação cross-tenant")}</span>
       </div>
       <Link
         href="/app"
