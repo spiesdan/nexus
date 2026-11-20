@@ -324,3 +324,22 @@ de construir é do dono; nada foi implementado.
 > Regra que passa a valer: **toda ação em produção entra aqui no mesmo dia**, com
 > autorização, backup, impacto e reversão. Ação sem linha neste documento é ação sem
 > auditoria.
+
+## 17. 21/11/2026 — Achado: rota responde HTTP 200 com `estado: "erro"` e a tela nunca avisa
+
+**Medido pela prova visual do D:** quando o provedor de geocodificação caía, o
+`POST /api/v1/.../rota/otimizar` respondia **HTTP 200** com `estado: "erro"` **por
+parada**. O `catch` do cliente nunca disparava — porque não houve erro HTTP — e o
+**banner de falha nunca aparecia no caso mais comum** (provedor fora do ar).
+
+**Por que é grave:** falha silenciosa é o pior estado do Sistema Vivo — a pessoa
+acha que a rota otimizou, e cada parada ficou sem coordenada. O caminho de erro
+existia, mas era inalcançável justamente no cenário que ele deveria cobrir.
+
+**Correção (#693, só cliente):** o cliente passou a tratar `estado: "erro"` por
+parada como falha visível (banner), além do erro HTTP. Sem mudança de regra de
+negócio e sem migration.
+
+**Lição:** **status HTTP não é o contrato.** Quando o corpo carrega estado, o
+cliente precisa olhar o estado — e a prova visual tem de exercitar o provedor
+morto, não só o caminho feliz.
