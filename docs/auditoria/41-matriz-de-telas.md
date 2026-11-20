@@ -108,19 +108,19 @@ escrito à mão).
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/fiscal` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 2 | `/fiscal/configuracoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 3 | `/fiscal/eventos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 4 | `/fiscal/fornecedores` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 5 | `/fiscal/manifestacoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 6 | `/fiscal/notas` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/0 (regras: nenhuma) — o banco de teste não tem linha em `fiscal_entradas` — a rota responde 404 para qualquer id |
-| 8 | `/fiscal/pendentes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 9 | `/fiscal/produtos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 10 | `/fiscal/relatorios` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 11 | `/fiscal/resumos` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
-| 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | **aplicado** — varredura medida (4 combinações): overflow 0, console 0, axe 0/1 (regras: label-content-name-mismatch (serious)) |
+| 1 | `/fiscal` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 2 | `/fiscal/configuracoes` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 3 | `/fiscal/eventos` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 4 | `/fiscal/fornecedores` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 5 | `/fiscal/manifestacoes` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 6 | `/fiscal/notas` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell); inclui a pílula ativa em `text-accent-ink` |
+| 7 | `/fiscal/notas/[id]` · dinâmica | — (pulada) | — | — | **inválida** — o banco de teste não tem linha em `fiscal_entradas`; qualquer id responde 404 (a varredura mediu o destino, não a nota) — sem nota de entrada no banco de teste |
+| 8 | `/fiscal/pendentes` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 9 | `/fiscal/produtos` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 10 | `/fiscal/relatorios` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 11 | `/fiscal/resumos` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 12 | `/fiscal/sincronizacoes` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
+| 13 | `/fiscal/xml` | 0/0 px | 0/1 | 0 | **aplicado** — re-varredura na `main` pós-merge (52 combinações no grupo): overflow 0, console 0, axe 0/1 (sério = seletor de empresa do shell) |
 
 ### 4. Expedição — 7 telas, 7 medidas
 
