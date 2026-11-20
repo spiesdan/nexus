@@ -174,31 +174,31 @@ escrito à mão).
 | 37 | `/venda-automatica` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 38 | `/webhooks` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 
-### 7. IA (agentes, runs, conhecimento) — 22 telas, 0 medidas
+### 7. IA (agentes, runs, conhecimento) — 22 telas, 18 medidas
 
 | # | Tela | Overflow 1440/390 | axe crítico/sério | Console | Veredito |
 |---|---|---|---|---|---|
-| 1 | `/ai` | — | — | — | pendente |
-| 2 | `/ai/agents` | — | — | — | pendente |
-| 3 | `/ai/agents/[id]` · dinâmica | — | — | — | pendente |
-| 4 | `/ai/agents/new` | — | — | — | pendente |
-| 5 | `/ai/cases` | — | — | — | pendente |
-| 6 | `/ai/controle` | — | — | — | pendente |
-| 7 | `/ai/credentials` | — | — | — | pendente |
-| 8 | `/ai/decisoes` | — | — | — | pendente |
-| 9 | `/ai/evolution` | — | — | — | pendente |
-| 10 | `/ai/followups` | — | — | — | pendente |
-| 11 | `/ai/followups/[id]` · dinâmica | — | — | — | pendente |
-| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — | — | — | pendente |
-| 13 | `/ai/inbox` | — | — | — | pendente |
-| 14 | `/ai/knowledge/sources` | — | — | — | pendente |
-| 15 | `/ai/memory` | — | — | — | pendente |
-| 16 | `/ai/proposals` | — | — | — | pendente |
-| 17 | `/ai/providers` | — | — | — | pendente |
-| 18 | `/ai/routers` | — | — | — | pendente |
-| 19 | `/ai/routers/[id]` · dinâmica | — | — | — | pendente |
-| 20 | `/ai/runs` | — | — | — | pendente |
-| 21 | `/ai/skills` | — | — | — | pendente |
-| 22 | `/ai/usage` | — | — | — | pendente |
+| 1 | `/ai` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 2 | `/ai/agents` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 3 | `/ai/agents/[id]` · dinâmica | — (pulada) | — | — | pulada: falta id de exemplo — rota dinâmica sem id de exemplo no instrumento |
+| 4 | `/ai/agents/new` | 0/0 px | 0/0 | 0 | **403 por papel**: rota exige admin e a medição usa `manager` (esperado) |
+| 5 | `/ai/cases` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 6 | `/ai/controle` | 0/0 px | 0/2 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 7 | `/ai/credentials` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 8 | `/ai/decisoes` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 9 | `/ai/evolution` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 10 | `/ai/followups` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 11 | `/ai/followups/[id]` · dinâmica | — (pulada) | — | — | pulada: falta id de exemplo — rota dinâmica sem id de exemplo no instrumento |
+| 12 | `/ai/followups/enrollments/[id]` · dinâmica | — (pulada) | — | — | pulada: falta id de exemplo — rota dinâmica sem id de exemplo no instrumento |
+| 13 | `/ai/inbox` | 0/0 px | 0/1 | 0 | limpo após o #716 (a aba fantasma era o crítico desta tela) |
+| 14 | `/ai/knowledge/sources` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 15 | `/ai/memory` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 16 | `/ai/proposals` | 0/0 px | 0/1 | 0 | limpo após o #716 |
+| 17 | `/ai/providers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 18 | `/ai/routers` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 19 | `/ai/routers/[id]` · dinâmica | — (pulada) | — | — | pulada: falta id de exemplo — rota dinâmica sem id de exemplo no instrumento |
+| 20 | `/ai/runs` | 0/0 px | 0/1 | 0 | sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell) |
+| 21 | `/ai/skills` | 0/0 px | 0/1 | 0 | **corrigido**: aviso informativo em `text-text-muted` sobre `accent-soft` não passava AA no escuro (`color-contrast`) → `text-text` |
+| 22 | `/ai/usage` | 0/0 px | 0/1 | 0 | **corrigido**: barra `role="progressbar"` sem nome no cartão de orçamento (`aria-progressbar-name`) → `aria-label`; depois, axe sério 0 fora o shell |
 
 <!-- MATRIZ:FIM -->

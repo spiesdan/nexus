@@ -635,154 +635,158 @@
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/agents",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/agents/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "pulada: falta id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
       "rota": "/ai/agents/new",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**403 por papel**: rota exige admin e a medição usa `manager` (esperado)"
     },
     {
       "rota": "/ai/cases",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo após o #716"
     },
     {
       "rota": "/ai/controle",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/credentials",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/decisoes",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo após o #716"
     },
     {
       "rota": "/ai/evolution",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/followups",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/followups/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "pulada: falta id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
       "rota": "/ai/followups/enrollments/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "pulada: falta id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
       "rota": "/ai/inbox",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo após o #716 (a aba fantasma era o crítico desta tela)"
     },
     {
       "rota": "/ai/knowledge/sources",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/memory",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/proposals",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo após o #716"
     },
     {
       "rota": "/ai/providers",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/routers",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/routers/[id]",
       "grupo": "ia",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "pulada: falta id de exemplo",
+      "pular": "rota dinâmica sem id de exemplo no instrumento"
     },
     {
       "rota": "/ai/runs",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0, só o seletor de empresa do shell)"
     },
     {
       "rota": "/ai/skills",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**corrigido**: aviso informativo em `text-text-muted` sobre `accent-soft` não passava AA no escuro (`color-contrast`) → `text-text`"
     },
     {
       "rota": "/ai/usage",
       "grupo": "ia",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**corrigido**: barra `role=\"progressbar\"` sem nome no cartão de orçamento (`aria-progressbar-name`) → `aria-label`; depois, axe sério 0 fora o shell"
     }
   ]
 }

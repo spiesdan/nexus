@@ -87,10 +87,9 @@ function fmtData(iso: string, idioma: string): string {
  */
 function mesCorrente(idioma: string): string {
   const agora = new Date();
-  const nome = new Date(Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), 1)).toLocaleDateString(
-    idioma,
-    { month: "long", year: "numeric", timeZone: "UTC" },
-  );
+  const nome = new Date(
+    Date.UTC(agora.getUTCFullYear(), agora.getUTCMonth(), 1),
+  ).toLocaleDateString(idioma, { month: "long", year: "numeric", timeZone: "UTC" });
   return nome;
 }
 
@@ -129,7 +128,10 @@ function frameDoEstado(
  * VPS com a chave afrouxada estaria mexendo num controle que o processo ignora —
  * que é o defeito que este trabalho inteiro existe para consertar.
  */
-function avisoDaChave(status: BudgetStatus, t: (texto: string) => string = (texto) => texto): string | null {
+function avisoDaChave(
+  status: BudgetStatus,
+  t: (texto: string) => string = (texto) => texto,
+): string | null {
   if (status.enforcement_env === "off") {
     return t(
       "A proteção de gasto está desligada nesta instalação (AI_BUDGET_ENFORCEMENT=off). O que estiver escolhido aqui não vale enquanto quem cuida do servidor não religar.",
@@ -229,6 +231,11 @@ export function BudgetCard({ initialData, isAdmin }: Props) {
             aria-valuemin={0}
             aria-valuemax={100}
             role="progressbar"
+            /* `role="progressbar"` exige NOME. Sem ele o leitor de tela anuncia
+               "barra de progresso, 40%" sem dizer de quê — e nesta tela há mais
+               de uma barra (orçamento do mês e, em Uso de IA, o consumo por
+               dia). Medido: `aria-progressbar-name` na matriz. */
+            aria-label={t("Consumo do orçamento de IA no mês")}
           />
         </div>
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
@@ -302,9 +309,7 @@ function OpcaoDeModo({
         <span className="block text-sm font-medium">{titulo}</span>
         <span className="block text-xs text-muted-foreground">{corpo}</span>
         {disabled && motivoBloqueado && (
-          <span className="block text-xs text-warning-fg">
-            {motivoBloqueado}
-          </span>
+          <span className="block text-xs text-warning-fg">{motivoBloqueado}</span>
         )}
       </span>
     </label>
@@ -315,9 +320,7 @@ function EditBudgetDialog({ status }: { status: BudgetStatus }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const update = useUpdateBudget();
-  const [limitUsd, setLimitUsd] = useState<string>(
-    (status.monthly_limit_cents / 100).toFixed(2),
-  );
+  const [limitUsd, setLimitUsd] = useState<string>((status.monthly_limit_cents / 100).toFixed(2));
   const [thresholdPct, setThresholdPct] = useState<number>(status.alarm_threshold_pct);
   const [modo, setModo] = useState<Modo>(status.enforcement_mode);
   const [imediato, setImediato] = useState(false);
@@ -400,7 +403,9 @@ function EditBudgetDialog({ status }: { status: BudgetStatus }) {
               onPick={setModo}
               disabled={update.isPending}
               titulo={t("Só acompanhar")}
-              corpo={t("A IA nunca para por gasto. Você vê o número nesta tela e decide o que fazer.")}
+              corpo={t(
+                "A IA nunca para por gasto. Você vê o número nesta tela e decide o que fazer.",
+              )}
             />
             <OpcaoDeModo
               valor="avisar"
@@ -408,7 +413,9 @@ function EditBudgetDialog({ status }: { status: BudgetStatus }) {
               onPick={setModo}
               disabled={update.isPending}
               titulo={`${t("Me avisar ao passar de")} ${limiarEfetivo}% ${t("de")} ${fmtCents(tetoParaCopy)}`}
-              corpo={t("Abrimos um aviso na Central de avisos. A IA continua respondendo normalmente.")}
+              corpo={t(
+                "Abrimos um aviso na Central de avisos. A IA continua respondendo normalmente.",
+              )}
             />
             <OpcaoDeModo
               valor="bloquear"
@@ -483,7 +490,10 @@ function EditBudgetDialog({ status }: { status: BudgetStatus }) {
           {armando && (
             <div className="space-y-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
               <p className="text-xs">
-                {t("A parada começa a valer")} <strong>72 {t("horas")}</strong> {t("depois de salvar. É o tempo de você ver o aviso chegar antes que alguma conversa pare.")}
+                {t("A parada começa a valer")} <strong>72 {t("horas")}</strong>{" "}
+                {t(
+                  "depois de salvar. É o tempo de você ver o aviso chegar antes que alguma conversa pare.",
+                )}
               </p>
               <label className="flex cursor-pointer items-center gap-2 text-xs">
                 <input
