@@ -114,7 +114,22 @@ async function medir(
 ): Promise<MedidaRota> {
   const url = urlDe(linha.rota)!;
   erros.length = 0;
+
+  /*
+   * NAVEGA ATÉ PARAR — porque metade das telas de configuração REDIRECIONA.
+   *
+   * Medido no lote de configurações: `goto` seguido de `evaluate` estoura com
+   * "Execution context was destroyed" e "Navigation is interrupted by another
+   * navigation" quando a própria tela leva para outra rota (`/settings/atendimento`
+   * → `/settings/tenant/whatsapp`, `/team` → 403, e assim por diante). O sinal de
+   * "parou" é a URL não mudar por 700ms.
+   */
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  let anterior = "";
+  for (let i = 0; i < 25 && page.url() !== anterior; i++) {
+    anterior = page.url();
+    await page.waitForTimeout(700);
+  }
 
   /*
    * ESPERAR O ESQUELETO SUMIR — não um relógio fixo.
@@ -249,7 +264,20 @@ async function main(): Promise<void> {
           continue;
         }
         try {
-          const m = await medir(page, linha, tema, tamanho.width, erros);
+          let m: MedidaRota;
+          try {
+            m = await medir(page, linha, tema, tamanho.width, erros);
+          } catch (e) {
+            // A tela redirecionou DURANTE a medição (contexto destruído). Uma
+            // segunda passada, com a navegação já assentada, é a diferença
+            // entre "a tela falhou" e "o instrumento correu atrás do redirect".
+            if (
+              !/Execution context was destroyed|interrupted by another navigation/i.test(String(e))
+            ) {
+              throw e;
+            }
+            m = await medir(page, linha, tema, tamanho.width, erros);
+          }
           medidas.push(m);
           console.info(
             `${tema}/${tamanho.nome} ${linha.rota.padEnd(34)} overflow=${String(m.overflow).padStart(3)} ` +
