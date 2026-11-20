@@ -78,9 +78,10 @@ const outputDir = path.join(
   `${nome}-${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}`,
 );
 mkdirSync(outputDir, { recursive: true });
+const args = [cli, "test", "--workers=1", ...specs, ...extras, "--output", outputDir];
 const resultado = spawnSync(
   process.execPath,
-  [cli, "test", "--workers=1", "--output", outputDir, ...specs, ...extras],
+  args,
   {
   stdio: "inherit",
   env: {
