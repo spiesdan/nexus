@@ -246,3 +246,15 @@ descrição em `produto_codigo` quando o item vem sem código) e dos **9 ambígu
 Régua: antes/depois na mesma base, claro/escuro × 1440/390, contraste medido,
 overflow/console, e **linha da matriz com veredito + evidência**. Exceção =
 `fora de escopo com motivo`.
+
+
+### Atualização 20/11 — 1.61.1 verificada e Sentinel fechando os falsos positivos
+
+| Item | Estado | Evidência |
+|---|---|---|
+| Deploy **1.61.1** | `[x]` | 7 containers healthy; `/health` 1.61.1; supabase/redis/rate_limit/waha ok; `/login` 200 |
+| Sentinel: `divergencia_valor_nota` e `nota_duplicada_por_pedido` | `[x]` encerradas | rodada real: `achados=20 · criadas=0 · reafirmadas=20 · **encerradas=2** · truncado=false` |
+| Série do SLO viva | `[x]` | 1ª amostra real: `/api/v1/commercial-orders · 200 · 1428 ms · 03:51Z`; hipótese de `after()` quebrado **errada** |
+| p95 da API | `[~]` | 1 amostra **não é p95**; sinal para olhar com série |
+| `operacao.lead_duplicado` | `[!]` **reais** | 5 ocorrências: mesmo contato, dois leads abertos; ação é mesclar (Dono/operação) |
+| `operacao.pedido_preso` | `[!]` decisão | 15 ocorrências; ruído de lote; opções a/b/c em `business-rules/pendencias-do-sentinel.md` |
