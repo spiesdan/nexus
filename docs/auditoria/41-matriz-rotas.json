@@ -285,49 +285,49 @@
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe nesta rodada; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/expedicao/[id]",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência de contraste no escuro**: «Próximo passo» (10px) e «A rota só sai com tudo conferido.» (12px) em `text-muted-foreground` — axe `color-contrast` a 1440 e 390"
     },
     {
       "rota": "/expedicao/[id]/fechamento",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "limpo (overflow 0, console 0, só o shell)"
     },
     {
       "rota": "/expedicao/[id]/motorista",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência medida**: `link-in-text-block` na atribuição do MapLibre (link OpenStreetMap) — atribuição da biblioteca, regra de CSS escopada"
     },
     {
       "rota": "/expedicao/[id]/rota",
       "grupo": "expedicao",
       "dinamica": true,
       "capturar": true,
-      "veredito": "**passe em 3 fatias**: #673 (mapa no piso de 50vh, selo de estado) · #685 (aviso de parada fora do mapa e mapa vazio) · #692 (erro de hidratação do `<details>`; 5 → 0 erros de console, com gate) · #694 (publicar a rota como ação da tela). Medido no antes/depois: overflow 0 px, console 0, axe crítico 0 nas 8 combinações; a ação aparece só em carga montando e o atalho do entregador só em `em_rota`"
+      "veredito": "ver a linha `/expedicao/[id]/rota` — aqui só a moldura (limpa)"
     },
     {
       "rota": "/expedicao/nova",
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "**pendência de contraste no escuro**: «3 · O que vai» (10px, caixa alta) em `text-muted-foreground`"
     },
     {
       "rota": "/frota",
       "grupo": "expedicao",
       "dinamica": false,
       "capturar": false,
-      "veredito": "pendente"
+      "veredito": "sem passe; limpo (overflow 0, console 0)"
     },
     {
       "rota": "/financeiro",
