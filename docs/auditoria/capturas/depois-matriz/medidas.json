@@ -1,7 +1,7 @@
 {
-  "gerado": "2026-11-20T03:59:12.495Z",
+  "gerado": "2026-11-20T04:14:18.952Z",
   "rotulo": "depois",
-  "rotas": 38,
+  "rotas": 1,
   "medidas": [
     {
       "rota": "/carteira",
@@ -1338,39 +1338,41 @@
     },
     {
       "rota": "/connections",
-      "url": "",
+      "url": "/app/connections",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/integrations/nuvemshop",
-      "url": "",
+      "url": "/app/integrations/nuvemshop",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Boa noite, E2E."
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/inteligencia",
@@ -1399,7 +1401,9 @@
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Boa noite, E2E."
+      ],
       "consoleErros": [],
       "axe": {
         "critica": 0,
@@ -1451,21 +1455,24 @@
     },
     {
       "rota": "/prospeccao",
-      "url": "",
+      "url": "/app/prospeccao",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Campanha"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
@@ -1485,39 +1492,49 @@
     },
     {
       "rota": "/prospeccao/nova",
-      "url": "",
+      "url": "/app/prospeccao/nova",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/prospeccao/nova\" is interrupted by another navigation to \"http://localhost:3313/app/campanhas?subtela=prospeccao\"\nCall log:\n\u001b[2m  - navigatin"
+      "h1": [
+        "Nova campanha"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar",
-      "url": "",
+      "url": "/app/radar",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar\" is interrupted by another navigation to \"http://localhost:3313/app/prospeccao/nova\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-wrap.gap-2:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/6abb35ef-66a9-4950-a269-98aab6041dc2\">Mercado E2E Recompra</a>",
+          "color-contrast: .flex-wrap.gap-2:nth-child(2) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/4048ce92-4d17-4bdf-9c9b-52c4ff144a96\">Padaria E2E Voo</a>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded",
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">"
+        ]
+      }
     },
     {
       "rota": "/radar/categorias",
@@ -1530,14 +1547,12 @@
       ],
       "consoleErros": [],
       "axe": {
-        "critica": 1,
+        "critica": 0,
         "seria": 1,
         "ids": [
-          "aria-valid-attr-value (critical)",
           "label-content-name-mismatch (serious)"
         ],
         "nos": [
-          "aria-valid-attr-value: #radix-_r_0_-trigger-risco :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_r_0_-content-...\" data-state=\"active\" id=\"radix-_r_0_-trigger-...\" class=\"inline-flex items-ce...\" tabin",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       }
@@ -1631,21 +1646,24 @@
     },
     {
       "rota": "/recuperacao",
-      "url": "",
+      "url": "/app/recuperacao",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/sentinel",
@@ -1696,219 +1714,237 @@
     },
     {
       "rota": "/settings/api-tokens",
-      "url": "",
+      "url": "/app/settings/api-tokens",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_api-tokens_light_1440.png"
     },
     {
       "rota": "/settings/atendimento",
-      "url": "",
+      "url": "/app/settings/atendimento",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/atendimento\" is interrupted by another navigation to \"http://localhost:3313/403\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3"
+      "h1": [
+        "Distribuição de atendimento"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_atendimento_light_1440.png"
     },
     {
       "rota": "/settings/atualizacao",
-      "url": "",
+      "url": "/app/settings/atualizacao",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/atualizacao\" is interrupted by another navigation to \"http://localhost:3313/app/settings/atendimento\"\nCall log:\n\u001b[2m  - navigating t"
+      "h1": [
+        "404 — Página não encontrada"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_atualizacao_light_1440.png"
     },
     {
       "rota": "/settings/billing",
-      "url": "",
+      "url": "/app/settings/billing",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/billing\" is interrupted by another navigation to \"http://localhost:3313/app/settings/atualizacao\"\nCall log:\n\u001b[2m  - navigating to \"h"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_billing_light_1440.png"
     },
     {
       "rota": "/settings/canal-oficial",
-      "url": "",
+      "url": "/app/settings/canal-oficial",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/canal-oficial\" is interrupted by another navigation to \"http://localhost:3313/app/settings/billing\"\nCall log:\n\u001b[2m  - navigating to "
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_canal-oficial_light_1440.png"
     },
     {
       "rota": "/settings/devices",
-      "url": "",
+      "url": "/app/settings/devices",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/devices\" is interrupted by another navigation to \"http://localhost:3313/app/settings/canal-oficial\"\nCall log:\n\u001b[2m  - navigating to "
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_devices_light_1440.png"
     },
     {
       "rota": "/settings/marca",
-      "url": "",
+      "url": "/app/settings/marca",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/marca\" is interrupted by another navigation to \"http://localhost:3313/app/settings/devices\"\nCall log:\n\u001b[2m  - navigating to \"http://"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_marca_light_1440.png"
     },
     {
       "rota": "/settings/notifications",
-      "url": "",
+      "url": "/app/settings/notifications",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Notificações"
+      ],
       "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/notifications\" is interrupted by another navigation to \"http://localhost:3313/app/settings/marca\"\nCall log:\n\u001b[2m  - navigating to \"h"
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
       ],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_notifications_light_1440.png"
     },
     {
       "rota": "/settings/profile",
-      "url": "",
+      "url": "/app/settings/profile",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/profile\" is interrupted by another navigation to \"http://localhost:3313/app/settings/notifications\"\nCall log:\n\u001b[2m  - navigating to "
+      "h1": [
+        "Perfil"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_profile_light_1440.png"
     },
     {
       "rota": "/settings/security",
-      "url": "",
+      "url": "/app/settings/security",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/security\" is interrupted by another navigation to \"http://localhost:3313/app/settings/profile\"\nCall log:\n\u001b[2m  - navigating to \"http"
+      "h1": [
+        "Segurança"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_security_light_1440.png"
     },
     {
       "rota": "/settings/templates",
-      "url": "",
+      "url": "/app/settings/templates",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_templates_light_1440.png"
     },
     {
       "rota": "/settings/tenant",
-      "url": "",
+      "url": "/app/settings/tenant",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant\" is interrupted by another navigation to \"http://localhost:3313/app/connections?aba=oficial&sub=templates\"\nCall log:\n\u001b[2m  - "
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_light_1440.png"
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -1928,8 +1964,8 @@
           "label-content-name-mismatch (serious)"
         ],
         "nos": [
-          "color-contrast: .opacity-60.bg-surface.p-3 > .flex-wrap.gap-2 > .py-0\\.5.text-\\[11px\\].px-2 :: <span class=\"rounded-full border border-border px-2 py-0.5 text-[11px] text-text-muted\">Consulta</span>",
-          "color-contrast: .opacity-60.bg-surface.p-3 > .flex-wrap.gap-2 > .tabular-nums.text-xs.text-text-muted :: <span class=\"text-xs text-text-muted tabular-nums\">30<!-- --> min</span>",
+          "color-contrast: .opacity-60.p-3.bg-surface > .flex-wrap.gap-2 > .py-0\\.5.text-\\[11px\\].px-2 :: <span class=\"rounded-full border border-border px-2 py-0.5 text-[11px] text-text-muted\">Consulta</span>",
+          "color-contrast: .opacity-60.p-3.bg-surface > .flex-wrap.gap-2 > .tabular-nums.text-xs.text-text-muted :: <span class=\"text-xs text-text-muted tabular-nums\">30 min</span>",
           "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
         ]
       },
@@ -1959,93 +1995,101 @@
     },
     {
       "rota": "/settings/tenant/whatsapp",
-      "url": "",
+      "url": "/app/settings/tenant/whatsapp",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_whatsapp_light_1440.png"
     },
     {
       "rota": "/team",
-      "url": "",
+      "url": "/app/team",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team\" is interrupted by another navigation to \"http://localhost:3313/app/connections\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/"
+      "h1": [
+        "Equipe"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/team/invite",
-      "url": "",
+      "url": "/app/team/invite",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team/invite\" is interrupted by another navigation to \"http://localhost:3313/app/team\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/venda-automatica",
-      "url": "",
+      "url": "/app/venda-automatica",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/venda-automatica\" is interrupted by another navigation to \"http://localhost:3313/app/team/invite\"\nCall log:\n\u001b[2m  - navigating to \"http://loc"
+      "h1": [
+        "Venda Automática"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/webhooks",
-      "url": "",
+      "url": "/app/webhooks",
       "tema": "light",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/webhooks\" is interrupted by another navigation to \"http://localhost:3313/app/venda-automatica\"\nCall log:\n\u001b[2m  - navigating to \"http://localh"
+      "h1": [
+        "Webhooks"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/audit",
@@ -2083,57 +2127,54 @@
     },
     {
       "rota": "/integrations/nuvemshop",
-      "url": "",
+      "url": "/app/integrations/nuvemshop",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Boa noite, E2E."
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/inteligencia",
-      "url": "",
+      "url": "/app/inteligencia",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/inteligencia\" is interrupted by another navigation to \"http://localhost:3313/app\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/app/"
+      "h1": [
+        "Inteligência"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/lgpd/requests",
-      "url": "",
+      "url": "/app/lgpd/requests",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/lgpd/requests\" is interrupted by another navigation to \"http://localhost:3313/app/inteligencia\"\nCall log:\n\u001b[2m  - navigating to \"http://local"
+      "h1": [
+        "Boa noite, E2E."
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/lgpd/requests/[id]",
@@ -2153,39 +2194,37 @@
     },
     {
       "rota": "/products",
-      "url": "",
+      "url": "/app/products",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/products\" is interrupted by another navigation to \"http://localhost:3313/app/lgpd/requests\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost"
+      "h1": [
+        "Catálogo"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/prospeccao",
-      "url": "",
+      "url": "/app/prospeccao",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/prospeccao\" is interrupted by another navigation to \"http://localhost:3313/app/products\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:33"
+      "h1": [
+        "Campanha"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
@@ -2253,14 +2292,10 @@
       ],
       "consoleErros": [],
       "axe": {
-        "critica": 1,
+        "critica": 0,
         "seria": 0,
-        "ids": [
-          "aria-valid-attr-value (critical)"
-        ],
-        "nos": [
-          "aria-valid-attr-value: #radix-_r_0_-trigger-risco :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_r_0_-content-...\" data-state=\"active\" id=\"radix-_r_0_-trigger-...\" class=\"inline-flex items-ce...\" tabin"
-        ]
+        "ids": [],
+        "nos": []
       }
     },
     {
@@ -2363,7 +2398,8 @@
       ],
       "consoleErros": [
         "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>",
-        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>"
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>",
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
       ],
       "axe": {
         "critica": 0,
@@ -2464,39 +2500,39 @@
     },
     {
       "rota": "/settings/canal-oficial",
-      "url": "",
+      "url": "/app/settings/canal-oficial",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_canal-oficial_light_390.png"
     },
     {
       "rota": "/settings/devices",
-      "url": "",
+      "url": "/app/settings/devices",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_devices_light_390.png"
     },
     {
       "rota": "/settings/marca",
@@ -2574,21 +2610,21 @@
     },
     {
       "rota": "/settings/templates",
-      "url": "",
+      "url": "/app/settings/templates",
       "tema": "light",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_templates_light_390.png"
     },
     {
       "rota": "/settings/tenant",
@@ -2753,39 +2789,41 @@
     },
     {
       "rota": "/connections",
-      "url": "",
+      "url": "/app/connections",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/integrations/nuvemshop",
-      "url": "",
+      "url": "/app/integrations/nuvemshop",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Boa noite, E2E."
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/inteligencia",
@@ -2868,21 +2906,24 @@
     },
     {
       "rota": "/prospeccao",
-      "url": "",
+      "url": "/app/prospeccao",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Campanha"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/prospeccao/campanhas/[id]",
@@ -2902,165 +2943,200 @@
     },
     {
       "rota": "/prospeccao/nova",
-      "url": "",
+      "url": "/app/prospeccao/nova",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/prospeccao/nova\" is interrupted by another navigation to \"http://localhost:3313/app/campanhas?subtela=prospeccao\"\nCall log:\n\u001b[2m  - navigatin"
+      "h1": [
+        "Nova campanha"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .sm\\:grid-cols-2 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Garimpa empresas que ainda não são clientes.</p>",
+          "color-contrast: .sm\\:grid-cols-3 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Recomendado: empresas já cadastradas, sem gastar busca.</p>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar",
-      "url": "",
+      "url": "/app/radar",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar\" is interrupted by another navigation to \"http://localhost:3313/app/prospeccao/nova\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded",
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">"
+        ]
+      }
     },
     {
       "rota": "/radar/categorias",
-      "url": "",
+      "url": "/app/radar/categorias",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar/categorias\" is interrupted by another navigation to \"http://localhost:3313/app/radar\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar/oportunidades",
-      "url": "",
+      "url": "/app/radar/oportunidades",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar/oportunidades\" is interrupted by another navigation to \"http://localhost:3313/app/radar/categorias\"\nCall log:\n\u001b[2m  - navigating to \"ht"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar/prospeccao",
-      "url": "",
+      "url": "/app/radar/prospeccao",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar/prospeccao\" is interrupted by another navigation to \"http://localhost:3313/app/radar/oportunidades\"\nCall log:\n\u001b[2m  - navigating to \"ht"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar/recuperacao",
-      "url": "",
+      "url": "/app/radar/recuperacao",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar/recuperacao\" is interrupted by another navigation to \"http://localhost:3313/app/radar/prospeccao\"\nCall log:\n\u001b[2m  - navigating to \"http"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/radar/risco",
-      "url": "",
+      "url": "/app/radar/risco",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/radar/risco\" is interrupted by another navigation to \"http://localhost:3313/app/radar/recuperacao\"\nCall log:\n\u001b[2m  - navigating to \"http://lo"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/recuperacao",
-      "url": "",
+      "url": "/app/recuperacao",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/recuperacao\" is interrupted by another navigation to \"http://localhost:3313/app/radar/risco\"\nCall log:\n\u001b[2m  - navigating to \"http://localhos"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/sentinel",
-      "url": "",
+      "url": "/app/sentinel",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Sentinel"
+      ],
       "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/sentinel\" is interrupted by another navigation to \"http://localhost:3313/app/recuperacao\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3"
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>",
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
       ],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/settings",
@@ -3071,11 +3147,7 @@
       "h1": [
         "Configurações"
       ],
-      "consoleErros": [
-        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>",
-        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>",
-        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
-      ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 1,
@@ -3166,255 +3238,288 @@
     },
     {
       "rota": "/settings/canal-oficial",
-      "url": "",
+      "url": "/app/settings/canal-oficial",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_canal-oficial_dark_1440.png"
     },
     {
       "rota": "/settings/devices",
-      "url": "",
+      "url": "/app/settings/devices",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/devices\" is interrupted by another navigation to \"http://localhost:3313/403\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_devices_dark_1440.png"
     },
     {
       "rota": "/settings/marca",
-      "url": "",
+      "url": "/app/settings/marca",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/marca\" is interrupted by another navigation to \"http://localhost:3313/app/settings/devices\"\nCall log:\n\u001b[2m  - navigating to \"http://"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_marca_dark_1440.png"
     },
     {
       "rota": "/settings/notifications",
-      "url": "",
+      "url": "/app/settings/notifications",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Notificações"
+      ],
       "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/notifications\" is interrupted by another navigation to \"http://localhost:3313/app/settings/marca\"\nCall log:\n\u001b[2m  - navigating to \"h"
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
       ],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .mt-2:nth-child(2) :: <p class=\"mt-2 text-muted-foreground\">Ligar o Push abaixo já faz o aviso aparecer na bandeja do sistema enquanto você está com o site aberto numa aba. Para receber também com a aba",
+          "color-contrast: .mt-2:nth-child(4) :: <p class=\"mt-2 text-muted-foreground\">O resultado vai no arquivo <code>.env</code>, em <code>VAPID_PUBLIC_KEY</code> e <code>VAPID_PRIVATE_KEY</code>. Email ainda não está disponív",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_notifications_dark_1440.png"
     },
     {
       "rota": "/settings/profile",
-      "url": "",
+      "url": "/app/settings/profile",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/profile\" is interrupted by another navigation to \"http://localhost:3313/app/settings/notifications\"\nCall log:\n\u001b[2m  - navigating to "
+      "h1": [
+        "Perfil"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_profile_dark_1440.png"
     },
     {
       "rota": "/settings/security",
-      "url": "",
+      "url": "/app/settings/security",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/security\" is interrupted by another navigation to \"http://localhost:3313/app/settings/profile\"\nCall log:\n\u001b[2m  - navigating to \"http"
+      "h1": [
+        "Segurança"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_security_dark_1440.png"
     },
     {
       "rota": "/settings/templates",
-      "url": "",
+      "url": "/app/settings/templates",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/templates\" is interrupted by another navigation to \"http://localhost:3313/app/settings/security\"\nCall log:\n\u001b[2m  - navigating to \"ht"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_templates_dark_1440.png"
     },
     {
       "rota": "/settings/tenant",
-      "url": "",
+      "url": "/app/settings/tenant",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant\" is interrupted by another navigation to \"http://localhost:3313/app/settings/templates\"\nCall log:\n\u001b[2m  - navigating to \"http"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_dark_1440.png"
     },
     {
       "rota": "/settings/tenant/agenda",
-      "url": "",
+      "url": "/app/settings/tenant/agenda",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/agenda\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant\"\nCall log:\n\u001b[2m  - navigating to \""
+      "h1": [
+        "Tipos de agendamento"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .opacity-60.p-3.bg-surface > .flex-wrap.gap-2 > .py-0\\.5.text-\\[11px\\].px-2 :: <span class=\"rounded-full border border-border px-2 py-0.5 text-[11px] text-text-muted\">Consulta</span>",
+          "color-contrast: .opacity-60.p-3.bg-surface > .flex-wrap.gap-2 > .tabular-nums.text-xs.text-text-muted :: <span class=\"text-xs text-text-muted tabular-nums\">30<!-- --> min</span>",
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_agenda_dark_1440.png"
     },
     {
       "rota": "/settings/tenant/pipelines",
-      "url": "",
+      "url": "/app/settings/tenant/pipelines",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/pipelines\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/agenda\"\nCall log:\n\u001b[2m  - navig"
+      "h1": [
+        "Etapas do funil"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_pipelines_dark_1440.png"
     },
     {
       "rota": "/settings/tenant/whatsapp",
-      "url": "",
+      "url": "/app/settings/tenant/whatsapp",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/whatsapp\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/pipelines\"\nCall log:\n\u001b[2m  - nav"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_whatsapp_dark_1440.png"
     },
     {
       "rota": "/team",
-      "url": "",
+      "url": "/app/team",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/whatsapp\"\nCall log:\n\u001b[2m  - navigating to \"http://lo"
+      "h1": [
+        "Equipe"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/team/invite",
-      "url": "",
+      "url": "/app/team/invite",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team/invite\" is interrupted by another navigation to \"http://localhost:3313/app/team\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/venda-automatica",
-      "url": "",
+      "url": "/app/venda-automatica",
       "tema": "dark",
       "largura": 1440,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/venda-automatica\" is interrupted by another navigation to \"http://localhost:3313/app/team/invite\"\nCall log:\n\u001b[2m  - navigating to \"http://loc"
+      "h1": [
+        "Venda Automática"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "pulada": "erro ao medir"
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: #radix-_R_9bnabn6lb_ :: <button class=\"inline-flex items-ce...\" data-testid=\"tenant-switcher\" aria-label=\"Empresa atual: E2E T...\" type=\"button\" id=\"radix-_R_9bnabn6lb_\" aria-haspopup=\"menu\" aria-expanded"
+        ]
+      }
     },
     {
       "rota": "/webhooks",
@@ -3643,14 +3748,10 @@
       ],
       "consoleErros": [],
       "axe": {
-        "critica": 1,
+        "critica": 0,
         "seria": 0,
-        "ids": [
-          "aria-valid-attr-value (critical)"
-        ],
-        "nos": [
-          "aria-valid-attr-value: #radix-_r_0_-trigger-risco :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_r_0_-content-...\" data-state=\"active\" id=\"radix-_r_0_-trigger-...\" class=\"inline-flex items-ce...\" tabin"
-        ]
+        "ids": [],
+        "nos": []
       }
     },
     {
@@ -3723,93 +3824,95 @@
     },
     {
       "rota": "/recuperacao",
-      "url": "",
+      "url": "/app/recuperacao",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "Radar Comercial"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/sentinel",
-      "url": "",
+      "url": "/app/sentinel",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
+      "h1": [
+        "Sentinel"
+      ],
       "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/sentinel\" is interrupted by another navigation to \"http://localhost:3313/app/radar/recuperacao\"\nCall log:\n\u001b[2m  - navigating to \"http://local"
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>",
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A serve"
       ],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/settings",
-      "url": "",
+      "url": "/app/settings",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings\" is interrupted by another navigation to \"http://localhost:3313/app/sentinel\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313"
+      "h1": [
+        "Configurações"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_dark_390.png"
     },
     {
       "rota": "/settings/api-tokens",
-      "url": "",
+      "url": "/app/settings/api-tokens",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/api-tokens\" is interrupted by another navigation to \"http://localhost:3313/app/settings\"\nCall log:\n\u001b[2m  - navigating to \"http://loc"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_api-tokens_dark_390.png"
     },
     {
       "rota": "/settings/atendimento",
-      "url": "",
+      "url": "/app/settings/atendimento",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/atendimento\" is interrupted by another navigation to \"http://localhost:3313/app/settings/api-tokens\"\nCall log:\n\u001b[2m  - navigating to"
+      "h1": [
+        "Distribuição de atendimento"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_atendimento_dark_390.png"
     },
     {
       "rota": "/settings/atualizacao",
@@ -3849,21 +3952,21 @@
     },
     {
       "rota": "/settings/canal-oficial",
-      "url": "",
+      "url": "/app/settings/canal-oficial",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_canal-oficial_dark_390.png"
     },
     {
       "rota": "/settings/devices",
@@ -3964,165 +4067,161 @@
     },
     {
       "rota": "/settings/templates",
-      "url": "",
+      "url": "/app/settings/templates",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.evaluate: Execution context was destroyed, most likely because of a navigation"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_templates_dark_390.png"
     },
     {
       "rota": "/settings/tenant",
-      "url": "",
+      "url": "/app/settings/tenant",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant\" is interrupted by another navigation to \"http://localhost:3313/403\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/a"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_dark_390.png"
     },
     {
       "rota": "/settings/tenant/agenda",
-      "url": "",
+      "url": "/app/settings/tenant/agenda",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/agenda\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant\"\nCall log:\n\u001b[2m  - navigating to \""
+      "h1": [
+        "Tipos de agendamento"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_agenda_dark_390.png"
     },
     {
       "rota": "/settings/tenant/pipelines",
-      "url": "",
+      "url": "/app/settings/tenant/pipelines",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/pipelines\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/agenda\"\nCall log:\n\u001b[2m  - navig"
+      "h1": [
+        "Etapas do funil"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_pipelines_dark_390.png"
     },
     {
       "rota": "/settings/tenant/whatsapp",
-      "url": "",
+      "url": "/app/settings/tenant/whatsapp",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/settings/tenant/whatsapp\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/pipelines\"\nCall log:\n\u001b[2m  - nav"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
       },
-      "pulada": "erro ao medir"
+      "captura": "settings_tenant_whatsapp_dark_390.png"
     },
     {
       "rota": "/team",
-      "url": "",
+      "url": "/app/team",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team\" is interrupted by another navigation to \"http://localhost:3313/app/settings/tenant/whatsapp\"\nCall log:\n\u001b[2m  - navigating to \"http://lo"
+      "h1": [
+        "Equipe"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/team/invite",
-      "url": "",
+      "url": "/app/team/invite",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/team/invite\" is interrupted by another navigation to \"http://localhost:3313/app/team\"\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3313/"
+      "h1": [
+        "403 — Sem permissão"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/venda-automatica",
-      "url": "",
+      "url": "/app/venda-automatica",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/venda-automatica\" is interrupted by another navigation to \"http://localhost:3313/app/team/invite\"\nCall log:\n\u001b[2m  - navigating to \"http://loc"
+      "h1": [
+        "Venda Automática"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     },
     {
       "rota": "/webhooks",
-      "url": "",
+      "url": "/app/webhooks",
       "tema": "dark",
       "largura": 390,
       "overflow": 0,
-      "h1": [],
-      "consoleErros": [
-        "Error: page.goto: Navigation to \"http://localhost:3313/app/webhooks\" is interrupted by another navigation to \"http://localhost:3313/app/venda-automatica\"\nCall log:\n\u001b[2m  - navigating to \"http://localh"
+      "h1": [
+        "Webhooks"
       ],
+      "consoleErros": [],
       "axe": {
         "critica": 0,
         "seria": 0,
         "ids": [],
         "nos": []
-      },
-      "pulada": "erro ao medir"
+      }
     }
   ]
 }
