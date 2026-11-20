@@ -199,13 +199,13 @@ base sumiu; duas telas entraram depois dela.
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
 | `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · 24 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/login/mfa` | público/auth | **pendente · motivo medido** | a captura caiu em `/login`: sem sessão parcial (1º fator) a rota redireciona. Medir exige usuário com MFA e parar antes do 2º fator — não medido | D |
-| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 (claro/escuro × 1440/390) | D |
-| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/login/mfa` | público/auth | **pendente · motivo medido** | **medido e reprovado pela régua (21/11):** `urlFinal=/login`, h1 «Entrar» — a tela de MFA não renderiza sem sessão parcial (1º fator). Medir exige usuário com MFA e parar antes do 2º fator; até lá, **não é `aplicado`** | D |
+| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · 32 textos, 0 abaixo do AA · overflow 0 · axe 0 (claro/escuro × 1440/390) · **h1 «Entrar» confirmado** (régua 21/11) | D |
+| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · 28 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Recuperar acesso» confirmado** (régua 21/11) | D |
 | `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · 20 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
+| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · 36 textos, 0 abaixo do AA · overflow 0 · axe 0 · **h1 «Criar conta» confirmado** (régua 21/11) | D |
 | `/403` | estado/erro | **já conforme** | #659 · 16 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
-| `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) | D |
+| `/500` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 (4 de console = o próprio status 500) · **h1 «500 — Erro interno» confirmado** (régua 21/11) | D |
 | `/503` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/account-suspended` | estado/erro | **já conforme** | #659 · 12 textos, 0 abaixo do AA · overflow 0 · axe 0 | D |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
@@ -247,10 +247,11 @@ Motivo: a rodada de 20/11 esperava "algum texto da tela", e foi assim que
 `/login/mfa` passou por medido sem ter sido — o texto do `/login`, para onde ele
 redireciona, satisfazia a espera. O instrumento está nessa régua
 (`tests/lib/rotas-publico-auth.ts` + teste que reprova rota sem h1 ou sem
-destino); a re-medição com ela está pendente de janela (swap > 4 GB + servidor de
-outra frente). Até lá, `mfa` segue `pendente`; as demais linhas mantêm a medição
-de 20/11, em que o `urlFinal` confirmou a rota certa — o h1 é a conferência
-adicional, não a primeira.
+destino). A re-medição rodou em **21/11** nas **5 primitivas + MFA** (24 medições
+contra o servidor da 3311, compartilhado): login, signup, recuperação, 404 e 500
+deram `medida=ok` com o h1 esperado; **MFA deu `medida=NAO`** (`h1 «Entrar»`,
+`urlFinal=/login`) — a prova de que a linha antiga estava errada. As demais linhas
+mantêm a medição de 20/11, em que o `urlFinal` confirmou a rota certa.
 
 **Total de texto medido (4 combinações por rota):** 524 nas rotas de acesso/
 estado/legal/público + 1.380 no wizard. A soma inclui o que caiu em `/login` na
@@ -265,7 +266,7 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 
 | Arquivo | Estado | Evidência |
 |---|---|---|
-| `app/not-found.tsx` (404) | **medido no navegador · sem achado** — 4 combinações (claro/escuro × 1440/390): **0** textos abaixo do AA (4 avaliados), **0** overflow, **0** axe serious/critical. Renderiza o `StatusPage` da variante `nao-encontrada`. Rota inexistente **anônima** não chega aqui: o proxy manda para `/login?next=…` (307) — o 404 é para sessão, ou para `/404` direto | `capturas/medido-estado-erro-publico-auth/` (8 PNG + `medidas.json`) |
+| `app/not-found.tsx` (404) | **medido no navegador · sem achado** — 4 combinações (claro/escuro × 1440/390): **0** textos abaixo do AA (4 avaliados), **0** overflow, **0** axe serious/critical · **h1 «404 — Página não encontrada» confirmado** (régua 21/11). Renderiza o `StatusPage` da variante `nao-encontrada`. Rota inexistente **anônima** não chega aqui: o proxy manda para `/login?next=…` (307) — o 404 é para sessão, ou para `/404` direto | `capturas/medido-estado-erro-publico-auth/` (8 PNG + `medidas.json`) |
 | `app/error.tsx` | **medido · unit** — `SegmentError` (root) com título, ID do erro (`digest`) e os dois botões nomeados; “Tentar de novo” chama o `reset`. **Não** medido no navegador: exigiria inventar uma exceção, e não há rota de gatilho no produto | `tests/unit/segment-error-estado.test.tsx` |
 | `app/global-error.tsx` | **medido · unit** — fallback do layout raiz: título, ID e reset provados; cores **inline** de propósito (o layout que falhou é quem carrega o CSS), e por isso ele é **sempre claro** — decisão declarada, não esquecimento do tema | `tests/unit/segment-error-estado.test.tsx` |
 
