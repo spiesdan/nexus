@@ -1,5 +1,22 @@
 # 39 — Fila por worker (viva)
 
+## TURNO — protocolo noturno (20/11/2026, ordem do dono)
+
+1. **Fila nunca vazia**: cada worker tem **≥3 tarefas escritas à frente** aqui;
+   quando uma termina, a próxima já está na seção dele.
+2. **Ninguém para sem entregar**: fim de fatia = **PR aberto** ou **bloqueio com
+   pergunta exata**. O coordenador responde **sempre com a próxima tarefa na mesma
+   mensagem** — nunca “aguarde”.
+3. **Decisão reversível se decide sozinho**: nome, ordem, microcopy, densidade,
+   estado vazio → decide, registra **uma linha no PR** e segue. Só para se for
+   **irreversível** (migration destrutiva, fiscal/financeiro, exclusão de dado,
+   regra de negócio) — aí vira proposta e o worker pega outra da fila.
+4. **PR verde é mergeado pelo coordenador**; `dirty` → rebase. Não acumular PR.
+5. **Release**: bloco fechado (rotas 1–3 + verdes) → **congelar merges**, cortar,
+   mergear o PR de release e avisar o dono com a tag. **Deploy é do dono**.
+6. **Nada pesado em paralelo**: um build/Playwright por vez; produção em **1.61.1**
+   intocada até o próximo deploy.
+
 ## AGORA
 
 - **D:** #673 com `verify` vermelho → corrigir e mergear; depois rotas fatia 2/3 e o **cartão agrupado** do `pedido_preso`.
@@ -238,3 +255,22 @@ release (aconteceu com #639 e #664).
   com números, rollback armado e **item novo no `40`**. Autorização não dispensa
   prova — operação fiscal/financeira, provedor, exclusão de dado e migration
   destrutiva seguem pedindo “pode” caso a caso.
+
+## Fila de reserva (≥3 por worker)
+
+**D:** 1) #673 (corrigir verify e mergear) · 2) rotas fatia 2/3 (estado de falha do
+mapa/rota) · 3) rotas fatia 3/3 (publicar/enviar) · 4) cartão agrupado do
+`pedido_preso` · 5) contatos/clientes · 6) configurações/equipe.
+
+**F:** 1) #679 (`sessionStorage`) e #680 (custo no resumo) — mergear · 2)
+`ignorar_*` só gerente com motivo/auditoria · 3) baixa atômica com override · 4)
+reprecificação com confirmação · 5) matriz E §9 na 1.61.1 (se ainda aberta) · 6)
+as 24 de público/auth na `41`.
+
+**G:** 1) as 22 telas de `admin` (uma por PR) · 2) p95 quando a série acumular ·
+3) varredura do Sentinel com a lente “1:N assumido como 1:1” · 4) evidência de
+lead com links (feito no #678) → próximos detectores.
+
+**Coordenação:** mergear #673/#679/#680 quando verdes; congelar e cortar quando o
+bloco fechar; relatório único ao amanhecer (entregas por worker, aberto com dono,
+decisões autônomas com reversão, estado de produção).
