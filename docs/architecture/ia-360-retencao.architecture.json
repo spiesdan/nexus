@@ -153,6 +153,14 @@
       "sublabel": "extraído da rota: a tela e o agente dizem a MESMA coisa sobre o mesmo negócio"
     },
     {
+      "id": "motorSaude",
+      "lane": "motor",
+      "col": 5,
+      "type": "lib",
+      "label": "lib/laya/saude.ts",
+      "sublabel": "incidente aberto = motor fora; a tela diz isso, não \"sem sugestão\""
+    },
+    {
       "id": "encerramento",
       "lane": "regra",
       "col": 4,
@@ -209,6 +217,14 @@
       "sublabel": "proposta que vence sozinha na janela do estágio"
     },
     {
+      "id": "incidentes",
+      "lane": "banco",
+      "col": 5,
+      "type": "table",
+      "label": "incidents",
+      "sublabel": "type=laya.motor_indisponivel — um aberto por organização"
+    },
+    {
       "id": "motorTool",
       "lane": "motor",
       "col": 2,
@@ -261,7 +277,10 @@
     { "id": "r33", "from": "cancelar", "to": "audit", "label": "followup.cancelled" },
     { "id": "r34", "from": "rotaCancel", "to": "audit", "label": "followup.cancelled (via fila)" },
     { "id": "r35", "from": "cronjobs", "to": "listar", "label": "o agente relê antes de reagendar" },
-    { "id": "r36", "from": "leads", "to": "radarLib", "label": "demandas abertas + última atividade" }
+    { "id": "r36", "from": "leads", "to": "radarLib", "label": "demandas abertas + última atividade" },
+    { "id": "r37", "from": "motorSaude", "to": "incidentes", "label": "falha abre, sucesso fecha o incidente" },
+    { "id": "r38", "from": "incidentes", "to": "motorSaude", "label": "estado e última falha lidos" },
+    { "id": "r39", "from": "motorSaude", "to": "radar", "label": "aviso \"motor fora\" no Radar e na Prospecção" }
   ],
   "cards": [
     {

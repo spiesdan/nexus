@@ -41,6 +41,8 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiClient } from "@/lib/api/client";
+import { AvisoMotorIndisponivel } from "@/components/observabilidade/AvisoMotorIndisponivel";
+import { useSaudeDoMotor } from "@/hooks/observabilidade/useSaudeDoMotor";
 import { DialogoDisparo } from "./_disparo";
 import { ImportarArquivoDialog } from "./_importar-arquivo";
 import { ContextualDrawer } from "@/components/shell/ContextualDrawer";
@@ -268,6 +270,9 @@ export function EmpresasTab({
   usuarioId: string;
 }) {
   const t = useT();
+  // O motor pode estar configurado e morto: a lista continua verdadeira, mas a
+  // nota de qualificação automática some — e isso precisa ser DITO.
+  const saudeDoMotor = useSaudeDoMotor();
   // A etiqueta do idioma em vigor para a data nativa (`toLocaleDateString`).
   // "pt-BR" escrito à mão vira uma data no idioma errado quando a sessão está em
   // outro idioma — e é o defeito que o gate `i18n-a-data-segue-o-idioma` pega.
@@ -1076,6 +1081,7 @@ export function EmpresasTab({
 
   return (
     <div className="space-y-4">
+      <AvisoMotorIndisponivel saude={saudeDoMotor.data} contexto="prospeccao" />
       <FilterBar>
         <FilterPrimary>
           <FilterSearch

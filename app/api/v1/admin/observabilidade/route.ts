@@ -4,6 +4,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
+import { lerSaudeDaInstalacao } from "@/lib/laya/saude";
 
 export const dynamic = "force-dynamic";
 
@@ -279,6 +280,11 @@ export async function GET(): Promise<Response> {
     },
   ];
 
+  // O motor de decisão não é uma rota da API: a falha dele não entra na série de
+  // `api_request_samples`. O fato está no incidente que o cron grava — ler dali
+  // é usar o que existe, não inventar uma métrica paralela.
+  const motor = await lerSaudeDaInstalacao(admin);
+
   return ok(
     {
       gerado_em: new Date(agoraMs).toISOString(),
@@ -296,6 +302,7 @@ export async function GET(): Promise<Response> {
         ok: boolean;
       } | null) ?? null,
       slos,
+      motor,
     },
     { requestId },
   );

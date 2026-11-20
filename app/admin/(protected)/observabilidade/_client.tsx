@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useT } from "@/hooks/i18n/useT";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
+import type { SaudeDaInstalacao } from "@/lib/laya/saude";
 
 type EstadoSlo = "ok" | "em_risco" | "estourado" | "sem_historico";
 
@@ -46,6 +47,7 @@ interface Resposta {
   serie: SerieDaApi;
   sonda: Sonda | null;
   slos: Slo[];
+  motor: SaudeDaInstalacao;
 }
 
 const ROTULO_DO_ESTADO: Record<EstadoSlo, string> = {
@@ -150,6 +152,57 @@ function SerieDaApiCartao({ serie, sonda }: { serie: SerieDaApi; sonda: Sonda | 
   );
 }
 
+/**
+ * O motor de decisão (laya) NÃO é uma rota: a falha dele não entra na série de
+ * `api_request_samples`. O cartão lê o incidente que o cron grava — o mesmo
+ * fato que o Radar e a Prospecção mostram ao tenant, visto da instalação.
+ */
+function CartaoDoMotor({ motor }: { motor: SaudeDaInstalacao }) {
+  const t = useT();
+  const tag = useTagDeIdioma();
+  const indisponivel = motor.estado === "indisponivel";
+  const semRegistro = motor.estado === "sem_registro";
+
+  return (
+    <Card data-testid="cartao-motor">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center justify-between gap-2 text-sm">
+          {t("Motor de decisão (laya)")}
+          <Badge variant={indisponivel ? "error" : semRegistro ? "neutral" : "success"}>
+            {indisponivel ? t("indisponível") : semRegistro ? t("sem registro") : t("ok")}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        {indisponivel ? (
+          <>
+            <p className="text-warning-fg">
+              {motor.organizacoes_com_falha === 1
+                ? t("1 organização sem resposta do motor.")
+                : `${motor.organizacoes_com_falha} ${t("organizações sem resposta do motor.")}`}
+            </p>
+            <p className="text-xs text-text-muted">
+              {t("A sugestão automática está desligada nessas organizações. Verifique LAYA_URL e o serviço do motor.")}
+            </p>
+          </>
+        ) : (
+          <p className="text-xs text-text-muted">
+            {semRegistro
+              ? t("O motor ainda não foi chamado ou a leitura falhou — isto não é um alarme.")
+              : t("O motor respondeu na última chamada; nenhuma organização está sem sugestão por falha dele.")}
+          </p>
+        )}
+        {motor.ultima_falha ? (
+          <p className="text-xs text-text-muted" data-testid="motor-ultima-falha">
+            {t("Última falha:")} {new Date(motor.ultima_falha).toLocaleString(tag)}
+            {motor.detalhe ? ` — ${motor.detalhe}` : ""}
+          </p>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
+
 export function ObservabilidadeClient() {
   const t = useT();
   const tag = useTagDeIdioma();
@@ -193,6 +246,7 @@ export function ObservabilidadeClient() {
       ) : (
         <>
           <SerieDaApiCartao serie={data.serie} sonda={data.sonda} />
+          {data.motor ? <CartaoDoMotor motor={data.motor} /> : null}
           <div className="grid gap-4 md:grid-cols-3">
             {data.slos.map((slo) => (
               <CartaoDeSlo key={slo.id} slo={slo} />

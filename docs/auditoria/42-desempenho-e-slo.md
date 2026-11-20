@@ -217,6 +217,41 @@ diagnóstico excluem `route='__sonda__'`, e as funções de SLO já filtram as c
 rotas quentes. A alternativa de uma tabela só exigiria gravar/ler/apagar no
 mesmo request, e o resíduo de um delete falho viraria histórico.
 
+## 3.2 Motor de decisão (laya) — o que estava invisível
+
+**Medido em produção (20/11/2026, 6 h):** `LAYA_URL` e `LAYA_API_KEY` definidos,
+**nenhum serviço escutando**. Resultado nos logs: 50 × `[prospeccao] motor de
+qualificação indisponível`, 17 × `[risk-watcher] motor de decisão indisponível`
+e 17 × `[radar] motor de decisão indisponível`. O `fetch` falhava a cada 15 min
+e as telas mostravam **ausência de sugestão** como se fosse “nada a sugerir”.
+
+O motor não é rota da API: a falha dele **não entra** em `api_request_samples`.
+Para não inventar uma série paralela, o cron passou a registrar o fato na tabela
+**`incidents`** que já existia (`type = 'laya.motor_indisponivel'`):
+
+- **um** incidente aberto por organização, com `payload.falhas` incrementado a
+  cada falha (sem isso seriam ~96 linhas/dia e a tela mostraria ruído);
+- o primeiro sucesso **fecha** o incidente (`resolved`) — o aviso some sozinho;
+- nada desliga, nada tenta de novo: é visibilidade, não comportamento.
+
+Onde isso aparece:
+
+| Superfície | O que diz |
+|---|---|
+| Radar (`/app/radar/risco`) | aviso “Sugestão automática desligada: o motor de decisão não respondeu”, com última falha e o que revisar (`LAYA_URL`/serviço); a linha sem sugestão ganha o selo **Sugestão indisponível** em vez de silêncio |
+| Prospecção (`/app/campanhas?subtela=prospeccao`) | o mesmo aviso, com o texto da **triagem** (a lista continua completa; a nota de qualificação é que está parada) |
+| `/admin/observabilidade` | cartão “Motor de decisão (laya)” com estado, organizações sem resposta e **última falha** — lido dos incidentes, sem métrica nova |
+| `/api/v1/laya/saude` | `{ estado, ultima_falha, detalhe, falhas }` por organização, `viewer` + `organization_id` do JWT |
+
+`estado = sem_registro` **não** é alarme: significa que o motor nunca foi
+chamado ou que a leitura falhou. Só `indisponivel` (incidente aberto) acende o
+aviso — e “disponível” não mostra nada.
+
+Testes: `lib/laya/saude.test.ts` (abre um só incidente, incrementa, fecha,
+nunca lança), `components/observabilidade/AvisoMotorIndisponivel.test.tsx`
+(indisponível × ok × sem registro) e `app/app/radar/_components/RiskRadarList.test.tsx`
+(motor fora não renderiza “Sugestão:”, renderiza o selo de indisponível).
+
 ## 4. Erros e recuperação (o que o produto faz hoje)
 
 ### 5xx

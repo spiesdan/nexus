@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { registrarFalhaDoMotor, registrarSucessoDoMotor } from "@/lib/laya/saude";
 
 /**
  * A SUGESTÃO DE AÇÃO — o motor de decisão que responde o chip do radar.
@@ -223,7 +224,7 @@ export async function decideAcoesDoRadar(
     for (let inicio = 0; inicio < estados.length; inicio += MAX_LOTE) {
       const fatiaEstados = estados.slice(inicio, inicio + MAX_LOTE);
       const fatiaLeads = pendentes.slice(inicio, inicio + MAX_LOTE);
-      const respostas = await chamaOMotor(fatiaEstados);
+      const respostas = await chamaOMotor(admin, organizationId, fatiaEstados);
       if (respostas === null) {
         base.falhou = true;
         break;
@@ -273,6 +274,8 @@ export async function decideAcoesDoRadar(
  * recusa legítima do modelo e não erro do sistema).
  */
 async function chamaOMotor(
+  admin: SupabaseClient,
+  organizationId: string,
   estados: string[],
 ): Promise<Array<{ acao: AcaoDaDecisao; confianca: number | null; modelo: string | null } | null> | null> {
   const url = `${env.LAYA_URL.replace(/\/+$/, "")}/v1/systemone/batch`;
@@ -295,13 +298,19 @@ async function chamaOMotor(
     if (!Array.isArray(results) || results.length !== estados.length) {
       throw new Error(`resposta com ${results?.length ?? 0} resultados para ${estados.length} states`);
     }
+    // Respondeu: se havia incidente aberto, ele fecha sozinho. Sem isto, a tela
+    // continuaria avisando "motor fora" depois da recuperação.
+    await registrarSucessoDoMotor(admin, organizationId);
     return results.map((r) => interpretaResposta(r));
   } catch (e) {
+    const detalhe = e instanceof Error ? e.message : String(e);
     logger.warn("[radar] motor de decisão indisponível", {
       url,
       estados: estados.length,
-      erro: e instanceof Error ? e.message : String(e),
+      erro: detalhe,
     });
+    // Visibilidade: o log some no container; o incidente é o que a tela lê.
+    await registrarFalhaDoMotor(admin, organizationId, "radar", detalhe);
     return null;
   }
 }

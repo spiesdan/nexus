@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { registrarFalhaDoMotor, registrarSucessoDoMotor } from "@/lib/laya/saude";
 
 /**
  * A QUALIFICAÇÃO DO PROSPECT — o "este aqui é dinheiro ou perda de tempo"?
@@ -124,7 +125,7 @@ export async function qualificaProspects(
     for (let inicio = 0; inicio < candidatos.length; inicio += MAX_LOTE) {
       const fatiaC = candidatos.slice(inicio, inicio + MAX_LOTE);
       const fatiaE = estados.slice(inicio, inicio + MAX_LOTE);
-      const respostas = await chamaOMotor(fatiaE);
+      const respostas = await chamaOMotor(admin, organizationId, fatiaE);
       if (respostas === null) {
         return { ...base, falhou: true };
       }
@@ -154,7 +155,11 @@ export async function qualificaProspects(
   }
 }
 
-async function chamaOMotor(estados: string[]): Promise<Array<LayaFit | null> | null> {
+async function chamaOMotor(
+  admin: SupabaseClient,
+  organizationId: string,
+  estados: string[],
+): Promise<Array<LayaFit | null> | null> {
   const url = `${env.LAYA_URL.replace(/\/+$/, "")}/v1/systemone/batch`;
   try {
     const resposta = await fetch(url, {
@@ -177,6 +182,7 @@ async function chamaOMotor(estados: string[]): Promise<Array<LayaFit | null> | n
         `resposta com ${results?.length ?? 0} resultados para ${estados.length} states`,
       );
     }
+    await registrarSucessoDoMotor(admin, organizationId);
     return results.map((r) => {
       const resposta = r.answers?.["fit"] as
         { type?: string; choice?: unknown; confidence?: unknown } | undefined;
@@ -185,11 +191,13 @@ async function chamaOMotor(estados: string[]): Promise<Array<LayaFit | null> | n
       return LAYA_FIT.includes(escolha as LayaFit) ? (escolha as LayaFit) : null;
     });
   } catch (e) {
+    const detalhe = e instanceof Error ? e.message : String(e);
     logger.warn("[prospeccao] motor de qualificação indisponível", {
       url,
       estados: estados.length,
-      erro: e instanceof Error ? e.message : String(e),
+      erro: detalhe,
     });
+    await registrarFalhaDoMotor(admin, organizationId, "prospeccao", detalhe);
     return null;
   }
 }
