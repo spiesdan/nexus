@@ -60,3 +60,19 @@ foi interrompida no ponto das falhas de MFA/artefato.
 **A regressão da 1.61.1, medida com o estado isolado, é 80 passed · 0 failed ·
 2 skipped.** A invocação única não é verde por defeito de harness — e isso está
 acima, não escondido.
+
+
+## 5. Depois do conserto do harness (#701)
+
+- **Suíte inteira, uma invocação:** **80 passed · 0 failed · 2 skipped em
+  14,7 min** (antes: 26,4 min e 8 falhas de infraestrutura).
+- `login-admin` agora detecta `Dígito 1` **disabled** em 6 s, avisa e re-semeia;
+  a segunda falha diz “continuou disabled mesmo depois de re-semear”.
+- `test-e2e-suite.ts` grava trace/network em diretório único de `tmpdir()`
+  (`--output`), fora de `test-results`; o `browserContext.close` não recebe mais
+  `ENOENT`.
+- Os 5 min do `jornada-fiscal` e os timeouts de `navegacao` eram o clique no
+  campo disabled; o ganho de **11,7 min** aparece no relógio.
+
+A invocação única **passou a ser verde** com o harness corrigido; a tabela da
+seção 2 permanece como o registro do que aconteceu antes.
