@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from "react-dom/server";
+import { render } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -51,12 +51,27 @@ afterEach(() => {
   vi.resetModules();
 });
 
+/**
+ * O MARKUP DO PRIMEIRO RENDER — e ele é o do CLIENTE, não o do servidor.
+ *
+ * A versão anterior usava `renderToStaticMarkup` porque, com a leitura num
+ * efeito, o HTML do servidor era a pintura mais cedo que existia. O hook mudou:
+ * `useSyncExternalStore` lê a permissão NO RENDER do cliente, e o snapshot do
+ * servidor é `"unsupported"` de propósito — o servidor não sabe a permissão do
+ * navegador, e fingir que sabe produzia "Hydration failed" (está documentado em
+ * `useNotificationPermission`).
+ *
+ * Ou seja: com permissão concedida, o HTML do SERVIDOR diz "desabilitado" e o
+ * primeiro render do CLIENTE diz "habilitado". A promessa que este arquivo
+ * protege — "não ofereça o que já está negado, e não negue o que já foi
+ * concedido" — só pode ser medida onde a informação existe: no cliente. Em
+ * `renderToStaticMarkup` os três casos mediam a constante do servidor.
+ */
 async function markupSemEfeitos(): Promise<string> {
   vi.resetModules();
-  const { NotificationPrefsClient } = await import(
-    "@/app/app/settings/notifications/_client"
-  );
-  return renderToStaticMarkup(<NotificationPrefsClient />);
+  const { NotificationPrefsClient } = await import("@/app/app/settings/notifications/_client");
+  const { container } = render(<NotificationPrefsClient />);
+  return container.innerHTML;
 }
 
 /**
