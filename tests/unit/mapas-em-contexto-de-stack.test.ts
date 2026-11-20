@@ -102,8 +102,15 @@ const COM_MAPA = DIRETORIOS.flatMap((d) => arquivosComMapa(join(RAIZ, d)));
  * dele, seja string ou template literal.
  */
 function classDoContêiner(texto: string): string {
-  // Comentário de bloco `{/* ... *\/}` e de linha `// ...`, fora de strings.
-  const semComentario = texto.replace(/\{[\s\S]*?\*\/[\s}]/g, "").replace(/^\s*\/\/.*$/gm, "");
+  // Comentário de bloco `{/* ... */}` e de linha `// ...`, fora de strings.
+  //
+  // O padrão começava em `\{` — qualquer chave — e ia até o próximo `*/`. Isso
+  // apagava CÓDIGO junto: em 20/11/2026 um `{/* */}` novo, depois do
+  // `ref={refCaixa}`, fez a varredura comer o próprio `ref` e o gate reprovou
+  // uma tela sem defeito. Aqui o casamento é só do comentário de bloco.
+  const semComentario = texto
+    .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
   const i = semComentario.indexOf("ref={refCaixa}");
   if (i === -1) return "";
   const janela = semComentario.slice(i, i + 400);
