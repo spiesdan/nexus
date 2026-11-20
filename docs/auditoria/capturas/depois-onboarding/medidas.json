@@ -1,0 +1,616 @@
+{
+  "base": "http://localhost:3311",
+  "rotulo": "depois",
+  "medidas": [
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client bran"
+      ],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}

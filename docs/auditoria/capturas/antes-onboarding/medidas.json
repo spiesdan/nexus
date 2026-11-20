@@ -1,0 +1,690 @@
+{
+  "base": "http://localhost:3311",
+  "rotulo": "antes",
+  "medidas": [
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "light",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "light",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 2,
+        "piores": [
+          {
+            "seletor": "p.mt-1.text-sm",
+            "texto": "Seu funcionário pensa com a inteligência artificial que você",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "14px/400"
+          },
+          {
+            "seletor": "span.text-xs.text-muted-foreground",
+            "texto": "Ela é guardada cifrada — nem nós conseguimos lê-la depois.",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "12px/400"
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .space-y-3 > div:nth-child(1) > p",
+          "color-contrast: .gap-3.items-center.flex > span"
+        ]
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 1,
+        "piores": [
+          {
+            "seletor": "p.text-xs.text-muted-foreground",
+            "texto": "Isso não trava nada: escolha outro modelo abaixo ou ajuste a",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "12px/400"
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .border-warning\\/40 > p:nth-child(2)"
+        ]
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "dark",
+      "largura": 1440,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "welcome",
+      "urlFinal": "/onboarding/welcome",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 38,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-whatsapp",
+      "urlFinal": "/onboarding/connect-whatsapp",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 27,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "connect-nuvemshop",
+      "urlFinal": "/onboarding/connect-nuvemshop",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 22,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "setup-ai",
+      "urlFinal": "/onboarding/setup-ai",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 73,
+        "abaixo": 2,
+        "piores": [
+          {
+            "seletor": "p.mt-1.text-sm",
+            "texto": "Seu funcionário pensa com a inteligência artificial que você",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "14px/400"
+          },
+          {
+            "seletor": "span.text-xs.text-muted-foreground",
+            "texto": "Ela é guardada cifrada — nem nós conseguimos lê-la depois.",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "12px/400"
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .space-y-3 > div:nth-child(1) > p",
+          "color-contrast: .gap-3.items-center.flex > span"
+        ]
+      }
+    },
+    {
+      "rota": "funil",
+      "urlFinal": "/onboarding/funil",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 49,
+        "abaixo": 1,
+        "piores": [
+          {
+            "seletor": "p.text-xs.text-muted-foreground",
+            "texto": "Isso não trava nada: escolha outro modelo abaixo ou ajuste a",
+            "razao": 4.27,
+            "piso": 4.5,
+            "cor": "rgb(144, 144, 144)",
+            "fundo": "rgb(55,44,33)",
+            "fonte": "12px/400"
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .border-warning\\/40 > p:nth-child(2)"
+        ]
+      }
+    },
+    {
+      "rota": "testar",
+      "urlFinal": "/onboarding/testar",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 21,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "invite-team",
+      "urlFinal": "/onboarding/invite-team",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 25,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    },
+    {
+      "rota": "done",
+      "urlFinal": "/onboarding/done",
+      "tema": "dark",
+      "largura": 390,
+      "overflow": 0,
+      "console": [],
+      "contraste": {
+        "total": 90,
+        "abaixo": 0,
+        "piores": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      }
+    }
+  ]
+}

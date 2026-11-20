@@ -79,6 +79,8 @@ supabase/.branches/
 .env.sentry-build-plugin
 inbox-with-real-msgs.png
 .e2e-creds.json
+# Credenciais do fixture de captura do onboarding (local, nunca versionar).
+.captura-onboarding.json
 .e2e-campanha-entrega.json
 .e2e-agente-mcp.json
 test-results/
