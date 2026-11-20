@@ -1913,6 +1913,12 @@ export function Roteirizador({
                     title={p.endereco ?? undefined}
                   >
                     {p.endereco ?? t("Sem endereço — corrija o cadastro ou marque no mapa.")}
+                    {p.endereco && p.semNumero ? (
+                      // Sem número é um endereço INCOMPLETO, não um endereço
+                      // errado: o pino fica na rua e o motorista procura o
+                      // número. A linha dizia isso só no balão do mapa.
+                      <span className="ml-1 text-warning-fg">· {t("sem número")}</span>
+                    ) : null}
                   </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]">
