@@ -67,6 +67,7 @@ export function pedido(over: Partial<Pedido> = {}): Pedido {
     frete_cents: 0,
     contact_id: "contato-1",
     cliente_documento: "12345678000199",
+    created_by: "usuario-1",
     created_at: ha(DIA),
     updated_at: ha(HORA),
     ...over,

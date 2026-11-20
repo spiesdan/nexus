@@ -48,7 +48,7 @@ O único caminho de escrita do produto é `sentinel_*` (o que o Sentinel viu) e 
 | `operacao.estoque_negativo` | saldo < 0 com controle de estoque | alta |
 | `operacao.estoque_divergente` | saldo ≠ razão desde 0242; **hipótese** de baixa confiança | baixa |
 | `operacao.pedido_total_incoerente` | total ≠ subtotal − desconto + frete | alta |
-| `operacao.pedido_preso` | rascunho/em análise sem toque há > 7 dias | media |
+| `operacao.pedido_preso` | rascunho/em análise **com autor humano** (`created_by`) sem toque há > 7 dias; importado sem autor é resíduo | media |
 | `operacao.pedido_sem_cliente` | pedido avançado sem `contact_id` | media |
 | `operacao.pedido_com_nf_sem_documento` | exige NF e sem documento do destinatário | media |
 | `operacao.recebivel_sem_origem` | sem pedido, nota e cliente | media |
@@ -522,6 +522,24 @@ devolução sem `ref_nfe` não tem regra própria e não é duplicidade. Criar a
 regra exige decidir o que é referência válida (chave da original, série/número
 ou vínculo explícito); fica registrada como próxima fatia, sem inventar
 critério.
+
+### v1.11 — pedido preso só com autor humano e link no lead
+
+Medido na org real em 20/11/2026: 121 rascunhos > 7 dias, **119 de origem
+Mercos**, 118 sem `created_by`, 20 com valor zero, 99 com itens. Só **1** tinha
+autor humano. O detector contava resíduo de importação como trabalho abandonado.
+
+- `operacao.pedido_preso` exige `created_by IS NOT NULL`; a coleta passou a
+  trazer o campo e a evidência `autor_user_id`. Com os dados de hoje: **121 → 1**.
+- `operacao.lead_duplicado` ganhou `leads_links` (`/app/leads/<id>`) ao lado de
+  `identificacao · etapa · criado_em`; a tela renderiza o caminho como link.
+  Nada é mesclado automaticamente — a pessoa resolve em dois cliques.
+- Sem migration: `created_by` já existe e `criarPedidoComercial` o grava em toda
+  criação humana (`lib/comercial/criar-pedido.ts:382`); importação Mercos entra
+  sem autor. Não há fallback por `vendedor_user_id`/`origem`.
+
+**Prova:** `regras-operacao.test.ts` — sem autor não abre (mesmo com itens/valor);
+com autor e >7d abre; recente não; `leads_links` com caminho navegável.
 
 **Nada foi implantado** — sem deploy, sem escrita em produção/VPS, sem operação
 fiscal/financeira real.

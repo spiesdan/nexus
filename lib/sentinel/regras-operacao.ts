@@ -128,6 +128,11 @@ export function pedidosPresos(s: Snapshot): Achado[] {
   return s.pedidos
     .filter(
       (p) =>
+        // Rascunho importado do Mercos (created_by NULL) é resíduo de
+        // importação, não trabalho abandonado: ninguém no produto o abriu.
+        // Medido na org real em 20/11/2026: 121 rascunhos >7d, 118 sem autor;
+        // com o filtro, 1 abre.
+        Boolean(p.created_by) &&
         ["rascunho", "em_analise"].includes(p.status) &&
         maisVelhoQue(p.updated_at, s.agoraMs, 7 * DIA_MS),
     )
@@ -148,6 +153,7 @@ export function pedidosPresos(s: Snapshot): Achado[] {
         pedido_numero: p.numero,
         total_cents: p.total_cents,
         atualizado_em: p.updated_at,
+        autor_user_id: p.created_by,
       },
     }));
 }
@@ -684,6 +690,7 @@ export function leadsDuplicados(s: Snapshot): Achado[] {
         identificacao_contato: identificacao,
         leads: ids.slice(0, 20),
         leads_detalhe: detalhes.slice(0, 20),
+        leads_links: ids.slice(0, 20).map((id) => `/app/leads/${id}`),
         ...(grupo.identidade === "telefone" && grupo.valor
           ? { telefone_mascarado: mascararTelefone(grupo.valor) }
           : {}),
