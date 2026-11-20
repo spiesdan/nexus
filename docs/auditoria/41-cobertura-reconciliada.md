@@ -185,22 +185,30 @@ base sumiu; duas telas entraram depois dela.
 
 ## 2.2 Superfícies fora de `app/app` e `app/admin` (26)
 
+> **20/11/2026 — passe de público/auth/estado (16 de 26).** Medido em
+> `next dev` nas duas pontas (antes/depois na mesma base): 64 medições por
+> lado, **0** textos abaixo do AA, **0** overflow, **0** axe serious. O que
+> mudou: as 6 telas de acesso ganharam o cartão das telas de estado e o
+> orçamento inválido deixou de ser beco. Detalhe e números em
+> `50-publico-auth-estado-design.md`. As **9 de onboarding seguem
+> `pendente`** (fixture de organização não finalizada, passe próprio).
+
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
-| `/login/forgot` | público/auth | **pendente** | — | — |
-| `/login/mfa` | público/auth | **pendente** | — | — |
-| `/login` | público/auth | **pendente** | — | — |
-| `/login/recovery` | público/auth | **pendente** | — | — |
-| `/login/reset` | público/auth | **pendente** | — | — |
-| `/signup` | público/auth | **pendente** | — | — |
-| `/403` | estado/erro | **pendente** | — | — |
-| `/500` | estado/erro | **pendente** | — | — |
-| `/503` | estado/erro | **pendente** | — | — |
-| `/account-suspended` | estado/erro | **pendente** | — | — |
+| `/login/forgot` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/mfa` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/recovery` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/login/reset` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/signup` | público/auth | **aplicado** (cartão da casca) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/403` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/500` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/503` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/account-suspended` | estado/erro | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/design` | interno | **fora de escopo** | styleguide interno, não é tela do produto | — |
-| `/legal/privacy` | público/legal | **pendente** | — | — |
-| `/legal/terms` | público/legal | **pendente** | — | — |
-| `/o/[token]` | público/orçamento | **pendente** | — | — |
+| `/legal/privacy` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/legal/terms` | público/legal | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/o/[token]` | público/orçamento | **aplicado** (estado inválido) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 | `/onboarding/connect-nuvemshop` | onboarding | **pendente** | — | — |
 | `/onboarding/connect-whatsapp` | onboarding | **pendente** | — | — |
 | `/onboarding/done` | onboarding | **pendente** | — | — |
@@ -210,9 +218,9 @@ base sumiu; duas telas entraram depois dela.
 | `/onboarding/setup-ai` | onboarding | **pendente** | — | — |
 | `/onboarding/testar` | onboarding | **pendente** | — | — |
 | `/onboarding/welcome` | onboarding | **pendente** | — | — |
-| `/` | público | **pendente** | — | — |
-| `/team/accept-invite/[token]` | público/auth | **pendente** | — | — |
-| `/vitrine-agenda` | público | **pendente** | — | — |
+| `/` | público | **medido · redireciona** (→ `/login?next=/app`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/team/accept-invite/[token]` | público/auth | **medido · sem achado** | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
+| `/vitrine-agenda` | público | **medido · exige sessão** (→ `/login`) | #659 · `50-publico-auth-estado-design.md` · `capturas/{antes,depois}-publico-auth/` | — |
 
 ## 3. Registry de navegação (78 rotas `/app`)
 
