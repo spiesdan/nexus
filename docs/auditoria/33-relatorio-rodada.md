@@ -271,3 +271,10 @@ overflow/console, e **linha da matriz com veredito + evidência**. Exceção =
 - **Critical local (1.61.1):** **70 passaram · 6 falharam · 2 skipped · 4 não rodaram** (exit 1). Falhas em triagem: `credenciais-de-ia` (provável ambiente), `entrada-do-endereco`, jornada fiscal, J14 CSV, recuperar senha.
 - **Aberto:** #691 (invariants, F), #694 (rotas publicar, D), #687/#693 `dirty`.
 - **Produção:** 1.61.1 healthy.
+
+### Turno noturno — 21/11 ~10:20Z
+
+- **Mergeados nesta janela:** #687, #691, #696, #697, #698, #699 (+ antes #682/#683/#686/#688/#689/#690/#692/#694).
+- **Aberto:** #695 (risk fatiado, rebaseado; CI), #700 (motor visível, G corrigindo `verify`).
+- **Critical 1.61.1:** 70 passa / 6 falha / 2 skip / 4 não rodou — em triagem.
+- **Produção:** 1.61.1 healthy; swap 1,7 GB.
