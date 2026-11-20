@@ -8,6 +8,110 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.62.2] — 2026-11-20
+
+### Alterado
+
+- **Configurações com moldura consistente, salvamento visível e console limpo** O passe sistêmico de `/app/settings` mediu 16 caminhos × 2 temas × 2 larguras:
+  HTTP 200 em todos, contraste AA sem reprovação, overflow zero e **4 → 0** erros de
+  console; o salvamento passa a mostrar estado.
+
+  **Nada a fazer na VPS.**
+
+### Corrigido
+
+- **Admin — alvo de toque do “voltar” na ficha de auditoria** O botão “Audit Log” media 99×32 px. Ganhou o piso de 40 px da casca, sem mudar
+  o desenho; a ficha fica com zero alvos pequenos em 1440 e 390. Overflow,
+  contraste, axe e console já estavam limpos.
+
+- **Admin — configuração com filtros nomeados e contraste nos avisos** O filtro de período do uso não tinha nome acessível; o selo “Ativo” de
+  platform admins e o aviso do Google reprovavam contraste no escuro (3,69:1 e
+  3,92:1). A primitiva do campo de arquivo cresceu para 40 px, e os botões de
+  salvar/exportar das cinco telas de configuração acompanharam.
+
+- **Admin — filtros de incidentes com nome e regiões roláveis focáveis** Os filtros da lista de incidentes não tinham nome acessível (axe `button-name`
+  crítico) e as regiões roláveis da ficha (payload e auditoria) não eram
+  alcançáveis por teclado. Ganharam `aria-label`/`role`/`tabIndex`, e os alvos
+  pequenos (filtros, “Ver”, voltar, “Resolver incidente”) subiram para 40 px.
+
+- **Admin — LGPD com filtros nomeados e barra de prazo acessível** Os filtros da lista não tinham nome acessível (axe `button-name` crítico) e a
+  barra de prazo da ficha era `progressbar` sem nome. As datas do marco e o
+  “por <id>” tinham véu de opacidade (2,52–3,29:1) e passaram para o token de
+  texto secundário. Alvos pequenos: 12 na lista e 1 na ficha, agora zero.
+
+- **Admin — sub-nav da ficha do tenant vira navegação e alvos de 40 px** A sub-nav usava `Tabs` sem `TabsContent` e anunciava `aria-controls` para um
+  painel inexistente — axe crítico nas quatro combinações. Virou `<nav>` com
+  links e `aria-current`, mantendo o desenho. Breadcrumb, abas,
+  “Impersonar tenant” e “Suspender tenant” ganharam o piso de 40 px: os alvos
+  pequenos caem de 7 (1440) e 5 (390) para zero.
+
+- **Admin — alvos de toque na criação de tenant** O seletor de plano e os botões “Criar tenant”/“Cancelar” mediam 36 px. Ganharam
+  o piso de 40 px da casca: a criação sai de 3 (1440) e 1 (390) alvos pequenos
+  para zero. A página de saúde do tenant já estava conforme e não foi tocada.
+
+- **Admin — alvos de toque da lista de tenants** O link “Ver” de cada linha media 18×15 px e o botão “Novo tenant” 115×32; os
+  filtros ficavam em 36 px. Todos ganharam o piso de 40 px da casca do admin, sem
+  mudar o desenho: os alvos pequenos da tela caem de 20 (1440) e 19 (390) para
+  zero. Overflow, contraste, axe e console já estavam limpos.
+
+- **Admin — região rolável focável e ficha de usuário com alvos de 40 px** O `<main>` do admin rolava sem ser alcançável por teclado (axe
+  `scrollable-region-focusable` sério em toda tela a 390); ganhou `tabIndex={0}`.
+  Na ficha do usuário, o bloco de auditoria recente virou região rotulada e
+  focável, e o breadcrumb e os links de tenant ganharam 40 px de alvo. O `/admin`
+  passa a ser medido no destino (`/admin/dashboard`): axe 0/0 também a 390.
+
+- **Admin — alvos de toque da lista de usuários** O link “Ver” de cada linha media 18×15 px e os filtros 36 px. Todos ganharam o
+  piso de 40 px da casca do admin, sem mudar o desenho: os alvos pequenos caem de
+  24 (1440) e 20 (390) para zero. Overflow, contraste, axe e console já estavam
+  limpos.
+
+- **Botão decorativo deixa de parecer ativo; permissão medida no primeiro render** O campo de arquivo desenhava a pintura com um botão sem handler: parecia ativo,
+  cursor de mão, clique sem efeito. Virou `span` decorativo. A leitura da permissão
+  de notificação passou a ser feita onde a informação existe (cliente), sem
+  “Hydration failed” e sem esconder o interruptor de quem já concedeu.
+
+  **Nada a fazer na VPS.**
+
+- **Telas de IA ganham nome na barra de progresso e contraste no escuro** A varredura das 22 telas de IA encontrou dois defeitos sérios de acessibilidade: a
+  **barra de progresso não tinha nome acessível** (leitor de tela anunciava “barra”
+  sem dizer do quê) e **texto com contraste insuficiente no tema escuro**.
+
+  Os dois foram corrigidos e medidos: 22 telas varridas, 0 crítico, e os sérios
+  zerados. As rotas dinâmicas sem id ficaram declaradas como **não medidas**, com
+  motivo — não entram no placar como cobertura.
+
+  **Nada a fazer na VPS.**
+
+- **Medição espera o h1 e mede o destino do redirect** Para quem mede: a varredura passa a esperar o `h1` (15 s) antes do PNG — tela
+  ainda montando entrava como “limpa” e o veredito media a si mesmo — e redirect
+  (`/titulos → /financeiro`) é medido no destino, não como tela vazia.
+
+  **Nada a fazer na VPS.**
+
+- **Varredura de IA e fiscal: 30 telas medidas, 5 inválidas com motivo** A varredura de `ai` (22 telas) e `fiscal` (13) passou a contar como aplicado só
+  quando mediu a rota: 30 aplicadas, 5 inválidas **com motivo escrito** (rotas
+  dinâmicas sem id, falha de instrumento). Antes, vazio contava como cobertura.
+
+  **Nada a fazer na VPS.**
+
+- **Matriz 41 passa a cobrir o 404 e os dois boundaries de erro** A matriz de cobertura listava 26 superfícies fora de `app/app` e `app/admin`, mas
+  `app/not-found.tsx`, `app/error.tsx` e `app/global-error.tsx` não apareciam em
+  lugar nenhum — o E2E conferia a cópia do `/404`, não a tela.
+
+  O 404 foi medido no navegador em claro/escuro × 1440/390: **0** textos abaixo do
+  contraste mínimo, **0** overflow e **0** violação séria no axe. Os dois boundaries
+  não têm rota de gatilho no produto (medir exigiria inventar uma exceção) e
+  ganharam prova unitária de estrutura, nomes e reset; a lacuna de navegador está
+  declarada na matriz, não escondida.
+
+  Nada a fazer na VPS.
+
+- **Quatro telas de IA deixam de anunciar aba que não existe** Botões de aba (Tabs) sem painel correspondente saíam com `aria-controls`
+  apontando para um painel inexistente — crítico no axe e leitor de tela anunciando
+  um controle quebrado. As quatro telas de IA agora só anunciam aba que tem painel.
+
+  **Nada a fazer na VPS.**
+
 ## [1.62.1] — 2026-11-20
 
 ### Corrigido
@@ -8543,7 +8647,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.2...HEAD
+[1.62.2]: https://github.com/spiesdan/nexus/compare/v1.62.1...v1.62.2
 [1.62.1]: https://github.com/spiesdan/nexus/compare/v1.62.0...v1.62.1
 [1.62.0]: https://github.com/spiesdan/nexus/compare/v1.61.1...v1.62.0
 [1.61.1]: https://github.com/spiesdan/nexus/compare/v1.61.0...v1.61.1
