@@ -128,7 +128,8 @@ function colunasAdmin(
       celula: (row) => (
         <Link
           href={`/admin/users/${row.user_id}`}
-          className="text-xs font-medium text-accent-ink hover:underline"
+          // Mesmo piso de 40 px do “Ver” de tenants: 18×15 não é alvo de dedo.
+          className="-mx-2 -my-1 inline-flex min-h-10 min-w-10 items-center justify-center rounded px-2 text-xs font-medium text-accent-ink hover:underline"
         >
           {t("Ver")}
         </Link>

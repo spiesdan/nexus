@@ -85,7 +85,7 @@ export function UsersClient() {
           placeholder={t("Buscar por email ou nome...")}
           value={inputValue}
           onChange={(e) => handleSearch(e.target.value)}
-          className="sm:w-72"
+          className="min-h-10 sm:w-72"
           aria-label={t("Buscar usuários")}
         />
 
@@ -93,7 +93,7 @@ export function UsersClient() {
           value={filters.tenant_id ?? "all"}
           onValueChange={handleTenant}
         >
-          <SelectTrigger className="sm:w-52" aria-label={t("Filtrar por tenant")}>
+          <SelectTrigger className="min-h-10 sm:w-52" aria-label={t("Filtrar por tenant")}>
             <SelectValue placeholder="Tenant" />
           </SelectTrigger>
           <SelectContent>
@@ -107,7 +107,7 @@ export function UsersClient() {
         </Select>
 
         <Select value={filters.role ?? "all"} onValueChange={handleRole}>
-          <SelectTrigger className="sm:w-40" aria-label={t("Filtrar por role")}>
+          <SelectTrigger className="min-h-10 sm:w-40" aria-label={t("Filtrar por role")}>
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
