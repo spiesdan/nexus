@@ -94,7 +94,7 @@
       "grupo": "pedidos-e-vendas",
       "dinamica": false,
       "capturar": true,
-      "veredito": "redireciona para a home no estado atual (recurso desligado ou sem permissão)",
+      "veredito": "redirect → /financeiro, medido lá",
       "redireciona": "/financeiro"
     },
     {

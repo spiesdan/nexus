@@ -226,15 +226,18 @@ async function medir(
    * a linha vira NÃO MEDIDA — nunca uma tela "limpa" que ninguém viu.
    */
   try {
+    // 3 s DEPOIS do esqueleto, não 3 s depois do `domcontentloaded`: o sinal
+    // caro (compilar/renderizar o corpo) já foi esperado acima. Aqui só falta
+    // o título, que é o primeiro nó pintado — 3 s é folga, não corrida.
     await page.waitForFunction(() => document.querySelector("h1") !== null, null, {
-      timeout: 12_000,
+      timeout: 3_000,
     });
   } catch {
     return medidaInvalida(
       linha,
       tema,
       largura,
-      "sem <h1> após 12 s — a tela não terminou de renderizar",
+      "sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
       erros,
     );
   }

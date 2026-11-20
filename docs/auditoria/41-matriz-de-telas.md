@@ -81,7 +81,7 @@ escrito à mão).
 | 9 | `/pedidos/[id]` · dinâmica | 0/0 px | 0/1 | 0 | sério de contraste medido (claro, 390) |
 | 10 | `/pedidos/imprimir` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
 | 11 | `/pedidos/novo` | 0/0 px | 0/1 | 0 | sem passe; limpo (fora o seletor de empresa do shell) |
-| 12 | `/titulos` | — (redirect) | — | — | redireciona para a home no estado atual (recurso desligado ou sem permissão) → `/financeiro` — **3/4**: a combinação light/1440 perdeu o contexto no redirect e ficou fora |
+| 12 | `/titulos` | — (redirect) | — | — | **redirect → `/financeiro`, medido lá** — **3/4**: a combinação light/1440 perdeu o contexto no redirect e ficou fora |
 
 ### 2. Atendimento (inbox, contatos, funil, agenda) — 13 telas, 2 medidas
 
