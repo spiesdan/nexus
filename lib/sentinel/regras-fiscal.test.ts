@@ -171,6 +171,102 @@ describe("detectores fiscais — caso positivo e negativo", () => {
     ).toHaveLength(0);
   });
 
+  it("divergência com agrupamento: soma de N pedidos fecha → não abre", () => {
+    const notaAgrupada = nota({ id: "nf-4629", total_cents: 13_400, order_id: "p-19594" });
+    const p1 = pedido({ id: "p-19594", numero: 19_594, total_cents: 9_200 });
+    const p2 = pedido({ id: "p-19597", numero: 19_597, total_cents: 4_200 });
+    const vinculo = { invoice_id: "nf-4629", order_id: "p-19597" };
+
+    expect(
+      divergenciaDeValorDaNota(
+        snapshot({ notas: [notaAgrupada], pedidos: [p1, p2], notasPedidos: [vinculo] }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("divergência com agrupamento: soma diferente abre com a decomposição", () => {
+    const notaAgrupada = nota({ id: "nf-4629", total_cents: 13_400, order_id: "p-19594" });
+    const p1 = pedido({ id: "p-19594", numero: 19_594, total_cents: 9_200 });
+    const p2 = pedido({ id: "p-19597", numero: 19_597, total_cents: 4_000 });
+
+    const r = divergenciaDeValorDaNota(
+      snapshot({
+        notas: [notaAgrupada],
+        pedidos: [p1, p2],
+        notasPedidos: [{ invoice_id: "nf-4629", order_id: "p-19597" }],
+      }),
+    );
+
+    expect(r).toHaveLength(1);
+    expect(primeiro(r).evidencia).toMatchObject({
+      nota_total_cents: 13_400,
+      soma_pedidos_cents: 13_200,
+      diferenca_cents: -200,
+      pedidos_total_cents: [9_200, 4_000],
+      pedido_numeros: [19_594, 19_597],
+    });
+  });
+
+  it("pedido do vínculo ausente do snapshot não abre (coleta incompleta)", () => {
+    expect(
+      divergenciaDeValorDaNota(
+        snapshot({
+          notas: [nota({ id: "nf-4629", total_cents: 13_400, order_id: "p-19594" })],
+          pedidos: [pedido({ id: "p-19594", total_cents: 9_200 })],
+          notasPedidos: [{ invoice_id: "nf-4629", order_id: "p-19597" }],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("nota com vínculo secundário não é 'sem vínculo'", () => {
+    expect(
+      notasSemVinculo(
+        snapshot({
+          notas: [nota({ id: "nf-4629", order_id: null })],
+          notasPedidos: [{ invoice_id: "nf-4629", order_id: "pedido-1" }],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("nota autorizada com pedido não faturado: agrupamento olha todos", () => {
+    const p1 = pedido({ id: "p-1", numero: 1, status: "faturado" });
+    const p2 = pedido({ id: "p-2", numero: 2, status: "aprovado" });
+    const notaAgrupada = nota({ id: "nf-1", order_id: "p-1" });
+    const vinculo = { invoice_id: "nf-1", order_id: "p-2" };
+
+    expect(
+      notasAutorizadasComPedidoNaoFaturado(
+        snapshot({ notas: [notaAgrupada], pedidos: [p1, p2], notasPedidos: [vinculo] }),
+      ),
+    ).toHaveLength(1);
+
+    expect(
+      notasAutorizadasComPedidoNaoFaturado(
+        snapshot({
+          notas: [notaAgrupada],
+          pedidos: [p1, pedido({ id: "p-2", numero: 2, status: "faturado" })],
+          notasPedidos: [vinculo],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
+  it("pedido com NF coberto por vínculo secundário não dispara", () => {
+    expect(
+      pedidosComNfSemNota(
+        snapshot({
+          pedidos: [
+            pedido({ id: "p-2", numero: 2, exige_nf: true, status: "faturado", updated_at: "2026-11-18T10:00:00.000Z" }),
+          ],
+          notas: [nota({ id: "nf-1", order_id: "p-1", status: "autorizada" })],
+          notasPedidos: [{ invoice_id: "nf-1", order_id: "p-2" }],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
   it("nota autorizada com pedido não faturado: aprovado dispara; faturado não", () => {
     expect(
       notasAutorizadasComPedidoNaoFaturado(

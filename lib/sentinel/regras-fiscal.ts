@@ -110,7 +110,7 @@ export function notasPendentesAntigas(s: Snapshot): Achado[] {
 
 export function notasSemVinculo(s: Snapshot): Achado[] {
   return s.notas
-    .filter((n) => n.status === "autorizada" && !n.order_id)
+    .filter((n) => n.status === "autorizada" && pedidosDaNota(s, n).length === 0)
     .map((n) => ({
       regra: "fiscal.nota_sem_vinculo",
       categoria: "fiscal" as const,
@@ -172,6 +172,21 @@ function finalidadeDaNota(n: NotaFiscal): number {
     if (Number.isFinite(parsed)) return parsed;
   }
   return 1;
+}
+
+/**
+ * Pedidos ligados à nota: o principal (`invoices.order_id`) E os secundários de
+ * agrupamento (`invoice_orders`). Uma nota pode faturar N pedidos; tratar
+ * `order_id` como 1:1 é o defeito que acusava a NF 4629 (13.400) contra um
+ * pedido de 9.200 quando a soma 9.200 + 4.200 fechava.
+ */
+function pedidosDaNota(s: Snapshot, n: NotaFiscal): string[] {
+  const ids = new Set<string>();
+  if (n.order_id) ids.add(n.order_id);
+  for (const vinculo of s.notasPedidos) {
+    if (vinculo.invoice_id === n.id) ids.add(vinculo.order_id);
+  }
+  return [...ids];
 }
 
 export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
@@ -237,30 +252,47 @@ export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
 
 export function divergenciaDeValorDaNota(s: Snapshot): Achado[] {
   const pedidos = new Map<string, Pedido>(s.pedidos.map((p) => [p.id, p]));
+
   return s.notas
-    .filter((n) => n.order_id && NOTA_ATIVA.has(n.status))
+    .filter((n) => NOTA_ATIVA.has(n.status))
     .flatMap((n) => {
-      const pedido = pedidos.get(n.order_id as string);
-      if (!pedido || pedido.total_cents === n.total_cents) return [];
+      const ids = pedidosDaNota(s, n);
+      if (ids.length === 0) return [];
+      const vinculados = ids.map((id) => pedidos.get(id));
+      // Pedido do vínculo fora do snapshot: coleta incompleta. Não acusa no
+      // escuro — a soma pode fechar com um pedido que não foi lido.
+      if (vinculados.some((p) => !p)) return [];
+
+      const soma = vinculados.reduce((total, p) => total + p!.total_cents, 0);
+      if (soma === n.total_cents) return [];
+      const primeiro = vinculados[0]!;
+
       return [
         {
           regra: "fiscal.divergencia_valor_nota",
           categoria: "fiscal" as const,
           entidadeTipo: "invoices",
           entidadeId: n.id,
-          titulo: `NF-e ${referencia(n)} com valor diferente do pedido`,
+          titulo:
+            vinculados.length === 1
+              ? `NF-e ${referencia(n)} com valor diferente do pedido`
+              : `NF-e ${referencia(n)} com valor diferente da soma de ${vinculados.length} pedidos`,
           resumo:
-            "O total da nota não é o total do pedido vinculado. Um dos dois mudou depois do faturamento.",
+            vinculados.length === 1
+              ? "O total da nota não é o total do pedido vinculado. Um dos dois mudou depois do faturamento."
+              : `O total da nota não é a soma dos ${vinculados.length} pedidos vinculados. Um dos lados mudou depois do faturamento.`,
           causaProvavel:
             "Desconto/frete aplicado depois da emissão, item alterado no pedido ou nota emitida a partir de outro snapshot.",
           severidade: "alta" as const,
-          href: `/app/pedidos/${pedido.id}`,
+          href: vinculados.length === 1 ? `/app/pedidos/${primeiro.id}` : "/app/pedidos",
           evidencia: {
             nota_total_cents: n.total_cents,
-            pedido_total_cents: pedido.total_cents,
-            diferenca_cents: pedido.total_cents - n.total_cents,
+            soma_pedidos_cents: soma,
+            diferenca_cents: soma - n.total_cents,
+            pedidos: vinculados.map((p) => `${p!.numero}: ${p!.total_cents}`),
+            pedidos_total_cents: vinculados.map((p) => p!.total_cents),
+            pedido_numeros: vinculados.map((p) => p!.numero),
             nota_status: n.status,
-            pedido_numero: pedido.numero,
           },
         },
       ];
@@ -269,29 +301,39 @@ export function divergenciaDeValorDaNota(s: Snapshot): Achado[] {
 
 export function notasAutorizadasComPedidoNaoFaturado(s: Snapshot): Achado[] {
   const pedidos = new Map<string, Pedido>(s.pedidos.map((p) => [p.id, p]));
+
   return s.notas
-    .filter((n) => n.status === "autorizada" && n.order_id)
+    .filter((n) => n.status === "autorizada")
     .flatMap((n) => {
-      const pedido = pedidos.get(n.order_id as string);
-      if (!pedido || !["rascunho", "em_analise", "aprovado"].includes(pedido.status)) return [];
+      const ids = pedidosDaNota(s, n);
+      if (ids.length === 0) return [];
+      const vinculados = ids.map((id) => pedidos.get(id));
+      if (vinculados.some((p) => !p)) return [];
+      const pendentes = vinculados.filter((p) =>
+        ["rascunho", "em_analise", "aprovado"].includes(p!.status),
+      );
+      if (pendentes.length === 0) return [];
+      const primeiro = pendentes[0]!;
+
       return [
         {
           regra: "fiscal.nota_autorizada_pedido_nao_faturado",
           categoria: "fiscal" as const,
           entidadeTipo: "invoices",
           entidadeId: n.id,
-          titulo: `NF-e ${referencia(n)} autorizada, pedido ainda em ${pedido.status}`,
+          titulo: `NF-e ${referencia(n)} autorizada, pedido ainda em ${primeiro.status}`,
           resumo:
             "A nota já existe, mas o pedido não avançou para `faturado`. A operação e o fiscal contam histórias diferentes.",
           causaProvavel:
             "Transição de status não executada depois da autorização, ou nota emitida antes de o pedido ser aprovado de verdade.",
           severidade: "media" as const,
-          href: `/app/pedidos/${pedido.id}`,
+          href: `/app/pedidos/${primeiro.id}`,
           evidencia: {
-            pedido_status: pedido.status,
-            pedido_numero: pedido.numero,
+            pedidos_pendentes: pendentes.map((p) => `${p!.numero}: ${p!.status}`),
+            pedido_status: primeiro.status,
+            pedido_numero: primeiro.numero,
             nota_total_cents: n.total_cents,
-            pedido_total_cents: pedido.total_cents,
+            pedido_total_cents: primeiro.total_cents,
           },
         },
       ];
@@ -300,11 +342,18 @@ export function notasAutorizadasComPedidoNaoFaturado(s: Snapshot): Achado[] {
 
 export function pedidosComNfSemNota(s: Snapshot): Achado[] {
   const notasPorPedido = new Map<string, NotaFiscal[]>();
+  const notaPorId = new Map(s.notas.map((n) => [n.id, n]));
+  const adicionar = (pedidoId: string, nota: NotaFiscal) => {
+    const lista = notasPorPedido.get(pedidoId) ?? [];
+    if (!lista.some((existente) => existente.id === nota.id)) lista.push(nota);
+    notasPorPedido.set(pedidoId, lista);
+  };
   for (const n of s.notas) {
-    if (!n.order_id) continue;
-    const lista = notasPorPedido.get(n.order_id) ?? [];
-    lista.push(n);
-    notasPorPedido.set(n.order_id, lista);
+    if (n.order_id) adicionar(n.order_id, n);
+  }
+  for (const vinculo of s.notasPedidos) {
+    const n = notaPorId.get(vinculo.invoice_id);
+    if (n) adicionar(vinculo.order_id, n);
   }
 
   return s.pedidos.flatMap((p) => {
