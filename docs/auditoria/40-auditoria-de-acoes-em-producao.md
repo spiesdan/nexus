@@ -519,7 +519,7 @@ instrumento** saíram do placar (368 → 341); antes, contavam como cobertura.
 2. **Redirect não é tela**: `/titulos → /financeiro` entra como `redirect`, medido no
    **destino**.
 
-## 26. 21/11/2026 — Regressão do passe de `settings` deixou a `main` vermelha
+## 26. 21/11/2026 — Janela de ~20 min de `main` vermelha no passe de `settings`
 
 **Medido:** quatro PRs de frentes diferentes (**#733 D, #736/#737/#738 G**) falhavam
 **os mesmos três testes** de configuração de notificação:
@@ -530,14 +530,17 @@ instrumento** saíram do placar (368 → 341); antes, contavam como cobertura.
 - push desabilitado sem VAPID — “conserto exagerado”, que tira o aviso com a aba
   aberta junto.
 
-Falha idêntica em branches independentes = **a regressão mora na `main`**, no
-passe de `settings` (#732, do D). A `main` (`65bea4ccb`) ficou com `verify`
-**failure**.
+Falha idêntica em branches independentes parecia “regressão na main”. **A medição
+corrigiu:** a `main` **não está vermelha agora** — os três testes passam 9/9. O que
+houve foi uma **janela de ~20 minutos**: o **#732** (passe de `settings`) quebrou os
+três, o **#739** consertou (`96f59378f`), mas **#736/#737/#738** foram **cortados
+dentro da janela** e carregaram o defeito.
 
 **Custo:** 4 PRs parados, uma rodada perdida e todo mundo re-testando o mesmo.
 Correção no **#740** (`fix(settings): destrava o verify da main em dois gates
 alheios`).
 
-**Lição:** **teste de invariante de UI que quebra na `main` bloqueia a fila
-inteira**; rodar `pnpm test:unit` local antes do push (ou o teste dirigido do
-arquivo) teria evitado. Mergear em cima de vermelho só espalha a falha.
+**Lição (a causa, não o sintoma):** **PR cortado de `main` vermelha carrega o
+vermelho**. Quando a `main` quebrar, quem tem PR aberto precisa **rebase** — não só
+esperar o conserto; e quem quebrou conserta **antes** de qualquer outra coisa.
+Rodar o teste dirigido antes do push encurta a janela.

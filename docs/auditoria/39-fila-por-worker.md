@@ -329,3 +329,12 @@ levaria meses e faria cada tela divergir da vizinha.
 **Ordem:** D em `settings` → `ai` → `fiscal`; G nas 22 de `admin` na mesma lógica.
 A matriz `41` ganha a coluna **“como foi medido”** (`individual` × `varredura do
 módulo`).
+
+
+## Regra — main vermelha e PR cortado na janela (21/11/2026)
+
+**PR cortado de `main` vermelha carrega o vermelho.** Quando a `main` quebrar:
+1. quem quebrou conserta **antes de qualquer outra coisa**;
+2. quem tem PR aberto **rebase** na `main` verde — não basta esperar;
+3. ninguém mergeia sobre vermelho (espalha a falha para mais branches);
+4. a janela medida nesta rodada foi de **~20 min** e custou 4 PRs e uma rodada.
