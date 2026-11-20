@@ -237,30 +237,63 @@ export function notasDuplicadasPorPedido(s: Snapshot): Achado[] {
 
 export function divergenciaDeValorDaNota(s: Snapshot): Achado[] {
   const pedidos = new Map<string, Pedido>(s.pedidos.map((p) => [p.id, p]));
+
+  /*
+   * Um agrupamento (0294) tem N pedidos numa nota só: o total da nota é a
+   * SOMA dos vinculados, não o total do `invoices.order_id`. Comparar com o
+   * principal sozinho acusava divergência em toda nota agrupada — o falso
+   * positivo que o faturamento via como "nota com valor errado".
+   */
+  const pedidosPorNota = new Map<string, Set<string>>();
+  for (const n of s.notas) {
+    const vinculados = new Set<string>();
+    if (n.order_id) vinculados.add(n.order_id);
+    pedidosPorNota.set(n.id, vinculados);
+  }
+  for (const vinculo of s.notasPedidos) {
+    // Só conta vínculo de nota que está no snapshot; vínculo órfão não vira
+    // pedido fantasma na soma.
+    pedidosPorNota.get(vinculo.invoice_id)?.add(vinculo.order_id);
+  }
+
   return s.notas
-    .filter((n) => n.order_id && NOTA_ATIVA.has(n.status))
+    .filter((n) => NOTA_ATIVA.has(n.status) && (pedidosPorNota.get(n.id)?.size ?? 0) > 0)
     .flatMap((n) => {
-      const pedido = pedidos.get(n.order_id as string);
-      if (!pedido || pedido.total_cents === n.total_cents) return [];
+      const ids = [...(pedidosPorNota.get(n.id) ?? [])];
+      const ligados = ids.map((id) => pedidos.get(id));
+      // Pedido vinculado fora do snapshot (coleta truncada): sem o total dele,
+      // a soma seria invenção. Não acusa.
+      if (ligados.some((p) => !p)) return [];
+      const lista = ligados as Pedido[];
+      const totalDosPedidos = lista.reduce((soma, p) => soma + p.total_cents, 0);
+      if (totalDosPedidos === n.total_cents) return [];
+
+      const principal = lista[0] as Pedido;
+      const agrupada = lista.length > 1;
       return [
         {
           regra: "fiscal.divergencia_valor_nota",
           categoria: "fiscal" as const,
           entidadeTipo: "invoices",
           entidadeId: n.id,
-          titulo: `NF-e ${referencia(n)} com valor diferente do pedido`,
-          resumo:
-            "O total da nota não é o total do pedido vinculado. Um dos dois mudou depois do faturamento.",
+          titulo: agrupada
+            ? `NF-e ${referencia(n)} com valor diferente da soma de ${lista.length} pedidos`
+            : `NF-e ${referencia(n)} com valor diferente do pedido`,
+          resumo: agrupada
+            ? "O total da nota não é a soma dos pedidos vinculados. Um dos pedidos ou a nota mudou depois do faturamento."
+            : "O total da nota não é o total do pedido vinculado. Um dos dois mudou depois do faturamento.",
           causaProvavel:
             "Desconto/frete aplicado depois da emissão, item alterado no pedido ou nota emitida a partir de outro snapshot.",
           severidade: "alta" as const,
-          href: `/app/pedidos/${pedido.id}`,
+          href: `/app/pedidos/${principal.id}`,
           evidencia: {
             nota_total_cents: n.total_cents,
-            pedido_total_cents: pedido.total_cents,
-            diferenca_cents: pedido.total_cents - n.total_cents,
+            pedido_total_cents: totalDosPedidos,
+            pedidos_total_cents: totalDosPedidos,
+            pedidos_vinculados: lista.length,
+            diferenca_cents: totalDosPedidos - n.total_cents,
             nota_status: n.status,
-            pedido_numero: pedido.numero,
+            pedido_numero: principal.numero,
           },
         },
       ];

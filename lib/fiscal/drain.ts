@@ -14,6 +14,7 @@ import { devolverNumeroDaNota, podeDevolverNumero, reservarNumeroDaNota } from "
 import { resolverProdutosDosItens } from "./produto-do-item";
 import { emitirViaSpedNfe } from "./provedor-spednfe";
 import { carregarContextoSped, type ItemSped } from "./sped-payload";
+import { totalDaNotaAoRetomar } from "./valor-da-nota";
 
 /**
  * O DRENO FISCAL — processa UM job de emissão até um estado terminal ou o
@@ -247,22 +248,40 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       .select("order_id")
       .eq("invoice_id", nota.id)
       .eq("organization_id", nota.organization_id);
-    const idsDosPedidos = (vinculos ?? []).length
-      ? (vinculos as unknown as { order_id: string }[]).map((v) => v.order_id)
-      : [ped.id];
+    const idsDosPedidos = [
+      ...new Set(
+        (vinculos ?? []).length
+          ? (vinculos as unknown as { order_id: string }[]).map((v) => v.order_id)
+          : [ped.id],
+      ),
+    ];
 
-    let freteDaNota = ped.frete_cents ?? 0;
+    // O total da nota agrupada é a SOMA dos pedidos — a mesma conta da emissão
+    // nova (`emitir-nota.ts`). Antes a retomada usava só `ped.total_cents`, o
+    // que reemitia uma nota de N pedidos com o valor de um.
+    type LinhaDoGrupo = { id: string; total_cents: number; frete_cents: number | null };
+    let linhasDoGrupo: LinhaDoGrupo[] = [
+      { id: ped.id, total_cents: ped.total_cents, frete_cents: ped.frete_cents ?? 0 },
+    ];
     if (idsDosPedidos.length > 1) {
-      const { data: fretes } = await admin
+      const { data: doGrupo, error: erroDoGrupo } = await admin
         .from("commercial_orders")
-        .select("id, frete_cents")
+        .select("id, total_cents, frete_cents")
         .in("id", idsDosPedidos)
         .eq("organization_id", nota.organization_id);
-      freteDaNota = ((fretes ?? []) as unknown as { frete_cents: number | null }[]).reduce(
-        (soma, f) => soma + (f.frete_cents ?? 0),
-        0,
-      );
+      if (erroDoGrupo) {
+        await finalizar(admin, job, nota, "erro", "Falha ao ler os pedidos do agrupamento.", null);
+        return { saidas: "concluido", destino: "erro" };
+      }
+      linhasDoGrupo = (doGrupo ?? []) as unknown as LinhaDoGrupo[];
     }
+    const totalDaNota = totalDaNotaAoRetomar(ped.id, idsDosPedidos, linhasDoGrupo);
+    if (totalDaNota === null) {
+      // Soma parcial seria um total que o fisco não viu.
+      await finalizar(admin, job, nota, "erro", "Pedido do agrupamento sumiu.", null);
+      return { saidas: "concluido", destino: "erro" };
+    }
+    const freteDaNota = linhasDoGrupo.reduce((soma, l) => soma + (l.frete_cents ?? 0), 0);
     const pedidoDaNota = { ...ped, frete_cents: freteDaNota };
 
     const destinatario = await carregarDestinatario(
@@ -328,7 +347,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
 
     contexto.order_id = ped.id;
     contexto.numero = ped.numero;
-    contexto.total_cents = ped.total_cents;
+    contexto.total_cents = totalDaNota;
     contexto.nome = nomeDestinatario;
     contexto.documento = documentoDestinatario;
     contexto.ie = destinatario.ie;

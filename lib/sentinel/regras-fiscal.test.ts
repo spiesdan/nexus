@@ -171,6 +171,48 @@ describe("detectores fiscais — caso positivo e negativo", () => {
     ).toHaveLength(0);
   });
 
+  it("nota agrupada: compara com a SOMA dos pedidos vinculados, não com o principal", () => {
+    const notaAgrupada = nota({ id: "nota-1", order_id: "pedido-1", total_cents: 10_000 });
+    const doisPedidos = [pedido({ id: "pedido-1", total_cents: 6_000 }), pedido({ id: "pedido-2", total_cents: 4_000 })];
+    const vinculo = [{ invoice_id: "nota-1", order_id: "pedido-2" }];
+
+    // 6.000 + 4.000 = 10.000: igual à nota, sem achado (o principal sozinho
+    // daria divergência de 4.000 — era o falso positivo).
+    expect(
+      divergenciaDeValorDaNota(
+        snapshot({ notas: [notaAgrupada], notasPedidos: vinculo, pedidos: doisPedidos }),
+      ),
+    ).toHaveLength(0);
+
+    // A soma é o que vale: 6.000 + 3.000 = 9.000 contra 10.000 → 1 achado.
+    const achados = divergenciaDeValorDaNota(
+      snapshot({
+        notas: [notaAgrupada],
+        notasPedidos: vinculo,
+        pedidos: [doisPedidos[0]!, pedido({ id: "pedido-2", total_cents: 3_000 })],
+      }),
+    );
+    expect(achados).toHaveLength(1);
+    expect(achados[0]!.evidencia).toMatchObject({
+      nota_total_cents: 10_000,
+      pedidos_total_cents: 9_000,
+      pedidos_vinculados: 2,
+      diferenca_cents: -1_000,
+    });
+  });
+
+  it("pedido vinculado fora do snapshot não vira soma inventada", () => {
+    expect(
+      divergenciaDeValorDaNota(
+        snapshot({
+          notas: [nota({ total_cents: 10_000 })],
+          notasPedidos: [{ invoice_id: "nota-1", order_id: "pedido-fora" }],
+          pedidos: [pedido({ total_cents: 10_000 })],
+        }),
+      ),
+    ).toHaveLength(0);
+  });
+
   it("nota autorizada com pedido não faturado: aprovado dispara; faturado não", () => {
     expect(
       notasAutorizadasComPedidoNaoFaturado(
