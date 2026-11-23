@@ -118,3 +118,58 @@ npx vitest run tests/unit/handlers-service-role-tem-guard.test.ts \
                tests/unit/handlers-service-role-filtram-organizacao.test.ts \
                tests/unit/messages-envio-nao-atravessa-org.test.ts
 ```
+
+## 8. Reauditoria em `nexus/main@377ddc7d3` (22/11/2026)
+
+Reexecutado o mesmo instrumento sobre o HEAD da 1.62.3, sem tocar em banco,
+VPS ou produção. Evidência bruta:
+[`evidencias/service-role/inventario-2026-11-22.txt`](evidencias/service-role/inventario-2026-11-22.txt).
+
+| Medida | 18/11 | 22/11 |
+|---|---:|---:|
+| `route.ts` em `app/api/**` | 419 | **440** |
+| handlers de rota com `createAdminClient` | 210 | **178** no inventário / **222** por `grep` direto (o instrumento só conta handler com `.from()` em tabela tenant-aware) |
+| arquivos com service role (`app` + `lib`) | — | **376** |
+| arquivos com cadeia tenant sem filtro | 42 | **43** |
+| encadeamentos tenant sem filtro na cadeia | 100 | **101** |
+| desses, em arquivo sem guard reconhecível | — | **17 em 2 arquivos** |
+
+### As 43 cadeias sem filtro — veredito
+
+A distribuição de classes da §2 **continua fechando**: 12 `admin/*` de
+plataforma, 10 `cron/*`, 3 `system/*`, 2 `_handler` genéricos, 6 rotas com
+client de sessão e 10 rotas com id já escopado. O 43º arquivo é a soma das
+classes (a contagem anterior dizia 42; a nova rota
+`admin/inbox/conversations/[id]` é plataforma e entra na classe `admin/*`).
+
+Os **17 encadeamentos sem guard reconhecível** são os mesmos dois handlers
+genéricos já revisados: `leads/_handler.ts` (6) e `messages/_handler.ts` (11).
+São chamados por rotas de sessão **e** por MCP/agent-engine com admin client —
+a classe de risco da §3. O de mensagens foi corrigido em 18/11 com checagem
+explícita `conv.organization_id !== ctx.organization_id → 404 not_found` e está
+protegido por `tests/unit/messages-envio-nao-atravessa-org.test.ts`. O de leads
+foi revisado cadeia a cadeia: toda busca começa de id/vínculo já resolvido com
+`organization_id`, e o invariante de comportamento é
+`tests/invariants/mcp-nao-alcanca-outro-tenant.test.ts`.
+
+### Módulos novos desde a revisão anterior
+
+- **Sentinel** (`lib/sentinel/coleta.ts`, `execucao.ts`, `agenda.ts`): recebem
+  `organizationId` do guard da rota ou do lote do cron, nunca do corpo; todas
+  as consultas tenant-aware filtram na própria cadeia (12 Pontos conferidos).
+- **Observabilidade** (`app/api/v1/admin/observabilidade/route.ts`):
+  `requirePlatformAdmin()` — escopo é a instalação inteira, não um tenant.
+- **Laya** (`lib/laya/saude.ts`): escreve/le `incidents` com
+  `organization_id` explícito do cron; sem rota pública de escrita.
+- **Offline devices** (`app/api/v1/offline-devices/route.ts`): `requireRole`
+  + `.eq("organization_id", authz.org.orgId)` em todas as cadeias.
+
+**Nenhuma cadeia nova sem filtro foi encontrada. Nenhuma correção nova foi
+necessária** — não há vazamento claro para corrigir nesta rodada, e inventar
+um filtro onde a fonte já é confiável trocaria risco conhecido por risco novo.
+As três provas existentes seguem verdes (8/8):
+`handlers-service-role-filtram-organizacao`, `handlers-service-role-tem-guard`
+e `messages-envio-nao-atravessa-org`.
+
+Risco residual inalterado: o instrumento é heurístico e não roda no CI; a
+revisão de comportamento continua nos invariantes de MCP e no teste de envio.
