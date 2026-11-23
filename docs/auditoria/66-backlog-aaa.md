@@ -14,7 +14,7 @@
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
 | P0-3 | Motor laya: subir (a) ou limpar `LAYA_URL` (b) | `[!]` | **BLOQUEADO — dono** | `40` §19: 50 qualificações/17 risk/17 radar em 6h | dono escolhe (a) serviço na VPS ou (b) env limpo |
-| P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + D (tela) | 124 rascunhos `origem=mercos`, R$ 218.003,63; medição antiga dizia 119 | registrar recorte com data/filtro; D projeta tela com idade/valor/próximo passo |
+| P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + F (backend) + D (tela) | Recorte escrito no fim deste doc; backend entregue | D projeta a tela sobre o endpoint |
 | P0-5 | Confirmação de rota transacional (atomicidade) | `[x]` | G | **#771** → `2ca999665`; ordem e versão na mesma transação (0335) | — |
 
 | P0-6 | P0 de packaging: `update.sh` com schema em transação única (`psql --single-transaction`) ou verificação `to_regclass` antes de trocar imagens | `[~]` | G | aborto da 1.63.0 deixou 0335 aplicada (40 §35); guard protege a imagem, não o schema | propor sem aplicar em produção; `pnpm test:shell` |
@@ -149,3 +149,12 @@ A checagem usa `lib/channels/janela.ts`.
 case/acento da campanha `3a0909d6`). Sem template aprovado o estado é
 **`aguardando_aprovacao`** — nunca `enviado`. Liberado para merge após a
 1.63.1; nenhuma release nova sem pedido do dono.
+
+
+## Reconciliação 119 × 124 — recorte escrito (23/11/2026)
+
+- **124**: 20/11, `40` §16 — `origem='mercos' AND status='rascunho'` (todos), R$ 218.003,63, primeiro 2024-10-23, último 2026-11-19, 0 com previsão de entrega. **CONFIRMADO**.
+- **119**: mesmo filtro **mais** `created_by IS NULL` (rascunhos do Mercos nunca abertos pela nossa equipe). **INFERIDO** de 124 − 5 rascunhos com autor humano; não re-medido em produção nesta rodada.
+- Diferença = 5, por `created_by` — não é divergência de contagem.
+
+Backend: `GET /api/v1/commercial-orders/orcamentos-parados` devolve número, cliente, valor, idade em dias, `dias_limite` e próximo passo por linha. Régua de 60 dias lida de `organizations.settings->'orcamentos_parados'->>'dias_limite'`; código em `lib/comercial/orcamentos-parados.ts`. D faz a tela.

@@ -4,18 +4,18 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-23T03:35:20.300Z.
+Gerado em 2026-11-23T09:10:10.394Z.
 
 | Medida | Valor |
 |---|---|
 | Telas (`page.tsx` com JSX) | **147** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **445** |
+| Handlers de API (`app/api/**/route.ts`) | **446** |
 | Layouts | 13 |
 | Páginas de erro (`error.tsx`) | 8 |
 | Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
 | Arquivos especiais (manifest/sitemap/robots/ícones) | 2 |
-| Migrations SQL | 316 |
+| Migrations SQL | 318 |
 
 ## Telas por grupo
 
@@ -49,8 +49,8 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/admin` | 22 |
 | `/api/v1/conversations` | 21 |
 | `/api/v1/leads` | 13 |
+| `/api/v1/commercial-orders` | 12 |
 | `/api/v1/contacts` | 12 |
-| `/api/v1/commercial-orders` | 11 |
 | `/api/v1/invoices` | 10 |
 | `/api/v1/sentinel` | 10 |
 | `/api/v1/team` | 10 |
@@ -155,10 +155,10 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `branding` | 2 |
 | `filters` | 2 |
 | `observabilidade` | 2 |
+| `prospeccao` | 2 |
 | `fiscal` | 1 |
 | `fotos` | 1 |
 | `operacao` | 1 |
-| `prospeccao` | 1 |
 
 ## Telas (147)
 
@@ -330,7 +330,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (445)
+## APIs (446)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
@@ -478,6 +478,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/commercial-orders/:id/timeline` | GET | requireRole, service-role, force-dynamic | 77 | `app/api/v1/commercial-orders/[id]/timeline/route.ts` |
 | `/api/v1/commercial-orders/importar-ia` | POST | requireRole, service-role, force-dynamic | 461 | `app/api/v1/commercial-orders/importar-ia/route.ts` |
 | `/api/v1/commercial-orders/importar-mercos` | GET/POST | requireRole, service-role, force-dynamic | 82 | `app/api/v1/commercial-orders/importar-mercos/route.ts` |
+| `/api/v1/commercial-orders/orcamentos-parados` | GET | requireRole, service-role, force-dynamic | 79 | `app/api/v1/commercial-orders/orcamentos-parados/route.ts` |
 | `/api/v1/commercial-orders/pdf` | GET | requireRole, force-dynamic | 69 | `app/api/v1/commercial-orders/pdf/route.ts` |
 | `/api/v1/commercial-policies` | GET | requireRole, force-dynamic | 30 | `app/api/v1/commercial-policies/route.ts` |
 | `/api/v1/commissions` | GET | requireRole, force-dynamic | 140 | `app/api/v1/commissions/route.ts` |
@@ -536,17 +537,17 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/cron/kb-conversations-batch` | GET | service-role, force-dynamic | 138 | `app/api/v1/cron/kb-conversations-batch/route.ts` |
 | `/api/v1/cron/lgpd-sla-watcher` | GET | service-role, force-dynamic | 210 | `app/api/v1/cron/lgpd-sla-watcher/route.ts` |
 | `/api/v1/cron/mercos-import` | GET/POST | service-role, force-dynamic | 69 | `app/api/v1/cron/mercos-import/route.ts` |
-| `/api/v1/cron/meu-dia-alertas` | GET/POST | service-role, force-dynamic | 627 | `app/api/v1/cron/meu-dia-alertas/route.ts` |
+| `/api/v1/cron/meu-dia-alertas` | GET/POST | service-role, force-dynamic | 644 | `app/api/v1/cron/meu-dia-alertas/route.ts` |
 | `/api/v1/cron/prospecting-drain` | GET/POST | service-role, force-dynamic | 52 | `app/api/v1/cron/prospecting-drain/route.ts` |
 | `/api/v1/cron/prospecting-fit` | GET/POST | service-role, force-dynamic | 82 | `app/api/v1/cron/prospecting-fit/route.ts` |
 | `/api/v1/cron/prospecting-send` | GET/POST | service-role, force-dynamic | 66 | `app/api/v1/cron/prospecting-send/route.ts` |
-| `/api/v1/cron/recover-stuck-messages` | GET/POST | service-role, force-dynamic | 382 | `app/api/v1/cron/recover-stuck-messages/route.ts` |
+| `/api/v1/cron/recover-stuck-messages` | GET/POST | service-role, force-dynamic | 391 | `app/api/v1/cron/recover-stuck-messages/route.ts` |
 | `/api/v1/cron/risk-watcher` | GET/POST | service-role, force-dynamic | 163 | `app/api/v1/cron/risk-watcher/route.ts` |
 | `/api/v1/cron/routing-worker` | GET/POST | force-dynamic | 82 | `app/api/v1/cron/routing-worker/route.ts` |
 | `/api/v1/cron/sentinel` | — | force-dynamic | 108 | `app/api/v1/cron/sentinel/route.ts` |
 | `/api/v1/cron/snooze-watcher` | GET/POST | service-role, force-dynamic | 130 | `app/api/v1/cron/snooze-watcher/route.ts` |
 | `/api/v1/cron/storage-redaction` | GET | force-dynamic | 50 | `app/api/v1/cron/storage-redaction/route.ts` |
-| `/api/v1/cron/sync-model-catalog` | — | service-role, force-dynamic | 167 | `app/api/v1/cron/sync-model-catalog/route.ts` |
+| `/api/v1/cron/sync-model-catalog` | — | service-role, force-dynamic | 174 | `app/api/v1/cron/sync-model-catalog/route.ts` |
 | `/api/v1/cron/webhook-log-retention` | GET | service-role, force-dynamic | 76 | `app/api/v1/cron/webhook-log-retention/route.ts` |
 | `/api/v1/demandas/:id` | PATCH | requireRole, service-role, force-dynamic | 115 | `app/api/v1/demandas/[id]/route.ts` |
 | `/api/v1/device/catalog` | GET | service-role, force-dynamic | 189 | `app/api/v1/device/catalog/route.ts` |
@@ -665,7 +666,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/products/import` | GET/POST | requireRole, force-dynamic | 233 | `app/api/v1/products/import/route.ts` |
 | `/api/v1/products/ncm-completar` | POST | requireRole, force-dynamic | 297 | `app/api/v1/products/ncm-completar/route.ts` |
 | `/api/v1/products/ncm-sugestao` | GET | requireRole, force-dynamic | 91 | `app/api/v1/products/ncm-sugestao/route.ts` |
-| `/api/v1/prospecting/campaigns` | GET/POST | requireRole, service-role, force-dynamic | 428 | `app/api/v1/prospecting/campaigns/route.ts` |
+| `/api/v1/prospecting/campaigns` | GET/POST | requireRole, service-role, force-dynamic | 430 | `app/api/v1/prospecting/campaigns/route.ts` |
 | `/api/v1/prospecting/campaigns/:id` | GET/PATCH/DELETE | requireRole, service-role, force-dynamic | 476 | `app/api/v1/prospecting/campaigns/[id]/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/controle` | GET | requireRole, service-role, force-dynamic | 615 | `app/api/v1/prospecting/campaigns/[id]/controle/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/executar` | POST | requireRole, service-role, force-dynamic | 218 | `app/api/v1/prospecting/campaigns/[id]/executar/route.ts` |
@@ -731,14 +732,14 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/shipments/:id/orders/:orderId` | PATCH/DELETE | requireRole, force-dynamic | 267 | `app/api/v1/shipments/[id]/orders/[orderId]/route.ts` |
 | `/api/v1/shipments/:id/orders/:orderId/proof` | GET/POST | redirect, requireRole, service-role, force-dynamic | 135 | `app/api/v1/shipments/[id]/orders/[orderId]/proof/route.ts` |
 | `/api/v1/shipments/:id/romaneio` | GET | requireRole, force-dynamic | 192 | `app/api/v1/shipments/[id]/romaneio/route.ts` |
-| `/api/v1/shipments/:id/rota` | GET | requireRole, force-dynamic | 73 | `app/api/v1/shipments/[id]/rota/route.ts` |
+| `/api/v1/shipments/:id/rota` | GET | requireRole, force-dynamic | 75 | `app/api/v1/shipments/[id]/rota/route.ts` |
 | `/api/v1/shipments/:id/rota/confirmar` | POST | requireRole, force-dynamic | 59 | `app/api/v1/shipments/[id]/rota/confirmar/route.ts` |
 | `/api/v1/shipments/:id/rota/distribuicao` | PATCH | requireRole, force-dynamic | 513 | `app/api/v1/shipments/[id]/rota/distribuicao/route.ts` |
 | `/api/v1/shipments/:id/rota/finalizar` | POST | force-dynamic | 17 | `app/api/v1/shipments/[id]/rota/finalizar/route.ts` |
-| `/api/v1/shipments/:id/rota/geocodificar` | POST | requireRole, force-dynamic | 163 | `app/api/v1/shipments/[id]/rota/geocodificar/route.ts` |
+| `/api/v1/shipments/:id/rota/geocodificar` | POST | requireRole, force-dynamic | 156 | `app/api/v1/shipments/[id]/rota/geocodificar/route.ts` |
 | `/api/v1/shipments/:id/rota/iniciar` | POST | force-dynamic | 16 | `app/api/v1/shipments/[id]/rota/iniciar/route.ts` |
 | `/api/v1/shipments/:id/rota/manual` | POST | requireRole, force-dynamic | 152 | `app/api/v1/shipments/[id]/rota/manual/route.ts` |
-| `/api/v1/shipments/:id/rota/ordem` | PATCH | requireRole, force-dynamic | 133 | `app/api/v1/shipments/[id]/rota/ordem/route.ts` |
+| `/api/v1/shipments/:id/rota/ordem` | PATCH | requireRole, force-dynamic | 195 | `app/api/v1/shipments/[id]/rota/ordem/route.ts` |
 | `/api/v1/shipments/:id/rota/otimizar` | POST | requireRole, force-dynamic | 196 | `app/api/v1/shipments/[id]/rota/otimizar/route.ts` |
 | `/api/v1/shipments/:id/rota/otimizar/veiculos` | POST | requireRole, force-dynamic | 370 | `app/api/v1/shipments/[id]/rota/otimizar/veiculos/route.ts` |
 | `/api/v1/shipments/:id/rota/posicao` | GET/POST | requireRole, force-dynamic | 101 | `app/api/v1/shipments/[id]/rota/posicao/route.ts` |
@@ -780,7 +781,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 443)
+## Delta de handlers desde o baseline de 17/11 (419 → 444)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -788,6 +789,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 |---|---:|---|---|
 | Observabilidade | 1 | Sonda sem cookie para o instrumento de métricas. | `/api/internal/observabilidade/sonda` |
 | Observabilidade — painel | 1 | Painel de SLOs lido por platform_admin, alimentado pela série 0330–0332. | `/api/v1/admin/observabilidade` |
+| Outros | 1 | Sem razão declarada. | `/api/v1/commercial-orders/orcamentos-parados` |
 | Contatos | 2 | Crédito do cliente e busca de cidades — apoio à venda. | `/api/v1/contacts/:id/credito`<br>`/api/v1/contacts/cidades` |
 | Sentinel — cron | 1 | Gatilho agendado da rodada; organização suspensa é ignorada na origem (0329). | `/api/v1/cron/sentinel` |
 | Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |
