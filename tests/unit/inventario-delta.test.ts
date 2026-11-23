@@ -39,14 +39,14 @@ describe("recontagem de rotas da API", () => {
 
   it("a contagem viva bate com o fim do delta no doc gerado", () => {
     expect(secao).toContain(`(${baseline.length} → ${agora.length})`);
-    // 419 → 442 no HEAD da 1.62.3; o número é derivado do baseline versionado
+    // 419 → 443 nesta fatia (a rota de aceite do motorista entra aqui); o número é derivado do baseline versionado
     // e do checkout, não escrito à mão dentro da prosa do doc.
-    expect(agora.length - baseline.length).toBe(23);
+    expect(agora.length - baseline.length).toBe(24);
   });
 
   it("toda rota nova está nomeada no doc, com área e motivo", () => {
     const novas = agora.filter((caminho) => !baseline.includes(caminho));
-    expect(novas).toHaveLength(23);
+    expect(novas).toHaveLength(24);
     for (const caminho of novas) {
       // O doc mostra a rota HTTP, não o caminho do arquivo; o sufixo é o que
       // distingue [id]/revoke, correcao/conversa/simular etc.
@@ -56,6 +56,7 @@ describe("recontagem de rotas da API", () => {
     expect(secao).toContain("Sentinel — conversa");
     expect(secao).toContain("Offline — credencial");
     expect(secao).toContain("Observabilidade — painel");
+    expect(secao).toContain("Expedição — aceite do motorista");
     expect(secao).toContain("Configuração — formas de pagamento");
     expect(secao).toContain("/api/v1/payment-methods");
     expect(secao).toContain("Nenhuma rota removida");

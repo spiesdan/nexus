@@ -29,6 +29,9 @@ export interface CargaRota {
   rota_geojson: { geometria?: number[][]; provedor?: string; ruas?: boolean; modo?: string } | null;
   rota_em: string | null;
   rota_versao: number;
+  /** Versão aplicada pelo motorista no aparelho (0336). */
+  rota_versao_confirmada: number | null;
+  rota_confirmada_em: string | null;
   /** Hora do dia da saída da base (migration 0307). NULL = janela não aplicável. */
   saida_prevista: string | null;
   started_at: string | null;
@@ -44,6 +47,7 @@ export interface CargaComParadas {
 const COLUNAS_CARGA_ROTA =
   "id, numero, status, placa, veiculo_tipo, motorista_nome, origem_endereco, origem_lat, origem_lng, " +
   "retornar_origem, tempo_parada_min, distancia_m, duracao_s, rota_geojson, rota_em, rota_versao, " +
+  "rota_versao_confirmada, rota_confirmada_em, " +
   "saida_prevista, started_at, finished_at";
 
 interface DestinoDaCarga {
