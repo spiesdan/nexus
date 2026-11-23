@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (23/11):** 16 `[x]` · 5 `[~]` · 4 `[!]` · 12 `[ ]` — 37 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 19 `[x]` · 4 `[~]` · 4 `[!]` · 11 `[ ]` — 38 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -16,6 +16,8 @@
 | P0-3 | Motor laya: subir (a) ou limpar `LAYA_URL` (b) | `[!]` | **BLOQUEADO — dono** | `40` §19: 50 qualificações/17 risk/17 radar em 6h | dono escolhe (a) serviço na VPS ou (b) env limpo |
 | P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + D (tela) | 124 rascunhos `origem=mercos`, R$ 218.003,63; medição antiga dizia 119 | registrar recorte com data/filtro; D projeta tela com idade/valor/próximo passo |
 | P0-5 | Confirmação de rota transacional (atomicidade) | `[x]` | G | **#771** → `2ca999665`; ordem e versão na mesma transação (0335) | — |
+
+| P0-6 | P0 de packaging: `update.sh` com schema em transação única (`psql --single-transaction`) ou verificação `to_regclass` antes de trocar imagens | `[~]` | G | aborto da 1.63.0 deixou 0335 aplicada (40 §35); guard protege a imagem, não o schema | propor sem aplicar em produção; `pnpm test:shell` |
 
 ## P1
 
@@ -30,10 +32,10 @@
 | P1-7 | F-04: token canônico (`#67885d` vs `#7e77f0`) com medição | `[ ]` | D (próximo) | dois hex em arquivos de design | escolher token, medir contraste, documentar |
 | P1-8 | Workbench de expedição no mobile em abas/drawer (hoje empilha) | `[x]` | D | **#780** → `32521385e`; abas Pedidos/Mapa/Planejamento, medido 390/1440 px | — |
 | P1-9 | Matriz única de capacidades de expedição (hoje dispersa em handoffs) | `[ ]` | coordenação | handoffs em `docs/frentes/` | consolidar em matriz com dono/estado |
-| P1-10 | 10 `.in()` sem teto restantes (doc 51) — priorizar os de cron | `[ ]` | G (próximo) | `docs/auditoria/51-postgrest-in-sem-teto.md` | teto explícito nos de cron primeiro |
-| P1-11 | `anon` com GRANT em 58/179 tabelas no descartável (limite F-09) | `[ ]` | G | gate F-09; medição do descartável | investigar se intencional; revoke se não for |
+| P1-10 | 10 `.in()` sem teto restantes (doc 51) — priorizar os de cron | `[x]` | G | **#791** → `4d846f57`; `.in()` nos crons com teto | — |
+| P1-11 | `anon` com GRANT em 58/179 tabelas no descartável (limite F-09) | `[x]` | G | **#792** → `250bbbec`; investigação registrada | — |
 | P1-12 | `Idempotency-Key` em `POST /messages` (pré-requisito do outbox web) | `[x]` | F | **#766** → `6bd44c3e8`; `Idempotency-Key` em `POST /messages` | — |
-| P1-13 | SLO p95 real quando a série acumular (hoje 1 amostra = 1428 ms) | `[~]` | G | `42-desempenho-e-slo.md`: 1 amostra não é p95 | aguardar série e publicar p95 medido |
+| P1-13 | SLO p95 real quando a série acumular (hoje 1 amostra = 1428 ms) | `[x]` | G | **#793** → `e0f31c1d`; p95 local 505 ms (série local, não produção) | — |
 | P1-14 | 5 leads duplicados reais | `[!]` | **BLOQUEADO — dono (merge)** | Sentinel 5 reafirmadas; sem merge automático | dono decide mesclar; ferramenta só linka |
 | P1-15 | Android físico / iOS | `[!]` | **BLOQUEADO — dono** | iOS fora por decisão; Android real nunca executado | dispositivo + decisão de escopo |
 | P1-16 | Recontar inventário vivo (440 rotas hoje vs 419 em 18/11) com delta explicado | `[x]` | coordenação | **#767** → `0d0b4f45f`; inventário reconciliado | — |
