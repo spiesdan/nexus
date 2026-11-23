@@ -47,11 +47,12 @@ A mensagem do `laya-decisao` mudou: `decisões gravadas: …` → `leitura de
 decisões falhou: …`. Era `select`; o texto antigo mandava procurar uma gravação
 que nunca existiu.
 
-## Sem teto de URL — 9 de 10 corrigidos (23/11/2026)
+## Sem teto de URL — 10 de 10 corrigidos (23/11/2026)
 
 Os nove sítios de **cron** passaram por `lib/db/por-fatias.ts` (`FATIA_DE_IDS =
-100`), prioridade do dono. O décimo (`lib/leads/timeline-query.ts:107`) não é
-cron e fica como dívida declarada.
+100`), prioridade do dono. O décimo (`lib/leads/timeline-query.ts:107`), não-cron,
+foi o último e também passou pela mesma helper — não existe mais `.in()` sem
+teto nesta varredura.
 
 | Arquivo:linha (antes) | Array | Antes | Depois |
 |---|---|---|---|
@@ -69,10 +70,12 @@ A união é a mesma: cada fatia devolve linhas e o helper concatena na ordem; um
 erro em qualquer fatia mantém a mensagem original do PostgREST e reprova a
 rodada (nunca "sucesso parcial" silencioso).
 
-**Resta 1:** `lib/leads/timeline-query.ts:107` — `agentIds` da página, limite do
-chamador, sem teto próprio. Não é cron; fica para depois do deploy da 1.63.1.
+**Último (não-cron):** `lib/leads/timeline-query.ts:107` — `agentIds` da página
+passaram por `porFatias`; prova em `tests/unit/timeline-query-nomes.test.ts` com
+**350 agentes** ⇒ `[100,100,100,50]`, todos os nomes preservados na ordem.
 
-Prova dirigida: `tests/unit/recover-stuck-messages.test.ts` com **350 mensagens**
+Provas dirigidas: `tests/unit/timeline-query-nomes.test.ts` com **350 agentes**;
+`tests/unit/recover-stuck-messages.test.ts` com **350 mensagens**
 — quatro UPDATES de `[100,100,100,50]`, todos com `eq:status=sending`. O helper
 `lib/db/por-fatias.test.ts` ja provava 350 ids na união ordenada.
 
