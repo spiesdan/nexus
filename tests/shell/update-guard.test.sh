@@ -624,5 +624,35 @@ check "  pull_policy da tag (missing — o pull é explícito na etapa 3)" \
   grep -q '^APP_PULL_POLICY=missing$' .env
 check "  e sem duplicar chave nenhuma" test "$(grep -c '^APP_IMAGE=' .env)" -eq 1
 
+echo "── 14. Deadlock no schema: pausa worker/scheduler ANTES, religa DEPOIS"
+# Medido em produção (v1.65.1): deadlock no ENABLE ROW LEVEL SECURITY porque
+# o scheduler escrevia em followup_enrollments. O gate lê a FONTE: a ordem
+# stop → psql -1 → up é estrutural, e o trap cobre o die do erro de schema.
+check "o kit chama dc stop worker scheduler antes do baseline" \
+  grep -q 'dc stop worker scheduler' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+check "o trap religa até no die" \
+  grep -q 'trap religar_automacoes EXIT' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+check "a religação é explícita depois do schema" \
+  grep -q '^religar_automacoes$' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+check "pausa e religação aparecem no log" \
+  grep -q 'Pausando automações para aplicar o schema' "$REPO_ROOT/hostgator-setup-kit/update.sh" &&
+  grep -q 'Automações religadas' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+check "se o stop falhar, segue com aviso (não inventa)" \
+  grep -q 'Não consegui pausar worker/scheduler' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+check "psql -1 intacto" \
+  grep -q 'psql_run -1 -f -' "$REPO_ROOT/hostgator-setup-kit/update.sh"
+
+# Ensaio real do caminho feliz no repo de mentira: a sequência de chamadas
+# dc fica no log do dublê, inclusive o stop e o up dos dois serviços.
+cd "$PROJ" || exit 1
+: > "$DOCKER_LOG"
+run_update --to v1.1.0 --force > "$WORK/sequencia.out" 2>&1
+check "update de verdade termina 0" test "$RC" -eq 0
+check "o log do docker registra o stop dos dois" \
+  grep -q 'stop worker scheduler' "$DOCKER_LOG"
+check "e o log do update mostra a pausa e a religação" \
+  grep -q 'Pausando automações' "$OUTFILE" &&
+  grep -q 'Automações religadas' "$OUTFILE"
+
 if [ "$FAILS" -eq 0 ]; then echo "OK — todas as provas passaram."; else echo "FALHOU — $FAILS prova(s)."; fi
 exit $((FAILS > 0))
