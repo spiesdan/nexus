@@ -28,6 +28,7 @@ import {
 } from "@/lib/schemas/fiscal";
 import { type PedidoComercial } from "@/lib/schemas/pedidos";
 import type { ContatoFiscal, DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
+import { camposDaAvulsa, precedenciaDigitado } from "@/lib/fiscal/avulsa-preenchimento";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { Receipt } from "@/lib/ui/icons";
 
@@ -305,10 +306,11 @@ export function EmitirNota({
     };
 
   /**
-   * NF-E AVULSA — ao escolher o cliente pelo cadastro, o destinatário se
-   * preenche sozinho: nome e documento vêm do próprio contato (a NF-e exige
-   * CPF/CNPJ no TLocal). O cliente avulso (sem cadastro) mantém o que foi
-   * digitado no campo livre — a busca limpa o `contato_id` e o nome.
+   * NF-E AVULSA — ao escolher o cliente pelo cadastro, preenche o destinatário
+   * e a entrega com a MESMA regra do pedido (`montarDestinatario`), inclusive o
+   * CPF que o Mercos deixou em `source_metadata`. O que o operador digitou
+   * continua valendo; o cadastro só entra onde está vazio. Cadastro sem
+   * endereço vira pendência nomeada, não silêncio.
    */
   const aoEscolherClienteAvulso = React.useCallback((id: string | null, nome: string) => {
     setAvulsa((atual) => ({ ...atual, contato_id: id ?? "", cliente_nome: nome }));
@@ -319,13 +321,45 @@ export function EmitirNota({
         .catch(() => null);
       const contato = r?.data;
       if (!contato) return;
-      const documento = (contato.cnpj ?? "").replace(/\D/g, "");
-      const nomeDoCadastro = (contato.display_name ?? contato.name ?? nome).trim();
+      const { campos, faltando } = camposDaAvulsa(contato, nome);
       setAvulsa((atual) => ({
         ...atual,
-        cliente_nome: atual.cliente_nome || nomeDoCadastro,
-        cliente_documento: atual.cliente_documento || documento,
+        contato_id: id,
+        cliente_nome: precedenciaDigitado(atual.cliente_nome, campos.cliente_nome),
+        cliente_documento: precedenciaDigitado(atual.cliente_documento, campos.cliente_documento),
       }));
+      setExtras((atual) => ({
+        ...atual,
+        destinatarioNome: precedenciaDigitado(atual.destinatarioNome, campos.destinatarioNome),
+        destinatarioDocumento: precedenciaDigitado(
+          atual.destinatarioDocumento,
+          campos.destinatarioDocumento,
+        ),
+        destinatarioIe: precedenciaDigitado(atual.destinatarioIe, campos.destinatarioIe),
+        entregaLogradouro: precedenciaDigitado(atual.entregaLogradouro, campos.entregaLogradouro),
+        entregaNumero: precedenciaDigitado(atual.entregaNumero, campos.entregaNumero),
+        entregaComplemento: precedenciaDigitado(
+          atual.entregaComplemento,
+          campos.entregaComplemento,
+        ),
+        entregaBairro: precedenciaDigitado(atual.entregaBairro, campos.entregaBairro),
+        entregaMunicipio: precedenciaDigitado(atual.entregaMunicipio, campos.entregaMunicipio),
+        entregaCodigoMunicipio: precedenciaDigitado(
+          atual.entregaCodigoMunicipio,
+          campos.entregaCodigoMunicipio,
+        ),
+        entregaUf: precedenciaDigitado(atual.entregaUf, campos.entregaUf),
+        entregaCep: precedenciaDigitado(atual.entregaCep, campos.entregaCep),
+      }));
+      setPendencias(
+        faltando.length > 0
+          ? faltando.map((falta) => ({
+              campo: "cliente",
+              mensagem: `Cliente: ajuste ${falta}`,
+              onde: `/app/contacts/${id}`,
+            }))
+          : null,
+      );
     })();
   }, []);
 
@@ -468,7 +502,12 @@ export function EmitirNota({
         desconto_pct: Number(i.desconto_pct) || 0,
       }))
       .filter((i) => i.descricao !== "" && i.quantidade > 0 && i.preco_cents > 0);
+    const extrasMontados = montarExtras(extras);
     const extrasCandidatos: ExtrasFiscais = {
+      // Tudo que o operador preencheu em "Dados adicionais" — complementares,
+      // fisco, cobrança, transporte, destinatário e entrega — entra na nota.
+      // Antes só `avulsa` ia, e o resto era descartado sem aviso.
+      ...(extrasMontados ?? {}),
       avulsa: {
         // O vínculo com o cadastro que puxou o nome: é ele que faz a NF-e
         // completar destinatário (nome + CPF/CNPJ) e endereço a partir do
@@ -488,6 +527,15 @@ export function EmitirNota({
     setEmitindo(true);
     setPendencias(null);
     try {
+      // A avulsa passa pela MESMA pré-validação do pedido, com o payload cheio:
+      // a rota devolve pendências nomeadas antes de a SEFAZ consumir número.
+      const prev = await apiClient.post<{
+        data: { ok: boolean; pendencias: { campo: string; mensagem: string; onde: string }[] };
+      }>("/api/v1/invoices/validar", { extras: checagem.data });
+      if (!prev.data.ok) {
+        setPendencias(prev.data.pendencias);
+        return;
+      }
       await apiClient.post("/api/v1/invoices", { extras: checagem.data });
       toast.success(t("Venda avulsa enfileirada para emissão"));
       setAvulsa({
@@ -1165,7 +1213,13 @@ export function EmitirNota({
                 inputMode="numeric"
                 maxLength={14}
                 value={avulsa.cliente_documento}
-                onChange={(e) => setAvulsa({ ...avulsa, cliente_documento: e.target.value })}
+                onChange={(e) => {
+                  const valor = e.target.value;
+                  setAvulsa((a) => ({ ...a, cliente_documento: valor }));
+                  // O campo visível é a verdade: corrigir o CPF aqui corrige
+                  // também o destinatário que vai no extras da nota.
+                  setExtras((x) => ({ ...x, destinatarioDocumento: valor }));
+                }}
               />
             </div>
             <div className="space-y-1.5">
