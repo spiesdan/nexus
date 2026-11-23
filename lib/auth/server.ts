@@ -31,6 +31,8 @@ interface RawMembershipRow {
 interface OrgJoin {
   display_name: string;
   locale: string | null;
+  status: string | null;
+  suspended_reason: string | null;
 }
 
 /**
@@ -204,7 +206,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // de quem foi convidado para várias no mesmo lote).
   const promessaMembros = supabase
     .from("user_organizations")
-    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale)")
+    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale, status, suspended_reason)")
     .eq("user_id", user.id)
     .is("revoked_at", null)
     .order("accepted_at", { ascending: true, nullsFirst: true })
@@ -265,6 +267,8 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
       role: row.role as Role,
       motorista: row.motorista === true,
       locale: org?.locale ?? null,
+      suspensoPorBilling:
+        org?.status === "suspended" && org?.suspended_reason === "billing",
     };
   });
 
@@ -315,6 +319,7 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
     name: ativo.organization_name,
     role: ativo.role,
     motorista: ativo.motorista === true,
+    suspensoPorBilling: ativo.suspensoPorBilling === true,
   };
 }
 

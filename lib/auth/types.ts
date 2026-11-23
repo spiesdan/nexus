@@ -123,6 +123,8 @@ export interface UserOrgMembership {
    * para responder algo que a primeira já tinha em mãos.
    */
   locale?: string | null;
+  /** Suspensão por assinatura vencida (cobrança SaaS). Não é papel nem RLS. */
+  suspensoPorBilling?: boolean;
 }
 
 export interface AuthUser {
@@ -188,6 +190,8 @@ export interface ActiveOrg {
   role: Role;
   /** Login de entregador (0292): a casca esconde o menu e a home vai para a expedição. */
   motorista?: boolean;
+  /** Suspensão por cobrança — o gate de UI e o backend leem o MESMO sinal. */
+  suspensoPorBilling?: boolean;
   /**
    * Escopo de visualização da org (G4-01). Opcional: só é preenchido no client
    * context (AppLayout) para a UI do inbox decidir visões visíveis. Não é fonte
