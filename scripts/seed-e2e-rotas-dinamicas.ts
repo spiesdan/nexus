@@ -13,15 +13,20 @@
 import { writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { anunciarDestino, credenciaisSupabaseDeTeste } from "./lib/env-de-teste";
+
 const ORG = process.env.E2E_ORG_ID ?? "68fe016a-7312-4ee0-8417-2dd07a0ad659";
 const ROUTER_ID = "11111111-1111-4111-8111-111111111111";
 
 async function main(): Promise<void> {
   const { createClient } = await import("@supabase/supabase-js");
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("faltam NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY");
-  const banco = createClient(url, key, { auth: { persistSession: false } });
+  // `process.env` VENCE o `.env.local`: sem isto um checkout de trabalho
+  // semearia a VPS de produção. O anúncio torna o destino observável no log.
+  const credenciais = credenciaisSupabaseDeTeste();
+  anunciarDestino("seed-e2e-rotas-dinamicas", credenciais);
+  const banco = createClient(credenciais.url, credenciais.serviceRole, {
+    auth: { persistSession: false },
+  });
 
   async function primeiroId(tabela: string, ordem: string): Promise<string | null> {
     const { data, error } = await banco
