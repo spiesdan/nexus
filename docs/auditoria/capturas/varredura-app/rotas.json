@@ -1,0 +1,455 @@
+{
+  "geradoEm": "2026-11-23",
+  "base": "nexus/main@b2b0d857a",
+  "total": 112,
+  "rotas": [
+    {
+      "rota": "/",
+      "grupo": "sem-grupo"
+    },
+    {
+      "rota": "/agenda",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/ai",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/agents",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/agents/new",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/cases",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/controle",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/credentials",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/decisoes",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/evolution",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/followups",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/inbox",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/knowledge/sources",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/memory",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/proposals",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/providers",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/routers",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/runs",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/skills",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/ai/usage",
+      "grupo": "ia"
+    },
+    {
+      "rota": "/audit",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/busca",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/campanhas",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/carteira",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/comissoes",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/compras",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/compras/[id]",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/connections",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/contacts",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/contacts/[id]",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/estoque",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/expedicao",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/expedicao/[id]",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/expedicao/[id]/fechamento",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/expedicao/[id]/motorista",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/expedicao/[id]/rota",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/expedicao/nova",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/faturamento",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/financeiro",
+      "grupo": "financeiro"
+    },
+    {
+      "rota": "/fiscal",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/notas",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/pendentes",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/produtos",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/relatorios",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/resumos",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/sincronizacoes",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/fiscal/xml",
+      "grupo": "fiscal"
+    },
+    {
+      "rota": "/frota",
+      "grupo": "expedicao"
+    },
+    {
+      "rota": "/inbox",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/inbox/[id]",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/indicadores",
+      "grupo": "financeiro"
+    },
+    {
+      "rota": "/integrations/nuvemshop",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/inteligencia",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/kanban",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/laboratorio",
+      "grupo": "financeiro"
+    },
+    {
+      "rota": "/leads/[id]",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/lgpd/requests",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/metrics",
+      "grupo": "financeiro"
+    },
+    {
+      "rota": "/meu-dia",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/notas",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/pedidos",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/pedidos/novo",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/products",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/prospeccao",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar/categorias",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/radar/risco",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/recuperacao",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/relatorios",
+      "grupo": "financeiro"
+    },
+    {
+      "rota": "/sentinel",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/atendimento",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/atualizacao",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/billing",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/canal-oficial",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/devices",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/marca",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/notifications",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/profile",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/security",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/templates",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/tenant",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/tenant/agenda",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/tenant/formas-pagamento",
+      "grupo": "sem-grupo"
+    },
+    {
+      "rota": "/settings/tenant/pipelines",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/settings/tenant/whatsapp",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/tarefas",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/team",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/team/invite",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/templates",
+      "grupo": "atendimento"
+    },
+    {
+      "rota": "/titulos",
+      "grupo": "pedidos-e-vendas"
+    },
+    {
+      "rota": "/venda-automatica",
+      "grupo": "config-e-inteligencia"
+    },
+    {
+      "rota": "/webhooks",
+      "grupo": "config-e-inteligencia"
+    }
+  ]
+}
