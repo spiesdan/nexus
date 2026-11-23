@@ -26,7 +26,7 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ### Corrigido
 
-- **Tenente suspenso por cobrança deixa de operar as APIs do tenant** O gate de suspensão passou a cobrir também `/api/v1/*` no proxy e a resolver
+- **Tenant suspenso por cobrança deixa de operar as APIs do tenant** O gate de suspensão passou a cobrir também `/api/v1/*` no proxy e a resolver
   organização ativa: tenant com assinatura vencida e `suspended_reason='billing'`
   recebe 403 na API (ou é redirecionado na UI), inclusive em handlers que usam
   service role sem `requireRole`. Cobrança, suporte, logout, health e auth seguem
