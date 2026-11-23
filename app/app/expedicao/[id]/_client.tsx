@@ -62,6 +62,7 @@ import {
   X,
 } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+import { NumeroDoPedido, rotuloNumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
 
 import { FechamentoCarga } from "./_fechamento";
 import { ModoMotorista } from "./_motorista";
@@ -1074,7 +1075,7 @@ export function CargaClient({
                               </span>
                               <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                 <span className="font-medium tabular-nums">
-                                  {numeroDoPedido(i.pedido.numero)}
+                                  <NumeroDoPedido numero={i.pedido.numero} numeroMercos={i.pedido.numero_mercos} />
                                 </span>
                                 <span className="font-medium text-text tabular-nums">
                                   {comoMoeda(i.pedido.total_cents, "BRL")}
@@ -1175,7 +1176,7 @@ export function CargaClient({
                                       className="h-4 w-4 accent-accent"
                                       checked={separado}
                                       onChange={(e) => void separar(i.order_id, e.target.checked)}
-                                      aria-label={`${t("Separado")}: ${numeroDoPedido(i.pedido.numero)}`}
+                                      aria-label={`${t("Separado")}: ${rotuloNumeroDoPedido(i.pedido.numero, i.pedido.numero_mercos)}`}
                                     />
                                     {t("Separado")}
                                   </label>
@@ -1297,7 +1298,7 @@ export function CargaClient({
                                 </div>
                                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                                   <span className="font-medium tabular-nums">
-                                    {numeroDoPedido(i.pedido.numero)}
+                                    <NumeroDoPedido numero={i.pedido.numero} numeroMercos={i.pedido.numero_mercos} />
                                   </span>
                                   <span className="font-medium text-text tabular-nums">
                                     {comoMoeda(i.pedido.total_cents, "BRL")}

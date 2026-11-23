@@ -20,10 +20,12 @@ import { showApiError } from "@/components/feedback/ApiErrorToast";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
+import { NumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
 
 interface Elegivel {
   id: string;
   numero: number;
+  numero_mercos?: number | null;
   cliente_nome: string;
   cidade: string | null;
   endereco_entrega?: string | null;
@@ -37,7 +39,7 @@ interface Resposta {
   data: {
     carga_status: string;
     pedidos: Elegivel[];
-    em_outra_rota: { id: string; numero: number; cliente_nome: string }[];
+    em_outra_rota: { id: string; numero: number; numero_mercos?: number | null; cliente_nome: string }[];
   };
 }
 
@@ -92,7 +94,7 @@ export function PainelDePedidosDisponiveis({
     return (pedidos ?? []).filter((p) => {
       if (status !== "" && p.status !== status) return false;
       if (termo === "") return true;
-      return [numeroDoPedido(p.numero), p.cliente_nome, p.cidade, p.endereco_entrega]
+      return [numeroDoPedido(p.numero), p.numero_mercos, p.cliente_nome, p.cidade, p.endereco_entrega]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(termo));
     });
@@ -169,7 +171,7 @@ export function PainelDePedidosDisponiveis({
             ref={buscaRef}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            placeholder={t("Buscar por pedido, cliente, cidade ou endereço…")}
+            placeholder={t("Pedido, número do Mercos, cliente, cidade ou endereço…")}
             aria-label={t("Buscar pedido disponível")}
             className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
           />
@@ -242,7 +244,7 @@ export function PainelDePedidosDisponiveis({
                       <label htmlFor={`pedido-${p.id}`} className="min-w-0 flex-1 cursor-pointer">
                         <span className="flex flex-wrap items-baseline justify-between gap-x-2">
                           <span className="text-sm font-medium text-text">
-                            {numeroDoPedido(p.numero)} · {p.cliente_nome}
+                            <NumeroDoPedido numero={p.numero} numeroMercos={p.numero_mercos} /> · {p.cliente_nome}
                           </span>
                           <span className="text-xs text-text tabular-nums">
                             {comoMoeda(p.total_cents, "BRL")}
@@ -291,7 +293,7 @@ export function PainelDePedidosDisponiveis({
                     <input type="checkbox" disabled checked={false} className="mt-1 h-5 w-5 shrink-0" aria-label={t("Indisponível")} />
                     <span className="min-w-0 flex-1">
                       <span className="text-sm">
-                        {numeroDoPedido(p.numero)} · {p.cliente_nome}
+                        <NumeroDoPedido numero={p.numero} numeroMercos={p.numero_mercos} /> · {p.cliente_nome}
                       </span>
                       <span className="block text-[11px] text-warning-fg">{t("Já em outra rota")}</span>
                     </span>
