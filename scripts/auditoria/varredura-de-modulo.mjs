@@ -86,7 +86,12 @@ if (rotas.length === 0) {
   process.exit(2);
 }
 
-/** Ids reais do banco de teste, para as dinâmicas que têm fixture. */
+/**
+ * Ids reais do banco de teste. As 24 rotas dinâmicas que antes eram
+ * `pendente — bloqueada: sem id de exemplo` passaram a ter fixture local:
+ * `scripts/seed-e2e-rotas-dinamicas.ts` grava `ids-dinamicos.json`.
+ */
+const IDS_PATH = path.join(RAIZ, "docs/auditoria/capturas/ids-dinamicos.json");
 const IDS = {
   "/pedidos/[id]": { id: process.env.ID_PEDIDO ?? "f0597235-ba27-4d32-98c5-e0f881dc667d" },
   "/compras/[id]": { id: process.env.ID_COMPRA ?? "1595e588-f87d-4323-b434-13039b4938a7" },
@@ -95,6 +100,9 @@ const IDS = {
   "/leads/[id]": { id: process.env.ID_LEAD ?? "56563958-a491-416f-8ec8-db3fe251f636" },
   "/pipelines/[id]": { id: process.env.ID_PIPELINE ?? "714dbeb6-8873-4771-9b72-6c5240109f34" },
   "/fiscal/notas/[id]": { id: process.env.ID_NOTA ?? "a6d2935c-8ada-49da-a33b-957642f4c3a2" },
+  ...(existsSync(IDS_PATH)
+    ? JSON.parse(readFileSync(IDS_PATH, "utf8"))
+    : {}),
 };
 
 function urlDe(rota) {

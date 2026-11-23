@@ -45,7 +45,7 @@ base sumiu; duas telas entraram depois dela.
 | Caminho | Módulo | Design | Evidência | Dono |
 |---|---|---|---|---|
 | `/app/agenda` | agenda | **aplicado** | #653 · `50-agenda-design.md` · `capturas/{antes,depois}-agenda/` | D |
-| `/app/ai/agents/[id]` | ai | **pendente** | — | D |
+| `/app/ai/agents/[id]` | ai | **pendente** — 8 críticos de axe | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
 | `/app/ai/agents/new` | ai | **pendente** | — | D |
 | `/app/ai/agents` | ai | **pendente** | — | D |
 | `/app/ai/cases` | ai | **pendente** | — | D |
@@ -53,8 +53,8 @@ base sumiu; duas telas entraram depois dela.
 | `/app/ai/credentials` | ai | **pendente** | — | D |
 | `/app/ai/decisoes` | ai | **pendente** | — | D |
 | `/app/ai/evolution` | ai | **pendente** | — | D |
-| `/app/ai/followups/[id]` | ai | **pendente** | — | D |
-| `/app/ai/followups/enrollments/[id]` | ai | **pendente** | — | D |
+| `/app/ai/followups/[id]` | ai | **pendente** — contraste 2 + alvos 23 | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
+| `/app/ai/followups/enrollments/[id]` | ai | **pendente** — 4 alvos <44 | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
 | `/app/ai/followups` | ai | **pendente** | — | D |
 | `/app/ai/inbox` | ai | **pendente** | — | D |
 | `/app/ai/knowledge/sources` | ai | **pendente** | — | D |
@@ -62,7 +62,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/ai` | ai | **pendente** | — | D |
 | `/app/ai/proposals` | ai | **pendente** | — | D |
 | `/app/ai/providers` | ai | **pendente** | — | D |
-| `/app/ai/routers/[id]` | ai | **pendente** | — | D |
+| `/app/ai/routers/[id]` | ai | **pendente** — 11 alvos <44 | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
 | `/app/ai/routers` | ai | **pendente** | — | D |
 | `/app/ai/runs` | ai | **pendente** | — | D |
 | `/app/ai/skills` | ai | **pendente** | — | D |
@@ -108,7 +108,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/kanban` | kanban | **pendente** | — | D |
 | `/app/laboratorio` | laboratorio | **pendente** | — | D |
 | `/app/leads/[id]` | leads | **pendente** | — | D |
-| `/app/lgpd/requests/[id]` | lgpd | **pendente** | — | D |
+| `/app/lgpd/requests/[id]` | lgpd | **pendente** — 6 sérios de axe | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
 | `/app/lgpd/requests` | lgpd | **pendente** | — | D |
 | `/app/metrics` | metrics | **pendente** | — | D |
 | `/app/meu-dia` | meu-dia | **pendente** | — | D |
@@ -120,7 +120,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/pedidos` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha · `capturas/{antes,depois}-pedidos/` | D |
 | `/app/pipelines/[id]` | pipelines | **pendente** | — | D |
 | `/app/products` | products | **pendente** | — | D |
-| `/app/prospeccao/campanhas/[id]` | prospeccao | **pendente** | — | D |
+| `/app/prospeccao/campanhas/[id]` | prospeccao | **pendente** — contraste 6 + alvos 14 | `58-rotas-dinamicas.md` · `capturas/varredura-dinamicas/varredura.json` | — | D |
 | `/app/prospeccao/nova` | prospeccao | **pendente** | — | D |
 | `/app/prospeccao` | prospeccao | **pendente** | — | D |
 | `/app/radar/categorias` | radar | **pendente** | — | D |
