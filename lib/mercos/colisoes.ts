@@ -48,10 +48,12 @@ export function rotuloEstado(colisao: ColisaoMercos): string {
     : "importado";
 }
 
-export function rotuloData(vistoEm: string): string {
+export function rotuloData(vistoEm: string, tagDoIdioma: string): string {
   const data = new Date(vistoEm);
   if (Number.isNaN(data.getTime())) return "data não informada";
-  return data.toLocaleString("pt-BR", {
+  // O idioma vem da camada (organização), não de um literal: a instalação
+  // pode estar em inglês e a data não pode denunciar o contrário.
+  return data.toLocaleString(tagDoIdioma, {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

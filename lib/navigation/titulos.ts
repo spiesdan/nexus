@@ -33,6 +33,7 @@ import { NAV_DESTINATIONS } from "./registry";
 const TITULOS_FORA_DO_MENU: Record<string, string> = {
   "/app/pedidos/novo": "Novo pedido",
   "/app/pedidos/imprimir": "Imprimir pedidos",
+  "/app/pedidos/colisoes-mercos": "Pedidos do Mercos que não entraram",
   "/app/ai/agents/new": "Novo agente",
   "/app/expedicao/nova": "Nova carga",
   "/app/prospeccao/nova": "Nova campanha",
