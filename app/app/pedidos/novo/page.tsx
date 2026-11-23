@@ -158,6 +158,10 @@ export default async function NovoPedidoPage({
         exigeNf: t("Nota fiscal"),
         exigeNfOpcao: t("Este pedido é com NF"),
         observacoes: t("Informações adicionais"),
+        informacoesFiscais: t("Informações fiscais (NF-e)"),
+        informacoesFiscaisDica: t(
+          "Vai no infCpl da nota. Se ficar vazio, a emissão usa as informações adicionais.",
+        ),
         obsInterna: t("Observação interna (equipe)"),
         endereco: t("Endereço de entrega"),
         enderecoExemplo: t("Rua, número, bairro, cidade"),

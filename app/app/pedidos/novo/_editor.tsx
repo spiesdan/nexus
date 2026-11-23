@@ -76,6 +76,8 @@ interface RascunhoDoPedido {
   formaPagamento?: FormaDePagamento | "";
   exigeNf?: boolean;
   observacoes: string;
+  /** 0305: o texto que vai para o infCpl da NF-e (não é a observação interna). */
+  informacoesFiscais?: string;
   obsInterna?: string;
   endereco?: string;
   transportadora?: string;
@@ -100,6 +102,8 @@ interface TextosBase {
   exigeNf: string;
   exigeNfOpcao: string;
   observacoes: string;
+  informacoesFiscais: string;
+  informacoesFiscaisDica: string;
   obsInterna: string;
   endereco: string;
   enderecoExemplo: string;
@@ -216,6 +220,7 @@ export function OrderEditor({
   const [formaPagamento, setFormaPagamento] = React.useState<FormaDePagamento | "">("");
   const [exigeNf, setExigeNf] = React.useState(false);
   const [observacoes, setObservacoes] = React.useState("");
+  const [informacoesFiscais, setInformacoesFiscais] = React.useState("");
   const [obsInterna, setObsInterna] = React.useState("");
   const [endereco, setEndereco] = React.useState("");
   const [transportadora, setTransportadora] = React.useState("");
@@ -472,6 +477,7 @@ export function OrderEditor({
       formaPagamento,
       exigeNf,
       observacoes,
+      informacoesFiscais,
       obsInterna,
       endereco,
       transportadora,
@@ -522,6 +528,7 @@ export function OrderEditor({
     setFormaPagamento(s.formaPagamento ?? "");
     setExigeNf(s.exigeNf ?? false);
     setObservacoes(s.observacoes ?? "");
+    setInformacoesFiscais(s.informacoesFiscais ?? "");
     // TODO campo editável que entra no autosave volta aqui. O desconto era o
     // caso medido pelo design (salvava e não voltava); a varredura achou mais
     // cinco com a mesma falha: obsInterna, endereco, tabelaId, descontoTexto,
@@ -789,6 +796,9 @@ export function OrderEditor({
         exige_nf: exigeNf,
         forma_pagamento: formaPagamento === "" ? null : formaPagamento,
         ...(observacoes.trim() ? { observacoes: observacoes.trim() } : {}),
+        ...(informacoesFiscais.trim()
+          ? { informacoes_fiscais: informacoesFiscais.trim() }
+          : {}),
         ...(obsInterna.trim() ? { obs_interna: obsInterna.trim() } : {}),
         ...(endereco.trim() ? { endereco_entrega: endereco.trim() } : {}),
         ...(transportadora.trim() ? { transportadora_nome: transportadora.trim() } : {}),
@@ -1291,6 +1301,15 @@ export function OrderEditor({
                 />
               </div>
               <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="inf-fiscais">{textos.informacoesFiscais}</Label>
+                <Input
+                  id="inf-fiscais"
+                  value={informacoesFiscais}
+                  onChange={(e) => setInformacoesFiscais(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">{textos.informacoesFiscaisDica}</p>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="obs-interna">{textos.obsInterna}</Label>
                 <Input
                   id="obs-interna"
@@ -1493,6 +1512,12 @@ export function OrderEditor({
               <p>
                 <span className="text-muted-foreground">{textos.observacoes}: </span>
                 {observacoes}
+              </p>
+            ) : null}
+            {informacoesFiscais.trim() ? (
+              <p>
+                <span className="text-muted-foreground">{textos.informacoesFiscais}: </span>
+                {informacoesFiscais}
               </p>
             ) : null}
             {obsInterna.trim() ? (

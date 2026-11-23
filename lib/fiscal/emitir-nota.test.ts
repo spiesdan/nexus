@@ -54,7 +54,11 @@ function corrente(resultado: Resultado) {
 }
 
 /** O banco da emissão: config, pedido com o status em teste e nenhuma nota viva. */
-function bancoFalso(status: string, observacoes: string | null = null) {
+function bancoFalso(
+  status: string,
+  observacoes: string | null = null,
+  informacoesFiscais: string | null = null,
+) {
   const escritas: string[] = [];
 
   const from = (tabela: string) => {
@@ -87,6 +91,7 @@ function bancoFalso(status: string, observacoes: string | null = null) {
             frete_cents: 0,
             status,
             observacoes,
+            informacoes_fiscais: informacoesFiscais,
           },
         ],
         error: null,
@@ -127,9 +132,13 @@ function bancoFalso(status: string, observacoes: string | null = null) {
 
 function emitir(
   status: string,
-  opcoes: { observacoes?: string | null; extras?: Parameters<typeof emitirNota>[0]["extras"] } = {},
+  opcoes: {
+    observacoes?: string | null;
+    informacoes_fiscais?: string | null;
+    extras?: Parameters<typeof emitirNota>[0]["extras"];
+  } = {},
 ) {
-  const banco = bancoFalso(status, opcoes.observacoes ?? null);
+  const banco = bancoFalso(status, opcoes.observacoes ?? null, opcoes.informacoes_fiscais ?? null);
   return {
     banco,
     promessa: emitirNota({
@@ -334,6 +343,17 @@ describe("informações adicionais do pedido viram o infCpl da nota", () => {
 
   it("leva 'Ordem de compra 22550' para informacoes_complementares", async () => {
     const { banco, promessa } = emitir("faturado", { observacoes: "Ordem de compra 22550" });
+    await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
+    expect(extrasGravados(banco)).toMatchObject({
+      adicionais: { informacoes_complementares: "Ordem de compra 22550" },
+    });
+  });
+
+  it("as Informações fiscais do pedido vencem a observação legada no infCpl", async () => {
+    const { banco, promessa } = emitir("faturado", {
+      observacoes: "texto antigo que nao deve sumir do pedido",
+      informacoes_fiscais: "Ordem de compra 22550",
+    });
     await expect(promessa).resolves.toMatchObject({ id: "nota-1" });
     expect(extrasGravados(banco)).toMatchObject({
       adicionais: { informacoes_complementares: "Ordem de compra 22550" },
