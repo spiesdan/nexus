@@ -81,6 +81,7 @@ import {
   type TemplateDaCategoria,
 } from "@/lib/prospeccao/templates-por-categoria";
 import { DialogoDisparo } from "../../_disparo";
+import { GastosDaCampanha } from "./_gastos";
 
 interface Janela {
   inicio: string;
@@ -121,6 +122,8 @@ interface CampanhaControle {
   pausa_motivo: string | null;
   pausa_em: string | null;
   created_at: string;
+  orcamento_prospeccao_cents: number | null;
+  orcamento_midia_cents: number | null;
 }
 
 interface EmpresaControle {
@@ -175,6 +178,8 @@ interface RespostaControle {
   por_cidade: CidadeResumo[];
   empresas: EmpresaControle[];
   previa_base: boolean;
+  pode_editar_gastos: boolean;
+  gasto_prospeccao_cents: number;
   publico: PublicoPreview | null;
   audiencia_ids: string[];
   /** 0288 — o número está com um lote em voo (reservas sem comprovante são fila, não órfãs). */
@@ -532,6 +537,14 @@ export function ControleDaCampanha({ id }: { id: string }) {
 
   return (
     <div className="space-y-5 p-4 md:p-6">
+      <GastosDaCampanha
+        campanhaId={id}
+        orcamentoProspeccaoCents={dados.campanha.orcamento_prospeccao_cents}
+        orcamentoMidiaCents={dados.campanha.orcamento_midia_cents}
+        gastoProspeccaoCents={dados.gasto_prospeccao_cents}
+        podeEditar={dados.pode_editar_gastos}
+      />
+
       <NexusPageHeader
         navigation={
           <Link

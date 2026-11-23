@@ -57,7 +57,8 @@ const COLUNAS =
   "id, nome, objetivo, categorias, cidades, status, publico, fonte_publico, prospect_ids, " +
   "contato_ids, mensagens, mensagem_tipo, template_name, template_language, " +
   "template_contract_hash, template_values, espaco_ms, limite_diario, data_inicio, data_fim, janelas, " +
-  "agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, pausa_motivo, pausa_em, created_at";
+  "agendada_em, ultimo_envio_at, ultimo_erro, ultimo_erro_em, pausa_motivo, pausa_em, created_at, " +
+  "orcamento_prospeccao_cents, orcamento_midia_cents";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -94,6 +95,8 @@ interface CampanhaControle {
   pausa_motivo: string | null;
   pausa_em: string | null;
   created_at: string;
+  orcamento_prospeccao_cents: number | null;
+  orcamento_midia_cents: number | null;
 }
 
 interface EmpresaControle {
@@ -608,6 +611,24 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
       /** 0288 — o número está com um lote em voo até este instante. */
       disparo_em_andamento: disparo.ativo,
       disparo_ate: disparo.ate,
+      /** Painel de gastos: viewer lê, manager lança/editar/exclui. */
+      pode_editar_gastos:
+        authz.org.role === "manager" || authz.org.role === "admin",
+      /** Gasto de prospecção REAL da campanha (mês corrente), mesma régua do guard. */
+      gasto_prospeccao_cents: await (async () => {
+        const hoje = new Date();
+        const desde = new Date(Date.UTC(hoje.getUTCFullYear(), hoje.getUTCMonth(), 1)).toISOString();
+        const { data: buscas } = await admin
+          .from("prospecting_searches")
+          .select("custo_estimado_cents")
+          .eq("organization_id", orgId)
+          .eq("campaign_id", id)
+          .gte("created_at", desde);
+        return (buscas ?? []).reduce(
+          (soma, linha) => soma + (Number(linha.custo_estimado_cents) || 0),
+          0,
+        );
+      })(),
     },
     { requestId },
   );

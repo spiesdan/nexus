@@ -638,6 +638,10 @@ export const AUDIT_ACTIONS = [
   "commercial_order.override",
   /** Gerente liberou campanha acima do teto com motivo (0335). */
   "campaign.budget_override",
+  /** Lançamento manual de mídia Meta por campanha (P1-17). */
+  "campaign.spend.created",
+  "campaign.spend.updated",
+  "campaign.spend.deleted",
   /** Configuração de formas/prazos por organização (0334). */
   "settings.payment_method.created",
   "settings.payment_method.updated",

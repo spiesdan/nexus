@@ -278,6 +278,13 @@ const resumo = {
 const BASELINE_APIS = join(RAIZ, "scripts", "auditoria", "inventario-baseline-1711.txt");
 const RAZOES_DO_DELTA: ReadonlyArray<{ prefixo: string; area: string; razao: string }> = [
   {
+    prefixo: "app/api/v1/prospecting/campaigns/[id]/gastos",
+    area: "Prospecção — gastos da campanha",
+    razao:
+      "Painel de gastos no detalhe da campanha: lanca e edita midia manual " +
+      "para comparar orcado com gasto (rotas GET/POST/PATCH/DELETE).",
+  },
+  {
     prefixo: "app/api/v1/shipments/[id]/rota/confirmar",
     area: "Expedição — aceite do motorista",
     razao:

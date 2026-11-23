@@ -1,10 +1,10 @@
 {
   "resumo": {
-    "gerado_em": "2026-11-23T10:07:34.561Z",
+    "gerado_em": "2026-11-23T10:55:25.728Z",
     "commit": null,
     "telas": 147,
     "resolvers": 13,
-    "apis": 447,
+    "apis": 449,
     "layouts": 13,
     "erros": 8,
     "estados": 9,
@@ -19,7 +19,7 @@
       "duplicadas": []
     },
     "testes": {
-      "tests/unit": 757,
+      "tests/unit": 758,
       "lib": 313,
       "tests/invariants": 191,
       "tests/e2e": 112,
@@ -57,7 +57,7 @@
     },
     "apis_por_prefixo": {
       "/api/v1/ai": 69,
-      "/api/v1/prospecting": 33,
+      "/api/v1/prospecting": 35,
       "/api/v1/cron": 31,
       "/api/v1/shipments": 26,
       "/api/v1/admin": 22,
@@ -2657,7 +2657,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 79
+      "linhas": 93
     },
     {
       "tipo": "api",
@@ -5394,7 +5394,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 615
+      "linhas": 636
     },
     {
       "tipo": "api",
@@ -5410,6 +5410,36 @@
         "force-dynamic"
       ],
       "linhas": 218
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/gastos",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/gastos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 92
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/campaigns/:id/gastos/:spendId",
+      "arquivo": "app/api/v1/prospecting/campaigns/[id]/gastos/[spendId]/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "PATCH",
+        "DELETE"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 90
     },
     {
       "tipo": "api",

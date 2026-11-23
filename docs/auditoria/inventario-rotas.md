@@ -4,13 +4,13 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-23T10:07:34.561Z.
+Gerado em 2026-11-23T10:55:25.728Z.
 
 | Medida | Valor |
 |---|---|
 | Telas (`page.tsx` com JSX) | **147** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **447** |
+| Handlers de API (`app/api/**/route.ts`) | **449** |
 | Layouts | 13 |
 | Páginas de erro (`error.tsx`) | 8 |
 | Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
@@ -43,7 +43,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | Prefixo | Handlers |
 |---|---|
 | `/api/v1/ai` | 69 |
-| `/api/v1/prospecting` | 33 |
+| `/api/v1/prospecting` | 35 |
 | `/api/v1/cron` | 31 |
 | `/api/v1/shipments` | 26 |
 | `/api/v1/admin` | 22 |
@@ -330,7 +330,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (447)
+## APIs (449)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
@@ -478,7 +478,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/commercial-orders/:id/timeline` | GET | requireRole, service-role, force-dynamic | 77 | `app/api/v1/commercial-orders/[id]/timeline/route.ts` |
 | `/api/v1/commercial-orders/importar-ia` | POST | requireRole, service-role, force-dynamic | 461 | `app/api/v1/commercial-orders/importar-ia/route.ts` |
 | `/api/v1/commercial-orders/importar-mercos` | GET/POST | requireRole, service-role, force-dynamic | 82 | `app/api/v1/commercial-orders/importar-mercos/route.ts` |
-| `/api/v1/commercial-orders/orcamentos-parados` | GET | requireRole, service-role, force-dynamic | 79 | `app/api/v1/commercial-orders/orcamentos-parados/route.ts` |
+| `/api/v1/commercial-orders/orcamentos-parados` | GET | requireRole, service-role, force-dynamic | 93 | `app/api/v1/commercial-orders/orcamentos-parados/route.ts` |
 | `/api/v1/commercial-orders/pdf` | GET | requireRole, force-dynamic | 69 | `app/api/v1/commercial-orders/pdf/route.ts` |
 | `/api/v1/commercial-policies` | GET | requireRole, force-dynamic | 30 | `app/api/v1/commercial-policies/route.ts` |
 | `/api/v1/commissions` | GET | requireRole, force-dynamic | 140 | `app/api/v1/commissions/route.ts` |
@@ -668,8 +668,10 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/products/ncm-sugestao` | GET | requireRole, force-dynamic | 91 | `app/api/v1/products/ncm-sugestao/route.ts` |
 | `/api/v1/prospecting/campaigns` | GET/POST | requireRole, service-role, force-dynamic | 430 | `app/api/v1/prospecting/campaigns/route.ts` |
 | `/api/v1/prospecting/campaigns/:id` | GET/PATCH/DELETE | requireRole, service-role, force-dynamic | 476 | `app/api/v1/prospecting/campaigns/[id]/route.ts` |
-| `/api/v1/prospecting/campaigns/:id/controle` | GET | requireRole, service-role, force-dynamic | 615 | `app/api/v1/prospecting/campaigns/[id]/controle/route.ts` |
+| `/api/v1/prospecting/campaigns/:id/controle` | GET | requireRole, service-role, force-dynamic | 636 | `app/api/v1/prospecting/campaigns/[id]/controle/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/executar` | POST | requireRole, service-role, force-dynamic | 218 | `app/api/v1/prospecting/campaigns/[id]/executar/route.ts` |
+| `/api/v1/prospecting/campaigns/:id/gastos` | GET/POST | requireRole, force-dynamic | 92 | `app/api/v1/prospecting/campaigns/[id]/gastos/route.ts` |
+| `/api/v1/prospecting/campaigns/:id/gastos/:spendId` | PATCH/DELETE | requireRole, force-dynamic | 90 | `app/api/v1/prospecting/campaigns/[id]/gastos/[spendId]/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/laboratorio` | GET/POST | requireRole, service-role, force-dynamic | 321 | `app/api/v1/prospecting/campaigns/[id]/laboratorio/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/liberar-reservas` | POST | requireRole, service-role, force-dynamic | 126 | `app/api/v1/prospecting/campaigns/[id]/liberar-reservas/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/painel` | GET | requireRole, force-dynamic | 175 | `app/api/v1/prospecting/campaigns/[id]/painel/route.ts` |
@@ -782,7 +784,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 445)
+## Delta de handlers desde o baseline de 17/11 (419 → 447)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -797,6 +799,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Laya | 1 | Health check do agente Laya. | `/api/v1/laya/saude` |
 | Offline — credencial | 2 | Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322). | `/api/v1/offline-devices`<br>`/api/v1/offline-devices/:id/revoke` |
 | Configuração — formas de pagamento | 2 | 0334 separa forma (t pag NT 2020.006) de prazo; lista e manutenção para a tela de configuração do tenant. | `/api/v1/payment-methods`<br>`/api/v1/payment-methods/:id` |
+| Prospecção — gastos da campanha | 2 | Painel de gastos no detalhe da campanha: lanca e edita midia manual para comparar orcado com gasto (rotas GET/POST/PATCH/DELETE). | `/api/v1/prospecting/campaigns/:id/gastos`<br>`/api/v1/prospecting/campaigns/:id/gastos/:spendId` |
 | Prospecção — relatório | 1 | Relatório mensal de gastos da campanha (orçado × prospecção × mídia), com CSV. | `/api/v1/prospecting/relatorio-gastos` |
 | Sentinel — detecção | 4 | Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329). | `/api/v1/sentinel/occurrences`<br>`/api/v1/sentinel/occurrences/:id`<br>`/api/v1/sentinel/scan`<br>`/api/v1/sentinel/settings` |
 | Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
