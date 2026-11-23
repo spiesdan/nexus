@@ -1,7 +1,7 @@
 ---
 impacto: capacidade_nova
 secao: corrigido
-titulo: Tenente suspenso por cobrança deixa de operar as APIs do tenant
+titulo: Tenant suspenso por cobrança deixa de operar as APIs do tenant
 ---
 
 O gate de suspensão passou a cobrir também `/api/v1/*` no proxy e a resolver
