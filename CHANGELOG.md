@@ -8,6 +8,27 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.65.1] — 2026-11-23
+
+### Adicionado
+
+- **Specs E2E da retomada de campanha com bloqueios declarados** Sete specs cobrem multi-campanha, retomada e follow-up de 48h. Uma prova o
+  matching sem case/acento da campanha 3a0909d6; seis ficam fixme com o motivo:
+  sem call site de envio, sem tick de follow-up e sem WABA de teste. Nenhuma
+  simula sucesso de envio pela Meta.
+
+  Nada a fazer na VPS.
+
+### Corrigido
+
+- **Lista do Inbox não filtra mais 2 mil conversas uma a uma** A policy de SELECT de `conversations` chamava duas funções com colunas da linha
+  por candidata. Em produção, com 2.162 conversas, o banco removia 2.138 uma a uma
+  do filtro: **929 ms** de RLS contra 3,8 ms sem ela. A policy agora expressa o
+  MESMO escopo (membro ativo, papel amplo, `visibility_mode`, canais permitidos)
+  com subqueries resolvidas uma vez e comparações diretas nas colunas — o plano
+  local passou de `Seq Scan`/26,5 ms para `Index Scan`/11,8 ms, com 897 → 707 buffers.
+  Nenhum índice novo; as telas e a RLS continuam iguais.
+
 ## [1.65.0] — 2026-11-23
 
 ### Adicionado
@@ -8955,7 +8976,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.1...HEAD
+[1.65.1]: https://github.com/spiesdan/nexus/compare/v1.65.0...v1.65.1
 [1.65.0]: https://github.com/spiesdan/nexus/compare/v1.64.0...v1.65.0
 [1.64.0]: https://github.com/spiesdan/nexus/compare/v1.63.1...v1.64.0
 [1.63.1]: https://github.com/spiesdan/nexus/compare/v1.63.0...v1.63.1
