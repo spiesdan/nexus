@@ -45,6 +45,7 @@ export interface Conversation {
    */
   comando_da_conversa?: string | null;
   last_handoff_at: string | null;
+  last_handoff_reason: string | null;
   created_at: string;
   updated_at: string;
 }

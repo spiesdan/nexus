@@ -16,6 +16,7 @@ import { useMarkNoSendConversation } from "@/hooks/inbox/useMarkNoSendConversati
 import { useAutomaticoAtivo } from "@/hooks/ai/useAutomaticoAtivo";
 import { OwnerBadge } from "@/components/kanban/OwnerBadge";
 import { comandoDaConversa, ROTULO_DO_MOTIVO } from "@/lib/inbox/comando-da-conversa";
+import { painelDeHandoff } from "@/lib/inbox/handoff";
 import { ReassignDialog } from "@/components/inbox/ReassignDialog";
 import { SnoozeButton } from "@/components/inbox/SnoozeButton";
 import type { ConversationWithContact } from "@/hooks/inbox/useConversationsRealtime";
@@ -89,6 +90,7 @@ export function ConversationHeader({ conversation }: Props) {
   const automaticoDaOrg = useAutomaticoAtivo();
   const [reassignOpen, setReassignOpen] = useState(false);
 
+  const handoff = painelDeHandoff(conversation);
   const c = conversation.contacts ?? null;
   const displayName = rotuloDoContato(c);
   const phone = c?.phone_number ? phoneForDisplay(c.phone_number) : null;
@@ -229,6 +231,27 @@ export function ConversationHeader({ conversation }: Props) {
             <OwnerBadge ownerKind={null} ownerName={null} />
           )}
         </div>
+        {/*
+          HANDOFF (P1-26): quando a IA entregou, o atendente precisa saber QUANDO,
+          POR QUÊ e o resumo durável — sem abrir o CRM. `<details>` de propósito:
+          o resumo é contexto, não uma faixa permanente no cabeçalho.
+        */}
+        {handoff && (
+          <details
+            data-testid="painel-handoff"
+            className="mt-1 rounded-lg border border-border bg-muted px-2 py-1 text-xs"
+          >
+            <summary className="cursor-pointer text-text-muted">
+              {t("Handoff em")}{" "}
+              {new Date(handoff.quando).toLocaleString("pt-BR", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })}
+              {handoff.motivo ? ` · ${handoff.motivo}` : ""}
+            </summary>
+            <p className="mt-1 whitespace-pre-line text-text-muted">{handoff.resumo}</p>
+          </details>
+        )}
         {phone && (
           <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
             <Phone size={11} weight="regular" aria-hidden /> {phone}

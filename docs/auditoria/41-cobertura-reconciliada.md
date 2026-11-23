@@ -101,8 +101,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/fiscal/xml` | fiscal | **pendente** | — | D |
 | `/app/frota` | frota | **pendente** | — | D |
 | `/app/inbox/[id]` | inbox | **aplicado** | #640 · `45-inbox-design.md` | D |
-| `/app/inbox` | inbox | **aplicado** — selo de cache quando `realtimeStatus ≠ subscribed`; 1/1 nas 4 combinações, contraste/overflow/console medidos | #638/#640 · `45-inbox-design.md` · `62-inbox-selo-cache.md` · `capturas/{antes,depois}-inbox-cache/` | D |
-| `/app/indicadores` | indicadores | **pendente** | — | D |
+| `/app/inbox` | inbox | **aplicado** — selo de cache quando `realtimeStatus ≠ subscribed` (1/1 em 4 combinações) + painel de handoff (quando/motivo/resumo, 4/4 combinações); contraste/overflow/console medidos | #638/#640 · `45-inbox-design.md` · `62-inbox-selo-cache.md` · `63-inbox-handoff.md` · `capturas/{antes,depois}-inbox-cache/` | D || `/app/indicadores` | indicadores | **pendente** | — | D |
 | `/app/integrations/nuvemshop` | integrations | **pendente** | — | D |
 | `/app/inteligencia` | inteligencia | **pendente** | — | D |
 | `/app/kanban` | kanban | **pendente** | — | D |
