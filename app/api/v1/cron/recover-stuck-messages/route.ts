@@ -46,6 +46,7 @@ import { ok, fail } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { porFatias } from "@/lib/db/por-fatias";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -154,32 +155,37 @@ export async function recoverStuckMessages(
     // concluiu entre o SELECT e o UPDATE (corrida real — o ack pode chegar a
     // qualquer momento), a linha já não está `sending` e não é tocada. Sem
     // isso, este cron marcaria como falha uma mensagem que o cliente recebeu.
-    const { data: updated, error: updErr } = await admin
-      .from("messages")
-      .update({
-        status: "failed",
-        error_code: "send_timeout",
-        error_message: `Envio não confirmado em ${STUCK_AFTER_MS / 60000} min — marcada como falha por recover-stuck-messages.`,
-        updated_at: now.toISOString(),
-      })
-      .in(
-        "id",
-        mensagens.map((m) => m.id),
-      )
-      .eq("organization_id", orgId)
-      .eq("status", "sending")
-      .select("id");
+    // Fatiado: 500 UUIDs numa URL dão 414 (`lib/db/por-fatias.ts`). O
+    // `.eq("status","sending")` continua por fatia — o claim atômico vale igual.
+    const { linhas: atualizadas, falhas: falhasUpdate, primeiroErro: updErr } = await porFatias(
+      mensagens.map((m) => m.id),
+      async (fatia) => {
+        const { data, error } = await admin
+          .from("messages")
+          .update({
+            status: "failed",
+            error_code: "send_timeout",
+            error_message: `Envio não confirmado em ${STUCK_AFTER_MS / 60000} min — marcada como falha por recover-stuck-messages.`,
+            updated_at: now.toISOString(),
+          })
+          .in("id", fatia)
+          .eq("organization_id", orgId)
+          .eq("status", "sending")
+          .select("id");
+        return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+      },
+    );
 
-    if (updErr) {
+    if (falhasUpdate > 0) {
       logger.error("[recover-stuck-messages] update falhou", {
-        error: updErr.message,
+        error: (updErr as { message?: string } | undefined)?.message ?? "fatia sem detalhe",
         organization_id: orgId,
         requestId,
       });
       continue;
     }
 
-    const marcadasAgora = (updated ?? []) as { id: string }[];
+    const marcadasAgora = atualizadas as { id: string }[];
     const n = marcadasAgora.length;
     if (n === 0) continue; // outra rodada (ou o ack) chegou primeiro
     marcadas += n;
@@ -313,13 +319,16 @@ export async function recoverStuckMessages(
     }
 
     if (duplicatas.length > 0) {
-      const { error: dupErr } = await admin
-        .from("agent_inbox_items")
-        .update({ status: "resolved" })
-        .in("id", duplicatas);
-      if (dupErr) {
+      const { falhas: falhasDup, primeiroErro: dupErr } = await porFatias(duplicatas, async (fatia) => {
+        const { error } = await admin
+          .from("agent_inbox_items")
+          .update({ status: "resolved" })
+          .in("id", fatia);
+        return { linhas: [], erro: error ?? undefined };
+      });
+      if (falhasDup > 0) {
         logger.warn("[recover-stuck-messages] não consegui fechar avisos duplicados", {
-          error: dupErr.message,
+          error: (dupErr as { message?: string } | undefined)?.message ?? "fatia sem detalhe",
           organization_id: orgId,
           duplicatas: duplicatas.length,
           requestId,

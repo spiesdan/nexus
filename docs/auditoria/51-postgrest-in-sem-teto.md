@@ -47,25 +47,34 @@ A mensagem do `laya-decisao` mudou: `decisões gravadas: …` → `leitura de
 decisões falhou: …`. Era `select`; o texto antigo mandava procurar uma gravação
 que nunca existiu.
 
-## Sem teto de URL — NÃO corrigido (dívida declarada)
+## Sem teto de URL — 9 de 10 corrigidos (23/11/2026)
 
-| Arquivo:linha | Array | Teto atual | Risco |
+Os nove sítios de **cron** passaram por `lib/db/por-fatias.ts` (`FATIA_DE_IDS =
+100`), prioridade do dono. O décimo (`lib/leads/timeline-query.ts:107`) não é
+cron e fica como dívida declarada.
+
+| Arquivo:linha (antes) | Array | Antes | Depois |
 |---|---|---|---|
-| `app/api/v1/cron/meu-dia-alertas/route.ts:221` | ids de pedidos | `SCAN_LIMIT = 300` | médio — 300 UUIDs ≈ 11 kB |
-| `app/api/v1/cron/meu-dia-alertas/route.ts:326` | ids de remessas | 300 | médio |
-| `app/api/v1/cron/meu-dia-alertas/route.ts:492` | `idsContato` | 300 | médio |
-| `app/api/v1/cron/meu-dia-alertas/route.ts:507` | `idsPedido` | 300 | médio |
-| `app/api/v1/cron/meu-dia-alertas/route.ts:571` | `.slice(0, SCAN_LIMIT * 2)` | 600 (origem ≤300) | médio — o slice não protege |
-| `app/api/v1/cron/meu-dia-alertas/route.ts:612` | idem | 600 (origem ≤300) | médio |
-| `app/api/v1/cron/recover-stuck-messages/route.ts:165` | ids de mensagens por org | `SCAN_LIMIT = 500` | alto — 500 UUIDs ≈ 18 kB |
-| `lib/leads/timeline-query.ts:107` | `agentIds` da página | limite do chamador, sem teto próprio | baixo/médio |
-| `app/api/v1/cron/recover-stuck-messages/route.ts:319` | avisos duplicados de uma assinatura | sem teto declarado | baixo — lista naturalmente curta |
-| `app/api/v1/cron/sync-model-catalog/route.ts:100` | `paraDepreciar` (diff do catálogo) | nenhum | baixo — `model_id` curto, catálogo de centenas |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:221` | ids de pedidos → notas | `SCAN_LIMIT = 300` | `porFatias` (4 blocos para 350 ids) |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:326` | ids de remessas → itens | 300 | `porFatias` |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:492` | `idsContato` → nomes | 300 | `porFatias` |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:507` | `idsPedido` → nomes | 300 | `porFatias` |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:571` | `lerPedidos` | `slice(0, 600)` | `porFatias` sem slice |
+| `app/api/v1/cron/meu-dia-alertas/route.ts:612` | cidades dos contatos | `slice(0, 600)` | `porFatias` sem slice |
+| `app/api/v1/cron/recover-stuck-messages/route.ts:165` | UPDATE de mensagens por org | `SCAN_LIMIT = 500` | `porFatias`; **claim `status='sending'` preservado em cada fatia** |
+| `app/api/v1/cron/recover-stuck-messages/route.ts:319` | fechar avisos duplicados | sem teto | `porFatias` |
+| `app/api/v1/cron/sync-model-catalog/route.ts:100` | deprecia modelos | nenhum | `porFatias` |
 
-Contagem, para não haver ambiguidade: a varredura achou **17 sítios** além do
-original; **7 foram corrigidos** (em 3 módulos) e **10 seguem listados** acima.
-Quatro módulos concentram o resto: `meu-dia-alertas` (6), `recover-stuck`
-(2), `timeline-query` (1), `sync-model-catalog` (1).
+A união é a mesma: cada fatia devolve linhas e o helper concatena na ordem; um
+erro em qualquer fatia mantém a mensagem original do PostgREST e reprova a
+rodada (nunca "sucesso parcial" silencioso).
+
+**Resta 1:** `lib/leads/timeline-query.ts:107` — `agentIds` da página, limite do
+chamador, sem teto próprio. Não é cron; fica para depois do deploy da 1.63.1.
+
+Prova dirigida: `tests/unit/recover-stuck-messages.test.ts` com **350 mensagens**
+— quatro UPDATES de `[100,100,100,50]`, todos com `eq:status=sending`. O helper
+`lib/db/por-fatias.test.ts` ja provava 350 ids na união ordenada.
 
 ## Protegidos por teto (não mexer)
 

@@ -302,4 +302,19 @@ describe("recover-stuck-messages", () => {
     expect(fecha?.filtros["in:id"]).toEqual(["aviso-2", "aviso-3"]);
     expect(r.resolved).toBe(2);
   });
+
+  it("350 mensagens presas: o UPDATE vai em fatias de 100, sem URL longa", async () => {
+    const presas350 = Array.from({ length: 350 }, (_, i) =>
+      presa({ id: `11111111-1111-4111-8111-${String(i).padStart(12, "0")}` }),
+    );
+    const { client, chamadas } = clientDuble(presas350);
+    await recoverStuckMessages(client as never, AGORA, "req-350");
+
+    const updates = chamadas.filter((c) => c.tabela === "messages" && c.op === "update");
+    expect(updates).toHaveLength(4);
+    expect(updates.map((c) => (c.filtros["in:id"] as string[]).length)).toEqual([100, 100, 100, 50]);
+    // O claim atômico continua em CADA fatia — não basta fatiar e perder o CAS.
+    for (const c of updates) expect(c.filtros["eq:status"]).toBe("sending");
+  });
+
 });

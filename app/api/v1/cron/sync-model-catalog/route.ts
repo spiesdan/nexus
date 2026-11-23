@@ -49,6 +49,7 @@ import {
 } from "@/lib/ai/catalogo/sincronizar";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import { porFatias } from "@/lib/db/por-fatias";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -93,12 +94,18 @@ export async function sincronizarCatalogo(
   }
 
   if (plano.paraDepreciar.length > 0) {
-    const { error } = await admin
-      .from("ai_models")
-      .update({ deprecated_at: agora })
-      .eq("source", FONTE_OPENROUTER)
-      .in("model_id", plano.paraDepreciar);
-    if (error) throw new Error(`catalogo_depreciacao_falhou: ${error.message}`);
+    const { falhas, primeiroErro } = await porFatias(plano.paraDepreciar, async (fatia) => {
+      const { error } = await admin
+        .from("ai_models")
+        .update({ deprecated_at: agora })
+        .eq("source", FONTE_OPENROUTER)
+        .in("model_id", fatia);
+      return { linhas: [], erro: error ?? undefined };
+    });
+    if (falhas > 0) {
+      const detalhe = (primeiroErro as { message?: string } | undefined)?.message ?? "fatia sem detalhe";
+      throw new Error(`catalogo_depreciacao_falhou: ${detalhe}`);
+    }
   }
 
   // Ressuscitar é feito pelo upsert acima (`deprecated_at: null`); o número é
