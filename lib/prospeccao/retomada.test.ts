@@ -28,7 +28,7 @@ describe("decisão de mensagem", () => {
       templateEscolhido: "template_primeiro_contato",
       templateRetomadaAprovado: null,
     });
-    expect(decisao).toMatchObject({ tipo: "template", template: "template_primeiro_contato" });
+    expect(decisao).toMatchObject({ tipo: "template", template: "template_primeiro_contato", status: "pronto" });
   });
 
   it("já contatado com janela aberta usa o TEXTO DO PRESET — não o enviado antes", () => {
@@ -39,7 +39,7 @@ describe("decisão de mensagem", () => {
       templateEscolhido: "template_primeiro_contato",
       templateRetomadaAprovado: "template_retomada",
     });
-    expect(decisao).toMatchObject({ tipo: "texto", texto: "preset vindo do banco do tenant" });
+    expect(decisao).toMatchObject({ tipo: "texto", texto: "preset vindo do banco do tenant", status: "pronto" });
     expect(JSON.stringify(decisao)).not.toContain("template_primeiro_contato");
   });
 
@@ -52,6 +52,9 @@ describe("decisão de mensagem", () => {
       templateRetomadaAprovado: null,
     });
     expect(bloqueado.tipo).toBe("bloqueado");
+    // Pré-requisito: sem template aprovado o fluxo fica AGUARDANDO, nunca enviado.
+    expect(bloqueado.status).toBe("aguardando_aprovacao");
+    expect(JSON.stringify(bloqueado)).not.toContain('"enviado"');
     expect(JSON.stringify(bloqueado)).toContain("131047");
 
     const aprovado = mensagemParaProspect({
@@ -61,7 +64,7 @@ describe("decisão de mensagem", () => {
       templateEscolhido: "template_primeiro_contato",
       templateRetomadaAprovado: "template_retomada",
     });
-    expect(aprovado).toMatchObject({ tipo: "template", template: "template_retomada" });
+    expect(aprovado).toMatchObject({ tipo: "template", template: "template_retomada", status: "pronto" });
   });
 
   it("preset vazio nunca vira texto fixo inventado", () => {
@@ -73,6 +76,7 @@ describe("decisão de mensagem", () => {
       templateRetomadaAprovado: null,
     });
     expect(decisao.tipo).toBe("bloqueado");
+    expect(decisao.status).toBe("aguardando_aprovacao");
   });
 });
 

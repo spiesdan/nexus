@@ -20,10 +20,17 @@ export const CATEGORIA_PRESET_RETOMADA = "retomada";
 export const HORAS_FOLLOWUP = 48;
 export const TETO_TENTATIVAS = 3;
 
+/**
+ * O estado do disparo é EXPLÍCITO: sem template aprovado o fluxo fica
+ * `aguardando_aprovacao`, nunca `enviado`. Nenhuma tela pode prometer envio
+ * onde a Meta recusaria com 131047.
+ */
+export type EstadoDoDisparo = "pronto" | "aguardando_aprovacao" | "enviado";
+
 export type DecisaoDeMensagem =
-  | { tipo: "template"; template: string; motivo: string }
-  | { tipo: "texto"; texto: string; motivo: string }
-  | { tipo: "bloqueado"; motivo: string };
+  | { tipo: "template"; template: string; motivo: string; status: EstadoDoDisparo }
+  | { tipo: "texto"; texto: string; motivo: string; status: EstadoDoDisparo }
+  | { tipo: "bloqueado"; motivo: string; status: EstadoDoDisparo };
 
 /**
  * O texto vem do preset gravado no banco. Nunca há fallback com texto fixo:
@@ -41,6 +48,7 @@ export function mensagemParaProspect(args: {
       tipo: "template",
       template: args.templateEscolhido,
       motivo: "Primeiro contato: template Meta escolhido na campanha.",
+      status: "pronto",
     };
   }
   const preset = args.presetRetomada?.trim() ?? "";
@@ -49,6 +57,7 @@ export function mensagemParaProspect(args: {
       tipo: "texto",
       texto: preset,
       motivo: "Janela de 24h aberta pela resposta: texto de retomada do preset.",
+      status: "pronto",
     };
   }
   if (args.templateRetomadaAprovado?.trim()) {
@@ -56,6 +65,7 @@ export function mensagemParaProspect(args: {
       tipo: "template",
       template: args.templateRetomadaAprovado.trim(),
       motivo: "Fora da janela de 24h: template de retomada aprovado na Meta.",
+      status: "pronto",
     };
   }
   return {
@@ -63,6 +73,7 @@ export function mensagemParaProspect(args: {
     motivo:
       "Fora da janela de 24h e sem template de retomada aprovado na Meta. " +
       "Configure o preset/bind antes de disparar (texto livre fora da janela falha com 131047).",
+    status: "aguardando_aprovacao",
   };
 }
 
