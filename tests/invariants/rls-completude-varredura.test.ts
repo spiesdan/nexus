@@ -76,6 +76,26 @@ interface Excecao {
  * linhas da OUTRA organização, não uma leitura como superusuário.
  */
 const PROVA_PROPRIA: readonly Excecao[] = [
+  ...(
+    [
+      "billing_customers",
+      "billing_subscriptions",
+      "billing_invoices",
+      "billing_checkout_sessions",
+      "billing_notices",
+      "billing_events",
+      "billing_verifications",
+      "billing_suspensions",
+    ] as const
+  ).map((tabela) => ({
+    tabela,
+    razao:
+      "tests/invariants/billing-rls-isolation.test.ts (0343) prova, com `set role " +
+      "authenticated` + JWT simulado, leitura da própria org e zero da vizinha, " +
+      "escrita negada a authenticated e usuário sem membership sem linha. Fora de " +
+      "TABLES porque a escrita é só service role (a varredura TABLES cobre casos " +
+      "com policy de escrita para authenticated).",
+  })),
   {
     tabela: "prospecting_followups",
     razao:
