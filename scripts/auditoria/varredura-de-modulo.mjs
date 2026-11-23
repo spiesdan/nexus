@@ -78,8 +78,9 @@ if (grupo && grupo !== true) rotas = rotas.filter((r) => grupoPorRota.get(r) ===
 if (excluirGrupo && excluirGrupo !== true)
   rotas = rotas.filter((r) => grupoPorRota.get(r) !== excluirGrupo);
 if (lista && lista !== true) {
-  const pedidas = String(lista).split(",").filter(Boolean);
-  rotas = pedidas.filter((r) => rotas.includes(r));
+  // `--rotas` aceita caminhos concretos (/expedicao/<uuid>/rota), que não
+  // estão na matriz — filtrar por ela derrubava a medição de uma tela real.
+  rotas = String(lista).split(",").filter(Boolean);
 }
 if (rotas.length === 0) {
   console.error("nenhuma rota selecionada");

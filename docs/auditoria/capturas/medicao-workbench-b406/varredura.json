@@ -1,0 +1,316 @@
+{
+  "geradoEm": "2026-11-23T05:18:50.655Z",
+  "base": "http://localhost:3025",
+  "tempoTotalMs": 12255,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 6,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 11963
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 81,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3230
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2831
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 81,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3009
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a/rota",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2893
+    }
+  ]
+}
