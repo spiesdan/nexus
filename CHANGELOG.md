@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.65.2] — 2026-11-23
+
+### Alterado
+
+- **Expedição vira um workbench de quatro etapas** A ficha da carga e a rota deixaram de ser abas: pedidos e paradas, mapa e ordem, planejar e publicar, e fechamento agora vivem numa mesma página com âncoras. O painel de pedidos disponíveis substituiu o diálogo, com busca, filtros, seleção múltipla, pedidos já em outra rota desabilitados e estados de carregamento/erro/vazio. No planejamento, a ordem salva e a sugerida têm selo próprio, os avisos podem ser revisados e a proposta pode ser descartada sem tocar nos pedidos. No celular, o mapa virou um bloco "Abrir mapa" em vez de aba.
+
 ## [1.65.1] — 2026-11-23
 
 ### Adicionado
@@ -8976,7 +8982,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.2...HEAD
+[1.65.2]: https://github.com/spiesdan/nexus/compare/v1.65.1...v1.65.2
 [1.65.1]: https://github.com/spiesdan/nexus/compare/v1.65.0...v1.65.1
 [1.65.0]: https://github.com/spiesdan/nexus/compare/v1.64.0...v1.65.0
 [1.64.0]: https://github.com/spiesdan/nexus/compare/v1.63.1...v1.64.0
