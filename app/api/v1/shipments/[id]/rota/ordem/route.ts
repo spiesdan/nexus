@@ -14,6 +14,7 @@ import { z } from "zod";
 import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { rotaOrdemAtomicaLigada, type ItemOrdemAtomica } from "@/lib/rotas/ordem-atomica";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "../_carga";
@@ -65,6 +66,73 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
   const posicao = new Map(parsed.data.ordem.map((c, i) => [c, i + 1]));
 
+  const itens: ItemOrdemAtomica[] = d.paradas.flatMap((p) =>
+    p.pedidos.map((ped) => ({ id: ped.shipment_order_id, sequencia: posicao.get(p.chave) ?? 1 })),
+  );
+  const b = parsed.data;
+  const ordemPersistida = d.paradas.map((p) => p.chave);
+  const ordemMudou = [...parsed.data.ordem].join("|") !== [...ordemPersistida].join("|");
+  const semProposta = b.geometria === undefined && b.provedor === undefined;
+  // Sequência mexida sem proposta nova: a geometria antiga não descreve mais a
+  // rota e morre junto com a escrita — nunca fica desenho órfão no mapa.
+  const invalidar = ordemMudou && semProposta;
+
+  // CAMINHO ATÔMICO (flag do dono): cobertura/separação JÁ validadas acima e
+  // revalidadas na RPC antes de qualquer UPDATE. A RPC sobe a versão com CAS e
+  // grava as sequências na MESMA transação; falha no meio rollbacka os dois.
+  // Sem flag, o caminho antigo continua exatamente como era.
+  if (rotaOrdemAtomicaLigada()) {
+    const cargaRpc: Record<string, unknown> = {
+      limpar_geojson: invalidar,
+      ...(b.origem_endereco !== undefined ? { origem_endereco: b.origem_endereco } : {}),
+      ...(b.origem_lat !== undefined ? { origem_lat: b.origem_lat } : {}),
+      ...(b.origem_lng !== undefined ? { origem_lng: b.origem_lng } : {}),
+      ...(b.retornar_origem !== undefined ? { retornar_origem: b.retornar_origem } : {}),
+      ...(b.tempo_parada_min !== undefined ? { tempo_parada_min: b.tempo_parada_min } : {}),
+      ...(b.distancia_m !== undefined ? { distancia_m: b.distancia_m } : {}),
+      ...(b.duracao_s !== undefined ? { duracao_s: b.duracao_s } : {}),
+      ...(!invalidar && (b.geometria !== undefined || b.provedor !== undefined)
+        ? {
+            rota_geojson: {
+              geometria: b.geometria ?? [],
+              provedor: b.provedor ?? "local",
+              ruas: b.ruas ?? false,
+              ...(b.modo ? { modo: b.modo } : {}),
+            },
+          }
+        : {}),
+    };
+    const { data: resultado, error: erroRpc } = await supabase.rpc("fn_salvar_ordem_rota", {
+      p_org: authz.org.orgId,
+      p_shipment: id,
+      p_itens: itens,
+      p_carga: cargaRpc,
+      p_versao_esperada: d.carga.rota_versao,
+      p_rota_em: new Date().toISOString(),
+    });
+    if (erroRpc) {
+      const conflito = /concorrencia|sequencia|cobertura|item_/.test(erroRpc.message);
+      return fail(
+        conflito ? "state_conflict" : "internal_error",
+        conflito
+          ? "A rota mudou ou a ordem ficou incompleta; nada foi gravado."
+          : "Erro ao salvar a rota.",
+        conflito ? 409 : 500,
+        { requestId },
+      );
+    }
+    await audit({
+      organizationId: authz.org.orgId,
+      actorUserId: authz.user.id,
+      action: "shipment.rota.ordenada",
+      resourceType: "shipments",
+      resourceId: id,
+      requestId,
+    });
+    const atualizado = await carregarCargaComParadas(supabase, authz.org.orgId, id);
+    return ok({ ...atualizado, transacao: resultado }, { requestId });
+  }
+
   for (const p of d.paradas) {
     const seq = posicao.get(p.chave) ?? 1;
     for (const ped of p.pedidos) {
@@ -77,15 +145,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
   }
 
-  const b = parsed.data;
   // Sequência alterada manualmente (prompt §5): sem proposta nova, a geometria
   // salva não corresponde mais à sequência — invalidar (null) em vez de deixar a
-  // linha antiga no mapa para uma ordem que não é mais a verdade. Com proposta
-  // (otimizar → salvar), a geometria vem no body e continua sendo a válida.
-  const semProposta = b.geometria === undefined && b.provedor === undefined;
-  const ordemPersistida = d.paradas.map((p) => p.chave);
-  const ordemMudou = [...parsed.data.ordem].join("|") !== [...ordemPersistida].join("|");
-  const invalidar = ordemMudou && semProposta;
+  // linha antiga no mapa para uma ordem que não é mais a verdade.
   const { error: erroCarga } = await supabase
     .from("shipments")
     .update({

@@ -67,6 +67,14 @@ const ANON_PERMITIDO: readonly Excecao[] = [];
  */
 const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
   {
+    fn: "fn_salvar_ordem_rota(uuid,uuid,jsonb,jsonb,integer,timestampwithtimezone)",
+    razao:
+      "PATCH /api/v1/shipments/[id]/rota/ordem chama com o client de sessão " +
+      "(app/api/v1/shipments/[id]/rota/ordem/route.ts:17 import, rpc no bloco " +
+      "ROTA_ORDEM_ATOMIC, dentro de requireRole('agent')). A função confere " +
+      "membership via auth.uid() e escopa a org em todo UPDATE (0335).",
+  },
+  {
     fn: "emit_event(text,text,uuid,jsonb,jsonb,uuid)",
     razao:
       "Server Actions chamam com a sessão do usuário " +
