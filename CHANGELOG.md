@@ -8,6 +8,32 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.65.0] — 2026-11-23
+
+### Adicionado
+
+- **Painel de gastos no detalhe da campanha com Lancamento manual de midia** A ficha da campanha mostra orcado (prospeccao + midia) contra gasto real
+  (prospeccao medida + midia lancada), com percentual, estado do guard e proximo
+  passo. Gerentes lancam, editam e excluem midia com auditoria; viewers so leem.
+  O historico traz os ultimos cinco lancamentos e a tela diz explicitamente que
+  midia e lancamento manual ate existir Marketing API.
+
+  Nada a fazer na VPS.
+
+### Corrigido
+
+- **Uma leitura de auth por request na lista do Inbox** A lista do Inbox lia a autenticação duas vezes na mesma request. Agora a
+  identidade é resolvida uma única vez e reaproveitada no caminho da rota — sem
+  mudar o que a pessoa vê nem as permissões aplicadas.
+
+- **Sentinel e painel voltam a ver a série de API (RPC devolve array)** `fn_slo_api_resumo` é `returns table(...)`: o `supabase.rpc()` devolve um ARRAY
+  de linhas. Os dois leitores liam o dado como objeto, então `total` virava 0 —
+  com 267 amostras e p95 de 2660 ms em produção, o detector
+  `plataforma.slo_estourado` nunca abria ocorrência e a tela dizia "sem
+  histórico". Agora uma função única normaliza array/objeto e os dois leitores a
+  usam. Testes dirigidos com os números medidos provam total 267 no painel e na
+  coleta, e ocorrência de latência **crítica** no detector.
+
 ## [1.64.0] — 2026-11-23
 
 ### Adicionado
@@ -8929,7 +8955,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.64.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.0...HEAD
+[1.65.0]: https://github.com/spiesdan/nexus/compare/v1.64.0...v1.65.0
 [1.64.0]: https://github.com/spiesdan/nexus/compare/v1.63.1...v1.64.0
 [1.63.1]: https://github.com/spiesdan/nexus/compare/v1.63.0...v1.63.1
 [1.63.0]: https://github.com/spiesdan/nexus/compare/v1.62.3...v1.63.0
