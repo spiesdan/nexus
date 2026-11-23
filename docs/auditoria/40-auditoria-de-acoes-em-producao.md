@@ -731,3 +731,29 @@ e o follow-up não é marcado como enviado.
 **Não há migration nova nesta versão.** Deploy é do dono, com backup,
 verificação e rollback (refixar 1.63.1). Congelamento de merges vale até o
 deploy verificado.
+
+## 38. 23/11/2026 — Deploy 1.64.0 VERIFICADO pelo dono
+
+`update.sh --to v1.64.0` → `EXIT=0`, *“Atualização concluída”*.
+
+```
+7 containers em 1.64.0 · health healthy 1.64.0
+  (supabase / redis / rate_limit / waha ok) · /login 200
+schema: commercial_payment_methods=t · prospecting_campaign_spend=t
+        rota_versao_confirmada=t · fn_salvar_ordem_rota=t
+Sentinel: achados=5 · reafirmadas=5 · truncado=false
+URI too long (30 min)=0 · risk-watcher falhas (30 min)=0
+rollback: refixar 1.63.1
+```
+
+**O `update.sh` transacional rodou pela primeira vez em produção e passou** —
+o P0 do aborto da 1.63.0 está **provado no artefato**: o schema entrou em
+transação única (`psql -1`, #796) e o guard não precisou intervir. O risco de
+DDL parcial do §35 está endereçado na prática, não só no papel.
+
+**Dependência do template Meta (§37)** continua valendo: o follow-up de +48h
+só dispara com template aprovado; sem ele o fluxo fica “aguardando aprovação”.
+
+**Descongelamento:** F liberado para painel de gastos + E2E do P1-28; D para a
+varredura das 96 (uma fatia por vez, `--workers=1`, swap >4 GB aborta e salva o
+parcial); G segue no p95. **Nenhuma release nova hoje sem pedido do dono.**
