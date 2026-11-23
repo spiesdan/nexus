@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (23/11):** 10 `[x]` · 9 `[~]` · 5 `[!]` · 16 `[ ]` — 36 itens. Worker que termina recebe a próxima tarefa na mesma mensagem;
+> **Placar (23/11):** 14 `[x]` · 8 `[~]` · 6 `[!]` · 16 `[ ]` — 36 itens.
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -22,11 +22,11 @@
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
 | P1-1 | 96 telas `app/app` por concentração + contraste por token | `[~]` | D | varredura fatiada de 99 rotas; tenent-switcher 82 rotas | terminar fatias, consertar por concentração |
-| P1-2 | `rota_versao_confirmada` (0334) + escrita pelo app | `[~]` | G | migration reservada 0334 | migration + escrita transacional ligada ao P0-5 |
+| P1-2 | `rota_versao_confirmada` (0334) + escrita pelo app | `[x]` | G | **#773** → `29df915bb`; `rota_versao_confirmada` (0336) + escrita pelo app |
 | P1-3 | Mapa↔lista sincronizados + pino por precisão | `[~]` | D | PRs de rotas do passe de expedição | seleção no mapa reflete na lista e vice-versa |
 | P1-4 | GPS “sem sinal há N min” + `PHOTON_URL` no env/template | `[x]` | G | **#774** → `3bbde8db5`; GPS honesto + `PHOTON_URL` no kit | — |
 | P1-5 | E2E 17/18/19: GPS ausente, mobile real, fila offline com retry/conflito | `[ ]` | G (próximo) | specs em `tests/e2e/`; Android real nunca rodou | escrever specs e marcar bloqueio de dispositivo |
-| P1-6 | 24 rotas dinâmicas sem id: criar fixture local e medir | `[ ]` | D (próximo) | `41`: 24 inválidas com motivo | fixture com id real; re-medir e baixar `pendente` |
+| P1-6 | 24 rotas dinâmicas sem id: criar fixture local e medir | `[x]` | D | **#769** → `20f0b3b2b` (+ `e3fbaf994`); fixture das dinâmicas e seed anuncia destino |
 | P1-7 | F-04: token canônico (`#67885d` vs `#7e77f0`) com medição | `[ ]` | D (próximo) | dois hex em arquivos de design | escolher token, medir contraste, documentar |
 | P1-8 | Workbench de expedição no mobile em abas/drawer (hoje empilha) | `[ ]` | D (próximo) | capturas do passe de expedição | protótipo + medição 390 px |
 | P1-9 | Matriz única de capacidades de expedição (hoje dispersa em handoffs) | `[ ]` | coordenação | handoffs em `docs/frentes/` | consolidar em matriz com dono/estado |
@@ -77,7 +77,7 @@
 | P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[ ]` | D | passe de inbox | componente + prova de estado |
 | P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[ ]` | D | `lib/inbox/handoff.ts` | expor no painel com teste |
 | P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[ ]` | D | passe de dashboard | medir e aplicar |
-| P2-4 | Consolidar `PROMPT-EXPEDICAO.md` no repo e linkar na auditoria | `[~]` | coordenação | arquivo copiado para a raiz nesta rodada | link vigente neste doc |
+| P2-4 | Consolidar `PROMPT-EXPEDICAO.md` no repo e linkar na auditoria | `[x]` | coordenação | `PROMPT-EXPEDICAO.md` na raiz (#761 → `7b70052b`) e linkado neste doc |
 
 ## Fonte de requisitos da Expedição
 
@@ -90,3 +90,5 @@ adotada neste inventário** (o prompt não traz IDs próprios), sobre as listas 
 prompt (Objetivo, P0, P1, P2 e critérios de aceitação). Mapeados: 22 em itens do
 backlog, 16 atendidos, 4 não aplicáveis (dependência de hardware/credencial sem
 origem real). Nenhum requisito sem destino.
+
+**Cobertura R1–R42 recalculada após os merges.**
