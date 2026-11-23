@@ -4,6 +4,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requirePlatformAdmin } from "@/lib/auth/requirePlatformAdmin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
+import { resumoSloRpc } from "@/lib/observabilidade/linha-rpc";
 import { lerSaudeDaInstalacao } from "@/lib/laya/saude";
 
 export const dynamic = "force-dynamic";
@@ -181,10 +182,8 @@ export async function GET(): Promise<Response> {
     });
   }
 
-  const amostras = Number((resumoApi.data as { total?: number } | null)?.total ?? 0);
-  const erros = Number((resumoApi.data as { erros?: number } | null)?.erros ?? 0);
-  const p95Bruto = (resumoApi.data as { p95?: number | string | null } | null)?.p95;
-  const p95 = p95Bruto === null || p95Bruto === undefined ? null : Math.round(Number(p95Bruto));
+  // O cartão de SLO e os indicadores usam a MESMA linha normalizada.
+  const { total: amostras, erros, p95 } = resumoSloRpc(resumoApi.data);
   const MIN_AMOSTRAS = 100;
   const temSerie = amostras >= MIN_AMOSTRAS;
   const disponibilidade = temSerie ? Math.round((1 - erros / amostras) * 1000) / 10 : null;
