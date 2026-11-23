@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,7 @@ const COR_DO_STATUS: Record<string, string> = {
 
 export function ConversationHeader({ conversation }: Props) {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const { user } = useAuth();
   const claim = useClaimConversation();
@@ -243,7 +245,7 @@ export function ConversationHeader({ conversation }: Props) {
           >
             <summary className="cursor-pointer text-text-muted">
               {t("Handoff em")}{" "}
-              {new Date(handoff.quando).toLocaleString("pt-BR", {
+              {new Date(handoff.quando).toLocaleString(tagDoIdioma, {
                 dateStyle: "short",
                 timeStyle: "short",
               })}
