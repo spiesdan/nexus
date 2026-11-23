@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { logger } from "@/lib/logger";
+import { lerConfiguracaoBilling } from "@/lib/billing/config";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { empresaExigeMfa, exigeCadastroDeMfa } from "@/lib/auth/politica-mfa";
@@ -310,11 +311,29 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
   const store = await cookies();
   const ativo = escolherMembroAtivo(authUser.organizations, store.get(ACTIVE_ORG_COOKIE)?.value);
   if (!ativo) return null;
+
+  // Gate de suspensão também AQUI (não só no requireRole): a membership continua
+  // com o formato antigo — o teste de idioma exige `organizations(display_name,
+  // locale)` e o de auth exige a forma exata da linha. A suspensão é uma
+  // pergunta à RPC, não um campo novo na membership.
+  let suspensoPorBilling = false;
+  if (lerConfiguracaoBilling().killSwitchGate) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.rpc("fn_billing_gate_bloqueia", {
+        p_org: ativo.organization_id,
+      });
+      suspensoPorBilling = data === true;
+    } catch {
+      suspensoPorBilling = false;
+    }
+  }
   return {
     orgId: ativo.organization_id,
     name: ativo.organization_name,
     role: ativo.role,
     motorista: ativo.motorista === true,
+    suspensoPorBilling,
   };
 }
 

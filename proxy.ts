@@ -3,6 +3,8 @@ import { cookieSecure } from "@/lib/supabase/cookie-secure";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { isPublicPath } from "@/lib/auth/public-paths";
+import { BILLING_GATE_ALLOWLIST } from "@/lib/billing/gate";
+import { lerConfiguracaoBilling } from "@/lib/billing/config";
 import {
   verifyImpersonateCookieEdge,
   IMPERSONATE_COOKIE_NAME_EDGE,
@@ -112,6 +114,25 @@ export async function proxy(request: NextRequest) {
           `[middleware] impersonate cookie invalid (${result.reason ?? "unknown"}) — clearing`,
         );
         response.cookies.delete(IMPERSONATE_COOKIE_NAME_EDGE);
+      }
+    }
+  }
+
+  // Gate de cobrança no EDGE para /app/*: o proxy é a única porta por onde
+  // TODA navegação autenticada passa. Deny-by-default com allowlist exata;
+  // o kill-switch desliga sem escrever no banco.
+  if (
+    pathname.startsWith("/app") &&
+    !BILLING_GATE_ALLOWLIST.includes(pathname) &&
+    lerConfiguracaoBilling().killSwitchGate
+  ) {
+    const orgCookie = request.cookies.get("active_org")?.value;
+    if (orgCookie) {
+      const { data: suspenso } = await supabase.rpc("fn_billing_gate_bloqueia", {
+        p_org: orgCookie,
+      });
+      if (suspenso) {
+        return NextResponse.redirect(new URL("/account-suspended", request.url));
       }
     }
   }

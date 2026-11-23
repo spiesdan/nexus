@@ -22,6 +22,7 @@ import { fail, type ApiError } from "@/lib/api/wrappers";
 import { audit } from "@/lib/audit";
 import { loadAuthUser, mfaEmDivida, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK, type ActiveOrg, type AuthUser, type Role } from "@/lib/auth/types";
+import { bloqueioPorCobranca } from "@/lib/billing/gate-servidor";
 import { createClient } from "@/lib/supabase/server";
 
 export type RoleCheck =
@@ -42,6 +43,8 @@ interface RequireRoleOpts {
    * NUNCA do body. O role vem de `fn_user_role_in_org(p_org)` nessa org.
    */
   organizationId?: string;
+  /** Caminho da requisição para o gate de cobrança (default: header x-pathname). */
+  path?: string;
 }
 
 /**
@@ -164,6 +167,22 @@ export async function requireRole(min: Role, opts: RequireRoleOpts = {}): Promis
       response: fail("forbidden_role", `Permissão insuficiente. Requer role >= ${min}.`, 403, {
         requestId,
       }),
+    };
+  }
+
+  // Gate backend da cobrança (P0) — DEPOIS de papel e MFA: quem não tem papel
+  // continua levando forbidden_role e quem tem fator cadastrado sem prová-lo
+  // continua levando mfa_required. Suspensão não pode mascarar essas decisões.
+  // Não é a única porta: resolveActiveOrg e o proxy /app/* também cobrem.
+  if (!user.is_platform_admin && (await bloqueioPorCobranca(org.orgId, opts.path))) {
+    return {
+      ok: false,
+      response: fail(
+        "tenant_suspended",
+        "Assinatura vencida. Regularize o pagamento para voltar a usar o sistema.",
+        403,
+        { requestId },
+      ),
     };
   }
 
