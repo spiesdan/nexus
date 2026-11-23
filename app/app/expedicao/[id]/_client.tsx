@@ -767,40 +767,76 @@ export function CargaClient({
 
             <div className="flex flex-wrap items-center gap-2">
               {podeOperar && carga.status === "montando" && (
-                <Button
-                  size="sm"
-                  onClick={() => void mudarStatus("em_rota")}
-                  disabled={naoSeparados.length > 0}
-                  title={
-                    naoSeparados.length > 0
-                      ? `${naoSeparados.length} ${
-                          naoSeparados.length === 1
-                            ? t("pedido ainda não separado")
-                            : t("pedidos ainda não separados")
-                        }`
-                      : undefined
-                  }
-                >
-                  {textos.sairRota}
-                </Button>
+                <>
+                  {naoSeparados.length > 0 ? (
+                    /* A AÇÃO QUE DESBLOQUEIA É PRIMÁRIA. "Sair para rota"
+                       fica secundária enquanto há separação pendente —
+                       primário desabilitado no topo era o botão mais
+                       destacado da tela e não fazia nada (auditoria 71/72). */
+                    <Button
+                      size="sm"
+                      onClick={() => proximaNaoSeparada && focarParada(proximaNaoSeparada.id)}
+                      disabled={!proximaNaoSeparada}
+                    >
+                      {t("Conferir separação")}
+                    </Button>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    variant={naoSeparados.length > 0 ? "outline" : "default"}
+                    onClick={() => void mudarStatus("em_rota")}
+                    title={
+                      naoSeparados.length > 0
+                        ? `${naoSeparados.length} ${
+                            naoSeparados.length === 1
+                              ? t("pedido ainda não separado")
+                              : t("pedidos ainda não separados")
+                          }`
+                        : undefined
+                    }
+                    className={
+                      naoSeparados.length > 0
+                        ? "border-border bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground"
+                        : undefined
+                    }
+                  >
+                    {textos.sairRota}
+                  </Button>
+                </>
               )}
               {podeOperar && carga.status === "em_rota" && (
-                <Button
-                  size="sm"
-                  onClick={() => void mudarStatus("concluida")}
-                  disabled={pendentes.length > 0}
-                  title={
-                    pendentes.length > 0
-                      ? `${pendentes.length} ${
-                          pendentes.length === 1
-                            ? t("parada ainda sem desfecho")
-                            : t("paradas ainda sem desfecho")
-                        }`
-                      : undefined
-                  }
-                >
-                  {textos.concluir}
-                </Button>
+                <>
+                  {pendentes.length > 0 ? (
+                    <Button
+                      size="sm"
+                      onClick={() => proxima && focarParada(proxima.id)}
+                      disabled={!proxima}
+                    >
+                      {t("Registrar desfecho")}
+                    </Button>
+                  ) : null}
+                  <Button
+                    size="sm"
+                    variant={pendentes.length > 0 ? "outline" : "default"}
+                    onClick={() => void mudarStatus("concluida")}
+                    title={
+                      pendentes.length > 0
+                        ? `${pendentes.length} ${
+                            pendentes.length === 1
+                              ? t("parada ainda sem desfecho")
+                              : t("paradas ainda sem desfecho")
+                          }`
+                        : undefined
+                    }
+                    className={
+                      pendentes.length > 0
+                        ? "border-border bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground"
+                        : undefined
+                    }
+                  >
+                    {textos.concluir}
+                  </Button>
+                </>
               )}
               {/* NO MÁXIMO DUAS AÇÕES NO CABEÇALHO. O resto mora no "…" —
                   em 390 px cinco botões quebravam em duas linhas. A ação de

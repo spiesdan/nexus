@@ -32,3 +32,21 @@ Capturas dos dois modos, claro/escuro × 1440/390, dado real (carga `a7c1997e…
 Cabeçalho em 390: uma linha para as ações do workbench (a ação primária e o menu "…"); nenhum corte. Contraste 0, overflow 0, console 0, axe 0 crítico/sério na medição final (`capturas/medicao-modos-final2/varredura.json`).
 
 Gates: `expedicao-pagina-de-rota-layout` e `rotulo-de-campo-aponta-para-controle` verdes; typecheck limpo.
+
+## Ajuste pós-revisão: ação primária desbloqueante
+
+Na captura de montagem o botão **Sair para rota** era o único preenchido e estava `disabled` exatamente quando faltavam separações — o controle mais destacado da tela não fazia nada. Agora:
+
+- com separação pendente → **Conferir separação** é o primário (leva à parada pendente); "Sair para rota" fica outline com fundo `bg-muted`/`text-muted-foreground`;
+- sem pendência → **Sair para rota** assume o preenchimento e o outro botão desaparece;
+- o mesmo padrão vale na operação: **Registrar desfecho** prime, **Concluir carga** secundário até todas as paradas terem desfecho.
+
+Par habilitado × desabilitado medido no navegador (cargas `a7c1997e…` bloqueada e `c9f0b81a…` liberada, ambas em montagem):
+
+| | botão | fundo computado |
+| --- | --- | --- |
+| bloqueada | Conferir separação (primário) | `rgb(164,165,255)` |
+| bloqueada | Sair para rota (secundário esmaecido) | `rgb(38,38,38)` |
+| liberada | Sair para rota (primário) | `rgb(164,165,255)` |
+
+Capturas: `capturas/modos-componentes/primario-{bloqueado,liberado}_light_{1440,390}.png`. Diferença visível e medida — não é o mesmo roxo sólido com `opacity` enganoso. Em 390 as duas ações da montagem ficam na mesma linha (`y=180`, `h=44`).
