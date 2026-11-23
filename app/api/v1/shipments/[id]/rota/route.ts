@@ -10,6 +10,7 @@ import { type NextRequest } from "next/server";
 
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 import { carregarCargaComParadas } from "./_carga";
@@ -63,6 +64,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     {
       ...d,
       ultima_posicao: ultima ?? null,
+      gps_sem_sinal_minutos: env.GPS_SEM_SINAL_MINUTOS,
       rota_versao: d.carga.rota_versao,
       distribuicao,
       historico_rotas: versoes ?? [],

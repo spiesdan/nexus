@@ -283,6 +283,24 @@ const schema = z.object({
   /** User-Agent identificável — exigência da política de uso do Nominatim. */
   GEOCODER_UA: z.string().optional().default("Nexus-Rotas/1.0"),
   /**
+   * Photon (Komoot) — serviço de autocomplete de endereço usado no painel de
+   * expedição. Padrão público, sem chave; uma instalação com volume próprio
+   * aponta para o seu. Nenhum segredo viaja nesta URL.
+   */
+  PHOTON_URL: z.string().optional().default("https://photon.komoot.io"),
+  /**
+   * Limiar do indicador de GPS do motorista no escritório, em minutos.
+   * Acima disto a tela diz "sem sinal há N min" — nunca "online" por default:
+   * posição antiga sem disclaimer é afirmação falsa de presença.
+   */
+  GPS_SEM_SINAL_MINUTOS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(1440)
+    .default(15)
+    .catch(15),
+  /**
    * Teto de NEGÓCIOS decididos por passada do cron de risco (15 min).
    *
    * O custo é medido, não estimado: 64 estados com uma pergunta custam ~12,5 s
