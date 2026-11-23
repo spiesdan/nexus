@@ -37,6 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DIAS_UTEIS, DiasDaSemana, resumoDosDias } from "@/components/prospeccao/DiasDaSemana";
+import { SimulacaoDeGastosCard } from "@/components/prospeccao/SimulacaoDeGastosCard";
 import { useT } from "@/hooks/i18n/useT";
 import { useMessageTemplates } from "@/hooks/inbox/useMessageTemplates";
 import { apiClient } from "@/lib/api/client";
@@ -51,6 +52,12 @@ import {
 import { ESPACO_ANTIBAN_MS, ESPACO_MAXIMO_MS } from "@/lib/prospeccao/disparo";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
 import { comoMoeda } from "@/lib/format/moeda";
+import {
+  custoDaCampanha,
+  faixaProspeccao,
+  CPM_PADRAO,
+  CTR_PADRAO,
+} from "@/lib/prospeccao/simulacao-gastos";
 
 import { CampoDeMidia } from "./_campo-de-midia";
 import {
@@ -205,6 +212,51 @@ export function CampanhaWizard({
   const templates = useMessageTemplates();
 
   const [passo, setPasso] = React.useState(0);
+  // P1-17 — premissas da simulação ficam VISÍVEIS ao lado do número. CPM/CTR
+  // começam nos defaults declarados e podem ser ajustados aqui na revisão.
+  const [cpmTexto, setCpmTexto] = React.useState(String(CPM_PADRAO));
+  const [ctrTexto, setCtrTexto] = React.useState(String(CTR_PADRAO * 100));
+  const [verbaTexto, setVerbaTexto] = React.useState("0");
+  const [configDeCusto, setConfigDeCusto] = React.useState<{
+    provider: string;
+    cfg: { preco_busca_cents: number | null; preco_detalhe_cents: number | null };
+  } | null>(null);
+  const [consumoDoMes, setConsumoDoMes] = React.useState<{
+    custo_cents: number;
+    limite_cents: number | null;
+  } | null>(null);
+
+  React.useEffect(() => {
+    let vivo = true;
+    void Promise.allSettled([
+      apiClient.get<{ data: Record<string, unknown> }>("/api/v1/prospecting/settings"),
+      apiClient.get<{ data: { mes?: { custo_cents?: number }; orcamento?: { limite_cents?: number | null } } }>(
+        "/api/v1/prospecting/consumo",
+      ),
+    ]).then(([cfg, consumo]) => {
+      if (!vivo) return;
+      const dados = cfg.status === "fulfilled" ? cfg.value.data : {};
+      if (dados && typeof dados === "object") {
+        setConfigDeCusto({
+          provider: String(dados.provider_ativo ?? "google_places"),
+          cfg: {
+            preco_busca_cents: dados.preco_busca_cents == null ? null : Number(dados.preco_busca_cents),
+            preco_detalhe_cents:
+              dados.preco_detalhe_cents == null ? null : Number(dados.preco_detalhe_cents),
+          },
+        });
+      }
+      if (consumo.status === "fulfilled") {
+        setConsumoDoMes({
+          custo_cents: Number(consumo.value.data?.mes?.custo_cents ?? 0),
+          limite_cents: consumo.value.data?.orcamento?.limite_cents ?? null,
+        });
+      }
+    });
+    return () => {
+      vivo = false;
+    };
+  }, []);
   const [alcancado, setAlcancado] = React.useState(0);
   const [nome, setNome] = React.useState("");
   /**
@@ -1102,6 +1154,16 @@ export function CampanhaWizard({
               }),
           ...agenda,
           ...(recorrencia ? { recorrencia_dias: Number(recorrencia) } : {}),
+          // P1-17 — o teto de prospecção é o MAXIMO da faixa mostrada na
+          // revisão: o número que o operador viu é o que fica gravado.
+          orcamento_prospeccao_cents: faixaProspeccao({
+            celulas: previa?.varridas ?? 0,
+            custo: custoDaCampanha(
+              configDeCusto?.provider ?? "google_places",
+              configDeCusto?.cfg,
+            ),
+          }).maximo,
+          orcamento_midia_cents: Math.max(0, Math.round((Number(verbaTexto) || 0) * 100)),
         },
       );
       const id = criada?.data?.id;
@@ -2337,6 +2399,63 @@ export function CampanhaWizard({
 
         {passo === 2 && (
           <div className="space-y-4">
+            <Card className="space-y-3 p-4">
+              <p className="text-sm font-semibold">{t("Simulação de gastos (premissas ajustáveis)")}</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="cpm-premissa">{t("CPM — R$ por mil impressões")}</Label>
+                  <Input
+                    id="cpm-premissa"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={cpmTexto}
+                    onChange={(e) => setCpmTexto(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="ctr-premissa">{t("CTR — porcentagem")}</Label>
+                  <Input
+                    id="ctr-premissa"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.1"
+                    value={ctrTexto}
+                    onChange={(e) => setCtrTexto(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="verba-premissa">{t("Verba de mídia (R$)")}</Label>
+                  <Input
+                    id="verba-premissa"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={verbaTexto}
+                    onChange={(e) => setVerbaTexto(e.target.value)}
+                  />
+                </div>
+              </div>
+              <SimulacaoDeGastosCard
+                celulas={previa?.varridas ?? 0}
+                custo={custoDaCampanha(
+                  configDeCusto?.provider ?? "google_places",
+                  configDeCusto?.cfg,
+                )}
+                verbaCents={Math.max(0, Math.round((Number(verbaTexto) || 0) * 100))}
+                cpm={cpmTexto === "" ? null : Number(cpmTexto)}
+                ctr={ctrTexto === "" ? null : Number(ctrTexto) / 100}
+                gastoCents={consumoDoMes?.custo_cents ?? 0}
+                limiteCents={consumoDoMes?.limite_cents ?? null}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t(
+                  "Células estimadas = volume varrido na prévia; a grade real pode variar com raio e sobreposição. O gasto de mídia é lançamento manual até existir Marketing API.",
+                )}
+              </p>
+            </Card>
+
             <Card className="space-y-3 p-4">
               <p className="text-sm font-semibold">{t("Revise antes de criar")}</p>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">

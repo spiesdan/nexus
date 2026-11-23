@@ -362,6 +362,9 @@ export const campanhaCreateSchema = z.object({
    * próprio) não volta.
    */
   fonte_publico: z.enum(["busca", "base", "ambas"]).optional(),
+  /** P1-17 — orçamentos por campanha; ausente = sem teto próprio. */
+  orcamento_prospeccao_cents: z.number().int().min(0).nullable().optional(),
+  orcamento_midia_cents: z.number().int().min(0).nullable().optional(),
 })
   // A criação também aceita o agendamento (0273): quem cria a campanha já com
   // o relógio não precisa de um segundo request — mas os campos são opcionais.
