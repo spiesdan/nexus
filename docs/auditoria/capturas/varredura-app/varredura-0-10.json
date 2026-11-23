@@ -1,0 +1,3292 @@
+{
+  "geradoEm": "2026-11-23T11:27:34.883Z",
+  "base": "http://localhost:3029",
+  "tempoTotalMs": 226600,
+  "rotas": 10,
+  "medidas": 40,
+  "validas": 40,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    },
+    "atendimento": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 1,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    },
+    "ia": {
+      "rotas": 8,
+      "medidas": 8,
+      "ok": 0,
+      "contraste": 2,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 8,
+      "axe": 2,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/",
+      "modulo": null,
+      "redirecionaPara": "/app",
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 16,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 61140
+    },
+    {
+      "rota": "/agenda",
+      "modulo": "atendimento",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 3,
+      "alvosPequenos": 238,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": true,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 27975
+    },
+    {
+      "rota": "/ai",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 2,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 19291
+    },
+    {
+      "rota": "/ai/agents",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 9,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 16235
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 2,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 65,
+      "axeCritica": 8,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 24724
+    },
+    {
+      "rota": "/ai/agents/new",
+      "modulo": "ia",
+      "redirecionaPara": "/403",
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 1,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 15713
+    },
+    {
+      "rota": "/ai/cases",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 6,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 13409
+    },
+    {
+      "rota": "/ai/controle",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 14,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 4,
+      "axeCritica": 0,
+      "axeSeria": 2,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 15936
+    },
+    {
+      "rota": "/ai/credentials",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 3,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 8774
+    },
+    {
+      "rota": "/ai/decisoes",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 70,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 19834
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app",
+      "redirecionaPara": "/app",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 152,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 27,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 38638
+    },
+    {
+      "rota": "/",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app",
+      "redirecionaPara": "/app",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 123,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 27,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tudo",
+            "largura": 41,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Vendas no mês",
+            "largura": 100,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8380
+    },
+    {
+      "rota": "/",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app",
+      "redirecionaPara": "/app",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 152,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 27,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7596
+    },
+    {
+      "rota": "/",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app",
+      "redirecionaPara": "/app",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 123,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 27,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tudo",
+            "largura": 41,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Vendas no mês",
+            "largura": 100,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6526
+    },
+    {
+      "rota": "/agenda",
+      "modulo": "atendimento",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/agenda",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agenda"
+        ],
+        "textos": 82,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 238,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Hoje",
+            "largura": 51,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo agendamento",
+            "largura": 156,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Período anterior",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Próximo período",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dia",
+            "largura": 37,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Semana",
+            "largura": 65,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .cursor-pointer.opacity-55[data-coluna=\"0\"]:nth-child(46) > .ml-1.leading-4.text-text :: <span class=\"ml-1 truncate text-[11px] font-semibold leading-4 text-text\">Consulta E2E</span>",
+          "color-contrast: button[data-coluna=\"1\"] > .ml-1.leading-4.text-text :: <span class=\"ml-1 truncate text-[11px] font-semibold leading-4 text-text\">Consulta E2E</span>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12486
+    },
+    {
+      "rota": "/agenda",
+      "modulo": "atendimento",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/agenda",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agenda"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 231,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dia",
+            "largura": 37,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Semana",
+            "largura": 65,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês",
+            "largura": 43,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximos1",
+            "largura": 93,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando confirmação0",
+            "largura": 181,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Passados0",
+            "largura": 95,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cancelados4",
+            "largura": 107,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5901
+    },
+    {
+      "rota": "/agenda",
+      "modulo": "atendimento",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/agenda",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agenda"
+        ],
+        "textos": 82,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 238,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Hoje",
+            "largura": 51,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo agendamento",
+            "largura": 156,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Período anterior",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Próximo período",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dia",
+            "largura": 37,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Semana",
+            "largura": 65,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5048
+    },
+    {
+      "rota": "/agenda",
+      "modulo": "atendimento",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/agenda",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agenda"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 231,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dia",
+            "largura": 37,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Semana",
+            "largura": 65,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês",
+            "largura": 43,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximos1",
+            "largura": 93,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando confirmação0",
+            "largura": 181,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Passados0",
+            "largura": 95,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cancelados4",
+            "largura": 107,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "Failed to load resource: the server responded with a status of 422 (Unprocessable Entity)"
+      ],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4540
+    },
+    {
+      "rota": "/ai",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agente de IA"
+        ],
+        "textos": 69,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10673
+    },
+    {
+      "rota": "/ai",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agente de IA"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2996
+    },
+    {
+      "rota": "/ai",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agente de IA"
+        ],
+        "textos": 69,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2959
+    },
+    {
+      "rota": "/ai",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agente de IA"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2663
+    },
+    {
+      "rota": "/ai/agents",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agents de IA"
+        ],
+        "textos": 69,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar agents",
+            "largura": 256,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por status",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7493
+    },
+    {
+      "rota": "/ai/agents",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Agents de IA"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar agents",
+            "largura": 294,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por status",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4472
+    },
+    {
+      "rota": "/ai/agents",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agents de IA"
+        ],
+        "textos": 70,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar agents",
+            "largura": 256,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por status",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 326,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2508
+    },
+    {
+      "rota": "/ai/agents",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Agents de IA"
+        ],
+        "textos": 41,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar agents",
+            "largura": 294,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por status",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1762
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 179,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "Escolher uma a uma (modo avançado)",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-sm font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 65,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" disabled=\"\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12356
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 147,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "Escolher uma a uma (modo avançado)",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-sm font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 60,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Propostas",
+            "largura": 88,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conversa com o cliente",
+            "largura": 172,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" disabled=\"\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4353
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 179,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 65,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" disabled=\"\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4651
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 147,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 60,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Propostas",
+            "largura": 88,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conversa com o cliente",
+            "largura": 172,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" disabled=\"\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3364
+    },
+    {
+      "rota": "/ai/agents/new",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7365
+    },
+    {
+      "rota": "/ai/agents/new",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2978
+    },
+    {
+      "rota": "/ai/agents/new",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2948
+    },
+    {
+      "rota": "/ai/agents/new",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2422
+    },
+    {
+      "rota": "/ai/cases",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/cases",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Casos"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abertos1",
+            "largura": 75,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Concluídos",
+            "largura": 81,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5195
+    },
+    {
+      "rota": "/ai/cases",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/cases",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Casos"
+        ],
+        "textos": 15,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abertos1",
+            "largura": 75,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Concluídos",
+            "largura": 81,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2868
+    },
+    {
+      "rota": "/ai/cases",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/cases",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Casos"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abertos1",
+            "largura": 75,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Concluídos",
+            "largura": 81,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2768
+    },
+    {
+      "rota": "/ai/cases",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/cases",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Casos"
+        ],
+        "textos": 15,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abertos1",
+            "largura": 75,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Concluídos",
+            "largura": 81,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2578
+    },
+    {
+      "rota": "/ai/controle",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/controle",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Controle de IA"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 7,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir decisões",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir inteligência",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir fila",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir uso",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Ver execuções",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: a[href$=\"decisoes\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/ai/decisoes\">Abrir decisões</a>",
+          "color-contrast: .mt-2.inline-block[href$=\"inteligencia\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/inteligencia\">Abrir inteligência</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6353
+    },
+    {
+      "rota": "/ai/controle",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/controle",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Controle de IA"
+        ],
+        "textos": 33,
+        "contrasteReprovados": 7,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir decisões",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir inteligência",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir fila",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir uso",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Abrir inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          },
+          {
+            "amostra": "Ver execuções",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "mt-2 inline-block text-xs font-medium text-primary underline-offset-4 "
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: a[href$=\"decisoes\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/ai/decisoes\">Abrir decisões</a>",
+          "color-contrast: .mt-2.inline-block[href$=\"inteligencia\"] :: <a class=\"mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/inteligencia\">Abrir inteligência</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3192
+    },
+    {
+      "rota": "/ai/controle",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/controle",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Controle de IA"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3525
+    },
+    {
+      "rota": "/ai/controle",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/controle",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Controle de IA"
+        ],
+        "textos": 33,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2866
+    },
+    {
+      "rota": "/ai/credentials",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/credentials",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Chaves de acesso à IA"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3680
+    },
+    {
+      "rota": "/ai/credentials",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/credentials",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Chaves de acesso à IA"
+        ],
+        "textos": 13,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1784
+    },
+    {
+      "rota": "/ai/credentials",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/credentials",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Chaves de acesso à IA"
+        ],
+        "textos": 42,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1695
+    },
+    {
+      "rota": "/ai/credentials",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/credentials",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Chaves de acesso à IA"
+        ],
+        "textos": 13,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1615
+    },
+    {
+      "rota": "/ai/decisoes",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/decisoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Decisões da IA"
+        ],
+        "textos": 197,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 30,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 70,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "0123456",
+            "largura": 52,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "NenhumE2E Ramos 1794804185013E2E Classif",
+            "largura": 280,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Salvar",
+            "largura": 58,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando decisão30",
+            "largura": 151,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7339
+    },
+    {
+      "rota": "/ai/decisoes",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/decisoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Decisões da IA"
+        ],
+        "textos": 166,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 30,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "0123456",
+            "largura": 52,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "NenhumE2E Ramos 1794804185013E2E Classif",
+            "largura": 280,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando decisão30",
+            "largura": 151,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Já decididas",
+            "largura": 89,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3962
+    },
+    {
+      "rota": "/ai/decisoes",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/decisoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Decisões da IA"
+        ],
+        "textos": 197,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 30,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 70,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "0123456",
+            "largura": 52,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "NenhumE2E Ramos 1794804185013E2E Classif",
+            "largura": 280,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Salvar",
+            "largura": 58,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando decisão30",
+            "largura": 151,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3724
+    },
+    {
+      "rota": "/ai/decisoes",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/decisoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Decisões da IA"
+        ],
+        "textos": 166,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 30,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "0123456",
+            "largura": 52,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "NenhumE2E Ramos 1794804185013E2E Classif",
+            "largura": 280,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aguardando decisão30",
+            "largura": 151,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Já decididas",
+            "largura": 89,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4809
+    }
+  ]
+}
