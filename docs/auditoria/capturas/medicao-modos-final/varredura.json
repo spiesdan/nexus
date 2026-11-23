@@ -1,0 +1,408 @@
+{
+  "geradoEm": "2026-11-23T15:17:51.280Z",
+  "base": "http://localhost:3031",
+  "tempoTotalMs": 15212,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 10,
+      "axeCritica": 0,
+      "axeSeria": 2,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 14827
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 031"
+        ],
+        "textos": 222,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Revisar avisos",
+            "largura": 343,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Outras formas de calcular",
+            "largura": 307,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4973
+    },
+    {
+      "rota": "/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 031"
+        ],
+        "textos": 176,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Revisar avisos",
+            "largura": 312,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Outras formas de calcular",
+            "largura": 276,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0083",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3160
+    },
+    {
+      "rota": "/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 031"
+        ],
+        "textos": 222,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Revisar avisos",
+            "largura": 343,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Outras formas de calcular",
+            "largura": 307,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .leading-relaxed.text-text-muted :: <p class=\"text-xs leading-relaxed text-text-muted\">Próxima: Cliente Jornada Expedicao 1795040572758. A carga só conclui com todas entregues ou devolvidas.</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3449
+    },
+    {
+      "rota": "/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 031"
+        ],
+        "textos": 176,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Revisar avisos",
+            "largura": 312,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Outras formas de calcular",
+            "largura": 276,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0083",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .leading-relaxed.text-text-muted :: <p class=\"text-xs leading-relaxed text-text-muted\">Próxima: Cliente Jornada Expedicao 1795040572758. A carga só conclui com todas entregues ou devolvidas.</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3245
+    }
+  ]
+}

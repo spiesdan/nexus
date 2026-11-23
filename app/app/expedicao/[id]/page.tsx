@@ -21,7 +21,11 @@ export default async function CargaPage({
 }) {
   const { id } = await params;
   const { aba } = await searchParams;
-  if (aba === "rota" || aba === "fechamento" || aba === "motorista") {
+  // `?aba=rota` mentia: abria o mesmo workbench com o breadcrumb dizendo
+  // "Rota". O deep link agora leva à visão de operação de verdade, que é onde
+  // o mapa e a ordem vivem. Motorista/fechamento seguem como subtelas próprias.
+  if (aba === "rota") redirect(`/app/expedicao/${id}/rota`);
+  if (aba === "fechamento" || aba === "motorista") {
     redirect(`/app/expedicao/${id}/${aba}`);
   }
 
