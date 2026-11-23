@@ -16,7 +16,7 @@
 
 | P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[x]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; P0-8 fechado no banco: EXPLAIN 929,6 → 49,4 ms (18,8×), p95 3408 → 767 ms | — 
 
-| P0-9 | `update.sh`: pausar worker + scheduler antes de aplicar o schema, subir depois (idempotente, passo visível no log) | `[ ]` | G (depois do #823) | 40 §43: first deploy 1.65.1 abortou em deadlock na linha 7402 do baseline (`followup_enrollments enable RLS`);/pnpm test:shell | parar serviços, aplicar baseline, subir; `pnpm test:shell`; entra na próxima, não nesta |
+| P0-9 | `update.sh`: pausar worker + scheduler antes de aplicar o schema, subir depois (idempotente, passo visível no log) | `[~]` | D (dono realocou; G saiu) | 40 §43: first deploy 1.65.1 abortou em deadlock na linha 7402 do baseline (`followup_enrollments enable RLS`);/pnpm test:shell | parar serviços, aplicar baseline, subir; `pnpm test:shell`; entra na próxima, não nesta |
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
