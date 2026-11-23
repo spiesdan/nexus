@@ -321,7 +321,17 @@ export function Roteirizador({
    * fora do mapa. Agora a falha tem lugar fixo acima dos painéis, com o texto
    * do servidor e o botão de tentar de novo.
    */
-  const [erroGeo, setErroGeo] = React.useState<string | null>(null);
+  const [erroGeo, setErroGeo] = React.useState<string | null>(null);  /**
+   * WORKBENCH MOBILE — uma decisão, três áreas.
+   *
+   * No celular o mapa de 50vh empurrava a ordem de entrega para baixo da dobra
+   * (medido em 390 px: h1 e 8 ações, depois 422 px de mapa antes da lista). A
+   * aba primária é "Pedidos": é onde se trabalha. O estado vive aqui e é
+   * compartilhado pelas três áreas; em `lg` tudo continua visível.
+   */
+  const [abaMobile, setAbaMobile] = React.useState<"pedidos" | "mapa" | "planejamento">("pedidos");
+  const visAba = (aba: typeof abaMobile) => (abaMobile === aba ? "block" : "hidden lg:block");
+
   const [retornar, setRetornar] = React.useState(false);
   const [tempoParada, setTempoParada] = React.useState(8);
   const [trabalhando, setTrabalhando] = React.useState<string | null>(null);
@@ -1559,7 +1569,44 @@ export function Roteirizador({
           o piso: 50vh, com o teto em 520px (antes 640px). Trazer a lista para a
           primeira dobra é trabalho da fatia 2 (ação primária e ordem sincronizada),
           não de encolher o mapa abaixo do que a tela precisa. */}
-      <div className="min-w-0">
+      {/*
+        ABAS DO WORKBENCH (celular). `role=tab` + `aria-selected` dizem o estado;
+        `aria-current` atende a régua da casa e `min-h-11` dá 44 px de alvo.
+      */}
+      <div
+        role="tablist"
+        aria-label={t("Áreas da rota")}
+        className="mb-3 flex gap-1 rounded-xl border border-border bg-stage-2/60 p-1 lg:hidden"
+      >
+        {(
+          [
+            ["pedidos", t("Pedidos")],
+            ["mapa", t("Mapa")],
+            // Carga concluída não tem planejamento — não oferecer aba vazia.
+            ...(editavel ? ([["planejamento", t("Planejamento")]] as const) : []),
+          ] as const
+        ).map(([chave, rotulo]) => {
+          const ativa = abaMobile === chave;
+          return (
+            <button
+              key={chave}
+              type="button"
+              role="tab"
+              aria-selected={ativa}
+              aria-current={ativa ? "page" : undefined}
+              aria-controls={chave === "planejamento" ? "aba-planejamento" : `aba-${chave}`}
+              onClick={() => setAbaMobile(chave)}
+              className={`min-h-11 flex-1 rounded-lg px-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink ${
+                ativa ? "bg-accent-soft text-accent-ink" : "text-muted-foreground"
+              }`}
+            >
+              {rotulo}
+            </button>
+          );
+        })}
+      </div>
+
+      <div id="aba-mapa" className={`min-w-0 ${visAba("mapa")}`}>
         <p data-testid="gps-estado" className="mb-2 text-xs text-text-muted">
           {estadoDoGps(
             ultimaPosicaoEm,
@@ -1711,7 +1758,7 @@ export function Roteirizador({
           celular empilham na ordem em que se usa. */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {editavel && (
-          <div className="min-w-0 space-y-4">
+          <div id="aba-planejamento" className={`min-w-0 space-y-4 ${visAba("planejamento")}`}>
             <Card className="min-w-0 overflow-hidden p-0">
               <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
                 <div className="min-w-0">
@@ -1865,7 +1912,7 @@ export function Roteirizador({
         )}
 
         {editavel && (
-          <div className="min-w-0 space-y-4">
+          <div className={`min-w-0 space-y-4 ${visAba("planejamento")}`}>
             {/* Recuperação de endereços (Address Recovery Engine, 0309) — logo
               acima da distribuição porque é pré-requisito dela: com endereço
               sem confirmação o servidor recusa otimizar. */}
@@ -2109,7 +2156,11 @@ export function Roteirizador({
         )}
 
         {/* ── A ordem de entrega ────────────────────────────────────────── */}
-        <Card className="order-first min-w-0 overflow-hidden p-0">
+        <Card
+          id="aba-pedidos"
+          role="tabpanel"
+          className={`order-first min-w-0 overflow-hidden p-0 ${visAba("pedidos")}`}
+        >
           <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-border px-3.5 py-2.5">
             <p className="text-sm font-medium text-text">
               {t("Ordem de entrega")}{" "}
