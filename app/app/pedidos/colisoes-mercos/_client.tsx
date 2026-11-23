@@ -24,6 +24,7 @@ import {
   type RespostaColisoesMercos,
 } from "@/lib/mercos/colisoes";
 import { ArrowsClockwise, CheckCircle, Package, Warning } from "@/lib/ui/icons";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 
 /** Alvos de 44 px sem repetir a classe em cada botão. */
 const ALVOS = "[&_a]:min-h-11 [&_button]:min-h-11 [&_a]:min-w-11 [&_button]:min-w-11";
@@ -34,6 +35,7 @@ export function ColisoesMercosClient({
   textos: { voltar: string; importar: string; abrir: string; tentar: string };
 }) {
   const t = useT();
+  const tagDoIdioma = useTagDeIdioma();
   const confirmar = useConfirmar();
   const [itens, setItens] = React.useState<ColisaoMercos[]>([]);
   const [carregando, setCarregando] = React.useState(true);
@@ -231,7 +233,7 @@ export function ColisoesMercosClient({
                         {t("Detectado em")}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {rotuloData(colisao.visto_em)}
+                        {rotuloData(colisao.visto_em, tagDoIdioma)}
                       </p>
                     </div>
                     <div className="min-w-0">
