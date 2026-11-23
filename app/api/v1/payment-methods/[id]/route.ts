@@ -37,7 +37,7 @@ export async function PATCH(req: NextRequest, ctx: Contexto): Promise<Response> 
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("payment_methods")
+    .from("commercial_payment_methods")
     .update(lido.data)
     .eq("id", id)
     .eq("organization_id", autorizado.org.orgId)
@@ -65,7 +65,7 @@ export async function DELETE(req: NextRequest, ctx: Contexto): Promise<Response>
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("payment_methods")
+    .from("commercial_payment_methods")
     .update({ ativo: false })
     .eq("id", id)
     .eq("organization_id", autorizado.org.orgId)
