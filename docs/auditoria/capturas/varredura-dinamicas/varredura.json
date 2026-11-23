@@ -1,0 +1,2202 @@
+{
+  "geradoEm": "2026-11-23T02:05:45.054Z",
+  "base": "http://localhost:3024",
+  "tempoTotalMs": 167910,
+  "rotas": 6,
+  "medidas": 24,
+  "validas": 24,
+  "invalidas": 0,
+  "porModulo": {
+    "ia": {
+      "rotas": 4,
+      "medidas": 4,
+      "ok": 0,
+      "contraste": 2,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 4,
+      "axe": 1,
+      "http": 0
+    },
+    "config-e-inteligencia": {
+      "rotas": 2,
+      "medidas": 2,
+      "ok": 0,
+      "contraste": 1,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 2,
+      "axe": 2,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 2,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 65,
+      "axeCritica": 8,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 69841
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 11,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 16826
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 2,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 23,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 14695
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "modulo": "ia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 4,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 13008
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 6,
+      "axeCritica": 0,
+      "axeSeria": 6,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 13855
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 6,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 14,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 37103
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 187,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "Escolher uma a uma (modo avançado)",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-sm font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 65,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 41081
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 155,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "Escolher uma a uma (modo avançado)",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-sm font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 60,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Propostas",
+            "largura": 88,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conversa com o cliente",
+            "largura": 172,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10706
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 187,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 65,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8773
+    },
+    {
+      "rota": "/ai/agents/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/agents/8c4cab8e-cd49-4c78-aea0-ec92c3c05800",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Agente Gatilho 1794804223298"
+        ],
+        "textos": 155,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 60,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configuração",
+            "largura": 109,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Teste",
+            "largura": 58,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Capacidades",
+            "largura": 107,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Execuções",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Histórico",
+            "largura": 81,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Propostas",
+            "largura": 88,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conversa com o cliente",
+            "largura": 172,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 2,
+        "seria": 0,
+        "ids": [
+          "aria-valid-attr-value (critical)",
+          "label (critical)"
+        ],
+        "nos": [
+          "aria-valid-attr-value: #radix-_R_9clritpet5rjnabn6lb_-trigger-conversa :: <button type=\"button\" role=\"tab\" aria-selected=\"true\" aria-controls=\"radix-_R_9clritpet5r...\" data-state=\"active\" id=\"radix-_R_9clritpet5r...\" class=\"inline-flex items-ce...\" data-",
+          "label: .font-mono :: <textarea class=\"flex min-h-[80px] w-...\" rows=\"12\" spellcheck=\"false\" aria-invalid=\"false\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9281
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/routers/11111111-1111-4111-8111-111111111111",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Roteador E2E (auditoria)"
+        ],
+        "textos": 60,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir roteador",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 510,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Automático — usa o provedor da organizaç",
+            "largura": 510,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nenhum — responde com o atendimento padr",
+            "largura": 510,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Testar classificação",
+            "largura": 159,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10864
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/routers/11111111-1111-4111-8111-111111111111",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Roteador E2E (auditoria)"
+        ],
+        "textos": 29,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Automático — usa o provedor da organizaç",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nenhum — responde com o atendimento padr",
+            "largura": 260,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2308
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/routers/11111111-1111-4111-8111-111111111111",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Roteador E2E (auditoria)"
+        ],
+        "textos": 59,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir roteador",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 510,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Automático — usa o provedor da organizaç",
+            "largura": 510,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nenhum — responde com o atendimento padr",
+            "largura": 510,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Testar classificação",
+            "largura": 159,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1985
+    },
+    {
+      "rota": "/ai/routers/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/routers/11111111-1111-4111-8111-111111111111",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Roteador E2E (auditoria)"
+        ],
+        "textos": 29,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "",
+            "largura": 36,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Automático — usa o provedor da organizaç",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nenhum — responde com o atendimento padr",
+            "largura": 260,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1669
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/d082f5ca-4f98-46e6-bf65-e8a31bbff245",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Gatilho Etapa 1794804223298"
+        ],
+        "textos": 59,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "React Flow",
+            "razao": 2.66,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(153,153,153,1)",
+            "corFundo": "rgb(246,247,249)",
+            "classe": ""
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 23,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Gatilho: Etapa do funil",
+            "largura": 148,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Política de handoff",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Salvar",
+            "largura": 60,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Publicar",
+            "largura": 69,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Desativar",
+            "largura": 79,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5257
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/d082f5ca-4f98-46e6-bf65-e8a31bbff245",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "E2E Gatilho Etapa 1794804223298"
+        ],
+        "textos": 19,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "React Flow",
+            "razao": 2.66,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(153,153,153,1)",
+            "corFundo": "rgb(246,247,249)",
+            "classe": ""
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Política de handoff",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Zoom In",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Zoom Out",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fit View",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Toggle Interactivity",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2988
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/d082f5ca-4f98-46e6-bf65-e8a31bbff245",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Gatilho Etapa 1794804223298"
+        ],
+        "textos": 59,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 23,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Gatilho: Etapa do funil",
+            "largura": 148,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Política de handoff",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Salvar",
+            "largura": 60,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Publicar",
+            "largura": 69,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Desativar",
+            "largura": 79,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3048
+    },
+    {
+      "rota": "/ai/followups/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/d082f5ca-4f98-46e6-bf65-e8a31bbff245",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "E2E Gatilho Etapa 1794804223298"
+        ],
+        "textos": 19,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Política de handoff",
+            "largura": 224,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Zoom In",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Zoom Out",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fit View",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Toggle Interactivity",
+            "largura": 26,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3402
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/enrollments/93608e27-2fb8-4498-a074-0b912e75fd8a",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Contato Gatilho 1794804223298"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5741
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "modulo": "ia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/enrollments/93608e27-2fb8-4498-a074-0b912e75fd8a",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Contato Gatilho 1794804223298"
+        ],
+        "textos": 31,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2481
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/enrollments/93608e27-2fb8-4498-a074-0b912e75fd8a",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Contato Gatilho 1794804223298"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2590
+    },
+    {
+      "rota": "/ai/followups/enrollments/[id]",
+      "modulo": "ia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/ai/followups/enrollments/93608e27-2fb8-4498-a074-0b912e75fd8a",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Contato Gatilho 1794804223298"
+        ],
+        "textos": 31,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2196
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "#abeae645"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Pré-visualizar dados",
+            "largura": 164,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aprovar anonimização",
+            "largura": 171,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "aria-progressbar-name (serious)",
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "aria-progressbar-name: .transition-all :: <div class=\"h-full rounded-full transition-all bg-emerald-500\" role=\"progressbar\" aria-valuenow=\"18\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 18%;\"></div>",
+          "color-contrast: .ml-2 :: <span class=\"ml-2 opacity-60\">por 298a7175…</span>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5151
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "#abeae645"
+        ],
+        "textos": 45,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "aria-progressbar-name (serious)"
+        ],
+        "nos": [
+          "aria-progressbar-name: .transition-all :: <div class=\"h-full rounded-full transition-all bg-emerald-500\" role=\"progressbar\" aria-valuenow=\"18\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 18%;\"></div>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2732
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "#abeae645"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Pré-visualizar dados",
+            "largura": 164,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Aprovar anonimização",
+            "largura": 171,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "aria-progressbar-name (serious)",
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "aria-progressbar-name: .transition-all :: <div class=\"h-full rounded-full transition-all bg-emerald-500\" role=\"progressbar\" aria-valuenow=\"18\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 18%;\"></div>",
+          "color-contrast: .ml-2 :: <span class=\"ml-2 opacity-60\">por 298a7175…</span>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3038
+    },
+    {
+      "rota": "/lgpd/requests/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/lgpd/requests/abeae645-8dfc-4e9b-86fb-5abbb6091c88",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "#abeae645"
+        ],
+        "textos": 45,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "aria-progressbar-name (serious)"
+        ],
+        "nos": [
+          "aria-progressbar-name: .transition-all :: <div class=\"h-full rounded-full transition-all bg-emerald-500\" role=\"progressbar\" aria-valuenow=\"18\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: 18%;\"></div>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2934
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 99,
+        "contrasteReprovados": 3,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais ações",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: tr:nth-child(1) > td:nth-child(5) > .text-primary.underline-offset-2.hover\\:underline :: <a class=\"text-xs font-medium text-primary underline-offset-2 hover:underline\" href=\"/app/inbox?id=f17dd8f9-7ee6-4ee9-8d8a-d240c881bc49\">Abrir Inbox</a>",
+          "color-contrast: tr:nth-child(2) > td:nth-child(5) > .text-primary.underline-offset-2.hover\\:underline :: <a class=\"text-xs font-medium text-primary underline-offset-2 hover:underline\" href=\"/app/inbox?id=b99d4096-5d1f-4e3e-afd0-aca3421bd4be\">Abrir Inbox</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 14600
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 3,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Pendentes 0",
+            "largura": 93,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviadas 2",
+            "largura": 84,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sem comprovante 0",
+            "largura": 134,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Falhas na entrega 1",
+            "largura": 129,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9413
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 99,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais ações",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7312
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Pendentes 0",
+            "largura": 93,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviadas 2",
+            "largura": 84,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sem comprovante 0",
+            "largura": 134,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Falhas na entrega 1",
+            "largura": 129,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5778
+    }
+  ]
+}

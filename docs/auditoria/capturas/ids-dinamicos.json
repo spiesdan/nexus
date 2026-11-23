@@ -1,0 +1,20 @@
+{
+  "/ai/agents/[id]": {
+    "id": "8c4cab8e-cd49-4c78-aea0-ec92c3c05800"
+  },
+  "/ai/routers/[id]": {
+    "id": "11111111-1111-4111-8111-111111111111"
+  },
+  "/ai/followups/[id]": {
+    "id": "d082f5ca-4f98-46e6-bf65-e8a31bbff245"
+  },
+  "/ai/followups/enrollments/[id]": {
+    "id": "93608e27-2fb8-4498-a074-0b912e75fd8a"
+  },
+  "/lgpd/requests/[id]": {
+    "id": "abeae645-8dfc-4e9b-86fb-5abbb6091c88"
+  },
+  "/prospeccao/campanhas/[id]": {
+    "id": "cbf5c604-dcc6-4149-a13c-e03151e506bf"
+  }
+}
