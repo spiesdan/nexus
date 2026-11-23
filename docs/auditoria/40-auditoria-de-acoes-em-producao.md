@@ -757,3 +757,30 @@ só dispara com template aprovado; sem ele o fluxo fica “aguardando aprovaçã
 **Descongelamento:** F liberado para painel de gastos + E2E do P1-28; D para a
 varredura das 96 (uma fatia por vez, `--workers=1`, swap >4 GB aborta e salva o
 parcial); G segue no p95. **Nenhuma release nova hoje sem pedido do dono.**
+
+
+## 39. 24/11/2026 — Série de SLO existe e ninguém viu (invariante 7 ferido)
+
+**Medição do dono em produção (7 dias):**
+
+```
+267 amostras · 0 erros · p95 2660 ms (alvo 800 ms)
+/api/v1/conversations: p95 2673 ms (259 amostras)
+Sentinel: plataforma.slo_estourado em regras_nao_avaliadas — NENHUMA ocorrência aberta
+```
+
+**Causa:** `fn_slo_api_resumo` é `returns table(...)`; `supabase.rpc()` devolve
+**array**. Dois leitores leem como **objeto**:
+`lib/sentinel/coleta.ts` (`total=0` → detector `null` → nunca abre) e
+`app/api/v1/admin/observabilidade/route.ts` (tela diz “sem histórico” com 267
+amostras na tabela).
+
+**Lição:** *RPC que retorna tabela devolve array; ler como objeto zera a série
+e cega o painel e o detector.* A série existe, o alvo é violado e o sistema
+não aprende — **invariante 7 ferido**.
+
+**Registrado no `66`:** P0-7 (G corrige os dois leitores) e P0-8 (G ataca a
+performance de `/api/v1/conversations`, p95 2673 ms). **Nenhuma release cortada
+por isso agora.** Quando o G mergear e o dono deployar, a verificação passa a
+exigir: **tela com 267+ amostras** e **ocorrência
+`plataforma.slo_estourado|latencia` aberta**.
