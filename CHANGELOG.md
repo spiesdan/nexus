@@ -8,6 +8,93 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.64.0] — 2026-11-23
+
+### Adicionado
+
+- **Specs de expedicao para GPS sem sinal, fila offline e cabine em 390px** Três specs cobrem a expedição: GPS ausente/desatualizado (nunca "online"),
+  fila offline com retry/idempotência/conflito (com bloqueio declarado onde é
+  preciso aparelho real) e cabine em viewport 390 com as abas do workbench.
+
+  Nada a fazer na VPS.
+
+- **Inbox mostra quando, por quê e o resumo do handoff** Quando a IA entregava a conversa, o atendente não via no cabeçalho quando isso
+  aconteceu, o motivo nem o resumo durável — precisava abrir o CRM. Agora o painel
+  de handoff traz essas três informações no cabeçalho da conversa.
+
+- **Empresa em varias campanhas, retomada por preset e follow-up de 48h** Uma empresa pode entrar em varias campanhas. A exclusividade da 0277 virou
+  membrosia (`prospecting_campaign_prospects`); continuam unicos o envio por
+  campanha e o espacamento por numero via pacing_ledger.
+
+  Empresa nunca contatada recebe o template Meta escolhido; empresa ja contatada
+  recebe o texto de retomada vindo de preset configuravel - nunca texto de marca
+  no codigo. Apos o envio inicial, um follow-up e agendado 48h depois somente se
+  nao houve resposta, com cancelamento em opt-out, conversa encerrada ou prospect
+  excluido. Fora da janela de 24h da Meta, texto livre e rejeitado: a retomada
+  usa template aprovado ou fica bloqueada com motivo nomeado.
+
+  Nada a fazer na VPS.
+
+- **Endpoint dos orcamentos parados do Mercos com idade e proximo passo** GET /api/v1/commercial-orders/orcamentos-parados devolve, no recorte
+  origem=mercos e status=rascunho, numero, cliente, valor, idade em dias e um
+  proximo passo por linha. A regua de idade vem de organizations.settings com
+  padrao de 60 dias, nunca de numero escondido na tela.
+
+  O recorte que separa as medicoes de 119 e 124 orcamentos esta registrado no
+  documento 66: 124 e o total; 119 e o subconjunto criado pelo Mercos que
+  ninguem da equipe abriu.
+
+  Nada a fazer na VPS.
+
+- **Exportacao CSV da fila de orcamentos parados** GET /api/v1/commercial-orders/orcamentos-parados?formato=csv exporta a MESMA
+  fila da tela, com numero, cliente, valor, idade, limite, proximo passo e total.
+  Nao e uma segunda consulta nem planilha morta: cada linha leva sua acao.
+
+  Nada a fazer na VPS.
+
+- **Relatorio mensal de gastos da campanha com exportacao CSV** GET /api/v1/prospecting/relatorio-gastos mostra, por campanha e no mes corrente,
+  orcamento (prospeccao + midia), gasto real de prospeccao e midia lancada
+  manualmente. O mesmo guard de 80/100% decide o estado e o proximo passo.
+  O parametro formato=csv devolve a mesma visao em planilha.
+
+  Sem tabela nova: os dados ja existiam nas colunas da campanha, em
+  prospecting_searches e em prospecting_campaign_spend.
+
+  Nada a fazer na VPS.
+
+### Corrigido
+
+- **Dashboard avisa quando o mês não tem vendas** Num mês sem vendas, o painel desenhava um gráfico zerado sem dizer que aquilo
+  era ausência de dado. Agora um estado vazio nomeia a fonte (as vendas do mês)
+  e aparece acima do gráfico, que continua na tela para manter a troca de mês.
+
+- **Crons fatiados para não estourar a URL do PostgREST** Os nove `.in()` sem teto que ainda rodavam em cron (Meu Dia: notas, itens de
+  carga, nomes de contatos/pedidos, pedidos e cidades; recover-stuck-messages:
+  marcação de mensagens e fechamento de avisos; sync-model-catalog: depreciação)
+  passaram a ir em blocos de 100 via `lib/db/por-fatias.ts`. Um erro em qualquer
+  bloco reprova a rodada com a mensagem original — sem "sucesso parcial". Fica
+  fora desta fatia o único sítio restante, `timeline-query`, que não é cron.
+
+- **Inbox avisa quando está mostrando o que já carregou** Quando o canal em tempo real não conectava, a lista do Inbox continuava legível
+  com dados do cache — sem dizer que aquilo não era o estado ao vivo. Agora um selo
+  discreto aparece acima dos filtros nesse caso, usando o estado do canal que a
+  própria tela já expunha.
+
+- **Atualização aplica o schema em uma transação só** No aborto da 1.63.0, o `update.sh` rodava o baseline statement por statement: a
+  migration 0334 falhou e a 0335 já tinha sido commitada, deixando o schema à
+  frente do código sem ninguém perceber. O passo de schema de `update.sh` e
+  `deploy.sh` agora roda com `psql -1` (`--single-transaction`): qualquer erro
+  desfaz tudo e a atualização para antes de trocar as imagens. A mensagem continua
+  apontando `psql:<stdin>:<linha>: ERROR: ...`. Não há `CREATE INDEX
+  CONCURRENTLY`, `VACUUM` nem `CREATE DATABASE` no baseline, então `-1` é viável
+  sem exceção.
+
+- **Último .in() sem teto da varredura foi fatiado** `lib/leads/timeline-query.ts` buscava todos os agentes da timeline num único
+  `.in("id", agentIds)` — com centenas de atores diferentes a URL podia estourar
+  (414) e a timeline perdia os nomes. A leitura agora usa `lib/db/por-fatias.ts`
+  (blocos de 100), o mesmo helper dos nove sítios de cron corrigidos antes.
+  Fecha a dívida declarada no doc `51`: **10 de 10** sítios sem teto corrigidos.
+
 ## [1.63.1] — 2026-11-23
 
 ### Corrigido
@@ -8842,7 +8929,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.63.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.64.0...HEAD
+[1.64.0]: https://github.com/spiesdan/nexus/compare/v1.63.1...v1.64.0
 [1.63.1]: https://github.com/spiesdan/nexus/compare/v1.63.0...v1.63.1
 [1.63.0]: https://github.com/spiesdan/nexus/compare/v1.62.3...v1.63.0
 [1.62.3]: https://github.com/spiesdan/nexus/compare/v1.62.2...v1.62.3
