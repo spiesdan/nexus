@@ -21,16 +21,15 @@ async function get(req: NextRequest): Promise<Response> {
   const requestId = randomUUID();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-    error: authErr,
-  } = await supabase.auth.getUser();
-  if (authErr || !user) {
+  // UM getUser por request, não dois. Antes esta rota chamava
+  // `supabase.auth.getUser()` e DEPOIS `loadAuthUser()`, que chama `getUser()`
+  // de novo — duas idas ao GoTrue + duas queries de membership só para abrir a
+  // lista. `AuthUser` já traz id/email; não há segunda verdade a buscar.
+  const authUser = await loadAuthUser();
+  if (!authUser) {
     return fail("unauthenticated", "Auth required.", 401, { requestId });
   }
-
-  const authUser = await loadAuthUser();
-  const activeOrg = authUser ? await resolveActiveOrg(authUser) : null;
+  const activeOrg = await resolveActiveOrg(authUser);
   if (!activeOrg) {
     return fail("no_active_org", "No active organization.", 403, { requestId });
   }
@@ -72,7 +71,7 @@ async function get(req: NextRequest): Promise<Response> {
       supabase,
       {
         organization_id: activeOrg.orgId,
-        actor: { type: "user", id: user.id },
+        actor: { type: "user", id: authUser.id },
         requestId,
       },
       qsParsed.data,
