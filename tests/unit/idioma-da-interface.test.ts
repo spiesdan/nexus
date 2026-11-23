@@ -56,7 +56,7 @@ describe("os elos que somem sem barulho", () => {
     // E a CADEIA: preferência da pessoa → idioma da ORGANIZAÇÃO → padrão.
     const servidor = readFileSync("lib/auth/server.ts", "utf8");
     expect(servidor, "a membership deixou de trazer o idioma da organização").toMatch(
-      /organizations\(display_name, locale\)/,
+      /organizations\(display_name, locale(, status, suspended_reason)?\)/,
     );
     expect(servidor, "o idioma da sessão parou de cair na organização").toMatch(
       /locale \?\? \(await localeDaOrgAtiva\(memberships\)\)/,
