@@ -61,3 +61,31 @@
 | P2-1 | `prompt-mestre.sha256` inválido (registra `ee40a0a2…`, arquivo mede `c37217c4…`) | `[ ]` | coordenação | hashes fornecidos pelo dono | recalcular hash e corrigir registro |
 | P2-2 | Docs com contagens antigas (F-11) | `[ ]` | coordenação | F-11 em `docs/auditoria/` | trocar número por comando onde couber |
 | P2-3 | Reclassificar fragmento `observabilidade-sonda`? | `[!]` | **BLOQUEADO — dono** | fragmento `capacidade_nova` definou 1.62.0 | dono decide; mudança só com reclassificação honesta |
+
+## Itens adicionais (22/11/2026)
+
+| id | item | estado | dono | evidência | próximo passo |
+|---|---|---|---|---|---|
+| P1-18 | NF-e avulsa: auto-preencher cliente (CPF do `source_metadata`), enviar todos os extras e chamar `/validar` | `[~]` | F | PR #762 no CI | fechar PR com teste e mergear |
+| P1-19 | “Informações fiscais (NF-e)” no criador, separada de observações | `[x]` | F | PR #763 verde | mergeado; conferir no passe visual |
+| P1-20 | Formas de pagamento configuráveis (tabela + tela, forma × prazo, `tpag` só com fonte oficial) | `[~]` | F | PR #764 no CI | migration + tela + teste |
+| P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[ ]` | F | pedido #765/next na fila | abrir edição do pedido, não só itens |
+| P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[ ]` | G | achado do passe de rotas | guard + teste de regressão |
+| P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[~]` | G | junto do P0-5 | mesma regra no cliente e no servidor |
+| P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
+| P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[ ]` | D | passe de inbox | componente + prova de estado |
+| P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[ ]` | D | `lib/inbox/handoff.ts` | expor no painel com teste |
+| P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[ ]` | D | passe de dashboard | medir e aplicar |
+| P2-4 | Consolidar `PROMPT-EXPEDICAO.md` no repo e linkar na auditoria | `[~]` | coordenação | arquivo copiado para a raiz nesta rodada | link vigente neste doc |
+
+## Fonte de requisitos da Expedição
+
+[`PROMPT-EXPEDICAO.md`](../../PROMPT-EXPEDICAO.md) está versionado na raiz — é a
+fonte dos requisitos de Expedição e a referência dos itens P0-5, P1-2, P1-3, P1-4,
+P1-5, P1-8 e P1-9.
+
+**Cobertura dos requisitos:** os IDs `R1–R42` são uma **numeração sequencial
+adotada neste inventário** (o prompt não traz IDs próprios), sobre as listas do
+prompt (Objetivo, P0, P1, P2 e critérios de aceitação). Mapeados: 22 em itens do
+backlog, 16 atendidos, 4 não aplicáveis (dependência de hardware/credencial sem
+origem real). Nenhum requisito sem destino.
