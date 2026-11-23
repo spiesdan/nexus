@@ -4,18 +4,18 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-23T02:23:56.484Z.
+Gerado em 2026-11-23T03:35:20.300Z.
 
 | Medida | Valor |
 |---|---|
 | Telas (`page.tsx` com JSX) | **147** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **444** |
+| Handlers de API (`app/api/**/route.ts`) | **445** |
 | Layouts | 13 |
 | Páginas de erro (`error.tsx`) | 8 |
 | Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
 | Arquivos especiais (manifest/sitemap/robots/ícones) | 2 |
-| Migrations SQL | 315 |
+| Migrations SQL | 316 |
 
 ## Telas por grupo
 
@@ -45,7 +45,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/ai` | 69 |
 | `/api/v1/prospecting` | 32 |
 | `/api/v1/cron` | 31 |
-| `/api/v1/shipments` | 25 |
+| `/api/v1/shipments` | 26 |
 | `/api/v1/admin` | 22 |
 | `/api/v1/conversations` | 21 |
 | `/api/v1/leads` | 13 |
@@ -330,7 +330,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (444)
+## APIs (445)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
@@ -732,6 +732,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/shipments/:id/orders/:orderId/proof` | GET/POST | redirect, requireRole, service-role, force-dynamic | 135 | `app/api/v1/shipments/[id]/orders/[orderId]/proof/route.ts` |
 | `/api/v1/shipments/:id/romaneio` | GET | requireRole, force-dynamic | 192 | `app/api/v1/shipments/[id]/romaneio/route.ts` |
 | `/api/v1/shipments/:id/rota` | GET | requireRole, force-dynamic | 73 | `app/api/v1/shipments/[id]/rota/route.ts` |
+| `/api/v1/shipments/:id/rota/confirmar` | POST | requireRole, force-dynamic | 59 | `app/api/v1/shipments/[id]/rota/confirmar/route.ts` |
 | `/api/v1/shipments/:id/rota/distribuicao` | PATCH | requireRole, force-dynamic | 513 | `app/api/v1/shipments/[id]/rota/distribuicao/route.ts` |
 | `/api/v1/shipments/:id/rota/finalizar` | POST | force-dynamic | 17 | `app/api/v1/shipments/[id]/rota/finalizar/route.ts` |
 | `/api/v1/shipments/:id/rota/geocodificar` | POST | requireRole, force-dynamic | 163 | `app/api/v1/shipments/[id]/rota/geocodificar/route.ts` |
@@ -779,7 +780,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 442)
+## Delta de handlers desde o baseline de 17/11 (419 → 443)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -796,6 +797,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Sentinel — detecção | 4 | Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329). | `/api/v1/sentinel/occurrences`<br>`/api/v1/sentinel/occurrences/:id`<br>`/api/v1/sentinel/scan`<br>`/api/v1/sentinel/settings` |
 | Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
 | Sentinel — conversa | 3 | Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328). | `/api/v1/sentinel/occurrences/:id/correcao/conversa`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` |
+| Expedição — aceite do motorista | 1 | 0336 grava a versão da rota aplicada no aparelho, com CAS na versão atual; sem isto o escritório não sabia se o motorista estava na nova sequência. | `/api/v1/shipments/:id/rota/confirmar` |
 
 Nenhuma rota removida no período — o delta é só acréscimo.
 

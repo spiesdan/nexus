@@ -1,18 +1,18 @@
 {
   "resumo": {
-    "gerado_em": "2026-11-23T02:23:56.484Z",
+    "gerado_em": "2026-11-23T03:35:20.300Z",
     "commit": null,
     "telas": 147,
     "resolvers": 13,
-    "apis": 444,
+    "apis": 445,
     "layouts": 13,
     "erros": 8,
     "estados": 9,
     "arquivos_especiais": 2,
     "migrations": {
-      "total": 315,
+      "total": 316,
       "primeira": "00001_initial_schema.sql",
-      "ultima": "20261124110000_0334_payment_methods.sql",
+      "ultima": "20261124130000_0336_rota_versao_confirmada.sql",
       "semPadrao": [
         "00001_initial_schema.sql"
       ],
@@ -21,7 +21,7 @@
     "testes": {
       "tests/unit": 755,
       "lib": 305,
-      "tests/invariants": 185,
+      "tests/invariants": 186,
       "tests/e2e": 109,
       "app": 80,
       "tests/api": 10,
@@ -59,7 +59,7 @@
       "/api/v1/ai": 69,
       "/api/v1/prospecting": 32,
       "/api/v1/cron": 31,
-      "/api/v1/shipments": 25,
+      "/api/v1/shipments": 26,
       "/api/v1/admin": 22,
       "/api/v1/conversations": 21,
       "/api/v1/leads": 13,
@@ -6330,6 +6330,20 @@
         "force-dynamic"
       ],
       "linhas": 73
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/shipments/:id/rota/confirmar",
+      "arquivo": "app/api/v1/shipments/[id]/rota/confirmar/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 59
     },
     {
       "tipo": "api",
