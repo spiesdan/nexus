@@ -31,7 +31,7 @@ import {
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
 import { podeRegistrarDesfecho } from "@/lib/entregas/desfecho-com-endereco";
-import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { numeroDoPedido } from "@/lib/format/moeda";
 import { situacaoDoNumero } from "@/lib/rotas/entradas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
 import {
@@ -423,7 +423,7 @@ export function ModoMotorista({
     }
     if (status === "entregue") {
       const ok = await confirmar({
-        title: t("Marcar como entregue? O pedido avança para 'entregue'."),
+        title: t("Entregar? O pedido avança para 'entregue'."),
         confirmLabel: t("Entregar"),
         cancelLabel: t("Cancelar"),
       });
@@ -507,7 +507,7 @@ export function ModoMotorista({
         className="mt-2 rounded-xl border border-warning/40 bg-warning-bg px-3 py-2 text-warning-fg"
       >
         <p className="text-xs font-semibold">{t("Entrega bloqueada: endereço desconhecido")}</p>
-        <p className="mt-0.5 text-[11px] leading-snug">
+        <p className="mt-0.5 text-xs leading-snug">
           {t("Sem endereço não há como registrar a entrega — o comprovante ficaria sem destino.")}
         </p>
       </div>
@@ -526,6 +526,22 @@ export function ModoMotorista({
         {t("Corrigir endereço aqui")}
       </Button>
     );
+  }
+
+  /** A ação do aviso de sincronização: atualiza a rota e descarrega a fila. */
+  async function atualizarRota() {
+    if (sincronizando) return;
+    setSincronizando(true);
+    try {
+      await recarregar();
+      await sincronizar();
+      const agora = new Date().toISOString();
+      registrarUltimaSincronizacao(agora);
+      setUltimaSync(agora);
+      toast.success(t("Rota atualizada."));
+    } finally {
+      setSincronizando(false);
+    }
   }
 
   /**
@@ -729,7 +745,7 @@ export function ModoMotorista({
             >
               <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
                 <DialogHeader>
-                  <DialogDescription className="text-[11px] font-semibold tracking-[0.14em] uppercase">
+                  <DialogDescription className="text-xs font-semibold tracking-[0.14em] uppercase">
                     {t("Parada")} {ordem} {t("de")} {rota.paradas.length}
                   </DialogDescription>
                   <DialogTitle className="text-xl leading-tight">{parada.cliente}</DialogTitle>
@@ -831,7 +847,6 @@ export function ModoMotorista({
                       {parada.pedidos.map((pedido) => (
                         <li key={pedido.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
                           <span className="font-medium tabular-nums">{numeroDoPedido(pedido.numero)}</span>
-                          <span className="tabular-nums">{comoMoeda(pedido.total_cents, "BRL")}</span>
                         </li>
                       ))}
                     </ul>
@@ -876,7 +891,7 @@ export function ModoMotorista({
                       }}
                     >
                       <Check size={16} aria-hidden />
-                      {t("Marcar como entregue")}
+                      {t("Entregue")}
                     </Button>
                   )}
 
@@ -976,13 +991,29 @@ export function ModoMotorista({
       </Card>
       )}
 
-      <p data-testid="estado-sync" className="text-xs text-text-muted">
-        {ultimaSync
-          ? `${t("Última sincronização às")} ${new Date(ultimaSync).toLocaleTimeString(tagDeIdioma, { hour: "2-digit", minute: "2-digit" })}`
-          : t("Ainda não sincronizou nesta instalação.")}{" "}
-        {fila.length > 0 ? `· ${fila.length} ${t("pendências")}` : ""}
-        {!online ? ` · ${t("sem conexão — a fila segue no aparelho")}` : ""}
-      </p>
+      <div
+        data-testid="estado-sync"
+        role={!online || !ultimaSync ? "alert" : undefined}
+        className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2"
+      >
+        <p className="min-w-0 flex-1 text-xs text-text">
+          {!online
+            ? t("Sem conexão — as entregas ficam salvas no aparelho. Toque em Atualizar quando a rede voltar.")
+            : ultimaSync
+              ? `${t("Última sincronização às")} ${new Date(ultimaSync).toLocaleTimeString(tagDeIdioma, { hour: "2-digit", minute: "2-digit" })}`
+              : t("Ainda não sincronizou nesta instalação — toque em Atualizar.")}
+          {fila.length > 0 ? ` · ${fila.length} ${t("pendências")}` : ""}
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          className="min-h-11"
+          disabled={sincronizando}
+          onClick={() => void atualizarRota()}
+        >
+          {sincronizando ? t("Atualizando…") : t("Atualizar")}
+        </Button>
+      </div>
 
       {fila.length > 0 && (
         <Card className="overflow-hidden border-warning/40 p-0">
@@ -1054,7 +1085,7 @@ export function ModoMotorista({
               {rota.paradas.findIndex((p) => p.chave === proxima.chave) + 1} {t("de")}{" "}
               {rota.paradas.length}
             </p>
-            <span className="shrink-0 text-[11px] font-medium text-accent-ink tabular-nums">
+            <span className="shrink-0 text-xs font-medium text-accent-ink tabular-nums">
               {proxima.pedidos.length}{" "}
               {proxima.pedidos.length === 1 ? t("pedido") : t("pedidos")}
             </span>
@@ -1098,7 +1129,6 @@ export function ModoMotorista({
               {proxima.pedidos.map((x) => (
                 <li key={x.order_id} className="flex items-center justify-between gap-2 px-3 py-2">
                   <span className="font-medium tabular-nums">{numeroDoPedido(x.numero)}</span>
-                  <span className="font-medium tabular-nums">{comoMoeda(x.total_cents, "BRL")}</span>
                 </li>
               ))}
             </ul>
@@ -1152,7 +1182,7 @@ export function ModoMotorista({
                     }}
                   >
                     <Check className="h-4 w-4" aria-hidden />
-                    {t("Marcar como entregue")}
+                    {t("Entregue")}
                   </Button>
                 )}
 
@@ -1234,7 +1264,7 @@ export function ModoMotorista({
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
             {t("Roteiro")}
           </p>
-          <p className="text-[11px] text-text-subtle tabular-nums">
+          <p className="text-xs text-text-subtle tabular-nums">
             {rota.paradas.length} {rota.paradas.length === 1 ? t("parada") : t("paradas")}
           </p>
         </header>
@@ -1271,7 +1301,7 @@ export function ModoMotorista({
                 {organizando === "tsp" ? t("Calculando…") : t("Por ruas")}
               </Button>
             </div>
-            <p className="mt-1 text-[11px] text-text-subtle">
+            <p className="mt-1 text-xs text-text-subtle">
               {t("A nova ordem aparece para você conferir antes de valer.")}
             </p>
           </div>
@@ -1298,7 +1328,7 @@ export function ModoMotorista({
                 >
                   <span
                     className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",
+                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold tabular-nums",
                       feito
                         ? "bg-success-bg text-success-fg"
                         : temPendente
@@ -1337,7 +1367,7 @@ export function ModoMotorista({
                       <CaretRight size={14} className="shrink-0 text-muted-foreground" aria-hidden />
                     </div>
                     {(p.itens?.length ?? 0) > 0 && (
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
                         {(p.itens ?? [])
                           .map((it) => `${it.quantidade}× ${it.nome}`)
                           .join(" · ")}
@@ -1357,7 +1387,7 @@ export function ModoMotorista({
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
           <div className="min-w-0">
             <p className="text-xs font-medium text-text">{t("Rastreio GPS")}</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {rastreando ? t("Ligado — só durante esta rota.") : t("Desligado.")}
             </p>
           </div>
@@ -1405,7 +1435,7 @@ export function ModoMotorista({
             className="min-h-24"
             placeholder={t("Rua, número, bairro, cidade")}
           />
-          <p className="text-[11px] leading-snug text-muted-foreground">
+          <p className="text-xs leading-snug text-muted-foreground">
             {t("Inclua número ou referência: é o que fica no comprovante da entrega.")}
           </p>
         </div>
@@ -1605,7 +1635,7 @@ export function ModoMotorista({
               style={{ width: `${pctFeito}%` }}
             />
           </span>
-          <span className="text-[11px] text-muted-foreground tabular-nums">{pctFeito}%</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{pctFeito}%</span>
           <button
             type="button"
             onClick={() => setFolhaAberta((v) => !v)}
@@ -1625,13 +1655,13 @@ export function ModoMotorista({
             <span className="text-xs font-semibold tabular-nums">
               {formatarDistancia(navegacao.distancia_m)}
             </span>
-            <span className="text-[11px] text-white/80 tabular-nums">
+            <span className="text-xs text-white/80 tabular-nums">
               {formatarDuracao(navegacao.duracao_s)}
             </span>
             <button
               type="button"
               onClick={() => setNavegacao(null)}
-              className="shrink-0 rounded-full px-1.5 text-[11px] font-medium text-white/90 underline underline-offset-2"
+              className="shrink-0 rounded-full px-1.5 text-xs font-medium text-white/90 underline underline-offset-2"
             >
               {t("Encerrar")}
             </button>
@@ -1722,7 +1752,7 @@ export function ModoMotorista({
                           {tripulacao || t("Sem veículo ou motorista definido")}
                         </span>
                       </span>
-                      <span className="shrink-0 text-[11px] font-medium text-muted-foreground">
+                      <span className="shrink-0 text-xs font-medium text-muted-foreground">
                         {atual ? t("Atual") : (ROTULO_DA_CARGA[c.status] ?? c.status)}
                       </span>
                     </button>

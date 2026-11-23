@@ -345,34 +345,9 @@ export function ExpedicaoClient({
           </div>
         ) : (
           <div className="space-y-3 px-4">
-            <div className="space-y-1.5">
-              <label
-                htmlFor="carga-do-entregador"
-                className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
-              >
-                {t("Qual carga você está entregando?")}
-              </label>
-              <select
-                id="carga-do-entregador"
-                className="h-12 w-full rounded-2xl border border-border bg-surface px-3 text-sm text-text shadow-xs"
-                defaultValue=""
-                onChange={(e) => {
-                  if (e.target.value) router.push(`/app/expedicao/${e.target.value}/motorista`);
-                }}
-              >
-                <option value="" disabled>
-                  {t("Escolha a carga…")}
-                </option>
-                {disponiveis.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {numeroDaCarga(c.numero)}
-                    {c.placa ? ` · ${c.placa}` : ""}
-                    {` · ${ROTULO_DA_CARGA[c.status as StatusDaCarga] ?? c.status}`}
-                    {c.motorista_nome ? ` · ${c.motorista_nome}` : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* P1-8: o seletor da carga do entregador fazia o
+                mesmo que os cartões abaixo (mesmo href) e exigia DOIS toques
+                numa mão, no meio da rua. Um lugar só: o cartão grande. */}
 
             {disponiveis.map((c) => {
               const pr = progresso[c.id] ?? {
