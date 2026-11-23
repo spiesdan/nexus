@@ -76,13 +76,16 @@ describe("GET /api/v1/commercial-orders — busca", () => {
     const resposta = await pedir("?busca=19405");
     expect(resposta.status).toBe(200);
     expect(or).toHaveBeenCalledWith(
-      "cliente_nome.ilike.%19405%,cliente_documento.ilike.%19405%,numero.eq.19405",
+      "cliente_nome.ilike.%19405%,cliente_documento.ilike.%19405%,numero.eq.19405,numero_mercos.eq.19405",
     );
   });
 
   it("acha também pelo formato que a tela mostra (`PED-19405`)", async () => {
     await pedir("?busca=PED-19405");
     expect(or.mock.calls[0]?.[0]).toContain("numero.eq.19405");
+    // O número do Mercos é a outra identidade do pedido: quem digita o que
+    // está vendo no ERP também precisa achar.
+    expect(or.mock.calls[0]?.[0]).toContain("numero_mercos.eq.19405");
   });
 
   it("mantém a busca por nome do cliente", async () => {
