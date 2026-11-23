@@ -30927,6 +30927,14 @@ as $$
      where o.id = p_org
        and o.status = 'suspended'
        and o.suspended_reason = 'billing'
+       -- Guarda de org (definer): só membro ativo da própria organização pode
+       -- receber "bloqueado". auth.uid() nulo (service_role) devolve falso.
+       and exists (
+         select 1 from public.user_organizations uo
+          where uo.user_id = auth.uid()
+            and uo.organization_id = p_org
+            and uo.revoked_at is null
+       )
   );
 $$;
 

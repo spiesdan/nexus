@@ -29,6 +29,10 @@ export async function bloqueioPorCobranca(
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("fn_billing_gate_bloqueia", { p_org: orgId });
   if (error) return false;
+  // A RPC devolve boolean. Qualquer outro formato é resposta inesperada —
+  // nunca deve virar "suspenso" (um stub/genérico devolvendo uma string, por
+  // exemplo, não pode bloquear a org inteira).
+  if (typeof data !== "boolean") return false;
 
   return deveBloquearPorCobranca({
     path: caminho ?? (await caminhoDaRequisicao()),

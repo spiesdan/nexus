@@ -81,20 +81,6 @@ export async function requireRole(min: Role, opts: RequireRoleOpts = {}): Promis
     };
   }
 
-  // Gate backend da cobrança (P0): não depende só de requireRole — esta é uma
-  // das portas; as outras são resolveActiveOrg, o proxy /app/* e a allowlist.
-  if (!user.is_platform_admin && (await bloqueioPorCobranca(org.orgId, opts.path))) {
-    return {
-      ok: false,
-      response: fail(
-        "tenant_suspended",
-        "Assinatura vencida. Regularize o pagamento para voltar a usar o sistema.",
-        403,
-        { requestId },
-      ),
-    };
-  }
-
   if (allowPlatformAdmin && user.is_platform_admin) {
     // O atalho do platform admin PULA o rank do tenant — é o que ele existe
     // para fazer. O que ele NÃO pode pular é a política de SESSÃO: antes, este
@@ -181,6 +167,22 @@ export async function requireRole(min: Role, opts: RequireRoleOpts = {}): Promis
       response: fail("forbidden_role", `Permissão insuficiente. Requer role >= ${min}.`, 403, {
         requestId,
       }),
+    };
+  }
+
+  // Gate backend da cobrança (P0) — DEPOIS de papel e MFA: quem não tem papel
+  // continua levando forbidden_role e quem tem fator cadastrado sem prová-lo
+  // continua levando mfa_required. Suspensão não pode mascarar essas decisões.
+  // Não é a única porta: resolveActiveOrg e o proxy /app/* também cobrem.
+  if (!user.is_platform_admin && (await bloqueioPorCobranca(org.orgId, opts.path))) {
+    return {
+      ok: false,
+      response: fail(
+        "tenant_suspended",
+        "Assinatura vencida. Regularize o pagamento para voltar a usar o sistema.",
+        403,
+        { requestId },
+      ),
     };
   }
 
