@@ -12,6 +12,7 @@
  *    por ausência — lista incompleta não é prova de nada.
  */
 import { ROTAS_DO_SLO } from "@/lib/observabilidade/rotas-slo";
+import { resumoSloRpc } from "@/lib/observabilidade/linha-rpc";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { SELECT_LEAD_ABERTO } from "@/lib/sentinel/selects";
 
@@ -474,14 +475,15 @@ export async function coletarSnapshot(
   ]);
   const falhaSlo = resumoApi.error ?? rotasApi.error;
   if (falhaSlo) coletas.push({ nome: "slo_api", coleta: { dados: [], truncado: true, falha: `slo_api: ${falhaSlo.message}` } });
-  const resumo = (resumoApi.data ?? null) as { total?: number; erros?: number; p95?: number | string | null } | null;
-  const sloApi = falhaSlo || !resumo
+  // `fn_slo_api_resumo` é RETURNS TABLE: o client devolve [{...}], não {...}.
+  const resumo = resumoSloRpc(resumoApi.data);
+  const sloApi = falhaSlo || resumo.total === 0
     ? null
     : {
         janela_dias: 7,
-        total: Number(resumo.total ?? 0),
-        erros: Number(resumo.erros ?? 0),
-        p95: resumo.p95 === null || resumo.p95 === undefined ? null : Math.round(Number(resumo.p95)),
+        total: resumo.total,
+        erros: resumo.erros,
+        p95: resumo.p95,
         rotas: ((rotasApi.data ?? []) as Array<{ route: string; total: number; erros: number; p95: number | string | null }>).map((r) => ({
           route: r.route,
           total: Number(r.total),

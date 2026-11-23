@@ -80,4 +80,40 @@ describe("plataforma.slo_estourado", () => {
     expect(f1).not.toBe(f2);
     expect(fingerprint(slosEstourados(snapshot({ sloApi: resumo({ erros: 20, p95: 900 }) }))![0]!)).toBe(f1);
   });
+
+  it("dados reais de produção (267 amostras, p95 2660 ms) abrem latência CRÍTICA", () => {
+    const achados = slosEstourados(
+      snapshot({
+        sloApi: resumo({
+          total: 267,
+          erros: 0,
+          p95: 2660,
+          rotas: [
+            rota("/api/v1/conversations", 259, 0, 2673),
+            rota("/api/v1/commercial-orders", 3, 0, 1378),
+            rota("/api/v1/contacts", 4, 0, 1052),
+            rota("/api/v1/invoices", 1, 0, 971),
+          ],
+        }),
+      }),
+    );
+
+    // 0 erros ⇒ disponibilidade 100% (não abre); latência 2660 > 1600 ⇒ crítica.
+    expect(achados).toHaveLength(1);
+    expect(achados![0]).toMatchObject({
+      regra: "plataforma.slo_estourado",
+      entidadeTipo: "slo",
+      entidadeId: "latencia",
+      severidade: "critica",
+    });
+    expect(achados![0]?.evidencia).toMatchObject({
+      total: 267,
+      p95_ms: 2660,
+      alvo_ms: 800,
+    });
+    expect(achados![0]?.evidencia.rotas_lentas).toContain(
+      "/api/v1/conversations: p95 2673 ms (259 amostras)",
+    );
+  });
+
 });

@@ -194,4 +194,37 @@ describe("GET /api/v1/admin/observabilidade", () => {
     const res = await GET();
     expect(res.status).toBe(500);
   });
+
+  it("ARRAY de produção (returns table): painel mostra 267 amostras e latência estourada", () => {
+    montar([], []);
+    rpc.mockImplementation(async (fn: string) =>
+      fn === "fn_slo_api_rotas"
+        ? {
+            data: [
+              { route: "/api/v1/conversations", total: 259, erros: 0, p95: 2673 },
+              { route: "/api/v1/commercial-orders", total: 3, erros: 0, p95: 1378 },
+              { route: "/api/v1/contacts", total: 4, erros: 0, p95: 1052 },
+              { route: "/api/v1/invoices", total: 1, erros: 0, p95: 971 },
+            ],
+            error: null,
+          }
+        : { data: [{ total: 267, erros: 0, p95: 2660 }], error: null },
+    );
+
+    // Antes do fix, `data as {total}` devolvia undefined → 0 → "sem histórico".
+    return GET().then(async (res) => {
+      const { slos } = (await corpo(res)).data;
+      expect(slos.find((s) => s.id === "disponibilidade")).toMatchObject({
+        valor: 100,
+        estado: "ok",
+        detalhe: { amostras: 267, erros: 0 },
+      });
+      expect(slos.find((s) => s.id === "latencia")).toMatchObject({
+        valor: 2660,
+        estado: "estourado",
+        detalhe: { amostras: 267 },
+      });
+    });
+  });
+
 });
