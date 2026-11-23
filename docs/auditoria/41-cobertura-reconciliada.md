@@ -112,7 +112,7 @@ base sumiu; duas telas entraram depois dela.
 | `/app/metrics` | metrics | **pendente** | — | D |
 | `/app/meu-dia` | meu-dia | **pendente** | — | D |
 | `/app/notas` | notas | **aplicado** | #655 · `51-notas-natureza.md` · `capturas/{antes,depois}-notas/` | D |
-| `/app` | público | **pendente** | — | D |
+| `/app` | público | **aplicado** — estado vazio explícito quando a série de vendas não tem dado; contraste/overflow/console 0 em 4 combinações | `64-dashboard-estado-vazio.md` · `capturas/{antes,depois}-dashboard-vazio/` | D |
 | `/app/pedidos/[id]` | pedidos | **aplicado** | #620 · hierarquia na lista e na ficha · `capturas/{antes,depois}-pedidos/` | D |
 | `/app/pedidos/imprimir` | pedidos | **fora de escopo** | documento de impressão — layout de papel, não superfície de operação | D |
 | `/app/pedidos/novo` | pedidos | **aplicado** | `44-criador-de-pedidos-experiencia.md` (aplicado em #615) | D |
@@ -280,7 +280,7 @@ medição do MFA — mas essa linha **não** é contada como MFA medido.
 |---|---|---|---|
 | `/app/ai` | sim | pendente | — |
 | `/app/settings` | sim | medido; sem mudança | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` |
-| `/app` | sim | pendente | — |
+| `/app` | sim | aplicado | `64-dashboard-estado-vazio.md` · `capturas/{antes,depois}-dashboard-vazio/` |
 | `/app/meu-dia` | sim | pendente | — |
 | `/app/indicadores` | sim | pendente | — |
 | `/app/busca` | sim | pendente | — |

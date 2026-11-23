@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { BrainRecomendacoes } from "@/components/nexus-ui/intelligence/BrainRecomendacoes";
 import { CrmSalesChart } from "@/components/nexus-ui/crm/crm-sales-chart";
+import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusKpi, NexusKpiGrid } from "@/components/nexus-ui/kpi/nexus-kpi";
 import { Card } from "@/components/ui/card";
 import { showApiError } from "@/components/feedback/ApiErrorToast";
@@ -14,6 +15,7 @@ import { comoMoeda } from "@/lib/format/moeda";
 import { atualizarQueryDaUrl } from "@/lib/navigation/shallow";
 import { NAV_DESTINATIONS } from "@/lib/navigation/registry";
 import { deslocarMes } from "@/lib/comercial/visao-do-mes";
+import { ChartLineUp } from "@/lib/ui/icons";
 import { ClientesParaAgir, SalesRoadmap } from "./_home-secoes";
 import { Atividade } from "./indicadores/_atividade";
 
@@ -117,6 +119,10 @@ export function DashboardHome(inicial: DadosDashboard) {
     dados.hora >= 5 && dados.hora < 12 ? t("Bom dia") : dados.hora >= 12 && dados.hora < 18 ? t("Boa tarde") : t("Boa noite");
   const primeiro = dados.nome?.trim().split(/\s+/)[0];
   const ticket = dados.qtdMes > 0 ? dados.vendidoMes / dados.qtdMes : null;
+  const semVendasNoMes =
+    dados.serie.every((s) => s.vendaAc === 0) &&
+    dados.objetivo == null &&
+    dados.previsaoMes === 0;
 
   const atalhos = ATALHOS
     .map((href) => NAV_DESTINATIONS.find((d) => d.href === href))
@@ -159,6 +165,22 @@ export function DashboardHome(inicial: DadosDashboard) {
         />
       </NexusKpiGrid>
 
+      {/* SEM SÉRIE ≠ GRÁFICO ZERADO (P1-27). `serieDiariaDoMes` devolve um ponto
+          por dia — inclusive com valor zero — então "sem série" aqui quer dizer
+          "sem VENDA na série": todos os acumulados em zero e sem meta/projeção
+          para desenhar. O estado vazio NOMEIA a fonte (as vendas do mês) e fica
+          ACIMA do gráfico, que continua na tela: as setas de navegação de mês
+          moram nele, e escondê-lo deixaria quem navegou para um mês vazio sem
+          caminho de volta. */}
+      {semVendasNoMes && (
+        <NexusEmptyState
+          icon={ChartLineUp}
+          headline={t("Ainda não há vendas neste mês.")}
+          subcopy={t(
+            "A curva aparece conforme as vendas entram. Os números acima já refletem o que foi registrado.",
+          )}
+        />
+      )}
       {(dados.serie.length > 0 || mesNavegado) && (
         <CrmSalesChart
           pontos={dados.serie.map((s) => ({
