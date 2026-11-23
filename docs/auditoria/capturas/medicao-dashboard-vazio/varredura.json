@@ -1,0 +1,414 @@
+{
+  "geradoEm": "2026-11-23T10:16:08.644Z",
+  "base": "http://localhost:3028",
+  "tempoTotalMs": 29460,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "?mes=2020-01",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 16,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 28653
+    }
+  ],
+  "registros": [
+    {
+      "rota": "?mes=2020-01",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app?mes=2020-01",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 153,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 26,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7717
+    },
+    {
+      "rota": "?mes=2020-01",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app?mes=2020-01",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 124,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 26,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tudo",
+            "largura": 41,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Vendas no mês",
+            "largura": 100,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8031
+    },
+    {
+      "rota": "?mes=2020-01",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app?mes=2020-01",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 153,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 26,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7027
+    },
+    {
+      "rota": "?mes=2020-01",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app?mes=2020-01",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Bom dia, E2E."
+        ],
+        "textos": 124,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 26,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mês anterior",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Próximo mês",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1D",
+            "largura": 29,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1W",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "1M",
+            "largura": 31,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tudo",
+            "largura": 41,
+            "altura": 24
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Vendas no mês",
+            "largura": 100,
+            "altura": 24
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5878
+    }
+  ]
+}
