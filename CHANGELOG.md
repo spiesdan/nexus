@@ -8,6 +8,124 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.63.0] — 2026-11-23
+
+### Adicionado
+
+- **Campanha com orcamento de prospeccao e de midia, simulacao e guard** Campanhas passam a ter orcamento proprio para prospeccao e para verba de midia.
+  Na revisao da criacao, a tela mostra a faixa minimo/esperado/maximo da
+  prospeccao, a estimativa de impressoes e cliques da midia e as premissas de CPM
+  e CTR ao lado do numero — ajustaveis na propria tela.
+
+  O guard avisa em 80% e bloqueia em 100% do orcamento da organizacao. Gerente
+  pode liberar com motivo; a liberacao vai para a auditoria.
+
+  Gasto de midia Meta e LANCAMENTO MANUAL ate existir Marketing API. Nada e
+  importado ou inferido: a tela diz isso, e a tabela guarda autor, data e
+  observacao do lancamento.
+
+- **Formas de pagamento e prazos configuraveis por organizacao** Forma de pagamento (meio + codigo tPag da tabela oficial da NF-e) e prazo de
+  vencimento deixam de ser a mesma lista fixa de tres valores. A tela em
+  Configuracoes permite adicionar, renomear e desativar ambos, com auditoria de
+  gerente. O criador de pedidos usa os prazos ativos da organizacao.
+
+  Nada a fazer na VPS: a migration 0334 e idempotente e entra no baseline.
+
+- **O painel passa a dizer qual versão da rota o motorista aplicou** Duas colunas aditivas em `shipments` (`0336`) guardam `rota_versao_confirmada` e
+  `rota_confirmada_em`, escritas pelo aceite no aparelho com CAS na versão atual —
+  se o painel mudou a rota enquanto o motorista decidia, o aceite recusa 409 em vez
+  de confirmar uma sequência que não existe mais. O roteirizador mostra
+  "confirmada na versão N às …" ou "motorista ainda na versão anterior".
+
+- **Cabine mostra o último sync e a política da foto offline** A cabine do entregador agora mostra “Última sincronização às HH:MM”, quantas
+  pendências ainda existem na fila e, sem rede, “sem conexão — a fila segue no
+  aparelho”. O horário só é gravado quando a fila realmente enviou desfechos. A
+  foto de comprovante continua exigindo conexão, mas isso agora está dito na tela
+  e no aviso: o desfecho é registrado offline, a foto é anexada quando o sinal
+  volta (ela não entra no outbox).
+
+### Alterado
+
+- **Botao da ficha do pedido agora diz Editar pedido** O botao da secao de produtos dizia "Adicionar produto ao pedido" e abria so a
+  edicao de itens. Agora diz "Editar pedido" e abre tambem a edicao de detalhes
+  (condicao, transportadora, endereco e observacoes) na mesma visita.
+
+  Os dois "Salvar" continuam separados de proposito: o PATCH de itens e atomico
+  (DELETE + INSERT + recalculo) e o de detalhes e outro PATCH. Junta-los num so
+  botao deixaria total velho com item novo se uma das duas metades falhasse.
+
+  Nada a fazer na VPS.
+
+- **Inventario de rotas recontado, com as 21 entradas nomeadas** O inventario vivo tem 440 arquivos route.ts em app/api, contra 419 no baseline
+  de 17/11. O gerador agora compara uma lista versionada de caminhos e publica o
+  delta por area: Sentinel (13), offline/device (5), observabilidade (2),
+  contatos (2), Laya (1) e cron (1).
+
+  Nada a fazer na VPS.
+
+- **Workbench de expedição no mobile em abas Pedidos, Mapa e Planejamento** No aparelho, o workbench de expedição deixou de empilhar Pedidos, Mapa e
+  Planejamento em uma coluna só: agora são abas, com a mesma informação e medição
+  em 390 px e 1440 px (claro/escuro). Nenhuma capacidade nova — o que já existia
+  passa a caber na tela do celular sem rolagem cega.
+
+### Corrigido
+
+- **Falha do geocodificador não apaga mais o pino do endereço** Na regeocodificação, quando o provedor devolvia `estado: "erro"`, o patch
+  gravava `latitude: null`/`longitude: null` e o pino válido que já estava no mapa
+  desaparecia — falha de rede virava perda de dado. Agora a falha grava só o aviso
+  (`geo_status`, `geo_em`, `geo_fonte`); a coordenada anterior fica intacta até uma
+  regeocodificação bem-sucedida.
+
+- **Painel diz quando o GPS do motorista está sem sinal, em vez de "online"** O mapa da expedição marcava a última posição do motorista sem dizer quando ela
+  foi recebida — posição antiga parecia presença confirmada. Agora o painel mostra
+  “Última posição às HH:MM” e, passado o limite, “sem sinal há N min”; sem posição,
+  diz explicitamente que não recebeu nenhuma. O limite vem de
+  `GPS_SEM_SINAL_MINUTOS` (padrão 15), e `PHOTON_URL` passa a ser declarado em
+  `lib/env.ts` e nos dois templates de ambiente.
+
+- **Criador de pedidos ganha o campo de informacoes fiscais da NF-e** O criador so oferecia "Informacoes adicionais", que vai para a observacao do
+  pedido. O campo que a emissao usa como infCpl so existia na ficha de detalhes,
+  entao a ordem de compra do cliente era digitada no lugar errado.
+
+  O novo campo "Informacoes fiscais (NF-e)" fica ao lado das observacoes, entra
+  no mesmo autosave e no payload de criacao, e aparece separado no resumo. Quando
+  ele fica vazio, a emissao continua usando as informacoes adicionais como antes.
+
+  Nada a fazer na VPS.
+
+- **Reenviar mensagem com a mesma chave nao duplica o envio** POST /api/v1/messages agora le o header Idempotency-Key com o mesmo desenho das
+  rotas fiscais: a chave e reivindicada antes do envio. Mesma chave e mesmo payload
+  devolvem a mensagem original com o header Idempotency-Replayed; a mesma chave
+  com payload diferente devolve 409. Sem header, nada muda.
+
+  Nada a fazer na VPS.
+
+- **NF-e avulsa leva o CPF do cadastro e todos os dados digitados** Ao escolher um cliente cadastrado na venda de balcão, a tela lia só a coluna
+  cnpj. Clientes com CPF salvo apenas nos metadados do Mercos emitiam sem
+  documento. O preenchimento passou a usar as mesmas funções do pedido:
+  documentoDoCadastro e montarDestinatario, com o digitado vencendo o cadastro.
+
+  A emissão mandava somente o grupo da venda avulsa e descartava o que estava em
+  Dados adicionais. O payload agora mescla os extras montados com a venda e passa
+  pela mesma pré-validação do pedido, mostrando pendências nomeadas antes de
+  consumir número da SEFAZ.
+
+  Nada a fazer na VPS.
+
+- **Publicar rota deixa de habilitar o que o servidor recusaria** O botão “Publicar rota” agora aplica, no cliente, a mesma regra de separação de
+  `iniciar`: se algum pedido ainda não foi separado/conferido, ele fica desabilitado
+  e a tela diz quantos faltam. Antes o gesto era permitido e a API devolvia 422
+  depois de a pessoa já ter confirmado a publicação.
+
+- **Ordem da rota é gravada em uma transação só (atrás de flag)** Antes, PATCH /rota/ordem gravava N sequências e só depois subia `rota_versao`;
+  uma falha no meio deixava sequência parcial com a versão antiga, e o motorista
+  aplicava uma rota diferente da que o escritório viu. Agora `fn_salvar_ordem_rota`
+  (0335) valida cobertura/separação antes de qualquer escrita, sobe a versão com
+  CAS e grava as sequências na mesma transação: qualquer falha rollbacka os dois.
+  A escrita fica atrás de `ROTA_ORDEM_ATOMIC=false` (padrão) — o dono liga depois
+  de `test:db` verde. Nem `publicarRota` nem a API mudaram de comportamento sem a
+  flag.
+
 ## [1.62.3] — 2026-11-20
 
 ### Corrigido
@@ -8710,7 +8828,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.62.3...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.63.0...HEAD
+[1.63.0]: https://github.com/spiesdan/nexus/compare/v1.62.3...v1.63.0
 [1.62.3]: https://github.com/spiesdan/nexus/compare/v1.62.2...v1.62.3
 [1.62.2]: https://github.com/spiesdan/nexus/compare/v1.62.1...v1.62.2
 [1.62.1]: https://github.com/spiesdan/nexus/compare/v1.62.0...v1.62.1
