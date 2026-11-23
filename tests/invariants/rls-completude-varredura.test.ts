@@ -77,6 +77,15 @@ interface Excecao {
  */
 const PROVA_PROPRIA: readonly Excecao[] = [
   {
+    tabela: "payment_methods",
+    razao:
+      "tests/invariants/payment-methods-rls.test.ts (0334) prova, com " +
+      "`set role authenticated` + JWT simulado, que membro da org A lê a própria " +
+      "e zero da org B, que agent não insere e manager insere na própria org, " +
+      "e que anon não lê. Fora de TABLES porque a policy de escrita é manager " +
+      "(TABLES semeia agent), exatamente o caso do offline_devices acima.",
+  },
+  {
     tabela: "offline_devices",
     razao:
       "tests/invariants/offline-devices-rls.test.ts prova, com JWT simulado e " +

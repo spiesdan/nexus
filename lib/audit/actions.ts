@@ -636,6 +636,10 @@ export const AUDIT_ACTIONS = [
    * O `metadata` carrega o que foi ignorado e o motivo declarado.
    */
   "commercial_order.override",
+  /** Configuração de formas/prazos por organização (0334). */
+  "settings.payment_method.created",
+  "settings.payment_method.updated",
+  "settings.payment_method.disabled",
   "sentinel.correction_applied",
   "sentinel.correction_reverted",
 ] as const;

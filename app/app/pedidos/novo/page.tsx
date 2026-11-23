@@ -43,6 +43,7 @@ export default async function NovoPedidoPage({
     { data: policies },
     { data: organizacao },
     { data: contatoDoPedido },
+    { data: prazos },
   ] = await Promise.all([
       supabase
         .from("catalog_products")
@@ -94,6 +95,22 @@ export default async function NovoPedidoPage({
             .eq("id", contatoDoLink)
             .maybeSingle()
         : Promise.resolve({ data: null }),
+      // Instalação que ainda não aplicou a 0334 continua funcionando com a
+      // lista legada no editor — a configuração nova é acréscimo, não pré-requisito.
+      (async () => {
+        try {
+          const r = await supabase
+            .from("payment_methods")
+            .select("codigo, nome")
+            .eq("organization_id", activeOrg.orgId)
+            .eq("tipo", "prazo")
+            .eq("ativo", true)
+            .order("nome");
+          return { data: r.error ? [] : r.data };
+        } catch {
+          return { data: [] };
+        }
+      })(),
     ]);
 
   type ContatoDoEditor = {
@@ -142,6 +159,10 @@ export default async function NovoPedidoPage({
       }}
       nomeVendedor={user.full_name ?? user.email}
       escopoDoRascunho={`${activeOrg.orgId}:${user.id}`}
+      prazos={(prazos ?? []).map((p: { codigo: string; nome: string }) => ({
+        codigo: String(p.codigo),
+        nome: String(p.nome),
+      }))}
       textos={{
         titulo: t("Novo pedido"),
         subtitulo: t("Busque o cliente, adicione os produtos e finalize."),
