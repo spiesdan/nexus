@@ -4,18 +4,18 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-23T09:10:10.394Z.
+Gerado em 2026-11-23T10:07:34.561Z.
 
 | Medida | Valor |
 |---|---|
 | Telas (`page.tsx` com JSX) | **147** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **446** |
+| Handlers de API (`app/api/**/route.ts`) | **447** |
 | Layouts | 13 |
 | Páginas de erro (`error.tsx`) | 8 |
 | Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
 | Arquivos especiais (manifest/sitemap/robots/ícones) | 2 |
-| Migrations SQL | 318 |
+| Migrations SQL | 320 |
 
 ## Telas por grupo
 
@@ -43,7 +43,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | Prefixo | Handlers |
 |---|---|
 | `/api/v1/ai` | 69 |
-| `/api/v1/prospecting` | 32 |
+| `/api/v1/prospecting` | 33 |
 | `/api/v1/cron` | 31 |
 | `/api/v1/shipments` | 26 |
 | `/api/v1/admin` | 22 |
@@ -330,7 +330,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (446)
+## APIs (447)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
@@ -695,6 +695,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/prospecting/prospects/disparar` | POST | requireRole, service-role, force-dynamic | 1054 | `app/api/v1/prospecting/prospects/disparar/route.ts` |
 | `/api/v1/prospecting/prospects/import` | POST | requireRole, force-dynamic | 205 | `app/api/v1/prospecting/prospects/import/route.ts` |
 | `/api/v1/prospecting/prospects/import-arquivo` | POST | requireRole, service-role, force-dynamic | 72 | `app/api/v1/prospecting/prospects/import-arquivo/route.ts` |
+| `/api/v1/prospecting/relatorio-gastos` | GET | requireRole, service-role, force-dynamic | 115 | `app/api/v1/prospecting/relatorio-gastos/route.ts` |
 | `/api/v1/prospecting/searches` | GET/POST | requireRole, service-role, force-dynamic | 295 | `app/api/v1/prospecting/searches/route.ts` |
 | `/api/v1/prospecting/searches/:id` | GET/PATCH | requireRole, force-dynamic | 105 | `app/api/v1/prospecting/searches/[id]/route.ts` |
 | `/api/v1/prospecting/settings` | GET/PUT | requireRole, service-role, force-dynamic | 108 | `app/api/v1/prospecting/settings/route.ts` |
@@ -781,7 +782,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 444)
+## Delta de handlers desde o baseline de 17/11 (419 → 445)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -796,6 +797,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Laya | 1 | Health check do agente Laya. | `/api/v1/laya/saude` |
 | Offline — credencial | 2 | Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322). | `/api/v1/offline-devices`<br>`/api/v1/offline-devices/:id/revoke` |
 | Configuração — formas de pagamento | 2 | 0334 separa forma (t pag NT 2020.006) de prazo; lista e manutenção para a tela de configuração do tenant. | `/api/v1/payment-methods`<br>`/api/v1/payment-methods/:id` |
+| Prospecção — relatório | 1 | Relatório mensal de gastos da campanha (orçado × prospecção × mídia), com CSV. | `/api/v1/prospecting/relatorio-gastos` |
 | Sentinel — detecção | 4 | Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329). | `/api/v1/sentinel/occurrences`<br>`/api/v1/sentinel/occurrences/:id`<br>`/api/v1/sentinel/scan`<br>`/api/v1/sentinel/settings` |
 | Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
 | Sentinel — conversa | 3 | Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328). | `/api/v1/sentinel/occurrences/:id/correcao/conversa`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` |

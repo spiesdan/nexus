@@ -1,28 +1,28 @@
 {
   "resumo": {
-    "gerado_em": "2026-11-23T09:10:10.394Z",
+    "gerado_em": "2026-11-23T10:07:34.561Z",
     "commit": null,
     "telas": 147,
     "resolvers": 13,
-    "apis": 446,
+    "apis": 447,
     "layouts": 13,
     "erros": 8,
     "estados": 9,
     "arquivos_especiais": 2,
     "migrations": {
-      "total": 318,
+      "total": 320,
       "primeira": "00001_initial_schema.sql",
-      "ultima": "20261124150000_0337_campanha_orcamento_gasto.sql",
+      "ultima": "20261124170000_0339_followup_retomada_48h.sql",
       "semPadrao": [
         "00001_initial_schema.sql"
       ],
       "duplicadas": []
     },
     "testes": {
-      "tests/unit": 756,
-      "lib": 310,
-      "tests/invariants": 190,
-      "tests/e2e": 109,
+      "tests/unit": 757,
+      "lib": 313,
+      "tests/invariants": 191,
+      "tests/e2e": 112,
       "app": 80,
       "tests/api": 10,
       "tests/fiscal": 10,
@@ -57,7 +57,7 @@
     },
     "apis_por_prefixo": {
       "/api/v1/ai": 69,
-      "/api/v1/prospecting": 32,
+      "/api/v1/prospecting": 33,
       "/api/v1/cron": 31,
       "/api/v1/shipments": 26,
       "/api/v1/admin": 22,
@@ -5781,6 +5781,21 @@
         "force-dynamic"
       ],
       "linhas": 72
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/prospecting/relatorio-gastos",
+      "arquivo": "app/api/v1/prospecting/relatorio-gastos/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 115
     },
     {
       "tipo": "api",

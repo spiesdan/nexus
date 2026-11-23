@@ -337,6 +337,11 @@ const RAZOES_DO_DELTA: ReadonlyArray<{ prefixo: string; area: string; razao: str
     razao: "Health check do agente Laya.",
   },
   {
+    prefixo: "app/api/v1/prospecting/relatorio-gastos",
+    area: "Prospecção — relatório",
+    razao: "Relatório mensal de gastos da campanha (orçado × prospecção × mídia), com CSV.",
+  },
+  {
     prefixo: "app/api/v1/contacts/",
     area: "Contatos",
     razao: "Crédito do cliente e busca de cidades — apoio à venda.",
