@@ -1,5 +1,5 @@
 ---
-impacto: mudou_comportamento
+impacto: capacidade_nova
 secao: alterado
 titulo: Nota fiscal usa o endereço do pedido quando falta no cadastro
 ---
