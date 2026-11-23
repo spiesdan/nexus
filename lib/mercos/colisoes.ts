@@ -26,8 +26,40 @@ export interface ColisaoMercos {
   numero_local?: number | null;
 }
 
+/** Resumo da última reconciliação Mercos × cadastro (contrato do G). */
+export interface ReconciliacaoMercos {
+  quando?: string | null;
+  censo_lido?: number | null;
+  censo_esperado?: number | null;
+  ausentes?: number | null;
+  colisoes?: number | null;
+  ignorados_sem_item?: number | null;
+  status?: "completa" | "incompleta" | null;
+}
+
 export interface RespostaColisoesMercos {
-  data: { itens: ColisaoMercos[] };
+  data: {
+    itens: ColisaoMercos[];
+    /** Pode faltar/nulo: é o estado de hoje, a tela continua funcionando. */
+    reconciliacao?: ReconciliacaoMercos | null;
+  };
+}
+
+export type EstadoDaConferencia = "sem" | "incompleta" | "ausentes" | "completa";
+
+export function estadoDaConferencia(
+  reconciliacao: ReconciliacaoMercos | null | undefined,
+): EstadoDaConferencia {
+  if (!reconciliacao?.status) return "sem";
+  if (reconciliacao.status === "incompleta") return "incompleta";
+  return (reconciliacao.ausentes ?? 0) > 0 ? "ausentes" : "completa";
+}
+
+export function coberturaDaConferencia(reconciliacao: ReconciliacaoMercos, tagIdioma: string): string {
+  const lido = (reconciliacao.censo_lido ?? 0).toLocaleString(tagIdioma);
+  const esperado = (reconciliacao.censo_esperado ?? 0).toLocaleString(tagIdioma);
+  const ausentes = (reconciliacao.ausentes ?? 0).toLocaleString(tagIdioma);
+  return `${ausentes} ausentes · ${lido} de ${esperado} verificados`;
 }
 
 export const SEM_CLIENTE_MERCOS = "cliente não informado no Mercos";
