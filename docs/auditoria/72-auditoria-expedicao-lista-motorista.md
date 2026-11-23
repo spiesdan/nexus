@@ -3,7 +3,7 @@
 > Medição feita em **23/11/2026**, sobre `nexus/main@250b2d916`, lendo o código de
 > `app/app/expedicao/_client.tsx`, `app/app/expedicao/page.tsx`,
 > `app/app/expedicao/[id]/_client.tsx`, `_motorista.tsx` e `_mapa-rota.tsx`, e as
-> capturas de `capturas/auditoria-lista-motorista/`. Mesma régua da auditoria
+> capturas de `docs/auditoria/capturas/lista-motorista/`. Mesma régua da auditoria
 > `71`: **P0 = parece quebrado, P1 = lento de entender, P2 = o que o pedido
 > pedia e não está**. Este documento é diagnóstico — **nada foi consertado**.
 >
@@ -20,7 +20,7 @@
   foi ligado **só localmente durante a captura** e desligado no mesmo comando —
   nenhuma migration, nenhum dado de produção.
 - Âncoras, fontes, contraste e alvos lidos do DOM; axe + varredura própria em
-  `capturas/medicao-lista-motorista/varredura.json`.
+  `docs/auditoria/capturas/lista-motorista/varredura.json`.
 
 ### Duas telas com a mesma URL — importante para quem for aprovar
 
@@ -44,7 +44,7 @@ As duas foram capturadas. Onde o achado vale só para uma, está dito.
   nosso.
 - **Cabeçalho da lista:** duas ações ("Frota" outline, "Nova carga" preenchido)
   em **uma linha em 390** (`_client.tsx:470-488`, captura
-  `app_expedicao_light_390.png`).
+  `docs/auditoria/capturas/lista-motorista/app_expedicao_light_390.png`).
 - **Aviso com ação inline:** os "14 avisos de saída esperando o número de
   expedição voltar" trazem "Ver conexões" no próprio aviso
   (`_client.tsx:498-515`). É exatamente o que a regra pede — o aviso não é texto
@@ -52,8 +52,8 @@ As duas foram capturadas. Onde o achado vale só para uma, está dito.
 - **Cabine do entregador:** a ação primária **"Entregue" está na primeira dobra**
   (`y=736`, `h=48`, dock escondido); "Trocar carga" e "Centralizar em mim" são
   44×44; `h1` existe (`sr-only`); controles de natureza diferente (Roteiro,
-  câmera, centralizar), não duplicatas. Ver `cabine-light_390.png` /
-  `cabine-dark_390.png`.
+  câmera, centralizar), não duplicatas. Ver `docs/auditoria/capturas/lista-motorista/cabine-light_390.png` /
+  `docs/auditoria/capturas/lista-motorista/cabine-dark_390.png`.
 - **Sem numeração duplicada** em nenhuma das duas telas — o defeito do `71` não
   reapareceu aqui.
 - **console 0, overflow 0, axe 0 sério/crítico** nas 8 combinações
@@ -83,8 +83,8 @@ também um filtro (`_client.tsx:518-635`). Duas delas não descrevem o que dizem
    da tela é dinheiro, antes da fila de trabalho. Vale a regra já decidida:
    dinheiro só onde ele decide, e uma ação só em um lugar.
 
-Evidência: `app_expedicao_light_1440.png`, `app_expedicao_light_390.png`,
-`app_expedicao_dark_1440.png`.
+Evidência: `docs/auditoria/capturas/lista-motorista/app_expedicao_light_1440.png`, `docs/auditoria/capturas/lista-motorista/app_expedicao_light_390.png`,
+`docs/auditoria/capturas/lista-motorista/app_expedicao_dark_1440.png`.
 
 ### P0-2. Motorista: mapa vazio e sem endereço são texto morto, e "Entregue" segue sendo a única saída
 
@@ -108,8 +108,8 @@ Na cabine com dado real (carga 031, sem geocodificação):
 
 É o caso mais claro de "parece quebrado": três avisos dizendo que falta
 informação, zero ações para resolve-la, e uma ação de desfecho disponível.
-Evidência: `cabine-light_390.png`, `cabine-dark_390.png`,
-`cabine-detalhe-dark_390.png`.
+Evidência: `docs/auditoria/capturas/lista-motorista/cabine-light_390.png`, `docs/auditoria/capturas/lista-motorista/cabine-dark_390.png`,
+`docs/auditoria/capturas/lista-motorista/cabine-detalhe-dark_390.png`.
 
 ## P1 — o que faz a tela ser lenta de entender
 
@@ -136,7 +136,7 @@ Na variante não-imersiva (`_client.tsx:693-720`), medido em 390×844:
   (`_motorista.tsx:1070`) — os dois atrás do dock;
 - só depois de `scrollTop=400` aparecem ("Cheguei" y=490, "Não entregue" y=606).
 
-A captura `motorista_light_390.png` mostra o cartão "PRÓXIMA ENTREGA" cortado
+A captura `docs/auditoria/capturas/lista-motorista/motorista_light_390.png` mostra o cartão "PRÓXIMA ENTREGA" cortado
 pelo rodapé. Na cabine do entregador isso **não** acontece — lá "Entregue" está
 em y=736 —, mas a URL é a mesma, e o operador que abre a tela no celular recebe
 a versão ruim.
@@ -153,7 +153,7 @@ O mesmo `desfecho(order_id, "entregue")` aparece como:
 
 Medido na cabine: folha fechada mostra **"Entregue"**; um toque no destino
 abre **"Cheguei" / "Marcar como entregue" / "Não entregue"**
-(`cabine-detalhe-dark_390.png`). É a mesma reclamação que o dono já fez na
+(`docs/auditoria/capturas/lista-motorista/cabine-detalhe-dark_390.png`). É a mesma reclamação que o dono já fez na
 ficha: dois rótulos para a mesma coisa obrigam o usuário a adivinhar qual é a
 real. Aqui são dois para "entregue" e a regra "uma ação, um lugar" continua
 valendo.
@@ -164,7 +164,7 @@ valendo.
 entrega, e `_motorista.tsx:749-754` faz o mesmo no popup do mapa. O motorista
 não decide preço, cobrança nem desconto na rua — o valor é ruído no cartão que
 deve dizer só **onde ir e o que fazer**. Captura
-`cabine-detalhe-dark_390.png`.
+`docs/auditoria/capturas/lista-motorista/cabine-detalhe-dark_390.png`.
 
 ### P1-7. "Ainda não sincronizou" é texto morto, pequeno e sem saída
 
@@ -182,7 +182,7 @@ Legibilidade ao sol: 9–11 px em pontos operacionais — "agora"
 (`_mapa-rota.tsx:803`, 11 px), % do placar (`:1452`, 11 px). Contraste medido
 reprovado em claro: **"Marcar como entregue" 4,35:1**, mínimo 4,5:1
 (`_motorista.tsx:786-794`, `bg-success text-accent-fg`), registrado em
-`capturas/medicao-lista-motorista/varredura.json`.
+`docs/auditoria/capturas/lista-motorista/varredura.json`.
 
 ### P1-8. "Qual carga você está entregando?" duplica a própria lista e vem antes dela
 
@@ -192,14 +192,14 @@ Logo abaixo, **41 cartões** (`_client.tsx:383-455`, `data-testid=carga-linha-*`
 levam ao **mesmo URL**. Medido: 1 select + 41 cartões, todos com o mesmo
 destino. O `select` exige dois toques (abrir, escolher) e aparece antes dos
 cartões de 32 px que são justamente o alvo de uma mão. Capturas
-`lista-entregador-{light,dark}_390.png`.
+`docs/auditoria/capturas/lista-motorista/lista-entregador-{light,dark}_390.png`.
 
 ## P2 — o que o pedido pedia e não está
 
 ### P2-9. Selos flutuantes voltam a cobrir conteúdo operacional
 
 Na cabine, o selo inferior direito cobre a ponta da linha **"Rastreio ligado —
-só nesta rota"** (`_motorista.tsx:1389-1403`, capturas `cabine-*_390.png`), e na
+só nesta rota"** (`_motorista.tsx:1389-1403`, capturas `docs/auditoria/capturas/lista-motorista/cabine-*_390.png`), e na
 lista da doca o primeiro cartão ("Abrir Carga 060", y=800–882) nasce atrás do
 dock (y=787). O `pb-24` protege o fim do conteúdo, não o meio — mesmo defeito já
 medido no `71`, agora nas outras duas telas.
@@ -224,10 +224,10 @@ que hoje é texto morto" segue sem ser aplicada nestas duas telas.
 
 ## Índice de evidência
 
-- Capturas: `capturas/auditoria-lista-motorista/`
-  - Lista operador: `app_expedicao_{light,dark}_{390,1440}.png`
-  - `/motorista` operador: `app_expedicao_ad90f4b3…_motorista_{light,dark}_{390,1440}.png`
-  - Cabine do entregador: `cabine-{light,dark}_390.png`, `cabine-detalhe-dark_390.png`
-  - Lista do entregador: `lista-entregador-{light,dark}_390.png`
-  - Ação abaixo da dobra: `medicao-motorista-acao-390.png`
-- Varredura: `capturas/medicao-lista-motorista/varredura.json`
+- Capturas: `docs/auditoria/capturas/lista-motorista/`
+  - Lista operador: `docs/auditoria/capturas/lista-motorista/app_expedicao_{light,dark}_{390,1440}.png`
+  - `/motorista` operador: `docs/auditoria/capturas/lista-motorista/app_expedicao_ad90f4b3…_motorista_{light,dark}_{390,1440}.png`
+  - Cabine do entregador: `docs/auditoria/capturas/lista-motorista/cabine-{light,dark}_390.png`, `docs/auditoria/capturas/lista-motorista/cabine-detalhe-dark_390.png`
+  - Lista do entregador: `docs/auditoria/capturas/lista-motorista/lista-entregador-{light,dark}_390.png`
+  - Ação abaixo da dobra: `docs/auditoria/capturas/lista-motorista/medicao-motorista-acao-390.png`
+- Varredura: `docs/auditoria/capturas/lista-motorista/varredura.json`
