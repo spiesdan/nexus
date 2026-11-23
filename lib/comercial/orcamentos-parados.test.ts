@@ -10,6 +10,7 @@ import { describe, expect, it } from "vitest";
 import {
   DIAS_PADRAO,
   diasDaRégua,
+  filaParaCsv,
   idadeEmDias,
   montarFila,
   proximoPasso,
@@ -92,5 +93,30 @@ describe("volumes da fila", () => {
     for (let i = 1; i < fila.length; i += 1) {
       expect(fila[i - 1]!.idade_dias).toBeGreaterThanOrEqual(fila[i]!.idade_dias);
     }
+  });
+});
+
+describe("exportação CSV da fila", () => {
+  it("cabeçalho fixo, próximo passo por linha e total; escapa vírgulas e aspas", () => {
+    const fila = montarFila(
+      [{ ...linha(1, 90), cliente: 'Empresa "A", Mafra' }],
+      AGORA,
+      60,
+    );
+    const csv = filaParaCsv(fila);
+    const linhas = csv.trim().split("\n");
+    expect(linhas[0]).toBe(
+      "numero,cliente,valor_cents,idade_dias,dias_limite,criado_por_humano,proximo_passo,detalhe",
+    );
+    expect(csv).toContain('"Empresa ""A"", Mafra"');
+    expect(csv).toContain(",expirar,");
+    expect(linhas[linhas.length - 1]).toContain("TOTAL,2000");
+  });
+
+  it("fila vazia ainda devolve cabeçalho e total zero", () => {
+    const csv = filaParaCsv([]);
+    const linhas = csv.trim().split("\n");
+    expect(linhas).toHaveLength(2);
+    expect(linhas[1]).toContain("TOTAL,0");
   });
 });
