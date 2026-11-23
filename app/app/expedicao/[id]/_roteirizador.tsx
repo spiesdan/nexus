@@ -321,7 +321,8 @@ export function Roteirizador({
    * fora do mapa. Agora a falha tem lugar fixo acima dos painéis, com o texto
    * do servidor e o botão de tentar de novo.
    */
-  const [erroGeo, setErroGeo] = React.useState<string | null>(null);  /**
+  const [erroGeo, setErroGeo] = React.useState<string | null>(null);
+  /**
    * WORKBENCH MOBILE — uma decisão, três áreas.
    *
    * No celular o mapa de 50vh empurrava a ordem de entrega para baixo da dobra
@@ -332,6 +333,15 @@ export function Roteirizador({
   const [abaMobile, setAbaMobile] = React.useState<"pedidos" | "mapa" | "planejamento">("pedidos");
   const visAba = (aba: typeof abaMobile) => (abaMobile === aba ? "block" : "hidden lg:block");
 
+  /** Parada compartilhada entre a lista e o mapa (P1-3): um clique destaca os dois. */
+  const [paradaSelecionada, setParadaSelecionada] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    if (!paradaSelecionada) return;
+    const linha = document.querySelector<HTMLElement>(
+      `[data-linha-parada="${CSS.escape(paradaSelecionada)}"]`,
+    );
+    linha?.scrollIntoView({ block: "nearest" });
+  }, [paradaSelecionada]);
   const [retornar, setRetornar] = React.useState(false);
   const [tempoParada, setTempoParada] = React.useState(8);
   const [trabalhando, setTrabalhando] = React.useState<string | null>(null);
@@ -658,6 +668,8 @@ export function Roteirizador({
       estado,
       pedidos: p.pedidos,
       veiculoRotulo: rotuloDoVeiculo(atribuicao[p.chave]),
+      precisao:
+        p.geo_status === "ok" && !pinoAproximado(p.geo_fonte) ? "confirmada" : "aproximada",
       entrada: entradaMarcada(p)
         ? { referencia: p.entrada?.referencia ?? null, confirmacoes: p.entrada?.confirmacoes ?? 0 }
         : null,
@@ -1630,6 +1642,8 @@ export function Roteirizador({
             if (marcarPara) setPinoPendente({ lat, lng });
           }}
           aoAcaoParada={(chave, acao) => void acaoParada(chave, acao)}
+          aoSelecionar={setParadaSelecionada}
+          selecionada={paradaSelecionada}
         />
 
         {marcarPara && (
@@ -2175,7 +2189,14 @@ export function Roteirizador({
 
           <ol className="divide-y divide-border">
             {paradasOrdenadas.map((p, i) => (
-              <li key={p.chave} className="flex items-start gap-2.5 px-3.5 py-3">
+              <li
+                key={p.chave}
+                data-linha-parada={p.chave}
+                onClick={() => setParadaSelecionada(p.chave)}
+                className={`flex cursor-pointer items-start gap-2.5 px-3.5 py-3 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-ink ${
+                  paradaSelecionada === p.chave ? "bg-accent-soft" : "hover:bg-stage-2/60"
+                }`}
+              >
                 <span
                   className={cn(
                     "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold tabular-nums",

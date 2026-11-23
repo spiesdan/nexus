@@ -33,6 +33,8 @@ export interface PontoParadaMapa {
   semNumero?: boolean;
   /** Veículo responsável (distribuição por veículo) — aparece no balão. */
   veiculoRotulo?: string | null;
+  /** Precisão do PINO: confirmada (borda sólida) × aproximada (borda tracejada). */
+  precisao?: "confirmada" | "aproximada";
   pedidos: { order_id: string; numero: number; total_cents: number; status: string }[];
 }
 
@@ -78,13 +80,21 @@ const COR_ESTADO: Record<PontoParadaMapa["estado"], string> = {
  * marcador é HTML nosso (`element` do `Marker`), então o que muda é quem
  * posiciona o nó, não o nó. Quem já lê a rota na rua não reaprende nada.
  */
-function htmlDoPino(cor: string, conteudo: string, destaque: boolean, titulo: string): string {
+function htmlDoPino(
+  cor: string,
+  conteudo: string,
+  destaque: boolean,
+  titulo: string,
+  chave?: string,
+  precisao?: "confirmada" | "aproximada",
+): string {
   const tamanho = destaque ? 38 : 34;
+  const borda = precisao === "aproximada" ? "3px dashed #fff" : "3px solid #fff";
   return (
-    `<div title="${titulo}" style="position:relative;width:${tamanho}px;height:${tamanho + 10}px;` +
+    `<div data-chave="${esc(chave ?? "")}" title="${titulo}" style="position:relative;width:${tamanho}px;height:${tamanho + 10}px;` +
     `filter:drop-shadow(0 3px 4px rgba(0,0,0,0.35))">` +
     `<div style="position:absolute;left:0;top:0;width:${tamanho}px;height:${tamanho}px;border-radius:50%;` +
-    `background:${cor};border:3px solid #fff;display:flex;align-items:center;justify-content:center;` +
+    `background:${cor};border:${borda};display:flex;align-items:center;justify-content:center;` +
     `color:#fff;font:700 ${destaque ? 15 : 13}px/1 system-ui,sans-serif;` +
     (destaque ? `box-shadow:0 0 0 4px rgba(37,99,235,0.35);` : "") +
     `">${conteudo}</div>` +
@@ -147,6 +157,8 @@ export function MapaRota({
   pinoPendente,
   aoClicarMapa,
   aoAcaoParada,
+  aoSelecionar,
+  selecionada,
   sobreposicao,
   imersivo = false,
   seguir = false,
@@ -173,6 +185,8 @@ export function MapaRota({
   pinoPendente: { lat: number; lng: number } | null;
   aoClicarMapa: (lat: number, lng: number) => void;
   aoAcaoParada: (chave: string, acao: "cheguei" | "entregue") => void;
+  aoSelecionar?: (chave: string) => void;
+  selecionada?: string | null;
   // Conteúdo flutuante sobre o mapa (distância, tempo, legenda). Fica DENTRO
   // do contêiner do mapa para não escorregar para cima da legenda abaixo dele;
   // `pointer-events-none` no invólucro garante que o mapa continue clicável.
@@ -218,6 +232,8 @@ export function MapaRota({
     pinoPendente,
     aoClicarMapa,
     aoAcaoParada,
+    aoSelecionar,
+    selecionada,
     imersivo,
     seguir,
     aoArrastar,
@@ -252,6 +268,8 @@ export function MapaRota({
       pinoPendente,
       aoClicarMapa,
       aoAcaoParada,
+      aoSelecionar,
+      selecionada,
       imersivo,
       seguir,
       aoArrastar,
@@ -283,6 +301,8 @@ export function MapaRota({
       rastro: ras,
       navegacao: nav,
       pinoPendente: pino,
+      aoSelecionar: aoSel,
+      selecionada: sel,
       seguir: seguindo,
     } = refProps.current;
     limparCamadas(m);
@@ -425,7 +445,7 @@ export function MapaRota({
     }
     for (const p of comCoord) {
       const cor = COR_ESTADO[p.estado];
-      const destaque = p.estado === "proxima";
+      const destaque = p.estado === "proxima" || p.chave === sel;
       const valor = p.pedidos.reduce((s, x) => s + x.total_cents, 0);
       const pedidosHtml = p.pedidos
         .map((x) => `#${x.numero} · ${esc(comoMoeda(x.total_cents, "BRL"))}`)
@@ -440,8 +460,9 @@ export function MapaRota({
       const marcador = criarMarcador(
         p.lng as number,
         p.lat as number,
-        htmlDoPino(cor, String(p.ordem), destaque, `#${p.ordem} ${esc(p.cliente)}`),
+        htmlDoPino(cor, String(p.ordem), destaque, `#${p.ordem} ${esc(p.cliente)}`, p.chave, p.precisao),
       );
+      marcador.getElement()?.addEventListener("click", () => aoSel?.(p.chave));
       const popup = novoBaliao(
         `<b>#${p.ordem} ${esc(p.cliente)}</b>` +
           (p.endereco ? `<br>${esc(p.endereco)}` : "") +
@@ -795,6 +816,17 @@ export function MapaRota({
           </div>
         ) : null}
       </div>
+      {/* LEGENDA — o contorno diz onde o pino veio; a cor é só o estado. */}
+      <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-subtle">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-solid border-muted-foreground" />
+          {t("Pino confirmado")}
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-dashed border-muted-foreground" />
+          {t("Pino aproximado")}
+        </span>
+      </p>
       {modoMarcar && (
         // O mapa só fala do que é dele: o alfinete. O estado da rota (ruas,
         // aproximada, sem cálculo) e as paradas sem localização vivem na
