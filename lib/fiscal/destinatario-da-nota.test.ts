@@ -337,3 +337,76 @@ describe("carregarDestinatario — CPF cifrado da ficha", () => {
     expect(chamou).toBe(false);
   });
 });
+
+/**
+ * O dono viu "6 pendências" na NF-e e perguntou por que o endereço do pedido
+ * não preenche sozinho. O coletor Mercos não traz rua/número/bairro; o pedido
+ * traz. Cadastro ganha; o que falta nele vem do pedido e a origem é dita.
+ */
+describe("endereço do pedido como reserva fiscal", () => {
+  const semEndereco: ContatoFiscal = {
+    id: "contato-sem-endereco",
+    name: "FULANO LTDA",
+    cnpj: "12345678000195",
+  };
+
+  it.each([
+    [
+      "FAZ BATATAIS, S/N — BELA VISTA DO SUL, MAFRA/SC, 89300001",
+      "S/N",
+      "BELA VISTA DO SUL",
+    ],
+    [
+      "BR-280, 1421, DE 1180 A 1998 LADO PAR, 1421 — CAMPO DA ÁGUA VERDE, Canoinhas/SC, 89466218",
+      "1421",
+      "CAMPO DA ÁGUA VERDE",
+    ],
+  ])("o endereço real %s resolve as 5 pendências de endereço", (endereco, numero, bairro) => {
+    const antes = montarDestinatario({ cliente_nome: "FULANO LTDA" }, semEndereco);
+    const depois = montarDestinatario(
+      { cliente_nome: "FULANO LTDA", endereco_entrega: endereco },
+      semEndereco,
+    );
+    expect(antes.faltando).toEqual([
+      "logradouro",
+      "número do endereço",
+      "bairro",
+      "cidade/UF (ou o código IBGE do município)",
+      "UF",
+    ]);
+    expect(depois.faltando).toEqual([]);
+    expect(depois.entrega?.numero).toBe(numero);
+    expect(depois.entrega?.bairro).toBe(bairro);
+    expect(depois.origem.logradouro).toBe("pedido");
+    expect(depois.origem.numero).toBe("pedido");
+    expect(depois.origem.bairro).toBe("pedido");
+    expect(depois.origem.cidade).toBe("pedido");
+    expect(depois.origem.uf).toBe("pedido");
+  });
+
+  it("cadastro completo ganha: o pedido não sobrescreve nada", () => {
+    const d = montarDestinatario(
+      {
+        cliente_nome: "IMPORTADO",
+        endereco_entrega: "FAZ BATATAIS, S/N — BELA VISTA DO SUL, MAFRA/SC, 89300001",
+      },
+      WANDERLEI,
+    );
+    expect(d.entrega?.logradouro).toBe("RUA JOÃO FRANCISCO DE ASSIS");
+    expect(d.entrega?.numero).toBe("27");
+    expect(d.entrega?.bairro).toBe("CENTRO");
+    expect(d.origem.logradouro).toBe("cadastro");
+    expect(d.origem.numero).toBe("cadastro");
+    expect(d.origem.bairro).toBe("cadastro");
+  });
+
+  it("texto ambíguo não chuta: pendências continuam, origem fica nula", () => {
+    const d = montarDestinatario(
+      { cliente_nome: "FULANO LTDA", endereco_entrega: "RUA SEM TRAVESSÃO, 10, MAFRA/SC" },
+      semEndereco,
+    );
+    expect(d.entrega).toBeNull();
+    expect(d.faltando).toContain("logradouro");
+    expect(d.origem.logradouro).toBeNull();
+  });
+});
