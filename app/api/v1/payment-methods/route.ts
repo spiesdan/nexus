@@ -47,7 +47,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("payment_methods")
+    .from("commercial_payment_methods")
     .select("id, tipo, codigo, nome, tpag, dias_prazo, ativo")
     .eq("organization_id", autorizado.org.orgId)
     .order("tipo")
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("payment_methods")
+    .from("commercial_payment_methods")
     .insert({ ...lido.data, organization_id: autorizado.org.orgId })
     .select("id, tipo, codigo, nome, tpag, dias_prazo, ativo")
     .single();

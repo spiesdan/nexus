@@ -100,7 +100,7 @@ export default async function NovoPedidoPage({
       (async () => {
         try {
           const r = await supabase
-            .from("payment_methods")
+            .from("commercial_payment_methods")
             .select("codigo, nome")
             .eq("organization_id", activeOrg.orgId)
             .eq("tipo", "prazo")

@@ -26,7 +26,7 @@ export default async function FormasDePagamentoPage() {
   const podeEditar = user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
   const supabase = await createClient();
   const { data } = await supabase
-    .from("payment_methods")
+    .from("commercial_payment_methods")
     .select("id, tipo, codigo, nome, tpag, dias_prazo, ativo")
     .eq("organization_id", activeOrg.orgId)
     .order("tipo")

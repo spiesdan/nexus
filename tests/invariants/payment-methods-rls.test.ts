@@ -53,7 +53,7 @@ function como(userId: string, comando: string): string {
 function contar(userId: string, org: string): number {
   const out = como(
     userId,
-    `select count(*) from public.payment_methods where organization_id = '${org}'::uuid;`,
+    `select count(*) from public.commercial_payment_methods where organization_id = '${org}'::uuid;`,
   );
   const linhas = out.split("\n").filter(Boolean);
   const ultimo = linhas[linhas.length - 1];
@@ -65,7 +65,7 @@ function inserir(userId: string, org: string, codigo: string): boolean {
   try {
     como(
       userId,
-      `insert into public.payment_methods
+      `insert into public.commercial_payment_methods
          (organization_id, tipo, codigo, nome, tpag)
        values ('${org}'::uuid, 'forma', '${codigo}', 'Teste do invariante', '17');`,
     );
@@ -94,17 +94,17 @@ beforeAll(() => {
       ('${AGENTE_B}', '${ORG_B}', 'agent', now())
       on conflict do nothing;
 
-    insert into public.payment_methods (organization_id, tipo, codigo, nome, tpag, dias_prazo)
+    insert into public.commercial_payment_methods (organization_id, tipo, codigo, nome, tpag, dias_prazo)
     select v.org, 'prazo', 'invariante-prazo', 'Prazo do invariante', null, 30
       from (values ('${ORG_A}'::uuid), ('${ORG_B}'::uuid)) as v(org)
      where not exists (
-       select 1 from public.payment_methods p
+       select 1 from public.commercial_payment_methods p
         where p.organization_id = v.org and p.codigo = 'invariante-prazo'
      );
   `);
 });
 
-describe("RLS de payment_methods", () => {
+describe("RLS de commercial_payment_methods", () => {
   it("1. membro lê a própria organização", () => {
     expect(contar(AGENTE_A, ORG_A)).toBeGreaterThan(0);
   });
@@ -127,7 +127,7 @@ describe("RLS de payment_methods", () => {
       out = sql(`
         set role anon;
         select set_config('request.jwt.claims', '', false);
-        select count(*) from public.payment_methods;
+        select count(*) from public.commercial_payment_methods;
       `);
     } catch (erro) {
       // "permission denied" é a prova mais forte: o anon nem chega a contar.

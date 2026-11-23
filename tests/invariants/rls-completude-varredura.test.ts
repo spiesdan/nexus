@@ -82,11 +82,11 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "tests/invariants/campaign-spend-rls.test.ts (0335) prova, com `set role " +
       "authenticated` + JWT simulado, que membro da org A lê e lança gasto na " +
       "própria campanha, zero linhas da org B nos dois sentidos, e que anon/user " +
-      "sem org não leem. Fora de TABLES pelo mesmo motivo do payment_methods: " +
+      "sem org não leem. Fora de TABLES pelo mesmo motivo do commercial_payment_methods: " +
       "a policy de escrita é agent (TABLES cobre casos de manager).",
   },
   {
-    tabela: "payment_methods",
+    tabela: "commercial_payment_methods",
     razao:
       "tests/invariants/payment-methods-rls.test.ts (0334) prova, com " +
       "`set role authenticated` + JWT simulado, que membro da org A lê a própria " +

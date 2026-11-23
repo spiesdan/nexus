@@ -14,7 +14,7 @@ import { FORMAS_DE_PAGAMENTO, ROTULO_DA_FORMA_DE_PAGAMENTO } from "@/lib/schemas
 import { NAV_DESTINATIONS } from "@/lib/navigation/registry";
 
 const migration = readFileSync(
-  "supabase/migrations/20261124110000_0334_payment_methods.sql",
+  "supabase/migrations/20261124110000_0334_commercial_payment_methods.sql",
   "utf8",
 );
 const baseline = readFileSync("supabase/baseline.sql", "utf8");
@@ -31,7 +31,7 @@ describe("0334 — formas de pagamento configuráveis", () => {
     expect(migration).toContain("enable row level security");
     expect(migration).toContain("fn_user_org_ids()");
     expect(migration).toContain("fn_role_at_least(organization_id, 'manager')");
-    expect(migration).toContain("revoke all on public.payment_methods from anon");
+    expect(migration).toContain("revoke all on public.commercial_payment_methods from anon");
   });
 
   it("semeia as três formas e os três prazos atuais de forma idempotente", () => {
@@ -55,9 +55,9 @@ describe("0334 — formas de pagamento configuráveis", () => {
   });
 
   it("chega ao baseline do self-host e ao MANIFEST", () => {
-    expect(baseline).toContain("create table if not exists public.payment_methods");
-    expect(baseline).toContain("payment_methods_select");
-    expect(manifest).toContain("0334_payment_methods");
+    expect(baseline).toContain("create table if not exists public.commercial_payment_methods");
+    expect(baseline).toContain("commercial_payment_methods_select");
+    expect(manifest).toContain("0334_commercial_payment_methods");
   });
 
   it("a tela existe na navegação com porte de gestão", () => {
