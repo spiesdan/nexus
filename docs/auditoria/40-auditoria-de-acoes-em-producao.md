@@ -601,3 +601,38 @@ transação) e **0336** (`rota_versao_confirmada` + `rota_confirmada_em` em
 no `baseline.sql`; o `update.sh` reaplica o baseline inteiro. Rollback de imagem
 **não** reverte DDL — ver §30 e o runbook. **Deploy é do dono**, com backup,
 verificação e rollback.
+
+
+## 32. 23/11/2026 — Correção da campanha `3a0909d6` (ação do dono, autorizada)
+
+**Autorização:** pedido direto do dono. **Backup:** `_bkp_campanha_3a0909d6_20261123`.
+
+**Diagnóstico medido:** 5.295 empresas nas 10 cidades; **356** casam as 18
+categorias **só ignorando maiúsculas** — a criação usou comparação **exata**
+(`"posto de combustível"` ≠ `"Posto de combustível"`); 284 `revisar` (excluídas
+por regra), 693 sem telefone, 0 opt-out → **282 elegíveis**; **89** em outra
+campanha, bloqueadas pelo trigger `prospect_em_outra_campanha`.
+
+**Escrita:** `prospect_ids` = **193** empresas elegíveis e livres (as 89 ficaram
+de fora). Status segue **`rascunho`** — **0 mensagens enviadas**. Impacto: 193
+empresas, 10 categorias, 0 envios. **Sem escrita financeira/fiscal.**
+
+**Reversão:** restaurar `prospect_ids` do backup (valor original: `{}`).
+
+**Lição:** *matching de categoria case-sensitive fez campanha nascer vazia e
+ninguém viu* — nenhum erro na tela, só zero resultados. O **F** corrige no mesmo
+PR do **P1-28**. As 89 empresas dependem do P1-28 (multi-campanha).
+
+## 33. 23/11/2026 — Prazo da expedição e congelamento
+
+**Prazo do dono:** expedição pronta e no ar até **07:00**; **alvo de tag 05:30**
+(deploy e verificação até 06:30). Congelamento de **features** até o corte:
+F e G realocados para expedição/E2E; só entram PRs de expedição. D fecha P1-3,
+G fecha P1-24; o corte leva o que estiver verde — **não espera o E2E inteiro**.
+
+**Migrations desta versão:** **0335** (ordem/versão da rota na mesma transação),
+**0336** (`rota_versao_confirmada` + `rota_confirmada_em`) e apêndice **0337**
+(orçamento de campanha, gasto manual de mídia). Ver §31.
+
+**Depois do deploy:** P1-28, orçamentos parados, Inbox/Dashboard, `.in()`,
+`anon`, p95 e E2E restante — ver `66-backlog-aaa.md`.
