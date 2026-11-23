@@ -128,3 +128,24 @@ próxima.
 orçamentos parados (P0-4, recorte + tela) · Inbox/Dashboard (P1-25/26/27) ·
 10 `.in()` sem teto (P1-10) · `anon` em 58/179 tabelas (P1-11) · SLO p95 real
 (P1-13) · E2E restante (P1-5). Congelamento de features vale até o corte.
+## Regra de retomada 48h (decisão do dono, 23/11/2026)
+
+Empresa **nunca contatada** entra na campanha com o template Meta escolhido;
+empresa **já contatada** entra com o **texto de retomada**. O texto é PRESET
+CONFIGURÁVEL em `prospecting_message_presets` (categoria `retomada`) — nunca
+texto fixo no código, porque contém a marca do tenant.
+
+Após o envio inicial, agendar **1** follow-up para +48h somente se não houve
+resposta. Cancelar se respondeu, pediu opt-out, a conversa foi encerrada por
+opt-out ou o prospect foi excluído. Idempotente por `(campaign_id, prospect_id)`
+e com teto de tentativas.
+
+**Limite técnico (não negociável):** fora da janela de 24h da Meta, texto livre
+é rejeitado com `131047`. A retomada fora da janela só sai com **template
+aprovado na Meta**; sem o template, o fluxo fica bloqueado com motivo nomeado.
+A checagem usa `lib/channels/janela.ts`.
+
+**Status:** implementado no P1-28 (membresia multi-campanha + matching sem
+case/acento da campanha `3a0909d6`). Sem template aprovado o estado é
+**`aguardando_aprovacao`** — nunca `enviado`. Liberado para merge após a
+1.63.1; nenhuma release nova sem pedido do dono.

@@ -661,7 +661,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           message_id: null,
           enviado_em: agoraIso,
         })),
-        { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
+        { onConflict: "campaign_id,prospect_id", ignoreDuplicates: true },
       )
       .select("prospect_id");
     if (errReserva) {

@@ -226,4 +226,30 @@ describe("categoriaDaCampanhaQueCombina — qual modelo usar (0285)", () => {
     });
     expect(categoriaDaCampanhaQueCombina(revisar, ["Posto de combustível"])).toBeNull();
   });
+
+
+  // P1-28 — campanha 3a0909d6 (20/11): rótulo da campanha em minúsculas e
+  // `categoria_canonica` com maiúscula. A comparação tem que casar sem case e
+  // sem acento nos TRÊS lugares: prévia, criação e disparo. Todos os três
+  // passam por `categoriaCombinaComCampanha`, então o teste fica aqui.
+  it("casa categoria da campanha em minúsculas com a canônica capitalizada", () => {
+    const canonica = categoriaEfetiva({
+      nome: "Posto Central",
+      categoria: null,
+      categoria_canonica: "Posto de combustível",
+      categoria_revisar: false,
+    });
+    expect(categoriaCombinaComCampanha(canonica, ["posto de combustível"])).toBe(true);
+    expect(categoriaDaCampanhaQueCombina(canonica, ["posto de combustível"])).toBe(
+      "posto de combustível",
+    );
+
+    const oficina = categoriaEfetiva({
+      nome: "Oficina Central",
+      categoria: null,
+      categoria_canonica: "Oficina mecânica",
+      categoria_revisar: false,
+    });
+    expect(categoriaCombinaComCampanha(oficina, ["oficina mecanica"])).toBe(true);
+  });
 });

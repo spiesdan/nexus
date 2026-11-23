@@ -724,7 +724,7 @@ export async function processarCampanhasAgendadas(
             message_id: null,
             enviado_em: agoraIso,
           },
-          { onConflict: "organization_id,prospect_id", ignoreDuplicates: true },
+          { onConflict: "campaign_id,prospect_id", ignoreDuplicates: true },
         )
         .select("prospect_id");
       if (erroReserva) {
