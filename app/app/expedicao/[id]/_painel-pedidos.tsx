@@ -238,15 +238,7 @@ export function PainelDePedidosDisponiveis({
                   const marcado = selecionados.has(p.id);
                   return (
                     <li key={p.id} className="flex items-start gap-3 px-3 py-2.5">
-                      <input
-                        type="checkbox"
-                        aria-label={`${t("Selecionar")} ${numeroDoPedido(p.numero)}`}
-                        checked={marcado}
-                        onChange={() => alternar(p.id)}
-                        disabled={desabilitado}
-                        className="mt-1 h-5 w-5 shrink-0 accent-accent"
-                      />
-                      <label className="min-w-0 flex-1 cursor-pointer">
+                      <label htmlFor={`pedido-${p.id}`} className="min-w-0 flex-1 cursor-pointer">
                         <span className="flex flex-wrap items-baseline justify-between gap-x-2">
                           <span className="text-sm font-medium text-text">
                             {numeroDoPedido(p.numero)} · {p.cliente_nome}
@@ -277,6 +269,15 @@ export function PainelDePedidosDisponiveis({
                             </button>
                           )}
                         </span>
+                        <input
+                          id={`pedido-${p.id}`}
+                          type="checkbox"
+                          aria-label={`${t("Selecionar")} ${numeroDoPedido(p.numero)}`}
+                          checked={marcado}
+                          onChange={() => alternar(p.id)}
+                          disabled={desabilitado}
+                          className="sr-only"
+                        />
                       </label>
                     </li>
                   );
