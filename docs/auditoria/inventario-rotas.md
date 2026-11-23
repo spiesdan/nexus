@@ -4,27 +4,27 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-16T01:10:32.592Z.
+Gerado em 2026-11-23T01:42:23.194Z.
 
 | Medida | Valor |
 |---|---|
-| Telas (`page.tsx` com JSX) | **143** |
+| Telas (`page.tsx` com JSX) | **146** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **418** |
+| Handlers de API (`app/api/**/route.ts`) | **442** |
 | Layouts | 13 |
-| Páginas de erro (`error.tsx`) | 7 |
-| Estados de rota (`loading`/`not-found`/`template`/`default`) | 8 |
+| Páginas de erro (`error.tsx`) | 8 |
+| Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
 | Arquivos especiais (manifest/sitemap/robots/ícones) | 2 |
-| Migrations SQL | 292 |
+| Migrations SQL | 314 |
 
 ## Telas por grupo
 
 | Grupo | Telas |
 |---|---|
-| administração | 20 |
-| app (outros) | 6 |
+| administração | 21 |
+| app (outros) | 7 |
 | atendimento | 2 |
-| configuração | 21 |
+| configuração | 22 |
 | crm | 5 |
 | expedição | 7 |
 | financeiro | 2 |
@@ -42,16 +42,17 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 
 | Prefixo | Handlers |
 |---|---|
-| `/api/v1/ai` | 68 |
+| `/api/v1/ai` | 69 |
 | `/api/v1/prospecting` | 32 |
-| `/api/v1/cron` | 30 |
+| `/api/v1/cron` | 31 |
 | `/api/v1/shipments` | 25 |
-| `/api/v1/admin` | 21 |
+| `/api/v1/admin` | 22 |
 | `/api/v1/conversations` | 21 |
 | `/api/v1/leads` | 13 |
+| `/api/v1/contacts` | 12 |
 | `/api/v1/commercial-orders` | 11 |
-| `/api/v1/contacts` | 10 |
 | `/api/v1/invoices` | 10 |
+| `/api/v1/sentinel` | 10 |
 | `/api/v1/team` | 10 |
 | `/api/v1/products` | 9 |
 | `/api/v1/webhooks` | 9 |
@@ -67,6 +68,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/system` | 5 |
 | `/api/v1/channel-sessions` | 4 |
 | `/api/v1/fiscal-inutilizacoes` | 4 |
+| `/api/v1/device` | 3 |
 | `/api/v1/fiscal-ibpt` | 3 |
 | `/api/v1/price-tables` | 3 |
 | `/api/v1/purchase-orders` | 3 |
@@ -84,10 +86,13 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/message-templates` | 2 |
 | `/api/v1/messages` | 2 |
 | `/api/v1/metrics` | 2 |
+| `/api/v1/offline-devices` | 2 |
 | `/api/v1/onboarding` | 2 |
 | `/api/v1/tarefas` | 2 |
 | `/api/v1/titulos` | 2 |
+| `/api/auth/signout` | 1 |
 | `/api/internal/agents` | 1 |
+| `/api/internal/observabilidade` | 1 |
 | `/api/mcp` | 1 |
 | `/api/v1/atividades` | 1 |
 | `/api/v1/auth` | 1 |
@@ -107,10 +112,12 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/fiscal-produtos` | 1 |
 | `/api/v1/fiscal-relatorios` | 1 |
 | `/api/v1/fiscal-sincronizacoes` | 1 |
+| `/api/v1/fiscal` | 1 |
 | `/api/v1/health` | 1 |
 | `/api/v1/home` | 1 |
 | `/api/v1/indicadores` | 1 |
 | `/api/v1/integrations` | 1 |
+| `/api/v1/laya` | 1 |
 | `/api/v1/lead-captures` | 1 |
 | `/api/v1/marca` | 1 |
 | `/api/v1/mcp` | 1 |
@@ -129,9 +136,9 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 
 | Diretório em `components/` | Arquivos `.ts`/`.tsx` |
 |---|---|
-| `inbox` | 39 |
+| `inbox` | 40 |
 | `admin` | 31 |
-| `nexus-ui` | 25 |
+| `nexus-ui` | 31 |
 | `assistente` | 22 |
 | `kanban` | 20 |
 | `ui` | 19 |
@@ -141,35 +148,38 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `agenda` | 10 |
 | `auth` | 10 |
 | `connections` | 9 |
+| `feedback` | 5 |
+| `app` | 4 |
 | `empty` | 3 |
-| `feedback` | 3 |
-| `app` | 2 |
 | `branding` | 2 |
 | `filters` | 2 |
+| `observabilidade` | 2 |
+| `fiscal` | 1 |
 | `fotos` | 1 |
 | `operacao` | 1 |
 | `prospeccao` | 1 |
 
-## Telas (143)
+## Telas (146)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
-| `/403` | — | 7 | `app/403/page.tsx` |
-| `/500` | — | 18 | `app/500/page.tsx` |
-| `/503` | — | 11 | `app/503/page.tsx` |
+| `/403` | — | 10 | `app/403/page.tsx` |
+| `/500` | — | 21 | `app/500/page.tsx` |
+| `/503` | — | 14 | `app/503/page.tsx` |
 | `/account-suspended` | — | 26 | `app/account-suspended/page.tsx` |
 | `/admin/audit` | — | 10 | `app/admin/(protected)/audit/page.tsx` |
 | `/admin/audit/:entryId` | — | 15 | `app/admin/(protected)/audit/[entryId]/page.tsx` |
 | `/admin/dashboard` | — | 8 | `app/admin/(protected)/dashboard/page.tsx` |
 | `/admin/forbidden` | platform-admin | 12 | `app/admin/forbidden/page.tsx` |
 | `/admin/google` | redirect, notFound, platform-admin, service-role, force-dynamic | 89 | `app/admin/(protected)/google/page.tsx` |
-| `/admin/inbox` | platform-admin | 23 | `app/admin/(protected)/inbox/page.tsx` |
+| `/admin/inbox` | platform-admin | 37 | `app/admin/(protected)/inbox/page.tsx` |
 | `/admin/inbox/:conversationId` | — | 11 | `app/admin/(protected)/inbox/[conversationId]/page.tsx` |
 | `/admin/incidents` | — | 8 | `app/admin/(protected)/incidents/page.tsx` |
 | `/admin/incidents/:id` | — | 13 | `app/admin/(protected)/incidents/[id]/page.tsx` |
 | `/admin/lgpd` | — | 10 | `app/admin/(protected)/lgpd/page.tsx` |
 | `/admin/lgpd/requests/:id` | — | 15 | `app/admin/(protected)/lgpd/requests/[id]/page.tsx` |
 | `/admin/marca` | redirect, notFound, platform-admin, force-dynamic | 115 | `app/admin/(protected)/marca/page.tsx` |
+| `/admin/observabilidade` | — | 8 | `app/admin/(protected)/observabilidade/page.tsx` |
 | `/admin/platform-admins` | — | 8 | `app/admin/(protected)/platform-admins/page.tsx` |
 | `/admin/tenants` | — | 8 | `app/admin/(protected)/tenants/page.tsx` |
 | `/admin/tenants/:id` | — | 11 | `app/admin/(protected)/tenants/[id]/page.tsx` |
@@ -179,7 +189,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/admin/users` | — | 8 | `app/admin/(protected)/users/page.tsx` |
 | `/admin/users/:id` | — | 13 | `app/admin/(protected)/users/[id]/page.tsx` |
 | `/app` | redirect, force-dynamic | 136 | `app/app/page.tsx` |
-| `/app/agenda` | redirect, notFound, force-dynamic | 285 | `app/app/agenda/page.tsx` |
+| `/app/agenda` | redirect, notFound, force-dynamic | 293 | `app/app/agenda/page.tsx` |
 | `/app/ai` | force-dynamic | 28 | `app/app/ai/page.tsx` |
 | `/app/ai/agents` | redirect, force-dynamic | 66 | `app/app/ai/agents/page.tsx` |
 | `/app/ai/agents/:id` | redirect, notFound, force-dynamic | 187 | `app/app/ai/agents/[id]/page.tsx` |
@@ -189,7 +199,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/ai/credentials` | redirect, force-dynamic | 66 | `app/app/ai/credentials/page.tsx` |
 | `/app/ai/decisoes` | redirect, force-dynamic | 39 | `app/app/ai/decisoes/page.tsx` |
 | `/app/ai/evolution` | redirect, force-dynamic | 47 | `app/app/ai/evolution/page.tsx` |
-| `/app/ai/followups` | redirect, force-dynamic | 59 | `app/app/ai/followups/page.tsx` |
+| `/app/ai/followups` | redirect, force-dynamic | 64 | `app/app/ai/followups/page.tsx` |
 | `/app/ai/followups/:id` | redirect, notFound, force-dynamic | 68 | `app/app/ai/followups/[id]/page.tsx` |
 | `/app/ai/followups/enrollments/:id` | redirect, force-dynamic | 31 | `app/app/ai/followups/enrollments/[id]/page.tsx` |
 | `/app/ai/inbox` | redirect, force-dynamic | 31 | `app/app/ai/inbox/page.tsx` |
@@ -205,7 +215,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/audit` | redirect, force-dynamic | 32 | `app/app/audit/page.tsx` |
 | `/app/busca` | redirect, force-dynamic | 30 | `app/app/busca/page.tsx` |
 | `/app/campanhas` | redirect, force-dynamic | 92 | `app/app/campanhas/page.tsx` |
-| `/app/carteira` | redirect, force-dynamic | 125 | `app/app/carteira/page.tsx` |
+| `/app/carteira` | redirect, force-dynamic | 143 | `app/app/carteira/page.tsx` |
 | `/app/comissoes` | redirect, service-role, force-dynamic | 65 | `app/app/comissoes/page.tsx` |
 | `/app/compras` | redirect, force-dynamic | 24 | `app/app/compras/page.tsx` |
 | `/app/compras/:id` | redirect, notFound, force-dynamic | 39 | `app/app/compras/[id]/page.tsx` |
@@ -220,36 +230,36 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/expedicao/:id/rota` | force-dynamic | 12 | `app/app/expedicao/[id]/rota/page.tsx` |
 | `/app/expedicao/nova` | redirect, force-dynamic | 133 | `app/app/expedicao/nova/page.tsx` |
 | `/app/faturamento` | redirect, service-role, force-dynamic | 50 | `app/app/faturamento/page.tsx` |
-| `/app/fiscal` | force-dynamic | 304 | `app/app/fiscal/page.tsx` |
-| `/app/fiscal/configuracoes` | force-dynamic | 142 | `app/app/fiscal/configuracoes/page.tsx` |
-| `/app/fiscal/eventos` | force-dynamic | 152 | `app/app/fiscal/eventos/page.tsx` |
-| `/app/fiscal/fornecedores` | force-dynamic | 108 | `app/app/fiscal/fornecedores/page.tsx` |
+| `/app/fiscal` | force-dynamic | 321 | `app/app/fiscal/page.tsx` |
+| `/app/fiscal/configuracoes` | redirect, force-dynamic | 148 | `app/app/fiscal/configuracoes/page.tsx` |
+| `/app/fiscal/eventos` | force-dynamic | 156 | `app/app/fiscal/eventos/page.tsx` |
+| `/app/fiscal/fornecedores` | force-dynamic | 113 | `app/app/fiscal/fornecedores/page.tsx` |
 | `/app/fiscal/manifestacoes` | force-dynamic | 131 | `app/app/fiscal/manifestacoes/page.tsx` |
 | `/app/fiscal/notas` | force-dynamic | 39 | `app/app/fiscal/notas/page.tsx` |
-| `/app/fiscal/notas/:id` | notFound, force-dynamic | 521 | `app/app/fiscal/notas/[id]/page.tsx` |
+| `/app/fiscal/notas/:id` | notFound, force-dynamic | 516 | `app/app/fiscal/notas/[id]/page.tsx` |
 | `/app/fiscal/pendentes` | force-dynamic | 51 | `app/app/fiscal/pendentes/page.tsx` |
-| `/app/fiscal/produtos` | force-dynamic | 152 | `app/app/fiscal/produtos/page.tsx` |
+| `/app/fiscal/produtos` | force-dynamic | 155 | `app/app/fiscal/produtos/page.tsx` |
 | `/app/fiscal/relatorios` | force-dynamic | 411 | `app/app/fiscal/relatorios/page.tsx` |
 | `/app/fiscal/resumos` | force-dynamic | 39 | `app/app/fiscal/resumos/page.tsx` |
-| `/app/fiscal/sincronizacoes` | force-dynamic | 133 | `app/app/fiscal/sincronizacoes/page.tsx` |
+| `/app/fiscal/sincronizacoes` | force-dynamic | 138 | `app/app/fiscal/sincronizacoes/page.tsx` |
 | `/app/fiscal/xml` | force-dynamic | 38 | `app/app/fiscal/xml/page.tsx` |
 | `/app/frota` | force-dynamic | 64 | `app/app/frota/page.tsx` |
 | `/app/inbox` | redirect, force-dynamic | 27 | `app/app/inbox/page.tsx` |
 | `/app/indicadores` | redirect, service-role, force-dynamic | 213 | `app/app/indicadores/page.tsx` |
-| `/app/integrations/nuvemshop` | service-role, suspense | 167 | `app/app/integrations/nuvemshop/page.tsx` |
+| `/app/integrations/nuvemshop` | redirect, service-role, suspense | 176 | `app/app/integrations/nuvemshop/page.tsx` |
 | `/app/inteligencia` | redirect, force-dynamic | 25 | `app/app/inteligencia/page.tsx` |
 | `/app/kanban` | redirect, requireRole, force-dynamic | 67 | `app/app/kanban/page.tsx` |
 | `/app/laboratorio` | redirect, force-dynamic | 31 | `app/app/laboratorio/page.tsx` |
 | `/app/lgpd/requests` | redirect, force-dynamic | 36 | `app/app/lgpd/requests/page.tsx` |
 | `/app/lgpd/requests/:id` | redirect, force-dynamic | 31 | `app/app/lgpd/requests/[id]/page.tsx` |
 | `/app/meu-dia` | redirect, force-dynamic | 27 | `app/app/meu-dia/page.tsx` |
-| `/app/notas` | redirect, force-dynamic | 659 | `app/app/notas/page.tsx` |
-| `/app/pedidos` | redirect, service-role, force-dynamic | 266 | `app/app/pedidos/page.tsx` |
-| `/app/pedidos/:id` | redirect, service-role, force-dynamic | 131 | `app/app/pedidos/[id]/page.tsx` |
-| `/app/pedidos/imprimir` | redirect, force-dynamic | 225 | `app/app/pedidos/imprimir/page.tsx` |
-| `/app/pedidos/novo` | redirect, force-dynamic | 145 | `app/app/pedidos/novo/page.tsx` |
+| `/app/notas` | redirect, force-dynamic | 680 | `app/app/notas/page.tsx` |
+| `/app/pedidos` | redirect, service-role, force-dynamic | 316 | `app/app/pedidos/page.tsx` |
+| `/app/pedidos/:id` | redirect, service-role, force-dynamic | 159 | `app/app/pedidos/[id]/page.tsx` |
+| `/app/pedidos/imprimir` | redirect, force-dynamic | 257 | `app/app/pedidos/imprimir/page.tsx` |
+| `/app/pedidos/novo` | redirect, force-dynamic | 197 | `app/app/pedidos/novo/page.tsx` |
 | `/app/pipelines/:id` | redirect, notFound, force-dynamic | 31 | `app/app/pipelines/[id]/page.tsx` |
-| `/app/products` | redirect, force-dynamic | 209 | `app/app/products/page.tsx` |
+| `/app/products` | redirect, force-dynamic | 222 | `app/app/products/page.tsx` |
 | `/app/prospeccao/campanhas/:id` | redirect, force-dynamic | 28 | `app/app/prospeccao/campanhas/[id]/page.tsx` |
 | `/app/prospeccao/nova` | redirect, force-dynamic | 38 | `app/app/prospeccao/nova/page.tsx` |
 | `/app/radar` | force-dynamic | 9 | `app/app/radar/page.tsx` |
@@ -258,21 +268,23 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/radar/prospeccao` | force-dynamic | 9 | `app/app/radar/prospeccao/page.tsx` |
 | `/app/radar/recuperacao` | force-dynamic | 9 | `app/app/radar/recuperacao/page.tsx` |
 | `/app/radar/risco` | force-dynamic | 9 | `app/app/radar/risco/page.tsx` |
-| `/app/relatorios` | redirect, service-role, force-dynamic | 130 | `app/app/relatorios/page.tsx` |
+| `/app/relatorios` | redirect, service-role, force-dynamic | 136 | `app/app/relatorios/page.tsx` |
+| `/app/sentinel` | redirect, force-dynamic | 77 | `app/app/sentinel/page.tsx` |
 | `/app/settings` | force-dynamic | 40 | `app/app/settings/page.tsx` |
-| `/app/settings/api-tokens` | redirect, force-dynamic | 32 | `app/app/settings/api-tokens/page.tsx` |
-| `/app/settings/atendimento` | redirect, force-dynamic | 74 | `app/app/settings/atendimento/page.tsx` |
+| `/app/settings/api-tokens` | redirect, force-dynamic | 34 | `app/app/settings/api-tokens/page.tsx` |
+| `/app/settings/atendimento` | redirect, force-dynamic | 70 | `app/app/settings/atendimento/page.tsx` |
 | `/app/settings/atualizacao` | notFound, force-dynamic | 19 | `app/app/settings/atualizacao/page.tsx` |
-| `/app/settings/billing` | redirect, force-dynamic | 54 | `app/app/settings/billing/page.tsx` |
-| `/app/settings/marca` | redirect, notFound, force-dynamic | 110 | `app/app/settings/marca/page.tsx` |
-| `/app/settings/notifications` | force-dynamic | 99 | `app/app/settings/notifications/page.tsx` |
-| `/app/settings/profile` | force-dynamic | 47 | `app/app/settings/profile/page.tsx` |
-| `/app/settings/security` | service-role, force-dynamic | 75 | `app/app/settings/security/page.tsx` |
-| `/app/settings/tenant` | redirect, force-dynamic | 95 | `app/app/settings/tenant/page.tsx` |
+| `/app/settings/billing` | redirect, force-dynamic | 52 | `app/app/settings/billing/page.tsx` |
+| `/app/settings/devices` | redirect, force-dynamic | 49 | `app/app/settings/devices/page.tsx` |
+| `/app/settings/marca` | redirect, notFound, force-dynamic | 111 | `app/app/settings/marca/page.tsx` |
+| `/app/settings/notifications` | force-dynamic | 96 | `app/app/settings/notifications/page.tsx` |
+| `/app/settings/profile` | force-dynamic | 51 | `app/app/settings/profile/page.tsx` |
+| `/app/settings/security` | service-role, force-dynamic | 73 | `app/app/settings/security/page.tsx` |
+| `/app/settings/tenant` | redirect, force-dynamic | 97 | `app/app/settings/tenant/page.tsx` |
 | `/app/settings/tenant/agenda` | redirect, force-dynamic | 98 | `app/app/settings/tenant/agenda/page.tsx` |
 | `/app/settings/tenant/pipelines` | redirect, force-dynamic | 58 | `app/app/settings/tenant/pipelines/page.tsx` |
 | `/app/tarefas` | redirect, force-dynamic | 21 | `app/app/tarefas/page.tsx` |
-| `/app/team` | force-dynamic | 96 | `app/app/team/page.tsx` |
+| `/app/team` | force-dynamic | 102 | `app/app/team/page.tsx` |
 | `/app/team/invite` | redirect, force-dynamic | 31 | `app/app/team/invite/page.tsx` |
 | `/app/templates` | redirect, force-dynamic | 36 | `app/app/templates/page.tsx` |
 | `/app/venda-automatica` | redirect, force-dynamic | 106 | `app/app/venda-automatica/page.tsx` |
@@ -281,11 +293,11 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/legal/privacy` | redirect, force-dynamic | 156 | `app/legal/privacy/page.tsx` |
 | `/legal/terms` | force-dynamic | 157 | `app/legal/terms/page.tsx` |
 | `/login` | — | 112 | `app/(public)/login/page.tsx` |
-| `/login/forgot` | — | 38 | `app/(public)/login/forgot/page.tsx` |
-| `/login/mfa` | redirect | 43 | `app/(public)/login/mfa/page.tsx` |
+| `/login/forgot` | — | 41 | `app/(public)/login/forgot/page.tsx` |
+| `/login/mfa` | redirect | 47 | `app/(public)/login/mfa/page.tsx` |
 | `/login/recovery` | — | 45 | `app/(public)/login/recovery/page.tsx` |
 | `/login/reset` | — | 30 | `app/(public)/login/reset/page.tsx` |
-| `/o/:token` | service-role, force-dynamic | 135 | `app/o/[token]/page.tsx` |
+| `/o/:token` | service-role, force-dynamic | 151 | `app/o/[token]/page.tsx` |
 | `/onboarding/connect-nuvemshop` | force-dynamic | 23 | `app/onboarding/connect-nuvemshop/page.tsx` |
 | `/onboarding/connect-whatsapp` | redirect, force-dynamic | 43 | `app/onboarding/connect-whatsapp/page.tsx` |
 | `/onboarding/done` | redirect, force-dynamic | 26 | `app/onboarding/done/page.tsx` |
@@ -316,11 +328,13 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (418)
+## APIs (442)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
+| `/api/auth/signout` | POST | redirect | 48 | `app/api/auth/signout/route.ts` |
 | `/api/internal/agents/run` | POST | force-dynamic | 115 | `app/api/internal/agents/run/route.ts` |
+| `/api/internal/observabilidade/sonda` | POST | force-dynamic | 65 | `app/api/internal/observabilidade/sonda/route.ts` |
 | `/api/mcp` | GET/POST/DELETE | force-dynamic | 75 | `app/api/mcp/route.ts` |
 | `/api/v1/admin/audit` | GET | platform-admin, service-role | 177 | `app/api/v1/admin/audit/route.ts` |
 | `/api/v1/admin/audit/:entryId` | GET | platform-admin, service-role | 132 | `app/api/v1/admin/audit/[entryId]/route.ts` |
@@ -330,17 +344,18 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/admin/inbox/conversations/:id` | GET | platform-admin, service-role | 128 | `app/api/v1/admin/inbox/conversations/[id]/route.ts` |
 | `/api/v1/admin/incidents` | GET | platform-admin, service-role | 151 | `app/api/v1/admin/incidents/route.ts` |
 | `/api/v1/admin/incidents/:id` | GET | platform-admin, service-role | 81 | `app/api/v1/admin/incidents/[id]/route.ts` |
-| `/api/v1/admin/incidents/:id/resolve` | POST | platform-admin, service-role | 116 | `app/api/v1/admin/incidents/[id]/resolve/route.ts` |
+| `/api/v1/admin/incidents/:id/resolve` | POST | platform-admin, service-role | 127 | `app/api/v1/admin/incidents/[id]/resolve/route.ts` |
 | `/api/v1/admin/lgpd/requests` | GET | platform-admin, service-role, force-dynamic | 209 | `app/api/v1/admin/lgpd/requests/route.ts` |
 | `/api/v1/admin/lgpd/requests/:id` | GET | platform-admin, service-role, force-dynamic | 91 | `app/api/v1/admin/lgpd/requests/[id]/route.ts` |
+| `/api/v1/admin/observabilidade` | GET | platform-admin, service-role, force-dynamic | 310 | `app/api/v1/admin/observabilidade/route.ts` |
 | `/api/v1/admin/platform-admins` | GET/POST/PATCH/DELETE | platform-admin, service-role | 212 | `app/api/v1/admin/platform-admins/route.ts` |
-| `/api/v1/admin/tenants` | GET/POST | platform-admin, service-role | 246 | `app/api/v1/admin/tenants/route.ts` |
+| `/api/v1/admin/tenants` | GET/POST | platform-admin, service-role | 257 | `app/api/v1/admin/tenants/route.ts` |
 | `/api/v1/admin/tenants/:id` | GET | platform-admin, service-role | 161 | `app/api/v1/admin/tenants/[id]/route.ts` |
 | `/api/v1/admin/tenants/:id/health` | GET | platform-admin, service-role | 331 | `app/api/v1/admin/tenants/[id]/health/route.ts` |
-| `/api/v1/admin/tenants/:id/impersonate` | POST | platform-admin, service-role | 147 | `app/api/v1/admin/tenants/[id]/impersonate/route.ts` |
-| `/api/v1/admin/tenants/:id/reactivate` | POST | platform-admin, service-role | 120 | `app/api/v1/admin/tenants/[id]/reactivate/route.ts` |
-| `/api/v1/admin/tenants/:id/suspend` | POST | platform-admin, service-role | 115 | `app/api/v1/admin/tenants/[id]/suspend/route.ts` |
-| `/api/v1/admin/usage` | GET | platform-admin, service-role | 295 | `app/api/v1/admin/usage/route.ts` |
+| `/api/v1/admin/tenants/:id/impersonate` | POST | platform-admin, service-role | 169 | `app/api/v1/admin/tenants/[id]/impersonate/route.ts` |
+| `/api/v1/admin/tenants/:id/reactivate` | POST | platform-admin, service-role | 131 | `app/api/v1/admin/tenants/[id]/reactivate/route.ts` |
+| `/api/v1/admin/tenants/:id/suspend` | POST | platform-admin, service-role | 126 | `app/api/v1/admin/tenants/[id]/suspend/route.ts` |
+| `/api/v1/admin/usage` | GET | platform-admin, service-role | 276 | `app/api/v1/admin/usage/route.ts` |
 | `/api/v1/admin/users` | GET | platform-admin, service-role | 351 | `app/api/v1/admin/users/route.ts` |
 | `/api/v1/admin/users/:id` | GET | platform-admin, service-role | 135 | `app/api/v1/admin/users/[id]/route.ts` |
 | `/api/v1/agenda/agendamentos` | GET/POST/PATCH/DELETE | requireRole | 288 | `app/api/v1/agenda/agendamentos/route.ts` |
@@ -380,7 +395,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/ai/followup-flows/:id/disable` | POST | requireRole, force-dynamic | 68 | `app/api/v1/ai/followup-flows/[id]/disable/route.ts` |
 | `/api/v1/ai/followup-flows/:id/publish` | POST | requireRole, service-role, force-dynamic | 179 | `app/api/v1/ai/followup-flows/[id]/publish/route.ts` |
 | `/api/v1/ai/followup-flows/:id/rollback` | POST | requireRole, force-dynamic | 103 | `app/api/v1/ai/followup-flows/[id]/rollback/route.ts` |
-| `/api/v1/ai/followups/enrollments` | GET/POST | requireRole, force-dynamic | 88 | `app/api/v1/ai/followups/enrollments/route.ts` |
+| `/api/v1/ai/followups/enrollments` | GET/POST | requireRole, force-dynamic | 123 | `app/api/v1/ai/followups/enrollments/route.ts` |
 | `/api/v1/ai/followups/enrollments/:id` | GET | requireRole, service-role, force-dynamic | 249 | `app/api/v1/ai/followups/enrollments/[id]/route.ts` |
 | `/api/v1/ai/followups/enrollments/:id/cancel` | POST | requireRole, force-dynamic | 98 | `app/api/v1/ai/followups/enrollments/[id]/cancel/route.ts` |
 | `/api/v1/ai/followups/enrollments/:id/pause` | POST | requireRole, service-role, force-dynamic | 54 | `app/api/v1/ai/followups/enrollments/[id]/pause/route.ts` |
@@ -412,6 +427,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/ai/routers/:id/members` | PUT | requireRole, service-role, force-dynamic | 119 | `app/api/v1/ai/routers/[id]/members/route.ts` |
 | `/api/v1/ai/routers/:id/test` | POST | requireRole, service-role, force-dynamic | 132 | `app/api/v1/ai/routers/[id]/test/route.ts` |
 | `/api/v1/ai/runs` | GET | requireRole, force-dynamic | 141 | `app/api/v1/ai/runs/route.ts` |
+| `/api/v1/ai/runs/:id` | GET | requireRole, force-dynamic | 107 | `app/api/v1/ai/runs/[id]/route.ts` |
 | `/api/v1/ai/skills` | GET | requireRole, service-role, force-dynamic | 97 | `app/api/v1/ai/skills/route.ts` |
 | `/api/v1/ai/skills/:name` | DELETE | requireRole, service-role, force-dynamic | 73 | `app/api/v1/ai/skills/[name]/route.ts` |
 | `/api/v1/ai/skills/:name/install` | POST | requireRole, service-role, force-dynamic | 79 | `app/api/v1/ai/skills/[name]/install/route.ts` |
@@ -450,10 +466,10 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/channels/templates` | GET/POST | requireRole, service-role, force-dynamic | 200 | `app/api/v1/channels/templates/route.ts` |
 | `/api/v1/comercial/inativos` | GET | requireRole, force-dynamic | 48 | `app/api/v1/comercial/inativos/route.ts` |
 | `/api/v1/commercial-goals` | GET/PUT | requireRole, force-dynamic | 101 | `app/api/v1/commercial-goals/route.ts` |
-| `/api/v1/commercial-orders` | GET/POST | requireRole, service-role, force-dynamic | 185 | `app/api/v1/commercial-orders/route.ts` |
-| `/api/v1/commercial-orders/:id` | GET/PATCH/DELETE | requireRole, service-role, force-dynamic | 374 | `app/api/v1/commercial-orders/[id]/route.ts` |
-| `/api/v1/commercial-orders/:id/duplicar` | POST | requireRole, service-role, force-dynamic | 187 | `app/api/v1/commercial-orders/[id]/duplicar/route.ts` |
-| `/api/v1/commercial-orders/:id/itens` | PATCH | requireRole, service-role, force-dynamic | 156 | `app/api/v1/commercial-orders/[id]/itens/route.ts` |
+| `/api/v1/commercial-orders` | POST | requireRole, service-role, force-dynamic | 231 | `app/api/v1/commercial-orders/route.ts` |
+| `/api/v1/commercial-orders/:id` | GET/PATCH/DELETE | requireRole, service-role, force-dynamic | 477 | `app/api/v1/commercial-orders/[id]/route.ts` |
+| `/api/v1/commercial-orders/:id/duplicar` | POST | requireRole, service-role, force-dynamic | 195 | `app/api/v1/commercial-orders/[id]/duplicar/route.ts` |
+| `/api/v1/commercial-orders/:id/itens` | PATCH | requireRole, service-role, force-dynamic | 190 | `app/api/v1/commercial-orders/[id]/itens/route.ts` |
 | `/api/v1/commercial-orders/:id/mercos` | POST | requireRole, service-role, force-dynamic | 103 | `app/api/v1/commercial-orders/[id]/mercos/route.ts` |
 | `/api/v1/commercial-orders/:id/orcamento` | POST | requireRole, service-role | 154 | `app/api/v1/commercial-orders/[id]/orcamento/route.ts` |
 | `/api/v1/commercial-orders/:id/pdf` | GET | requireRole, force-dynamic | 62 | `app/api/v1/commercial-orders/[id]/pdf/route.ts` |
@@ -462,20 +478,22 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/commercial-orders/importar-mercos` | GET/POST | requireRole, service-role, force-dynamic | 82 | `app/api/v1/commercial-orders/importar-mercos/route.ts` |
 | `/api/v1/commercial-orders/pdf` | GET | requireRole, force-dynamic | 69 | `app/api/v1/commercial-orders/pdf/route.ts` |
 | `/api/v1/commercial-policies` | GET | requireRole, force-dynamic | 30 | `app/api/v1/commercial-policies/route.ts` |
-| `/api/v1/commissions` | GET | requireRole, force-dynamic | 124 | `app/api/v1/commissions/route.ts` |
+| `/api/v1/commissions` | GET | requireRole, force-dynamic | 140 | `app/api/v1/commissions/route.ts` |
 | `/api/v1/commissions/baixas` | POST/DELETE | requireRole, force-dynamic | 109 | `app/api/v1/commissions/baixas/route.ts` |
-| `/api/v1/contacts` | GET/POST | requireRole, force-dynamic | 116 | `app/api/v1/contacts/route.ts` |
+| `/api/v1/contacts` | POST | requireRole, force-dynamic | 125 | `app/api/v1/contacts/route.ts` |
 | `/api/v1/contacts/:id` | GET/PATCH/DELETE | requireRole, force-dynamic | 144 | `app/api/v1/contacts/[id]/route.ts` |
 | `/api/v1/contacts/:id/avatar` | GET | redirect, service-role, force-dynamic | 95 | `app/api/v1/contacts/[id]/avatar/route.ts` |
-| `/api/v1/contacts/:id/crm-summary` | GET | force-dynamic | 160 | `app/api/v1/contacts/[id]/crm-summary/route.ts` |
+| `/api/v1/contacts/:id/credito` | GET | requireRole, force-dynamic | 68 | `app/api/v1/contacts/[id]/credito/route.ts` |
+| `/api/v1/contacts/:id/crm-summary` | GET | force-dynamic | 175 | `app/api/v1/contacts/[id]/crm-summary/route.ts` |
 | `/api/v1/contacts/:id/proposals` | GET | requireRole, force-dynamic | 57 | `app/api/v1/contacts/[id]/proposals/route.ts` |
 | `/api/v1/contacts/:id/proposals/:proposal_id` | POST | requireRole, force-dynamic | 193 | `app/api/v1/contacts/[id]/proposals/[proposal_id]/route.ts` |
-| `/api/v1/contacts/:id/timeline` | GET | force-dynamic | 156 | `app/api/v1/contacts/[id]/timeline/route.ts` |
+| `/api/v1/contacts/:id/timeline` | GET | force-dynamic | 162 | `app/api/v1/contacts/[id]/timeline/route.ts` |
 | `/api/v1/contacts/bulk-tag` | POST | requireRole, force-dynamic | 98 | `app/api/v1/contacts/bulk-tag/route.ts` |
+| `/api/v1/contacts/cidades` | GET | requireRole, force-dynamic | 80 | `app/api/v1/contacts/cidades/route.ts` |
 | `/api/v1/contacts/cnpj-lookup` | GET | requireRole, force-dynamic | 62 | `app/api/v1/contacts/cnpj-lookup/route.ts` |
 | `/api/v1/contacts/import` | POST | requireRole, force-dynamic | 303 | `app/api/v1/contacts/import/route.ts` |
 | `/api/v1/conversation-tags` | GET | requireRole, force-dynamic | 39 | `app/api/v1/conversation-tags/route.ts` |
-| `/api/v1/conversations` | GET | force-dynamic | 93 | `app/api/v1/conversations/route.ts` |
+| `/api/v1/conversations` | — | force-dynamic | 97 | `app/api/v1/conversations/route.ts` |
 | `/api/v1/conversations/:id` | GET/PATCH | requireRole, force-dynamic | 108 | `app/api/v1/conversations/[id]/route.ts` |
 | `/api/v1/conversations/:id/claim` | POST | requireRole, force-dynamic | 115 | `app/api/v1/conversations/[id]/claim/route.ts` |
 | `/api/v1/conversations/:id/close` | POST | requireRole, force-dynamic | 110 | `app/api/v1/conversations/[id]/close/route.ts` |
@@ -484,7 +502,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/conversations/:id/media` | POST | requireRole, service-role, force-dynamic | 107 | `app/api/v1/conversations/[id]/media/route.ts` |
 | `/api/v1/conversations/:id/messages` | GET | force-dynamic | 72 | `app/api/v1/conversations/[id]/messages/route.ts` |
 | `/api/v1/conversations/:id/no-send` | POST | requireRole, service-role, force-dynamic | 150 | `app/api/v1/conversations/[id]/no-send/route.ts` |
-| `/api/v1/conversations/:id/notes` | GET/POST | requireRole, service-role, force-dynamic | 147 | `app/api/v1/conversations/[id]/notes/route.ts` |
+| `/api/v1/conversations/:id/notes` | GET/POST | requireRole, service-role, force-dynamic | 151 | `app/api/v1/conversations/[id]/notes/route.ts` |
 | `/api/v1/conversations/:id/notes/:noteId` | DELETE | requireRole, force-dynamic | 65 | `app/api/v1/conversations/[id]/notes/[noteId]/route.ts` |
 | `/api/v1/conversations/:id/pause-ai` | POST | requireRole, force-dynamic | 161 | `app/api/v1/conversations/[id]/pause-ai/route.ts` |
 | `/api/v1/conversations/:id/reactivate-bot` | POST | requireRole, force-dynamic | 91 | `app/api/v1/conversations/[id]/reactivate-bot/route.ts` |
@@ -504,10 +522,10 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/cron/attendant-heartbeat` | GET | service-role, force-dynamic | 70 | `app/api/v1/cron/attendant-heartbeat/route.ts` |
 | `/api/v1/cron/automatic-sales` | GET/POST | service-role, force-dynamic | 58 | `app/api/v1/cron/automatic-sales/route.ts` |
 | `/api/v1/cron/channel-health` | — | service-role, force-dynamic | 158 | `app/api/v1/cron/channel-health/route.ts` |
-| `/api/v1/cron/contact-avatars` | — | service-role, force-dynamic | 241 | `app/api/v1/cron/contact-avatars/route.ts` |
+| `/api/v1/cron/contact-avatars` | — | service-role, force-dynamic | 266 | `app/api/v1/cron/contact-avatars/route.ts` |
 | `/api/v1/cron/contact-phones` | — | service-role, force-dynamic | 204 | `app/api/v1/cron/contact-phones/route.ts` |
 | `/api/v1/cron/contact-proposals-watcher` | GET/POST | service-role, force-dynamic | 106 | `app/api/v1/cron/contact-proposals-watcher/route.ts` |
-| `/api/v1/cron/data-retention` | GET/POST | service-role, force-dynamic | 288 | `app/api/v1/cron/data-retention/route.ts` |
+| `/api/v1/cron/data-retention` | GET/POST | service-role, force-dynamic | 305 | `app/api/v1/cron/data-retention/route.ts` |
 | `/api/v1/cron/event-log-drain` | GET/POST | service-role, force-dynamic | 62 | `app/api/v1/cron/event-log-drain/route.ts` |
 | `/api/v1/cron/expedition-notices` | GET/POST | service-role, force-dynamic | 62 | `app/api/v1/cron/expedition-notices/route.ts` |
 | `/api/v1/cron/fiscal-drain` | GET/POST | service-role, force-dynamic | 68 | `app/api/v1/cron/fiscal-drain/route.ts` |
@@ -516,25 +534,29 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/cron/kb-conversations-batch` | GET | service-role, force-dynamic | 138 | `app/api/v1/cron/kb-conversations-batch/route.ts` |
 | `/api/v1/cron/lgpd-sla-watcher` | GET | service-role, force-dynamic | 210 | `app/api/v1/cron/lgpd-sla-watcher/route.ts` |
 | `/api/v1/cron/mercos-import` | GET/POST | service-role, force-dynamic | 69 | `app/api/v1/cron/mercos-import/route.ts` |
-| `/api/v1/cron/meu-dia-alertas` | GET/POST | service-role, force-dynamic | 621 | `app/api/v1/cron/meu-dia-alertas/route.ts` |
+| `/api/v1/cron/meu-dia-alertas` | GET/POST | service-role, force-dynamic | 627 | `app/api/v1/cron/meu-dia-alertas/route.ts` |
 | `/api/v1/cron/prospecting-drain` | GET/POST | service-role, force-dynamic | 52 | `app/api/v1/cron/prospecting-drain/route.ts` |
 | `/api/v1/cron/prospecting-fit` | GET/POST | service-role, force-dynamic | 82 | `app/api/v1/cron/prospecting-fit/route.ts` |
 | `/api/v1/cron/prospecting-send` | GET/POST | service-role, force-dynamic | 66 | `app/api/v1/cron/prospecting-send/route.ts` |
-| `/api/v1/cron/recover-stuck-messages` | GET/POST | service-role, force-dynamic | 249 | `app/api/v1/cron/recover-stuck-messages/route.ts` |
+| `/api/v1/cron/recover-stuck-messages` | GET/POST | service-role, force-dynamic | 382 | `app/api/v1/cron/recover-stuck-messages/route.ts` |
 | `/api/v1/cron/risk-watcher` | GET/POST | service-role, force-dynamic | 163 | `app/api/v1/cron/risk-watcher/route.ts` |
 | `/api/v1/cron/routing-worker` | GET/POST | force-dynamic | 82 | `app/api/v1/cron/routing-worker/route.ts` |
+| `/api/v1/cron/sentinel` | — | force-dynamic | 108 | `app/api/v1/cron/sentinel/route.ts` |
 | `/api/v1/cron/snooze-watcher` | GET/POST | service-role, force-dynamic | 130 | `app/api/v1/cron/snooze-watcher/route.ts` |
 | `/api/v1/cron/storage-redaction` | GET | force-dynamic | 50 | `app/api/v1/cron/storage-redaction/route.ts` |
 | `/api/v1/cron/sync-model-catalog` | — | service-role, force-dynamic | 167 | `app/api/v1/cron/sync-model-catalog/route.ts` |
 | `/api/v1/cron/webhook-log-retention` | GET | service-role, force-dynamic | 76 | `app/api/v1/cron/webhook-log-retention/route.ts` |
 | `/api/v1/demandas/:id` | PATCH | requireRole, service-role, force-dynamic | 115 | `app/api/v1/demandas/[id]/route.ts` |
-| `/api/v1/faturamento` | GET | requireRole, force-dynamic | 92 | `app/api/v1/faturamento/route.ts` |
+| `/api/v1/device/catalog` | GET | service-role, force-dynamic | 189 | `app/api/v1/device/catalog/route.ts` |
+| `/api/v1/device/me` | GET | service-role, force-dynamic | 61 | `app/api/v1/device/me/route.ts` |
+| `/api/v1/device/orders` | POST | service-role, force-dynamic | 132 | `app/api/v1/device/orders/route.ts` |
+| `/api/v1/faturamento` | GET | requireRole, force-dynamic | 110 | `app/api/v1/faturamento/route.ts` |
 | `/api/v1/financeiro/conciliacao` | GET | requireRole, force-dynamic | 124 | `app/api/v1/financeiro/conciliacao/route.ts` |
-| `/api/v1/financeiro/dashboard` | GET | requireRole, force-dynamic | 110 | `app/api/v1/financeiro/dashboard/route.ts` |
+| `/api/v1/financeiro/dashboard` | — | requireRole, force-dynamic | 126 | `app/api/v1/financeiro/dashboard/route.ts` |
 | `/api/v1/financeiro/fluxo` | GET | requireRole, force-dynamic | 84 | `app/api/v1/financeiro/fluxo/route.ts` |
 | `/api/v1/financeiro/gerar` | POST | requireRole, service-role, force-dynamic | 80 | `app/api/v1/financeiro/gerar/route.ts` |
 | `/api/v1/financeiro/pagamentos/:id` | DELETE | requireRole, service-role, force-dynamic | 46 | `app/api/v1/financeiro/pagamentos/[id]/route.ts` |
-| `/api/v1/financeiro/recebiveis` | GET/POST | requireRole, force-dynamic | 232 | `app/api/v1/financeiro/recebiveis/route.ts` |
+| `/api/v1/financeiro/recebiveis` | GET/POST | requireRole, service-role, force-dynamic | 288 | `app/api/v1/financeiro/recebiveis/route.ts` |
 | `/api/v1/financeiro/recebiveis/:id` | GET | requireRole, force-dynamic | 86 | `app/api/v1/financeiro/recebiveis/[id]/route.ts` |
 | `/api/v1/financeiro/recebiveis/:id/pagamentos` | POST | requireRole, service-role, force-dynamic | 80 | `app/api/v1/financeiro/recebiveis/[id]/pagamentos/route.ts` |
 | `/api/v1/financial-pagaveis` | GET | requireRole, force-dynamic | 38 | `app/api/v1/financial-pagaveis/route.ts` |
@@ -544,20 +566,20 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/fiscal-entradas/:id` | GET | requireRole, force-dynamic | 94 | `app/api/v1/fiscal-entradas/[id]/route.ts` |
 | `/api/v1/fiscal-entradas/:id/conferencia` | POST | requireRole, force-dynamic | 94 | `app/api/v1/fiscal-entradas/[id]/conferencia/route.ts` |
 | `/api/v1/fiscal-entradas/:id/ignorar` | POST | requireRole, force-dynamic | 55 | `app/api/v1/fiscal-entradas/[id]/ignorar/route.ts` |
-| `/api/v1/fiscal-entradas/:id/importar` | POST | requireRole, force-dynamic | 270 | `app/api/v1/fiscal-entradas/[id]/importar/route.ts` |
+| `/api/v1/fiscal-entradas/:id/importar` | POST | requireRole, force-dynamic | 416 | `app/api/v1/fiscal-entradas/[id]/importar/route.ts` |
 | `/api/v1/fiscal-entradas/:id/itens/:itemId` | PATCH | requireRole, force-dynamic | 117 | `app/api/v1/fiscal-entradas/[id]/itens/[itemId]/route.ts` |
-| `/api/v1/fiscal-entradas/:id/manifestar` | POST | requireRole, force-dynamic | 184 | `app/api/v1/fiscal-entradas/[id]/manifestar/route.ts` |
+| `/api/v1/fiscal-entradas/:id/manifestar` | POST | requireRole, force-dynamic | 267 | `app/api/v1/fiscal-entradas/[id]/manifestar/route.ts` |
 | `/api/v1/fiscal-entradas/:id/xml` | GET | requireRole, force-dynamic | 60 | `app/api/v1/fiscal-entradas/[id]/xml/route.ts` |
 | `/api/v1/fiscal-eventos` | GET | requireRole, force-dynamic | 58 | `app/api/v1/fiscal-eventos/route.ts` |
-| `/api/v1/fiscal-events/:id/retransmitir` | POST | requireRole, service-role, force-dynamic | 86 | `app/api/v1/fiscal-events/[id]/retransmitir/route.ts` |
+| `/api/v1/fiscal-events/:id/retransmitir` | POST | requireRole, service-role, force-dynamic | 124 | `app/api/v1/fiscal-events/[id]/retransmitir/route.ts` |
 | `/api/v1/fiscal-fornecedores` | GET | requireRole, force-dynamic | 60 | `app/api/v1/fiscal-fornecedores/route.ts` |
 | `/api/v1/fiscal-ibpt/consulta` | GET | requireRole, force-dynamic | 125 | `app/api/v1/fiscal-ibpt/consulta/route.ts` |
 | `/api/v1/fiscal-ibpt/importar` | POST | requireRole, service-role, force-dynamic | 125 | `app/api/v1/fiscal-ibpt/importar/route.ts` |
 | `/api/v1/fiscal-ibpt/importar-siscomex` | POST | requireRole, service-role, force-dynamic | 134 | `app/api/v1/fiscal-ibpt/importar-siscomex/route.ts` |
-| `/api/v1/fiscal-inutilizacoes` | GET/POST | requireRole, service-role, force-dynamic | 142 | `app/api/v1/fiscal-inutilizacoes/route.ts` |
-| `/api/v1/fiscal-inutilizacoes/:id/retransmitir` | POST | requireRole, service-role, force-dynamic | 66 | `app/api/v1/fiscal-inutilizacoes/[id]/retransmitir/route.ts` |
+| `/api/v1/fiscal-inutilizacoes` | GET/POST | requireRole, service-role, force-dynamic | 191 | `app/api/v1/fiscal-inutilizacoes/route.ts` |
+| `/api/v1/fiscal-inutilizacoes/:id/retransmitir` | POST | requireRole, service-role, force-dynamic | 105 | `app/api/v1/fiscal-inutilizacoes/[id]/retransmitir/route.ts` |
 | `/api/v1/fiscal-inutilizacoes/lacunas` | POST | requireRole, service-role, force-dynamic | 45 | `app/api/v1/fiscal-inutilizacoes/lacunas/route.ts` |
-| `/api/v1/fiscal-inutilizacoes/puladas` | GET | requireRole, service-role, force-dynamic | 145 | `app/api/v1/fiscal-inutilizacoes/puladas/route.ts` |
+| `/api/v1/fiscal-inutilizacoes/puladas` | GET | requireRole, service-role, force-dynamic | 149 | `app/api/v1/fiscal-inutilizacoes/puladas/route.ts` |
 | `/api/v1/fiscal-jobs` | GET | requireRole, force-dynamic | 66 | `app/api/v1/fiscal-jobs/route.ts` |
 | `/api/v1/fiscal-manifestacoes` | GET | requireRole, force-dynamic | 58 | `app/api/v1/fiscal-manifestacoes/route.ts` |
 | `/api/v1/fiscal-produtos` | GET | requireRole, force-dynamic | 66 | `app/api/v1/fiscal-produtos/route.ts` |
@@ -565,27 +587,29 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/fiscal-settings` | GET/PUT | requireRole, service-role, force-dynamic | 204 | `app/api/v1/fiscal-settings/route.ts` |
 | `/api/v1/fiscal-settings/certificado` | POST | requireRole, service-role, force-dynamic | 175 | `app/api/v1/fiscal-settings/certificado/route.ts` |
 | `/api/v1/fiscal-sincronizacoes` | GET | requireRole, force-dynamic | 56 | `app/api/v1/fiscal-sincronizacoes/route.ts` |
+| `/api/v1/fiscal/cadastro-do-cnpj` | GET | requireRole, force-dynamic | 95 | `app/api/v1/fiscal/cadastro-do-cnpj/route.ts` |
 | `/api/v1/fleet` | GET | requireRole, force-dynamic | 45 | `app/api/v1/fleet/route.ts` |
 | `/api/v1/fleet/drivers` | GET/POST | requireRole, force-dynamic | 85 | `app/api/v1/fleet/drivers/route.ts` |
 | `/api/v1/fleet/drivers/:id` | PATCH/DELETE | requireRole, force-dynamic | 106 | `app/api/v1/fleet/drivers/[id]/route.ts` |
 | `/api/v1/fleet/vehicles` | GET/POST | requireRole, force-dynamic | 79 | `app/api/v1/fleet/vehicles/route.ts` |
 | `/api/v1/fleet/vehicles/:id` | PATCH/DELETE | requireRole, force-dynamic | 97 | `app/api/v1/fleet/vehicles/[id]/route.ts` |
-| `/api/v1/health` | GET | force-dynamic | 275 | `app/api/v1/health/route.ts` |
+| `/api/v1/health` | GET | force-dynamic | 315 | `app/api/v1/health/route.ts` |
 | `/api/v1/home/mes` | GET | requireRole, force-dynamic | 126 | `app/api/v1/home/mes/route.ts` |
 | `/api/v1/indicadores/perguntar` | POST | requireRole, force-dynamic | 133 | `app/api/v1/indicadores/perguntar/route.ts` |
 | `/api/v1/integrations/nuvemshop/callback` | GET | redirect, service-role, force-dynamic | 171 | `app/api/v1/integrations/nuvemshop/callback/route.ts` |
 | `/api/v1/inventory/movements` | GET/POST | requireRole, force-dynamic | 129 | `app/api/v1/inventory/movements/route.ts` |
 | `/api/v1/inventory/sugestoes` | GET | requireRole, force-dynamic | 107 | `app/api/v1/inventory/sugestoes/route.ts` |
-| `/api/v1/invoices` | GET/POST | requireRole, service-role, force-dynamic | 105 | `app/api/v1/invoices/route.ts` |
+| `/api/v1/invoices` | POST | requireRole, service-role, force-dynamic | 161 | `app/api/v1/invoices/route.ts` |
 | `/api/v1/invoices/:id` | GET | requireRole, force-dynamic | 207 | `app/api/v1/invoices/[id]/route.ts` |
 | `/api/v1/invoices/:id/ajustes` | GET/PATCH | requireRole, service-role, force-dynamic | 91 | `app/api/v1/invoices/[id]/ajustes/route.ts` |
-| `/api/v1/invoices/:id/cancel` | POST | requireRole, service-role, force-dynamic | 172 | `app/api/v1/invoices/[id]/cancel/route.ts` |
+| `/api/v1/invoices/:id/cancel` | POST | requireRole, service-role, force-dynamic | 289 | `app/api/v1/invoices/[id]/cancel/route.ts` |
 | `/api/v1/invoices/:id/carta-correcao` | POST | requireRole, service-role, force-dynamic | 109 | `app/api/v1/invoices/[id]/carta-correcao/route.ts` |
 | `/api/v1/invoices/:id/danfe` | GET | requireRole, force-dynamic | 105 | `app/api/v1/invoices/[id]/danfe/route.ts` |
-| `/api/v1/invoices/:id/reemitir` | POST | requireRole, force-dynamic | 70 | `app/api/v1/invoices/[id]/reemitir/route.ts` |
+| `/api/v1/invoices/:id/reemitir` | POST | requireRole, service-role, force-dynamic | 153 | `app/api/v1/invoices/[id]/reemitir/route.ts` |
 | `/api/v1/invoices/:id/xml` | GET | requireRole, force-dynamic | 46 | `app/api/v1/invoices/[id]/xml/route.ts` |
 | `/api/v1/invoices/importar-xmls` | POST | requireRole, service-role, force-dynamic | 159 | `app/api/v1/invoices/importar-xmls/route.ts` |
 | `/api/v1/invoices/validar` | POST | requireRole, force-dynamic | 254 | `app/api/v1/invoices/validar/route.ts` |
+| `/api/v1/laya/saude` | GET | requireRole, service-role, force-dynamic | 34 | `app/api/v1/laya/saude/route.ts` |
 | `/api/v1/lead-captures` | GET | requireRole, force-dynamic | 97 | `app/api/v1/lead-captures/route.ts` |
 | `/api/v1/leads` | GET/POST | requireRole, force-dynamic | 89 | `app/api/v1/leads/route.ts` |
 | `/api/v1/leads/:id` | PATCH | requireRole, force-dynamic | 63 | `app/api/v1/leads/[id]/route.ts` |
@@ -598,8 +622,8 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/leads/at-risk` | GET | requireRole, service-role, force-dynamic | 60 | `app/api/v1/leads/at-risk/route.ts` |
 | `/api/v1/leads/bulk` | POST | requireRole, service-role, force-dynamic | 343 | `app/api/v1/leads/bulk/route.ts` |
 | `/api/v1/leads/import` | GET/POST | requireRole, force-dynamic | 256 | `app/api/v1/leads/import/route.ts` |
-| `/api/v1/leads/proposals` | GET | service-role, force-dynamic | 192 | `app/api/v1/leads/proposals/route.ts` |
-| `/api/v1/leads/reactivations` | GET | requireRole, force-dynamic | 51 | `app/api/v1/leads/reactivations/route.ts` |
+| `/api/v1/leads/proposals` | GET | service-role, force-dynamic | 194 | `app/api/v1/leads/proposals/route.ts` |
+| `/api/v1/leads/reactivations` | GET | requireRole, force-dynamic | 56 | `app/api/v1/leads/reactivations/route.ts` |
 | `/api/v1/lgpd/anonymize` | POST | requireRole, force-dynamic | 177 | `app/api/v1/lgpd/anonymize/route.ts` |
 | `/api/v1/lgpd/requests` | GET | requireRole, force-dynamic | 125 | `app/api/v1/lgpd/requests/route.ts` |
 | `/api/v1/lgpd/requests/:id` | GET | requireRole, service-role, force-dynamic | 97 | `app/api/v1/lgpd/requests/[id]/route.ts` |
@@ -607,15 +631,17 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/lgpd/requests/:id/preview` | GET | requireRole, service-role, force-dynamic | 124 | `app/api/v1/lgpd/requests/[id]/preview/route.ts` |
 | `/api/v1/marca/logo` | POST/DELETE | platform-admin, service-role, force-dynamic | 490 | `app/api/v1/marca/logo/route.ts` |
 | `/api/v1/mcp/tools` | GET | force-dynamic | 59 | `app/api/v1/mcp/tools/route.ts` |
-| `/api/v1/message-templates` | GET/POST | requireRole, force-dynamic | 85 | `app/api/v1/message-templates/route.ts` |
+| `/api/v1/message-templates` | GET/POST | requireRole, force-dynamic | 87 | `app/api/v1/message-templates/route.ts` |
 | `/api/v1/message-templates/:id` | PATCH/DELETE | requireRole, force-dynamic | 94 | `app/api/v1/message-templates/[id]/route.ts` |
 | `/api/v1/messages` | POST | requireRole, force-dynamic | 58 | `app/api/v1/messages/route.ts` |
 | `/api/v1/messages/:id/media` | GET | redirect, service-role, force-dynamic | 148 | `app/api/v1/messages/[id]/media/route.ts` |
 | `/api/v1/metrics/atrito` | GET/PATCH | requireRole, service-role, force-dynamic | 249 | `app/api/v1/metrics/atrito/route.ts` |
 | `/api/v1/metrics/attendants` | GET | requireRole, service-role, force-dynamic | 119 | `app/api/v1/metrics/attendants/route.ts` |
 | `/api/v1/notifications/push` | GET/PUT/DELETE | requireRole, force-dynamic | 117 | `app/api/v1/notifications/push/route.ts` |
+| `/api/v1/offline-devices` | GET/POST | requireRole, service-role, force-dynamic | 164 | `app/api/v1/offline-devices/route.ts` |
+| `/api/v1/offline-devices/:id/revoke` | POST | requireRole, force-dynamic | 67 | `app/api/v1/offline-devices/[id]/revoke/route.ts` |
 | `/api/v1/onboarding/whatsapp/qr` | GET | — | 44 | `app/api/v1/onboarding/whatsapp/qr/route.ts` |
-| `/api/v1/onboarding/whatsapp/session` | GET/POST | — | 190 | `app/api/v1/onboarding/whatsapp/session/route.ts` |
+| `/api/v1/onboarding/whatsapp/session` | GET/POST | — | 199 | `app/api/v1/onboarding/whatsapp/session/route.ts` |
 | `/api/v1/pipelines` | GET/POST | requireRole, force-dynamic | 177 | `app/api/v1/pipelines/route.ts` |
 | `/api/v1/pipelines/:id` | PATCH/DELETE | requireRole, force-dynamic | 291 | `app/api/v1/pipelines/[id]/route.ts` |
 | `/api/v1/pipelines/:id/agent-mapping` | GET/PUT | requireRole, force-dynamic | 282 | `app/api/v1/pipelines/[id]/agent-mapping/route.ts` |
@@ -626,18 +652,18 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/price-tables` | GET/POST | requireRole, force-dynamic | 85 | `app/api/v1/price-tables/route.ts` |
 | `/api/v1/price-tables/:id` | GET/PATCH | requireRole, force-dynamic | 103 | `app/api/v1/price-tables/[id]/route.ts` |
 | `/api/v1/price-tables/:id/items` | PUT | requireRole, force-dynamic | 99 | `app/api/v1/price-tables/[id]/items/route.ts` |
-| `/api/v1/products` | GET/POST | requireRole, force-dynamic | 112 | `app/api/v1/products/route.ts` |
+| `/api/v1/products` | GET/POST | requireRole, force-dynamic | 142 | `app/api/v1/products/route.ts` |
 | `/api/v1/products/:id` | PATCH/DELETE | requireRole, force-dynamic | 118 | `app/api/v1/products/[id]/route.ts` |
-| `/api/v1/products/:id/images` | GET/POST | requireRole, service-role, force-dynamic | 159 | `app/api/v1/products/[id]/images/route.ts` |
+| `/api/v1/products/:id/images` | GET/POST | requireRole, service-role, force-dynamic | 161 | `app/api/v1/products/[id]/images/route.ts` |
 | `/api/v1/products/:id/images/:imageId` | GET/DELETE | requireRole, service-role, force-dynamic | 103 | `app/api/v1/products/[id]/images/[imageId]/route.ts` |
 | `/api/v1/products/afins` | GET | requireRole, force-dynamic | 122 | `app/api/v1/products/afins/route.ts` |
 | `/api/v1/products/images` | POST | requireRole, force-dynamic | 101 | `app/api/v1/products/images/route.ts` |
 | `/api/v1/products/import` | GET/POST | requireRole, force-dynamic | 233 | `app/api/v1/products/import/route.ts` |
 | `/api/v1/products/ncm-completar` | POST | requireRole, force-dynamic | 297 | `app/api/v1/products/ncm-completar/route.ts` |
 | `/api/v1/products/ncm-sugestao` | GET | requireRole, force-dynamic | 91 | `app/api/v1/products/ncm-sugestao/route.ts` |
-| `/api/v1/prospecting/campaigns` | GET/POST | requireRole, service-role, force-dynamic | 412 | `app/api/v1/prospecting/campaigns/route.ts` |
+| `/api/v1/prospecting/campaigns` | GET/POST | requireRole, service-role, force-dynamic | 428 | `app/api/v1/prospecting/campaigns/route.ts` |
 | `/api/v1/prospecting/campaigns/:id` | GET/PATCH/DELETE | requireRole, service-role, force-dynamic | 476 | `app/api/v1/prospecting/campaigns/[id]/route.ts` |
-| `/api/v1/prospecting/campaigns/:id/controle` | GET | requireRole, service-role, force-dynamic | 605 | `app/api/v1/prospecting/campaigns/[id]/controle/route.ts` |
+| `/api/v1/prospecting/campaigns/:id/controle` | GET | requireRole, service-role, force-dynamic | 615 | `app/api/v1/prospecting/campaigns/[id]/controle/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/executar` | POST | requireRole, service-role, force-dynamic | 218 | `app/api/v1/prospecting/campaigns/[id]/executar/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/laboratorio` | GET/POST | requireRole, service-role, force-dynamic | 321 | `app/api/v1/prospecting/campaigns/[id]/laboratorio/route.ts` |
 | `/api/v1/prospecting/campaigns/:id/liberar-reservas` | POST | requireRole, service-role, force-dynamic | 126 | `app/api/v1/prospecting/campaigns/[id]/liberar-reservas/route.ts` |
@@ -649,9 +675,9 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/prospecting/campaigns/numeros` | GET | requireRole, service-role, force-dynamic | 52 | `app/api/v1/prospecting/campaigns/numeros/route.ts` |
 | `/api/v1/prospecting/campaigns/opcoes` | GET | requireRole, service-role, force-dynamic | 106 | `app/api/v1/prospecting/campaigns/opcoes/route.ts` |
 | `/api/v1/prospecting/campaigns/preview` | POST | requireRole, service-role, force-dynamic | 118 | `app/api/v1/prospecting/campaigns/preview/route.ts` |
-| `/api/v1/prospecting/campaigns/recuperacao` | POST | requireRole, service-role | 160 | `app/api/v1/prospecting/campaigns/recuperacao/route.ts` |
+| `/api/v1/prospecting/campaigns/recuperacao` | POST | requireRole, service-role | 162 | `app/api/v1/prospecting/campaigns/recuperacao/route.ts` |
 | `/api/v1/prospecting/campaigns/recuperacao/preview` | POST | requireRole, service-role, force-dynamic | 126 | `app/api/v1/prospecting/campaigns/recuperacao/preview/route.ts` |
-| `/api/v1/prospecting/campaigns/regiao` | POST | requireRole, service-role | 203 | `app/api/v1/prospecting/campaigns/regiao/route.ts` |
+| `/api/v1/prospecting/campaigns/regiao` | POST | requireRole, service-role | 204 | `app/api/v1/prospecting/campaigns/regiao/route.ts` |
 | `/api/v1/prospecting/campaigns/regiao/cidades` | GET | requireRole, service-role, force-dynamic | 62 | `app/api/v1/prospecting/campaigns/regiao/cidades/route.ts` |
 | `/api/v1/prospecting/campaigns/regiao/preview` | POST | requireRole, service-role, force-dynamic | 126 | `app/api/v1/prospecting/campaigns/regiao/preview/route.ts` |
 | `/api/v1/prospecting/consumo` | GET | requireRole, force-dynamic | 86 | `app/api/v1/prospecting/consumo/route.ts` |
@@ -669,17 +695,27 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/prospecting/settings` | GET/PUT | requireRole, service-role, force-dynamic | 108 | `app/api/v1/prospecting/settings/route.ts` |
 | `/api/v1/public/orcamento/:token` | GET/POST | service-role | 71 | `app/api/v1/public/orcamento/[token]/route.ts` |
 | `/api/v1/purchase-orders` | GET/POST | requireRole, force-dynamic | 144 | `app/api/v1/purchase-orders/route.ts` |
-| `/api/v1/purchase-orders/:id` | GET/PATCH | requireRole, force-dynamic | 108 | `app/api/v1/purchase-orders/[id]/route.ts` |
-| `/api/v1/purchase-orders/:id/receber` | POST | requireRole, force-dynamic | 168 | `app/api/v1/purchase-orders/[id]/receber/route.ts` |
-| `/api/v1/radar-compras` | GET | requireRole, service-role, force-dynamic | 206 | `app/api/v1/radar-compras/route.ts` |
+| `/api/v1/purchase-orders/:id` | GET/PATCH | requireRole, service-role, force-dynamic | 166 | `app/api/v1/purchase-orders/[id]/route.ts` |
+| `/api/v1/purchase-orders/:id/receber` | POST | requireRole, force-dynamic | 220 | `app/api/v1/purchase-orders/[id]/receber/route.ts` |
+| `/api/v1/radar-compras` | GET | requireRole, service-role, force-dynamic | 210 | `app/api/v1/radar-compras/route.ts` |
 | `/api/v1/roadmap` | GET | requireRole, force-dynamic | 110 | `app/api/v1/roadmap/route.ts` |
 | `/api/v1/rotas` | GET | requireRole, force-dynamic | 59 | `app/api/v1/rotas/route.ts` |
 | `/api/v1/sales-brain` | GET | requireRole, service-role, force-dynamic | 117 | `app/api/v1/sales-brain/route.ts` |
+| `/api/v1/sentinel/occurrences` | GET | requireRole, force-dynamic | 84 | `app/api/v1/sentinel/occurrences/route.ts` |
+| `/api/v1/sentinel/occurrences/:id` | GET/PATCH | requireRole, service-role, force-dynamic | 195 | `app/api/v1/sentinel/occurrences/[id]/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao` | POST | requireRole, service-role, force-dynamic | 152 | `app/api/v1/sentinel/occurrences/[id]/correcao/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao/conversa` | POST | requireRole, service-role, force-dynamic | 163 | `app/api/v1/sentinel/occurrences/[id]/correcao/conversa/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter` | POST | requireRole, service-role, force-dynamic | 94 | `app/api/v1/sentinel/occurrences/[id]/correcao/conversa/reverter/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` | POST | requireRole, force-dynamic | 77 | `app/api/v1/sentinel/occurrences/[id]/correcao/conversa/simular/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao/reverter` | POST | requireRole, service-role, force-dynamic | 89 | `app/api/v1/sentinel/occurrences/[id]/correcao/reverter/route.ts` |
+| `/api/v1/sentinel/occurrences/:id/correcao/simular` | POST | requireRole, force-dynamic | 79 | `app/api/v1/sentinel/occurrences/[id]/correcao/simular/route.ts` |
+| `/api/v1/sentinel/scan` | POST | requireRole, force-dynamic | 60 | `app/api/v1/sentinel/scan/route.ts` |
+| `/api/v1/sentinel/settings` | GET/PATCH | requireRole, force-dynamic | 132 | `app/api/v1/sentinel/settings/route.ts` |
 | `/api/v1/settings/api-tokens` | GET/POST | requireRole, force-dynamic | 104 | `app/api/v1/settings/api-tokens/route.ts` |
 | `/api/v1/settings/api-tokens/:id/revoke` | POST | requireRole, force-dynamic | 57 | `app/api/v1/settings/api-tokens/[id]/revoke/route.ts` |
 | `/api/v1/settings/routing` | GET/PATCH | requireRole, service-role, force-dynamic | 151 | `app/api/v1/settings/routing/route.ts` |
 | `/api/v1/shipments` | GET/POST | requireRole, force-dynamic | 217 | `app/api/v1/shipments/route.ts` |
-| `/api/v1/shipments/:id` | GET/PATCH/DELETE | requireRole, force-dynamic | 305 | `app/api/v1/shipments/[id]/route.ts` |
+| `/api/v1/shipments/:id` | GET/PATCH/DELETE | requireRole, force-dynamic | 332 | `app/api/v1/shipments/[id]/route.ts` |
 | `/api/v1/shipments/:id/conciliar` | POST | requireRole, service-role, force-dynamic | 277 | `app/api/v1/shipments/[id]/conciliar/route.ts` |
 | `/api/v1/shipments/:id/destinos/:destinationId/confirmar` | POST | requireRole, force-dynamic | 125 | `app/api/v1/shipments/[id]/destinos/[destinationId]/confirmar/route.ts` |
 | `/api/v1/shipments/:id/destinos/:destinationId/entrada/confirmar` | POST | requireRole, force-dynamic | 200 | `app/api/v1/shipments/[id]/destinos/[destinationId]/entrada/confirmar/route.ts` |
@@ -739,25 +775,44 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
+## Delta de handlers desde o baseline de 17/11 (419 → 440)
+
+Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
+
+| Área | Novas | Por que entraram | Rotas |
+|---|---:|---|---|
+| Observabilidade | 1 | Sonda sem cookie para o instrumento de métricas. | `/api/internal/observabilidade/sonda` |
+| Observabilidade — painel | 1 | Painel de SLOs lido por platform_admin, alimentado pela série 0330–0332. | `/api/v1/admin/observabilidade` |
+| Contatos | 2 | Crédito do cliente e busca de cidades — apoio à venda. | `/api/v1/contacts/:id/credito`<br>`/api/v1/contacts/cidades` |
+| Sentinel — cron | 1 | Gatilho agendado da rodada; organização suspensa é ignorada na origem (0329). | `/api/v1/cron/sentinel` |
+| Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |
+| Laya | 1 | Health check do agente Laya. | `/api/v1/laya/saude` |
+| Offline — credencial | 2 | Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322). | `/api/v1/offline-devices`<br>`/api/v1/offline-devices/:id/revoke` |
+| Sentinel — detecção | 4 | Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329). | `/api/v1/sentinel/occurrences`<br>`/api/v1/sentinel/occurrences/:id`<br>`/api/v1/sentinel/scan`<br>`/api/v1/sentinel/settings` |
+| Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
+| Sentinel — conversa | 3 | Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328). | `/api/v1/sentinel/occurrences/:id/correcao/conversa`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` |
+
+Nenhuma rota removida no período — o delta é só acréscimo.
+
 ## Layouts (13)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
-| `/` | — | 82 | `app/(public)/layout.tsx` |
+| `/` | — | 93 | `app/(public)/layout.tsx` |
 | `/` | client, metadata | 314 | `app/layout.tsx` |
-| `/admin` | redirect, platform-admin | 32 | `app/admin/(protected)/layout.tsx` |
+| `/admin` | redirect, platform-admin, metadata | 47 | `app/admin/(protected)/layout.tsx` |
 | `/admin` | — | 13 | `app/admin/layout.tsx` |
 | `/admin/inbox` | — | 23 | `app/admin/(protected)/inbox/layout.tsx` |
 | `/admin/tenants/:id` | platform-admin, service-role | 93 | `app/admin/(protected)/tenants/[id]/layout.tsx` |
-| `/app` | redirect, service-role | 253 | `app/app/layout.tsx` |
+| `/app` | redirect, service-role, metadata | 279 | `app/app/layout.tsx` |
 | `/app/ai` | — | 14 | `app/app/ai/layout.tsx` |
 | `/app/fiscal` | — | 17 | `app/app/fiscal/layout.tsx` |
 | `/app/radar` | force-dynamic | 20 | `app/app/radar/layout.tsx` |
 | `/design` | — | 21 | `app/design/layout.tsx` |
 | `/legal` | — | 45 | `app/legal/layout.tsx` |
-| `/onboarding` | redirect | 64 | `app/onboarding/layout.tsx` |
+| `/onboarding` | redirect, metadata | 79 | `app/onboarding/layout.tsx` |
 
-## Estados de rota (8)
+## Estados de rota (9)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
@@ -768,24 +823,26 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/inbox` | — | 26 | `app/app/inbox/loading.tsx` |
 | `/app/inteligencia` | — | 12 | `app/app/inteligencia/loading.tsx` |
 | `/app/kanban` | — | 20 | `app/app/kanban/loading.tsx` |
+| `/app/pedidos` | — | 32 | `app/app/pedidos/loading.tsx` |
 | `/app/prospeccao/campanhas/:id` | — | 16 | `app/app/prospeccao/campanhas/[id]/loading.tsx` |
 
-## Páginas de erro (7)
+## Páginas de erro (8)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
 | `/` | client | 8 | `app/(public)/error.tsx` |
 | `/` | client | 8 | `app/error.tsx` |
-| `/` | client | 112 | `app/global-error.tsx` |
+| `/` | client | 123 | `app/global-error.tsx` |
 | `/` | — | 7 | `app/not-found.tsx` |
 | `/app` | client | 8 | `app/app/error.tsx` |
 | `/app/agenda` | client | 8 | `app/app/agenda/error.tsx` |
 | `/app/inteligencia` | client | 11 | `app/app/inteligencia/error.tsx` |
+| `/app/pedidos` | client | 16 | `app/app/pedidos/error.tsx` |
 
 ## Arquivos especiais (2)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
 | `/` | force-dynamic | 104 | `app/icon.tsx` |
-| `/` | — | 33 | `app/manifest.ts` |
+| `/` | — | 43 | `app/manifest.ts` |
 

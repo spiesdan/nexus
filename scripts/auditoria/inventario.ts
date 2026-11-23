@@ -269,6 +269,66 @@ const resumo = {
   ),
 };
 
+/**
+ * Recontagem auditável: o baseline é uma LISTA DE CAMINHOS Versionada, não um
+ * número digitado à mão. O doc 06-apis dizia 419 handlers em 17/11; aqui se
+ * compara arquivo por arquivo com o checkout daquele dia, para que "419 → 440"
+ * seja explicado por rotas nomeadas, não por palpite de área.
+ */
+const BASELINE_APIS = join(RAIZ, "scripts", "auditoria", "inventario-baseline-1711.txt");
+const RAZOES_DO_DELTA: ReadonlyArray<{ prefixo: string; area: string; razao: string }> = [
+  {
+    prefixo: "app/api/v1/sentinel/occurrences/[id]/correcao/conversa",
+    area: "Sentinel — conversa",
+    razao: "Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328).",
+  },
+  {
+    prefixo: "app/api/v1/sentinel/occurrences/[id]/correcao",
+    area: "Sentinel — job",
+    razao: "Nível 2 para job travado: simular/aplicar/reverter com CAS (0325).",
+  },
+  {
+    prefixo: "app/api/v1/sentinel/",
+    area: "Sentinel — detecção",
+    razao: "Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329).",
+  },
+  {
+    prefixo: "app/api/v1/cron/sentinel",
+    area: "Sentinel — cron",
+    razao: "Gatilho agendado da rodada; organização suspensa é ignorada na origem (0329).",
+  },
+  {
+    prefixo: "app/api/internal/observabilidade/",
+    area: "Observabilidade",
+    razao: "Sonda sem cookie para o instrumento de métricas.",
+  },
+  {
+    prefixo: "app/api/v1/admin/observabilidade",
+    area: "Observabilidade — painel",
+    razao: "Painel de SLOs lido por platform_admin, alimentado pela série 0330–0332.",
+  },
+  {
+    prefixo: "app/api/v1/offline-devices/",
+    area: "Offline — credencial",
+    razao: "Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322).",
+  },
+  {
+    prefixo: "app/api/v1/device/",
+    area: "Offline — shell",
+    razao: "Catálogo, identidade e pedidos do APK sem cookie de sessão.",
+  },
+  {
+    prefixo: "app/api/v1/laya/",
+    area: "Laya",
+    razao: "Health check do agente Laya.",
+  },
+  {
+    prefixo: "app/api/v1/contacts/",
+    area: "Contatos",
+    razao: "Crédito do cliente e busca de cidades — apoio à venda.",
+  },
+];
+
 if (SO_CHECK) {
   console.log(JSON.stringify(resumo, null, 2));
 } else {
@@ -334,9 +394,45 @@ if (SO_CHECK) {
     linhas.push("");
   };
 
+  const baseline = new Set(
+    readFileSync(BASELINE_APIS, "utf8").split("\n").map((s) => s.trim()).filter(Boolean),
+  );
+  const apisNaApi = apis.filter((i) => i.arquivo.startsWith(`app/api${sep}`));
+  const novas = apisNaApi.filter((i) => !baseline.has(i.arquivo));
+  const sumidas = [...baseline].filter((caminho) => !apisNaApi.some((i) => i.arquivo === caminho));
+
   secao("Telas", telas);
   secao("Resolvers e redirects", resolvers);
   secao("APIs", apis, true);
+
+  linhas.push(`## Delta de handlers desde o baseline de 17/11 (${baseline.size} → ${apisNaApi.length})`);
+  linhas.push("");
+  linhas.push(
+    "Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), " +
+      "não um número decorado. O total do gerador acima inclui dois `route.ts` fora de " +
+      "`app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.",
+  );
+  linhas.push("");
+  linhas.push("| Área | Novas | Por que entraram | Rotas |");
+  linhas.push("|---|---:|---|---|");
+  const grupos = new Map<string, { razao: string; rotas: string[] }>();
+  for (const rota of novas) {
+    const motivo = RAZOES_DO_DELTA.find((r) => rota.arquivo.startsWith(r.prefixo));
+    const area = motivo?.area ?? "Outros";
+    const grupo = grupos.get(area) ?? { razao: motivo?.razao ?? "Sem razão declarada.", rotas: [] };
+    grupo.rotas.push(`\`${rota.rota}\``);
+    grupos.set(area, grupo);
+  }
+  for (const [area, grupo] of grupos) {
+    linhas.push(`| ${area} | ${grupo.rotas.length} | ${grupo.razao} | ${grupo.rotas.join("<br>")} |`);
+  }
+  linhas.push("");
+  linhas.push(
+    sumidas.length === 0
+      ? "Nenhuma rota removida no período — o delta é só acréscimo."
+      : `Removidas: ${sumidas.map((c) => `\`${c}\``).join(", ")}.`,
+  );
+  linhas.push("");
   secao("Layouts", layouts);
   secao("Estados de rota", estados);
   secao("Páginas de erro", erros);
