@@ -873,3 +873,39 @@ claims em produção sem `Rows Removed by Filter` nas 2.138 linhas; p95 de
 `plataforma.slo_estourado` **reafirma** (não fecha) se ainda acima de 800 ms —
 isso é esperado: a melhoria é de ordem de grandeza, não garantia de fechar o
 alvo. Deploy é do dono.
+
+## 43. 24/11/2026 — Deploy 1.65.1 VERIFICADO; packaging revelou deadlock no baseline
+
+**Medição que importa (o laço fechou de vez):**
+
+```
+EXPLAIN com claims em produção (mesma query da lista do Inbox):
+  antes (0340 não aplicada) ... 929,6 ms
+  depois .....................  49,4 ms   → 18,8× mais rápido
+rota /api/v1/conversations (pós-deploy, 4 amostras):
+  p50 409 ms · p95 767 ms  (baseline anterior: p95 3408 ms com 318 amostras)
+```
+
+**O deploy FALHOU na primeira tentativa — dois fatos registrados:**
+
+```
+update.sh --to v1.65.1 → EXIT=1
+psql:<stdin>:7402: ERROR: deadlock detected
+  linha 7402 do baseline = "alter table followup_enrollments enable row level security;"
+nada aplicado (transação única) e imagens NÃO trocadas — app seguiu em 1.65.0
+segunda tentativa, com crm-worker e crm-scheduler PARADOS → EXIT=0
+```
+
+**Causa:** `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` toma `ACCESS EXCLUSIVE`;
+o cron do follow-up (`/api/v1/cron/followup-flow-worker`, disparado pelo
+scheduler) escreve nessa tabela continuamente. Com o baseline inteiro numa
+transação única, o deadlock aborta **tudo** — e a mensagem diz “o banco recusou
+parte do schema” sem nomear a concorrência como causa. A transação (P0-6) fez
+o que devia: não deixou drift; falta o passo de packaging que evita o deadlock.
+
+**Tarefa durável aberta (P0-9 no `66`, dono G depois do #823):** no `update.sh`,
+**parar `worker` e `scheduler` antes de aplicar o schema e subir depois**, de
+forma idempotente e com passo visível no log (“pausando automações para aplicar
+schema”). Gate: `pnpm test:shell`. Sem isso, todo self-hoster com follow-up
+ativo corre o mesmo risco e a mensagem de erro não ajuda ninguém. **Não é
+release agora** — entra na próxima, por decisão do dono. Deploy é do dono.

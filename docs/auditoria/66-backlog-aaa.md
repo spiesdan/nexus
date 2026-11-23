@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 26 `[x]` · 4 `[~]` · 4 `[!]` · 6 `[ ]` — 40 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 27 `[x]` · 3 `[~]` · 4 `[!]` · 7 `[ ]` — 41 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -13,6 +13,10 @@
 |---|---|---|---|---|---|
 | P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; detector e painel enxergam (produção 1.65.0: 340 amostras, p95 3359 ms) | — 
 | P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; policy set-based 0340 otimiza RLS (929 ms → sem filtro linha a linha), tag 1.65.1 | verificação pós-deploy: EXPLAIN sem filter, p95 < 3408 ms, reafirmação esperada 
+
+| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[x]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; P0-8 fechado no banco: EXPLAIN 929,6 → 49,4 ms (18,8×), p95 3408 → 767 ms | — 
+
+| P0-9 | `update.sh`: pausar worker + scheduler antes de aplicar o schema, subir depois (idempotente, passo visível no log) | `[ ]` | G (depois do #823) | 40 §43: first deploy 1.65.1 abortou em deadlock na linha 7402 do baseline (`followup_enrollments enable RLS`);/pnpm test:shell | parar serviços, aplicar baseline, subir; `pnpm test:shell`; entra na próxima, não nesta |
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
@@ -191,3 +195,12 @@ Backend: `GET /api/v1/commercial-orders/orcamentos-parados` devolve número, cli
 pós-deploy do dono: `EXPLAIN` sem `Rows Removed by Filter`, p95 de
 `/api/v1/conversations` abaixo de 3408 ms e reafirmação (não fechamento) da
 ocorrência `plataforma.slo_estourado` se ainda acima de 800 ms.
+
+## Pós-deploy 1.65.1 (24/11)
+
+- **P0-8 FECHADO no banco:** 929,6 ms → 49,4 ms (18,8×) no EXPLAIN com claims;
+  p95 de `/api/v1/conversations` 3408 → 767 ms (4 amostras pós-deploy).
+- **P0-9 ABERTO (packaging, dono G depois do #823):** pausar worker/scheduler
+  no `update.sh` antes do schema; primeira tentativa de deploy abortou em
+  deadlock na `ALTER TABLE ... ENABLE RLS` (40 §43). Entra na próxima release,
+  não nesta, por decisão do dono.
