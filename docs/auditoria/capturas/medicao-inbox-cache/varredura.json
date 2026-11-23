@@ -1,0 +1,429 @@
+{
+  "geradoEm": "2026-11-23T09:02:08.000Z",
+  "base": "http://localhost:3027",
+  "tempoTotalMs": 40808,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 1,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 1,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 30,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 40419
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Inbox"
+        ],
+        "textos": 162,
+        "contrasteReprovados": 1,
+        "pioresContrastes": [
+          {
+            "amostra": "Ver no 360",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 2,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 30,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar conversas",
+            "largura": 243,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fila14",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Minhas1",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas61",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fechadas",
+            "largura": 57,
+            "altura": 29
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 21867
+    },
+    {
+      "rota": "/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Inbox"
+        ],
+        "textos": 24,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 2,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Conversas",
+            "largura": 94,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ficha",
+            "largura": 66,
+            "altura": 36
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Handoff em 20/11/2026, 05:17 · cliente p",
+            "largura": 284,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Responder",
+            "largura": 70,
+            "altura": 30
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nota interna",
+            "largura": 80,
+            "altura": 30
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Anexar",
+            "largura": 40,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sugerir resposta",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6715
+    },
+    {
+      "rota": "/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Inbox"
+        ],
+        "textos": 162,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 2,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 30,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar conversas",
+            "largura": 243,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fila14",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Minhas1",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas61",
+            "largura": 57,
+            "altura": 29
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fechadas",
+            "largura": 57,
+            "altura": 29
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .border-l-accent > .min-w-0.flex-1 > .items-baseline.justify-between.gap-2 > .tabular-nums.text-\\[11px\\].shrink-0 :: <span class=\"shrink-0 text-[11px] text-muted-foreground tabular-nums\">3 dias</span>",
+          "color-contrast: .border-l-accent > .min-w-0.flex-1 > .leading-snug.mt-0\\.5 :: <p class=\"mt-0.5 truncate text-[13px] leading-snug text-muted-foreground\">Oi, queria saber o preço</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6521
+    },
+    {
+      "rota": "/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/inbox?id=97cce84e-ca55-4f41-bf65-68dc1f92f4df",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Inbox"
+        ],
+        "textos": 24,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 2,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Conversas",
+            "largura": 94,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ficha",
+            "largura": 66,
+            "altura": 36
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Handoff em 20/11/2026, 05:17 · cliente p",
+            "largura": 284,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Responder",
+            "largura": 70,
+            "altura": 30
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Nota interna",
+            "largura": 80,
+            "altura": 30
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Anexar",
+            "largura": 40,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sugerir resposta",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5316
+    }
+  ]
+}

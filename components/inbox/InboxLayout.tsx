@@ -411,6 +411,22 @@ export function InboxLayout({ initialSelectedId = null }: InboxLayoutProps = {})
             colunas.lista,
           )}
         >
+          {/*
+            SELO DE CACHE (P1-25). O canal pode estar morto e a lista continuar
+            legível — o que faltava era DIZER que aquilo é o que já carregou.
+            Discreto e com `role=status`: não atrapalha quem atende, mas anuncia
+            o estado a quem usa leitor de tela. `subscribed` é o único status
+            "ao vivo"; connecting/channel_error/timed_out/closed não são.
+          */}
+          {listQ.realtimeStatus !== "subscribed" && (
+            <p
+              role="status"
+              data-testid="inbox-selo-cache"
+              className="border-b border-border bg-warning-bg px-3 py-1 text-[11px] text-warning-fg"
+            >
+              {t("Mostrando o que já carregou — conexão ao vivo indisponível.")}
+            </p>
+          )}
           <InboxFilters value={filterValue} onChange={setFilterValue} />
           <div className="min-h-0 flex-1 overflow-hidden">
             <ConversationList
