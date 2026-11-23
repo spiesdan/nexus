@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.67.0] — 2026-11-23
+
+### Adicionado
+
+- **Tabelas da cobrança SaaS preparadas (sem comportamento ainda)** Criamos as oito tabelas `billing_*` (cliente, assinatura, fatura, checkout,
+  avisos D-3/D-2/D-1, eventos do webhook, verificações pendentes e
+  suspensão/reativação) com RLS de leitura por organização e escrita só por
+  service role. Nenhuma rotina usa estas tabelas ainda: plano, valor e vencimento
+  continuam decisão comercial pendente. Nada muda para quem usa a instalação.
+
+- **Tela dos pedidos do Mercos que ficaram de fora** Pedido do Mercos que não entrou por número já usado aparece agora numa tela ao lado da importação, com os dois clientes nomeados, valor, data, estado e ação para importar com número local. Lista vazia é boa notícia; erro tem botão de tentar de novo.
+
+- **Reconciliação do Mercos declara o que verificou antes de dizer "zero ausentes"** A reconciliação agora grava quantos números a lista do Mercos tinha e quantos foram realmente lidos. Linha truncada é contada, nunca descartada em silêncio. Se o censo estiver incompleto, a rodada sai marcada como "não verificado" com o motivo — só uma rodada completa com zero ausentes autoriza dizer que nenhum pedido ficou de fora. O resumo aparece na tela de colisões, no mesmo endpoint.
+
+### Alterado
+
+- **Nota fiscal usa o endereço do pedido quando falta no cadastro** Endereço do Mercos agora é lido do pedido quando o cadastro do cliente está vazio. O parser só aceita o formato conhecido e devolve vazio quando não dá para separar com segurança. A tela mostra "veio do pedido — confira" e oferece salvar no cadastro, para a próxima nota não repetir o trabalho.
+
+- **Expedição conta cada pedido uma vez e bloqueia entrega sem endereço** A faixa de situação contava o mesmo pedido em duas células e o cartão de concluídas mostrava paradas de carga em rota. Agora a contagem é uma partição feita no servidor: um pedido pertence à situação da sua carga, e só quem não está em carga entra em "aguardando embarque". Na cabine do motorista, "Entregue" não aparece quando o endereço é desconhecido — no lugar dele está "Corrigir endereço aqui", que abre um campo na própria tela, salva e libera a entrega sem mandar o motorista para outro lugar.
+
+- **Pedido mostra o número do Mercos quando ele é diferente do interno** Quando o número do Mercos difere do número interno, a lista, a ficha e a expedição mostram os dois — o interno em destaque e "Mercos 19669" como referência. Quando são iguais, aparece um só. A busca passa a aceitar o número do Mercos.
+
 ## [1.66.0] — 2026-11-23
 
 ### Adicionado
@@ -9008,7 +9030,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.66.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.67.0...HEAD
+[1.67.0]: https://github.com/spiesdan/nexus/compare/v1.66.0...v1.67.0
 [1.66.0]: https://github.com/spiesdan/nexus/compare/v1.65.2...v1.66.0
 [1.65.2]: https://github.com/spiesdan/nexus/compare/v1.65.1...v1.65.2
 [1.65.1]: https://github.com/spiesdan/nexus/compare/v1.65.0...v1.65.1
