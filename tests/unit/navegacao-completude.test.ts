@@ -53,6 +53,8 @@ const NAV_ALLOWLIST: Record<string, string> = {
     "redirect para /app/campanhas?subtela=prospeccao — a prospecção virou a segunda subtela da tela Campanha; o endereço antigo sobrevive a links salvos, ao F5 e aos deep-links com ?aba=",
   "/app/pedidos/imprimir":
     "impressão em lote dos selecionados, alcançada pelo botão Imprimir da barra de massa (ids via URL)",
+  "/app/pedidos/colisoes-mercos":
+    "sub-fluxo de quem importa: alcançado pelo link 'Ficaram de fora' ao lado do botão Importar pedidos Mercos, na lista de Pedidos — é o desdobramento da importação, não destino de menu",
   "/app/team/invite": "sub-fluxo de convite, alcançado de dentro de Equipe",
   "/app/settings/tenant/whatsapp": "redirect legado para /app/connections; mantido por links salvos",
   "/app/settings/canal-oficial":
