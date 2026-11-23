@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { cidadesDaCarga } from "@/lib/expedicao/cidades-da-carga";
 import { carregarContatosDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
+import { calcularSituacaoDaExpedicao } from "@/lib/expedicao/situacao-da-expedicao";
 import { COLUNAS_DA_CARGA, STATUS_EMBARCAVEIS, type Carga } from "@/lib/schemas/expedicao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -178,6 +179,18 @@ export default async function ExpedicaoPage() {
 
   const pedidosNaFila = (fila ?? []) as { id: string; total_cents: number | null }[];
 
+  /**
+   * A faixa de situação é UMA PARTIÇÃO feita aqui, na origem, com os mesmos
+   * dados que alimentam a lista. Antes cada célula contava por conta própria no
+   * cliente — um pedido elegível que já estava numa carga aparecia em duas
+   * células, e "Concluídas" exibia paradas de carga em rota (auditoria 71/72).
+   */
+  const situacao = calcularSituacaoDaExpedicao({
+    cargas: (cargas ?? []) as unknown as { id: string; status: string }[],
+    itens,
+    pedidosElegiveis: pedidosNaFila,
+  });
+
   return (
     <ExpedicaoClient
       inicial={((cargas ?? []) as unknown as Carga[]).filter(
@@ -187,10 +200,7 @@ export default async function ExpedicaoPage() {
         // dirigi-la, e o botão "Iniciar rota" da cabine nunca era alcançado.
         (c) => !motorista || c.status === "em_rota" || c.status === "montando",
       )}
-      fila={{
-        total: pedidosNaFila.length,
-        valor: pedidosNaFila.reduce((soma, p) => soma + (p.total_cents || 0), 0),
-      }}
+      situacao={situacao}
       progresso={progresso}
       podeCriar={podeCriar}
       motorista={motorista}

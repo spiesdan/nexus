@@ -339,7 +339,11 @@ export async function carregarCargaComParadas(
       // tinha quando entrou na carga, e mexer no cadastro do cliente depois
       // disso não move a entrega planejada (prompt §2).
       endereco_entrega:
-        destino?.endereco ?? linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
+        // `??` com destino VAZIO sombreava o snapshot recém-corrigido: o
+        // motorista salvava o endereço na cabine e a rota continuava dizendo
+        // "Sem endereço". Um destino sem rua não é escolha de ponto (linhaComRua
+        // devolve null) — deixa o snapshot/cadastro responder (auditoria 72).
+        linhaComRua(destino?.endereco) ?? linhaComRua(p?.endereco_entrega) ?? (enderecoEmLinha(c) || null),
       latitude: destino ? destino.latitude : (c?.latitude ?? null),
       longitude: destino ? destino.longitude : (c?.longitude ?? null),
       geo_status: destino ? (destino.geo_status ?? "pendente") : (c?.geo_status ?? "pendente"),
