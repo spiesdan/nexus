@@ -636,3 +636,28 @@ G fecha P1-24; o corte leva o que estiver verde — **não espera o E2E inteiro*
 
 **Depois do deploy:** P1-28, orçamentos parados, Inbox/Dashboard, `.in()`,
 `anon`, p95 e E2E restante — ver `66-backlog-aaa.md`.
+
+## 34. 23/11/2026 — Deploy da 1.63.0 ABORTADO no schema (guard funcionou)
+
+**Resultado:** nada foi aplicado. Produção segue **1.62.3 healthy**. Conferido:
+`prospecting_campaign_spend` não existe · `shipments.rota_versao_confirmada`
+não existe · `payment_methods.tipo` não existe. Tag `v1.63.0` permanece
+publicada, mas **não será deployada** — o deploy vai direto para **1.63.1**.
+
+**Causa:** colisão de nome. Produção já tem uma `payment_methods` **legada**
+(`name`/`account_id`/`is_active`, FK de `sales`) que **não está no
+`baseline.sql`**. O `create table if not exists` da 0334 foi ignorado e o
+índice em `tipo` falhou. O guard do `update.sh` parou antes de trocar imagens.
+
+**Correção em curso (F):** renomear a tabela nova para
+`commercial_payment_methods` + prova de não-colisão + varredura dos demais
+objetos das migrations 0334/0335/0336/0337. PR com fragmento `nada_mudou`
+⇒ **patch 1.63.1**, cortado pelo workflow oficial.
+
+**Lição:** *baseline não é o schema de produção — há tabelas legadas fora dele;
+migration nova precisa de nome livre e o teste precisa rodar contra um banco
+com o legado.* `create table if not exists` **não** prova que a coluna que você
+espera existe: ele aceita a tabela alheia e falha depois no índice. O teste
+deve asserir forma, não só presença.
+
+**Congelamento:** D/G/F seguem sem merge de features até o deploy da 1.63.1.
