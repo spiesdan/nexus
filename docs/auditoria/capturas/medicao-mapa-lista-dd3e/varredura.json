@@ -1,0 +1,366 @@
+{
+  "geradoEm": "2026-11-23T05:43:32.338Z",
+  "base": "http://localhost:3026",
+  "tempoTotalMs": 30715,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 7,
+      "axeCritica": 0,
+      "axeSeria": 2,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 30253
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 010"
+        ],
+        "textos": 128,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "link-in-text-block (serious)"
+        ],
+        "nos": [
+          "link-in-text-block: .maplibregl-ctrl-attrib-inner > a :: <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9515
+    },
+    {
+      "rota": "/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 010"
+        ],
+        "textos": 95,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9630
+    },
+    {
+      "rota": "/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 010"
+        ],
+        "textos": 128,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "link-in-text-block (serious)"
+        ],
+        "nos": [
+          "link-in-text-block: .maplibregl-ctrl-attrib-inner > a :: <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6112
+    },
+    {
+      "rota": "/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/dd3e6cbf-8e05-4d23-a551-9bf5e35db52d/rota",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 010"
+        ],
+        "textos": 95,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4996
+    }
+  ]
+}
