@@ -31831,9 +31831,6 @@ cross join (values
   ('agendado_45', 'Agendado — 45 dias', 45)
 ) as v(codigo, nome, dias)
 on conflict (organization_id, codigo) do nothing;
---
-=====================================================================
-=======
 -- 0336 — apêndice idempotente: versão confirmada da rota.
 -- 0336 — QUAL VERSÃO O MOTORISTA REALMENTE APLICOU.
 --
