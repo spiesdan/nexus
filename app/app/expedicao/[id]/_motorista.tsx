@@ -18,11 +18,14 @@ import {
 } from "@/components/ui/dialog";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import {
   descarregarOutbox,
   enfileirarDesfecho,
   lerRotaLocal,
+  lerUltimaSincronizacao,
   pendentesDaCarga,
+  registrarUltimaSincronizacao,
   salvarRotaLocal,
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
@@ -94,6 +97,10 @@ export function ModoMotorista({
   const [motivo, setMotivo] = React.useState<MotivoDevolucao>("cliente_ausente");
   const [fila, setFila] = React.useState<DesfechoPendente[]>(() => pendentesDaCarga(cargaId));
   const [sincronizando, setSincronizando] = React.useState(false);
+  /** P1-24: estado operacional da sincronização, visível sem depender da rede. */
+  const [ultimaSync, setUltimaSync] = React.useState<string | null>(() => lerUltimaSincronizacao());
+  const [online, setOnline] = React.useState(true);
+  const tagDeIdioma = useTagDeIdioma();
   // Folha da cabine: fechada mostra a próxima entrega; aberta, o roteiro.
   const [folhaAberta, setFolhaAberta] = React.useState(false);
   /** "Trocar carga": pular de romaneio sem voltar para a home. */
@@ -156,6 +163,9 @@ export function ModoMotorista({
             r.enviados === 1 ? t("entrega sincronizada") : t("entregas sincronizadas")
           }`,
         );
+        const agora = new Date().toISOString();
+        registrarUltimaSincronizacao(agora);
+        setUltimaSync(agora);
         await recarregar();
         aoMudar();
       }
@@ -319,9 +329,18 @@ export function ModoMotorista({
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void sincronizar();
-    const aoVoltar = () => void sincronizar();
+    const aoVoltar = () => {
+      setOnline(true);
+      void sincronizar();
+    };
+    const aoCair = () => setOnline(false);
+    setOnline(navigator.onLine);
     window.addEventListener("online", aoVoltar);
-    return () => window.removeEventListener("online", aoVoltar);
+    window.addEventListener("offline", aoCair);
+    return () => {
+      window.removeEventListener("online", aoVoltar);
+      window.removeEventListener("offline", aoCair);
+    };
   }, [sincronizar]);
 
   // ─── RASTREIO LIGADO POR PADRÃO NA CABINE ────────────────────────────────
@@ -869,6 +888,14 @@ export function ModoMotorista({
         </div>
       </Card>
       )}
+
+      <p data-testid="estado-sync" className="text-xs text-text-muted">
+        {ultimaSync
+          ? `${t("Última sincronização às")} ${new Date(ultimaSync).toLocaleTimeString(tagDeIdioma, { hour: "2-digit", minute: "2-digit" })}`
+          : t("Ainda não sincronizou nesta instalação.")}{" "}
+        {fila.length > 0 ? `· ${fila.length} ${t("pendências")}` : ""}
+        {!online ? ` · ${t("sem conexão — a fila segue no aparelho")}` : ""}
+      </p>
 
       {fila.length > 0 && (
         <Card className="overflow-hidden border-warning/40 p-0">

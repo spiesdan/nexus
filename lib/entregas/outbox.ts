@@ -37,6 +37,8 @@ export interface ArmazenLocal {
 
 const CHAVE_OUTBOX = "entregas-outbox-v1";
 const CHAVE_ROTA = "entregas-rota-v1";
+/** Instante do último descarte bem-sucedido da fila (P1-24). */
+const CHAVE_ULTIMA_SYNC = "entregas-ultima-sync-v1";
 
 function memoria(): ArmazenLocal | null {
   try {
@@ -150,6 +152,35 @@ export function lerRotaLocal<T>(cargaId: string, store?: ArmazenLocal | null): T
     const cru = s.getItem(`${CHAVE_ROTA}:${cargaId}`);
     if (!cru) return null;
     return (JSON.parse(cru) as { rota: T }).rota ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
+/**
+ * Última sincronização bem-sucedida, no mesmo `store` injetável da fila.
+ * Só é gravada quando `descarregarOutbox` enviou pelo menos um desfecho —
+ * " Sincronizado" não pode mentir sobre uma rodada que não aconteceu.
+ */
+export function registrarUltimaSincronizacao(
+  agoraIso: string = new Date().toISOString(),
+  store?: ArmazenLocal | null,
+): void {
+  const s = store ?? memoria();
+  if (!s) return;
+  try {
+    s.setItem(CHAVE_ULTIMA_SYNC, agoraIso);
+  } catch {
+    /* armazenamento cheio: o horário não é crítico para a entrega */
+  }
+}
+
+export function lerUltimaSincronizacao(store?: ArmazenLocal | null): string | null {
+  const s = store ?? memoria();
+  if (!s) return null;
+  try {
+    return s.getItem(CHAVE_ULTIMA_SYNC);
   } catch {
     return null;
   }
