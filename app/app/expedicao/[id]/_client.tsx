@@ -882,6 +882,11 @@ export function CargaClient({
       </div>
 
       {/* ETAPA 1 — pedidos disponíveis e paradas da carga. */}
+      {/* `pb-24` no fim do workbench dá folga para a barra inferior do
+          navegador no celular e para os selos do rodapé da sidebar no
+          desktop: sem isso o último controle da lista podia ficar debaixo
+          de um overlay (medido em 1440: "Escolher foto" em y=797 e os selos
+          em y=799/836, na mesma faixa horizontal da área de conteúdo). */}
       <section id="etapa-pedidos" aria-labelledby="titulo-etapa-pedidos" className="scroll-mt-44 space-y-3">
         <div>
           <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
@@ -1389,7 +1394,7 @@ export function CargaClient({
       </div>
 
       {/* ETAPA 4 — fechamento. */}
-      <div id="etapa-fechamento" className="scroll-mt-44">
+      <div id="etapa-fechamento" className="scroll-mt-44 pb-24">
         <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
       </div>
 

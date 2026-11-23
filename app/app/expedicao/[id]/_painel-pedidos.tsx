@@ -228,11 +228,12 @@ export function PainelDePedidosDisponiveis({
               </span>
             </div>
 
-            {pedidos.length === 0 && ocupados.length === 0 ? (
+            {pedidos.length === 0 && (
               <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                 {t("Nenhum pedido aguardando embarque nesta organização.")}
               </div>
-            ) : (
+            )}
+            {(pedidos.length > 0 || ocupados.length > 0) && (
               <ul className="divide-y divide-border rounded-lg border border-border">
                 {pedidos.map((p) => {
                   const marcado = selecionados.has(p.id);
