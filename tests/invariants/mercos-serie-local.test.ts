@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { countAs, sql } from "./gov-helpers";
+import { countAs, sql, writeCountAs } from "./gov-helpers";
 
 const ORG_A = "0344aaaa-0000-4000-8000-000000000001";
 const ORG_B = "0344bbbb-0000-4000-8000-000000000002";
@@ -42,6 +42,14 @@ beforeAll(() => {
     -- Pedido LOCAL antigo, com número na faixa do Mercos. NÃO pode mudar.
     insert into public.commercial_orders (organization_id, numero, cliente_nome, status, origem)
     values ('${ORG_A}', 19669, 'Cliente Local 19669', 'faturado', 'vendedor');
+
+    -- Prova comportamental de RLS das três tabelas de reconciliação (0347).
+    insert into public.mercos_colisoes (organization_id, numero_mercos, cliente_mercos_nome)
+    values ('${ORG_A}', 99991, 'A'), ('${ORG_B}', 99992, 'B');
+    insert into public.mercos_reconciliacoes (organization_id, run_id, numero_mercos, situacao)
+    values ('${ORG_A}', 'prova-a', 99991, 'ausente'), ('${ORG_B}', 'prova-b', 99992, 'ausente');
+    insert into public.mercos_reconciliacoes_runs (organization_id, run_id, censo_lido)
+    values ('${ORG_A}', 'prova-a', 1), ('${ORG_B}', 'prova-b', 1);
   `);
 });
 
@@ -103,7 +111,18 @@ describe("0344 — série local separada e colisões visíveis", () => {
     ).toBe("0");
   });
 
-  it("mercos_colisoes é isolada por tenant", () => {
-    expect(countAs(USER_A, "select count(*) from public.mercos_colisoes")).toBe(1);
+  it("as três tabelas de reconciliação são isoladas por tenant e negam escrita a authenticated", () => {
+    const inserts: Record<string, string> = {
+      mercos_colisoes: `insert into public.mercos_colisoes (organization_id, numero_mercos) values ('${ORG_A}', 99999)`,
+      mercos_reconciliacoes: `insert into public.mercos_reconciliacoes (organization_id, run_id, numero_mercos) values ('${ORG_A}', 'x', 99999)`,
+      mercos_reconciliacoes_runs: `insert into public.mercos_reconciliacoes_runs (organization_id, run_id) values ('${ORG_A}', 'x')`,
+    };
+    for (const [tabela, insert] of Object.entries(inserts)) {
+      expect(countAs(USER_A, `select count(*) from public.${tabela} where organization_id='${ORG_A}'`))
+        .toBeGreaterThan(0);
+      expect(countAs(USER_A, `select count(*) from public.${tabela} where organization_id='${ORG_B}'`))
+        .toBe(0);
+      expect(writeCountAs(USER_A, insert)).toBe(0);
+    }
   });
 });

@@ -97,11 +97,11 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "com policy de escrita para authenticated).",
   })),
   ...(
-    ["mercos_colisoes", "mercos_reconciliacoes"] as const
+    ["mercos_colisoes", "mercos_reconciliacoes", "mercos_reconciliacoes_runs"] as const
   ).map((tabela) => ({
     tabela,
     razao:
-      "tests/invariants/mercos-serie-local.test.ts (0344/0345) prova, com " +
+      "tests/invariants/mercos-serie-local.test.ts (0344/0345/0347) prova, com " +
       "`set role authenticated` + JWT simulado, leitura da própria org e zero " +
       "da vizinha, e escrita negada a authenticated.",
   })),

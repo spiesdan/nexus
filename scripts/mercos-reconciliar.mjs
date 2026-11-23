@@ -14,10 +14,11 @@
  * A prova: rodada 1 lista ausentes/colisões/ignorados; rodada 2, com o MESMO
  * run-id, devolve 0 ausentes e as mesmas colisões com `resolvido_em` preenchido.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 import { createClient } from "@supabase/supabase-js";
 
+import { avaliarCobertura, avaliarResultado } from "./mercos-cobertura.mjs";
 import {
   classificarComDetalhe,
   classificarNumero,
@@ -51,33 +52,57 @@ if (!LISTA || !ORG || !URL_BASE || !CHAVE) {
 }
 
 function lerJsonl(caminho) {
-  if (!caminho) return [];
-  return readFileSync(caminho, "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .flatMap((linha) => {
-      try {
-        return [JSON.parse(linha)];
-      } catch {
-        return [];
-      }
-    });
+  if (!caminho) return { registros: [], ilegiveis: 0 };
+  const registros = [];
+  let ilegiveis = 0;
+  for (const linha of readFileSync(caminho, "utf8").split("\n").filter(Boolean)) {
+    try {
+      registros.push(JSON.parse(linha));
+    } catch {
+      ilegiveis++; // truncada: contada, nunca descartada em silêncio
+    }
+  }
+  return { registros, ilegiveis };
+}
+
+/** Meta do coletor: quantos pedidos a lista tinha de verdade. */
+function censoEsperado() {
+  const override = arg("censo-esperado", process.env.MERCOS_CENSO_ESPERADO || "");
+  if (override) {
+    const n = Number(override);
+    if (Number.isInteger(n) && n > 0) return n;
+  }
+  const caminho = `${LISTA}.meta.json`;
+  if (!existsSync(caminho)) return null;
+  try {
+    const meta = JSON.parse(readFileSync(caminho, "utf8"));
+    return Number.isInteger(meta?.censo_esperado) && meta.censo_esperado > 0 ? meta.censo_esperado : null;
+  } catch {
+    return null;
+  }
 }
 
 const inicio = Date.now();
-const linhasLista = lerJsonl(LISTA);
+const { registros: linhasLista, ilegiveis: ilegiveisLista } = lerJsonl(LISTA);
 const porNumero = new Map();
+let numerosIlegiveis = 0;
 for (const linha of linhasLista) {
-  if (!Number.isInteger(linha?.numero) || linha.numero <= 0) continue;
+  if (!Number.isInteger(linha?.numero) || linha.numero <= 0) {
+    numerosIlegiveis++;
+    continue;
+  }
   if (!porNumero.has(linha.numero)) porNumero.set(linha.numero, linha);
 }
+const ESPERADO = censoEsperado();
 
+const { registros: detalhesBrutos, ilegiveis: ilegiveisDetalhes } = lerJsonl(DETALHES);
 const detalhes = new Map();
-for (const registro of lerJsonl(DETALHES)) {
+for (const registro of detalhesBrutos) {
   if (Number.isInteger(registro?.numero) && !detalhes.has(registro.numero)) {
     detalhes.set(registro.numero, registro);
   }
 }
+const LINHAS_ILEGIVEIS = ilegiveisLista + ilegiveisDetalhes + numerosIlegiveis;
 
 const todos = [...porNumero.values()];
 const semData = todos.filter((r) => !Number.isFinite(Date.parse(r.data_emissao || "")));
@@ -139,6 +164,9 @@ const resultado = {
   limite: LIMITE,
   aplicar: APLICAR,
   numeros_na_lista: todos.length,
+  censo_esperado: ESPERADO,
+  censo_lido: todos.length,
+  linhas_ilegiveis: LINHAS_ILEGIVEIS,
   registros_sem_data: semData.length,
   registros_fora_da_janela: todos.length - semData.length - naJanela.length,
   candidatos: candidatos.length,
@@ -244,6 +272,45 @@ if (erroContagem) {
 } else {
   resultado.ausentes_depois = ausentesDepois ?? 0;
 }
+
+const cobertura = avaliarCobertura({
+  censoEsperado: ESPERADO,
+  censoLido: resultado.censo_lido,
+  linhasIlegiveis: resultado.linhas_ilegiveis,
+  registrosSemData: resultado.registros_sem_data,
+  erros: resultado.erros_importacao,
+});
+const veredito = avaliarResultado({ cobertura, ausentesDepois: resultado.ausentes_depois });
+resultado.status = veredito.status;
+resultado.motivos = veredito.motivos;
+resultado.verificado = veredito.verificado;
+resultado.declaracao = veredito.declaracao;
+
+const { error: erroRun } = await admin
+  .from("mercos_reconciliacoes_runs")
+  .upsert({
+    organization_id: ORG,
+    run_id: RUN_ID,
+    censo_esperado: ESPERADO,
+    censo_lido: resultado.censo_lido,
+    linhas_ilegiveis: resultado.linhas_ilegiveis,
+    registros_sem_data: resultado.registros_sem_data,
+    ausentes: resultado.ausentes_depois,
+    colisoes: resultado.colisoes_por_identidade.length,
+    ignorados_sem_item: resultado.ignorados_sem_itens.length,
+    importados: resultado.importados.length,
+    status: veredito.status,
+    motivos: veredito.motivos,
+    verificado: veredito.verificado,
+    declaracao: veredito.declaracao,
+    atualizado_em: new Date().toISOString(),
+  }, { onConflict: "organization_id,run_id" });
+if (erroRun) {
+  resultado.erros_importacao++;
+  resultado.verificado = false;
+  resultado.declaracao = "não verificado: falha ao gravar o resumo da rodada";
+}
+
 resultado.duracao_ms = Date.now() - inicio;
 process.stdout.write(JSON.stringify(resultado, null, 2) + "\n");
-if (resultado.erros_importacao > 0) process.exitCode = 1;
+if (resultado.erros_importacao > 0 || resultado.status === "incompleta") process.exitCode = 1;

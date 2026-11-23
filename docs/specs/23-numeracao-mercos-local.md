@@ -70,6 +70,19 @@ Consequências implementadas:
    `ignorados_sem_itens` (19639); rodada 2 devolve `ausentes_depois = 0` e
    mantém as colisões no artefato com `resolvido_em` preenchido. A colisão não
    desaparece quando o pedido é recuperado — senão a prova apagaria o defeito.
+5. **Cobertura é resultado, não detalhe (0347).** O coletor grava
+   `<lista>.meta.json` com `censo_esperado` (o `lista fechada: 5.929 pedidos`).
+   Toda linha ilegível é contada em `linhas_ilegiveis`, nunca descartada em
+   silêncio. `status = incompleta` se o censo lido for menor que o esperado,
+   se faltar a meta, se houver linha ilegível, registro sem data ou erro de
+   leitura/escrita. **Regra de ouro:** só `status = completa` **e**
+   `ausentes = 0` autorizam dizer "nenhum pedido de fora"; qualquer outra
+   combinação vira "não verificado: <motivo>".
+
+`GET /api/v1/mercos/colisoes` devolve, no mesmo payload, `resumo` com
+`{ run_id, quando, censo_lido, censo_esperado, ausentes, colisoes,
+ignorados_sem_item, status, verificado, motivos, declaracao }` da última
+rodada — a tela mostra o bloco sem precisar de outra rota.
 
 **Não foi deployado.** As contagens acima são as que o dono mediu no container
 em somente leitura. A contagem de produção depende de rodar a reconciliação na

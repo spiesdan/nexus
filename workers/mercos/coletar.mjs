@@ -326,7 +326,18 @@ try {
         }))
         .join("\n") + "\n",
     );
-    console.log(`  censo gravado: ${LISTA_SAIDA} (${lista.length} números)`);
+    // A meta é o que permite à reconciliação saber se o censo está inteiro.
+    // Sem ela, "zero ausentes" não pode ser dito — a rodada vira incompleta.
+    writeFileSync(
+      `${LISTA_SAIDA}.meta.json`,
+      JSON.stringify({
+        censo_esperado: lista.length,
+        gerado_em: new Date().toISOString(),
+        de: DE,
+        ate: ATE,
+      }) + "\n",
+    );
+    console.log(`  censo gravado: ${LISTA_SAIDA} (${lista.length} números) + meta`);
   }
 
   // ─── DETALHE: cabeçalho + itens, com reconciliação ───────────────────────
