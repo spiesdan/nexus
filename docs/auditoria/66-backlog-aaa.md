@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (23/11):** 14 `[x]` · 8 `[~]` · 6 `[!]` · 16 `[ ]` — 36 itens.
+> **Placar (23/11):** 12 `[x]` · 6 `[~]` · 4 `[!]` · 14 `[ ]` — 36 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
