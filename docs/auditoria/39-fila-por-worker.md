@@ -412,3 +412,17 @@ o **D** faz o passe visual/medição do wizard e do painel — sem tocar na lóg
 
 P1-28 é capacidade nova ⇒ fragmento `capacidade_nova` na próxima release; a
 1.63.0 fecha sem esta feature, por decisão do dono ao fechar o lote.
+
+
+## Tabela de ociosidade e estado do daemon (24/11, 08:56 UTC)
+
+| worker | estado | PR/commit recente | tarefa atual |
+|---|---|---|---|
+| D | em execução | #783 (mapa↔lista) mergeado | Inbox (P1-25/26) → Dashboard (P1-27) → 96 telas |
+| F | em execução | **#794** (P1-28) aberto | P1-28 → E2E expedição → orçamentos parados |
+| G | em execução | #791/#792/#793 mergeados | `.in()` feito → **P0-6** (transação no `update.sh`) → p95 em produção |
+
+Máquina no início da volta: swap **2,29 GB** · **0** `next-server` · 0 Chromium.
+Regras vigentes: um worker por frente, só os três IDs reais, estado lido do
+repositório, fila ≥2 por worker, merge verde do coordenador e **deploy do dono**.
+Nenhuma release nova hoje sem pedido do dono (lote 1.63.1 já no ar).
