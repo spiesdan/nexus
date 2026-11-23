@@ -401,3 +401,14 @@ G → P0-1/P0-5/P1-2. Bloqueados com dono: P0-3, P1-14, P1-15, P2-3.
 
 P1-17 entra com fragmento `capacidade_nova` (minor derivado) e, quando mergeado,
 o **D** faz o passe visual/medição do wizard e do painel — sem tocar na lógica.
+
+
+## Fila do F — ordem revisada (23/11/2026, ordem do dono)
+
+1. **P1-28 multi-campanha + retomada 48h** (frente da fila — depende de template
+   de retomada aprovado na Meta; Sem isso o fluxo fica “aguardando aprovação”) →
+   2. backend dos **orçamentos parados** (antes: P0-4 recorte + D na tela) →
+   3. demais itens do F em `66-backlog-aaa.md`.
+
+P1-28 é capacidade nova ⇒ fragmento `capacidade_nova` na próxima release; a
+1.63.0 fecha sem esta feature, por decisão do dono ao fechar o lote.
