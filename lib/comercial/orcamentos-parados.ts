@@ -104,3 +104,26 @@ export function montarFila(
     })
     .sort((a, b) => b.idade_dias - a.idade_dias);
 }
+
+/**
+ * CSV da fila — a MESMA lista que a tela lê, com o próximo passo de cada linha
+ * e um total. Nunca uma segunda consulta: o chamador já tem a fila montada.
+ */
+export function filaParaCsv(fila: readonly OrcamentoParado[]): string {
+  const escapar = (valor: unknown): string => {
+    const texto = valor == null ? "" : String(valor);
+    return /[",\n]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto;
+  };
+  const cabecalho = [
+    "numero", "cliente", "valor_cents", "idade_dias", "dias_limite",
+    "criado_por_humano", "proximo_passo", "detalhe",
+  ];
+  const linhas = fila.map((l) =>
+    [
+      l.numero, l.cliente, l.valor_cents, l.idade_dias, l.dias_limite,
+      l.criado_por_humano, l.proximo_passo.acao, l.proximo_passo.texto,
+    ].map(escapar).join(","),
+  );
+  const total = fila.reduce((soma, l) => soma + l.valor_cents, 0);
+  return [cabecalho.join(","), ...linhas, `,,,,TOTAL,${total}`].join("\n") + "\n";
+}
