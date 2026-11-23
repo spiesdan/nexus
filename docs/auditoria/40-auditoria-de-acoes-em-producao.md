@@ -661,3 +661,47 @@ espera existe: ele aceita a tabela alheia e falha depois no índice. O teste
 deve asserir forma, não só presença.
 
 **Congelamento:** D/G/F seguem sem merge de features até o deploy da 1.63.1.
+
+## 35. 23/11/2026 — Drift parcial deixado pelo aborto da 1.63.0
+
+Verificação pós-aborto: o schema **não** ficou intacto. O `update.sh` aplica o
+baseline **statement por statement, sem transação**; o erro foi no 0334, mas o
+que vinha antes já commitou:
+
+```
+fn_salvar_ordem_rota(uuid,uuid,jsonb,jsonb,integer,timestamptz)  EXISTE em produção
+prospecting_campaign_spend                                       não existe
+payment_methods.tipo                                             não existe (legada sem tipo)
+shipments.rota_versao_confirmada                                 não existe
+```
+
+Ou seja, a **0335 ficou aplicada**. A 1.62.3 no ar não chamava essa função
+(flag desligada): sem dano funcional, mas **drift** de schema à frente do código.
+
+**Lição:** *`update.sh` aplica schema sem transação — erro no meio deixa parte
+aplicada; o guard protege a imagem, não o schema.*
+
+**Proposta — NÃO IMPLEMENTADA (P0 de packaging, decisão do dono):** envolver o
+bloco de schema em transação única (`psql -1` / `--single-transaction`) **ou**
+verificar `to_regclass()` e a forma das colunas antes de trocar imagens.
+
+## 36. 23/11/2026 — Deploy 1.63.1 VERIFICADO pelo dono
+
+`update.sh --to v1.63.1` → `EXIT=0`, *“Atualização concluída — app no ar e
+saudável”*.
+
+```
+7 containers em 1.63.1 · /health healthy 1.63.1
+  (supabase / redis / rate_limit / waha ok) · /login 200
+schema: prospecting_campaign_spend=t · commercial_payment_methods=t
+        shipments.rota_versao_confirmada=t · fn_salvar_ordem_rota=t
+Sentinel: achados=5 · reafirmadas=5 · truncado=false
+URI too long (30 min)=0 · risk-watcher falhas (30 min)=0
+rollback: refixar 1.62.3
+```
+
+**A 1.63.0 nunca foi deployada** — abortou no schema (§34). Produção passou
+**diretamente de 1.62.3 para 1.63.1**. Os quatro objetos do §35 foram conferidos
+um a um; o drift foi fechado. Lote de hoje encerrado: **nenhuma release nova
+sem pedido do dono**. Fila retomada: F → P1-28/E2E/orçamentos · D →
+Inbox/Dashboard/96 telas · G → `.in()`/`anon`/p95.
