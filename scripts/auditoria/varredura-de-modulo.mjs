@@ -72,6 +72,8 @@ const grupoPorRota = new Map(matriz.rotas.map((r) => [r.rota, r.grupo]));
 const grupo = args.get("--grupo");
 const excluirGrupo = args.get("--excluir-grupo");
 const lista = args.get("--rotas");
+const de = Number(args.get("--de") ?? 0);
+const ate = Number(args.get("--ate") ?? 0);
 
 let rotas = matriz.rotas.map((r) => r.rota);
 if (grupo && grupo !== true) rotas = rotas.filter((r) => grupoPorRota.get(r) === grupo);
@@ -82,10 +84,22 @@ if (lista && lista !== true) {
   // estão na matriz — filtrar por ela derrubava a medição de uma tela real.
   rotas = String(lista).split(",").filter(Boolean);
 }
+// Fatiar DEPOIS de `--rotas`/`--grupo`: cada fatia grava o seu JSON e mata
+// servidor/Chromium ao fim. Se uma morrer, as outras não são perdidas.
+if (ate > de) rotas = rotas.slice(de, ate);
 if (rotas.length === 0) {
   console.error("nenhuma rota selecionada");
   process.exit(2);
 }
+
+const mem = (onde) => {
+  const m = process.memoryUsage();
+  console.log(
+    `MEM ${onde} rss=${Math.round(m.rss / 1048576)}MB ` +
+      `heap=${Math.round(m.heapUsed / 1048576)}MB ext=${Math.round(m.external / 1048576)}MB`,
+  );
+};
+mem("inicio");
 
 /**
  * Ids reais do banco de teste. As 24 rotas dinâmicas que antes eram
@@ -405,6 +419,7 @@ for (const rota of rotas) {
         registro.valida = true;
         registro.tempoMs = Date.now() - t0;
         registros.push(registro);
+        if (registros.length % 40 === 0) mem(`apos ${registros.length / 4} rotas`);
 
         const m = registro.medida;
         const erros = registro.consoleErros.length + registro.errosDePagina.length;
@@ -521,7 +536,10 @@ for (const r of resumo) {
     if (r.defeitos[d]) m[d] += 1;
 }
 
-const arquivo = path.join(saida, "varredura.json");
+const arquivo = path.join(
+  saida,
+  ate > de ? `varredura-${de}-${ate}.json` : "varredura.json",
+);
 writeFileSync(
   arquivo,
   JSON.stringify(
@@ -542,6 +560,7 @@ writeFileSync(
   ) + "\n",
 );
 
+mem("fim");
 process.stdout.write(`\n${rotas.length} rotas · ${registros.length} combinações · ${Math.round(tempoTotalMs / 1000)} s\n`);
 for (const r of resumo) {
   process.stdout.write(
