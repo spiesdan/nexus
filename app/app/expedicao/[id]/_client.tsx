@@ -10,6 +10,12 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
 import { PainelDePedidosDisponiveis } from "./_painel-pedidos";
 import {
@@ -40,6 +46,7 @@ import {
 import { chaveDoDia } from "@/lib/tempo/dia";
 import {
   ArrowRight,
+  DotsThree,
   CaretDown,
   CaretLeft,
   CheckCircle,
@@ -552,6 +559,12 @@ export function CargaClient({
   const linhaDaCarga = [ROTULO_DA_CARGA[carga.status] ?? carga.status, veiculoETripulacao]
     .filter(Boolean)
     .join(" · ");
+
+  /**
+   * DOIS MODOS, decididos pelo status — a mesma tela para "montar" e para
+   * "rodar" era o que deixava o dono confuso (auditoria 71, P0).
+   */
+  const modo: "montagem" | "operacao" = carga.status === "montando" ? "montagem" : "operacao";
   const aberta = abertaId === "" ? null : (abertaId ?? proxima?.id ?? null);
   const pctConcluido = itens.length > 0 ? Math.round((concluidas.length / itens.length) * 100) : 0;
 
@@ -710,7 +723,7 @@ export function CargaClient({
   }
 
   return (
-    <div className={cn("space-y-5", ALVOS_DE_TOQUE)}>
+    <div className={cn("space-y-5 pb-24", ALVOS_DE_TOQUE)}>
       {/* Cabeçalho fixo: na ficha longa, número e ações acompanham a rolagem
         em vez de sumirem para cima.
         A ficha NÃO declara padding próprio: quem inseta é o `main` do AppShell
@@ -789,83 +802,60 @@ export function CargaClient({
                   {textos.concluir}
                 </Button>
               )}
-              {podeOperar && carga.status === "montando" && (
-                <Button variant="outline" size="sm" onClick={() => irParaEtapa("etapa-pedidos")}>
-                  <Plus className="h-3.5 w-3.5" aria-hidden />
-                  {t("Adicionar pedido")}
-                </Button>
-              )}
-              {podeOperar && (carga.status === "montando" || carga.status === "em_rota") && (
-                <Button variant="ghost" size="sm" onClick={abrirVeiculo}>
-                  <PencilSimple className="h-3.5 w-3.5" aria-hidden />
-                  {t("Veículo")}
-                </Button>
-              )}
-              <Button variant="outline" size="sm" asChild>
-                <Link
-                  href={`/api/v1/shipments/${carga.id}/romaneio`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FileText className="h-3.5 w-3.5" aria-hidden />
-                  {textos.romaneio}
-                </Link>
-              </Button>
-              {/* O romaneio é a folha de quem dirige; este é o documento de
-                  cada pedido, na ordem das paradas — o que o galpão separa.
-                  Mesma aba, de propósito: é o contrato do impresso de pedidos
-                  (tests/e2e/imprimir-pedidos-mesma-aba), e o visor do navegador
-                  é o destino. A página intermediária responde 307 no servidor. */}
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={`/app/pedidos/imprimir?carga=${carga.id}`}>
-                  <Receipt className="h-3.5 w-3.5" aria-hidden />
-                  {textos.imprimirPedidos}
-                </Link>
-              </Button>
-              {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (
-                <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
-              )}
-              {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-error-fg hover:bg-error-bg hover:text-error-fg"
-                  onClick={() => void excluirCarga()}
-                  aria-label={textos.excluirCarga}
-                  title={textos.excluirCarga}
-                >
-                  <Trash size={15} aria-hidden />
-                  <span className="hidden sm:inline">{textos.excluirCarga}</span>
-                </Button>
-              )}
+              {/* NO MÁXIMO DUAS AÇÕES NO CABEÇALHO. O resto mora no "…" —
+                  em 390 px cinco botões quebravam em duas linhas. A ação de
+                  adicionar pedido saiu daqui: vive no bloco "Adicionar pedidos". */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" aria-label={t("Mais ações")} className="min-h-11">
+                    <DotsThree size={16} aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {(carga.status === "montando" || carga.status === "em_rota") && (
+                    <DropdownMenuItem onSelect={abrirVeiculo}>
+                      <PencilSimple size={14} aria-hidden /> {t("Veículo")}
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link href={`/api/v1/shipments/${carga.id}/romaneio`} target="_blank" rel="noopener noreferrer">
+                      <FileText size={14} aria-hidden /> {textos.romaneio}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/app/pedidos/imprimir?carga=${carga.id}`}>
+                      <Receipt size={14} aria-hidden /> {textos.imprimirPedidos}
+                    </Link>
+                  </DropdownMenuItem>
+                  {podeExcluir && (carga.status === "montando" || carga.status === "em_rota") && (
+                    <DropdownMenuItem
+                      onSelect={() => void excluirCarga()}
+                      className="text-error-fg focus:text-error-fg"
+                    >
+                      <Trash size={14} aria-hidden /> {textos.excluirCarga}
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
 
-        {/* UM WORKBENCH, QUATRO ETAPAS. As âncoras ROLAM a mesma página —
-            não trocam de tela. O dono pediu explicitamente sem abas: o
-            operador precisa ver os pedidos, o mapa e o planejamento juntos. */}
-        <nav
-          aria-label={t("Etapas da expedição")}
-          className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5"
-        >
-          {(
-            [
-              ["etapa-pedidos", `1 ${t("Pedidos")}`],
-              ["etapa-mapa", `2 ${t("Mapa")}`],
-              ["etapa-publicar", `3 ${t("Publicar")}`],
-              ["etapa-fechamento", `4 ${t("Fechamento")}`],
-            ] as const
-          ).map(([id, rotulo]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => irParaEtapa(id)}
-              className="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-2.5 text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-accent/40 hover:text-text sm:text-sm"
-            >
+        {/* DOIS MODIOS, TRÊS BLOCOS. Cada âncora tem um destino DISTINTO:
+            montagem = carga / pedidos / saída; operação = próxima / mapa / fechamento. */}
+        <nav aria-label={t("Seções da expedição")} className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5">
+          {(modo === "montagem"
+            ? [["bloco-carga", t("O que já está na carga")], ["bloco-adicionar", t("Adicionar pedidos")], ["bloco-saida", t("Fechar e sair")]]
+            : [["bloco-proxima", t("Próxima parada")], ["bloco-mapa", t("Mapa e ordem")], ["bloco-fechamento", t("Fechamento")]]
+          ).map((par) => {
+            const [id, rotulo] = par as [string, string];
+            return (
+            <button key={id} type="button" onClick={() => irParaEtapa(id)}
+              className="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-2.5 text-xs font-medium whitespace-nowrap text-muted-foreground hover:border-accent/40 hover:text-text sm:text-sm">
               {rotulo}
             </button>
-          ))}
+            );
+          })}
           <Link
             href={`/app/expedicao/${cargaId}/motorista`}
             aria-label={textos.modoMotorista}
@@ -887,26 +877,16 @@ export function CargaClient({
           desktop: sem isso o último controle da lista podia ficar debaixo
           de um overlay (medido em 1440: "Escolher foto" em y=797 e os selos
           em y=799/836, na mesma faixa horizontal da área de conteúdo). */}
-      <section id="etapa-pedidos" aria-labelledby="titulo-etapa-pedidos" className="scroll-mt-44 space-y-3">
+      <section id={modo === "montagem" ? "bloco-carga" : "bloco-proxima"} aria-labelledby="titulo-bloco-principal" className="scroll-mt-44 space-y-3">
         <div>
-          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-            {t("Etapa 1")}
-          </p>
-          <h2 id="titulo-etapa-pedidos" className="text-base font-medium text-text">
-            {t("Pedidos e paradas")}
+          <h2 id="titulo-bloco-principal" className="text-base font-medium text-text">
+            {modo === "montagem" ? t("O que já está na carga") : t("Próxima parada")}
           </h2>
         </div>
-        {podeOperar && carga.status === "montando" && (
-          <PainelDePedidosDisponiveis
-            cargaId={cargaId}
-            podeOperar={podeOperar}
-            aoAdicionar={() => void recarregar()}
-          />
-        )}
         <>
           {/* O que a carga significa em trabalho e em dinheiro — uma faixa de
           instrumentos, não quatro cartões iguais. */}
-          <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4">
+          <div className={cn("grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs", modo === "montagem" ? "sm:grid-cols-2" : "2xl:grid-cols-4")}>
             <div className="border-r border-b border-border px-3.5 py-3 sm:border-b-0">
               <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                 {textos.paradasConcluidas}
@@ -948,6 +928,8 @@ export function CargaClient({
               </p>
             </div>
 
+            {modo === "operacao" && (
+              <>
             <div className="border-r border-border px-3.5 py-3">
               <p className="min-h-7 text-[10px] leading-tight font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                 {textos.aCobrar}
@@ -958,7 +940,9 @@ export function CargaClient({
               <p className="mt-2 text-[11px] text-text-subtle">
                 {totalPago > 0
                   ? `${t("já recebido")} ${comoMoeda(totalPago, "BRL")}`
-                  : t("nada recebido ainda")}
+                  : carga.status === "concluida"
+                    ? t("cobrança pendente")
+                    : t("nada recebido ainda")}
               </p>
             </div>
 
@@ -974,8 +958,31 @@ export function CargaClient({
                 {itens.length === 1 ? t("pedido embarcado") : t("pedidos embarcados")}
               </p>
             </div>
+              </>
+            )}
           </div>
         </>
+
+        {modo === "montagem" ? (
+          /* BLOCO 2 — o painel fica DEPOIS do que já está na carga e começa
+             recolhido: a primeira pergunta é "o que já tenho?", não o que falta
+             buscar (auditoria 71, P0-3). */
+          <details id="bloco-adicionar" className="scroll-mt-44 rounded-2xl border border-border bg-surface">
+            <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-3.5 py-2.5 text-sm font-medium text-text">
+              <Plus className="h-4 w-4" aria-hidden />
+              {t("Adicionar pedidos")}
+            </summary>
+            <div className="px-3.5 pb-3.5">
+              {podeOperar && (
+                <PainelDePedidosDisponiveis
+                  cargaId={cargaId}
+                  podeOperar={podeOperar}
+                  aoAdicionar={() => void recarregar()}
+                />
+              )}
+            </div>
+          </details>
+        ) : null}
 
         <div className="min-w-0 space-y-3">
           {/* O próximo passo em uma faixa, não em um cartão ao lado: é a
@@ -1000,10 +1007,10 @@ export function CargaClient({
             )}
             <div className="min-w-0 flex-1">
               <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
-                {t("Próximo passo")}
+                <span className="text-text">{t("Próximo passo")}</span>
               </p>
               <p className="text-sm font-semibold text-text">{passo.titulo}</p>
-              <p className="text-xs leading-relaxed text-muted-foreground">{passo.detalhe}</p>
+              <p className="text-xs leading-relaxed text-text">{passo.detalhe}</p>
             </div>
             {passo.acao && <div className="w-full shrink-0 sm:w-auto">{passo.acao}</div>}
           </div>
@@ -1140,10 +1147,13 @@ export function CargaClient({
                                     {t("Abrir no mapa")}
                                   </a>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 text-warning-fg">
+                                  <Link
+                                    href={`/app/pedidos/${i.order_id}`}
+                                    className="inline-flex items-center gap-1 font-medium text-accent-ink underline underline-offset-4"
+                                  >
                                     <MapPin size={13} aria-hidden />
-                                    {textos.semEndereco}
-                                  </span>
+                                    {textos.semEndereco} · {t("Corrigir endereço")}
+                                  </Link>
                                 )}
                                 {i.pago_cents > 0 && (
                                   <span className="text-muted-foreground">
@@ -1383,8 +1393,8 @@ export function CargaClient({
         </div>
       </section>
 
-      {/* ETAPA 2 + 3 — mapa, ordem sincronizada, planejamento e publicação. */}
-      <div id="etapa-publicar" className="scroll-mt-44">
+      {/* OPERAÇÃO — mapa e ordem no mesmo bloco; montagem —Publicar fica no Roteirizador. */}
+      <div id={modo === "montagem" ? "bloco-saida" : "bloco-mapa"} className="scroll-mt-44">
         <Roteirizador
           cargaId={cargaId}
           podeOperar={podeOperar}
@@ -1393,8 +1403,8 @@ export function CargaClient({
         />
       </div>
 
-      {/* ETAPA 4 — fechamento. */}
-      <div id="etapa-fechamento" className="scroll-mt-44 pb-24">
+      {/* FECHAMENTO — só na operação. */}
+      <div id="bloco-fechamento" className="scroll-mt-44 pb-24">
         <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
       </div>
 
