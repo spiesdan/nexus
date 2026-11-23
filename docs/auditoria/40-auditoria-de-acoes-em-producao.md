@@ -848,3 +848,28 @@ o CI reprova em `manifest-x-migrations.test.ts`. O G vai restaurar com **+1
 linha** — não se mergeia até o manifest voltar.
 
 **Nenhuma release nova hoje sem pedido do dono. Deploy é do dono.**
+
+
+## 42. 24/11/2026 — Release 1.65.1 (patch derivado) — policy set-based 0340
+
+O número veio de `.changes/`: **`nada_mudou`** em ambos os fragmentos
+(`conversas-rls-sargavel.md`, `e2e-multi-campanha-retomada.md`) ⇒
+**1.65.0 + patch = 1.65.1**, derivado por `pnpm release:conferir`, nunca digitado.
+PR oficial **#822** (App), tag **`v1.65.1`**. Congelamento aplicado antes do
+corte; D (workbench), F (catálogo PDF) e G (plano Stripe) **não interrompidos**.
+
+**Medição antes/depois da policy (0340):**
+
+| Medida | Antes | Depois |
+|---|---|---|
+| RLS em produção (2.162 conversas, 2.138 removidas pelo filtro) | **929 ms** | sem `Rows Removed by Filter` (verificação do dono) |
+| Plano local | `Seq Scan` / 26,5 ms | `Index Scan` / 11,8 ms |
+| Buffers | 897 | 707 |
+| p95 `/api/v1/conversations` (produção 1.65.0) | **3408 ms** | a medir no deploy |
+
+**Verificação pós-deploy exigida (segunda metade do P0-8):** `EXPLAIN` com
+claims em produção sem `Rows Removed by Filter` nas 2.138 linhas; p95 de
+`/api/v1/conversations` abaixo de **3408 ms**; e a ocorrência
+`plataforma.slo_estourado` **reafirma** (não fecha) se ainda acima de 800 ms —
+isso é esperado: a melhoria é de ordem de grandeza, não garantia de fechar o
+alvo. Deploy é do dono.
