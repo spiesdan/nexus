@@ -102,3 +102,6 @@ troca-de-organizacao-tem-volta.spec.ts
 vps-webhook-outbound-ssrf.spec.ts
 webhooks.spec.ts
 wizard-do-funcionario.spec.ts
+gps-sem-sinal.spec.ts
+fila-offline-retry-conflito.spec.ts
+cabine-mobile-workbench.spec.ts
