@@ -41,13 +41,13 @@ describe("lerBuscaDePedido", () => {
 describe("filtroOrDeBuscaDePedido", () => {
   it("procura o número exato junto com nome e documento", () => {
     expect(filtroOrDeBuscaDePedido("19405")).toBe(
-      "cliente_nome.ilike.%19405%,cliente_documento.ilike.%19405%,numero.eq.19405",
+      "cliente_nome.ilike.%19405%,cliente_documento.ilike.%19405%,numero.eq.19405,numero_mercos.eq.19405",
     );
   });
 
   it("`PED-19405` busca o número e o texto como digitado", () => {
     expect(filtroOrDeBuscaDePedido("PED-19405")).toBe(
-      "cliente_nome.ilike.%PED-19405%,cliente_documento.ilike.%PED-19405%,numero.eq.19405",
+      "cliente_nome.ilike.%PED-19405%,cliente_documento.ilike.%PED-19405%,numero.eq.19405,numero_mercos.eq.19405",
     );
   });
 
