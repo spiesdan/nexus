@@ -590,3 +590,14 @@ e lê o `EXIT` de lá: **sinal do observador ≠ estado do observado**. Timeout 
 não é timeout do deploy; conferir o artefato antes de declarar falha parcial.
 
 **Sem migration nova nesta versão** (rollback = refixar 1.62.2).
+
+
+## 31. 23/11/2026 — pré-deploy da 1.63.0 (preparado, NÃO executado)
+
+O deploy desta versão leva as **migrations 0335** (ordem e versão da rota na mesma
+transação) e **0336** (`rota_versao_confirmada` + `rota_confirmada_em` em
+`shipments`, escrita com CAS pelo aceite no aparelho), além do apêndice **0337**
+(orçamento de campanha e gasto de mídia lançado à mão). São apêndices idempotentes
+no `baseline.sql`; o `update.sh` reaplica o baseline inteiro. Rollback de imagem
+**não** reverte DDL — ver §30 e o runbook. **Deploy é do dono**, com backup,
+verificação e rollback.

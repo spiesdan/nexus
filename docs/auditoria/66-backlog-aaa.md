@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (23/11):** 14 `[x]` · 8 `[~]` · 6 `[!]` · 16 `[ ]` — 36 itens.
+> **Placar (23/11):** 14 `[x]` · 6 `[~]` · 4 `[!]` · 13 `[ ]` — 37 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -38,7 +38,7 @@
 | P1-15 | Android físico / iOS | `[!]` | **BLOQUEADO — dono** | iOS fora por decisão; Android real nunca executado | dispositivo + decisão de escopo |
 | P1-16 | Recontar inventário vivo (440 rotas hoje vs 419 em 18/11) com delta explicado | `[x]` | coordenação | **#767** → `0d0b4f45f`; inventário reconciliado | — |
 
-| P1-17 | Controle de gastos da campanha: orçamento de prospecção + verba Meta, simulação mínimo/esperado/máximo na criação e guard 80%/100% com override de gerente auditado | `[ ]` | F (depois da avulsa) | decisão do dono; reuso de `lib/prospeccao/custos.ts`, `uso.ts` (`estadoDoOrcamento`), `_config.tsx`, `grade.ts`, `motor.ts` (`custo_estimado_cents`) | ver aceite abaixo |
+| P1-17 | Controle de gastos da campanha: orçamento de prospecção + verba Meta, simulação mínimo/esperado/máximo na criação e guard 80%/100% com override de gerente auditado | `[x]` | F | **#772** → `35bf529d9`; simulação + guards 80%/100% + override auditado; gasto Meta manual | — |
 
 ### P1-17 — aceite e dependências
 
@@ -71,13 +71,34 @@
 | P1-19 | “Informações fiscais (NF-e)” no criador, separada de observações | `[x]` | F | **#763** → `0840cfa86`; informações fiscais no criador | — |
 | P1-20 | Formas de pagamento configuráveis (tabela + tela, forma × prazo, `tpag` só com fonte oficial) | `[x]` | F | **#764** → `7bd8a63a8`; formas de pagamento configuráveis | — |
 | P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[x]` | F | **#765** → `ac2d92738`; “Editar pedido” no lugar de adicionar produto | — |
-| P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[ ]` | G | achado do passe de rotas | guard + teste de regressão |
+| P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[x]` | G | **#776** → `a9cb4015e`; coordenada preservada | — |
 | P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[~]` | G | junto do P0-5 | mesma regra no cliente e no servidor |
 | P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
 | P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[ ]` | D | passe de inbox | componente + prova de estado |
 | P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[ ]` | D | `lib/inbox/handoff.ts` | expor no painel com teste |
 | P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[ ]` | D | passe de dashboard | medir e aplicar |
 | P2-4 | Consolidar `PROMPT-EXPEDICAO.md` no repo e linkar na auditoria | `[x]` | coordenação | `PROMPT-EXPEDICAO.md` na raiz (#761 → `7b70052b`) e linkado neste doc |
+
+| P1-28 | Multi-campanha + retomada 48h: empresa em outra campanha entra na nova; nunca contatada recebe template Meta, já contatada recebe mensagem de retomada; follow-up +48h uma vez, idempotente, cancelado em resposta/opt-out, no ritmo/rotação de `disparo.ts` | `[ ]` | F (frente da fila) | decisão do dono; causa raiz `prospect_em_outra_campanha` em `baseline.sql:22109-22122` (desde 0277) | ver aceite abaixo |
+
+### P1-28 — dependências e aceite
+
+- **Causa raiz:** trigger `prospect_em_outra_campanha` (`baseline.sql:22109-22122`,
+  desde 0277) impede a empresa de pertencer a duas campanhas. Migration de
+  membresia substitui a exclusividade por coexistência — nada destrutivo.
+- **Dependências:** (1) **template de retomada aprovado na Meta** — fora da janela
+  de 24h o texto livre é rejeitado (131047), então a retomada **não dispara sem
+  template aprovado**; (2) migration de membresia multi-campanha; (3)
+  `prospecting_sends` continua com **1 envio por campanha**; (4) texto vem de
+  **preset configurável pela marca do tenant**, nunca hardcoded.
+- **Aceite:** “Ver empresas” mostra nunca-contatada → template Meta da campanha;
+  já-contatada → retomada. Follow-up automático **+48h**, **uma vez**,
+  **idempotente**, cancelado se houver resposta ou opt-out, usando ritmo e
+  rotação de `disparo.ts`. Sem template aprovado, o fluxo fica pronto e é
+  declarado **“aguardando aprovação”** — nunca marcado como disparado.
+- **Próxima release:** entra na **próxima** janela, por decisão do dono ao fechar
+  o lote da 1.63.0; o código pode ser mergeado antes, mas a feature só é anunciada
+  quando o template estiver aprovado.
 
 ## Fonte de requisitos da Expedição
 
