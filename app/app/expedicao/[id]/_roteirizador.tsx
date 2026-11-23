@@ -37,6 +37,7 @@ import { ArrowRight, CaretDown, CaretUp, MapPin, PaperPlaneTilt } from "@/lib/ui
 import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
+import { estadoDoGps } from "@/lib/rotas/gps-estado";
 import { PainelRecuperacao } from "./_recuperacao";
 
 export interface ParadaRotaApi {
@@ -215,6 +216,7 @@ export interface RotaCarregada {
   };
   paradas: ParadaRotaApi[];
   ultima_posicao: { latitude: number; longitude: number; em: string } | null;
+  gps_sem_sinal_minutos?: number;
   distribuicao?: DistribuicaoApi | null;
   historico_rotas?: HistoricoRotaApi[];
 }
@@ -329,6 +331,10 @@ export function Roteirizador({
   const [referenciaEntrada, setReferenciaEntrada] = React.useState("");
   const [rastro, setRastro] = React.useState<[number, number][]>([]);
   const [motorista, setMotorista] = React.useState<{ lat: number; lng: number } | null>(null);
+  /** Instante da última posição recebida — a tela nunca chama isto de "online". */
+  const [ultimaPosicaoEm, setUltimaPosicaoEm] = React.useState<string | null>(null);
+  const [agora, setAgora] = React.useState(() => Date.now());
+  const [limiarGps, setLimiarGps] = React.useState(15);
   // ── Distribuição por veículo (F5/VRPTW) ──────────────────────────────────
   const [frota, setFrota] = React.useState<{
     veiculos: VeiculoDaFrotaApi[];
@@ -384,8 +390,14 @@ export function Roteirizador({
       );
       setRetornar(d.carga.retornar_origem);
       setTempoParada(d.carga.tempo_parada_min);
-      if (d.ultima_posicao)
+      if (d.ultima_posicao) {
         setMotorista({ lat: d.ultima_posicao.latitude, lng: d.ultima_posicao.longitude });
+        setUltimaPosicaoEm(d.ultima_posicao.em);
+        if (d.gps_sem_sinal_minutos) setLimiarGps(d.gps_sem_sinal_minutos);
+      } else {
+        setMotorista(null);
+        setUltimaPosicaoEm(null);
+      }
       return d;
     } catch (e) {
       showApiError(e);
@@ -397,6 +409,11 @@ export function Roteirizador({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void recarregar();
   }, [recarregar]);
+
+  React.useEffect(() => {
+    const id = window.setInterval(() => setAgora(Date.now()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // Frota: uma vez, para o painel de distribuição saber o que pode alocar.
   React.useEffect(() => {
@@ -1508,6 +1525,15 @@ export function Roteirizador({
           primeira dobra é trabalho da fatia 2 (ação primária e ordem sincronizada),
           não de encolher o mapa abaixo do que a tela precisa. */}
       <div className="min-w-0">
+        <p data-testid="gps-estado" className="mb-2 text-xs text-text-muted">
+          {estadoDoGps(
+            ultimaPosicaoEm,
+            agora,
+            limiarGps,
+            (iso) => new Date(iso).toLocaleTimeString(tagDeIdioma, { hour: "2-digit", minute: "2-digit" }),
+            t,
+          ) ?? t("Sem posição recebida do motorista.")}
+        </p>
         <MapaRota
           altura="min(50vh, 520px)"
           paradas={pontosMapa}

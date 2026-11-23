@@ -1645,6 +1645,9 @@ esac
   # estas três linhas no .env e roda o update — o install as preserva.
   envq GEOCODER_URL "${GEOCODER_URL:-https://nominatim.openstreetmap.org/search}"
   envq GEOCODER_MIN_INTERVALO_MS "${GEOCODER_MIN_INTERVALO_MS:-1100}"
+  # Autocomplete (Photon) e o limiar do indicador de GPS do motorista (0336/GPS).
+  envq PHOTON_URL "${PHOTON_URL:-https://photon.komoot.io}"
+  envq GPS_SEM_SINAL_MINUTOS "${GPS_SEM_SINAL_MINUTOS:-15}"
   envq OSRM_URL "${OSRM_URL:-https://router.project-osrm.org}"
   envq WAHA_API_KEY "$WAHA_API_KEY"
   envq WAHA_API_KEY_SHA512 "$WAHA_API_KEY_SHA512"
