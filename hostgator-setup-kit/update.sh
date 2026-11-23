@@ -219,11 +219,16 @@ if [ -f supabase/baseline.sql ]; then
     "create extension if not exists vector with schema public; create extension if not exists citext with schema public; create extension if not exists pg_trgm with schema public;" \
     >/dev/null 2>&1 || true
 
+  # `-1` (single transaction) é o conserto do P0 de 22/11: o aborto no 0334 da
+  # 1.63.0 deixou a 0335 COMMITADA — o psql seguia statement por statement e o
+  # schema ficou à frente do código sem ninguém saber. Com `-1`, QUALQUER erro
+  # (inclusive o benigno) faz ROLLBACK de tudo: falha = nada aplicado, e a
+  # mensagem continua apontando `psql:<stdin>:<linha>: ERROR: ...`.
   # O arquivo vai por `-f -` (stdin) em vez de bind mount: `psql_run` decide se
   # o comando roda dentro do container do banco ou num container efêmero, e só
   # no segundo caso um bind mount teria sentido. Ler do stdin funciona nos dois
   # — e é o caminho que o próprio `_common.sh` já usa.
-  raw="$(cat "$PROJECT_DIR/supabase/baseline.sql" | psql_run -f - 2>&1 || true)"
+  raw="$(cat "$PROJECT_DIR/supabase/baseline.sql" | psql_run -1 -f - 2>&1 || true)"
 
   # Erros benignos ao re-aplicar sobre uma base existente:
   benign='already exists|multiple primary keys|multiple default values|is already a member|already a partition'

@@ -28,11 +28,11 @@ espera() { # espera <descrição> <condição já avaliada como string "ok">
 
 # ── cenário: <nome> <resposta_do_baseline> <objetos_faltando> <tem_baseline> ──
 monta() {
-  local nome="$1" resposta="$2" faltando="$3" tem_baseline="$4"
+  local nome="$1" resposta="$2" faltando="$3" tem_baseline="$4" conteudo="${5:--- baseline de teste}"
   local dir="$TMP/$nome"
   mkdir -p "$dir/scripts" "$dir/hostgator-setup-kit" "$dir/supabase" "$dir/bin"
   cp "$DEPLOY" "$dir/scripts/deploy.sh"
-  [ "$tem_baseline" = "sim" ] && echo "-- baseline de teste" > "$dir/supabase/baseline.sql"
+  [ "$tem_baseline" = "sim" ] && printf '%s\n' "$conteudo" > "$dir/supabase/baseline.sql"
   printf 'SUPABASE_DB_URL=postgres://duble/db\n' > "$dir/.env"
 
   cat > "$dir/hostgator-setup-kit/_common.sh" <<'STUB'
@@ -54,12 +54,21 @@ psql_run() {
     if [ "$a" = "-c" ]; then tem_c=1; fi
   done
   if [ "$tem_arquivo" = 1 ]; then
-    cat >/dev/null
+    local sql; sql="$(cat)"
+    : > "$PWD/objetos-faltando"
+    if printf '%s\n' "$sql" | grep -q 'ERRO_NO_MEIO'; then
+      printf 'psql:<stdin>:42: ERROR: erro injetado no meio\n'
+      printf '%s' 'messages,contacts' > "$PWD/objetos-faltando"
+    fi
     printf '%s\n' "${RESPOSTA_BASELINE:-}"
     return 0
   fi
   if [ "$tem_c" = 1 ]; then
-    printf '%s' "${FALTANDO:-}"
+    if [ -s "$PWD/objetos-faltando" ]; then
+      printf '%s' "$(cat "$PWD/objetos-faltando")"
+    else
+      printf '%s' "${FALTANDO:-}"
+    fi
   fi
   return 0
 }
@@ -93,6 +102,10 @@ espera "caminho feliz sai 0" "$([ "$rc" = 0 ] && echo ok || echo nao)"
 log="$d/dublê.log"
 espera "baseline vai por psql_run (não por pnpm)" \
   "$(grep -q 'psql .*-f' "$log" && ! grep -q 'pnpm db:migrate' "$log" && echo ok || echo nao)"
+espera "schema roda em TRANSAÇÃO ÚNICA (-1)" \
+  "$(grep -q 'psql -1 -f' "$log" && echo ok || echo nao)"
+espera "update.sh também usa -1 no mesmo passo" \
+  "$(grep -q 'psql_run -1 -f -' "$RAIZ/hostgator-setup-kit/update.sh" && echo ok || echo nao)"
 linha_psql="$(grep -n 'psql .*-f' "$log" | head -1 | cut -d: -f1)"
 linha_up="$(grep -n 'dc .*up -d' "$log" | head -1 | cut -d: -f1)"
 espera "schema aplicado ANTES de subir container" \
@@ -137,6 +150,18 @@ d="$(monta benigno '' '' sim)"
 rc=$?
 espera "'already exists' é ruído esperado e o deploy segue" \
   "$([ "$rc" = 0 ] && echo ok || echo nao)"
+
+# ── 6. erro no meio: transação inteira desfeita, objeto nenhum ──────────────
+d="$(monta meio '' '' sim 'create table antes(); -- ERRO_NO_MEIO
+create table depois();')"
+( cd "$d" && PATH="$d/bin:$PATH" NEXUS_IMAGE="ghcr.io/exemplo/nexus:v9.9.9" \
+  bash scripts/deploy.sh > "$d/saida.txt" 2>&1 )
+rc=$?
+espera "erro no meio do baseline derruba o deploy" "$([ "$rc" != 0 ] && echo ok || echo nao)"
+espera "nada aplicado: o erro interrompe antes de subir e os objetos faltam" \
+  "$(grep -q 'schema FALHOU' "$d/saida.txt" && grep -q 'messages,contacts' "$d/objetos-faltando" && echo ok || echo nao)"
+espera "nenhum container sobe com o schema desfeito" \
+  "$(grep -q 'up -d' "$d/dublê.log" && echo nao || echo ok)"
 
 printf '\n'
 if [ "$FALHAS" = 0 ]; then
