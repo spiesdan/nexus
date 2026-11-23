@@ -11,6 +11,7 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PainelDePedidosDisponiveis } from "./_painel-pedidos";
 import {
   Dialog,
   DialogContent,
@@ -84,16 +85,6 @@ interface Textos {
   motivo: string;
   confirmar: string;
   cancelar: string;
-}
-
-/** Um pedido da fila de embarque, para o diálogo "Adicionar pedido". */
-interface Elegivel {
-  id: string;
-  numero: number;
-  cliente_nome: string;
-  cidade: string | null;
-  total_cents: number;
-  status: string;
 }
 
 interface Detalhe {
@@ -383,62 +374,14 @@ export function CargaClient({
   // Placa/veículo/motorista e "mais um pedido na doca" são a mesma pergunta:
   // "a carga ainda pode mudar?". A resposta é o status `montando` — depois que
   // o caminhão saiu, a lista de paradas é a que o motorista já recebeu.
-  const [addAberto, setAddAberto] = React.useState(false);
-  const [elegiveis, setElegiveis] = React.useState<Elegivel[] | null>(null);
-  const [buscaElegivel, setBuscaElegivel] = React.useState("");
-  const [selecionados, setSelecionados] = React.useState<Set<string>>(new Set());
-  const [salvandoAdd, setSalvandoAdd] = React.useState(false);
-
   const [veiculoAberto, setVeiculoAberto] = React.useState(false);
   const [placa, setPlaca] = React.useState("");
   const [veiculoTipo, setVeiculoTipo] = React.useState("");
   const [motoristaNome, setMotoristaNome] = React.useState("");
   const [salvandoVeiculo, setSalvandoVeiculo] = React.useState(false);
 
-  async function abrirAdicionar() {
-    setAddAberto(true);
-    setBuscaElegivel("");
-    setSelecionados(new Set());
-    setElegiveis(null);
-    try {
-      const corpo = await apiClient.get<{ data: { pedidos: Elegivel[] } }>(
-        `/api/v1/shipments/${cargaId}/orders`,
-      );
-      setElegiveis(corpo?.data?.pedidos ?? []);
-    } catch (e) {
-      setElegiveis([]);
-      showApiError(e);
-    }
-  }
-
-  function alternarSelecionado(id: string) {
-    setSelecionados((atual) => {
-      const proximo = new Set(atual);
-      if (proximo.has(id)) proximo.delete(id);
-      else proximo.add(id);
-      return proximo;
-    });
-  }
-
-  async function adicionarPedidos() {
-    if (selecionados.size === 0) return;
-    setSalvandoAdd(true);
-    try {
-      const res = await apiClient.post<{ data: { adicionados: unknown[] } }>(
-        `/api/v1/shipments/${cargaId}/orders`,
-        { order_ids: [...selecionados] },
-      );
-      const quantos = res?.data?.adicionados?.length ?? selecionados.size;
-      toast.success(
-        quantos === 1 ? t("Pedido posto na carga.") : `${quantos} ${t("pedidos postos na carga.")}`,
-      );
-      setAddAberto(false);
-      await recarregar();
-    } catch (e) {
-      showApiError(e);
-    } finally {
-      setSalvandoAdd(false);
-    }
+  function irParaEtapa(id: string) {
+    rolarPara(document.getElementById(id), { block: "start" });
   }
 
   function abrirVeiculo() {
@@ -539,31 +482,15 @@ export function CargaClient({
             <span className="text-sm text-muted-foreground">{t("Carregando a carga…")}</span>
           </div>
 
-          <nav
-            aria-label={t("Seções da carga")}
-            className="mt-2 flex items-center gap-0.5 overflow-x-auto border-t border-border"
-          >
-            {(
-              [
-                ["paradas", t("Paradas")],
-                ["rota", textos.rota],
-                ["fechamento", t("Fechamento")],
-              ] as const
-            ).map(([chave, rotulo]) => (
-              <span
-                key={chave}
-                aria-current={secao === chave ? "page" : undefined}
-                className={cn(
-                  "-mb-px inline-flex shrink-0 items-center border-b-2 px-2.5 py-2 text-xs font-medium whitespace-nowrap sm:text-sm",
-                  secao === chave
-                    ? "border-accent text-text"
-                    : "border-transparent text-muted-foreground",
-                )}
-              >
-                {rotulo}
-              </span>
-            ))}
-          </nav>
+          <div className="mt-2 flex min-h-11 items-center gap-2 overflow-x-auto border-t border-border text-xs text-muted-foreground">
+            <span>1 {t("Pedidos")}</span>
+            <span aria-hidden>·</span>
+            <span>2 {t("Mapa")}</span>
+            <span aria-hidden>·</span>
+            <span>3 {t("Publicar")}</span>
+            <span aria-hidden>·</span>
+            <span>4 {t("Fechamento")}</span>
+          </div>
         </div>
 
         <div className="space-y-4 p-4 sm:p-6">
@@ -863,7 +790,7 @@ export function CargaClient({
                 </Button>
               )}
               {podeOperar && carga.status === "montando" && (
-                <Button variant="outline" size="sm" onClick={() => void abrirAdicionar()}>
+                <Button variant="outline" size="sm" onClick={() => irParaEtapa("etapa-pedidos")}>
                   <Plus className="h-3.5 w-3.5" aria-hidden />
                   {t("Adicionar pedido")}
                 </Button>
@@ -915,42 +842,30 @@ export function CargaClient({
           </div>
         </div>
 
-        {/* Cada tarefa tem endereço: o clique NAVEGA, não rola. A aba ativa
-            é marcada por `aria-current`, que também é o que o leitor de tela
-            anuncia — cor sozinha não diz onde a pessoa está. */}
+        {/* UM WORKBENCH, QUATRO ETAPAS. As âncoras ROLAM a mesma página —
+            não trocam de tela. O dono pediu explicitamente sem abas: o
+            operador precisa ver os pedidos, o mapa e o planejamento juntos. */}
         <nav
-          aria-label={t("Seções da carga")}
+          aria-label={t("Etapas da expedição")}
           className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5"
         >
           {(
             [
-              ["paradas", t("Paradas"), itens.length],
-              ["rota", textos.rota, null],
-              ["fechamento", t("Fechamento"), null],
+              ["etapa-pedidos", `1 ${t("Pedidos")}`],
+              ["etapa-mapa", `2 ${t("Mapa")}`],
+              ["etapa-publicar", `3 ${t("Publicar")}`],
+              ["etapa-fechamento", `4 ${t("Fechamento")}`],
             ] as const
-          ).map(([chave, rotulo, contagem]) => {
-            const ativa = secao === chave;
-            return (
-              <Link
-                key={chave}
-                href={`/app/expedicao/${cargaId}${chave === "paradas" ? "" : `/${chave}`}`}
-                aria-current={ativa ? "page" : undefined}
-                className={cn(
-                  "-mb-px inline-flex shrink-0 items-center border-b-2 px-2.5 py-2 text-xs font-medium whitespace-nowrap transition-colors sm:text-sm",
-                  ativa
-                    ? "border-accent text-text"
-                    : "border-transparent text-muted-foreground hover:border-accent/40 hover:text-text",
-                )}
-              >
-                {rotulo}
-                {contagem != null && (
-                  <span className="ml-1.5 text-[11px] text-text-subtle tabular-nums">
-                    {contagem}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          ).map(([id, rotulo]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => irParaEtapa(id)}
+              className="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-2.5 text-xs font-medium whitespace-nowrap text-muted-foreground transition-colors hover:border-accent/40 hover:text-text sm:text-sm"
+            >
+              {rotulo}
+            </button>
+          ))}
           <Link
             href={`/app/expedicao/${cargaId}/motorista`}
             aria-label={textos.modoMotorista}
@@ -966,7 +881,28 @@ export function CargaClient({
         </nav>
       </div>
 
-      {secao === "paradas" && (
+      {/* ETAPA 1 — pedidos disponíveis e paradas da carga. */}
+      {/* `pb-24` no fim do workbench dá folga para a barra inferior do
+          navegador no celular e para os selos do rodapé da sidebar no
+          desktop: sem isso o último controle da lista podia ficar debaixo
+          de um overlay (medido em 1440: "Escolher foto" em y=797 e os selos
+          em y=799/836, na mesma faixa horizontal da área de conteúdo). */}
+      <section id="etapa-pedidos" aria-labelledby="titulo-etapa-pedidos" className="scroll-mt-44 space-y-3">
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+            {t("Etapa 1")}
+          </p>
+          <h2 id="titulo-etapa-pedidos" className="text-base font-medium text-text">
+            {t("Pedidos e paradas")}
+          </h2>
+        </div>
+        {podeOperar && carga.status === "montando" && (
+          <PainelDePedidosDisponiveis
+            cargaId={cargaId}
+            podeOperar={podeOperar}
+            aoAdicionar={() => void recarregar()}
+          />
+        )}
         <>
           {/* O que a carga significa em trabalho e em dinheiro — uma faixa de
           instrumentos, não quatro cartões iguais. */}
@@ -1040,9 +976,7 @@ export function CargaClient({
             </div>
           </div>
         </>
-      )}
 
-      {secao === "paradas" && (
         <div className="min-w-0 space-y-3">
           {/* O próximo passo em uma faixa, não em um cartão ao lado: é a
               primeira frase que a operação precisa ler, e não um painel. */}
@@ -1447,103 +1381,22 @@ export function CargaClient({
             )}
           </section>
         </div>
-      )}
+      </section>
 
-      {secao === "rota" && (
-        <Roteirizador cargaId={cargaId} podeOperar={podeOperar} aoMudar={() => void recarregar()} />
-      )}
+      {/* ETAPA 2 + 3 — mapa, ordem sincronizada, planejamento e publicação. */}
+      <div id="etapa-publicar" className="scroll-mt-44">
+        <Roteirizador
+          cargaId={cargaId}
+          podeOperar={podeOperar}
+          aoMudar={() => void recarregar()}
+          aoTrocarVeiculo={abrirVeiculo}
+        />
+      </div>
 
-      {secao === "fechamento" && <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />}
-
-      {/* ADICIONAR PEDIDO — a fila de embarque sem os que já estão em alguma
-          carga. Busca e seleção múltipla: a doca costuma pôr mais de um. */}
-      <Dialog open={addAberto} onOpenChange={setAddAberto}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>{t("Adicionar pedido à carga")}</DialogTitle>
-            <DialogDescription>
-              {t("Só pedido aprovado, concluído ou faturado que ainda não está em outra carga.")}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Input
-              value={buscaElegivel}
-              onChange={(e) => setBuscaElegivel(e.target.value)}
-              placeholder={t("Buscar por número ou cliente…")}
-              aria-label={t("Buscar pedido")}
-            />
-            <div className="max-h-72 overflow-y-auto rounded-lg border border-border">
-              {elegiveis === null ? (
-                <p className="p-4 text-sm text-muted-foreground">{t("Carregando…")}</p>
-              ) : (
-                (() => {
-                  const termo = buscaElegivel.trim().toLowerCase();
-                  const lista = elegiveis.filter(
-                    (p) =>
-                      termo === "" ||
-                      String(p.numero).includes(termo) ||
-                      (p.cliente_nome ?? "").toLowerCase().includes(termo) ||
-                      (p.cidade ?? "").toLowerCase().includes(termo),
-                  );
-                  if (lista.length === 0) {
-                    return (
-                      <p className="p-4 text-sm text-muted-foreground">
-                        {t("Nenhum pedido aguardando embarque.")}
-                      </p>
-                    );
-                  }
-                  return (
-                    <ul className="divide-y divide-border">
-                      {lista.map((p) => (
-                        <li key={p.id}>
-                          <label className="flex cursor-pointer items-start gap-3 p-2.5 hover:bg-muted/40">
-                            <input
-                              type="checkbox"
-                              className="mt-1"
-                              checked={selecionados.has(p.id)}
-                              onChange={() => alternarSelecionado(p.id)}
-                            />
-                            <span className="min-w-0 flex-1">
-                              <span className="flex items-baseline justify-between gap-2">
-                                <span className="truncate text-sm font-medium text-text">
-                                  {numeroDoPedido(p.numero)} · {p.cliente_nome}
-                                </span>
-                                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                                  {comoMoeda(p.total_cents, "BRL")}
-                                </span>
-                              </span>
-                              <span className="block truncate text-xs text-muted-foreground">
-                                {p.cidade ?? t("Cidade não informada")}
-                              </span>
-                            </span>
-                          </label>
-                        </li>
-                      ))}
-                    </ul>
-                  );
-                })()
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setAddAberto(false)}>
-              {t("Cancelar")}
-            </Button>
-            <Button
-              onClick={() => void adicionarPedidos()}
-              disabled={salvandoAdd || selecionados.size === 0}
-            >
-              {salvandoAdd
-                ? t("Adicionando…")
-                : selecionados.size === 1
-                  ? t("Adicionar 1 pedido")
-                  : `${t("Adicionar")} ${selecionados.size} ${t("pedidos")}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* ETAPA 4 — fechamento. */}
+      <div id="etapa-fechamento" className="scroll-mt-44 pb-24">
+        <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
+      </div>
 
       {/* VEÍCULO E MOTORISTA — o cabeçalho mostra "Placa · tipo · nome" e até
           aqui não havia onde corrigir: a carga nascia com o que foi digitado na

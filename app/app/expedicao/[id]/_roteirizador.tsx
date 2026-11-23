@@ -35,6 +35,7 @@ import {
 import { createClient } from "@/lib/supabase/browser";
 import { ArrowRight, CaretDown, CaretUp, MapPin, PaperPlaneTilt } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+import { numeroDaCarga } from "@/lib/schemas/expedicao";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 import { estadoDoGps } from "@/lib/rotas/gps-estado";
@@ -299,10 +300,12 @@ export function Roteirizador({
   cargaId,
   podeOperar,
   aoMudar,
+  aoTrocarVeiculo,
 }: {
   cargaId: string;
   podeOperar: boolean;
   aoMudar: () => void;
+  aoTrocarVeiculo?: () => void;
 }) {
   const t = useT();
   // O histórico de rotas mostra data e hora: o formato tem de seguir o idioma
@@ -323,15 +326,11 @@ export function Roteirizador({
    */
   const [erroGeo, setErroGeo] = React.useState<string | null>(null);
   /**
-   * WORKBENCH MOBILE — uma decisão, três áreas.
-   *
-   * No celular o mapa de 50vh empurrava a ordem de entrega para baixo da dobra
-   * (medido em 390 px: h1 e 8 ações, depois 422 px de mapa antes da lista). A
-   * aba primária é "Pedidos": é onde se trabalha. O estado vive aqui e é
-   * compartilhado pelas três áreas; em `lg` tudo continua visível.
+   * WORKBENCH SEM ABAS. No celular o MAPA é um bloco recolhível: a lista vem
+   * primeiro e o mapa abre só quando a pessoa pede. Em `lg` ele está sempre
+   * aberto e grande — o estado do celular não esconde o mapa no desktop.
    */
-  const [abaMobile, setAbaMobile] = React.useState<"pedidos" | "mapa" | "planejamento">("pedidos");
-  const visAba = (aba: typeof abaMobile) => (abaMobile === aba ? "block" : "hidden lg:block");
+  const [mapaAberto, setMapaAberto] = React.useState(false);
 
   /** Parada compartilhada entre a lista e o mapa (P1-3): um clique destaca os dois. */
   const [paradaSelecionada, setParadaSelecionada] = React.useState<string | null>(null);
@@ -1284,6 +1283,25 @@ export function Roteirizador({
     setProposta(null);
   }
 
+  /**
+   * DESCARTAR PROPOSTA — volta à ordem e aos ajustes SALVOS sem tocar nos
+   * pedidos. Não chama a API: a proposta é sudório local, e o usuário precisa
+   * poder desistir dela sem efeito operacional (prompt §5).
+   */
+  function descartarProposta() {
+    if (!rota) return;
+    setOrdem(ordemSalva);
+    setProposta(null);
+    setPropostaMulti(null);
+    setRetornar(rota.carga.retornar_origem);
+    setTempoParada(rota.carga.tempo_parada_min);
+    setOrigemTexto(rota.carga.origem_endereco ?? "");
+    const confirmada = rota.distribuicao?.veiculos ?? [];
+    setAtribuicao(Object.fromEntries(confirmada.flatMap((v) => v.paradas.map((c) => [c, v.veiculo_id ?? ""]))));
+    setSelecionados(confirmada.map((v) => v.veiculo_id).filter((v): v is string => Boolean(v)));
+    toast.success(t("Proposta descartada. A ordem salva voltou para a tela."));
+  }
+
   /** `destino` é o id do DESTINO (0308) — ou o contato, em carga legada. */
   function alternarMarcar(destino: string) {
     const proximo = marcarPara === destino ? null : destino;
@@ -1404,7 +1422,7 @@ export function Roteirizador({
                     : t("Ordem aproximada por distância em linha reta.")
                   : t("Nenhum cálculo aplicado ainda.")}
                 {selecionados.length > 0
-                  ? ` ${t("Distribuição com OR-Tools: respeita capacidade e jornada.")}`
+                  ? ` ${t("A distribuição por veículo respeita capacidade e jornada cadastradas.")}`
                   : ""}
               </p>
             </details>
@@ -1581,44 +1599,20 @@ export function Roteirizador({
           o piso: 50vh, com o teto em 520px (antes 640px). Trazer a lista para a
           primeira dobra é trabalho da fatia 2 (ação primária e ordem sincronizada),
           não de encolher o mapa abaixo do que a tela precisa. */}
-      {/*
-        ABAS DO WORKBENCH (celular). `role=tab` + `aria-selected` dizem o estado;
-        `aria-current` atende a régua da casa e `min-h-11` dá 44 px de alvo.
-      */}
-      <div
-        role="tablist"
-        aria-label={t("Áreas da rota")}
-        className="mb-3 flex gap-1 rounded-xl border border-border bg-stage-2/60 p-1 lg:hidden"
+      {/* BLOCO COLAPSÁVEL DO MAPA (celular). A lista vem primeiro; o mapa
+          abre só com este botão — 44 px de alvo, `aria-expanded` e foco. */}
+      <button
+        type="button"
+        onClick={() => setMapaAberto((v) => !v)}
+        aria-expanded={mapaAberto}
+        aria-controls="etapa-mapa"
+        className="mb-2 inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-text lg:hidden"
       >
-        {(
-          [
-            ["pedidos", t("Pedidos")],
-            ["mapa", t("Mapa")],
-            // Carga concluída não tem planejamento — não oferecer aba vazia.
-            ...(editavel ? ([["planejamento", t("Planejamento")]] as const) : []),
-          ] as const
-        ).map(([chave, rotulo]) => {
-          const ativa = abaMobile === chave;
-          return (
-            <button
-              key={chave}
-              type="button"
-              role="tab"
-              aria-selected={ativa}
-              aria-current={ativa ? "page" : undefined}
-              aria-controls={chave === "planejamento" ? "aba-planejamento" : `aba-${chave}`}
-              onClick={() => setAbaMobile(chave)}
-              className={`min-h-11 flex-1 rounded-lg px-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink ${
-                ativa ? "bg-accent-soft text-accent-ink" : "text-muted-foreground"
-              }`}
-            >
-              {rotulo}
-            </button>
-          );
-        })}
-      </div>
+        <MapPin className="h-4 w-4" aria-hidden />
+        {mapaAberto ? t("Fechar mapa") : t("Abrir mapa")}
+      </button>
 
-      <div id="aba-mapa" className={`min-w-0 ${visAba("mapa")}`}>
+      <div id="etapa-mapa" className={`min-w-0 scroll-mt-44 ${mapaAberto ? "block" : "hidden lg:block"}`}>
         <p data-testid="gps-estado" className="mb-2 text-xs text-text-muted">
           {estadoDoGps(
             ultimaPosicaoEm,
@@ -1772,7 +1766,7 @@ export function Roteirizador({
           celular empilham na ordem em que se usa. */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {editavel && (
-          <div id="aba-planejamento" className={`min-w-0 space-y-4 ${visAba("planejamento")}`}>
+          <div id="etapa-planejamento" className="min-w-0 scroll-mt-44 space-y-4">
             <Card className="min-w-0 overflow-hidden p-0">
               <header className="flex items-center justify-between gap-2 border-b border-border bg-stage-2/60 px-3.5 py-2.5">
                 <div className="min-w-0">
@@ -1781,10 +1775,127 @@ export function Roteirizador({
                   </p>
                   <p className="text-sm font-medium text-text">{t("Planejar rota")}</p>
                 </div>
-                <Badge variant={proposta ? "info" : "neutral"}>
-                  {proposta ? t("Não salva") : t("Salva")}
-                </Badge>
+                <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  <Badge variant={proposta || propostaMulti ? "info" : "neutral"}>
+                    {proposta || propostaMulti ? t("Ordem sugerida") : t("Ordem manual")}
+                  </Badge>
+                  <Badge variant={proposta || propostaMulti || ordemMudou || configMudou ? "warning" : "success"}>
+                    {proposta || propostaMulti || ordemMudou || configMudou
+                      ? t("Não salva")
+                      : t("Salva")}
+                  </Badge>
+                </div>
               </header>
+
+              {/* RESUMO DO PLANEJAMENTO — identificação, gente, quantidade,
+                  sequência, cálculo com FONTE e avisos. Nenhum número aparece
+                  sem dizer de onde veio (prompt §5). */}
+              <div className="space-y-2 border-b border-border px-3.5 py-3 text-xs">
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2">
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Rota")}
+                    </dt>
+                    <dd className="text-text">{numeroDaCarga(rota.carga.numero)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Motorista e veículo")}
+                    </dt>
+                    <dd className="truncate text-text">
+                      {rota.carga.motorista_nome ?? t("Sem motorista")}
+                      {rota.carga.placa ? ` · ${rota.carga.placa}` : ""}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Pedidos e paradas")}
+                    </dt>
+                    <dd className="text-text tabular-nums">
+                      {rota.itens?.length ?? 0} {t("pedidos")} · {paradasOrdenadas.length}{" "}
+                      {t("paradas")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Sequência")}
+                    </dt>
+                    <dd className="text-text">
+                      {proposta || propostaMulti || ordemMudou ? t("Em revisão") : t("Salva")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Distância e tempo")}
+                    </dt>
+                    <dd className="text-text tabular-nums">
+                      {distanciaM != null ? `${formatarDistancia(distanciaM)} · ` : ""}
+                      {duracaoTotalS != null ? formatarDuracao(duracaoTotalS) : t("não calculados")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
+                      {t("Fonte do cálculo")}
+                    </dt>
+                    <dd className="text-text">
+                      {provedorRota
+                        ? `${provedorRota.nome} · ${rota.carga.rota_em ? new Date(rota.carga.rota_em).toLocaleString(tagDeIdioma) : t("sem data")}`
+                        : t("Sem cálculo aplicado")}
+                    </dd>
+                  </div>
+                </dl>
+
+                {propostaMulti && veiculosAtivos.some((v) => v.capacidade_kg > 0 || v.capacidade_m3 > 0) && (
+                  <p className="text-[11px] text-text-subtle">
+                    {t("Capacidade usada")}: {propostaMulti.total_kg} kg · {propostaMulti.total_m3} m³
+                  </p>
+                )}
+
+                <details className="text-[11px]">
+                  <summary className="cursor-pointer text-text-muted hover:text-text">
+                    {t("Revisar avisos")}
+                  </summary>
+                  <ul className="mt-1 list-disc space-y-0.5 pl-4 text-warning-fg">
+                    {semCoord.length > 0 && (
+                      <li>{`${semCoord.length} ${t("parada(s) sem coordenada no mapa.")}`}</li>
+                    )}
+                    {(proposta?.nao_roteirizaveis.length ?? 0) > 0 && (
+                      <li>{`${proposta!.nao_roteirizaveis.length} ${t("parada(s) não roteirizáveis.")}`}</li>
+                    )}
+                    {(propostaMulti?.entregas_nao_alocadas.length ?? 0) > 0 && (
+                      <li>{`${propostaMulti!.entregas_nao_alocadas.length} ${t("entrega(s) não alocadas.")}`}</li>
+                    )}
+                    {(propostaMulti?.restricoes_nao_aplicadas.length ?? 0) > 0 && (
+                      <li>{`${propostaMulti!.restricoes_nao_aplicadas.length} ${t("restrição(ões) não aplicada(s).")}`}</li>
+                    )}
+                    {semCoord.length === 0 &&
+                      (proposta?.nao_roteirizaveis.length ?? 0) === 0 &&
+                      (propostaMulti?.entregas_nao_alocadas.length ?? 0) === 0 &&
+                      (propostaMulti?.restricoes_nao_aplicadas.length ?? 0) === 0 && (
+                        <li>{t("Nenhum aviso deste cálculo.")}</li>
+                      )}
+                  </ul>
+                </details>
+
+                <div className="flex flex-wrap gap-2">
+                  {aoTrocarVeiculo && (
+                    <Button size="sm" variant="outline" className="min-h-11" onClick={aoTrocarVeiculo}>
+                      {t("Trocar motorista ou veículo")}
+                    </Button>
+                  )}
+                  {(proposta || propostaMulti || ordemMudou || configMudou) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="min-h-11"
+                      onClick={descartarProposta}
+                      disabled={trabalhando !== null}
+                    >
+                      {t("Descartar proposta")}
+                    </Button>
+                  )}
+                </div>
+              </div>
 
               <ol className="divide-y divide-border">
                 {/* 1 — de onde a rota sai */}
@@ -1828,32 +1939,45 @@ export function Roteirizador({
                   <Passo numero={2} />
                   <div className="min-w-0 flex-1 space-y-2">
                     <p className="text-xs font-medium text-text">{t("Calcular a ordem")}</p>
-                    <div className="grid gap-1.5">
-                      <Button
-                        size="sm"
-                        onClick={() => void otimizar("distancia")}
-                        disabled={trabalhando !== null || paradasOrdenadas.length === 0}
-                      >
-                        {trabalhando === "otimizar" ? t("Calculando…") : t("Ordenar por distância")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void otimizar("tsp")}
-                        disabled={trabalhando !== null || paradasOrdenadas.length === 0}
-                      >
-                        {t("Otimizar por ruas")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void geocodificarTudo()}
-                        disabled={trabalhando !== null}
-                      >
-                        <MapPin className="h-3.5 w-3.5" aria-hidden />
-                        {trabalhando === "geo" ? t("Localizando…") : t("Geocodificar")}
-                      </Button>
-                    </div>
+                    {/* UMA AÇÃO PRIMÁRIA. O modo é detalhe: o que a operação
+                        pede é "ordenar" (sem frota) ou "otimizar" (com frota).
+                        Os dois algoritmos ficam recolhidos, sem desaparecer. */}
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={() => void otimizar("tsp")}
+                      disabled={trabalhando !== null || paradasOrdenadas.length === 0}
+                    >
+                      {trabalhando === "otimizar"
+                        ? t("Calculando…")
+                        : veiculosAtivos.length === 0
+                          ? t("Ordenar paradas")
+                          : t("Otimizar rota")}
+                    </Button>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer text-[11px] text-text-muted hover:text-text">
+                        {t("Outras formas de calcular")}
+                      </summary>
+                      <div className="mt-1.5 grid gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void otimizar("distancia")}
+                          disabled={trabalhando !== null || paradasOrdenadas.length === 0}
+                        >
+                          {t("Ordenar por distância em linha reta")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void geocodificarTudo()}
+                          disabled={trabalhando !== null}
+                        >
+                          <MapPin className="h-3.5 w-3.5" aria-hidden />
+                          {trabalhando === "geo" ? t("Localizando…") : t("Geocodificar endereços")}
+                        </Button>
+                      </div>
+                    </details>
                     {comCoord.length === 0 && paradasOrdenadas.length > 0 && (
                       <p className="text-[11px] text-text-subtle">
                         {t(
@@ -1926,7 +2050,7 @@ export function Roteirizador({
         )}
 
         {editavel && (
-          <div className={`min-w-0 space-y-4 ${visAba("planejamento")}`}>
+          <div className="min-w-0 space-y-4">
             {/* Recuperação de endereços (Address Recovery Engine, 0309) — logo
               acima da distribuição porque é pré-requisito dela: com endereço
               sem confirmação o servidor recusa otimizar. */}
@@ -2090,7 +2214,7 @@ export function Roteirizador({
                         >
                           {trabalhando === "multi"
                             ? t("Distribuindo…")
-                            : t("Distribuir com OR-Tools")}
+                            : t("Otimizar rota")}
                         </Button>
                         <Button
                           size="sm"
@@ -2170,11 +2294,7 @@ export function Roteirizador({
         )}
 
         {/* ── A ordem de entrega ────────────────────────────────────────── */}
-        <Card
-          id="aba-pedidos"
-          role="tabpanel"
-          className={`order-first min-w-0 overflow-hidden p-0 ${visAba("pedidos")}`}
-        >
+        <Card id="etapa-ordem" className="order-first min-w-0 scroll-mt-44 overflow-hidden p-0">
           <header className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 border-b border-border px-3.5 py-2.5">
             <p className="text-sm font-medium text-text">
               {t("Ordem de entrega")}{" "}
