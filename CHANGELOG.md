@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.63.1] — 2026-11-23
+
+### Corrigido
+
+- **Tabela de formas de pagamento nao colide com a legada de producao** A tabela nova da 0334 passa a se chamar commercial_payment_methods. Producao
+  tem uma payment_methods legada (name/account_id/is_active, usada por sales)
+  que nao existe no baseline; o create if not exist era ignorado e o indice em
+  tipo quebrava o deploy da 1.63.0.
+
+  Rotas, tela e testes apontam para o nome novo. Um invariante reaplica a 0334
+  com a tabela legada presente e prova que as duas convivem.
+
+  Nada a fazer na VPS.
+
 ## [1.63.0] — 2026-11-23
 
 ### Adicionado
@@ -8828,7 +8842,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.63.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.63.1...HEAD
+[1.63.1]: https://github.com/spiesdan/nexus/compare/v1.63.0...v1.63.1
 [1.63.0]: https://github.com/spiesdan/nexus/compare/v1.62.3...v1.63.0
 [1.62.3]: https://github.com/spiesdan/nexus/compare/v1.62.2...v1.62.3
 [1.62.2]: https://github.com/spiesdan/nexus/compare/v1.62.1...v1.62.2
