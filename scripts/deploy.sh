@@ -72,7 +72,9 @@ if [ -f supabase/baseline.sql ]; then
     "create extension if not exists vector with schema public; create extension if not exists citext with schema public; create extension if not exists pg_trgm with schema public;" \
     >/dev/null 2>&1 || true
 
-  raw="$(cat supabase/baseline.sql | psql_run -f - 2>&1 || true)"
+  # `-1`: falha no meio do baseline não pode deixar metade do schema aplicado
+  # (o aborto da 1.63.0 no 0334 commitou a 0335). A linha do erro é preservada.
+  raw="$(cat supabase/baseline.sql | psql_run -1 -f - 2>&1 || true)"
   # Erros benignos ao re-aplicar sobre base existente.
   benign='already exists|multiple primary keys|multiple default values|is already a member|already a partition'
   unexpected="$(printf '%s\n' "$raw" | grep -iE 'ERROR|FATAL' | grep -viE "$benign" || true)"
