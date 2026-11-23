@@ -11,7 +11,7 @@
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; RPC lido como array nos dois leitores + testes; verificação pós-deploy pendente (267+ amostras, ocorrência aberta) | aguardar deploy do dono e conferir tela/ocorrência 
+| P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; RPC array normalizado nos dois leitores + testes com 267 amostras | verificação pós-deploy: 267+ amostras na tela e ocorrência aberta 
 | P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#811** → `d8638cf3` + **#812** → `1b484654`; p95 2673 ms em `/api/v1/conversations` medido | perfilhar N+1/query e medir antes/depois; alvo 800 ms 
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
@@ -161,3 +161,14 @@ case/acento da campanha `3a0909d6`). Sem template aprovado o estado é
 - Diferença = 5, por `created_by` — não é divergência de contagem.
 
 Backend: `GET /api/v1/commercial-orders/orcamentos-parados` devolve número, cliente, valor, idade em dias, `dias_limite` e próximo passo por linha. Régua de 60 dias lida de `organizations.settings->'orcamentos_parados'->>'dias_limite'`; código em `lib/comercial/orcamentos-parados.ts`. D faz a tela.
+
+
+## Fechamentos e continuidade (24/11, 1.65.0)
+
+- **#813** (uma leitura de auth por request), **#810** (leitura array da RPC) e
+  **#814** (docs da policy set-based) fecharam. O #814 é documentação da
+  medição (63,5 → 19,8 ms local, 897 → 331 buffers); **a migration da policy
+  set-based segue com G** e entra na **1.64.2/next** depois de medida.
+- **O redesenho do workbench da Expedição segue com D** (prioridade do dono).
+- Release 1.65.0 é minor derivado: fragmento `capacidade_nova` do painel de
+  gastos (#808) — a régua é o fragmento, não a frase dita antes de conferi-lo.
