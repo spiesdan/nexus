@@ -705,3 +705,29 @@ rollback: refixar 1.62.3
 um a um; o drift foi fechado. Lote de hoje encerrado: **nenhuma release nova
 sem pedido do dono**. Fila retomada: F → P1-28/E2E/orçamentos · D →
 Inbox/Dashboard/96 telas · G → `.in()`/`anon`/p95.
+
+## 37. 23/11/2026 — Release 1.64.0 cortada (preparada, NÃO deployada)
+
+Tag **`v1.64.0`** criada pelo CI a partir do merge do PR oficial **#805**
+(`nexus-release-spiesdan[bot]`), derivada de **11 fragmentos** (4
+`capacidade_nova`) ⇒ **minor**, `1.63.1` → **1.64.0**. Número calculado por
+`pnpm release:conferir`; **corte pelo workflow oficial**, nunca à mão (o guard
+já recusou o atalho na 1.63.0).
+
+**Entra nesta versão:** multi-campanha + retomada 48h (#794) · orçamentos
+parados com idade/próximo passo (#801) + CSV (#803) · relatório mensal de
+gastos com CSV (#802) · Inbox selo de cache (#798) + handoff no cabeçalho
+(#799) · Dashboard com estado vazio explícito (#804) · E2E de expedição
+(#800) · `update.sh` com schema em transação única (#796) · `.in()` 10/10
+(#791/#797).
+
+**Dependência externa — template de retomada aprovado na Meta.** O follow-up
+de +48h **não dispara sem template aprovado**: fora da janela de 24h a Meta
+rejeita texto livre (erro 131047). O código usa preset configurável pela marca
+do tenant (nunca texto hardcoded), mas a **aprovação do template é pré-requisito
+operacional do dono**. Sem ela, o fluxo fica declarado *“aguardando aprovação”*
+e o follow-up não é marcado como enviado.
+
+**Não há migration nova nesta versão.** Deploy é do dono, com backup,
+verificação e rollback (refixar 1.63.1). Congelamento de merges vale até o
+deploy verificado.
