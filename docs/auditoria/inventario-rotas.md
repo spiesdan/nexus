@@ -4,18 +4,18 @@
 > reescreve este arquivo e `inventario.json`. Se um número aqui divergir do código, o
 > comando está certo e o texto envelheceu — rode de novo.
 
-Gerado em 2026-11-23T01:42:23.194Z.
+Gerado em 2026-11-23T02:23:56.484Z.
 
 | Medida | Valor |
 |---|---|
-| Telas (`page.tsx` com JSX) | **146** |
+| Telas (`page.tsx` com JSX) | **147** |
 | Resolvers/redirects (sem JSX) | 13 |
-| Handlers de API (`app/api/**/route.ts`) | **442** |
+| Handlers de API (`app/api/**/route.ts`) | **444** |
 | Layouts | 13 |
 | Páginas de erro (`error.tsx`) | 8 |
 | Estados de rota (`loading`/`not-found`/`template`/`default`) | 9 |
 | Arquivos especiais (manifest/sitemap/robots/ícones) | 2 |
-| Migrations SQL | 314 |
+| Migrations SQL | 315 |
 
 ## Telas por grupo
 
@@ -24,7 +24,7 @@ Gerado em 2026-11-23T01:42:23.194Z.
 | administração | 21 |
 | app (outros) | 7 |
 | atendimento | 2 |
-| configuração | 22 |
+| configuração | 23 |
 | crm | 5 |
 | expedição | 7 |
 | financeiro | 2 |
@@ -88,6 +88,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/metrics` | 2 |
 | `/api/v1/offline-devices` | 2 |
 | `/api/v1/onboarding` | 2 |
+| `/api/v1/payment-methods` | 2 |
 | `/api/v1/tarefas` | 2 |
 | `/api/v1/titulos` | 2 |
 | `/api/auth/signout` | 1 |
@@ -159,7 +160,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `operacao` | 1 |
 | `prospeccao` | 1 |
 
-## Telas (146)
+## Telas (147)
 
 | Rota | Flags | Linhas | Arquivo |
 |---|---|---|---|
@@ -257,7 +258,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/pedidos` | redirect, service-role, force-dynamic | 316 | `app/app/pedidos/page.tsx` |
 | `/app/pedidos/:id` | redirect, service-role, force-dynamic | 159 | `app/app/pedidos/[id]/page.tsx` |
 | `/app/pedidos/imprimir` | redirect, force-dynamic | 257 | `app/app/pedidos/imprimir/page.tsx` |
-| `/app/pedidos/novo` | redirect, force-dynamic | 197 | `app/app/pedidos/novo/page.tsx` |
+| `/app/pedidos/novo` | redirect, force-dynamic | 222 | `app/app/pedidos/novo/page.tsx` |
 | `/app/pipelines/:id` | redirect, notFound, force-dynamic | 31 | `app/app/pipelines/[id]/page.tsx` |
 | `/app/products` | redirect, force-dynamic | 222 | `app/app/products/page.tsx` |
 | `/app/prospeccao/campanhas/:id` | redirect, force-dynamic | 28 | `app/app/prospeccao/campanhas/[id]/page.tsx` |
@@ -282,6 +283,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/settings/security` | service-role, force-dynamic | 73 | `app/app/settings/security/page.tsx` |
 | `/app/settings/tenant` | redirect, force-dynamic | 97 | `app/app/settings/tenant/page.tsx` |
 | `/app/settings/tenant/agenda` | redirect, force-dynamic | 98 | `app/app/settings/tenant/agenda/page.tsx` |
+| `/app/settings/tenant/formas-pagamento` | redirect, force-dynamic | 47 | `app/app/settings/tenant/formas-pagamento/page.tsx` |
 | `/app/settings/tenant/pipelines` | redirect, force-dynamic | 58 | `app/app/settings/tenant/pipelines/page.tsx` |
 | `/app/tarefas` | redirect, force-dynamic | 21 | `app/app/tarefas/page.tsx` |
 | `/app/team` | force-dynamic | 102 | `app/app/team/page.tsx` |
@@ -328,7 +330,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/app/titulos` | redirect | 14 | `app/app/titulos/page.tsx` |
 | `/onboarding` | redirect, force-dynamic | 26 | `app/onboarding/page.tsx` |
 
-## APIs (442)
+## APIs (444)
 
 | Rota | Métodos | Flags | Linhas | Arquivo |
 |---|---|---|---|---|
@@ -633,7 +635,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/mcp/tools` | GET | force-dynamic | 59 | `app/api/v1/mcp/tools/route.ts` |
 | `/api/v1/message-templates` | GET/POST | requireRole, force-dynamic | 87 | `app/api/v1/message-templates/route.ts` |
 | `/api/v1/message-templates/:id` | PATCH/DELETE | requireRole, force-dynamic | 94 | `app/api/v1/message-templates/[id]/route.ts` |
-| `/api/v1/messages` | POST | requireRole, force-dynamic | 58 | `app/api/v1/messages/route.ts` |
+| `/api/v1/messages` | POST | requireRole, service-role, force-dynamic | 112 | `app/api/v1/messages/route.ts` |
 | `/api/v1/messages/:id/media` | GET | redirect, service-role, force-dynamic | 148 | `app/api/v1/messages/[id]/media/route.ts` |
 | `/api/v1/metrics/atrito` | GET/PATCH | requireRole, service-role, force-dynamic | 249 | `app/api/v1/metrics/atrito/route.ts` |
 | `/api/v1/metrics/attendants` | GET | requireRole, service-role, force-dynamic | 119 | `app/api/v1/metrics/attendants/route.ts` |
@@ -642,6 +644,8 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/api/v1/offline-devices/:id/revoke` | POST | requireRole, force-dynamic | 67 | `app/api/v1/offline-devices/[id]/revoke/route.ts` |
 | `/api/v1/onboarding/whatsapp/qr` | GET | — | 44 | `app/api/v1/onboarding/whatsapp/qr/route.ts` |
 | `/api/v1/onboarding/whatsapp/session` | GET/POST | — | 199 | `app/api/v1/onboarding/whatsapp/session/route.ts` |
+| `/api/v1/payment-methods` | GET/POST | requireRole, force-dynamic | 91 | `app/api/v1/payment-methods/route.ts` |
+| `/api/v1/payment-methods/:id` | PATCH/DELETE | requireRole, force-dynamic | 87 | `app/api/v1/payment-methods/[id]/route.ts` |
 | `/api/v1/pipelines` | GET/POST | requireRole, force-dynamic | 177 | `app/api/v1/pipelines/route.ts` |
 | `/api/v1/pipelines/:id` | PATCH/DELETE | requireRole, force-dynamic | 291 | `app/api/v1/pipelines/[id]/route.ts` |
 | `/api/v1/pipelines/:id/agent-mapping` | GET/PUT | requireRole, force-dynamic | 282 | `app/api/v1/pipelines/[id]/agent-mapping/route.ts` |
@@ -775,7 +779,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 440)
+## Delta de handlers desde o baseline de 17/11 (419 → 442)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -788,6 +792,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |
 | Laya | 1 | Health check do agente Laya. | `/api/v1/laya/saude` |
 | Offline — credencial | 2 | Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322). | `/api/v1/offline-devices`<br>`/api/v1/offline-devices/:id/revoke` |
+| Configuração — formas de pagamento | 2 | 0334 separa forma (t pag NT 2020.006) de prazo; lista e manutenção para a tela de configuração do tenant. | `/api/v1/payment-methods`<br>`/api/v1/payment-methods/:id` |
 | Sentinel — detecção | 4 | Rodada, ocorrências e config: Nível 1 do sistema vivo (0321–0329). | `/api/v1/sentinel/occurrences`<br>`/api/v1/sentinel/occurrences/:id`<br>`/api/v1/sentinel/scan`<br>`/api/v1/sentinel/settings` |
 | Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
 | Sentinel — conversa | 3 | Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328). | `/api/v1/sentinel/occurrences/:id/correcao/conversa`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` |

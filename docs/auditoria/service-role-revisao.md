@@ -127,7 +127,7 @@ VPS ou produção. Evidência bruta:
 
 | Medida | 18/11 | 22/11 |
 |---|---:|---:|
-| `route.ts` em `app/api/**` | 419 | **440** |
+| `route.ts` em `app/api/**` | 419 | **442** (inventário vivo `419 → 442`, 23 rotas novas) |
 | handlers de rota com `createAdminClient` | 210 | **178** no inventário / **222** por `grep` direto (o instrumento só conta handler com `.from()` em tabela tenant-aware) |
 | arquivos com service role (`app` + `lib`) | — | **376** |
 | arquivos com cadeia tenant sem filtro | 42 | **43** |
