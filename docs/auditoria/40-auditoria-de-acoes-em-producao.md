@@ -810,3 +810,41 @@ merge-tree` local não tem conflito e os checks obrigatórios estão verdes, o
 **merge por API é legítimo** — não se fica esperando a UI recalcular. (O mesmo
 vale para o próprio PR de release.) Isso **não** autoriza merge com check
 vermelho: a régua continua sendo o check, não o `mergeable`.
+
+
+## 41. 24/11/2026 — Deploy 1.65.0 VERIFICADO pelo dono (laço fechado)
+
+Sequência do artefato: tag `v1.65.0` criada pelo CI no merge do PR oficial
+**#817** → `publish-image` publicou as 7 imagens → `update.sh --to v1.65.0`
+→ `EXIT=0`, *“Atualização concluída”*.
+
+```
+7 containers em 1.65.0 · health healthy 1.65.0
+  (supabase / redis / rate_limit / waha ok)
+/login 200 · /app 307 (guard ok) · /api/v1/admin/observabilidade 401 sem sessão
+0 migrações entre 1.64.0 e 1.65.0 (release só de código)
+URI too long (30 min)=0 · risk-watcher falhas (30 min)=0
+```
+
+**A prova exigida — série → detector → tela — passou:**
+
+```
+Sentinel abriu: plataforma.slo_estourado | CRÍTICA | estado nova
+  "Latência das listas em p95 3359 ms (alvo 800 ms)"
+  total 340 amostras · p95 3359 ms
+  /api/v1/conversations 318 · 3408 ms · /api/v1/invoices 7 · 1454 ms
+  /api/v1/commercial-orders 8 · 1253 ms · /api/v1/contacts 4 · 1052 ms
+  /api/v1/financeiro/dashboard 3 · 288 ms
+```
+
+Antes do fix: `regras_nao_avaliadas = ["plataforma.slo_estourado"]` e **zero**
+ocorrência. Agora abre — **o sistema aprende com a própria série**.
+
+**P95 subiu de 2660 → 3359 ms:** não é regressão do detector, é a medida
+honesta agora visível. A **policy set-based ainda não está em produção** (#814
+era só doc de diagnóstico: 63,5 → 19,8 ms local). A otimização é o **#818**,
+que está **TRAVADO**: o `MANIFEST.md` foi substituído por 1 linha (eram 430) e
+o CI reprova em `manifest-x-migrations.test.ts`. O G vai restaurar com **+1
+linha** — não se mergeia até o manifest voltar.
+
+**Nenhuma release nova hoje sem pedido do dono. Deploy é do dono.**
