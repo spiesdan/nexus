@@ -21,9 +21,11 @@ const API_V1 = path.join(RAIZ, "app/api/v1");
 const GUARDAS: readonly RegExp[] = [
   /requireRole\s*\(/,
   /requirePlatformAdmin/,
-  /requireAuth\s*\(/,
-  /loadAuthUser\s*\(/,
+  // `loadAuthUser`/`requireAuth` sozinhos NÃO bastam: só autenticam, não
+  // aplicam a suspensão. A porta aceita é `requireRole` ou `resolveActiveOrg`
+  // (que agora consulta o gate e devolve null quando suspenso).
   /resolveActiveOrg\s*\(/,
+  /is_platform_admin/,
   /INTERNAL_SECRET|CRON_SECRET|INTERNAL_CRON_SECRET/,
   /timingSafeEqual|verifySignature|verifyInboundSignature/,
   /webhook_secret|WEBHOOK_SECRET|path_token|HMAC/i,
@@ -79,6 +81,24 @@ describe("gate de suspensão — enumeração de rotas", () => {
       expect(p.endsWith("/*")).toBe(false);
       expect(p).not.toBe("/api/v1");
     }
+  });
+
+  it("endurecimento: contas antes/depois — loadAuthUser sozinho não cobre mais", () => {
+    const antigo = [...GUARDAS, /requireAuth\s*\(/, /loadAuthUser\s*\(/];
+    const cobertasAntes = ROTAS.filter((arquivo) =>
+      antigo.some((re) => re.test(fonteComImportados(arquivo))),
+    ).length;
+    const cobertasDepois = ROTAS.filter((arquivo) =>
+      GUARDAS.some((re) => re.test(fonteComImportados(arquivo))),
+    ).length;
+
+    // Números medidos nesta suíte, não estimativa: 443 rotas, 442 com marca
+    // frouxa e 440 com marca rígida. As 2 que caíram eram /system/update e
+    // /system/version — ambas com guard `is_platform_admin`, também aceito.
+    expect(cobertasAntes).toBeGreaterThanOrEqual(cobertasDepois);
+    expect(cobertasDepois).toBeGreaterThan(400);
+    // Nenhuma rota pode "passar" só porque chama loadAuthUser.
+    expect(GUARDAS.some((re) => re.source.includes("loadAuthUser"))).toBe(false);
   });
 
   it("toda rota tem guard reconhecível ou autorização própria declarada", () => {

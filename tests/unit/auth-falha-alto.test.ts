@@ -121,6 +121,10 @@ describe("loadAuthUser — falha de permissão não vira 'sem organização'", (
         organization_name: "Acme",
         role: "admin",
         locale: null,
+        // Gate de cobrança (P1-5): status/suspended_reason vêm no MESMO select,
+        // sem segunda consulta. O dublê não devolve as colunas → null.
+        status: null,
+        suspended_reason: null,
         // Modo entregador (0292): o dublê não devolve a coluna, e ausente é
         // `false` — quem não é entregador continua vendo o menu.
         motorista: false,

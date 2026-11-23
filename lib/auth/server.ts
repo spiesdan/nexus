@@ -32,6 +32,8 @@ interface RawMembershipRow {
 interface OrgJoin {
   display_name: string;
   locale: string | null;
+  status: string | null;
+  suspended_reason: string | null;
 }
 
 /**
@@ -205,7 +207,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // de quem foi convidado para várias no mesmo lote).
   const promessaMembros = supabase
     .from("user_organizations")
-    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale)")
+    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale, status, suspended_reason)")
     .eq("user_id", user.id)
     .is("revoked_at", null)
     .order("accepted_at", { ascending: true, nullsFirst: true })
@@ -266,6 +268,8 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
       role: row.role as Role,
       motorista: row.motorista === true,
       locale: org?.locale ?? null,
+      status: org?.status ?? null,
+      suspended_reason: org?.suspended_reason ?? null,
     };
   });
 
@@ -316,16 +320,24 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
   // com o formato antigo — o teste de idioma exige `organizations(display_name,
   // locale)` e o de auth exige a forma exata da linha. A suspensão é uma
   // pergunta à RPC, não um campo novo na membership.
-  let suspensoPorBilling = false;
-  if (lerConfiguracaoBilling().killSwitchGate) {
+  // Só consulta a RPC quando a linha da org JÁ diz "suspensa por billing".
+  // 100% da base hoje é saudável — zero round-trip por request nesses casos.
+  if (
+    ativo.status === "suspended" &&
+    ativo.suspended_reason === "billing" &&
+    lerConfiguracaoBilling().killSwitchGate
+  ) {
     try {
       const supabase = await createClient();
       const { data } = await supabase.rpc("fn_billing_gate_bloqueia", {
         p_org: ativo.organization_id,
       });
-      suspensoPorBilling = data === true;
+      // RPC é a autoridade (membership viva). Null/devolução inesperada não
+      // transforma request saudável em bloqueio.
+      if (data === true) return null;
     } catch {
-      suspensoPorBilling = false;
+      // fail-open declarado: indisponibilidade consultando o gate não é
+      // suspensão definitiva — o job/reconciliação volta a verificar.
     }
   }
   return {
@@ -333,7 +345,6 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
     name: ativo.organization_name,
     role: ativo.role,
     motorista: ativo.motorista === true,
-    suspensoPorBilling,
   };
 }
 

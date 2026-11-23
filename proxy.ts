@@ -118,11 +118,14 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Gate de cobrança no EDGE para /app/*: o proxy é a única porta por onde
-  // TODA navegação autenticada passa. Deny-by-default com allowlist exata;
-  // o kill-switch desliga sem escrever no banco.
+  // Gate de cobrança no EDGE para /app/* E /api/v1/*: `/app` sozinho deixava
+  // as APIs de um tenant suspenso operando (há handler com service role que não
+  // chama requireRole). Deny-by-default com allowlist EXATA; kill-switch sem
+  // escrita. Webhooks/crons já voltaram no isPublicPath acima.
+  const caminhoGateado =
+    pathname.startsWith("/app") || pathname.startsWith("/api/v1/");
   if (
-    pathname.startsWith("/app") &&
+    caminhoGateado &&
     !BILLING_GATE_ALLOWLIST.includes(pathname) &&
     lerConfiguracaoBilling().killSwitchGate
   ) {
@@ -132,6 +135,21 @@ export async function proxy(request: NextRequest) {
         p_org: orgCookie,
       });
       if (suspenso) {
+        // API responde no envelope canônico; UI redireciona.
+        if (pathname.startsWith("/api/")) {
+          return new NextResponse(
+            JSON.stringify({
+              error: {
+                code: "tenant_suspended",
+                message: "Assinatura vencida. Regularize o pagamento.",
+              },
+            }),
+            {
+              status: 403,
+              headers: { "content-type": "application/json", "x-request-id": requestId },
+            },
+          );
+        }
         return NextResponse.redirect(new URL("/account-suspended", request.url));
       }
     }
