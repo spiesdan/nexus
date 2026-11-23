@@ -899,10 +899,17 @@ export function ModoMotorista({
                 size="sm"
                 variant="outline"
                 className="border-info/40 text-info-fg"
-                onClick={() => {
-                  setVersaoVista(rota.carga.rota_versao);
-                  void recarregar();
-                }}
+                onClick={() => void (async () => {
+                  try {
+                    await apiClient.post(`/api/v1/shipments/${cargaId}/rota/confirmar`, {
+                      versao: rota.carga.rota_versao,
+                    });
+                    setVersaoVista(rota.carga.rota_versao);
+                    void recarregar();
+                  } catch (e) {
+                    showApiError(e);
+                  }
+                })()}
               >
                 {t("Aplicar")}
               </Button>

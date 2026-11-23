@@ -1417,6 +1417,23 @@ export function Roteirizador({
           <p className="text-xs text-text-muted tabular-nums">
             {t("Publicada em")} {new Date(rota.carga.rota_em).toLocaleString(tagDeIdioma)} ·{" "}
             {t("versão")} {rota.carga.rota_versao}
+            {rota.carga.rota_versao_confirmada === null ? (
+              <span className="block">{t("Motorista ainda não confirmou esta rota.")}</span>
+            ) : rota.carga.rota_versao_confirmada < rota.carga.rota_versao ? (
+              <span className="block text-warning-fg">
+                {t("Motorista ainda na versão anterior")} {rota.carga.rota_versao_confirmada} ·{" "}
+                {rota.carga.rota_confirmada_em
+                  ? new Date(rota.carga.rota_confirmada_em).toLocaleString(tagDeIdioma)
+                  : ""}
+              </span>
+            ) : (
+              <span className="block">
+                {t("Confirmada na versão")} {rota.carga.rota_versao_confirmada}
+                {rota.carga.rota_confirmada_em
+                  ? ` ${t("às")} ${new Date(rota.carga.rota_confirmada_em).toLocaleString(tagDeIdioma)}`
+                  : ""}
+              </span>
+            )}
           </p>
         ) : null}
         {publicacao.tipo === "publicada" && (
