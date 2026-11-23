@@ -10,6 +10,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { logger } from "@/lib/logger";
+import { lerConfiguracaoBilling } from "@/lib/billing/config";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { empresaExigeMfa, exigeCadastroDeMfa } from "@/lib/auth/politica-mfa";
@@ -31,8 +32,6 @@ interface RawMembershipRow {
 interface OrgJoin {
   display_name: string;
   locale: string | null;
-  status: string | null;
-  suspended_reason: string | null;
 }
 
 /**
@@ -206,7 +205,7 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
   // de quem foi convidado para várias no mesmo lote).
   const promessaMembros = supabase
     .from("user_organizations")
-    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale, status, suspended_reason)")
+    .select("organization_id, role, motorista, accepted_at, organizations(display_name, locale)")
     .eq("user_id", user.id)
     .is("revoked_at", null)
     .order("accepted_at", { ascending: true, nullsFirst: true })
@@ -267,8 +266,6 @@ const carregarUsuarioDoRequest = async function (): Promise<AuthUser | null> {
       role: row.role as Role,
       motorista: row.motorista === true,
       locale: org?.locale ?? null,
-      suspensoPorBilling:
-        org?.status === "suspended" && org?.suspended_reason === "billing",
     };
   });
 
@@ -314,12 +311,29 @@ export async function resolveActiveOrg(authUser: AuthUser): Promise<ActiveOrg | 
   const store = await cookies();
   const ativo = escolherMembroAtivo(authUser.organizations, store.get(ACTIVE_ORG_COOKIE)?.value);
   if (!ativo) return null;
+
+  // Gate de suspensão também AQUI (não só no requireRole): a membership continua
+  // com o formato antigo — o teste de idioma exige `organizations(display_name,
+  // locale)` e o de auth exige a forma exata da linha. A suspensão é uma
+  // pergunta à RPC, não um campo novo na membership.
+  let suspensoPorBilling = false;
+  if (lerConfiguracaoBilling().killSwitchGate) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.rpc("fn_billing_gate_bloqueia", {
+        p_org: ativo.organization_id,
+      });
+      suspensoPorBilling = data === true;
+    } catch {
+      suspensoPorBilling = false;
+    }
+  }
   return {
     orgId: ativo.organization_id,
     name: ativo.organization_name,
     role: ativo.role,
     motorista: ativo.motorista === true,
-    suspensoPorBilling: ativo.suspensoPorBilling === true,
+    suspensoPorBilling,
   };
 }
 

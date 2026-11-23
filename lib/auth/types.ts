@@ -123,8 +123,6 @@ export interface UserOrgMembership {
    * para responder algo que a primeira já tinha em mãos.
    */
   locale?: string | null;
-  /** Suspensão por assinatura vencida (cobrança SaaS). Não é papel nem RLS. */
-  suspensoPorBilling?: boolean;
 }
 
 export interface AuthUser {
