@@ -784,3 +784,29 @@ performance de `/api/v1/conversations`, p95 2673 ms). **Nenhuma release cortada
 por isso agora.** Quando o G mergear e o dono deployar, a verificação passa a
 exigir: **tela com 267+ amostras** e **ocorrência
 `plataforma.slo_estourado|latencia` aberta**.
+
+
+## 40. 24/11/2026 — Release 1.65.0 (minor derivado) e laço fechado do SLO
+
+O número **não foi digitado**: 1.64.0 + **minor** porque o fragmento do painel
+de gastos (#808) é `capacidade_nova`. A régua é o fragmento, não a frase dita
+antes de conferi-lo: o pedido verbal era "1.64.1", a derivação honesta é
+**1.65.0**. PR de release **#817**, assinado pelo App; tag **`v1.65.0`**.
+
+**Entra:** painel de gastos no detalhe da campanha (lançamento manual de mídia
+com auditoria) · painel de observabilidade e Sentinel voltam a ler a série
+(array/objeto, #810) · uma leitura de auth por request (#813) · docs da policy
+set-based (#814).
+
+**A prova do laço fechado (série → detector → tela):** esta versão conserta a
+cegueira do §39. A verificação pós-deploy do dono passa a exigir:
+`/admin/observabilidade` com **267+ amostras** e p95 real (não “sem histórico”);
+a próxima varredura do Sentinel **abre** `plataforma.slo_estourado|latencia`;
+e o p95 de `/api/v1/conversations` **cai** em relação a **2673 ms** medidos.
+
+**Lição operacional — `mergeable=UNKNOWN`:** o GitHub ficou minutos sem calcular
+a mergeabilidade de #813/#815/#816 com 14 checks verdes. Quando o `git
+merge-tree` local não tem conflito e os checks obrigatórios estão verdes, o
+**merge por API é legítimo** — não se fica esperando a UI recalcular. (O mesmo
+vale para o próprio PR de release.) Isso **não** autoriza merge com check
+vermelho: a régua continua sendo o check, não o `mergeable`.
