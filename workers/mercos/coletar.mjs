@@ -27,6 +27,8 @@
  *   MERCOS_EMAIL=... MERCOS_SENHA=... node coletar.mjs --de 01/09/2026 --ate 14/10/2026
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createClient } from "@supabase/supabase-js";
+import { buracosParaReprocessar } from "./buracos.mjs";
 
 import { chromium } from "@playwright/test";
 
@@ -97,6 +99,38 @@ function lidos() {
       .filter((n) => n != null),
   );
 }
+
+
+/** Números que o coletor JÁ viu mas que nunca chegaram ao banco. */
+async function numerosPerdidosNoBanco(jaLidos) {
+  const todos = [...jaLidos];
+  if (todos.length === 0) return [];
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const org = process.env.MERCOS_ORG_ID || "";
+  if (!url || !key || !org) return [];
+  const admin = createClient(url, key, { auth: { persistSession: false } });
+  const vistos = [];
+  for (let i = 0; i < todos.length; i += 500) {
+    const pedaco = todos.slice(i, i + 500);
+    const { data, error } = await admin
+      .from("commercial_orders")
+      .select("numero_mercos")
+      .eq("organization_id", org)
+      .in("numero_mercos", pedaco);
+    if (error) return [];
+    for (const linha of data ?? []) vistos.push(linha.numero_mercos);
+  }
+  return buracosParaReprocessar({
+    vistosNoColetor: todos,
+    numerosNoBanco: vistos,
+    aPartirDe: A_PARTIR_DE,
+    limite: MAX_BURACOS,
+  });
+}
+
+const MAX_BURACOS = Number(process.env.MERCOS_MAX_BURACOS || "50");
+const alvoReprocesso = [];
 
 const STORAGE = process.env.MERCOS_STORAGE_STATE || "";
 const CODIGO_FILE = process.env.MERCOS_CODIGO_FILE || "";
@@ -276,10 +310,24 @@ try {
 
   // ─── DETALHE: cabeçalho + itens, com reconciliação ───────────────────────
   const jaLidos = lidos();
-  const alvo = lista
+
+  // VARREDURA DE BURACOS (0344): o cursor por número deixa passados os pedidos
+  // que o banco pulou por colisão. Comparamos o que o coletor viu com o que
+  // chegou ao banco (`numero_mercos`) e recolhemos só a janela, com LIMITE.
+  const buracos = await numerosPerdidosNoBanco(jaLidos);
+  for (const numero of buracos) {
+    const encontrado = lista.find((p) => p.numero === numero);
+    if (encontrado) {
+      alvoReprocesso.push(encontrado);
+      process.stdout.write(`\n  buraco reprocessado: ${numero}`);
+    }
+  }
+
+  const alvo = [...alvoReprocesso, ...lista
     .filter((p) => p.numero > A_PARTIR_DE)
     .filter((p) => !jaLidos.has(p.numero))
-    .sort((a, b) => b.numero - a.numero)
+    .sort((a, b) => b.numero - a.numero)]
+    .filter((p, i, arr) => arr.findIndex((x) => x.numero === p.numero) === i)
     .slice(0, LIMITE);
 
   console.log(
