@@ -17,6 +17,7 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import {
   diasDaRégua,
+  filaParaCsv,
   montarFila,
   type OrcadorParado,
 } from "@/lib/comercial/orcamentos-parados";
@@ -62,6 +63,19 @@ export async function GET(req: NextRequest): Promise<Response> {
     criado_por_humano: pedido.created_by != null,
   }));
   const fila = montarFila(linhas, new Date(), diasLimite);
+  const recorte = { origem: "mercos", status: "rascunho" };
+
+  // `?formato=csv` exporta a MESMA fila (não uma segunda consulta), com o
+  // próximo passo de cada linha — nunca lista morta em planilha.
+  if (req.nextUrl.searchParams.get("formato") === "csv") {
+    return new Response(filaParaCsv(fila), {
+      headers: {
+        "content-type": "text/csv; charset=utf-8",
+        "content-disposition": `attachment; filename="orcamentos-parados-${new Date().toISOString().slice(0, 10)}.csv"`,
+        "x-request-id": requestId ?? randomUUID(),
+      },
+    });
+  }
 
   return ok(
     {
@@ -71,7 +85,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       total_cents: fila.reduce((soma, linha) => soma + linha.valor_cents, 0),
       // O recorte está no corpo para quem lê a resposta não ter que adivinhar
       // por que 119 e 124 não são o mesmo número.
-      recorte: { origem: "mercos", status: "rascunho" },
+      recorte,
     },
     { requestId },
   );
