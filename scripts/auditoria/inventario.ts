@@ -278,6 +278,13 @@ const resumo = {
 const BASELINE_APIS = join(RAIZ, "scripts", "auditoria", "inventario-baseline-1711.txt");
 const RAZOES_DO_DELTA: ReadonlyArray<{ prefixo: string; area: string; razao: string }> = [
   {
+    prefixo: "app/api/v1/payment-methods",
+    area: "Configuração — formas de pagamento",
+    razao:
+      "0334 separa forma (t pag NT 2020.006) de prazo; lista e manutenção " +
+      "para a tela de configuração do tenant.",
+  },
+  {
     prefixo: "app/api/v1/sentinel/occurrences/[id]/correcao/conversa",
     area: "Sentinel — conversa",
     razao: "Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328).",

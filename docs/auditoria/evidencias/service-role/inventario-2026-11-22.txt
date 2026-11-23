@@ -1,0 +1,153 @@
+handlers com service role: 178
+tabelas tenant-aware: 179
+encadeamentos .from() em tabela tenant: 586
+sem filtro de organização na cadeia: 101 em 43 arquivos
+desses, em arquivo sem guard reconhecível: 17
+
+Cada linha abaixo NÃO é um vazamento — é uma pergunta. A resposta revisada
+de cada classe está em docs/auditoria/service-role-revisao.md.
+
+### app/api/v1/admin/dashboard/kpis/route.ts
+  L55 from(organizations)
+  L60 from(conversations)
+  L66 from(channel_sessions)
+  L73 from(lgpd_requests)
+### app/api/v1/admin/inbox/conversations/[id]/route.ts
+  L65 from(contacts)
+### app/api/v1/admin/incidents/[id]/resolve/route.ts
+  L77 from(incidents)
+### app/api/v1/admin/incidents/[id]/route.ts
+  L45 from(api_audit_log)
+### app/api/v1/admin/lgpd/requests/[id]/route.ts
+  L59 from(api_audit_log)
+### app/api/v1/admin/platform-admins/route.ts
+  L40 from(platform_admins)
+### app/api/v1/admin/tenants/[id]/impersonate/route.ts
+  L79 from(organizations)
+### app/api/v1/admin/tenants/[id]/reactivate/route.ts
+  L63 from(organizations)
+  L84 from(organizations)
+### app/api/v1/admin/tenants/[id]/route.ts
+  L30 from(organizations)
+### app/api/v1/admin/tenants/[id]/suspend/route.ts
+  L63 from(organizations)
+  L79 from(organizations)
+### app/api/v1/admin/tenants/route.ts
+  L83 from(organizations)
+  L206 from(organizations)
+### app/api/v1/admin/usage/route.ts
+  L96 from(organizations)
+### app/api/v1/ai/agents/route.ts
+  L191 from(ai_agents)
+### app/api/v1/ai/knowledge/sources/[id]/route.ts
+  L206 from(ai_faq_items)
+### app/api/v1/ai/knowledge/sources/route.ts
+  L280 from(ai_faq_items)
+  L285 from(ai_knowledge_sources)
+### app/api/v1/ai/routers/[id]/members/route.ts
+  L96 from(ai_router_members)
+### app/api/v1/ai/skills/route.ts
+  L69 from(skill_versions)
+### app/api/v1/automation-rules/[id]/route.ts
+  L78 from(automation_rules)
+  L117 from(automation_rules)
+### app/api/v1/channels/official/route.ts
+  L203 from(channel_sessions)
+### app/api/v1/channels/partner/templates/route.ts
+  L78 from(channel_sessions)
+### app/api/v1/cron/agenda-google-push/route.ts
+  L169 from(calendar_appointments)
+  L211 from(calendar_appointments)
+  L218 from(calendar_appointments)
+### app/api/v1/cron/agenda-google-refresh/route.ts
+  L166 from(calendar_connections)
+  L202 from(calendar_connections)
+### app/api/v1/cron/agenda-google-sync/route.ts
+  L116 from(organizations)
+  L152 from(calendar_connection_calendars)
+  L272 from(calendar_connection_calendars)
+### app/api/v1/cron/attendant-heartbeat/route.ts
+  L41 from(attendant_availability)
+### app/api/v1/cron/lgpd-sla-watcher/route.ts
+  L70 from(lgpd_requests)
+### app/api/v1/cron/meu-dia-alertas/route.ts
+  L90 from(organizations)
+  L219 from(invoices)
+  L324 from(shipment_orders)
+  L490 from(contacts)
+  L505 from(commercial_orders)
+  L569 from(commercial_orders)
+  L610 from(contacts)
+### app/api/v1/cron/recover-stuck-messages/route.ts
+  L123 from(agent_inbox_items)
+  L303 from(agent_inbox_items)
+  L304 from(agent_inbox_items)
+  L317 from(agent_inbox_items)
+### app/api/v1/cron/snooze-watcher/route.ts
+  L87 from(conversations)
+### app/api/v1/cron/sync-model-catalog/route.ts
+  L78 from(ai_models)
+  L88 from(ai_models)
+  L97 from(ai_models)
+### app/api/v1/financeiro/recebiveis/route.ts
+  L265 from(financial_receivables)
+### app/api/v1/fiscal-inutilizacoes/route.ts
+  L176 from(fiscal_inutilizacoes)
+### app/api/v1/leads/_handler.ts   [SEM GUARD RECONHECÍVEL]
+  L257 from(crm_leads)
+  L545 from(crm_leads)
+  L581 from(crm_leads)
+  L592 from(crm_leads)
+  L617 from(crm_leads)
+  L649 from(crm_stages)
+### app/api/v1/leads/bulk/route.ts
+  L128 from(crm_leads)
+  L240 from(crm_leads)
+  L256 from(crm_leads)
+  L285 from(crm_leads)
+### app/api/v1/marca/logo/route.ts
+  L193 from(platform_branding)
+  L224 from(platform_branding)
+### app/api/v1/messages/_handler.ts   [SEM GUARD RECONHECÍVEL]
+  L274 from(conversations)
+  L275 from(conversations)
+  L530 from(messages)
+  L576 from(messages)
+  L588 from(messages)
+  L598 from(messages)
+  L610 from(messages)
+  L751 from(messages)
+  L789 from(messages)
+  L801 from(messages)
+  L838 from(conversations)
+### app/api/v1/prospecting/campaigns/[id]/route.ts
+  L308 from(prospecting_campaigns)
+### app/api/v1/shipments/[id]/conciliar/route.ts
+  L119 from(shipment_orders)
+  L131 from(commercial_orders)
+  L139 from(financial_receivables)
+  L152 from(financial_payments)
+### app/api/v1/system/agent/route.ts
+  L92 from(system_version)
+  L124 from(system_update_runs)
+  L145 from(system_update_runs)
+  L165 from(system_update_runs)
+  L185 from(system_update_runs)
+### app/api/v1/system/update/route.ts
+  L32 from(system_version)
+  L53 from(system_update_runs)
+  L75 from(system_update_runs)
+  L93 from(system_update_runs)
+### app/api/v1/system/version/route.ts
+  L30 from(system_version)
+  L57 from(system_update_runs)
+### app/api/v1/team/[user_id]/_shared.ts
+  L87 from(user_organizations)
+  L161 from(user_organizations)
+  L321 from(user_organizations)
+  L425 from(user_organizations)
+### app/api/v1/webhook-sources/[id]/route.ts
+  L83 from(webhook_sources)
+  L122 from(webhook_sources)
+### app/api/v1/webhooks/in/[token]/route.ts
+  L552 from(webhook_sources)
