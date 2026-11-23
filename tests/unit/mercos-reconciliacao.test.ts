@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-// @ts-expect-error — módulos ESM do worker/script, sem declaração TS
+// @ts-expect-error — módulo ESM do worker, sem declaração TS
 import { dataDoCartao } from "../../workers/mercos/cliente.mjs";
-// @ts-expect-error — módulo ESM do script, sem declaração TS
 import {
   classificarComDetalhe,
   classificarNumero,
