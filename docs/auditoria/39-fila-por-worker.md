@@ -390,3 +390,14 @@ antes de qualquer rodada; nenhum item sem dono.
 
 **Retomada (22/11):** D → P1-1/P1-6/P1-7; F → P1-12 + frentes fiscais/pedidos;
 G → P0-1/P0-5/P1-2. Bloqueados com dono: P0-3, P1-14, P1-15, P2-3.
+
+
+## Fila do F — ordem dos pedidos (22/11/2026)
+
+1. avulsa: auto-fill + extras + validar (**em curso**) → 2. **gastos da campanha
+   (P1-17)** → 3. informações fiscais no criador → 4. formas de pagamento (tabela +
+   tela + migration) → 5. “Editar pedido” → 6. `Idempotency-Key` em `POST /messages`
+   → 7. inventário.
+
+P1-17 entra com fragmento `capacidade_nova` (minor derivado) e, quando mergeado,
+o **D** faz o passe visual/medição do wizard e do painel — sem tocar na lógica.

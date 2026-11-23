@@ -37,6 +37,23 @@
 | P1-15 | Android físico / iOS | `[!]` | **BLOQUEADO — dono** | iOS fora por decisão; Android real nunca executado | dispositivo + decisão de escopo |
 | P1-16 | Recontar inventário vivo (440 rotas hoje vs 419 em 18/11) com delta explicado | `[ ]` | coordenação | contagem do dono + `inventario-rotas.md` | comando de contagem + delta por módulo |
 
+| P1-17 | Controle de gastos da campanha: orçamento de prospecção + verba Meta, simulação mínimo/esperado/máximo na criação e guard 80%/100% com override de gerente auditado | `[ ]` | F (depois da avulsa) | decisão do dono; reuso de `lib/prospeccao/custos.ts`, `uso.ts` (`estadoDoOrcamento`), `_config.tsx`, `grade.ts`, `motor.ts` (`custo_estimado_cents`) | ver aceite abaixo |
+
+### P1-17 — aceite e dependências
+
+- **Dependências:** `grade.ts` para alcance; `custos.ts` para preço; `uso.ts` para
+  consumo. Nada de motor paralelo de custo.
+- **Simulação:** mínimo / esperado / máximo na **criação**, com premissas visíveis
+  (CPM e CTR configuráveis, **declarados como premissa** — nunca como fato).
+- **Guard:** 80% (aviso) e 100% (bloqueio), com **override de gerente** com motivo e
+  auditoria.
+- **Gasto de mídia Meta:** **lançamento manual** até existir Marketing API; a tela
+  diz isso explicitamente e nunca importa nem simula valor como real.
+- **Entrega:** PR com `.changes/` (`capacidade_nova` ⇒ a release deriva **minor**),
+  testes do guard/override/simulação e fragmento conferido antes do corte.
+- **Depois do merge:** avisar **D** para o passe visual/medição do wizard e do painel
+  (D não implementa a lógica).
+
 ## P2
 
 | id | item | estado | dono | evidência | próximo passo |
