@@ -185,6 +185,45 @@ if ! git checkout --quiet "$TARGET_TAG" 2>&1; then
 fi
 [ -n "${NEXUS_AGENT_REPORT:-}" ] && eval "${NEXUS_AGENT_REPORT_CMD}" codigo
 
+# ── 3.5 Pausa das automações ANTES do DDL ───────────────────────────────────
+# `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` toma ACCESS EXCLUSIVE. O worker
+# do follow-up (cron do scheduler) escreve nessa tabela sem parar: com o
+# baseline inteiro numa transação (`psql -1`), um deadlock aborta TUDO e o
+# update para sem trocar a imagem. Medido em produção em 23/11/2026, v1.65.1:
+#
+#   psql:<stdin>:7402: ERROR: deadlock detected
+#   linha 7402: alter table followup_enrollments enable row level security;
+#   segunda tentativa, com crm-worker e crm-scheduler PARADOS: EXIT=0
+#
+# Os dois serviços que escrevem em background saem ANTES do schema e voltam
+# DEPOIS — inclusive se o schema falhar, porque die() encerra o script. O trap
+# EXIT é a rede de segurança: ele cobre QUALQUER saída entre o stop e o up,
+# inclusive o `die` do erro de schema. A religação normal, abaixo, é explícita.
+AUTOMACOES_PAUSADAS=0
+religar_automacoes() {
+  [ "$AUTOMACOES_PAUSADAS" = "1" ] || return 0
+  # Zera ANTES da chamada: se ela falhar, o trap EXIT não tenta de novo e não
+  # imprime duas mensagens diferentes para o mesmo evento.
+  AUTOMACOES_PAUSADAS=0
+  if dc up -d worker scheduler >/dev/null 2>&1; then
+    c_grn "✓ Automações religadas"
+  else
+    c_ylw "⚠ Não consegui religar as automações. Suba na mão ANTES de seguir:"
+    c_ylw "  docker compose $(dc_files) up -d worker scheduler"
+  fi
+}
+
+if [ -f supabase/baseline.sql ]; then
+  c_ylw "▶ Pausando automações para aplicar o schema"
+  if dc stop worker scheduler >/dev/null 2>&1; then
+    AUTOMACOES_PAUSADAS=1
+    trap religar_automacoes EXIT
+  else
+    c_ylw "⚠ Não consegui pausar worker/scheduler: o schema pode colidir com escrita em background."
+    c_ylw "  Se aparecer 'deadlock detected' abaixo, pare estes dois serviços e rode o update de novo."
+  fi
+fi
+
 # ── 4. Banco: schema + correções de dados (schema ANTES do app) ──────────────
 # O baseline é idempotente e auto-curativo. Re-aplicar numa base que JÁ existe
 # gera erros do tipo "já existe" / "multiple primary keys" — isso é ESPERADO e
@@ -264,6 +303,12 @@ if [ -f supabase/baseline.sql ]; then
 else
   c_ylw "⚠ supabase/baseline.sql não encontrado — pulei a parte do banco."
 fi
+# Schema terminou (bem ou mal, o die acima já passou pelo trap). Religar AQUI
+# deixa a sequência visível no log mesmo no caminho feliz: parar → aplicar →
+# subir. O trap cobre só a saída antecipada.
+religar_automacoes
+trap - EXIT
+
 [ -n "${NEXUS_AGENT_REPORT:-}" ] && eval "${NEXUS_AGENT_REPORT_CMD}" banco
 
 # ── 4.5 E-mails de acesso, para quem já estava instalado ────────────────────
