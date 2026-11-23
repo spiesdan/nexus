@@ -15,15 +15,31 @@ export function mesmoCliente(
   documentoLista?: string | null,
   documentoBanco?: string | null,
 ): boolean;
+export type SituacaoDaClassificacao = "importado" | "colisao" | "ausente";
+
+export interface LinhaDoBanco {
+  id?: string | null;
+  numero?: number | null;
+  numero_mercos?: number | null;
+  cliente_nome?: string | null;
+  cliente_documento?: string | null;
+}
+
+export interface Classificacao {
+  situacao: SituacaoDaClassificacao;
+  pedido_id: string | null;
+  cliente_local_nome: string | null;
+}
+
 export function classificarNumero(entrada: {
   nomeLista: string | null | undefined;
   documentoLista?: string | null;
-  linhasBanco?: Array<{ cliente_nome?: string | null; cliente_documento?: string | null }>;
-}): string;
+  linhasBanco?: readonly LinhaDoBanco[];
+}): Classificacao;
 export function temItens(registro: unknown): boolean;
 export function classificarComDetalhe(entrada: {
   situacao: string;
-  detalhe?: { itens?: unknown[] } | null;
+  detalhe?: { itens?: unknown[]; total_cents?: number | null } | null;
 }): string;
 export function payloadDeImportacao(registro: Record<string, unknown>): Record<string, unknown>;
 export function dentroDaJanela(
