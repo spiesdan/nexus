@@ -34,6 +34,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 
 import { fail, ok } from "@/lib/api/wrappers";
+import { porFatias } from "@/lib/db/por-fatias";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -65,6 +66,12 @@ export const dynamic = "force-dynamic";
 
 /** Teto por organização e por varredura. Ver a nota do cabeçalho. */
 const SCAN_LIMIT = 300;
+
+/** Erro da primeira fatia que falhou, com a mensagem original do PostgREST. */
+function erroDasFatias(erro: unknown, prefixo: string): Error {
+  const detalhe = (erro as { message?: string } | undefined)?.message ?? "falha em fatia";
+  return new Error(`${prefixo}: ${detalhe}`);
+}
 
 export async function GET(req: NextRequest): Promise<Response> {
   return rodar(req);
@@ -215,13 +222,14 @@ async function varrerNfPendente(
   if (pedidos.length === 0) return [];
 
   const ids = pedidos.map((p) => p.id);
-  const { data: notas, error: erroNotas } = await admin
-    .from("invoices")
-    .select("order_id, status, numero, serie, created_at")
-    .in("order_id", ids);
-  if (erroNotas) {
-    throw new Error(`notas: ${erroNotas.message}`);
-  }
+  const { linhas: notas, falhas: falhasNotas, primeiroErro: erroNotas } = await porFatias(ids, async (fatia) => {
+    const { data, error } = await admin
+      .from("invoices")
+      .select("order_id, status, numero, serie, created_at")
+      .in("order_id", fatia);
+    return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+  });
+  if (falhasNotas > 0) throw erroDasFatias(erroNotas, "notas");
 
   const { data: config, error: erroConfig } = await admin
     .from("fiscal_settings")
@@ -320,13 +328,14 @@ async function varrerForaDaCarga(
   if (listaCargas.length === 0) return [];
 
   const ids = listaCargas.map((c) => c.id);
-  const { data: itens, error: erroItens } = await admin
-    .from("shipment_orders")
-    .select("shipment_id, order_id")
-    .in("shipment_id", ids);
-  if (erroItens) {
-    throw new Error(`itens da carga: ${erroItens.message}`);
-  }
+  const { linhas: itens, falhas: falhasItens, primeiroErro: erroItens } = await porFatias(ids, async (fatia) => {
+    const { data, error } = await admin
+      .from("shipment_orders")
+      .select("shipment_id, order_id")
+      .in("shipment_id", fatia);
+    return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+  });
+  if (falhasItens > 0) throw erroDasFatias(erroItens, "itens da carga");
 
   const porCarga = new Map<string, string[]>();
   const emAlgumaCarga = new Set<string>();
@@ -486,11 +495,14 @@ async function enriquecerComNome(
 
   const nomePorContato = new Map<string, string>();
   if (idsContato.length > 0) {
-    const { data } = await admin
-      .from("contacts")
-      .select("id, display_name, name")
-      .in("id", idsContato);
-    for (const c of (data ?? []) as unknown as {
+    const { linhas: contatos } = await porFatias(idsContato, async (fatia) => {
+      const { data, error } = await admin
+        .from("contacts")
+        .select("id, display_name, name")
+        .in("id", fatia);
+      return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+    });
+    for (const c of contatos as unknown as {
       id: string;
       display_name: string | null;
       name: string | null;
@@ -501,11 +513,14 @@ async function enriquecerComNome(
 
   const nomePorPedido = new Map<string, string>();
   if (idsPedido.length > 0) {
-    const { data } = await admin
-      .from("commercial_orders")
-      .select("id, cliente_nome")
-      .in("id", idsPedido);
-    for (const o of (data ?? []) as unknown as { id: string; cliente_nome: string }[]) {
+    const { linhas: nomesPedido } = await porFatias(idsPedido, async (fatia) => {
+      const { data, error } = await admin
+        .from("commercial_orders")
+        .select("id, cliente_nome")
+        .in("id", fatia);
+      return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+    });
+    for (const o of nomesPedido as unknown as { id: string; cliente_nome: string }[]) {
       nomePorPedido.set(o.id, o.cliente_nome);
     }
   }
@@ -565,14 +580,15 @@ async function lerPedidos(
   ids: string[],
 ): Promise<{ id: string; contact_id: string | null }[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await admin
-    .from("commercial_orders")
-    .select("id, contact_id, endereco_entrega")
-    .in("id", ids.slice(0, SCAN_LIMIT * 2));
-  if (error) {
-    throw new Error(`pedidos da carga: ${error.message}`);
-  }
-  return (data ?? []) as unknown as { id: string; contact_id: string | null }[];
+  const { linhas, falhas, primeiroErro } = await porFatias(ids, async (fatia) => {
+    const { data, error } = await admin
+      .from("commercial_orders")
+      .select("id, contact_id, endereco_entrega")
+      .in("id", fatia);
+    return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+  });
+  if (falhas > 0) throw erroDasFatias(primeiroErro, "pedidos da carga");
+  return linhas as unknown as { id: string; contact_id: string | null }[];
 }
 
 /**
@@ -606,14 +622,15 @@ async function cidadesDosPedidos(
     ...new Set(faltamContato.map((p) => p.contact_id).filter(Boolean)),
   ] as string[];
   if (idsContato.length > 0) {
-    const { data, error } = await admin
-      .from("contacts")
-      .select("id, cidade")
-      .in("id", idsContato.slice(0, SCAN_LIMIT * 2));
-    if (error) {
-      throw new Error(`cidades dos contatos: ${error.message}`);
-    }
-    for (const c of (data ?? []) as unknown as { id: string; cidade: string | null }[]) {
+    const { linhas: cidades, falhas, primeiroErro } = await porFatias(idsContato, async (fatia) => {
+      const { data, error } = await admin
+        .from("contacts")
+        .select("id, cidade")
+        .in("id", fatia);
+      return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+    });
+    if (falhas > 0) throw erroDasFatias(primeiroErro, "cidades dos contatos");
+    for (const c of cidades as unknown as { id: string; cidade: string | null }[]) {
       porContato.set(c.id, c.cidade ?? null);
     }
   }
