@@ -467,6 +467,13 @@ export function CargaClient({
   }
 
   async function anexarFoto(orderId: string, arquivo: File | undefined) {
+    // Política explícita (P1-24): foto NÃO entra no outbox — só o desfecho
+    // (JSON pequeno) sobrevive offline. Sem rede, avisar em vez de tentar e
+    // fingir que o comprovante foi enviado.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      toast.error(t("Comprovante exige conexão — anexe quando o sinal voltar. O desfecho já está registrado."));
+      return;
+    }
     if (!arquivo) {
       toast.error(t("Escolha a foto primeiro."));
       return;
@@ -1405,6 +1412,10 @@ export function CargaClient({
                                     {textos.verComprovante}
                                   </Link>
                                 ) : podeOperar ? (
+                                  <>
+                                  <p className="text-[11px] text-text-muted">
+                                    {t("Foto exige conexão; o desfecho funciona offline.")}
+                                  </p>
                                   <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-xs font-medium text-text hover:bg-muted">
                                     <UploadSimple className="h-3.5 w-3.5" aria-hidden />
                                     {textos.escolherFoto}
@@ -1418,6 +1429,7 @@ export function CargaClient({
                                       }
                                     />
                                   </label>
+                                  </>
                                 ) : (
                                   <span className="text-xs text-muted-foreground">
                                     {t("Sem comprovante anexado.")}
