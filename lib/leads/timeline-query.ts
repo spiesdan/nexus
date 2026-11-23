@@ -1,3 +1,4 @@
+import { porFatias } from "@/lib/db/por-fatias";
 import type { createClient } from "@/lib/supabase/server";
 import type { TimelineItem, TimelineItemView } from "@/lib/types/contacts";
 
@@ -104,8 +105,13 @@ export async function comNomeDoAtor(
 
   const nomeAgente = new Map<string, string>();
   if (agentIds.length > 0) {
-    const { data } = await supabase.from("ai_agents").select("id, name").in("id", agentIds);
-    for (const a of (data ?? []) as Array<{ id: string; name: string }>) nomeAgente.set(a.id, a.name);
+    // Último `.in()` sem teto da família (doc 51): stub de timeline pode ter
+    // centenas de agentes diferentes. `porFatias` mantém a união e a ordem.
+    const { linhas: agentes } = await porFatias(agentIds, async (fatia) => {
+      const { data, error } = await supabase.from("ai_agents").select("id, name").in("id", fatia);
+      return { linhas: (data ?? []) as unknown[], erro: error ?? undefined };
+    });
+    for (const a of agentes as Array<{ id: string; name: string }>) nomeAgente.set(a.id, a.name);
   }
 
   const nomeUsuario = new Map<string, string>();
