@@ -11,7 +11,6 @@
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-
 | P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[~]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | corrigir `lib/sentinel/coleta.ts` + `app/api/v1/admin/observabilidade/route.ts`; teste dirigido prova total>0 e detector abre |
 | P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[ ]` | G | medição do dono, 7 dias | perfilhar query/N+1, medir antes/depois; alvo 800 ms |
 
