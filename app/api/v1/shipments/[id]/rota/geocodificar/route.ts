@@ -14,6 +14,7 @@ import { audit } from "@/lib/audit";
 import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { geocodificarComFallback } from "@/lib/rotas/geocodificacao";
+import { patchDeGeocodificacao } from "@/lib/rotas/geocodificacao-patch";
 import { FONTE_ENTRADA } from "@/lib/rotas/entradas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -120,16 +121,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
       alvo.endereco as string,
     );
-    const patch =
-      r.estado === "ok"
-        ? {
-            latitude: r.latitude,
-            longitude: r.longitude,
-            geo_status: "ok",
-            geo_em: new Date().toISOString(),
-            geo_fonte: `nominatim:${r.precisao ?? "rua"}`,
-          }
-        : { latitude: null, longitude: null, geo_status: r.estado, geo_em: new Date().toISOString(), geo_fonte: "nominatim" };
+    // Erro do provedor não apaga pino válido (P1-22): só o aviso é gravado.
+    const patch = patchDeGeocodificacao(r, new Date().toISOString());
     // Grava no DESTINO. O cadastro do contato só é tocado em carga legada
     // (sem `destination_id`) — gravar sempre no contato era o defeito que
     // fazia dois endereços do mesmo cliente compartilharem um pino.
