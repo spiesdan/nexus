@@ -48,6 +48,14 @@ grant execute on function public.fn_proximo_numero_pedido(uuid) to authenticated
 alter table public.commercial_orders
   add column if not exists numero_mercos integer;
 
+-- Backfill de importados antigos: a coluna é nova, então os 11.979 pedidos já
+-- vindos do Mercos não tinham `numero_mercos`. Idempotente e nunca sobrescreve
+-- um valor existente (caso da colisão recuperada).
+update public.commercial_orders
+   set numero_mercos = numero
+ where origem = 'mercos'
+   and numero_mercos is null;
+
 create unique index if not exists commercial_orders_org_numero_mercos_key
   on public.commercial_orders (organization_id, numero_mercos)
   where numero_mercos is not null;

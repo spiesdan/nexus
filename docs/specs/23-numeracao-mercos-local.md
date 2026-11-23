@@ -34,6 +34,13 @@ Se (b) ou (c) forem adotadas depois, as duas últimas continuam válidas.
   `pedido_importado_id`.
 - Coletor: compara o que já viu com `numero_mercos` no banco e reprocessa até
   `MERCOS_MAX_BURACOS` (default 50) números perdidos por rodada.
+- **Reconciliação (0345)**: `scripts/mercos-reconciliar.mjs` grava
+  `mercos_reconciliacoes` com `situacao` `ausente`/`importado` por
+  `(run_id, numero_mercos)`. Janela de garantia: **30 dias** por padrão
+  (`MERCOS_RECONCILIAR_DIAS`); pedidos fora da janela e registros sem data de
+  emissão são **contados e declarados como fora da garantia** — nunca viram
+  "zero ausentes" por omissão. Rodar de novo com o mesmo run-id tem de devolver
+  `ausentes_depois = 0`.
 - `GET /api/v1/mercos/colisoes`: contrato para a tela do D.
 
 **Não foi deployado.** A contagem histórica de produção depende de rodar a

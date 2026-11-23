@@ -96,6 +96,15 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "TABLES porque a escrita é só service role (a varredura TABLES cobre casos " +
       "com policy de escrita para authenticated).",
   })),
+  ...(
+    ["mercos_colisoes", "mercos_reconciliacoes"] as const
+  ).map((tabela) => ({
+    tabela,
+    razao:
+      "tests/invariants/mercos-serie-local.test.ts (0344/0345) prova, com " +
+      "`set role authenticated` + JWT simulado, leitura da própria org e zero " +
+      "da vizinha, e escrita negada a authenticated.",
+  })),
   {
     tabela: "prospecting_followups",
     razao:
