@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (23/11):** 14 `[x]` · 6 `[~]` · 4 `[!]` · 13 `[ ]` — 37 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (23/11):** 16 `[x]` · 5 `[~]` · 4 `[!]` · 12 `[ ]` — 37 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -28,7 +28,7 @@
 | P1-5 | E2E 17/18/19: GPS ausente, mobile real, fila offline com retry/conflito | `[ ]` | G (próximo) | specs em `tests/e2e/`; Android real nunca rodou | escrever specs e marcar bloqueio de dispositivo |
 | P1-6 | 24 rotas dinâmicas sem id: criar fixture local e medir | `[x]` | D | **#769** → `20f0b3b2b` (+ `e3fbaf994`); fixture das dinâmicas e seed anuncia destino |
 | P1-7 | F-04: token canônico (`#67885d` vs `#7e77f0`) com medição | `[ ]` | D (próximo) | dois hex em arquivos de design | escolher token, medir contraste, documentar |
-| P1-8 | Workbench de expedição no mobile em abas/drawer (hoje empilha) | `[ ]` | D (próximo) | capturas do passe de expedição | protótipo + medição 390 px |
+| P1-8 | Workbench de expedição no mobile em abas/drawer (hoje empilha) | `[x]` | D | **#780** → `32521385e`; abas Pedidos/Mapa/Planejamento, medido 390/1440 px | — |
 | P1-9 | Matriz única de capacidades de expedição (hoje dispersa em handoffs) | `[ ]` | coordenação | handoffs em `docs/frentes/` | consolidar em matriz com dono/estado |
 | P1-10 | 10 `.in()` sem teto restantes (doc 51) — priorizar os de cron | `[ ]` | G (próximo) | `docs/auditoria/51-postgrest-in-sem-teto.md` | teto explícito nos de cron primeiro |
 | P1-11 | `anon` com GRANT em 58/179 tabelas no descartável (limite F-09) | `[ ]` | G | gate F-09; medição do descartável | investigar se intencional; revoke se não for |
@@ -72,7 +72,7 @@
 | P1-20 | Formas de pagamento configuráveis (tabela + tela, forma × prazo, `tpag` só com fonte oficial) | `[x]` | F | **#764** → `7bd8a63a8`; formas de pagamento configuráveis | — |
 | P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[x]` | F | **#765** → `ac2d92738`; “Editar pedido” no lugar de adicionar produto | — |
 | P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[x]` | G | **#776** → `a9cb4015e`; coordenada preservada | — |
-| P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[~]` | G | junto do P0-5 | mesma regra no cliente e no servidor |
+| P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[x]` | G | **#777** → `55d5acfb`; mesma regra no cliente e no servidor | — |
 | P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
 | P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[ ]` | D | passe de inbox | componente + prova de estado |
 | P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[ ]` | D | `lib/inbox/handoff.ts` | expor no painel com teste |
@@ -113,3 +113,16 @@ backlog, 16 atendidos, 4 não aplicáveis (dependência de hardware/credencial s
 origem real). Nenhum requisito sem destino.
 
 **Cobertura R1–R42 recalculada após os merges.**
+
+
+## Depois do deploy da 1.63.0 (decisão do dono, 23/11)
+
+**Na janela da 1.63.0:** P0-5 · P1-2 · P1-4 · P1-8 · P1-22 · P1-23 — expedição
+pronta e no ar até 07:00 (alvo de tag 05:30, deploy/verificação até 06:30).
+O E2E inteiro **não** é pré-requisito do corte: specs novas não prontas vão na
+próxima.
+
+**Ficam para depois do deploy:** P1-28 multi-campanha/retomada 48h (F) ·
+orçamentos parados (P0-4, recorte + tela) · Inbox/Dashboard (P1-25/26/27) ·
+10 `.in()` sem teto (P1-10) · `anon` em 58/179 tabelas (P1-11) · SLO p95 real
+(P1-13) · E2E restante (P1-5). Congelamento de features vale até o corte.
