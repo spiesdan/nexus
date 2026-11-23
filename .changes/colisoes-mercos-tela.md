@@ -1,6 +1,6 @@
 ---
-impacto: nada_mudou
-secao: novo
+impacto: capacidade_nova
+secao: adicionado
 titulo: Tela dos pedidos do Mercos que ficaram de fora
 ---
 

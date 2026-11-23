@@ -27,6 +27,8 @@
  *   MERCOS_EMAIL=... MERCOS_SENHA=... node coletar.mjs --de 01/09/2026 --ate 14/10/2026
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createClient } from "@supabase/supabase-js";
+import { buracosParaReprocessar } from "./buracos.mjs";
 
 import { chromium } from "@playwright/test";
 
@@ -41,6 +43,8 @@ const EMPRESA = process.env.MERCOS_EMPRESA || "338282";
 const BASE = `https://app.mercos.com/${EMPRESA}`;
 const SAIDA = arg("saida", new URL("./pedidos.jsonl", import.meta.url).pathname);
 const ANDAMENTO = arg("andamento", new URL("./andamento.json", import.meta.url).pathname);
+/** Censo da reconciliação: a LISTA, que leva minutos, não os detalhes (12 h). */
+const LISTA_SAIDA = arg("lista-saida", process.env.MERCOS_LISTA_JSONL || "");
 
 const DE = arg("de", "01/09/2026");
 const ATE = arg("ate", "31/12/2026");
@@ -97,6 +101,38 @@ function lidos() {
       .filter((n) => n != null),
   );
 }
+
+
+/** Números que o coletor JÁ viu mas que nunca chegaram ao banco. */
+async function numerosPerdidosNoBanco(jaLidos) {
+  const todos = [...jaLidos];
+  if (todos.length === 0) return [];
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const org = process.env.MERCOS_ORG_ID || "";
+  if (!url || !key || !org) return [];
+  const admin = createClient(url, key, { auth: { persistSession: false } });
+  const vistos = [];
+  for (let i = 0; i < todos.length; i += 500) {
+    const pedaco = todos.slice(i, i + 500);
+    const { data, error } = await admin
+      .from("commercial_orders")
+      .select("numero_mercos")
+      .eq("organization_id", org)
+      .in("numero_mercos", pedaco);
+    if (error) return [];
+    for (const linha of data ?? []) vistos.push(linha.numero_mercos);
+  }
+  return buracosParaReprocessar({
+    vistosNoColetor: todos,
+    numerosNoBanco: vistos,
+    aPartirDe: A_PARTIR_DE,
+    limite: MAX_BURACOS,
+  });
+}
+
+const MAX_BURACOS = Number(process.env.MERCOS_MAX_BURACOS || "50");
+const alvoReprocesso = [];
 
 const STORAGE = process.env.MERCOS_STORAGE_STATE || "";
 const CODIGO_FILE = process.env.MERCOS_CODIGO_FILE || "";
@@ -274,12 +310,56 @@ try {
   }
   console.log(`\n  lista fechada: ${lista.length} pedidos entre ${DE} e ${ATE}`);
 
+  // O censo vai para disco ANTES do detalhe: se o detalhe falhar no meio, a
+  // lista já está disponível para a reconciliação comparar número+identidade.
+  if (LISTA_SAIDA) {
+    writeFileSync(
+      LISTA_SAIDA,
+      lista
+        .map((p) => JSON.stringify({
+          numero: p.numero,
+          id_mercos: p.id ?? null,
+          cliente_nome: p.razao_lista || p.fantasia_lista || null,
+          data_emissao: p.data_emissao_lista || null,
+          status: p.status ?? null,
+          vendedor: p.vendedor_lista ?? null,
+        }))
+        .join("\n") + "\n",
+    );
+    // A meta é o que permite à reconciliação saber se o censo está inteiro.
+    // Sem ela, "zero ausentes" não pode ser dito — a rodada vira incompleta.
+    writeFileSync(
+      `${LISTA_SAIDA}.meta.json`,
+      JSON.stringify({
+        censo_esperado: lista.length,
+        gerado_em: new Date().toISOString(),
+        de: DE,
+        ate: ATE,
+      }) + "\n",
+    );
+    console.log(`  censo gravado: ${LISTA_SAIDA} (${lista.length} números) + meta`);
+  }
+
   // ─── DETALHE: cabeçalho + itens, com reconciliação ───────────────────────
   const jaLidos = lidos();
-  const alvo = lista
+
+  // VARREDURA DE BURACOS (0344): o cursor por número deixa passados os pedidos
+  // que o banco pulou por colisão. Comparamos o que o coletor viu com o que
+  // chegou ao banco (`numero_mercos`) e recolhemos só a janela, com LIMITE.
+  const buracos = await numerosPerdidosNoBanco(jaLidos);
+  for (const numero of buracos) {
+    const encontrado = lista.find((p) => p.numero === numero);
+    if (encontrado) {
+      alvoReprocesso.push(encontrado);
+      process.stdout.write(`\n  buraco reprocessado: ${numero}`);
+    }
+  }
+
+  const alvo = [...alvoReprocesso, ...lista
     .filter((p) => p.numero > A_PARTIR_DE)
     .filter((p) => !jaLidos.has(p.numero))
-    .sort((a, b) => b.numero - a.numero)
+    .sort((a, b) => b.numero - a.numero)]
+    .filter((p, i, arr) => arr.findIndex((x) => x.numero === p.numero) === i)
     .slice(0, LIMITE);
 
   console.log(

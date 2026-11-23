@@ -51,8 +51,10 @@ describe("colisões do Mercos — o que a tela diz", () => {
   });
 
   it("data inválida é dita como sem data", () => {
-    expect(rotuloData("não é data")).toBe("data não informada");
-    expect(rotuloData(base.visto_em)).toMatch(/2026/);
+    // A tag do idioma vem da camada (organização), nunca de literal: a
+    // instalação pode estar em inglês.
+    expect(rotuloData("não é data", "pt-BR")).toBe("data não informada");
+    expect(rotuloData(base.visto_em, "pt-BR")).toMatch(/2026/);
   });
 
   it("a explicação é em frase de dono, sem jargão de colisão", () => {
