@@ -636,6 +636,8 @@ export const AUDIT_ACTIONS = [
    * O `metadata` carrega o que foi ignorado e o motivo declarado.
    */
   "commercial_order.override",
+  /** Gerente liberou campanha acima do teto com motivo (0335). */
+  "campaign.budget_override",
   /** Configuração de formas/prazos por organização (0334). */
   "settings.payment_method.created",
   "settings.payment_method.updated",

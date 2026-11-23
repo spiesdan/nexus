@@ -12,10 +12,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ post: vi.fn() }));
+const mocks = vi.hoisted(() => ({ post: vi.fn(), get: vi.fn() }));
 
 vi.mock("@/lib/api/client", () => ({
-  apiClient: { get: vi.fn(), post: mocks.post, patch: vi.fn(), delete: vi.fn() },
+  // `get` precisa devolver Promise: o debounce de busca de contatos dispara
+  // depois do teste, e `undefined.then` virava erro não tratado na suíte cheia.
+  apiClient: { get: mocks.get, post: mocks.post, patch: vi.fn(), delete: vi.fn() },
 }));
 vi.mock("@/hooks/i18n/useT", () => ({ useT: () => (chave: string) => chave }));
 vi.mock("@/hooks/i18n/useLocaleDeData", () => ({ useTagDeIdioma: () => "pt-BR" }));
@@ -84,6 +86,8 @@ function renderEditor() {
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
+  mocks.get.mockReset();
+  mocks.get.mockResolvedValue({ data: [] });
   mocks.post.mockReset();
   mocks.post.mockResolvedValue({ numero: 42, aprovacao_necessaria: false });
   semearRascunho();

@@ -364,6 +364,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       cidades: parsed.data.cidades,
       recorrencia_dias: parsed.data.recorrencia_dias ?? null,
       fonte_publico: parsed.data.fonte_publico ?? "busca",
+      orcamento_prospeccao_cents: parsed.data.orcamento_prospeccao_cents ?? null,
+      orcamento_midia_cents: parsed.data.orcamento_midia_cents ?? null,
       // 0273 — a criação também aceita o agendamento; os campos ausentes ficam
       // no default da coluna (o operador que agenda pela tela usa o PATCH).
       ...(parsed.data.prospect_ids !== undefined ? { prospect_ids: parsed.data.prospect_ids } : {}),
