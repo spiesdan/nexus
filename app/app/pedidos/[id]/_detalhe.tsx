@@ -31,6 +31,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { copyToClipboard } from "@/lib/clipboard";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { numeroMercosEhReferencia, rotuloNumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
 import { margemDoPedido, type CustoDoPedido } from "@/lib/comercial/custo-do-pedido";
 import type { ItemDoPedido, PedidoComercial, StatusDoPedido } from "@/lib/schemas/pedidos";
 
@@ -803,6 +804,11 @@ export function DetalheDoPedido({
           mesmo arranjo do Mercos (número + pill), sem Card de chroma. */}
       <NexusPageHeader
         title={numeroDoPedido(pedido.numero)}
+        subtitle={
+          numeroMercosEhReferencia(pedido.numero, pedido.numero_mercos)
+            ? `Mercos ${pedido.numero_mercos}`
+            : undefined
+        }
         navigation={
           <Link href="/app/pedidos" className="underline underline-offset-4 hover:text-text">
             {t("← Pedidos")}
@@ -1200,7 +1206,10 @@ export function DetalheDoPedido({
       <Card className="hover-raise space-y-4 p-4">
         <TituloDaSecao numero={4}>{t("DETALHES DO PEDIDO")}</TituloDaSecao>
         <dl className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <LinhaDetalhe rotulo={t("Nº do pedido")} valor={numeroDoPedido(pedido.numero)} />
+          <LinhaDetalhe
+            rotulo={t("Nº do pedido")}
+            valor={rotuloNumeroDoPedido(pedido.numero, pedido.numero_mercos)}
+          />
           <LinhaDetalhe
             rotulo={t("Data da emissão")}
             valor={new Date(pedido.created_at).toLocaleDateString(tagIdioma)}

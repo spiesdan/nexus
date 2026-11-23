@@ -229,6 +229,8 @@ export function subtotalDoItem(
 export interface PedidoComercial {
   id: string;
   numero: number;
+  /** 0344: número do ERP. Opcional até a migration do G entrar na main. */
+  numero_mercos?: number | null;
   contact_id: string | null;
   cliente_nome: string;
   cliente_documento: string | null;

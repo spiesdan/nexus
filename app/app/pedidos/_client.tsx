@@ -20,6 +20,7 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
+import { NumeroDoPedido, rotuloNumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -952,7 +953,7 @@ export function PedidosClient({
             <Input
               value={filtros.busca}
               onChange={(e) => mudar({ busca: e.target.value }, true)}
-              placeholder={t("Número do pedido, cliente ou CNPJ")}
+              placeholder={t("Pedido, cliente, CNPJ ou número do Mercos")}
               aria-label={textos.buscar}
               className="h-9 bg-surface pl-9"
             />
@@ -1252,7 +1253,7 @@ export function PedidosClient({
                             type="checkbox"
                             checked={selecionados.includes(p.id)}
                             onChange={() => alternar(p.id)}
-                            aria-label={numeroDoPedido(p.numero)}
+                            aria-label={rotuloNumeroDoPedido(p.numero, p.numero_mercos)}
                             className="relative z-10 shrink-0"
                           />
                         )}
@@ -1269,7 +1270,7 @@ export function PedidosClient({
                                 href={`/app/pedidos/${p.id}`}
                                 className="shrink-0 text-sm font-semibold whitespace-nowrap text-accent-ink after:absolute after:inset-0 after:content-['']"
                               >
-                                {numeroDoPedido(p.numero)}
+                                <NumeroDoPedido numero={p.numero} numeroMercos={p.numero_mercos} />
                               </Link>
                               <PillDoStatus status={p.status as StatusDoPedido} />
                             </div>
@@ -1397,11 +1398,13 @@ export function PedidosClient({
                             type="checkbox"
                             checked={selecionados.includes(p.id)}
                             onChange={() => alternar(p.id)}
-                            aria-label={numeroDoPedido(p.numero)}
+                            aria-label={rotuloNumeroDoPedido(p.numero, p.numero_mercos)}
                           />
                         </TableCell>
                       )}
-                      <TableCell className="font-medium">{numeroDoPedido(p.numero)}</TableCell>
+                      <TableCell className="font-medium">
+                        <NumeroDoPedido numero={p.numero} numeroMercos={p.numero_mercos} />
+                      </TableCell>
                       <TableCell>{p.cliente_nome}</TableCell>
                       <TableCell className="text-muted-foreground">
                         {new Date(p.created_at).toLocaleDateString(tagIdioma, {

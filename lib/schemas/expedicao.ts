@@ -77,6 +77,8 @@ export interface PedidoNaCarga {
   reconferir_motivo?: string | null;
   pedido: {
     numero: number;
+    /** 0344: referência do Mercos, quando diferente do número interno. */
+    numero_mercos?: number | null;
     cliente_nome: string;
     endereco_entrega: string | null;
     total_cents: number;
