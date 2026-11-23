@@ -62,6 +62,8 @@ const TEXTO = {
   exigeNf: "Nota fiscal",
   exigeNfOpcao: "Com NF",
   observacoes: "Observações",
+  informacoesFiscais: "Informações fiscais (NF-e)",
+  informacoesFiscaisDica: "Vai no infCpl da nota.",
   obsInterna: "Observação interna",
   endereco: "Endereço",
   enderecoExemplo: "Rua, número",
