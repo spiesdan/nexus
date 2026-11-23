@@ -705,3 +705,82 @@ rollback: refixar 1.62.3
 um a um; o drift foi fechado. Lote de hoje encerrado: **nenhuma release nova
 sem pedido do dono**. Fila retomada: F → P1-28/E2E/orçamentos · D →
 Inbox/Dashboard/96 telas · G → `.in()`/`anon`/p95.
+
+## 37. 23/11/2026 — Release 1.64.0 cortada (preparada, NÃO deployada)
+
+Tag **`v1.64.0`** criada pelo CI a partir do merge do PR oficial **#805**
+(`nexus-release-spiesdan[bot]`), derivada de **11 fragmentos** (4
+`capacidade_nova`) ⇒ **minor**, `1.63.1` → **1.64.0**. Número calculado por
+`pnpm release:conferir`; **corte pelo workflow oficial**, nunca à mão (o guard
+já recusou o atalho na 1.63.0).
+
+**Entra nesta versão:** multi-campanha + retomada 48h (#794) · orçamentos
+parados com idade/próximo passo (#801) + CSV (#803) · relatório mensal de
+gastos com CSV (#802) · Inbox selo de cache (#798) + handoff no cabeçalho
+(#799) · Dashboard com estado vazio explícito (#804) · E2E de expedição
+(#800) · `update.sh` com schema em transação única (#796) · `.in()` 10/10
+(#791/#797).
+
+**Dependência externa — template de retomada aprovado na Meta.** O follow-up
+de +48h **não dispara sem template aprovado**: fora da janela de 24h a Meta
+rejeita texto livre (erro 131047). O código usa preset configurável pela marca
+do tenant (nunca texto hardcoded), mas a **aprovação do template é pré-requisito
+operacional do dono**. Sem ela, o fluxo fica declarado *“aguardando aprovação”*
+e o follow-up não é marcado como enviado.
+
+**Não há migration nova nesta versão.** Deploy é do dono, com backup,
+verificação e rollback (refixar 1.63.1). Congelamento de merges vale até o
+deploy verificado.
+
+## 38. 23/11/2026 — Deploy 1.64.0 VERIFICADO pelo dono
+
+`update.sh --to v1.64.0` → `EXIT=0`, *“Atualização concluída”*.
+
+```
+7 containers em 1.64.0 · health healthy 1.64.0
+  (supabase / redis / rate_limit / waha ok) · /login 200
+schema: commercial_payment_methods=t · prospecting_campaign_spend=t
+        rota_versao_confirmada=t · fn_salvar_ordem_rota=t
+Sentinel: achados=5 · reafirmadas=5 · truncado=false
+URI too long (30 min)=0 · risk-watcher falhas (30 min)=0
+rollback: refixar 1.63.1
+```
+
+**O `update.sh` transacional rodou pela primeira vez em produção e passou** —
+o P0 do aborto da 1.63.0 está **provado no artefato**: o schema entrou em
+transação única (`psql -1`, #796) e o guard não precisou intervir. O risco de
+DDL parcial do §35 está endereçado na prática, não só no papel.
+
+**Dependência do template Meta (§37)** continua valendo: o follow-up de +48h
+só dispara com template aprovado; sem ele o fluxo fica “aguardando aprovação”.
+
+**Descongelamento:** F liberado para painel de gastos + E2E do P1-28; D para a
+varredura das 96 (uma fatia por vez, `--workers=1`, swap >4 GB aborta e salva o
+parcial); G segue no p95. **Nenhuma release nova hoje sem pedido do dono.**
+
+
+## 39. 24/11/2026 — Série de SLO existe e ninguém viu (invariante 7 ferido)
+
+**Medição do dono em produção (7 dias):**
+
+```
+267 amostras · 0 erros · p95 2660 ms (alvo 800 ms)
+/api/v1/conversations: p95 2673 ms (259 amostras)
+Sentinel: plataforma.slo_estourado em regras_nao_avaliadas — NENHUMA ocorrência aberta
+```
+
+**Causa:** `fn_slo_api_resumo` é `returns table(...)`; `supabase.rpc()` devolve
+**array**. Dois leitores leem como **objeto**:
+`lib/sentinel/coleta.ts` (`total=0` → detector `null` → nunca abre) e
+`app/api/v1/admin/observabilidade/route.ts` (tela diz “sem histórico” com 267
+amostras na tabela).
+
+**Lição:** *RPC que retorna tabela devolve array; ler como objeto zera a série
+e cega o painel e o detector.* A série existe, o alvo é violado e o sistema
+não aprende — **invariante 7 ferido**.
+
+**Registrado no `66`:** P0-7 (G corrige os dois leitores) e P0-8 (G ataca a
+performance de `/api/v1/conversations`, p95 2673 ms). **Nenhuma release cortada
+por isso agora.** Quando o G mergear e o dono deployar, a verificação passa a
+exigir: **tela com 267+ amostras** e **ocorrência
+`plataforma.slo_estourado|latencia` aberta**.

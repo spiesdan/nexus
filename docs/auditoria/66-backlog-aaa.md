@@ -4,13 +4,16 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 19 `[x]` · 4 `[~]` · 4 `[!]` · 11 `[ ]` — 38 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 19 `[x]` · 6 `[~]` · 4 `[!]` · 11 `[ ]` — 40 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
+| P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[~]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | corrigir `lib/sentinel/coleta.ts` + `app/api/v1/admin/observabilidade/route.ts`; teste dirigido prova total>0 e detector abre |
+| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[ ]` | G | medição do dono, 7 dias | perfilhar query/N+1, medir antes/depois; alvo 800 ms |
+
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
 | P0-3 | Motor laya: subir (a) ou limpar `LAYA_URL` (b) | `[!]` | **BLOQUEADO — dono** | `40` §19: 50 qualificações/17 risk/17 radar em 6h | dono escolhe (a) serviço na VPS ou (b) env limpo |

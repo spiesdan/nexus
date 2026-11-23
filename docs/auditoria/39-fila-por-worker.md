@@ -426,3 +426,15 @@ Máquina no início da volta: swap **2,29 GB** · **0** `next-server` · 0 Chrom
 Regras vigentes: um worker por frente, só os três IDs reais, estado lido do
 repositório, fila ≥2 por worker, merge verde do coordenador e **deploy do dono**.
 Nenhuma release nova hoje sem pedido do dono (lote 1.63.1 já no ar).
+
+
+## Atualização da ociosidade — 24/11, 11:33 UTC
+
+| worker | estado | tarefa |
+|---|---|---|
+| D | em execução | varredura das 96 (#806 aberto); swap 2,98 GB, 0 servidores — retomar em fatias de 10, `--workers=1`, parar se >4 GB |
+| F | em execução | #808 painel de gastos (aberto) + E2E do P1-28 |
+| G | em execução | **P0-7** leitura array do SLO (corrigir #809) e **P0-8** p95 de `/api/v1/conversations` |
+
+Chave do ciclo: série de produção 267 amostras/p95 2660 ms (alvo 800) — #809
+original dizia 'sem série' e foi rejeitado; G reescreve com os números medidos.
