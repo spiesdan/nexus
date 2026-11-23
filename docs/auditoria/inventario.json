@@ -1,27 +1,27 @@
 {
   "resumo": {
-    "gerado_em": "2026-11-23T03:35:20.300Z",
+    "gerado_em": "2026-11-23T09:10:10.394Z",
     "commit": null,
     "telas": 147,
     "resolvers": 13,
-    "apis": 445,
+    "apis": 446,
     "layouts": 13,
     "erros": 8,
     "estados": 9,
     "arquivos_especiais": 2,
     "migrations": {
-      "total": 316,
+      "total": 318,
       "primeira": "00001_initial_schema.sql",
-      "ultima": "20261124130000_0336_rota_versao_confirmada.sql",
+      "ultima": "20261124150000_0337_campanha_orcamento_gasto.sql",
       "semPadrao": [
         "00001_initial_schema.sql"
       ],
       "duplicadas": []
     },
     "testes": {
-      "tests/unit": 755,
-      "lib": 305,
-      "tests/invariants": 186,
+      "tests/unit": 756,
+      "lib": 310,
+      "tests/invariants": 190,
       "tests/e2e": 109,
       "app": 80,
       "tests/api": 10,
@@ -50,10 +50,10 @@
       "branding": 2,
       "filters": 2,
       "observabilidade": 2,
+      "prospeccao": 2,
       "fiscal": 1,
       "fotos": 1,
-      "operacao": 1,
-      "prospeccao": 1
+      "operacao": 1
     },
     "apis_por_prefixo": {
       "/api/v1/ai": 69,
@@ -63,8 +63,8 @@
       "/api/v1/admin": 22,
       "/api/v1/conversations": 21,
       "/api/v1/leads": 13,
+      "/api/v1/commercial-orders": 12,
       "/api/v1/contacts": 12,
-      "/api/v1/commercial-orders": 11,
       "/api/v1/invoices": 10,
       "/api/v1/sentinel": 10,
       "/api/v1/team": 10,
@@ -2646,6 +2646,21 @@
     },
     {
       "tipo": "api",
+      "rota": "/api/v1/commercial-orders/orcamentos-parados",
+      "arquivo": "app/api/v1/commercial-orders/orcamentos-parados/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 79
+    },
+    {
+      "tipo": "api",
       "rota": "/api/v1/commercial-orders/pdf",
       "arquivo": "app/api/v1/commercial-orders/pdf/route.ts",
       "grupo": "api",
@@ -3480,7 +3495,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 627
+      "linhas": 644
     },
     {
       "tipo": "api",
@@ -3540,7 +3555,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 382
+      "linhas": 391
     },
     {
       "tipo": "api",
@@ -3620,7 +3635,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 167
+      "linhas": 174
     },
     {
       "tipo": "api",
@@ -5347,7 +5362,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 428
+      "linhas": 430
     },
     {
       "tipo": "api",
@@ -6329,7 +6344,7 @@
         "requireRole",
         "force-dynamic"
       ],
-      "linhas": 73
+      "linhas": 75
     },
     {
       "tipo": "api",
@@ -6384,7 +6399,7 @@
         "requireRole",
         "force-dynamic"
       ],
-      "linhas": 163
+      "linhas": 156
     },
     {
       "tipo": "api",
@@ -6425,7 +6440,7 @@
         "requireRole",
         "force-dynamic"
       ],
-      "linhas": 133
+      "linhas": 195
     },
     {
       "tipo": "api",

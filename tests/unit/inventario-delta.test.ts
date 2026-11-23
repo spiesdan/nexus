@@ -39,14 +39,14 @@ describe("recontagem de rotas da API", () => {
 
   it("a contagem viva bate com o fim do delta no doc gerado", () => {
     expect(secao).toContain(`(${baseline.length} → ${agora.length})`);
-    // 419 → 443 nesta fatia (a rota de aceite do motorista entra aqui); o número é derivado do baseline versionado
+    // 419 → 444 nesta fatia (aceite do motorista, checkout e orcamentos-parados); número medido do disco
     // e do checkout, não escrito à mão dentro da prosa do doc.
-    expect(agora.length - baseline.length).toBe(24);
+    expect(agora.length - baseline.length).toBe(25);
   });
 
   it("toda rota nova está nomeada no doc, com área e motivo", () => {
     const novas = agora.filter((caminho) => !baseline.includes(caminho));
-    expect(novas).toHaveLength(24);
+    expect(novas).toHaveLength(25);
     for (const caminho of novas) {
       // O doc mostra a rota HTTP, não o caminho do arquivo; o sufixo é o que
       // distingue [id]/revoke, correcao/conversa/simular etc.
