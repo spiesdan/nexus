@@ -4,15 +4,15 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 19 `[x]` · 6 `[~]` · 4 `[!]` · 11 `[ ]` — 40 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 26 `[x]` · 4 `[~]` · 4 `[!]` · 6 `[ ]` — 40 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[~]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | corrigir `lib/sentinel/coleta.ts` + `app/api/v1/admin/observabilidade/route.ts`; teste dirigido prova total>0 e detector abre |
-| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[ ]` | G | medição do dono, 7 dias | perfilhar query/N+1, medir antes/depois; alvo 800 ms |
+| P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; RPC lido como array nos dois leitores + testes; verificação pós-deploy pendente (267+ amostras, ocorrência aberta) | aguardar deploy do dono e conferir tela/ocorrência 
+| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#811** → `d8638cf3` + **#812** → `1b484654`; p95 2673 ms em `/api/v1/conversations` medido | perfilhar N+1/query e medir antes/depois; alvo 800 ms 
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
@@ -20,13 +20,13 @@
 | P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + F (backend) + D (tela) | Recorte escrito no fim deste doc; backend entregue | D projeta a tela sobre o endpoint |
 | P0-5 | Confirmação de rota transacional (atomicidade) | `[x]` | G | **#771** → `2ca999665`; ordem e versão na mesma transação (0335) | — |
 
-| P0-6 | P0 de packaging: `update.sh` com schema em transação única (`psql --single-transaction`) ou verificação `to_regclass` antes de trocar imagens | `[~]` | G | aborto da 1.63.0 deixou 0335 aplicada (40 §35); guard protege a imagem, não o schema | propor sem aplicar em produção; `pnpm test:shell` |
+| P0-6 | P0 de packaging: `update.sh` com schema em transação única (`psql --single-transaction`) ou verificação `to_regclass` antes de trocar imagens | `[x]` | G | aborto da 1.63.0 deixou 0335 aplicada (40 §35); guard protege a imagem, não o schema | **#796** → `596b96bbe`; `psql -1` aplicado em produção 1.64.0 (40 §38) | — 
 
 ## P1
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P1-1 | 96 telas `app/app` por concentração + contraste por token | `[~]` | D | varredura fatiada de 99 rotas; tenent-switcher 82 rotas | terminar fatias, consertar por concentração |
+| P1-1 | 96 telas `app/app` por concentração + contraste por token | `[x]` | D | varredura fatiada de 99 rotas; tenent-switcher 82 rotas | **#806** → `e02678acc`; varredura das 96 entregue | — 
 | P1-2 | `rota_versao_confirmada` (0334) + escrita pelo app | `[x]` | G | **#773** → `29df915bb`; `rota_versao_confirmada` (0336) + escrita pelo app |
 | P1-3 | Mapa↔lista sincronizados + pino por precisão | `[~]` | D | PRs de rotas do passe de expedição | seleção no mapa reflete na lista e vice-versa |
 | P1-4 | GPS “sem sinal há N min” + `PHOTON_URL` no env/template | `[x]` | G | **#774** → `3bbde8db5`; GPS honesto + `PHOTON_URL` no kit | — |
@@ -79,12 +79,12 @@
 | P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[x]` | G | **#776** → `a9cb4015e`; coordenada preservada | — |
 | P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[x]` | G | **#777** → `55d5acfb`; mesma regra no cliente e no servidor | — |
 | P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
-| P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[ ]` | D | passe de inbox | componente + prova de estado |
-| P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[ ]` | D | `lib/inbox/handoff.ts` | expor no painel com teste |
-| P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[ ]` | D | passe de dashboard | medir e aplicar |
+| P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[x]` | D | passe de inbox | **#798** → `c05c07ea`; selo medido 1/1 em 4 combinações | — 
+| P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[x]` | D | `lib/inbox/handoff.ts` | **#799** → `82c90c18`; painel de handoff no cabeçalho, 4/4 combinações | — 
+| P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[x]` | D | passe de dashboard | **#804** → `aff53e90`; `NexusEmptyState` no Dashboard | — 
 | P2-4 | Consolidar `PROMPT-EXPEDICAO.md` no repo e linkar na auditoria | `[x]` | coordenação | `PROMPT-EXPEDICAO.md` na raiz (#761 → `7b70052b`) e linkado neste doc |
 
-| P1-28 | Multi-campanha + retomada 48h: empresa em outra campanha entra na nova; nunca contatada recebe template Meta, já contatada recebe mensagem de retomada; follow-up +48h uma vez, idempotente, cancelado em resposta/opt-out, no ritmo/rotação de `disparo.ts` | `[ ]` | F (frente da fila) | decisão do dono; causa raiz `prospect_em_outra_campanha` em `baseline.sql:22109-22122` (desde 0277) | ver aceite abaixo |
+| P1-28 | Multi-campanha + retomada 48h: empresa em outra campanha entra na nova; nunca contatada recebe template Meta, já contatada recebe mensagem de retomada; follow-up +48h uma vez, idempotente, cancelado em resposta/opt-out, no ritmo/rotação de `disparo.ts` | `[x]` | F (frente da fila) | decisão do dono; causa raiz `prospect_em_outra_campanha` em `baseline.sql:22109-22122` (desde 0277) | **#794** → `940c140e`; multi-campanha + retomada 48h (template Meta aprovado: pré-requisito operacional) | — 
 
 ### P1-28 — dependências e aceite
 
