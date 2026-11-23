@@ -50,3 +50,11 @@ Par habilitado × desabilitado medido no navegador (cargas `a7c1997e…` bloquea
 | liberada | Sair para rota (primário) | `rgb(164,165,255)` |
 
 Capturas: `capturas/modos-componentes/primario-{bloqueado,liberado}_light_{1440,390}.png`. Diferença visível e medida — não é o mesmo roxo sólido com `opacity` enganoso. Em 390 as duas ações da montagem ficam na mesma linha (`y=180`, `h=44`).
+
+## Ajuste 2 — uma ação, um nome, um lugar (sem duplicata)
+
+A revisão do par bloqueado/liberado encontrou a **mesma ação em dois lugares com nomes diferentes**: no cabeçalho "Conferir separação" / "Sair para rota" e no cartão "Próximo passo" "Abrir para conferir" / "Iniciar rota". O usuário tinha que adivinhar qual era a real.
+
+Regra aplicada: **a ação do próximo passo vive só no cartão "Próximo passo"**. O cabeçalho ficou com "Veículo" (natureza diferente) e o menu "…" (Romaneio, Imprimir, Excluir, Motorista) — nenhuma ação de status.
+
+Verificado no navegador, 2 temas × 2 estados × 1440/390: apenas **uma** das ações (`Conferir separação` no estado bloqueado, `Sair para rota` no liberado) existe no documento. Capturas renomeadas com o tema correto: `capturas/modos-componentes/acaounica-{bloqueado,liberado}_{light,dark}_{1440,390}.png`. As capturas antigas `primario-*_light_*` estavam na verdade escuras (toggle com sol); foram substituídas — nome de evidência errado é pior que evidência faltando.

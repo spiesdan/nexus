@@ -617,7 +617,7 @@ export function CargaClient({
             variant="outline"
             onClick={() => proxima && focarParada(proxima.id)}
           >
-            {t("Abrir próxima parada")}
+            {t("Registrar desfecho")}
           </Button>
         ) : null,
       };
@@ -648,7 +648,7 @@ export function CargaClient({
             variant="outline"
             onClick={() => proximaNaoSeparada && focarParada(proximaNaoSeparada.id)}
           >
-            {t("Abrir para conferir")}
+            {t("Conferir separação")}
           </Button>
         ),
       };
@@ -659,7 +659,7 @@ export function CargaClient({
       detalhe: t("Tudo conferido. A rota pode começar."),
       acao: podeOperar ? (
         <Button className="w-full" size="sm" onClick={() => void mudarStatus("em_rota")}>
-          {t("Iniciar rota")}
+          {textos.sairRota}
         </Button>
       ) : null,
     };
@@ -766,81 +766,16 @@ export function CargaClient({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {podeOperar && carga.status === "montando" && (
-                <>
-                  {naoSeparados.length > 0 ? (
-                    /* A AÇÃO QUE DESBLOQUEIA É PRIMÁRIA. "Sair para rota"
-                       fica secundária enquanto há separação pendente —
-                       primário desabilitado no topo era o botão mais
-                       destacado da tela e não fazia nada (auditoria 71/72). */
-                    <Button
-                      size="sm"
-                      onClick={() => proximaNaoSeparada && focarParada(proximaNaoSeparada.id)}
-                      disabled={!proximaNaoSeparada}
-                    >
-                      {t("Conferir separação")}
-                    </Button>
-                  ) : null}
-                  <Button
-                    size="sm"
-                    variant={naoSeparados.length > 0 ? "outline" : "default"}
-                    onClick={() => void mudarStatus("em_rota")}
-                    title={
-                      naoSeparados.length > 0
-                        ? `${naoSeparados.length} ${
-                            naoSeparados.length === 1
-                              ? t("pedido ainda não separado")
-                              : t("pedidos ainda não separados")
-                          }`
-                        : undefined
-                    }
-                    className={
-                      naoSeparados.length > 0
-                        ? "border-border bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground"
-                        : undefined
-                    }
-                  >
-                    {textos.sairRota}
-                  </Button>
-                </>
+              {podeOperar && (carga.status === "montando" || carga.status === "em_rota") && (
+                <Button variant="outline" size="sm" onClick={abrirVeiculo} className="min-h-11">
+                  <PencilSimple size={14} aria-hidden />
+                  {t("Veículo")}
+                </Button>
               )}
-              {podeOperar && carga.status === "em_rota" && (
-                <>
-                  {pendentes.length > 0 ? (
-                    <Button
-                      size="sm"
-                      onClick={() => proxima && focarParada(proxima.id)}
-                      disabled={!proxima}
-                    >
-                      {t("Registrar desfecho")}
-                    </Button>
-                  ) : null}
-                  <Button
-                    size="sm"
-                    variant={pendentes.length > 0 ? "outline" : "default"}
-                    onClick={() => void mudarStatus("concluida")}
-                    title={
-                      pendentes.length > 0
-                        ? `${pendentes.length} ${
-                            pendentes.length === 1
-                              ? t("parada ainda sem desfecho")
-                              : t("paradas ainda sem desfecho")
-                          }`
-                        : undefined
-                    }
-                    className={
-                      pendentes.length > 0
-                        ? "border-border bg-muted text-muted-foreground hover:bg-muted hover:text-muted-foreground"
-                        : undefined
-                    }
-                  >
-                    {textos.concluir}
-                  </Button>
-                </>
-              )}
-              {/* NO MÁXIMO DUAS AÇÕES NO CABEÇALHO. O resto mora no "…" —
-                  em 390 px cinco botões quebravam em duas linhas. A ação de
-                  adicionar pedido saiu daqui: vive no bloco "Adicionar pedidos". */}
+              {/* SÓ AÇÕES DE NATUREZA DIFERENTE NO TOPO. A ação do próximo
+                  passo vive EXCLUSIVAMENTE no cartão "Próximo passo" — repeti-la
+                  aqui com outro nome ("Sair para rota" × "Iniciar rota", por
+                  exemplo) fazia o operador adivinhar qual era a real. */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" aria-label={t("Mais ações")} className="min-h-11">
@@ -848,11 +783,6 @@ export function CargaClient({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {(carga.status === "montando" || carga.status === "em_rota") && (
-                    <DropdownMenuItem onSelect={abrirVeiculo}>
-                      <PencilSimple size={14} aria-hidden /> {t("Veículo")}
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem asChild>
                     <Link href={`/api/v1/shipments/${carga.id}/romaneio`} target="_blank" rel="noopener noreferrer">
                       <FileText size={14} aria-hidden /> {textos.romaneio}
@@ -871,6 +801,11 @@ export function CargaClient({
                       <Trash size={14} aria-hidden /> {textos.excluirCarga}
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem asChild>
+                    <Link href={`/app/expedicao/${cargaId}/motorista`}>
+                      <Truck size={14} aria-hidden /> {textos.modoMotorista}
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
