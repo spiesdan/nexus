@@ -379,3 +379,14 @@ nova vale para todos. **Se a varredura passou, a linha ganha o veredito e evidê
 não se cria trabalho de redesign para parecer produtivo.** Só muda o que falhou:
 `/account-suspended` tinha logout por **GET** (agora POST) e link de contato
 139×17 → 147×44. Antídoto para “redesign por obrigação”.
+
+## Fila viva completa — 66-backlog-aaa.md (22/11/2026)
+
+A lista única de pendências auditadas está em
+[`66-backlog-aaa.md`](66-backlog-aaa.md): 24 itens (5 P0, 16 P1, 3 P2), cada um
+com **estado, dono, evidência e próximo passo**. Esta fila continua sendo o
+despacho operacional; a `66` é o inventário vivo. Regra: **≥2 itens por worker**
+antes de qualquer rodada; nenhum item sem dono.
+
+**Retomada (22/11):** D → P1-1/P1-6/P1-7; F → P1-12 + frentes fiscais/pedidos;
+G → P0-1/P0-5/P1-2. Bloqueados com dono: P0-3, P1-14, P1-15, P2-3.
