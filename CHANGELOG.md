@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.66.0] — 2026-11-23
+
+### Adicionado
+
+- **Núcleo da cobrança SaaS do Nexus entra em modo de teste** O sistema já sabe impor a suspensão por assinatura vencida no **backend** (não
+  só na tela), com gate no `resolveActiveOrg`, no `requireRole` e no proxy `/app/*`,
+  allowlist exata para cobrança/suporte/saída e kill-switch que devolve o acesso
+  sem apagar o estado registrado. A máquina de avisos D-3/D-2/D-1 também existe,
+  sem reenvio retroativo e sem duplicar etapa. Chave `sk_live_` derruba o boot:
+  esta fatia **não cobra ninguém** — plano, preço e vencimento ainda são decisão
+  comercial pendente. Nenhum deploy nesta entrega.
+
+### Alterado
+
+- **Expedição abre no modo certo — montagem ou operação** A mesma página tentava servir montar e rodar uma carga, com quatro etapas que repetiam destinos. Agora o status decide: em montagem, o operador vê primeiro o que já está na carga, depois adiciona pedidos e sai; em rota/concluída, vê a próxima parada, mapa e ordem juntos e fechamento no fim. O cabeçalho tem só uma ação principal e um menu "…", e não há mais numeração repetida.
+
 ## [1.65.2] — 2026-11-23
 
 ### Alterado
@@ -8982,7 +8998,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.65.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.66.0...HEAD
+[1.66.0]: https://github.com/spiesdan/nexus/compare/v1.65.2...v1.66.0
 [1.65.2]: https://github.com/spiesdan/nexus/compare/v1.65.1...v1.65.2
 [1.65.1]: https://github.com/spiesdan/nexus/compare/v1.65.0...v1.65.1
 [1.65.0]: https://github.com/spiesdan/nexus/compare/v1.64.0...v1.65.0
