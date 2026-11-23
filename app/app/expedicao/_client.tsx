@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { chaveDeBusca } from "@/lib/expedicao/buscar-embarcavel";
+import type { SituacaoDaExpedicao } from "@/lib/expedicao/situacao-da-expedicao";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   numeroDaCarga,
@@ -137,7 +138,7 @@ const ALVOS_DE_TOQUE =
 
 export function ExpedicaoClient({
   inicial,
-  fila,
+  situacao,
   progresso = {},
   podeCriar,
   motorista = false,
@@ -146,10 +147,11 @@ export function ExpedicaoClient({
 }: {
   inicial: Carga[];
   /**
-   * O que espera embarque: número e valor. A lista de pedidos em si vive na
-   * subtela `/app/expedicao/nova` — aqui só o suficiente para a faixa.
+   * A faixa de situação já particionada no servidor. A lista de pedidos em si
+   * vive na subtela `/app/expedicao/nova` — aqui só o que a faixa mostra. Um
+   * pedido aparece em UMA célula: contar de novo no cliente recriaria o erro.
    */
-  fila: { total: number; valor: number };
+  situacao: SituacaoDaExpedicao;
   /**
    * `shipment_id` → paradas/entregues. Vem do servidor porque a lista de cargas
    * não carrega os itens: sem isto a linha da carga diz "em rota" e não diz se
@@ -194,26 +196,18 @@ export function ExpedicaoClient({
     [inicial],
   );
 
-  const paradasPendentes = React.useMemo(
-    () =>
-      porStatus.emRota.reduce((soma, c) => {
-        const p = progresso[c.id];
-        return soma + Math.max(0, (p?.total ?? 0) - (p?.entregues ?? 0) - (p?.devolvidos ?? 0));
-      }, 0),
-    [porStatus.emRota, progresso],
-  );
-  const paradasNaRua = porStatus.emRota.reduce((s, c) => s + (progresso[c.id]?.total ?? 0), 0);
-  const pedidosNaDoca = porStatus.montando.reduce((s, c) => s + (progresso[c.id]?.total ?? 0), 0);
-
+  // As contagens da faixa vêm da PARTIÇÃO feita no servidor. Recontar aqui
+  // (por status de carga + itens soltos) era exatamente o que fazia um pedido
+  // aparecer em duas células — auditorias 71/72.
   const contagem = React.useMemo(
     () => ({
       todas: inicial.length,
-      em_rota: porStatus.emRota.length,
-      montando: porStatus.montando.length,
-      concluidas: porStatus.concluidas.length,
+      em_rota: situacao.cargas.naRua,
+      montando: situacao.cargas.montando,
+      concluidas: situacao.cargas.concluidas,
       canceladas: porStatus.canceladas.length,
     }),
-    [inicial.length, porStatus],
+    [inicial.length, situacao.cargas, porStatus.canceladas],
   );
 
   // ── Fila ──────────────────────────────────────────────────────────────────
@@ -516,8 +510,9 @@ export function ExpedicaoClient({
       )}
 
       {/* ── A situação da operação ──────────────────────────────────────────
-          Uma faixa, não três cartões. Cada número é também o filtro da fila:
-          "2 na rua" abre as duas; "8 aguardando embarque" leva à Nova carga. */}
+          Uma PARTIÇÃO: cada pedido está em uma célula só. As três células de
+          carga também filtram a fila; "aguardando embarque" é só leitura —
+          criar carga é o botão do cabeçalho (uma ação, um lugar). */}
       <div
         className="grid grid-cols-2 overflow-hidden rounded-2xl border border-border bg-surface shadow-xs 2xl:grid-cols-4"
         aria-label={t("Situação da expedição")}
@@ -539,8 +534,8 @@ export function ExpedicaoClient({
               {contagem.em_rota}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
-              {paradasPendentes}{" "}
-              {paradasPendentes === 1 ? t("parada em aberto") : t("paradas em aberto")}
+              {situacao.pedidos.naRua}{" "}
+              {situacao.pedidos.naRua === 1 ? t("pedido na rua") : t("pedidos na rua")}
             </span>
           </span>
           <span
@@ -569,7 +564,8 @@ export function ExpedicaoClient({
               {contagem.montando}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
-              {pedidosNaDoca} {pedidosNaDoca === 1 ? t("pedido na doca") : t("pedidos na doca")}
+              {situacao.pedidos.montando}{" "}
+              {situacao.pedidos.montando === 1 ? t("pedido na doca") : t("pedidos na doca")}
             </span>
           </span>
           <span
@@ -581,26 +577,23 @@ export function ExpedicaoClient({
           />
         </button>
 
-        <Link
-          href="/app/expedicao/nova"
-          className="group relative flex flex-col items-start gap-0.5 border-r border-border px-3.5 py-3 text-left transition-colors hover:bg-accent-soft/60"
-        >
+        {/* Célula de leitura, não link: "Nova carga" no cabeçalho já leva a
+            /nova. Dois caminhos para o mesmo destino com nomes diferentes
+            faziam o operador adivinhar qual era a ação real (auditoria 72). */}
+        <div className="relative flex flex-col items-start gap-0.5 border-r border-border px-3.5 py-3 text-left">
           <span className="text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">
             {textos.embarcaveis}
           </span>
           <span className="flex min-w-0 items-baseline gap-2">
             <span className="shrink-0 text-2xl font-semibold text-text tabular-nums">
-              {fila.total}
+              {situacao.pedidos.aguardando}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
-              {comoMoeda(fila.valor, "BRL")}
+              {comoMoeda(situacao.valorAguardandoCents, "BRL")}
             </span>
           </span>
-          <span
-            aria-hidden
-            className="absolute inset-x-0 bottom-0 h-0.5 bg-accent opacity-0 transition-opacity group-hover:opacity-60"
-          />
-        </Link>
+          <span aria-hidden className="absolute inset-x-0 bottom-0 h-0.5 bg-accent opacity-40" />
+        </div>
 
         <button
           type="button"
@@ -619,9 +612,8 @@ export function ExpedicaoClient({
               {contagem.concluidas}
             </span>
             <span className="truncate text-[11px] text-muted-foreground">
-              {paradasNaRua > 0
-                ? `${paradasNaRua} ${paradasNaRua === 1 ? t("parada na rua") : t("paradas na rua")}`
-                : t("histórico")}
+              {situacao.pedidos.concluidas}{" "}
+              {situacao.pedidos.concluidas === 1 ? t("pedido concluído") : t("pedidos concluídos")}
             </span>
           </span>
           <span

@@ -9,6 +9,7 @@ import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +30,7 @@ import {
   salvarRotaLocal,
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
+import { podeRegistrarDesfecho } from "@/lib/entregas/desfecho-com-endereco";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
 import { situacaoDoNumero } from "@/lib/rotas/entradas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
@@ -113,6 +115,14 @@ export function ModoMotorista({
   const [calculandoRota, setCalculandoRota] = React.useState(false);
   /** Parada aberta no detalhe (qualquer uma do roteiro, não só a próxima). */
   const [paradaAberta, setParadaAberta] = React.useState<string | null>(null);
+  /**
+   * P0-2 (auditoria 71/72): destino desconhecido trava o desfecho. A correção
+   * acontece AQUI, na cabine — mandar o motorista para outra tela no meio da
+   * rua não é caminho de correção, é abandono.
+   */
+  const [corrigindoEndereco, setCorrigindoEndereco] = React.useState<ParadaRotaApi | null>(null);
+  const [enderecoCorrigido, setEnderecoCorrigido] = React.useState("");
+  const [salvandoEndereco, setSalvandoEndereco] = React.useState(false);
   // "Seguindo você": o mapa acompanha o GPS a cada ping. Desligado quando o
   // dedo arrasta o mapa — ver `aoArrastar` em `MapaRota`.
   const [seguir, setSeguir] = React.useState(false);
@@ -404,6 +414,13 @@ export function ModoMotorista({
   const versaoNova = versaoVista != null && rota.carga.rota_versao > versaoVista;
 
   async function desfecho(orderId: string, status: "em_atendimento" | "entregue" | "devolvido") {
+    // Última linha de defesa: mesmo que um botão escape da trava visual, a
+    // baixa nunca é registrada num endereço que o sistema não conhece.
+    const paradaDoPedido = rota?.paradas.find((p) => p.pedidos.some((x) => x.order_id === orderId));
+    if (status !== "em_atendimento" && !podeRegistrarDesfecho(paradaDoPedido)) {
+      toast.error(t("Endereço desconhecido: corrija antes de registrar o desfecho."));
+      return;
+    }
     if (status === "entregue") {
       const ok = await confirmar({
         title: t("Marcar como entregue? O pedido avança para 'entregue'."),
@@ -446,6 +463,69 @@ export function ModoMotorista({
       setMotivoAberto(false);
       toast.success(t("Sem internet — salvo no aparelho, envia sozinho quando voltar."));
     }
+  }
+
+  function abrirCorrecaoDeEndereco(parada: ParadaRotaApi) {
+    setEnderecoCorrigido(parada.endereco ?? "");
+    setCorrigindoEndereco(parada);
+  }
+
+  /** Corrigir o cadastro SEM sair da cabine — reusa o PATCH já existente. */
+  async function salvarEnderecoCorrigido() {
+    const texto = enderecoCorrigido.trim();
+    const alvo = corrigindoEndereco?.pedidos.find((x) =>
+      ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+    );
+    if (!corrigindoEndereco || !alvo || !texto) return;
+    setSalvandoEndereco(true);
+    try {
+      await apiClient.patch(`/api/v1/commercial-orders/${alvo.order_id}`, {
+        endereco_entrega: texto,
+      });
+      toast.success(t("Endereço salvo. Agora você pode registrar a entrega."));
+      setCorrigindoEndereco(null);
+      await recarregar();
+      aoMudar();
+    } catch (e) {
+      if (e instanceof ApiError) showApiError(e);
+      else toast.error(t("Não foi possível salvar o endereço. Tente novamente."));
+    } finally {
+      setSalvandoEndereco(false);
+    }
+  }
+
+  /**
+   * O MESMO motivo nas três entradas de desfecho (mapa, detalhe, folha fechada).
+   * A ação que destrava fica na fileira do botão de entrega — nunca no fim de
+   * uma folha que exige rolagem: "se a única forma de habilitar for rolar, o
+   * primário está no lugar errado" (regra já decidida pelo dono na ficha).
+   */
+  function avisoDeEnderecoDesconhecido() {
+    return (
+      <div
+        role="alert"
+        className="mt-2 rounded-xl border border-warning/40 bg-warning-bg px-3 py-2 text-warning-fg"
+      >
+        <p className="text-xs font-semibold">{t("Entrega bloqueada: endereço desconhecido")}</p>
+        <p className="mt-0.5 text-[11px] leading-snug">
+          {t("Sem endereço não há como registrar a entrega — o comprovante ficaria sem destino.")}
+        </p>
+      </div>
+    );
+  }
+
+  /** No lugar do botão de desfecho, a ação que o destrava — na mesma dobra. */
+  function botaoDeCorrecaoOuDesfecho(parada: ParadaRotaApi) {
+    return (
+      <Button
+        type="button"
+        className="h-12 flex-1 rounded-2xl border border-warning/50 bg-warning-bg text-warning-fg hover:bg-warning-bg"
+        onClick={() => abrirCorrecaoDeEndereco(parada)}
+      >
+        <MapPin size={16} aria-hidden />
+        {t("Corrigir endereço aqui")}
+      </Button>
+    );
   }
 
   /**
@@ -664,6 +744,7 @@ export function ModoMotorista({
                   ) : (
                     <p className="text-warning-fg">{t("Sem endereço cadastrado.")}</p>
                   )}
+                  {!podeRegistrarDesfecho(parada) && avisoDeEnderecoDesconhecido()}
                   {parada.fone && (
                     <a
                       href={`tel:${parada.fone.replace(/[^\d+]/g, "")}`}
@@ -782,7 +863,12 @@ export function ModoMotorista({
                     )}
                   </div>
 
-                  {podeOperar && alvo && (
+                  {podeOperar && alvo && !podeRegistrarDesfecho(parada) && (
+                    <div className="flex w-full gap-2">
+                      {botaoDeCorrecaoOuDesfecho(parada)}
+                    </div>
+                  )}
+                  {podeOperar && alvo && podeRegistrarDesfecho(parada) && (
                     <Button
                       className="h-12 w-full rounded-2xl bg-success text-accent-fg hover:bg-success/90"
                       onClick={() => {
@@ -813,6 +899,7 @@ export function ModoMotorista({
                         size="sm"
                         variant="destructive"
                         className="h-9 w-full"
+                        disabled={!podeRegistrarDesfecho(parada)}
                         onClick={() => {
                           void desfecho(alvo.order_id, "devolvido").then(() => setParadaAberta(null));
                         }}
@@ -983,6 +1070,7 @@ export function ModoMotorista({
               ) : (
                 <p className="mt-1 text-sm text-warning-fg">{t("Sem endereço cadastrado.")}</p>
               )}
+              {!podeRegistrarDesfecho(proxima) && avisoDeEnderecoDesconhecido()}
               {/* A referência da entrada chega antes da esquina: é aqui que o
                   motorista precisa saber que o portão é o azul (0311). */}
               {proxima.entrada?.referencia && (
@@ -1047,24 +1135,32 @@ export function ModoMotorista({
             {podeOperar && (
               <>
                 {/* Verde sólido: o desfecho positivo é A ação da cabine e, em
-                    contorno sobre `success-bg`, lia como botão desabilitado. */}
-                <Button
-                  className="h-12 w-full bg-success text-accent-fg hover:bg-success/90"
-                  onClick={() => {
-                    const alvo = proxima.pedidos.find((x) =>
-                      ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
-                    );
-                    if (alvo) void desfecho(alvo.order_id, "entregue");
-                  }}
-                >
-                  <Check className="h-4 w-4" aria-hidden />
-                  {t("Marcar como entregue")}
-                </Button>
+                    contorno sobre `success-bg`, lia como botão desabilitado.
+                    Sem endereço, quem ocupa o lugar é a ação que destrava. */}
+                {!podeRegistrarDesfecho(proxima) ? (
+                  <div className="flex w-full gap-2">
+                    {botaoDeCorrecaoOuDesfecho(proxima)}
+                  </div>
+                ) : (
+                  <Button
+                    className="h-12 w-full bg-success text-accent-fg hover:bg-success/90"
+                    onClick={() => {
+                      const alvo = proxima.pedidos.find((x) =>
+                        ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
+                      );
+                      if (alvo) void desfecho(alvo.order_id, "entregue");
+                    }}
+                  >
+                    <Check className="h-4 w-4" aria-hidden />
+                    {t("Marcar como entregue")}
+                  </Button>
+                )}
 
                 {!motivoAberto ? (
                   <Button
                     className="w-full text-muted-foreground"
                     variant="ghost"
+                    disabled={!podeRegistrarDesfecho(proxima)}
                     onClick={() => setMotivoAberto(true)}
                   >
                     {t("Não entregue")}
@@ -1088,6 +1184,7 @@ export function ModoMotorista({
                         size="sm"
                         variant="destructive"
                         className="h-9 flex-1"
+                        disabled={!podeRegistrarDesfecho(proxima)}
                         onClick={() => {
                           const alvo = proxima.pedidos.find((x) =>
                             ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
@@ -1277,12 +1374,64 @@ export function ModoMotorista({
     </>
   );
 
+  /* A correção do endereço mora DENTRO da cabine, nas duas variantes: na rua
+     o motorista não pode ser mandado para outra tela para destravar a entrega. */
+  const dialogoCorrecaoEndereco = (
+    <Dialog
+      open={corrigindoEndereco !== null}
+      onOpenChange={(aberto) => {
+        if (!aberto) setCorrigindoEndereco(null);
+      }}
+    >
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("Corrigir endereço da entrega")}</DialogTitle>
+          <DialogDescription>
+            {t("O endereço é salvo no pedido e libera o desfecho aqui mesmo.")}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <label
+            htmlFor="endereco-de-entrega"
+            className="block text-[10px] font-semibold tracking-[0.12em] text-muted-foreground uppercase"
+          >
+            {t("Endereço de entrega")}
+          </label>
+          <Textarea
+            id="endereco-de-entrega"
+            value={enderecoCorrigido}
+            onChange={(evento) => setEnderecoCorrigido(evento.target.value)}
+            rows={3}
+            className="min-h-24"
+            placeholder={t("Rua, número, bairro, cidade")}
+          />
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            {t("Inclua número ou referência: é o que fica no comprovante da entrega.")}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            className="h-11 flex-1"
+            disabled={!enderecoCorrigido.trim() || salvandoEndereco}
+            onClick={() => void salvarEnderecoCorrigido()}
+          >
+            {salvandoEndereco ? t("Salvando…") : t("Salvar e liberar entrega")}
+          </Button>
+          <Button className="h-11" variant="outline" onClick={() => setCorrigindoEndereco(null)}>
+            {t("Cancelar")}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (!imersivo) {
     return (
       <div className="mx-auto max-w-xl space-y-3.5 pb-8">
         <div className="sticky top-0 z-10">{mapa("40dvh", false)}</div>
         {cartoes}
         {dialogoDaParada}
+        {dialogoCorrecaoEndereco}
       </div>
     );
   }
@@ -1333,12 +1482,14 @@ export function ModoMotorista({
             ) : (
               <p className="mt-1 text-[13px] text-warning-fg">{t("Sem endereço cadastrado.")}</p>
             )}
-            {distanciaProximaM != null && (
+            {/* Sem endereço, a folha fechada mostra SÓ o que destrava: distância e
+                itens ficam para a folha aberta, para a ação não exigir rolagem. */}
+            {podeRegistrarDesfecho(proxima) && distanciaProximaM != null && (
               <p className="mt-1 text-xs font-medium text-accent-ink tabular-nums">
                 {t("a")} {formatarDistancia(distanciaProximaM)}
               </p>
             )}
-            {(proxima.itens?.length ?? 0) > 0 && (
+            {podeRegistrarDesfecho(proxima) && (proxima.itens?.length ?? 0) > 0 && (
               <ul className="mt-2 space-y-0.5">
                 {proxima.itens!.slice(0, 3).map((it, i) => (
                   <li
@@ -1358,6 +1509,8 @@ export function ModoMotorista({
             )}
           </button>
 
+          {!podeRegistrarDesfecho(proxima) && avisoDeEnderecoDesconhecido()}
+
           <div className="mt-2.5 flex gap-2">
             {podeNavegar && (
               <Button
@@ -1369,17 +1522,20 @@ export function ModoMotorista({
                 {calculandoRota ? t("Calculando…") : t("Navegar")}
               </Button>
             )}
-            {podeOperar && (
-              <Button
-                className="h-12 flex-1 rounded-2xl bg-success text-[15px] text-accent-fg hover:bg-success/90"
-                onClick={() => {
-                  if (alvoDaProxima) void desfecho(alvoDaProxima.order_id, "entregue");
-                }}
-              >
-                <Check className="h-4 w-4" aria-hidden />
-                {t("Entregue")}
-              </Button>
-            )}
+            {podeOperar &&
+              (!podeRegistrarDesfecho(proxima) ? (
+                botaoDeCorrecaoOuDesfecho(proxima)
+              ) : (
+                <Button
+                  className="h-12 flex-1 rounded-2xl bg-success text-[15px] text-accent-fg hover:bg-success/90"
+                  onClick={() => {
+                    if (alvoDaProxima) void desfecho(alvoDaProxima.order_id, "entregue");
+                  }}
+                >
+                  <Check className="h-4 w-4" aria-hidden />
+                  {t("Entregue")}
+                </Button>
+              ))}
           </div>
 
           {/* O rastreio continua a um toque. Ele mora no cartão completo, que
@@ -1607,6 +1763,7 @@ export function ModoMotorista({
           </p>
         </div>
       </div>
+      {dialogoCorrecaoEndereco}
     </div>
   );
 }
