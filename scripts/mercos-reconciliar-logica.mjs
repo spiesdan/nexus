@@ -1,6 +1,86 @@
-/** Lógica pura da reconciliação — testável sem Playwright nem banco. */
+/**
+ * Lógica pura da reconciliação — testável sem Playwright, sem banco e sem rede.
+ *
+ * Medição do dono (23/11/2026): a lista do Mercos devolve 5.929 pedidos em
+ * minutos; abrir o detalhe de cada um custa ~7,7 s (~12 h). Por isso a
+ * reconciliação decide pela LISTA (número + identidade) e abre detalhe SÓ para
+ * o que não está presente ou que colidiu.
+ */
 
-/** Um registro do JSONL vira o payload que fn_importar_pedido_mercos espera. */
+/** Só dígitos: documento é comparado pelo valor, não pela máscara. */
+export function soDigitos(texto) {
+  return (texto || "").replace(/\D/g, "");
+}
+
+/** Nome normalizado: caixa, acento e pontuação não decidem identidade. */
+export function nomeNormalizado(texto) {
+  return (texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
+/**
+ * Documento quando os dois lados têm; nome quando a lista não traz documento.
+ * Na ausência de documento a comparacao é EXATA (normalizada): preferimos
+ * marcar colisão e investigar a dar "presente" para um pedido perdido.
+ */
+export function mesmoCliente(nomeLista, nomeBanco, documentoLista, documentoBanco) {
+  const docA = soDigitos(documentoLista);
+  const docB = soDigitos(documentoBanco);
+  if (docA && docB) return docA === docB;
+  const a = nomeNormalizado(nomeLista);
+  const b = nomeNormalizado(nomeBanco);
+  return Boolean(a && b && a === b);
+}
+
+/**
+ * CLASSIFICAÇÃO PELA LISTA. `linhasBanco` são todas as linhas com
+ * `numero = N` ou `numero_mercos = N` — as duas chaves, porque os 11.979
+ * importados antigos não tinham `numero_mercos` preenchido.
+ *
+ * Número presente com OUTRO cliente é COLISÃO, não ausência: é exatamente o
+ * caso dos 19669–19672, que apareceriam como "zero ausentes" se a comparação
+ * olhasse só o número.
+ */
+export function classificarNumero({ nomeLista, documentoLista = null, linhasBanco = [] }) {
+  const identicas = linhasBanco.filter((linha) =>
+    mesmoCliente(nomeLista, linha.cliente_nome, documentoLista, linha.cliente_documento),
+  );
+  if (identicas.length > 0) {
+    return { situacao: "importado", pedido_id: identicas[0].id ?? null, cliente_local_nome: null };
+  }
+  if (linhasBanco.length > 0) {
+    return {
+      situacao: "colisao",
+      pedido_id: linhasBanco[0].id ?? null,
+      cliente_local_nome: linhasBanco[0].cliente_nome ?? null,
+    };
+  }
+  return { situacao: "ausente", pedido_id: null, cliente_local_nome: null };
+}
+
+/** Pedido sem item (19639, 16/11, total 0) não é perda. */
+export function temItens(registro) {
+  return Array.isArray(registro?.itens) && registro.itens.length > 0;
+}
+
+/**
+ * Só ausente e colisão abrem detalhe. A colisão é achado mesmo sem detalhe
+ * (o número existe com outro cliente); o detalhe só decide se dá para importar.
+ * Ausente sem detalhe NÃO é prova — fica em `sem_detalhe`, fora da conta.
+ */
+export function classificarComDetalhe({ situacao, detalhe }) {
+  if (situacao === "colisao") {
+    return detalhe && !temItens(detalhe) ? "ignorado_sem_itens" : "colisao";
+  }
+  if (situacao !== "ausente") return situacao;
+  if (!detalhe) return "sem_detalhe";
+  return temItens(detalhe) ? "ausente" : "ignorado_sem_itens";
+}
+
+/** O payload que fn_importar_pedido_mercos espera, com numero_mercos preservado. */
 export function payloadDeImportacao(registro) {
   const cliente = registro.cliente ?? {};
   return {
@@ -18,23 +98,6 @@ export function payloadDeImportacao(registro) {
       subtotal_cents: i.subtotal ?? 0,
     })),
   };
-}
-
-/** Registro sem número, sem cliente ou sem itens NÃO é ausência: é falha de leitura. */
-export function registroValido(registro) {
-  return Boolean(
-    registro &&
-      Number.isInteger(registro.numero) &&
-      registro.numero > 0 &&
-      (registro.cliente?.razao || registro.cliente?.fantasia) &&
-      Array.isArray(registro.itens) &&
-      registro.itens.length > 0,
-  );
-}
-
-/** Linha do artefato: presença no banco decide a situação, nunca o console. */
-export function situacaoPresenca(encontrado) {
-  return encontrado ? "importado" : "ausente";
 }
 
 /**

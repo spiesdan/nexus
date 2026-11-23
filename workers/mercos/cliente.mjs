@@ -160,13 +160,35 @@ export function lerCliente(linhas, { documentoRepresentada = null } = {}) {
 }
 
 /**
+ * Data do cartão da lista. A reconciliação decides pela LISTA (5.929 pedidos
+ * em minutos) e só abre detalhe do que falta — sem esta data a janela de 30
+ * dias não existe. Nunca inventa: se o cartão não traz, devolve null.
+ */
+export function dataDoCartao(linhas) {
+  for (const bruto of linhas) {
+    const linha = String(bruto ?? "");
+    const pt = linha.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    if (pt) {
+      const iso = `${pt[3]}-${pt[2]}-${pt[1]}`;
+      if (!Number.isNaN(Date.parse(iso))) return iso;
+    }
+    const iso = linha.match(/\d{4}-\d{2}-\d{2}/);
+    if (iso && !Number.isNaN(Date.parse(iso[0]))) return iso[0];
+  }
+  return null;
+}
+
+/**
  * Lê o cartão da lista. É só reserva para quando o detalhe falha — mas é a
  * reserva que já colocou "event AVISTA" e "- Concluído" no nome do cliente.
  */
 export function lerCartao(linhas) {
   const iNum = linhas.findIndex((l) => /^#\d{3,8}/.test(l));
   if (iNum < 0) {
-    return { numero: null, status: null, vendedor_lista: null, razao_lista: null, fantasia_lista: null };
+    return {
+      numero: null, status: null, vendedor_lista: null,
+      razao_lista: null, fantasia_lista: null, data_emissao_lista: null,
+    };
   }
 
   const numero = Number(linhas[iNum].match(/#(\d{3,8})/)[1]);
@@ -194,5 +216,8 @@ export function lerCartao(linhas) {
     break;
   }
 
-  return { numero, status, vendedor_lista, razao_lista, fantasia_lista };
+  return {
+    numero, status, vendedor_lista, razao_lista, fantasia_lista,
+    data_emissao_lista: dataDoCartao(linhas),
+  };
 }

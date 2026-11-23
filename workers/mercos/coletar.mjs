@@ -43,6 +43,8 @@ const EMPRESA = process.env.MERCOS_EMPRESA || "338282";
 const BASE = `https://app.mercos.com/${EMPRESA}`;
 const SAIDA = arg("saida", new URL("./pedidos.jsonl", import.meta.url).pathname);
 const ANDAMENTO = arg("andamento", new URL("./andamento.json", import.meta.url).pathname);
+/** Censo da reconciliação: a LISTA, que leva minutos, não os detalhes (12 h). */
+const LISTA_SAIDA = arg("lista-saida", process.env.MERCOS_LISTA_JSONL || "");
 
 const DE = arg("de", "01/09/2026");
 const ATE = arg("ate", "31/12/2026");
@@ -307,6 +309,25 @@ try {
     await dormir(700);
   }
   console.log(`\n  lista fechada: ${lista.length} pedidos entre ${DE} e ${ATE}`);
+
+  // O censo vai para disco ANTES do detalhe: se o detalhe falhar no meio, a
+  // lista já está disponível para a reconciliação comparar número+identidade.
+  if (LISTA_SAIDA) {
+    writeFileSync(
+      LISTA_SAIDA,
+      lista
+        .map((p) => JSON.stringify({
+          numero: p.numero,
+          id_mercos: p.id ?? null,
+          cliente_nome: p.razao_lista || p.fantasia_lista || null,
+          data_emissao: p.data_emissao_lista || null,
+          status: p.status ?? null,
+          vendedor: p.vendedor_lista ?? null,
+        }))
+        .join("\n") + "\n",
+    );
+    console.log(`  censo gravado: ${LISTA_SAIDA} (${lista.length} números)`);
+  }
 
   // ─── DETALHE: cabeçalho + itens, com reconciliação ───────────────────────
   const jaLidos = lidos();

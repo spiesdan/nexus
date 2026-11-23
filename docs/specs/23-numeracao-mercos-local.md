@@ -34,14 +34,43 @@ Se (b) ou (c) forem adotadas depois, as duas últimas continuam válidas.
   `pedido_importado_id`.
 - Coletor: compara o que já viu com `numero_mercos` no banco e reprocessa até
   `MERCOS_MAX_BURACOS` (default 50) números perdidos por rodada.
-- **Reconciliação (0345)**: `scripts/mercos-reconciliar.mjs` grava
-  `mercos_reconciliacoes` com `situacao` `ausente`/`importado` por
-  `(run_id, numero_mercos)`. Janela de garantia: **30 dias** por padrão
-  (`MERCOS_RECONCILIAR_DIAS`); pedidos fora da janela e registros sem data de
-  emissão são **contados e declarados como fora da garantia** — nunca viram
-  "zero ausentes" por omissão. Rodar de novo com o mesmo run-id tem de devolver
-  `ausentes_depois = 0`.
+- **Reconciliação (0345/0346)**: `scripts/mercos-reconciliar.mjs` grava
+  `mercos_reconciliacoes` por `(run_id, numero_mercos)`. O **censo vem da LISTA**
+  (`--lista`, gravada pelo coletor com `--lista-saida`), não do detalhe: abrir
+  5.929 detalhes custa ~12 h medidos; percorrer a lista leva minutos. O detalhe
+  (`--detalhes`) só é consultado para o que está ausente ou colidiu. Janela de
+  garantia: **30 dias** por padrão (`MERCOS_RECONCILIAR_DIAS`);
+  `registros_sem_data` e `registros_fora_da_janela` são **contados e declarados
+  como fora da garantia** — nunca viram "zero ausentes" por omissão.
 - `GET /api/v1/mercos/colisoes`: contrato para a tela do D.
 
-**Não foi deployado.** A contagem histórica de produção depende de rodar a
-varredura na VPS; este doc não afirma número que não mediu.
+## Medição do dono (23/11/2026) — o que mudou no desenho
+
+```
+lista 24/10→24/11 ................. 5.929 pedidos  (minutos)
+abrir 1 detalhe ................... ~7,7 s         (12 h para 5.929)
+amostra: 394 detalhes (19338→19731) · 393 no banco · 1 ausente por número
+o ausente: 19639 — OFICINA MECANICA DO NEY, 16/11, 0 itens, total 0,00
+perdas reais: 4 COLISÕES (19669–19672) — número existe, cliente é outro
+```
+
+Consequências implementadas:
+
+1. **Comparar pela lista, nunca pelo detalhe.** Número + data vêm do cartão;
+   o detalhe só se abre para ausente/colisão e é o que decide a importação.
+2. **Colisão entra na conta por identidade**, não por número. Número presente
+   com cliente diferente vira `colisao` (não `importado`): comparar só número
+   daria "zero ausentes" com 4 pedidos perdidos — o pior resultado possível.
+   `mesmoCliente` usa documento quando os dois lados têm e nome normalizado
+   (caixa/acento/pontuação) quando a lista não traz documento.
+3. **Pedido sem item não é perda.** Vira `ignorado_sem_itens` (visível na tela),
+   não `ausente`. Ausente sem detalhe fica em `sem_detalhe` — fora da prova.
+4. **Prova em duas rodadas** com o mesmo `run_id`: rodada 1 lista
+   `ausentes_por_numero`, `colisoes_por_identidade` (deve conter 19669–19672) e
+   `ignorados_sem_itens` (19639); rodada 2 devolve `ausentes_depois = 0` e
+   mantém as colisões no artefato com `resolvido_em` preenchido. A colisão não
+   desaparece quando o pedido é recuperado — senão a prova apagaria o defeito.
+
+**Não foi deployado.** As contagens acima são as que o dono mediu no container
+em somente leitura. A contagem de produção depende de rodar a reconciliação na
+VPS com o JSONL da lista; este doc não afirma número que não mediu.
