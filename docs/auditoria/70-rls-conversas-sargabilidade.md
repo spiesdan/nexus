@@ -78,13 +78,19 @@ Mesma query, usuário `viewer` (não platform-admin) para não short-circuitar:
 
 | Plano | Execution | Buffers | Acesso |
 |---|---:|---:|---|
-| Policy atual | **63,458 ms** | **897** | `Seq Scan` + `Sort`, filtro por função em 61 linhas |
-| Policy reescrita (set-based) | **19,844 ms** | **331** | `Index Scan idx_conversations_org_last_msg` + `Incremental Sort`, subplans `hashed` executados **1×** |
+| Policy atual | **26,520 ms** | **897** | `Seq Scan` + `Sort`, filtro por função em 61 linhas |
+| Policy reescrita v1 (sem cláusula de canais) | 19,844 ms | 331 | **Medição incompleta — não usar** |
+| Policy 0340 final (escopo completo, canais não correlacionados) | **11,821 ms** | **707** | `Index Scan idx_conversations_org_last_msg` + `Incremental Sort`, todos os subplans `hashed` com `loops=1` |
 
-~3,2× mais rápido e ~63% menos buffers com **61 linhas**. Em produção, onde o
-filtro remove 2.138 de 2.162, a mesma mudança de forma de plano é o que pode
-recuperar os ~828 ms do filtro — **não afirmo o número de produção sem rodar o
-EXPLAIN lá**.
+**Retificação:** a primeira versão deste doc media 63,5 → 19,8 ms com uma
+policy alternativa que **não incluía a cláusula de `canais_permitidos`**. Ao
+incluí-la de forma correlacionada, o plano piorava (39,4 ms, 2.405 buffers,
+`SubPlan loops=61`). A policy final da 0340 resolve os canais com subqueries
+**não correlacionadas** (par org+canal), preservando o escopo exato; medida
+pareada no mesmo cenário: **26,5 → 11,8 ms, 897 → 707 buffers** (~2,2×).
+Em produção, onde o filtro remove 2.138 de 2.162, a mesma mudança de forma de
+plano é o que pode recuperar os ~828 ms do filtro — **não afirmo o número de
+produção sem rodar o EXPLAIN lá**.
 
 Policy usada na medição (equivalente em escopo; **não aplicada**):
 
