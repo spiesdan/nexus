@@ -3,18 +3,19 @@
 > Fila viva ao lado do [`39-fila-por-worker.md`](39-fila-por-worker.md). Uma linha
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
-> **Nada sem dono.** Worker que termina recebe a próxima tarefa na mesma mensagem;
+> **Nada sem dono.**
+> **Placar (23/11):** 10 `[x]` · 9 `[~]` · 5 `[!]` · 16 `[ ]` — 36 itens. Worker que termina recebe a próxima tarefa na mesma mensagem;
 > coordenação não deixa slot vazio.
 
 ## P0
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[~]` | G | contagem do dono + gates `handlers-service-role-filtram-organizacao` | concluir varredura e provar filtro no ponto de uso |
+| P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
 | P0-3 | Motor laya: subir (a) ou limpar `LAYA_URL` (b) | `[!]` | **BLOQUEADO — dono** | `40` §19: 50 qualificações/17 risk/17 radar em 6h | dono escolhe (a) serviço na VPS ou (b) env limpo |
 | P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + D (tela) | 124 rascunhos `origem=mercos`, R$ 218.003,63; medição antiga dizia 119 | registrar recorte com data/filtro; D projeta tela com idade/valor/próximo passo |
-| P0-5 | Confirmação de rota transacional (atomicidade) | `[~]` | G | falha de gravação parcial observada no passe de rotas | CAS/transação + teste de concorrência |
+| P0-5 | Confirmação de rota transacional (atomicidade) | `[x]` | G | **#771** → `2ca999665`; ordem e versão na mesma transação (0335) | — |
 
 ## P1
 
@@ -23,7 +24,7 @@
 | P1-1 | 96 telas `app/app` por concentração + contraste por token | `[~]` | D | varredura fatiada de 99 rotas; tenent-switcher 82 rotas | terminar fatias, consertar por concentração |
 | P1-2 | `rota_versao_confirmada` (0334) + escrita pelo app | `[~]` | G | migration reservada 0334 | migration + escrita transacional ligada ao P0-5 |
 | P1-3 | Mapa↔lista sincronizados + pino por precisão | `[~]` | D | PRs de rotas do passe de expedição | seleção no mapa reflete na lista e vice-versa |
-| P1-4 | GPS “sem sinal há N min” + `PHOTON_URL` no env/template | `[~]` | G | `08-mobile-offline`, docs de expedição | estado explícito no painel + env documentado |
+| P1-4 | GPS “sem sinal há N min” + `PHOTON_URL` no env/template | `[x]` | G | **#774** → `3bbde8db5`; GPS honesto + `PHOTON_URL` no kit | — |
 | P1-5 | E2E 17/18/19: GPS ausente, mobile real, fila offline com retry/conflito | `[ ]` | G (próximo) | specs em `tests/e2e/`; Android real nunca rodou | escrever specs e marcar bloqueio de dispositivo |
 | P1-6 | 24 rotas dinâmicas sem id: criar fixture local e medir | `[ ]` | D (próximo) | `41`: 24 inválidas com motivo | fixture com id real; re-medir e baixar `pendente` |
 | P1-7 | F-04: token canônico (`#67885d` vs `#7e77f0`) com medição | `[ ]` | D (próximo) | dois hex em arquivos de design | escolher token, medir contraste, documentar |
@@ -31,11 +32,11 @@
 | P1-9 | Matriz única de capacidades de expedição (hoje dispersa em handoffs) | `[ ]` | coordenação | handoffs em `docs/frentes/` | consolidar em matriz com dono/estado |
 | P1-10 | 10 `.in()` sem teto restantes (doc 51) — priorizar os de cron | `[ ]` | G (próximo) | `docs/auditoria/51-postgrest-in-sem-teto.md` | teto explícito nos de cron primeiro |
 | P1-11 | `anon` com GRANT em 58/179 tabelas no descartável (limite F-09) | `[ ]` | G | gate F-09; medição do descartável | investigar se intencional; revoke se não for |
-| P1-12 | `Idempotency-Key` em `POST /messages` (pré-requisito do outbox web) | `[ ]` | F (próximo) | contrato em `lib/api/idempotencia.ts` | reivindicação antes do efeito + teste de replay |
+| P1-12 | `Idempotency-Key` em `POST /messages` (pré-requisito do outbox web) | `[x]` | F | **#766** → `6bd44c3e8`; `Idempotency-Key` em `POST /messages` | — |
 | P1-13 | SLO p95 real quando a série acumular (hoje 1 amostra = 1428 ms) | `[~]` | G | `42-desempenho-e-slo.md`: 1 amostra não é p95 | aguardar série e publicar p95 medido |
 | P1-14 | 5 leads duplicados reais | `[!]` | **BLOQUEADO — dono (merge)** | Sentinel 5 reafirmadas; sem merge automático | dono decide mesclar; ferramenta só linka |
 | P1-15 | Android físico / iOS | `[!]` | **BLOQUEADO — dono** | iOS fora por decisão; Android real nunca executado | dispositivo + decisão de escopo |
-| P1-16 | Recontar inventário vivo (440 rotas hoje vs 419 em 18/11) com delta explicado | `[ ]` | coordenação | contagem do dono + `inventario-rotas.md` | comando de contagem + delta por módulo |
+| P1-16 | Recontar inventário vivo (440 rotas hoje vs 419 em 18/11) com delta explicado | `[x]` | coordenação | **#767** → `0d0b4f45f`; inventário reconciliado | — |
 
 | P1-17 | Controle de gastos da campanha: orçamento de prospecção + verba Meta, simulação mínimo/esperado/máximo na criação e guard 80%/100% com override de gerente auditado | `[ ]` | F (depois da avulsa) | decisão do dono; reuso de `lib/prospeccao/custos.ts`, `uso.ts` (`estadoDoOrcamento`), `_config.tsx`, `grade.ts`, `motor.ts` (`custo_estimado_cents`) | ver aceite abaixo |
 
@@ -66,10 +67,10 @@
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P1-18 | NF-e avulsa: auto-preencher cliente (CPF do `source_metadata`), enviar todos os extras e chamar `/validar` | `[~]` | F | PR #762 no CI | fechar PR com teste e mergear |
-| P1-19 | “Informações fiscais (NF-e)” no criador, separada de observações | `[x]` | F | PR #763 verde | mergeado; conferir no passe visual |
-| P1-20 | Formas de pagamento configuráveis (tabela + tela, forma × prazo, `tpag` só com fonte oficial) | `[~]` | F | PR #764 no CI | migration + tela + teste |
-| P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[ ]` | F | pedido #765/next na fila | abrir edição do pedido, não só itens |
+| P1-18 | NF-e avulsa: auto-preencher cliente (CPF do `source_metadata`), enviar todos os extras e chamar `/validar` | `[x]` | F | **#762** → `0b444b589`; avulsa com extras/CPF/validar | — |
+| P1-19 | “Informações fiscais (NF-e)” no criador, separada de observações | `[x]` | F | **#763** → `0840cfa86`; informações fiscais no criador | — |
+| P1-20 | Formas de pagamento configuráveis (tabela + tela, forma × prazo, `tpag` só com fonte oficial) | `[x]` | F | **#764** → `7bd8a63a8`; formas de pagamento configuráveis | — |
+| P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[x]` | F | **#765** → `ac2d92738`; “Editar pedido” no lugar de adicionar produto | — |
 | P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[ ]` | G | achado do passe de rotas | guard + teste de regressão |
 | P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[~]` | G | junto do P0-5 | mesma regra no cliente e no servidor |
 | P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
