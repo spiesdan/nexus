@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 import { estadoDoGps } from "@/lib/rotas/gps-estado";
+import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { PainelRecuperacao } from "./_recuperacao";
 
 export interface ParadaRotaApi {
@@ -217,6 +218,8 @@ export interface RotaCarregada {
     finished_at: string | null;
   };
   paradas: ParadaRotaApi[];
+  /** Itens da carga com `separado_em` — a mesma fonte que `iniciar` confere. */
+  itens?: Array<{ separado_em: string | null }>;
   ultima_posicao: { latitude: number; longitude: number; em: string } | null;
   gps_sem_sinal_minutos?: number;
   distribuicao?: DistribuicaoApi | null;
@@ -930,8 +933,14 @@ export function Roteirizador({
    * existir no aparelho do entregador — vão na confirmação, porque nenhuma
    * delas é reversível pelo botão.
    */
+  // A mesma regra de `transicaoDeRota('iniciar')`, antecipada: o botão não
+  // habilita uma publicação que o servidor recusaria por falta de separação.
+  const naoSeparados = rota ? qtdNaoSeparados(rota.itens ?? []) : 0;
+  const separacaoPendente = publicacao.tipo === "publicar" && naoSeparados > 0;
+
   async function publicarRota() {
     if (publicacao.tipo !== "publicar") return;
+    if (separacaoPendente) return;
     const seguir = await confirmar({
       title: publicacao.precisaSalvar
         ? t("Publicar a rota com a ordem que está na tela?")
@@ -1404,16 +1413,23 @@ export function Roteirizador({
           controle decorativo que esta base já pagou caro.
         */}
         {publicacao.tipo === "publicar" && podeOperar && (
+          <>
           <Button
             size="sm"
             className="gap-1.5"
             onClick={() => void publicarRota()}
-            disabled={trabalhando !== null}
+            disabled={trabalhando !== null || separacaoPendente}
             data-testid="publicar-rota"
           >
             <PaperPlaneTilt className="h-3.5 w-3.5" aria-hidden />
             {trabalhando === "publicar" ? t("Publicando…") : t("Publicar rota")}
           </Button>
+          {separacaoPendente ? (
+            <p data-testid="publicar-bloqueado" className="text-xs text-warning-fg">
+              {naoSeparados} {t("pedido(s) ainda sem separação/conferência — publique após separar.")}
+            </p>
+          ) : null}
+          </>
         )}
         {publicacao.tipo === "publicada" && rota.carga.rota_em ? (
           <p className="text-xs text-text-muted tabular-nums">
