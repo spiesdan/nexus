@@ -225,7 +225,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
   } else {
     const { data: pedido } = await admin
       .from("commercial_orders")
-      .select("id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents")
+      .select("id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, endereco_entrega")
       .eq("id", nota.order_id)
       .maybeSingle();
     const ped = pedido as unknown as {
@@ -236,6 +236,7 @@ export async function processarJob(admin: SupabaseClient, job: JobFiscal): Promi
       contact_id: string | null;
       total_cents: number;
       frete_cents: number;
+      endereco_entrega: string | null;
     } | null;
     if (!ped) {
       await finalizar(admin, job, nota, "erro", "Pedido da nota sumiu.", null);

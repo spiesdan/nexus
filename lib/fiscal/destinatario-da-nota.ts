@@ -20,6 +20,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { limparTextoDoEndereco } from "@/lib/contacts/endereco-em-linha";
+import { enderecoDoPedido } from "./endereco-do-pedido";
 
 import type { AjusteDoDestinatario, ExtrasFiscais } from "@/lib/schemas/fiscal";
 
@@ -33,6 +34,23 @@ export interface PedidoParaDestinatario {
   cliente_nome?: string | null;
   cliente_documento?: string | null;
   contact_id?: string | null;
+  /** Reserva de endereço quando o cadastro está vazio (coletor Mercos não traz rua/número/bairro). */
+  endereco_entrega?: string | null;
+}
+
+/** De onde veio cada campo efetivo — a tela diz "veio do pedido — confira". */
+export type OrigemDoCampo = "cadastro" | "pedido" | null;
+
+export interface OrigemDestinatario {
+  nome: OrigemDoCampo;
+  documento: OrigemDoCampo;
+  logradouro: OrigemDoCampo;
+  numero: OrigemDoCampo;
+  complemento: OrigemDoCampo;
+  bairro: OrigemDoCampo;
+  cidade: OrigemDoCampo;
+  uf: OrigemDoCampo;
+  cep: OrigemDoCampo;
 }
 
 export interface ContatoFiscal {
@@ -70,6 +88,8 @@ export interface DestinatarioDaNota {
    * do limite da NF-e. Vazio = completo.
    */
   faltando: string[];
+  /** Origem campo a campo: o cadastro ganha; o pedido só cobre o que falta. */
+  origem: OrigemDestinatario;
 }
 
 const COLUNAS_DO_CONTATO =
@@ -167,21 +187,72 @@ export function montarDestinatario(
   ajuste?: AjusteDoDestinatario | null,
 ): DestinatarioDaNota {
   const c = aplicarAjusteNoContato(contato, ajuste);
+  const doCadastro = Boolean(texto(c?.display_name) || texto(c?.name));
   const nome = texto(c?.display_name) || texto(c?.name) || texto(pedido.cliente_nome);
   // O documento vem do cadastro inteiro, não só da coluna `cnpj`: o
   // importador do Mercos deixa o CPF em `source_metadata.mercos.documento` e
   // deixa `cnpj` NULL (907 contatos nesta instalação). Sem esta leitura, a nota
   // pedia CPF a um cliente que tem CPF — o pedido 19341 é o caso.
-  const documento =
-    documentoDoCadastro(c)?.digitos ?? documentoFiscal(pedido.cliente_documento);
+  const documentoDoCliente = documentoDoCadastro(c)?.digitos;
+  const documentoDoSnapshot = documentoFiscal(pedido.cliente_documento);
+  const documento = documentoDoCliente ?? documentoDoSnapshot;
   const { ie, indicador: indicador_ie } = indicadorIe(c?.ie);
 
+  // O endereço do PEDIDO é reserva, nunca dono: o cadastro continua ganhando
+  // campo a campo. O parser é conservador — texto ambíguo vira null, e o campo
+  // volta para `faltando` em vez de ser chutado (auditoria do dono, 23/11).
+  const reserva = enderecoDoPedido(pedido.endereco_entrega);
+  const origem: OrigemDestinatario = {
+    nome: doCadastro ? "cadastro" : nome ? "pedido" : null,
+    documento: documentoDoCliente ? "cadastro" : documentoDoSnapshot ? "pedido" : null,
+    logradouro: null,
+    numero: null,
+    complemento: null,
+    bairro: null,
+    cidade: null,
+    uf: null,
+    cep: null,
+  };
+  function resolver(
+    chave: keyof OrigemDestinatario,
+    valorCadastro: string | null | undefined,
+    valorPedido: string | null | undefined,
+    limpar = true,
+  ): string {
+    const doCadastroValor = limpar
+      ? limparTextoDoEndereco(valorCadastro)
+      : texto(valorCadastro);
+    if (doCadastroValor) {
+      origem[chave] = "cadastro";
+      return doCadastroValor;
+    }
+    if (valorPedido) {
+      origem[chave] = "pedido";
+      return limpar ? limparTextoDoEndereco(valorPedido) : texto(valorPedido);
+    }
+    return "";
+  }
+
   const faltando: string[] = [];
-  const logradouro = limparTextoDoEndereco(c?.logradouro);
-  const numero = limparTextoDoEndereco(c?.numero_end);
-  const bairro = limparTextoDoEndereco(c?.bairro);
-  const ufBruto = texto(c?.uf).toUpperCase();
-  const municipio = municipioIbge(c?.cidade, c?.uf);
+  const logradouro = resolver("logradouro", c?.logradouro, reserva?.logradouro);
+  const numero = resolver("numero", c?.numero_end, reserva?.numero);
+  const bairro = resolver("bairro", c?.bairro, reserva?.bairro);
+  resolver("cidade", c?.cidade, reserva?.cidade, false);
+  let ufBruto = resolver("uf", c?.uf, reserva?.uf, false).toUpperCase();
+  let municipio = municipioIbge(c?.cidade, c?.uf);
+  // Cidade e UF são um PAR: misturar "Curitiba" do cadastro com "SC" do pedido
+  // daria IBGE errado. Se o par do cadastro não resolve, o par do pedido entra
+  // inteiro — e a origem dos dois muda junto.
+  if (!municipio && reserva?.cidade && reserva?.uf) {
+    const candidato = municipioIbge(reserva.cidade, reserva.uf);
+    if (candidato) {
+      municipio = candidato;
+      ufBruto = reserva.uf;
+      origem.cidade = "pedido";
+      origem.uf = "pedido";
+    }
+  }
+  const cep = resolver("cep", c?.cep, reserva?.cep, false).replace(/\D/g, "");
   // O cadastro às vezes deixa o `uf` estruturado vazio e escreve o estado por
   // extenso na cidade ("Mafra, Santa Catarina" / "Irati, Paraná"). A sigla sai da
   // mesma regra do `UF_POR_NOME` dentro do IBGE (via município resolvido) — o que
@@ -200,8 +271,7 @@ export function montarDestinatario(
   // xCpl, xBairro — o XSD). O cadastro é `text`, sem limite: cortar aqui
   // mandaria endereço pela metade para a SEFAZ, então o campo é NOMEADO para
   // quem emite corrigir no cadastro.
-  const cep = (c?.cep ?? "").replace(/\D/g, "");
-  const complemento = limparTextoDoEndereco(c?.complemento);
+  const complemento = resolver("complemento", c?.complemento, reserva?.complemento);
   for (const [rotulo, valor] of [
     ["logradouro", logradouro],
     ["número do endereço", numero],
@@ -226,7 +296,7 @@ export function montarDestinatario(
         }
       : null;
 
-  return { nome, documento, ie, indicador_ie, entrega, faltando };
+  return { nome, documento, ie, indicador_ie, entrega, faltando, origem };
 }
 
 /**

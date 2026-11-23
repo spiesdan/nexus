@@ -123,7 +123,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { data: pedido } = await supabase
     .from("commercial_orders")
     .select(
-      "id, numero, cliente_nome, cliente_documento, total_cents, frete_cents, status, contact_id",
+      "id, numero, cliente_nome, cliente_documento, total_cents, frete_cents, status, contact_id, endereco_entrega",
     )
     .eq("id", parsed.data.order_id)
     .eq("organization_id", authz.org.orgId)

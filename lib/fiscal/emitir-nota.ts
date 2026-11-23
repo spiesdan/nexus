@@ -237,7 +237,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
   const { data: pedidos, error: erroPedidos } = await supabase
     .from("commercial_orders")
     .select(
-      "id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status, informacoes_fiscais, observacoes",
+      "id, numero, cliente_nome, cliente_documento, contact_id, total_cents, frete_cents, status, informacoes_fiscais, observacoes, endereco_entrega",
     )
     .in("id", ids)
     .eq("organization_id", orgId);
@@ -252,6 +252,7 @@ export async function emitirNota(input: EmitirNotaInput): Promise<NotaEmitida> {
     status: string;
     informacoes_fiscais: string | null;
     observacoes: string | null;
+    endereco_entrega: string | null;
   };
   const lista = (pedidos ?? []) as unknown as PedidoDaNota[];
   if (erroPedidos || lista.length !== ids.length) {

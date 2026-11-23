@@ -137,6 +137,26 @@ export const EXTRAS_VAZIOS: ExtrasDoFormulario = {
   entregaCep: "",
 };
 
+/** O que veio do pedido e deve ser gravado no cadastro, campo a campo. */
+const CAMPO_DO_PEDIDO_PARA_FORM: Record<string, keyof ExtrasDoFormulario> = {
+  logradouro: "entregaLogradouro",
+  numero: "entregaNumero",
+  complemento: "entregaComplemento",
+  bairro: "entregaBairro",
+  cidade: "entregaMunicipio",
+  uf: "entregaUf",
+  cep: "entregaCep",
+};
+const CAMPO_DO_PEDIDO_PARA_API: Record<string, string> = {
+  logradouro: "logradouro",
+  numero: "numero_end",
+  complemento: "complemento",
+  bairro: "bairro",
+  cidade: "cidade",
+  uf: "uf",
+  cep: "cep",
+};
+
 function ehModalidade(v: string): v is ModalidadeDeFrete {
   return (MODALIDADES_DE_FRETE as readonly string[]).includes(v);
 }
@@ -364,6 +384,11 @@ export function EmitirNota({
   }, []);
 
   const escolhido = faturados.find((p) => p.id === pedidoId) ?? null;
+  /** Campos preenchidos do endereço do PEDIDO porque faltavam no cadastro. */
+  const camposDoPedido = Object.entries(escolhido?.destinatario?.origem ?? {})
+    .filter(([, origem]) => origem === "pedido")
+    .map(([campo]) => campo)
+    .filter((campo) => campo in CAMPO_DO_PEDIDO_PARA_FORM);
 
   React.useEffect(() => {
     if (!pedidoId) {
@@ -457,6 +482,25 @@ export function EmitirNota({
       entregaUf: entrega?.uf ?? "",
       entregaCep: entrega?.cep ?? "",
     }));
+  }
+
+  /** Confirma o que veio do pedido no cadastro: a próxima nota não repete o trabalho. */
+  async function salvarEnderecoNoCadastro() {
+    const contatoId = escolhido?.contact_id;
+    if (!contatoId || camposDoPedido.length === 0) return;
+    const corpo: Record<string, string> = {};
+    for (const campo of camposDoPedido) {
+      const valor = extras[CAMPO_DO_PEDIDO_PARA_FORM[campo]!].trim();
+      if (valor) corpo[CAMPO_DO_PEDIDO_PARA_API[campo]!] = valor;
+    }
+    if (Object.keys(corpo).length === 0) return;
+    try {
+      await apiClient.patch(`/api/v1/contacts/${contatoId}`, corpo);
+      toast.success(t("Endereço salvo no cadastro do cliente."));
+    } catch (e) {
+      if (e instanceof Error) showApiError(e);
+      else toast.error(t("Não foi possível salvar no cadastro."));
+    }
   }
 
   /**
@@ -1080,7 +1124,23 @@ export function EmitirNota({
                     )}
                   </p>
                   {escolhido?.destinatario &&
-                    (escolhido.destinatario.entrega ? (
+                    (camposDoPedido.length > 0 ? (
+                      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-info/40 bg-info-bg p-2 text-xs text-info-fg">
+                        <p className="min-w-0 flex-1 font-medium">
+                          {t("veio do pedido — confira")} ·{" "}
+                          {camposDoPedido.join(", ")}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="min-h-11"
+                          onClick={() => void salvarEnderecoNoCadastro()}
+                        >
+                          {t("Salvar no cadastro do cliente")}
+                        </Button>
+                      </div>
+                    ) : escolhido.destinatario.entrega ? (
                       <p className="text-xs text-muted-foreground">
                         {t(
                           "Preenchido com o cadastro do cliente. Pode corrigir aqui — vale o que estiver nesta tela.",
