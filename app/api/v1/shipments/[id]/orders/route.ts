@@ -72,9 +72,14 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
   const emAlgumaCarga = new Set(
     ((ocupados ?? []) as unknown as { order_id: string }[]).map((o) => o.order_id),
   );
-  const disponiveis = ((pedidos ?? []) as unknown as Record<string, unknown>[]).filter(
-    (p) => !emAlgumaCarga.has(p.id as string),
-  );
+  const todosOsPedidos = ((pedidos ?? []) as unknown as Record<string, unknown>[]);
+  const disponiveis = todosOsPedidos.filter((p) => !emAlgumaCarga.has(p.id as string));
+  // O painel de pedidos disponíveis também nomeia os que NÃO podem entrar:
+  // sem isto o operador vê a fila menor e não sabe que os outros já foram
+  // alocados — e tentaria a inclusão, que a rota recusa com 409.
+  const emOutraRota = todosOsPedidos
+    .filter((p) => emAlgumaCarga.has(p.id as string))
+    .map((p) => ({ id: p.id, numero: p.numero, cliente_nome: p.cliente_nome }));
 
   // Cidade resolvida como na ficha da carga e no romaneio: endereço do pedido
   // primeiro, cadastro depois — a tela não pode chamar de "sem cidade" um
@@ -92,8 +97,17 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
           contatos,
         ),
         cidade: cidadeDaEntrega(p, contatos),
+        endereco_entrega: (p.endereco_entrega as string | null) ?? null,
         total_cents: p.total_cents,
         status: p.status,
+      })),
+      em_outra_rota: emOutraRota.map((p) => ({
+        id: p.id,
+        numero: p.numero,
+        cliente_nome: nomeDaEntrega(
+          { ...p, cliente_nome: p.cliente_nome as string | null },
+          contatos,
+        ),
       })),
     },
     { requestId },

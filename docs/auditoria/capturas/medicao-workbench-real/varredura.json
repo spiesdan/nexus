@@ -1,0 +1,382 @@
+{
+  "geradoEm": "2026-11-23T12:59:41.481Z",
+  "base": "http://localhost:3030",
+  "tempoTotalMs": 14315,
+  "rotas": 1,
+  "medidas": 4,
+  "validas": 4,
+  "invalidas": 0,
+  "porModulo": {
+    "sem-grupo": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "modulo": null,
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 8,
+      "axeCritica": 0,
+      "axeSeria": 2,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 14003
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "modulo": null,
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 173,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "Escolher foto da entrega",
+            "largura": 1,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0243",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3222
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "modulo": null,
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 127,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "Escolher foto da entrega",
+            "largura": 1,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0243",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3440
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 173,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "Escolher foto da entrega",
+            "largura": 1,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Toggle attribution",
+            "largura": 24,
+            "altura": 24
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0243",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-1.min-w-0 > .tracking-\\[0\\.14em\\].uppercase.text-\\[10px\\] :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">Próximo passo</p>",
+          "color-contrast: .flex-1.min-w-0 > .leading-relaxed.text-xs :: <p class=\"text-xs leading-relaxed text-muted-foreground\">1 parada com desfecho. O romaneio e o fechamento ficam registrados.</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3843
+    },
+    {
+      "rota": "/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "modulo": null,
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/b406f296-cdcc-4ccc-82ed-68836f92de2a",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Carga 061"
+        ],
+        "textos": 127,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "file",
+            "texto": "Escolher foto da entrega",
+            "largura": 1,
+            "altura": 44
+          },
+          {
+            "tag": "summary",
+            "tipo": null,
+            "texto": "Detalhes do cálculo",
+            "largura": 109,
+            "altura": 15
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "Conferido: PED-0243",
+            "largura": 16,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-1.min-w-0 > .tracking-\\[0\\.14em\\].uppercase.text-\\[10px\\] :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">Próximo passo</p>",
+          "color-contrast: .flex-1.min-w-0 > .leading-relaxed.text-xs :: <p class=\"text-xs leading-relaxed text-muted-foreground\">1 parada com desfecho. O romaneio e o fechamento ficam registrados.</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3498
+    }
+  ]
+}
