@@ -210,6 +210,8 @@ export interface RotaCarregada {
     } | null;
     rota_em: string | null;
     rota_versao: number;
+    rota_versao_confirmada: number | null;
+    rota_confirmada_em: string | null;
     saida_prevista: string | null;
     started_at: string | null;
     finished_at: string | null;

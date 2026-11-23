@@ -5,11 +5,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 /** 0336 — a versão confirmada existe e só é gravada com CAS na versão atual. */
 const container = process.env.TEST_DB_CONTAINER;
 if (!container) throw new Error("TEST_DB_CONTAINER not set — rode via `pnpm test:db`");
+const containerName: string = container;
 
 function sql(script: string): string {
   return execFileSync(
     "docker",
-    ["exec", "-i", container, "psql", "-U", "postgres", "-d", "postgres",
+    ["exec", "-i", containerName, "psql", "-U", "postgres", "-d", "postgres",
       "-v", "ON_ERROR_STOP=1", "-tA", "-f", "-"],
     { input: script, encoding: "utf8" },
   ).trim();
