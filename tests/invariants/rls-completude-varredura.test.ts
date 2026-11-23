@@ -77,6 +77,22 @@ interface Excecao {
  */
 const PROVA_PROPRIA: readonly Excecao[] = [
   {
+    tabela: "prospecting_followups",
+    razao:
+      "tests/invariants/prospect-membresia-campanhas.test.ts (0339) prova, com " +
+      "`set role authenticated` + JWT simulado, leitura própria, zero da vizinha, " +
+      "escrita cross-org negada e anon sem linha.",
+  },
+  {
+    tabela: "prospecting_campaign_prospects",
+    razao:
+      "tests/invariants/prospect-membresia-campanhas.test.ts (0338) prova, com " +
+      "`set role authenticated` + JWT simulado, que membro da org A lê a própria " +
+      "membrosia e zero da org B, que escrita na vizinha é negada e que anon não " +
+      "lê. Fora de TABLES pelo mesmo motivo dos casos de agent: a policy de " +
+      "escrita é agent, não manager.",
+  },
+  {
     tabela: "prospecting_campaign_spend",
     razao:
       "tests/invariants/campaign-spend-rls.test.ts (0335) prova, com `set role " +
