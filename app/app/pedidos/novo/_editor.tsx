@@ -153,6 +153,7 @@ export function OrderEditor({
   nomeVendedor,
   escopoDoRascunho,
   textos,
+  prazos,
 }: {
   produtos: Produto[];
   contatos: ContatoOpcao[];
@@ -184,8 +185,19 @@ export function OrderEditor({
   /** `<orgId>:<userId>` — isola o rascunho por tenant e por pessoa. */
   escopoDoRascunho: string;
   textos: TextosBase;
+  /** Prazos ATIVOS configurados pela org (0334). Vazio = lista legada. */
+  prazos?: { codigo: string; nome: string }[];
 }) {
   const t = useT();
+  // A configuração da org manda quando existe; a lista legada é o fallback de
+  // instalação sem a tabela nova, não uma segunda fonte de verdade.
+  const opcoesDePrazo: { codigo: string; nome: string }[] =
+    prazos && prazos.length > 0
+      ? prazos
+      : (Object.keys(FORMA_DE_PAGAMENTO_LABEL) as FormaDePagamento[]).map((f) => ({
+          codigo: f,
+          nome: FORMA_DE_PAGAMENTO_LABEL[f],
+        }));
   const tagIdioma = useTagDeIdioma();
   const router = useRouter();
   const buscaRef = React.useRef<HTMLInputElement | null>(null);
@@ -1229,9 +1241,9 @@ export function OrderEditor({
                   onChange={(e) => setFormaPagamento(e.target.value as FormaDePagamento | "")}
                 >
                   <option value="">{textos.prazoLivre}</option>
-                  {(Object.keys(FORMA_DE_PAGAMENTO_LABEL) as FormaDePagamento[]).map((f) => (
-                    <option key={f} value={f}>
-                      {FORMA_DE_PAGAMENTO_LABEL[f]}
+                  {opcoesDePrazo.map((p) => (
+                    <option key={p.codigo} value={p.codigo}>
+                      {p.nome}
                     </option>
                   ))}
                 </select>
@@ -1423,7 +1435,10 @@ export function OrderEditor({
               <dd className="font-medium">{condicao.trim() || "—"}</dd>
               <dt className="text-muted-foreground">{textos.formaPagamento}</dt>
               <dd className="font-medium">
-                {formaPagamento ? FORMA_DE_PAGAMENTO_LABEL[formaPagamento] : textos.prazoLivre}
+                {formaPagamento
+                  ? (opcoesDePrazo.find((p) => p.codigo === formaPagamento)?.nome ??
+                    FORMA_DE_PAGAMENTO_LABEL[formaPagamento])
+                  : textos.prazoLivre}
               </dd>
               <dt className="text-muted-foreground">{textos.exigeNf}</dt>
               <dd className="font-medium">{exigeNf ? t("Sim") : t("Não")}</dd>

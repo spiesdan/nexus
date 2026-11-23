@@ -690,6 +690,18 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     minRole: "manager",
     section: "Sua empresa",
   },
+  {
+    // Forma (meio de pagamento + tPag oficial) e prazo (vencimento) são coisas
+    // diferentes e vivem em seções distintas da tela. A migration 0334 substitui
+    // a lista fixa de três prazos que antes se chamava "formas de pagamento".
+    href: "/app/settings/tenant/formas-pagamento",
+    label: "Formas de pagamento",
+    description: "O meio de pagamento com o código da NF-e e o prazo de vencimento.",
+    icon: Receipt,
+    group: "organizacao",
+    minRole: "manager",
+    section: "Sua empresa",
+  },
 
   // ---- Inteligência — montar, ensinar, acompanhar (100% hub) ----
   {
