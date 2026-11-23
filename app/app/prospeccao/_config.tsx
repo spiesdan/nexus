@@ -262,6 +262,15 @@ export function ConfigTab({
           <h2 className="text-sm font-semibold">{t("Consumo de Prospecção")}</h2>
           <span className="text-xs text-muted-foreground">{rotuloProvider}</span>
         </div>
+        <p className="text-xs text-muted-foreground">
+          {t("Gasto de mídia é lançamento manual até existir Marketing API.")}{" "}
+          <a
+            href="/api/v1/prospecting/relatorio-gastos?formato=csv"
+            className="font-medium text-foreground underline underline-offset-4"
+          >
+            {t("Baixar relatório mensal (CSV)")}
+          </a>
+        </p>
         {consumoErro ? (
           <div className="space-y-2">
             <p className="text-sm text-destructive">{t("Erro ao carregar o consumo")}</p>
