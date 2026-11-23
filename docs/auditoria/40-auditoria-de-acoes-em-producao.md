@@ -661,3 +661,31 @@ espera existe: ele aceita a tabela alheia e falha depois no índice. O teste
 deve asserir forma, não só presença.
 
 **Congelamento:** D/G/F seguem sem merge de features até o deploy da 1.63.1.
+
+## 35. 23/11/2026 — Drift de schema deixado pelo aborto da 1.63.0
+
+Verificação pós-aborto: **o schema não ficou intacto**. O `update.sh` aplica o
+baseline **statement por statement, sem transação**; o erro foi no 0334, mas o
+que vinha antes já tinha commitado:
+
+```
+fn_salvar_ordem_rota(uuid,uuid,jsonb,jsonb,integer,timestamptz)  EXISTE em produção
+prospecting_campaign_spend                                       não existe
+payment_methods.tipo                                             não existe (legada sem tipo)
+shipments.rota_versao_confirmada                                 não existe
+```
+
+Ou seja: a **0335 ficou aplicada**. A 1.62.3 no ar **não chama** essa função
+(flag desligada), então **não há dano funcional** — mas há **drift**: schema à
+frente do código. A **1.63.1 completará o resto** e o dono verificará os quatro
+objetos no deploy; se faltar um, rollback/redo.
+
+**Lição:** *`update.sh` aplica schema sem transação — erro no meio deixa parte
+aplicada; o guard protege a imagem, não o schema.*
+
+**Proposta — NÃO IMPLEMENTADA (P0 de packaging, decisão do dono):** envolver o
+bloco de schema numa transação única (`psql -1` / `--single-transaction`) **ou**
+acrescentar um passo de verificação que compare `to_regclass()` (e a forma das
+colunas) do que deveria existir antes de trocar imagens. Hoje o guard barra o
+deploy, mas não desfaz o DDL parcial. Registrado como proposta; nada foi mudado
+no kit.
