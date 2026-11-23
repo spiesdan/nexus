@@ -12,7 +12,7 @@
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
 | P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; detector e painel enxergam (produção 1.65.0: 340 amostras, p95 3359 ms) | — 
-| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#811/#812** → `d8638cf3`/`1b484654`; detector e painel enxergam; p95 **subiu** para 3359 ms ante 2660 — melhoria pendente | **#818** (policy set-based) travado até MANIFEST voltar a 430+1 linhas 
+| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; policy set-based 0340 otimiza RLS (929 ms → sem filtro linha a linha), tag 1.65.1 | verificação pós-deploy: EXPLAIN sem filter, p95 < 3408 ms, reafirmação esperada 
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
 | P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
@@ -182,3 +182,12 @@ Backend: `GET /api/v1/commercial-orders/orcamentos-parados` devolve número, cli
   painel enxergar). A policy set-based do G é a otimização (#818), **travada**
   até o `MANIFEST.md` ser restaurado (430 linhas + 1).
 - **Nenhuma release nova hoje sem pedido do dono.**
+
+
+## Pós-corte 1.65.1 (24/11)
+
+**P0-8 passa a “otimização em produção”**: a policy set-based 0340 está na
+1.65.1 (tag derivada patch, dois fragmentos `nada_mudou`). Faltam as medições
+pós-deploy do dono: `EXPLAIN` sem `Rows Removed by Filter`, p95 de
+`/api/v1/conversations` abaixo de 3408 ms e reafirmação (não fechamento) da
+ocorrência `plataforma.slo_estourado` se ainda acima de 800 ms.
