@@ -1,5 +1,5 @@
 ---
-impacto: mudou_comportamento
+impacto: capacidade_nova
 secao: alterado
 titulo: Expedição conta cada pedido uma vez e bloqueia entrega sem endereço
 ---

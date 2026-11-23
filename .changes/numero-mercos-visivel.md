@@ -1,5 +1,5 @@
 ---
-impacto: mudou_comportamento
+impacto: capacidade_nova
 secao: alterado
 titulo: Pedido mostra o número do Mercos quando ele é diferente do interno
 ---
