@@ -1068,9 +1068,17 @@ export function DetalheDoPedido({
               size="sm"
               variant="outline"
               className="ml-auto"
-              onClick={() => setEditandoItens(true)}
+              onClick={() => {
+                // "Editar pedido" abre AS DUAS superfícies: a de itens (aqui)
+                // e a de detalhes (mais abaixo). Os dois "Salvar" continuam
+                // separados de propósito — o PATCH de itens é DELETE+INSERT com
+                // recálculo atômico e o de detalhes é outro PATCH; juntá-los
+                // num único botão criaria um save parcial com total velho.
+                setEditandoItens(true);
+                setEditando(true);
+              }}
             >
-              {t("Adicionar produto ao pedido")}
+              {t("Editar pedido")}
             </Button>
           )}
         </div>

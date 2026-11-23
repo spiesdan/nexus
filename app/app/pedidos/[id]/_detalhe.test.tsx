@@ -146,7 +146,11 @@ describe("ficha do pedido — itens atualizados no Mercos", () => {
 
     expect(screen.getByText("PRODUTO QUE O MERCOS TIROU")).toBeTruthy();
 
-    await usuario.click(screen.getByRole("button", { name: "Adicionar produto ao pedido" }));
+    await usuario.click(screen.getByRole("button", { name: "Editar pedido" }));
+    // O botão novo abre as DUAS edições: a de itens e a de detalhes. Os dois
+    // "Salvar" continuam separados — gravar itens e detalhes no mesmo PATCH
+    // deixaria total velho com item novo se uma das duas metades falhasse.
+    expect(screen.getByPlaceholderText("Condição de pagamento")).toBeTruthy();
     await usuario.click(screen.getByRole("button", { name: "salvar-itens" }));
 
     await waitFor(() => {
