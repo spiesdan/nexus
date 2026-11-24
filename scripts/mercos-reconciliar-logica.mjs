@@ -81,22 +81,75 @@ export function classificarComDetalhe({ situacao, detalhe }) {
 }
 
 /** O payload que fn_importar_pedido_mercos espera, com numero_mercos preservado. */
+/**
+ * O PAYLOAD DA IMPORTAÇÃO — o mesmo formato que o worker normal envia.
+ *
+ * Duas coisas NÃO podem ser copiadas cruas do JSONL, e as duas já custaram
+ * uma rodada inteira de importação falhando com 7 erros:
+ *
+ * 1. **dinheiro**: o coletor grava `"R$ 280,00"` no item (texto) e o banco
+ *    espera `bigint` em centavos. `invalid input syntax for type bigint`.
+ * 2. **status**: o ERP diz "Concluído"/"Cancelado"/"Em orçamento"; a RPC só
+ *    aceita o vocabulário interno. Sem o mapa, todo pedido é recusado.
+ *
+ * `numero_mercos` vai junto porque é a identidade do pedido do ERP — é por ele
+ * que a reimportação é idempotente e por ele que a busca acha.
+ */
+const STATUS_DO_ERP = {
+  "Concluído": "concluido",
+  "Concluido": "concluido",
+  "Faturado": "faturado",
+  "Expedido": "expedido",
+  "Entregue": "entregue",
+  "Cancelado": "cancelado",
+  "Em orçamento": "em_analise",
+  "Em orcamento": "em_analise",
+  "Aprovado": "aprovado",
+};
+
+function paraCentavos(texto) {
+  if (typeof texto === "number" && Number.isFinite(texto)) return Math.round(texto);
+  const limpo = String(texto ?? "").replace(/[^\d,.-]/g, "");
+  if (!limpo) return 0;
+  const normalizado = limpo.includes(",")
+    ? limpo.replace(/\./g, "").replace(",", ".")
+    : limpo;
+  const n = Number(normalizado);
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
 export function payloadDeImportacao(registro) {
   const cliente = registro.cliente ?? {};
+  const statusErp = registro.status_detalhe || registro.status_lista || "Aprovado";
+  const itens = (registro.itens ?? []).map((i) => ({
+    codigo: i.codigo || i.descricao || null,
+    descricao: i.descricao || i.codigo || "",
+    quantidade: Number(i.quantidade ?? 1),
+    preco_unit_cents: paraCentavos(i.preco_liq),
+    subtotal_cents: paraCentavos(i.subtotal),
+  }));
   return {
     numero: registro.numero,
+    numero_mercos: registro.numero,
+    status: STATUS_DO_ERP[statusErp] ?? "aprovado",
+    status_origem: statusErp,
     cliente_nome: cliente.razao || cliente.fantasia || null,
     cliente_documento: cliente.documento || null,
-    status: registro.status_detalhe || "aprovado",
-    total_cents: registro.total_cents ?? 0,
-    subtotal_cents: registro.soma_itens_cents ?? registro.total_cents ?? 0,
+    cliente: {
+      razao: cliente.razao ?? null,
+      fantasia: cliente.fantasia ?? null,
+      documento: cliente.documento ?? null,
+      telefone: cliente.telefone ?? null,
+      cidade: cliente.cidade ?? null,
+    },
+    mercos_observacoes: registro.informacoes_adicionais ?? null,
+    vendedor: registro.vendedor ?? registro.vendedor_lista ?? null,
     condicao_pagamento: registro.condicao_pagamento || null,
-    itens: (registro.itens ?? []).map((i) => ({
-      codigo: i.codigo || i.descricao,
-      descricao: i.descricao || i.codigo,
-      quantidade: i.quantidade ?? 1,
-      subtotal_cents: i.subtotal ?? 0,
-    })),
+    subtotal_cents: registro.soma_itens_cents ?? itens.reduce((s, i) => s + i.subtotal_cents, 0),
+    desconto_cents: 0,
+    frete_cents: paraCentavos(registro.valor_frete),
+    total_cents: registro.total_cents ?? 0,
+    itens,
   };
 }
 
