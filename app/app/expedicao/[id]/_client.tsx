@@ -388,10 +388,6 @@ export function CargaClient({
   const [motoristaNome, setMotoristaNome] = React.useState("");
   const [salvandoVeiculo, setSalvandoVeiculo] = React.useState(false);
 
-  function irParaEtapa(id: string) {
-    rolarPara(document.getElementById(id), { block: "start" });
-  }
-
   function abrirVeiculo() {
     setPlaca(carga.placa ?? "");
     setVeiculoTipo(carga.veiculo_tipo ?? "");
@@ -813,19 +809,30 @@ export function CargaClient({
           </div>
         </div>
 
-        {/* DOIS MODIOS, TRÊS BLOCOS. Cada âncora tem um destino DISTINTO:
-            montagem = carga / pedidos / saída; operação = próxima / mapa / fechamento. */}
-        <nav aria-label={t("Seções da expedição")} className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5">
-          {(modo === "montagem"
-            ? [["bloco-carga", t("O que já está na carga")], ["bloco-adicionar", t("Adicionar pedidos")], ["bloco-saida", t("Fechar e sair")]]
-            : [["bloco-proxima", t("Próxima parada")], ["bloco-mapa", t("Mapa e ordem")], ["bloco-fechamento", t("Fechamento")]]
-          ).map((par) => {
-            const [id, rotulo] = par as [string, string];
+        {/* TRÊS PÁGINAS DE VERDADE: link do Next, não âncora nem aba. O
+            cabeçalho é o mesmo; a página atual é marcada para leitor de tela
+            e para quem olha (aria-current + borda). */}
+        <nav aria-label={t("Páginas da expedição")} className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5">
+          {[
+            { href: `/app/expedicao/${cargaId}`, chave: "paradas", rotulo: t("Pedidos e paradas") },
+            { href: `/app/expedicao/${cargaId}/rota`, chave: "rota", rotulo: t("Mapa e ordem") },
+            { href: `/app/expedicao/${cargaId}/fechamento`, chave: "fechamento", rotulo: t("Fechamento") },
+          ].map((pagina) => {
+            const atual = secao === pagina.chave;
             return (
-            <button key={id} type="button" onClick={() => irParaEtapa(id)}
-              className="-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-2.5 text-xs font-medium whitespace-nowrap text-muted-foreground hover:border-accent/40 hover:text-text sm:text-sm">
-              {rotulo}
-            </button>
+              <Link
+                key={pagina.href}
+                href={pagina.href}
+                aria-current={atual ? "page" : undefined}
+                className={cn(
+                  "-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 px-2.5 text-xs font-medium whitespace-nowrap sm:text-sm",
+                  atual
+                    ? "border-accent text-text"
+                    : "border-transparent text-muted-foreground hover:border-accent/40 hover:text-text",
+                )}
+              >
+                {pagina.rotulo}
+              </Link>
             );
           })}
           <Link
@@ -843,6 +850,8 @@ export function CargaClient({
         </nav>
       </div>
 
+      {secao === "paradas" && (
+        <>
       {/* ETAPA 1 — pedidos disponíveis e paradas da carga. */}
       {/* `pb-24` no fim do workbench dá folga para a barra inferior do
           navegador no celular e para os selos do rodapé da sidebar no
@@ -1364,9 +1373,12 @@ export function CargaClient({
           </section>
         </div>
       </section>
+        </>
+      )}
 
       {/* OPERAÇÃO — mapa e ordem no mesmo bloco; montagem —Publicar fica no Roteirizador. */}
-      <div id={modo === "montagem" ? "bloco-saida" : "bloco-mapa"} className="scroll-mt-44">
+      {secao === "rota" && (
+      <div id="bloco-mapa" className="scroll-mt-44">
         <Roteirizador
           cargaId={cargaId}
           podeOperar={podeOperar}
@@ -1374,11 +1386,14 @@ export function CargaClient({
           aoTrocarVeiculo={abrirVeiculo}
         />
       </div>
+      )}
 
       {/* FECHAMENTO — só na operação. */}
+      {secao === "fechamento" && (
       <div id="bloco-fechamento" className="scroll-mt-44 pb-24">
         <FechamentoCarga cargaId={cargaId} podeFechar={podeFechar} />
       </div>
+      )}
 
       {/* VEÍCULO E MOTORISTA — o cabeçalho mostra "Placa · tipo · nome" e até
           aqui não havia onde corrigir: a carga nascia com o que foi digitado na
