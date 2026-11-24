@@ -65,7 +65,12 @@ export async function GET(): Promise<Response> {
     const cfg = lerConfigStripe();
     const resposta = await stripeRequest<{ data: AssinaturaStripe[] }>(
       cfg,
-      `/customers/${encodeURIComponent(cliente.stripe_customer_id)}/subscriptions?status=all&limit=1`,
+      // `/customers/{id}/subscriptions` NÃO aceita `status` nas versões novas
+      // da API (400 "Received unknown parameter: status"), e o filtro por
+      // cliente saiu de lá — a listagem é `/v1/subscriptions?customer=...`.
+      // Medido em produção: era isso que fazia a tela dizer "não conseguimos
+      // consultar o Stripe" com a chave e a rede funcionando.
+      `/subscriptions?customer=${encodeURIComponent(cliente.stripe_customer_id)}&status=all&limit=1`,
     );
     if (resposta.ok) {
       remoto = resposta.data.data?.[0] ?? null;
