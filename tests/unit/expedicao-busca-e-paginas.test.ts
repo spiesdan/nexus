@@ -60,7 +60,7 @@ describe("três páginas de verdade", () => {
       ["app/app/expedicao/[id]/page.tsx", 'secao="paradas"'],
       ["app/app/expedicao/[id]/rota/page.tsx", 'secao="rota"'],
       ["app/app/expedicao/[id]/fechamento/page.tsx", 'secao="fechamento"'],
-    ]) {
+    ] as const) {
       expect(ler(arquivo)).toContain(secao);
     }
   });
