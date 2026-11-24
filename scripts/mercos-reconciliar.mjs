@@ -106,7 +106,32 @@ const LINHAS_ILEGIVEIS = ilegiveisLista + ilegiveisDetalhes + numerosIlegiveis;
 
 const todos = [...porNumero.values()];
 const semData = todos.filter((r) => !Number.isFinite(Date.parse(r.data_emissao || "")));
-const naJanela = todos.filter((r) => dentroDaJanela(r, AGORA, JANELA_DIAS));
+
+/**
+ * O CENSO JÁ É A JANELA.
+ *
+ * O coletor pede a lista ao ERP com `de`/`ate` — a filtragem por data acontece
+ * na ORIGEM. O cartão da lista, porém, não traz a data de emissão (medido em
+ * 23/11/2026: 5.930 de 5.930 linhas com `data_emissao: null`), então reaplicar
+ * `dentroDaJanela` aqui zerava o censo inteiro e a rodada saía `incompleta`
+ * por um motivo que não é falta de cobertura.
+ *
+ * Regra: quando o `meta.json` do censo declara o período, linha sem data conta
+ * como dentro — e o número continua visível em `registros_sem_data`, para
+ * ninguém confundir "não filtrado" com "filtrado e vazio". Sem o meta, o
+ * comportamento antigo permanece: sem data não entra.
+ */
+const censoDeclaraJanela = (() => {
+  try {
+    const meta = JSON.parse(readFileSync(`${LISTA}.meta.json`, "utf8"));
+    return Boolean(meta?.de && meta?.ate);
+  } catch {
+    return false;
+  }
+})();
+const naJanela = todos.filter(
+  (r) => dentroDaJanela(r, AGORA, JANELA_DIAS) || (censoDeclaraJanela && semData.includes(r)),
+);
 const candidatos = naJanela.sort((a, b) => a.numero - b.numero).slice(0, LIMITE);
 
 const admin = createClient(URL_BASE, CHAVE, { auth: { persistSession: false } });
