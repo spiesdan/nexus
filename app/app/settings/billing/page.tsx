@@ -1,11 +1,14 @@
 import { redirect } from "next/navigation";
 
-import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
+import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
+import { createClient } from "@/lib/supabase/server";
+import { PaginaDeConfiguracao } from "@/components/nexus-ui/layout/PaginaDeConfiguracao";
 
 import { ROLE_RANK } from "@/lib/auth/types";
 import { emailDeSuporte } from "@/lib/branding/saida";
-import { Card } from "@/components/ui/card";
 import { traduzir } from "@/lib/i18n/dicionario";
+
+import { BillingClient } from "./_client";
 
 export const dynamic = "force-dynamic";
 
@@ -24,28 +27,19 @@ export default async function BillingPage() {
   }
   const suporte = emailDeSuporte();
   const idioma = user.idioma;
+  const supabase = await createClient();
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("status")
+    .eq("id", activeOrg.orgId)
+    .maybeSingle();
+  const suspensa = (org as { status?: string } | null)?.status === "suspended";
   return (
     <PaginaDeConfiguracao
       titulo="Billing"
       descricao={traduzir("Planos, faturas e cobrança.", idioma)}
     >
-      <Card className="hover-raise max-w-xl p-6">
-        <h2 className="text-sm font-semibold">{traduzir("Em breve — Fase 2", idioma)}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {traduzir("Billing entra na Fase 2 do roadmap.", idioma)}{" "}
-          {suporte ? (
-            <>
-              {traduzir("Para questões de pagamento, contate", idioma)}{" "}
-              <a className="underline" href={`mailto:${suporte}`}>
-                {suporte}
-              </a>
-              .
-            </>
-          ) : (
-            <>{traduzir("Para questões de pagamento, fale com quem administra este sistema.", idioma)}</>
-          )}
-        </p>
-      </Card>
+      <BillingClient suporte={suporte} suspensa={suspensa} />
     </PaginaDeConfiguracao>
   );
 }
