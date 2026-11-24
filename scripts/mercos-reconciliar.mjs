@@ -106,8 +106,36 @@ const LINHAS_ILEGIVEIS = ilegiveisLista + ilegiveisDetalhes + numerosIlegiveis;
 
 const todos = [...porNumero.values()];
 const semData = todos.filter((r) => !Number.isFinite(Date.parse(r.data_emissao || "")));
-const naJanela = todos.filter((r) => dentroDaJanela(r, AGORA, JANELA_DIAS));
-const candidatos = naJanela.sort((a, b) => a.numero - b.numero).slice(0, LIMITE);
+
+/**
+ * O CENSO JÁ É A JANELA.
+ *
+ * O coletor pede a lista ao ERP com `de`/`ate` — a filtragem por data acontece
+ * na ORIGEM. O cartão da lista, porém, não traz a data de emissão (medido em
+ * 23/11/2026: 5.930 de 5.930 linhas com `data_emissao: null`), então reaplicar
+ * `dentroDaJanela` aqui zerava o censo inteiro e a rodada saía `incompleta`
+ * por um motivo que não é falta de cobertura.
+ *
+ * Regra: quando o `meta.json` do censo declara o período, linha sem data conta
+ * como dentro — e o número continua visível em `registros_sem_data`, para
+ * ninguém confundir "não filtrado" com "filtrado e vazio". Sem o meta, o
+ * comportamento antigo permanece: sem data não entra.
+ */
+const censoDeclaraJanela = (() => {
+  try {
+    const meta = JSON.parse(readFileSync(`${LISTA}.meta.json`, "utf8"));
+    return Boolean(meta?.de && meta?.ate);
+  } catch {
+    return false;
+  }
+})();
+const naJanela = todos.filter(
+  (r) => dentroDaJanela(r, AGORA, JANELA_DIAS) || (censoDeclaraJanela && semData.includes(r)),
+);
+// Do mais NOVO para o mais antigo: com teto de 100 por rodada, olhar primeiro
+// o pedido de seis meses atrás responderia uma pergunta que ninguém fez. O que
+// interessa é o recente — e é o recente que o dono abre na tela.
+const candidatos = naJanela.sort((a, b) => b.numero - a.numero).slice(0, LIMITE);
 
 const admin = createClient(URL_BASE, CHAVE, { auth: { persistSession: false } });
 
@@ -278,6 +306,7 @@ const cobertura = avaliarCobertura({
   censoLido: resultado.censo_lido,
   linhasIlegiveis: resultado.linhas_ilegiveis,
   registrosSemData: resultado.registros_sem_data,
+  censoDaJanela: censoDeclaraJanela,
   erros: resultado.erros_importacao,
 });
 const veredito = avaliarResultado({ cobertura, ausentesDepois: resultado.ausentes_depois });

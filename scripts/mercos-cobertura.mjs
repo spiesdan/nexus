@@ -12,6 +12,15 @@ export function avaliarCobertura({
   censoLido = 0,
   linhasIlegiveis = 0,
   registrosSemData = 0,
+  /**
+   * O censo foi PEDIDO para a janela (o `meta.json` declara `de`/`ate`)?
+   *
+   * Quando é, a filtragem por data aconteceu na origem e a ausência de data na
+   * linha não é falta de cobertura — o cartão da lista do ERP não traz data
+   * (medido: 5.930 de 5.930). Sem este flag, uma rodada com cobertura perfeita
+   * se declarava incompleta por um motivo que não existe.
+   */
+  censoDaJanela = false,
   erros = 0,
 } = {}) {
   const motivos = [];
@@ -21,7 +30,9 @@ export function avaliarCobertura({
     motivos.push(`censo lido ${censoLido} de ${censoEsperado}`);
   }
   if (linhasIlegiveis > 0) motivos.push(`${linhasIlegiveis} linha(s) ilegível(is) no censo`);
-  if (registrosSemData > 0) motivos.push(`${registrosSemData} registro(s) sem data de emissão`);
+  if (registrosSemData > 0 && !censoDaJanela) {
+    motivos.push(`${registrosSemData} registro(s) sem data de emissão`);
+  }
   if (erros > 0) motivos.push(`${erros} erro(s) de leitura/escrita`);
 
   return { status: motivos.length > 0 ? "incompleta" : "completa", motivos };
