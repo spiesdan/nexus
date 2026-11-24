@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.71.0] — 2026-11-24
+
+### Adicionado
+
+- **Cobrança SaaS ganha assinatura, checkout, portal, webhook e avisos de vencimento** A assinatura exibida passa a vir do Stripe, nunca de valor fixo. Checkout e portal são criados no Stripe com o tenant resolvido da sessão, e o webhook valida a assinatura sobre o corpo bruto, guarda o evento por id e recusa evento fora de ordem. Avisos D-3/D-2/D-1 são persistidos por fatura e um cron diário compara o estado local com o Stripe. Stripe fora vira verificação com retry — nunca "pago" e nunca suspensão sem fatura vencida confirmada.
+
+### Corrigido
+
+- **Testes de YAML voltam a rodar com a versão 4 da biblioteca** O bump automático para `js-yaml` 5 quebrou o parse dos workflows: `workflows-fazem-parse` passou a reprovar `apk.yml`, `ci.yml` e `e2e.yml` como "YAML inválido". A v5 mudou a superfície da API usada pelo teste, e o bump foi mergeado sem que a suíte pegasse — o job de release reprovou e travou a publicação. Volta para a v4, que é a versão em que o teste foi escrito.
+
+- **Webhook do Stripe usa o verificador de assinatura reconhecido pelo gate** A verificação HMAC do webhook do Stripe passou a usar o helper compartilhado `verifyInboundSignature`, o mesmo nome reconhecido pelos gates de service role e de suspensão. A checagem continua sobre o corpo bruto, com tolerância curta e comparação em tempo constante — nenhuma autorização foi afrouxada.
+
 ## [1.70.1] — 2026-11-24
 
 ### Corrigido
@@ -9097,7 +9109,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.70.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.71.0...HEAD
+[1.71.0]: https://github.com/spiesdan/nexus/compare/v1.70.1...v1.71.0
 [1.70.1]: https://github.com/spiesdan/nexus/compare/v1.70.0...v1.70.1
 [1.70.0]: https://github.com/spiesdan/nexus/compare/v1.69.1...v1.70.0
 [1.69.1]: https://github.com/spiesdan/nexus/compare/v1.69.0...v1.69.1
