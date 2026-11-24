@@ -410,3 +410,44 @@ describe("endereço do pedido como reserva fiscal", () => {
     expect(d.origem.logradouro).toBeNull();
   });
 });
+
+describe("resolução determinística da UF no clique de emitir", () => {
+  const enderecoCompleto = {
+    ...WANDERLEI,
+    logradouro: "Avenida Michele Simonetti",
+    numero_end: "357",
+    bairro: "Sao Miguel",
+    cep: "89580-000",
+  };
+
+  it("Campo do Tenente/SC: payload sai certo (4104105/PR) e corrigido diz o que mudou", () => {
+    const d = montarDestinatario(
+      { cliente_nome: "PEREIRA MOTORS" },
+      { ...enderecoCompleto, cidade: "Campo do Tenente", uf: "SC" },
+    );
+    expect(d.entrega?.codigo_municipio).toBe("4104105");
+    expect(d.entrega?.uf).toBe("PR");
+    expect(d.corrigido).toEqual({ campo: "uf", de: "SC", para: "PR" });
+    expect(d.faltando).toEqual([]);
+  });
+
+  it("Irati/XX:ambiguidade nomeia PR e SC, entrega nula e nada é corrigido", () => {
+    const d = montarDestinatario(
+      { cliente_nome: "HOMONIMO" },
+      { ...enderecoCompleto, cidade: "Irati", uf: "XX" },
+    );
+    expect(d.entrega).toBeNull();
+    expect(d.corrigido).toBeNull();
+    expect(d.faltando.join(" ")).toContain("PR e SC");
+  });
+
+  it("par válido não muda nada", () => {
+    const d = montarDestinatario(
+      { cliente_nome: "PEREIRA MOTORS" },
+      { ...enderecoCompleto, cidade: "Mafra", uf: "SC" },
+    );
+    expect(d.corrigido).toBeNull();
+    expect(d.faltando).toEqual([]);
+    expect(d.entrega?.uf).toBe("SC");
+  });
+});

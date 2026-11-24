@@ -26,7 +26,7 @@ import type { AjusteDoDestinatario, ExtrasFiscais } from "@/lib/schemas/fiscal";
 
 import { documentoDoCadastro } from "@/lib/contacts/documento-do-cadastro";
 
-import { municipioIbge } from "./municipio-ibge";
+import { municipioIbge, normalizarMunicipio, ufsPossiveisDoMunicipio } from "./municipio-ibge";
 
 export type LocalDeEntrega = NonNullable<ExtrasFiscais["entrega"]>;
 
@@ -90,6 +90,11 @@ export interface DestinatarioDaNota {
   faltando: string[];
   /** Origem campo a campo: o cadastro ganha; o pedido só cobre o que falta. */
   origem: OrigemDestinatario;
+  /**
+   * Resolução determinística aplicada SÓ na nota (não grava no cadastro):
+   * a UF informada não existe para o município, que tem uma única UF possível.
+   */
+  corrigido: { campo: "uf"; de: string; para: string } | null;
 }
 
 const COLUNAS_DO_CONTATO =
@@ -252,6 +257,29 @@ export function montarDestinatario(
       origem.uf = "pedido";
     }
   }
+  // Se o PAR ainda não resolve, o nome do município pode existir em UMA
+  // única UF. Nesse caso o dado é determinístico: usamos essa UF no payload
+  // da nota e devolvemos `corrigido` para a tela dizer o que resolveu. Nada
+  // é escrito no cadastro aqui — a persistência é do Sentinel, com audit.
+  let corrigido: { campo: "uf"; de: string; para: string } | null = null;
+  let ambiguidade: string | null = null;
+  if (!municipio) {
+    const cidadeBruta = c?.cidade ?? reserva?.cidade ?? null;
+    const ufs = ufsPossiveisDoMunicipio(cidadeBruta);
+    if (ufs.length === 1) {
+      const ufUnica = ufs[0] ?? "";
+      const candidate = municipioIbge(cidadeBruta, ufUnica);
+      if (candidate) {
+        corrigido = { campo: "uf", de: ufBruto, para: ufUnica };
+        municipio = candidate;
+        ufBruto = ufUnica;
+        origem.uf = "cadastro";
+      }
+    } else if (ufs.length > 1) {
+      const nome = normalizarMunicipio((cidadeBruta ?? "").split(",")[0] ?? "");
+      ambiguidade = `${nome} existe em ${ufs.join(" e ")} — informe a UF`;
+    }
+  }
   const cep = resolver("cep", c?.cep, reserva?.cep, false).replace(/\D/g, "");
   // O cadastro às vezes deixa o `uf` estruturado vazio e escreve o estado por
   // extenso na cidade ("Mafra, Santa Catarina" / "Irati, Paraná"). A sigla sai da
@@ -263,7 +291,10 @@ export function montarDestinatario(
   if (!logradouro) faltando.push("logradouro");
   if (!numero) faltando.push("número do endereço");
   if (!bairro) faltando.push("bairro");
-  if (!municipio) faltando.push("cidade/UF (ou o código IBGE do município)");
+  if (!municipio) {
+    faltando.push("cidade/UF (ou o código IBGE do município)");
+    if (ambiguidade) faltando.push(ambiguidade);
+  }
   if (uf.length !== 2) faltando.push("UF");
   if (!documento) faltando.push("CPF/CNPJ");
 
@@ -296,7 +327,7 @@ export function montarDestinatario(
         }
       : null;
 
-  return { nome, documento, ie, indicador_ie, entrega, faltando, origem };
+  return { nome, documento, ie, indicador_ie, entrega, faltando, origem, corrigido };
 }
 
 /**
