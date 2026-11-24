@@ -59,6 +59,17 @@ export function filtroOrDeBuscaDePedido(termo: string): string | null {
   if (texto !== "") {
     partes.push(`cliente_nome.ilike.%${texto}%`, `cliente_documento.ilike.%${texto}%`);
   }
-  if (numero !== null) partes.push(`numero.eq.${numero}`);
+  if (numero !== null) {
+    // DOIS NÚMEROS, UM TERMO. O pedido tem o número interno (`numero`) e o do
+    // Mercos (`numero_mercos`). O operador tem na mão ora um, ora outro — o
+    // romaneio mostra o interno, o ERP mostra o do Mercos, e o cliente no
+    // telefone cita o que estiver no papel dele. Procurar só o interno faz a
+    // busca "não achar" metade das vezes, que é o mesmo defeito que este
+    // módulo nasceu para consertar.
+    //
+    // `numero_mercos` é anulável: nos pedidos que não vêm do ERP ele é nulo, e
+    // a comparação simplesmente não casa — não quebra nem filtra a mais.
+    partes.push(`numero.eq.${numero}`, `numero_mercos.eq.${numero}`);
+  }
   return partes.length > 0 ? partes.join(",") : null;
 }
