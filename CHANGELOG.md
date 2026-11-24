@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.68.0] — 2026-11-24
+
+### Adicionado
+
+- **Endereço do cliente do Mercos passa a vir da ficha dele, sem apagar cadastro corrigido** O bloco do cliente no pedido não traz rua, número, bairro nem CEP — só a ficha do cliente traz. O coletor agora busca o cliente pelo documento e lê o endereço na ficha, guardando o resultado por 30 dias para não repetir a consulta. A gravação só preenche campo vazio: se o operador corrigiu o cadastro, o ERP nunca desfaz. A leitura falha não impede o pedido de entrar.
+
+- **Tela mostra se a verificação do Mercos terminou** A tela de colisões passa a dizer se a conferência foi completa: "nenhum pedido ficou de fora" só aparece quando a verificação terminou com zero ausentes. Cobertura incompleta é avisada em âmbar, com a explicação de que a próxima execução termina.
+
+### Corrigido
+
+- **Expedição mostra os quatro filtros e limpa a cabine do motorista** Lista: os filtros de veículo e motorista voltam a aparecer quando a atribuição está no cadastro da carga. Cabine: um nome só para "Entregue", sem valor em dinheiro no cartão, aviso de sincronização com botão Atualizar e texto maior; na lista do entregador, um seletor a menos que duplicava os cartões.
+
 ## [1.67.0] — 2026-11-23
 
 ### Adicionado
@@ -9030,7 +9042,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.67.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.68.0...HEAD
+[1.68.0]: https://github.com/spiesdan/nexus/compare/v1.67.0...v1.68.0
 [1.67.0]: https://github.com/spiesdan/nexus/compare/v1.66.0...v1.67.0
 [1.66.0]: https://github.com/spiesdan/nexus/compare/v1.65.2...v1.66.0
 [1.65.2]: https://github.com/spiesdan/nexus/compare/v1.65.1...v1.65.2
