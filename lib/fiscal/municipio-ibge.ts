@@ -117,3 +117,13 @@ export function municipioIbge(
   const ufDoAchado = chave.split("/")[1];
   return codigo && oficial && ufDoAchado ? { codigo, nome: oficial, uf: ufDoAchado } : null;
 }
+
+/** UFs em que o nome do município existe — base para decidir ambiguidade. */
+export function ufsPossiveisDoMunicipio(cidade: string | null | undefined): string[] {
+  const nome = normalizarMunicipio((cidade ?? "").split(",")[0] ?? "");
+  if (!nome) return [];
+  const prefixo = `${nome}/`;
+  return [...new Set(
+    Object.keys(MAPA).filter((chave) => chave.startsWith(prefixo)).map((chave) => chave.slice(prefixo.length)),
+  )].sort();
+}
