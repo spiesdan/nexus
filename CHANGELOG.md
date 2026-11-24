@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.72.0] — 2026-11-24
+
+### Adicionado
+
+- **Billing do tenant mostra assinatura real e ações de pagamento** A tela de billing sai do placeholder e passa a mostrar plano, valor, moeda, vencimento e avisos D-3/D-2/D-1 vindos da API. Há ações de checkout e portal, estados de pendente/suspensa/sem Stripe, e nenhum dado de cartão ou confirmação local de pagamento.
+
+- **Plano SaaS passa a morar no banco, com R$ 1.699,00 e descrição definidos pelo dono** O plano Nexus (R$ 1.699,00, BRL, mensal, "Servidor, hospedagem, domínio e inteligência artificial") nasce no banco, não em código. Enquanto não há Price casado, a tela e o endpoint leem esses valores do banco. Quando `billing_plans.stripe_price_id` for preenchido, valor e descrição vêm do Stripe. A virada para live continua exigindo duas decisões explícitas no `.env`: `STRIPE_TEST_MODE=false` e `STRIPE_LIVE_CONFIRMADO=sim`.
+
 ## [1.71.0] — 2026-11-24
 
 ### Adicionado
@@ -9109,7 +9117,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.71.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.72.0...HEAD
+[1.72.0]: https://github.com/spiesdan/nexus/compare/v1.71.0...v1.72.0
 [1.71.0]: https://github.com/spiesdan/nexus/compare/v1.70.1...v1.71.0
 [1.70.1]: https://github.com/spiesdan/nexus/compare/v1.70.0...v1.70.1
 [1.70.0]: https://github.com/spiesdan/nexus/compare/v1.69.1...v1.70.0
