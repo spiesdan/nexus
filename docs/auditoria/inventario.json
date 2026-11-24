@@ -1,28 +1,28 @@
 {
   "resumo": {
-    "gerado_em": "2026-11-23T10:55:25.728Z",
+    "gerado_em": "2026-11-24T04:46:09.524Z",
     "commit": null,
-    "telas": 147,
+    "telas": 149,
     "resolvers": 13,
-    "apis": 449,
+    "apis": 455,
     "layouts": 13,
     "erros": 8,
     "estados": 9,
     "arquivos_especiais": 2,
     "migrations": {
-      "total": 320,
+      "total": 330,
       "primeira": "00001_initial_schema.sql",
-      "ultima": "20261124170000_0339_followup_retomada_48h.sql",
+      "ultima": "20261124270000_0349_mercos_run_tipo.sql",
       "semPadrao": [
         "00001_initial_schema.sql"
       ],
       "duplicadas": []
     },
     "testes": {
-      "tests/unit": 758,
-      "lib": 313,
-      "tests/invariants": 191,
-      "tests/e2e": 112,
+      "tests/unit": 770,
+      "lib": 321,
+      "tests/invariants": 195,
+      "tests/e2e": 113,
       "app": 80,
       "tests/api": 10,
       "tests/fiscal": 10,
@@ -53,22 +53,23 @@
       "prospeccao": 2,
       "fiscal": 1,
       "fotos": 1,
-      "operacao": 1
+      "operacao": 1,
+      "pedidos": 1
     },
     "apis_por_prefixo": {
       "/api/v1/ai": 69,
       "/api/v1/prospecting": 35,
-      "/api/v1/cron": 31,
+      "/api/v1/cron": 32,
       "/api/v1/shipments": 26,
       "/api/v1/admin": 22,
       "/api/v1/conversations": 21,
       "/api/v1/leads": 13,
+      "/api/v1/products": 13,
       "/api/v1/commercial-orders": 12,
       "/api/v1/contacts": 12,
       "/api/v1/invoices": 10,
       "/api/v1/sentinel": 10,
       "/api/v1/team": 10,
-      "/api/v1/products": 9,
       "/api/v1/webhooks": 9,
       "/api/v1/financeiro": 8,
       "/api/v1/fiscal-entradas": 8,
@@ -136,6 +137,7 @@
       "/api/v1/lead-captures": 1,
       "/api/v1/marca": 1,
       "/api/v1/mcp": 1,
+      "/api/v1/mercos": 1,
       "/api/v1/notifications": 1,
       "/api/v1/public": 1,
       "/api/v1/radar-compras": 1,
@@ -161,7 +163,7 @@
       "onboarding": 8,
       "público e legal": 16,
       "receita": 9,
-      "vendas e catálogo": 8
+      "vendas e catálogo": 10
     }
   },
   "itens": [
@@ -736,7 +738,7 @@
         "service-role",
         "force-dynamic"
       ],
-      "linhas": 310
+      "linhas": 309
     },
     {
       "tipo": "api",
@@ -2908,7 +2910,7 @@
       "flags": [
         "force-dynamic"
       ],
-      "linhas": 97
+      "linhas": 96
     },
     {
       "tipo": "api",
@@ -3481,6 +3483,21 @@
         "force-dynamic"
       ],
       "linhas": 69
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/cron/mercos-reconciliacao",
+      "arquivo": "app/api/v1/cron/mercos-reconciliacao/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 70
     },
     {
       "tipo": "api",
@@ -4882,6 +4899,21 @@
     },
     {
       "tipo": "api",
+      "rota": "/api/v1/mercos/colisoes",
+      "arquivo": "app/api/v1/mercos/colisoes/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 67
+    },
+    {
+      "tipo": "api",
       "rota": "/api/v1/message-templates",
       "arquivo": "app/api/v1/message-templates/route.ts",
       "grupo": "api",
@@ -5290,6 +5322,68 @@
         "force-dynamic"
       ],
       "linhas": 122
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/catalogo-pdf",
+      "arquivo": "app/api/v1/products/catalogo-pdf/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST"
+      ],
+      "flags": [
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 102
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/catalogo-pdf/download",
+      "arquivo": "app/api/v1/products/catalogo-pdf/download/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 21
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/catalogo-pdf/logo",
+      "arquivo": "app/api/v1/products/catalogo-pdf/logo/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "flags": [
+        "redirect",
+        "requireRole",
+        "service-role",
+        "force-dynamic"
+      ],
+      "linhas": 152
+    },
+    {
+      "tipo": "api",
+      "rota": "/api/v1/products/catalogo-pdf/preview",
+      "arquivo": "app/api/v1/products/catalogo-pdf/preview/route.ts",
+      "grupo": "api",
+      "metodos": [
+        "GET"
+      ],
+      "flags": [
+        "requireRole",
+        "force-dynamic"
+      ],
+      "linhas": 23
     },
     {
       "tipo": "api",
@@ -6329,7 +6423,7 @@
         "requireRole",
         "force-dynamic"
       ],
-      "linhas": 240
+      "linhas": 254
     },
     {
       "tipo": "api",
@@ -7493,7 +7587,7 @@
         "redirect",
         "force-dynamic"
       ],
-      "linhas": 213
+      "linhas": 244
     },
     {
       "tipo": "tela",
@@ -7504,7 +7598,7 @@
         "redirect",
         "force-dynamic"
       ],
-      "linhas": 31
+      "linhas": 35
     },
     {
       "tipo": "tela",
@@ -7944,6 +8038,17 @@
     },
     {
       "tipo": "tela",
+      "rota": "/app/pedidos/colisoes-mercos",
+      "arquivo": "app/app/pedidos/colisoes-mercos/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 40
+    },
+    {
+      "tipo": "tela",
       "rota": "/app/pedidos/imprimir",
       "arquivo": "app/app/pedidos/imprimir/page.tsx",
       "grupo": "vendas e catálogo",
@@ -7986,6 +8091,17 @@
         "force-dynamic"
       ],
       "linhas": 222
+    },
+    {
+      "tipo": "tela",
+      "rota": "/app/products/catalogo-pdf",
+      "arquivo": "app/app/products/catalogo-pdf/page.tsx",
+      "grupo": "vendas e catálogo",
+      "flags": [
+        "redirect",
+        "force-dynamic"
+      ],
+      "linhas": 28
     },
     {
       "tipo": "resolver",

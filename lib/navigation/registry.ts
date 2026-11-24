@@ -341,6 +341,15 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     sidebar: true,
   },
   {
+    // Catálogo impresso: a prévia e o download consomem a MESMA rota/PDF.
+    // Sem sidebar (doutrina da dobra) — a entrada fica no hub de Vendas.
+    href: "/app/products/catalogo-pdf",
+    label: "Catálogo em PDF",
+    description: "Monte e baixe o catálogo de produtos em PDF, sem preços.",
+    icon: FileText,
+    group: "vendas",
+  },
+  {
     // ⚠️ ERA "Kanban", e a URL continua sendo. O nome saiu da interface porque o
     // produto tinha CINCO vocabulários para a mesma coisa — "Kanban" no menu,
     // "Pipelines" no título desta tela, "Funis" no menu ao lado, "funil" em todo
