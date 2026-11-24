@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.70.1] — 2026-11-24
+
+### Corrigido
+
+- **Pedido que já viajou volta a poder entrar em nova carga** A tela de pedidos disponíveis e a validação de inclusão olhavam **qualquer** linha de `shipment_orders` para dizer que um pedido "já está em outra carga" — enquanto o índice único do banco é parcial e só considera `na_carga` e `em_rota`. Resultado: pedido entregue numa carga antiga desaparecia da lista e a inclusão devolvia 409 para sempre. Agora as duas consultas usam os mesmos estados do índice: entregue, devolvido ou cancelado não ocupa, e o pedido pode ser embarcado de novo.
+
+- **Busca de pedidos filtra a lista e expedição vira três páginas** A busca do painel passa a mostrar só os resultados, o número exato vem primeiro e a seleção fica visível (checkbox, linha marcada, contador e ação com quantidade). A ficha da carga agora tem três páginas reais — pedidos/paradas, rota e fechamento — com links marcando a atual; a seleção não sobrevive à troca de página.
+
 ## [1.70.0] — 2026-11-24
 
 ### Adicionado
@@ -9089,7 +9097,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.70.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.70.1...HEAD
+[1.70.1]: https://github.com/spiesdan/nexus/compare/v1.70.0...v1.70.1
 [1.70.0]: https://github.com/spiesdan/nexus/compare/v1.69.1...v1.70.0
 [1.69.1]: https://github.com/spiesdan/nexus/compare/v1.69.0...v1.69.1
 [1.69.0]: https://github.com/spiesdan/nexus/compare/v1.68.1...v1.69.0
