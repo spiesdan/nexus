@@ -50,6 +50,40 @@ type Construtor = (achado: Achado) => Recomendacao;
  */
 export const RECOMENDACOES: Record<string, Construtor> = {
   // ─── Fiscal ───────────────────────────────────────────────────────────────
+  "fiscal.cliente_sem_endereco_fiscal": () =>
+    plano(
+      "Completar o endereço fiscal do destinatário ANTES de emitir a nota.",
+      [
+        "Abra o cadastro do cliente e preencha os campos listados na evidência.",
+        "Volte ao pedido e confirme que a pré-validação da nota passou.",
+        "Só depois disso clique em emitir — a fila de rejeições some na origem.",
+      ],
+      ["campos que faltam", "número do pedido", "link de correção"],
+      {
+        fonte: ["contacts", "commercial_orders", "invoices"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        limitacao: "Endereço é dado do cliente: o ERP nunca sobrescreve o que o operador corrigiu.",
+      },
+    ),
+
+  "fiscal.uf_divergente_do_ibge": () =>
+    plano(
+      "Conferir a UF do município antes da emissão.",
+      [
+        "Proposta: corrigir a UF dos contatos com uma única UF possível e aplicar pelo botão revisável — a escrita acontece em job separado, com antes/depois auditado.",
+        "Quando há mais de uma UF possível, decida com o dono do cadastro — não escolha pelo nome.",
+        "Depois da correção, confirme que cidade/UF resolvem no IBGE.",
+      ],
+      ["uf atual", "uf correta", "ufs possíveis", "cidade"],
+      {
+        fonte: ["contacts", "municipios-ibge.json"],
+        risco: "baixo",
+        reversibilidade: "reversivel",
+        limitacao: "Nunca alterar UF quando o nome do município é ambíguo (ex.: Irati, PR e SC).",
+      },
+    ),
+
   "fiscal.nota_rejeitada": () =>
     plano(
       "Resolver a rejeição antes de qualquer reemissão.",

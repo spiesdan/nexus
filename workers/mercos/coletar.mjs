@@ -48,11 +48,21 @@ const ANDAMENTO = arg("andamento", new URL("./andamento.json", import.meta.url).
 const LISTA_SAIDA = arg("lista-saida", process.env.MERCOS_LISTA_JSONL || "");
 /** Só o censo: a reconciliação não abre detalhe de quem está presente. */
 const SO_LISTA = process.argv.includes("--so-lista");
+/**
+ * Busca pontual por números antigos (ex.: --numeros 16387,16389,...).
+ * A listagem NÃO filtra por data: percorremos a lista e abrimos o detalhe
+ * SÓ destes números, com o mesmo parser de sempre.
+ */
+const NUMEROS = new Set(
+  (arg("numeros", "") || "").split(",").map((n) => Number(n.trim()))
+    .filter((n) => Number.isInteger(n) && n > 0),
+);
 
 const DE = arg("de", "01/09/2026");
 const ATE = arg("ate", "31/12/2026");
 /** Só o que ainda não foi importado: o banco tem até este número. */
 const A_PARTIR_DE = Number(arg("a-partir-de", "18459"));
+const CORTE_LISTA = NUMEROS.size > 0 ? Math.max(0, Math.min(...NUMEROS) - 1) : A_PARTIR_DE;
 const LIMITE = Number(arg("limite", "0")) || Infinity;
 // 1,2s entre pedidos TOMOU 429 medido em 13/10/2026. O padrão aqui é
 // 4s: mais lento, e a recoleta é retomável, então demorar não custa nada.
@@ -350,8 +360,8 @@ try {
     // Para assim que a página inteira já for antiga. `Math.max` da página, e
     // não do acumulado: o que decide é se ESTA página trouxe algo novo.
     const maiorDaPagina = Math.max(...novos.map((p) => p.numero));
-    if (maiorDaPagina <= A_PARTIR_DE) {
-      console.log(`\n  corte atingido na pagina ${paginas} (maior numero ${maiorDaPagina} <= ${A_PARTIR_DE})`);
+    if (maiorDaPagina <= CORTE_LISTA) {
+      console.log(`\n  corte atingido na pagina ${paginas} (maior numero ${maiorDaPagina} <= ${CORTE_LISTA})`);
       break;
     }
 
@@ -412,15 +422,17 @@ try {
     }
   }
 
-  const alvo = [...alvoReprocesso, ...lista
-    .filter((p) => p.numero > A_PARTIR_DE)
+  const alvo = NUMEROS.size > 0
+    ? lista.filter((p) => NUMEROS.has(p.numero)).sort((a, b) => b.numero - a.numero)
+    : [...alvoReprocesso, ...lista
+    .filter((p) => p.numero > CORTE_LISTA)
     .filter((p) => !jaLidos.has(p.numero))
     .sort((a, b) => b.numero - a.numero)]
     .filter((p, i, arr) => arr.findIndex((x) => x.numero === p.numero) === i)
     .slice(0, LIMITE);
 
   console.log(
-    `  a importar: ${alvo.length} (ja lidos antes: ${jaLidos.size}; corte: numero > ${A_PARTIR_DE})`,
+    `  a importar: ${alvo.length} (ja lidos antes: ${jaLidos.size}; corte: numero > ${CORTE_LISTA}${NUMEROS.size ? "; numeros: " + [...NUMEROS].join(",") : ""})`,
   );
   if (alvo.length === 0) {
     console.log("  nada a fazer.");

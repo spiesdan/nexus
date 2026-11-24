@@ -245,9 +245,12 @@ export function contatoEndereco(over: Partial<ContatoEndereco> = {}): ContatoEnd
   return {
     id: "contato-1",
     logradouro: null,
+    numero_end: null,
     complemento: null,
     bairro: null,
     cidade: null,
+    uf: null,
+    cep: null,
     ...over,
   };
 }

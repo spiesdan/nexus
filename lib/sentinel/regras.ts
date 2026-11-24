@@ -14,6 +14,20 @@ import type { Regra } from "./tipos";
 export const REGRAS: readonly Regra[] = [
   // ─── Fiscal ───────────────────────────────────────────────────────────────
   {
+    id: "fiscal.cliente_sem_endereco_fiscal",
+    categoria: "fiscal",
+    descricao:
+      "Pré-emissão: pedido faturável sem nota cujo destinatário não fecha o endereço fiscal na pré-validação.",
+    detectar: fiscal.clientesSemEnderecoFiscal,
+  },
+  {
+    id: "fiscal.uf_divergente_do_ibge",
+    categoria: "fiscal",
+    descricao:
+      "Cidade/UF que não resolve no IBGE e cujo município existe em uma única UF — ou é ambíguo e pede decisão humana.",
+    detectar: fiscal.ufDivergenteDoIbge,
+  },
+  {
     id: "fiscal.nota_rejeitada",
     categoria: "fiscal",
     descricao:

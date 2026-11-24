@@ -332,7 +332,7 @@ export async function coletarSnapshot(
       "contatos_endereco",
       admin
         .from("contacts")
-        .select("id, logradouro, complemento, bairro, cidade")
+        .select("id, logradouro, numero_end, complemento, bairro, cidade, uf, cep")
         .eq("organization_id", organizationId)
         .or(
           "logradouro.not.is.null,complemento.not.is.null,bairro.not.is.null,cidade.not.is.null",

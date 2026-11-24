@@ -113,6 +113,9 @@ CRONS="
 # only-read na origem; nenhum suspende sem fatura vencida confirmada.
 0 6 * * *|120|api/v1/cron/billing-notices
 30 6 * * *|120|api/v1/cron/billing-reconcile
+# Correcao deterministica da UF: so quando o municipio existe em uma unica
+# UF. Ambiguidade vira ocorrencia do Sentinel para decisao humana.
+45 6 * * *|120|api/v1/cron/sentinel-correcoes-uf
 "
 
 # CRONTAB_PATH é ponto de injeção do teste (tests/shell/scheduler-entrypoint.test.sh).
