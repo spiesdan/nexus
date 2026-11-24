@@ -1,10 +1,12 @@
 /**
- * OSRM — o provedor padrão (ruas de verdade, sem chave, sem fatura).
+ * OSRM — provedor de ruas do prórIO servidor.
  *
- * `route` desenha pelas ruas; `trip` resolve o caixeiro-viajante (origem
- * fixa com `source=first`, destino conforme `retornar`). `OSRM_URL` troca o
- * servidor sem código (padrão: demo pública — ritmo justo, retry curto).
- * Fora do ar? Quem chama cai no vizinho-mais-próximo com `ruas=false`.
+ * NÃO existe default público: `router.project-osrm.org` é serviço compartilhado
+ * sem SLA, recebe a posição do cliente e pode sumir/rate-limitar. Sem
+ * `OSRM_URL` configurado, a rota devolve `osrm_nao_configurado` e a cabine
+ * oferece Google Maps/Waze — nunca chama um terceiro em silêncio.
+ *
+ * Timeout curto (5 s): `osrm_timeout` também é erro visível, não giro infinito.
  */
 
 import {
@@ -17,17 +19,20 @@ import {
 
 export type { Coordenada } from "./roteamento";
 
-const PADRAO = "https://router.project-osrm.org";
+const TIMEOUT_MS = 5000;
 
-function base(): string {
-  return (process.env.OSRM_URL ?? PADRAO).trim().replace(/\/+$/, "") || PADRAO;
+/** Erros que NÃO podem virar heurística local: configuração/timeout são falha visível. */
+export const ERROS_VISIVEIS = new Set(["osrm_nao_configurado", "osrm_timeout"]);
+
+export function base(): string {
+  return (process.env.OSRM_URL ?? "").trim().replace(/\/+$/, "");
 }
 
 function par(p: Coordenada): string {
   return `${p.lng},${p.lat}`;
 }
 
-async function getJson(url: string, timeoutMs = 20000): Promise<unknown> {
+async function getJson(url: string, timeoutMs = TIMEOUT_MS): Promise<unknown> {
   const controle = new AbortController();
   const limite = setTimeout(() => controle.abort(), timeoutMs);
   try {
@@ -37,9 +42,18 @@ async function getJson(url: string, timeoutMs = 20000): Promise<unknown> {
     });
     if (!res.ok) throw new Error(`osrm_${res.status}`);
     return (await res.json()) as unknown;
+  } catch (err) {
+    if (controle.signal.aborted) throw new Error("osrm_timeout");
+    throw err;
   } finally {
     clearTimeout(limite);
   }
+}
+
+function exigirBase(): string {
+  const url = base();
+  if (!url) throw new Error("osrm_nao_configurado");
+  return url;
 }
 
 export class OsmrmProvider implements RoutingProvider {
@@ -50,7 +64,7 @@ export class OsmrmProvider implements RoutingProvider {
       return { ordem: pontos.map((_, i) => i), distanciaM: 0, duracaoS: 0, geometria: [], provedor: this.nome, ruas: false };
     }
     const j = (await getJson(
-      `${base()}/route/v1/driving/${pontos.map(par).join(";")}?overview=full&geometries=geojson`,
+      `${exigirBase()}/route/v1/driving/${pontos.map(par).join(";")}?overview=full&geometries=geojson`,
     )) as { code?: string; routes?: { distance?: number; duration?: number; geometry?: { coordinates?: number[][] } }[] };
     const r = j.routes?.[0];
     if (j.code !== "Ok" || !r) throw new Error("osrm_sem_rota");
@@ -67,8 +81,8 @@ export class OsmrmProvider implements RoutingProvider {
   async otimizar(pontos: Coordenada[], retornar: boolean): Promise<PropostaDeRota> {
     if (pontos.length <= 2) return this.rota(pontos);
     const j = (await getJson(
-      `${base()}/trip/v1/driving/${pontos.map(par).join(";")}?overview=full&geometries=geojson&source=first&destination=${retornar ? "any" : "last"}&roundtrip=${retornar ? "true" : "false"}`,
-      30000,
+      `${exigirBase()}/trip/v1/driving/${pontos.map(par).join(";")}?overview=full&geometries=geojson&source=first&destination=${retornar ? "any" : "last"}&roundtrip=${retornar ? "true" : "false"}`,
+      TIMEOUT_MS,
     )) as {
       code?: string;
       trips?: { distance?: number; duration?: number; geometry?: { coordinates?: number[][] } }[];
@@ -102,7 +116,11 @@ export async function otimizarComFallback(
 ): Promise<PropostaDeRota> {
   try {
     return await provedor.otimizar(pontos, retornar);
-  } catch {
+  } catch (erro) {
+    const codigo = erro instanceof Error ? erro.message : "";
+    // Configuração ausente e timeout são fatos que a tela precisa conhecer:
+    // nenhum "plano B" pode fingir que ruas funcionaram.
+    if (ERROS_VISIVEIS.has(codigo)) throw erro;
     const ordem = vizinhoMaisProximo(pontos, retornar);
     let distanciaM = 0;
     for (let i = 1; i < ordem.length; i++) {
