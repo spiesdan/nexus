@@ -124,7 +124,16 @@ function normalizar(linha) {
         documento: cli.documento ?? null,
         telefone: cli.telefone ?? null,
         cidade: cli.cidade ?? null,
+        logradouro: cli.endereco?.logradouro ?? null,
+        numero_end: cli.endereco?.numero_end ?? null,
+        complemento: cli.endereco?.complemento ?? null,
+        bairro: cli.endereco?.bairro ?? null,
+        cep: cli.endereco?.cep ?? null,
+        uf: cli.endereco?.uf ?? null,
       },
+      // Endereço da ficha do cliente vai em RPC separada (0348): se falhar,
+      // o pedido entra de qualquer jeito.
+      endereco_cliente: cli.endereco ?? null,
       subtotal_cents: itens.reduce((soma, i) => soma + i.subtotal_cents, 0),
       desconto_cents: 0,
       frete_cents: moedaParaCents(bruto.valor_frete),
@@ -286,6 +295,23 @@ async function processar(admin, run) {
   const revisao = [];
 
   async function importar(pedido) {
+    // Endereço da ficha do cliente é ENRIQUECIMENTO: falha aqui nunca impede
+    // o pedido de entrar. A RPC só preenche campo vazio (0348).
+    try {
+      if (pedido.endereco_cliente && Object.values(pedido.endereco_cliente).some(Boolean)) {
+        const { error: erroEndereco } = await admin.rpc("fn_mercos_enriquecer_endereco", {
+          p_org: org,
+          p_documento: pedido.cliente.documento ?? null,
+          p_endereco: pedido.endereco_cliente,
+        });
+        if (erroEndereco) {
+          log("endereco_falha", { run: run.id, numero: pedido.numero, erro: erroEndereco.message });
+        }
+      }
+    } catch (err) {
+      log("endereco_falha", { run: run.id, numero: pedido.numero, erro: err instanceof Error ? err.message : String(err) });
+    }
+
     const { data, error } = await admin.rpc("fn_importar_pedido_mercos", {
       p_org: org,
       p_pedido: pedido,
