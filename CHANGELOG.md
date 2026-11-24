@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.72.1] — 2026-11-24
+
+### Corrigido
+
+- **Vencimento da assinatura deixa de ser apagado quando o Stripe muda o campo de lugar** O período da assinatura passou a ser lido do topo ou, nas versões novas da API, do primeiro item — o mesmo leitor serve para a tela e para a reconciliação. Quando o Stripe não devolve o vencimento em nenhum dos dois lugares, a reconciliação mantém o valor local em vez de gravar NULL. A resposta do cron agora lista o que impediu uma divergência de ser corrigida.
+
+- **Tela de cobrança volta a consultar o Stripe** A rota chamava `/customers/{id}/subscriptions?status=all`, mas as versões novas da API do Stripe recusam `status` nesse caminho (400 "Received unknown parameter: status") — e a tela de cobrança exibia "não conseguimos consultar o Stripe" com a chave e a rede funcionando. A listagem passou para `/subscriptions?customer=...&status=all`, que é o caminho que aceita o filtro. Medido em produção com a chave real: 200 com a assinatura.
+
 ## [1.72.0] — 2026-11-24
 
 ### Adicionado
@@ -9125,7 +9133,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.72.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.72.1...HEAD
+[1.72.1]: https://github.com/spiesdan/nexus/compare/v1.72.0...v1.72.1
 [1.72.0]: https://github.com/spiesdan/nexus/compare/v1.71.0...v1.72.0
 [1.71.0]: https://github.com/spiesdan/nexus/compare/v1.70.1...v1.71.0
 [1.70.1]: https://github.com/spiesdan/nexus/compare/v1.70.0...v1.70.1
