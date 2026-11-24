@@ -149,6 +149,27 @@ export default async function ExpedicaoPage() {
   );
 
   const progresso: Record<string, ProgressoDaCarga> = {};
+  // P1-3: os filtros de veículo e motorista sumiam quando a atribuição vivia
+  // só no campo legado da carga (o caso medido: 69 itens, 0 veiculo_id).
+  // A faixa e os cartões mostram `placa`/`motorista_nome`; os filtros tinham
+  // que enxergar OS MESMOS valores, senão a tela oferecia 2 dos 4 filtros.
+  for (const carga of (cargas ?? []) as unknown as {
+    id: string;
+    placa: string | null;
+    motorista_nome: string | null;
+  }[]) {
+    const p = (progresso[carga.id] ??= {
+      total: 0,
+      entregues: 0,
+      devolvidos: 0,
+      cidades: [],
+      semCidade: 0,
+      veiculos: [],
+      motoristas: [],
+    });
+    if (carga.placa?.trim()) p.veiculos.push(carga.placa.trim());
+    if (carga.motorista_nome?.trim()) p.motoristas.push(carga.motorista_nome.trim());
+  }
   for (const item of itens) {
     const p = (progresso[item.shipment_id] ??= {
       total: 0,
