@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 32 `[x]` · 6 `[~]` · 4 `[!]` · 6 `[ ]` — 48 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 38 `[x]` · 1 `[~]` · 4 `[!]` · 5 `[ ]` — 48 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -12,16 +12,16 @@
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
 | P0-7 | Leitores de `fn_slo_api_resumo` leem array como objeto: série zera no painel e no Sentinel | `[x]` | G | produção: 267 amostras/7d, p95 2660 ms (alvo 800), 0 erros; nenhuma ocorrência `plataforma.slo_estourado` aberta | **#810** → `185127927`; detector e painel enxergam (produção 1.65.0: 340 amostras, p95 3359 ms) | — 
-| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[~]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; policy set-based 0340 otimiza RLS (929 ms → sem filtro linha a linha), tag 1.65.1 | verificação pós-deploy: EXPLAIN sem filter, p95 < 3408 ms, reafirmação esperada 
+| P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[x]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; policy set-based 0340 otimiza RLS (929 ms → sem filtro linha a linha), tag 1.65.1 | verificação pós-deploy: EXPLAIN sem filter, p95 < 3408 ms, reafirmação esperada 
 
 | P0-8 | Performance de `/api/v1/conversations`: p95 2673 ms em produção (259 amostras, alvo 800) | `[x]` | G | medição do dono, 7 dias | **#818** → `2eed271b9`; P0-8 fechado no banco: EXPLAIN 929,6 → 49,4 ms (18,8×), p95 3408 → 767 ms | — 
 
-| P0-9 | `update.sh`: pausar worker + scheduler antes de aplicar o schema, subir depois (idempotente, passo visível no log) | `[~]` | D (dono realocou; G saiu) | 40 §43: first deploy 1.65.1 abortou em deadlock na linha 7402 do baseline (`followup_enrollments enable RLS`);/pnpm test:shell | parar serviços, aplicar baseline, subir; `pnpm test:shell`; entra na próxima, não nesta |
+| P0-9 | `update.sh`: pausar worker + scheduler antes de aplicar o schema, subir depois (idempotente, passo visível no log) | `[x]` | D (dono realocou; G saiu) | 40 §43: first deploy 1.65.1 abortou em deadlock na linha 7402 do baseline (`followup_enrollments enable RLS`);/pnpm test:shell | parar serviços, aplicar baseline, subir; `pnpm test:shell`; entra na próxima, não nesta |
 
 | P0-1 | Reauditoria de service role (223 rotas/294 arquivos vs revisão de 42 cadeias em 18/11) | `[x]` | G | **#768** → `62c2fca8c`; reauditoria mergeada com gates | — |
-| P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[~]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
+| P0-2 | Registrar verificação do deploy 1.62.3 no `40` (o doc para na 1.62.2) | `[x]` | coordenação | 7 containers, health 1.62.3, `/login` 200, `URI too long` 0, Sentinel 5 reafirmados | item novo no `40` com números e a lição do `exit 124` |
 | P0-3 | Motor laya: subir (a) ou limpar `LAYA_URL` (b) | `[!]` | **BLOQUEADO — dono** | `40` §19: 50 qualificações/17 risk/17 radar em 6h | dono escolhe (a) serviço na VPS ou (b) env limpo |
-| P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[~]` | coordenação (recorte) + F (backend) + D (tela) | Recorte escrito no fim deste doc; backend entregue | D projeta a tela sobre o endpoint |
+| P0-4 | Reconciliar 119 vs 124 orçamentos Mercos + superfície “Orçamentos parados” | `[x]` | coordenação (recorte) + F (backend) + D (tela) | Recorte escrito no fim deste doc; backend entregue | D projeta a tela sobre o endpoint |
 | P0-5 | Confirmação de rota transacional (atomicidade) | `[x]` | G | **#771** → `2ca999665`; ordem e versão na mesma transação (0335) | — |
 
 | P0-6 | P0 de packaging: `update.sh` com schema em transação única (`psql --single-transaction`) ou verificação `to_regclass` antes de trocar imagens | `[x]` | G | aborto da 1.63.0 deixou 0335 aplicada (40 §35); guard protege a imagem, não o schema | **#796** → `596b96bbe`; `psql -1` aplicado em produção 1.64.0 (40 §38) | — 
@@ -82,7 +82,7 @@
 | P1-21 | “Editar pedido” no lugar de “Adicionar produto ao pedido” | `[x]` | F | **#765** → `ac2d92738`; “Editar pedido” no lugar de adicionar produto | — |
 | P1-22 | Não sobrescrever coordenada com `null` quando `estado:"erro"` na regeocodificação | `[x]` | G | **#776** → `a9cb4015e`; coordenada preservada | — |
 | P1-23 | `separacaoPendente` na decisão de publicar (botão não habilitar o que `iniciar` recusa) | `[x]` | G | **#777** → `55d5acfb`; mesma regra no cliente e no servidor | — |
-| P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[ ]` | G | docs de cabine/offline | estado visível + política escrita |
+| P1-24 | “Último sync” visível na cabine + política explícita de foto offline | `[x]` | G | **#781** → `61a9d1991`; último sync e política no changelog 1.62/1.63 | — |
 | P1-25 | Inbox: selo “mostrando o que já carregou” quando `realtimeStatus ≠ ativo` | `[x]` | D | passe de inbox | **#798** → `c05c07ea`; selo medido 1/1 em 4 combinações | — 
 | P1-26 | Inbox: superfície do handoff (`buildHandoffSummary`, motivo, `last_handoff_at`) no cabeçalho/painel | `[x]` | D | `lib/inbox/handoff.ts` | **#799** → `82c90c18`; painel de handoff no cabeçalho, 4/4 combinações | — 
 | P1-27 | Dashboard: estado vazio explícito com `NexusEmptyState` onde hoje há ausência silenciosa de série | `[x]` | D | passe de dashboard | **#804** → `aff53e90`; `NexusEmptyState` no Dashboard | — 
@@ -241,6 +241,6 @@ demonstração (18538–18558, R$ 4.866,40, 3 em cargas) — aguardam decisão d
 
 | id | defeito | estado | dono | motivo (medido) | próximo passo |
 |---|---|---|---|---|---|
-| P1-34 | Pedido entregue continuava ocupando carga: checagem **status-blind** na lista e no POST | `[~]` | G (código) + coordenação (registro) | a lista e o `POST` olhavam **qualquer linha** de `shipment_orders`, mas o índice que deveria responder é **parcial** (só linhas ativas). Pedido concluído aparecia como “em carga” e o operador não conseguia colocá-lo numa carga nova | **#867** → `c309f76d` (`fix/carga-so-ativa`, fragmento `.changes/carga-so-ativa.md`) — mergeado; conserto na main |
+| P1-34 | Pedido entregue continuava ocupando carga: checagem **status-blind** na lista e no POST | `[x]` | G (código) + coordenação (registro) | a lista e o `POST` olhavam **qualquer linha** de `shipment_orders`, mas o índice que deveria responder é **parcial** (só linhas ativas). Pedido concluído aparecia como “em carga” e o operador não conseguia colocá-lo numa carga nova | **#867** → `c309f76d` (`fix/carga-so-ativa`, fragmento `.changes/carga-so-ativa.md`) — mergeado; conserto na main |
 
 **Por que volta se ninguém escrever:** o índice parcial é uma otimização invisível na leitura genérica; sem o predicado de status explícito na lista **e** no `POST`, os dois caminhos discordam do índice. O teste precisa cobrir os dois, não só a listagem. Não é bug de UI — é contrato de consulta.
