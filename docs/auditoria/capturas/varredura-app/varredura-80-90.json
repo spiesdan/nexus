@@ -1,0 +1,3301 @@
+{
+  "geradoEm": "2026-11-23T12:13:35.217Z",
+  "base": "http://localhost:3029",
+  "tempoTotalMs": 323071,
+  "rotas": 10,
+  "medidas": 40,
+  "validas": 40,
+  "invalidas": 0,
+  "porModulo": {
+    "config-e-inteligencia": {
+      "rotas": 9,
+      "medidas": 9,
+      "ok": 0,
+      "contraste": 1,
+      "overflow": 0,
+      "console": 1,
+      "alvo": 9,
+      "axe": 1,
+      "http": 0
+    },
+    "financeiro": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/radar/categorias",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 22,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 56696
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 64,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 22,
+      "axeCritica": 0,
+      "axeSeria": 2,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 42463
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 22,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 33873
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 9,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 35937
+    },
+    {
+      "rota": "/radar/risco",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 22,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 31253
+    },
+    {
+      "rota": "/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": "/app/radar/recuperacao",
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 8,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 28883
+    },
+    {
+      "rota": "/relatorios",
+      "modulo": "financeiro",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 4,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 17949
+    },
+    {
+      "rota": "/sentinel",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 12,
+      "alvosPequenos": 176,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": true,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 39570
+    },
+    {
+      "rota": "/settings",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 3,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 12771
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": "/403",
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 1,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 19070
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/radar/categorias",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/categorias",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 67,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos298a7175b7412824",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 35640
+    },
+    {
+      "rota": "/radar/categorias",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/categorias",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7510
+    },
+    {
+      "rota": "/radar/categorias",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/categorias",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 68,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7022
+    },
+    {
+      "rota": "/radar/categorias",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/categorias",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6524
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/oportunidades",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 260,
+        "contrasteReprovados": 32,
+        "pioresContrastes": [
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "TESTE QA ·Mercado Planalto",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "TESTE QA ·Comercial Rio Branco",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: li:nth-child(1) > .h-full.space-y-2.rounded-2xl > .flex-wrap.gap-2.flex:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/6abb35ef-66a9-4950-a269-98aab6041dc2\">Mercado E2E Recompra</a>",
+          "color-contrast: li:nth-child(2) > .h-full.space-y-2.rounded-2xl > .flex-wrap.gap-2.flex:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/4048ce92-4d17-4bdf-9c9b-52c4ff144a96\">Padaria E2E Voo</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 20136
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/oportunidades",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 229,
+        "contrasteReprovados": 32,
+        "pioresContrastes": [
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "TESTE QA ·Mercado Planalto",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "TESTE QA ·Comercial Rio Branco",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 13,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: li:nth-child(1) > .h-full.space-y-2.rounded-2xl > .flex-wrap.gap-2.flex:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/6abb35ef-66a9-4950-a269-98aab6041dc2\">Mercado E2E Recompra</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6855
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/oportunidades",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 260,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7627
+    },
+    {
+      "rota": "/radar/oportunidades",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/oportunidades",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 229,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 13,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7845
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/prospeccao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 5,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Abrir",
+            "largura": 53,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Iniciar conversa",
+            "largura": 113,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Adicionar à fila",
+            "largura": 106,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Abrir",
+            "largura": 53,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Iniciar conversa",
+            "largura": 113,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 18191
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/prospeccao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 5,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5566
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/prospeccao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 5,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Abrir",
+            "largura": 53,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Iniciar conversa",
+            "largura": 113,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Adicionar à fila",
+            "largura": 106,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Abrir",
+            "largura": 53,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Iniciar conversa",
+            "largura": 113,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5282
+    },
+    {
+      "rota": "/radar/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/prospeccao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 46,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 5,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4834
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 59,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Aplicar",
+            "largura": 84,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 934,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 97,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 18884
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 28,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 316,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 316,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6792
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 59,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 9,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Aplicar",
+            "largura": 84,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 934,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 97,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4522
+    },
+    {
+      "rota": "/radar/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 28,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 316,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 316,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5739
+    },
+    {
+      "rota": "/radar/risco",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/risco",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 382,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12056
+    },
+    {
+      "rota": "/radar/risco",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/risco",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 351,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6863
+    },
+    {
+      "rota": "/radar/risco",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/risco",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 382,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Assumir",
+            "largura": 71,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5398
+    },
+    {
+      "rota": "/radar/risco",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/risco",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 351,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6936
+    },
+    {
+      "rota": "/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "redirecionaPara": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 53,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Aplicar",
+            "largura": 84,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 934,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 97,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12511
+    },
+    {
+      "rota": "/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "redirecionaPara": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 24,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 316,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 316,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5876
+    },
+    {
+      "rota": "/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "redirecionaPara": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 53,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Aplicar",
+            "largura": 84,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 934,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 176,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 97,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5448
+    },
+    {
+      "rota": "/recuperacao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar/recuperacao",
+      "redirecionaPara": "/app/radar/recuperacao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 24,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "number",
+            "texto": "",
+            "largura": 112,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 316,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 316,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5048
+    },
+    {
+      "rota": "/relatorios",
+      "modulo": "financeiro",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/relatorios",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Relatórios"
+        ],
+        "textos": 129,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Exportar CSV",
+            "largura": 101,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Exportar CSV",
+            "largura": 101,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8285
+    },
+    {
+      "rota": "/relatorios",
+      "modulo": "financeiro",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/relatorios",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Relatórios"
+        ],
+        "textos": 102,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3180
+    },
+    {
+      "rota": "/relatorios",
+      "modulo": "financeiro",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/relatorios",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Relatórios"
+        ],
+        "textos": 129,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Exportar CSV",
+            "largura": 101,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Exportar CSV",
+            "largura": 101,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3703
+    },
+    {
+      "rota": "/relatorios",
+      "modulo": "financeiro",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/relatorios",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Relatórios"
+        ],
+        "textos": 102,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2781
+    },
+    {
+      "rota": "/sentinel",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/sentinel",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Sentinel"
+        ],
+        "textos": 642,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 176,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Configurações",
+            "largura": 159,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Executar agora",
+            "largura": 159,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar ocorrência",
+            "largura": 258,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por estado",
+            "largura": 258,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por severidade",
+            "largura": 258,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por categoria",
+            "largura": 258,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>\n        <SentinelCl",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>"
+      ],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ],
+      "valida": true,
+      "tempoMs": 13063
+    },
+    {
+      "rota": "/sentinel",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/sentinel",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Sentinel"
+        ],
+        "textos": 445,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar ocorrência",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por estado",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por severidade",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por categoria",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>\n        <SentinelCl",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>"
+      ],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ],
+      "valida": true,
+      "tempoMs": 12440
+    },
+    {
+      "rota": "/sentinel",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/sentinel",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Sentinel"
+        ],
+        "textos": 642,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 176,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Configurações",
+            "largura": 159,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Executar agora",
+            "largura": 159,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar ocorrência",
+            "largura": 258,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por estado",
+            "largura": 258,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por severidade",
+            "largura": 258,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por categoria",
+            "largura": 258,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>\n        <SentinelCl",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>"
+      ],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ],
+      "valida": true,
+      "tempoMs": 8234
+    },
+    {
+      "rota": "/sentinel",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/sentinel",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Sentinel"
+        ],
+        "textos": 445,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar ocorrência",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por estado",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por severidade",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtrar por categoria",
+            "largura": 260,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Job pendente fora da janelaoperacao.job_",
+            "largura": 191,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [
+        "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s <span> tr  \n\n  ...\n    <SegmentViewNode type=\"page\" pagePath=\"app/sentin...\">\n      <SegmentTrieNode>\n      <SentinelPage>\n        <SentinelCl",
+        "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace. tr <span>"
+      ],
+      "errosDePagina": [
+        "Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if "
+      ],
+      "valida": true,
+      "tempoMs": 5833
+    },
+    {
+      "rota": "/settings",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 70,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7721
+    },
+    {
+      "rota": "/settings",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 43,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1714
+    },
+    {
+      "rota": "/settings",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 71,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1647
+    },
+    {
+      "rota": "/settings",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações"
+        ],
+        "textos": 43,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1689
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9089
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3705
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2722
+    },
+    {
+      "rota": "/settings/api-tokens",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/403",
+      "redirecionaPara": "/403",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "403 — Sem permissão"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3554
+    }
+  ]
+}

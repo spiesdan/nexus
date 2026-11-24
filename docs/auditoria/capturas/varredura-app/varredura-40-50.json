@@ -1,0 +1,3085 @@
+{
+  "geradoEm": "2026-11-23T11:48:47.344Z",
+  "base": "http://localhost:3029",
+  "tempoTotalMs": 223075,
+  "rotas": 10,
+  "medidas": 40,
+  "validas": 40,
+  "invalidas": 0,
+  "porModulo": {
+    "expedicao": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    },
+    "pedidos-e-vendas": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 1,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 1,
+      "http": 0
+    },
+    "financeiro": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    },
+    "fiscal": {
+      "rotas": 7,
+      "medidas": 7,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 7,
+      "axe": 0,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/expedicao/nova",
+      "modulo": "expedicao",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 150,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 13838
+    },
+    {
+      "rota": "/faturamento",
+      "modulo": "pedidos-e-vendas",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 102,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 7,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 15985
+    },
+    {
+      "rota": "/financeiro",
+      "modulo": "financeiro",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 44,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 39747
+    },
+    {
+      "rota": "/fiscal",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 6,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 19659
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 13,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 20992
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 2,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 21677
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 2,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 22659
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 2,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 24570
+    },
+    {
+      "rota": "/fiscal/notas",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 6,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 19266
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "modulo": "fiscal",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 1,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 3,
+      "tempoMs": 19578
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/expedicao/nova",
+      "modulo": "expedicao",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/nova",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Nova carga"
+        ],
+        "textos": 70,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 564,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 150,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cidade e período",
+            "largura": 145,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar pedido",
+            "largura": 690,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5722
+    },
+    {
+      "rota": "/expedicao/nova",
+      "modulo": "expedicao",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/nova",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Nova carga"
+        ],
+        "textos": 41,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 564,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 148,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cidade e período",
+            "largura": 145,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar pedido",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2600
+    },
+    {
+      "rota": "/expedicao/nova",
+      "modulo": "expedicao",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/nova",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Nova carga"
+        ],
+        "textos": 70,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 564,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 150,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 349,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cidade e período",
+            "largura": 145,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar pedido",
+            "largura": 690,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .py-2\\.5 > div > p :: <p class=\"text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase\">3 · O que vai</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2862
+    },
+    {
+      "rota": "/expedicao/nova",
+      "modulo": "expedicao",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/expedicao/nova",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Nova carga"
+        ],
+        "textos": 41,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 564,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 148,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cidade e período",
+            "largura": 145,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar pedido",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2654
+    },
+    {
+      "rota": "/faturamento",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/faturamento",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Faturamento"
+        ],
+        "textos": 45,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 604,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excel",
+            "largura": 55,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4847
+    },
+    {
+      "rota": "/faturamento",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/faturamento",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Faturamento"
+        ],
+        "textos": 424,
+        "contrasteReprovados": 102,
+        "pioresContrastes": [
+          {
+            "amostra": "PED-0245",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "PED-0244",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "PED-0243",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "PED-0242",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "PED-0241",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "PED-0240",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(1) > .space-y-1.text-sm > .justify-between.gap-2.flex > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/83b9092d-8d58-4d37-a56d-04d2870f6fd8\">PED-0245</a>",
+          "color-contrast: .bg-surface.p-4.shadow-xs:nth-child(2) > .space-y-1.text-sm > .justify-between.gap-2.flex > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/pedidos/4eb3052a-81bb-4a83-b5e2-2ea8653018bf\">PED-0244</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2859
+    },
+    {
+      "rota": "/faturamento",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/faturamento",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Faturamento"
+        ],
+        "textos": 45,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 604,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excel",
+            "largura": 55,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2820
+    },
+    {
+      "rota": "/faturamento",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/faturamento",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Faturamento"
+        ],
+        "textos": 424,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "date",
+            "texto": "",
+            "largura": 146,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5459
+    },
+    {
+      "rota": "/financeiro",
+      "modulo": "financeiro",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 63,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 194,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 44,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a receber",
+            "largura": 132,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a pagar",
+            "largura": 120,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cobranças",
+            "largura": 93,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conciliação",
+            "largura": 97,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fluxo de caixa",
+            "largura": 113,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 21967
+    },
+    {
+      "rota": "/financeiro",
+      "modulo": "financeiro",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 34,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 194,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a receber",
+            "largura": 132,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a pagar",
+            "largura": 120,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cobranças",
+            "largura": 93,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conciliação",
+            "largura": 97,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fluxo de caixa",
+            "largura": 113,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Títulos",
+            "largura": 67,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 124,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5914
+    },
+    {
+      "rota": "/financeiro",
+      "modulo": "financeiro",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 63,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 194,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 44,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a receber",
+            "largura": 132,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a pagar",
+            "largura": 120,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cobranças",
+            "largura": 93,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conciliação",
+            "largura": 97,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fluxo de caixa",
+            "largura": 113,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5853
+    },
+    {
+      "rota": "/financeiro",
+      "modulo": "financeiro",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 34,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 194,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 16,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a receber",
+            "largura": 132,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Contas a pagar",
+            "largura": 120,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cobranças",
+            "largura": 93,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Conciliação",
+            "largura": 97,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Fluxo de caixa",
+            "largura": 113,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Títulos",
+            "largura": 67,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 124,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6013
+    },
+    {
+      "rota": "/fiscal",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "NF-e recebidas"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sincronizar agora",
+            "largura": 151,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9784
+    },
+    {
+      "rota": "/fiscal",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "NF-e recebidas"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3989
+    },
+    {
+      "rota": "/fiscal",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "NF-e recebidas"
+        ],
+        "textos": 77,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sincronizar agora",
+            "largura": 151,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3114
+    },
+    {
+      "rota": "/fiscal",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "NF-e recebidas"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2772
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/configuracoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações fiscais"
+        ],
+        "textos": 79,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 13,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "HomologaçãoProdução",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Stub (sem SEFAZ)SPED-NFe (certificado A1",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviar certificado",
+            "largura": 123,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9109
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/configuracoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Configurações fiscais"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "HomologaçãoProdução",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Stub (sem SEFAZ)SPED-NFe (certificado A1",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "password",
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5353
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/configuracoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações fiscais"
+        ],
+        "textos": 79,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 13,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "HomologaçãoProdução",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Stub (sem SEFAZ)SPED-NFe (certificado A1",
+            "largura": 553,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviar certificado",
+            "largura": 123,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3764
+    },
+    {
+      "rota": "/fiscal/configuracoes",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/configuracoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Configurações fiscais"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 11,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "HomologaçãoProdução",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Stub (sem SEFAZ)SPED-NFe (certificado A1",
+            "largura": 308,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "password",
+            "texto": "",
+            "largura": 308,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2766
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/eventos",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Cancelamentos e eventos"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10916
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/eventos",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Cancelamentos e eventos"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3918
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/eventos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Cancelamentos e eventos"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4140
+    },
+    {
+      "rota": "/fiscal/eventos",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/eventos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Cancelamentos e eventos"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2703
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/fornecedores",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Fornecedores das notas"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10586
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/fornecedores",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Fornecedores das notas"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4550
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/fornecedores",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Fornecedores das notas"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3295
+    },
+    {
+      "rota": "/fiscal/fornecedores",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/fornecedores",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Fornecedores das notas"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4228
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/manifestacoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Manifestação do destinatário"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12393
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/manifestacoes",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Manifestação do destinatário"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5739
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/manifestacoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Manifestação do destinatário"
+        ],
+        "textos": 50,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3476
+    },
+    {
+      "rota": "/fiscal/manifestacoes",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/manifestacoes",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Manifestação do destinatário"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2962
+    },
+    {
+      "rota": "/fiscal/notas",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Todas as notas"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sincronizar agora",
+            "largura": 151,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10223
+    },
+    {
+      "rota": "/fiscal/notas",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Todas as notas"
+        ],
+        "textos": 12,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3392
+    },
+    {
+      "rota": "/fiscal/notas",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Todas as notas"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 6,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Sincronizar agora",
+            "largura": 151,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3066
+    },
+    {
+      "rota": "/fiscal/notas",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Todas as notas"
+        ],
+        "textos": 12,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 5,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Emitir NF-eVisão GeralTodas as NotasPend",
+            "largura": 342,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar notas",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 132,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Conferência",
+            "largura": 151,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2585
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "404 — Página não encontrada"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9913
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "modulo": "fiscal",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "404 — Página não encontrada"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3467
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "404 — Página não encontrada"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3005
+    },
+    {
+      "rota": "/fiscal/notas/[id]",
+      "modulo": "fiscal",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/fiscal/notas/a6d2935c-8ada-49da-a33b-957642f4c3a2",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "404 — Página não encontrada"
+        ],
+        "textos": 4,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3193
+    }
+  ]
+}

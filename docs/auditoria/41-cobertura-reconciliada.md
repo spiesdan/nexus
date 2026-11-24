@@ -132,17 +132,17 @@ base sumiu; duas telas entraram depois dela.
 | `/app/relatorios` | relatorios | **pendente** | — | D |
 | `/app/sentinel` | sentinel | **aplicado** | #652 · `49-sentinel-design.md` · `capturas/{antes,depois}-sentinel/` + `sentinel-detalhe-*` | D |
 | `/app/settings/api-tokens` | settings | **aplicado** — cabeçalho canônico | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/atendimento` | settings | **aplicado** — moldura + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/atualizacao` | settings | **medido; sem mudança** — superfície do dono (`UpdatePanel`); medida como platform admin | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/billing` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/canal-oficial` | settings | **redirect → `/app/connections?aba=oficial`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/devices` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/marca` | settings | **aplicado** — moldura + seletor de arquivo em pt-BR | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/notifications` | settings | **aplicado** — hidratação (4→0 console) + coluna Email fora do 390 | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/atendimento` | settings | **pendente** — moldura + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 9-10 | D |
+| `/app/settings/atualizacao` | settings | **pendente** — superfície do dono (`UpdatePanel`); medida como platform admin | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 2-5 | D |
+| `/app/settings/billing` | settings | **pendente** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 1-3 | D |
+| `/app/settings/canal-oficial` | settings | **redirect → `/app/connections?aba=oficial`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 10-13; 1 combinação inválida (h1 não apareceu em 3s) | D |
+| `/app/settings/devices` | settings | **pendente** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 4-8 | D |
+| `/app/settings/marca` | settings | **pendente** — moldura + seletor de arquivo em pt-BR | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 7-8 | D |
+| `/app/settings/notifications` | settings | **pendente** — hidratação (4→0 console) + coluna Email fora do 390 | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 12-18, axe color-contrast serious (escuro) | D |
 | `/app/settings` | settings | **medido; sem mudança** — hub usa NavHub; medido, sem cabeçalho duplicado | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/profile` | settings | **aplicado** — 1 coluna no 390 + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/security` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
-| `/app/settings/templates` | settings | **redirect → `/app/connections?aba=oficial&sub=templates`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
+| `/app/settings/profile` | settings | **pendente** — 1 coluna no 390 + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 8-9 | D |
+| `/app/settings/security` | settings | **pendente** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 3-7 | D |
+| `/app/settings/templates` | settings | **redirect → `/app/connections?aba=oficial&sub=templates`, medido lá** | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` · varredura 90-100 (medido 4/4): alvos<44 7-10 | D |
 | `/app/settings/tenant/agenda` | settings | **aplicado** — moldura canônica | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
 | `/app/settings/tenant` | settings | **aplicado** — 1 coluna no 390 + rodapé de salvamento | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |
 | `/app/settings/tenant/pipelines` | settings | **medido; sem mudança** — já usa `NexusPageHeader`; 390 alvos de reordenação declarados | `56-settings-sistemico.md` · `capturas/varredura-settings-{antes,depois}/` | D |

@@ -1,0 +1,3661 @@
+{
+  "geradoEm": "2026-11-23T12:06:06.326Z",
+  "base": "http://localhost:3029",
+  "tempoTotalMs": 338283,
+  "rotas": 10,
+  "medidas": 40,
+  "validas": 38,
+  "invalidas": 2,
+  "porModulo": {
+    "pedidos-e-vendas": {
+      "rotas": 4,
+      "medidas": 4,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 4,
+      "axe": 0,
+      "http": 0
+    },
+    "atendimento": {
+      "rotas": 1,
+      "medidas": 1,
+      "ok": 0,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 1,
+      "axe": 0,
+      "http": 0
+    },
+    "config-e-inteligencia": {
+      "rotas": 5,
+      "medidas": 5,
+      "ok": 0,
+      "contraste": 2,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 5,
+      "axe": 3,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/pedidos",
+      "modulo": "pedidos-e-vendas",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 220,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 21416
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "modulo": "pedidos-e-vendas",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 8,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 11519
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "modulo": "pedidos-e-vendas",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 4,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 7788
+    },
+    {
+      "rota": "/pedidos/novo",
+      "modulo": "pedidos-e-vendas",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 25,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 8179
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "modulo": "atendimento",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 100,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 71371
+    },
+    {
+      "rota": "/products",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 170,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 4,
+      "tempoMs": 30143
+    },
+    {
+      "rota": "/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": "/app/campanhas?subtela=prospeccao",
+      "combinacoes": 4,
+      "validas": 2,
+      "invalidas": 2,
+      "motivo": "Error: sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 13,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": false
+      },
+      "falhas": 2,
+      "tempoMs": 30805
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 6,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 14,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 39457
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 96,
+      "axeCritica": 0,
+      "axeSeria": 1,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 56879
+    },
+    {
+      "rota": "/radar",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 4,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 22,
+      "axeCritica": 0,
+      "axeSeria": 5,
+      "defeitos": {
+        "http": false,
+        "contraste": true,
+        "overflow": false,
+        "console": false,
+        "alvo": true,
+        "axe": true
+      },
+      "falhas": 4,
+      "tempoMs": 56504
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/pedidos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 238,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 858,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 219,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Entra no Mercos e importa os pedidos que",
+            "largura": 226,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Imprimir",
+            "largura": 143,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar",
+            "largura": 587,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 126,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Vendedor",
+            "largura": 172,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Origem",
+            "largura": 169,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10283
+    },
+    {
+      "rota": "/pedidos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 203,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 858,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 205,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar",
+            "largura": 284,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 129,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtros avançados",
+            "largura": 147,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0249",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0248",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0247",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0246",
+            "largura": 13,
+            "altura": 13
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3652
+    },
+    {
+      "rota": "/pedidos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 228,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 871,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 220,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Entra no Mercos e importa os pedidos que",
+            "largura": 226,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Imprimir",
+            "largura": 143,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar",
+            "largura": 587,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 126,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Vendedor",
+            "largura": 172,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3806
+    },
+    {
+      "rota": "/pedidos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 191,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 871,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 205,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Buscar",
+            "largura": 284,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Status",
+            "largura": 129,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Filtros avançados",
+            "largura": 147,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0249",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0248",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0247",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "PED-0246",
+            "largura": 13,
+            "altura": 13
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3675
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "PED-0158"
+        ],
+        "textos": 93,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Faturar pedido",
+            "largura": 105,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Marcar como concluído",
+            "largura": 156,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais opções",
+            "largura": 96,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Trocar cliente",
+            "largura": 102,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar pedido",
+            "largura": 100,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Alterar detalhes do pedido",
+            "largura": 173,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4520
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "PED-0158"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2537
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "PED-0158"
+        ],
+        "textos": 93,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 8,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Faturar pedido",
+            "largura": 105,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Marcar como concluído",
+            "largura": 156,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais opções",
+            "largura": 96,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Trocar cliente",
+            "largura": 102,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Editar pedido",
+            "largura": 100,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Alterar detalhes do pedido",
+            "largura": 173,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2289
+    },
+    {
+      "rota": "/pedidos/[id]",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/f0597235-ba27-4d32-98c5-e0f881dc667d",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "PED-0158"
+        ],
+        "textos": 64,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2173
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/imprimir",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Imprimir pedidos"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 3,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3565
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/imprimir",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Imprimir pedidos"
+        ],
+        "textos": 8,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1456
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/imprimir",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Imprimir pedidos"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 4,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1408
+    },
+    {
+      "rota": "/pedidos/imprimir",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/imprimir",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Imprimir pedidos"
+        ],
+        "textos": 9,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Open Tanstack query devtools",
+            "largura": 40,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1359
+    },
+    {
+      "rota": "/pedidos/novo",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/novo",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Novo pedido"
+        ],
+        "textos": 89,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 1,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 25,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Gerar pedido",
+            "largura": 123,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 133,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviar",
+            "largura": 111,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais opções",
+            "largura": 152,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 695,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cadastrar novo cliente",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3099
+    },
+    {
+      "rota": "/pedidos/novo",
+      "modulo": "pedidos-e-vendas",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/novo",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Novo pedido"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 1,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Preço base",
+            "largura": 276,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "combobox",
+            "texto": "Buscar produto, código ou EAN",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Prazo livre / não informadoÀ vistaAgenda",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1626
+    },
+    {
+      "rota": "/pedidos/novo",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/novo",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Novo pedido"
+        ],
+        "textos": 89,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 1,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 25,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Gerar pedido",
+            "largura": 123,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Visualizar",
+            "largura": 133,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviar",
+            "largura": 111,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais opções",
+            "largura": 152,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 695,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cadastrar novo cliente",
+            "largura": 151,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1611
+    },
+    {
+      "rota": "/pedidos/novo",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pedidos/novo",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Novo pedido"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 1,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Preço base",
+            "largura": 276,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "combobox",
+            "texto": "Buscar produto, código ou EAN",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Prazo livre / não informadoÀ vistaAgenda",
+            "largura": 276,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 276,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1843
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "modulo": "atendimento",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pipelines/714dbeb6-8873-4771-9b72-6c5240109f34",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 219,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 100,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo Lead",
+            "largura": 139,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Responsável: Todos",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Status: Todos",
+            "largura": 102,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tag: todas",
+            "largura": 84,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 40240
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "modulo": "atendimento",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pipelines/714dbeb6-8873-4771-9b72-6c5240109f34",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 188,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 94,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 324,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cliente Nascimento 088334",
+            "largura": 178,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ações do lead",
+            "largura": 28,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Daniel",
+            "largura": 39,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ações do lead",
+            "largura": 28,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Negócio de Quem Manda 1795038217293",
+            "largura": 240,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 12756
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "modulo": "atendimento",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pipelines/714dbeb6-8873-4771-9b72-6c5240109f34",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 219,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 100,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Novo Lead",
+            "largura": 139,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 256,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Responsável: Todos",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Status: Todos",
+            "largura": 102,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Tag: todas",
+            "largura": 84,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8715
+    },
+    {
+      "rota": "/pipelines/[id]",
+      "modulo": "atendimento",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/pipelines/714dbeb6-8873-4771-9b72-6c5240109f34",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Pedidos"
+        ],
+        "textos": 188,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 94,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 324,
+            "altura": 36
+          },
+          {
+            "tag": "input",
+            "tipo": "checkbox",
+            "texto": "",
+            "largura": 13,
+            "altura": 13
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cliente Nascimento 088334",
+            "largura": 178,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ações do lead",
+            "largura": 28,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Daniel",
+            "largura": 39,
+            "altura": 20
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Ações do lead",
+            "largura": 28,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Negócio de Quem Manda 1795038217293",
+            "largura": 240,
+            "altura": 40
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 9660
+    },
+    {
+      "rota": "/products",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/products",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Catálogo"
+        ],
+        "textos": 456,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 170,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Produtos",
+            "largura": 102,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Promoções",
+            "largura": 116,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Destaques",
+            "largura": 112,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configurações",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 719,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todas as categorias",
+            "largura": 157,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 14145
+    },
+    {
+      "rota": "/products",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/products",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Catálogo"
+        ],
+        "textos": 225,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 165,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Produtos",
+            "largura": 102,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Promoções",
+            "largura": 116,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Destaques",
+            "largura": 112,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configurações",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 284,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todas as categorias",
+            "largura": 157,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os produtosExibir produtos ativosE",
+            "largura": 178,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5905
+    },
+    {
+      "rota": "/products",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/products",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Catálogo"
+        ],
+        "textos": 456,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 170,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Produtos",
+            "largura": 102,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Promoções",
+            "largura": 116,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Destaques",
+            "largura": 112,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configurações",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 719,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todas as categorias",
+            "largura": 157,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5361
+    },
+    {
+      "rota": "/products",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/products",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Catálogo"
+        ],
+        "textos": 225,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 165,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Produtos",
+            "largura": 102,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Promoções",
+            "largura": 116,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Destaques",
+            "largura": 112,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Configurações",
+            "largura": 137,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 284,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todas as categorias",
+            "largura": 157,
+            "altura": 36
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os produtosExibir produtos ativosE",
+            "largura": 178,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4732
+    },
+    {
+      "rota": "/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao",
+      "valida": false,
+      "motivo": "Error: sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
+      "consoleErros": [],
+      "errosDePagina": [],
+      "overflow": null,
+      "contraste": null,
+      "alvosPequenos": null,
+      "axe": null,
+      "tempoMs": 9944
+    },
+    {
+      "rota": "/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao",
+      "valida": false,
+      "motivo": "Error: sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
+      "consoleErros": [],
+      "errosDePagina": [],
+      "overflow": null,
+      "contraste": null,
+      "alvosPequenos": null,
+      "axe": null,
+      "tempoMs": 5850
+    },
+    {
+      "rota": "/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/campanhas?subtela=prospeccao",
+      "redirecionaPara": "/app/campanhas?subtela=prospeccao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha"
+        ],
+        "textos": 49,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 13,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Campanha",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Prospecção",
+            "largura": 99,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Campanhas",
+            "largura": 100,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresas",
+            "largura": 87,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Encontrar empresas",
+            "largura": 136,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Pesquisas",
+            "largura": 80,
+            "altura": 32
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8479
+    },
+    {
+      "rota": "/prospeccao",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/campanhas?subtela=prospeccao",
+      "redirecionaPara": "/app/campanhas?subtela=prospeccao",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha"
+        ],
+        "textos": 22,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 7,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Campanha",
+            "largura": 92,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Prospecção",
+            "largura": 99,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Campanhas",
+            "largura": 100,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Empresas",
+            "largura": 87,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": "search",
+            "texto": "",
+            "largura": 284,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Todos os statusAtivasRascunhosPausadasCo",
+            "largura": 284,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6532
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 99,
+        "contrasteReprovados": 3,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais ações",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: tr:nth-child(1) > td:nth-child(5) > .text-primary.underline-offset-2.hover\\:underline :: <a class=\"text-xs font-medium text-primary underline-offset-2 hover:underline\" href=\"/app/inbox?id=f17dd8f9-7ee6-4ee9-8d8a-d240c881bc49\">Abrir Inbox</a>",
+          "color-contrast: tr:nth-child(2) > td:nth-child(5) > .text-primary.underline-offset-2.hover\\:underline :: <a class=\"text-xs font-medium text-primary underline-offset-2 hover:underline\" href=\"/app/inbox?id=b99d4096-5d1f-4e3e-afd0-aca3421bd4be\">Abrir Inbox</a>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 21642
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 3,
+        "pioresContrastes": [
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          },
+          {
+            "amostra": "Abrir Inbox",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "text-xs font-medium text-primary underline-offset-2 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Pendentes 0",
+            "largura": 93,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviadas 2",
+            "largura": 84,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sem comprovante 0",
+            "largura": 134,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Falhas na entrega 1",
+            "largura": 129,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5638
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 99,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atualizar",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mais ações",
+            "largura": 36,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5499
+    },
+    {
+      "rota": "/prospeccao/campanhas/[id]",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/campanhas/cbf5c604-dcc6-4149-a13c-e03151e506bf",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Campanha E2E Entrega"
+        ],
+        "textos": 56,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 10,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas3",
+            "largura": 65,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Canoinhas2/3",
+            "largura": 100,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Todas",
+            "largura": 58,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Pendentes 0",
+            "largura": 93,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Enviadas 2",
+            "largura": 84,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Sem comprovante 0",
+            "largura": 134,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Falhas na entrega 1",
+            "largura": 129,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 6678
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/nova",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Nova campanha"
+        ],
+        "textos": 166,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 96,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cancelar",
+            "largura": 75,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 509,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar cidades",
+            "largura": 491,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Itajaí/SC1",
+            "largura": 244,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mafra/SC1",
+            "largura": 244,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 26940
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/nova",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Nova campanha"
+        ],
+        "textos": 134,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 90,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar cidades",
+            "largura": 242,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Itajaí/SC1",
+            "largura": 242,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mafra/SC1",
+            "largura": 242,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar categorias",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Restaurante",
+            "largura": 87,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lanchonete",
+            "largura": 85,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 7713
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/nova",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Nova campanha"
+        ],
+        "textos": 166,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 96,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Cancelar",
+            "largura": 75,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 509,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar cidades",
+            "largura": 491,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Itajaí/SC1",
+            "largura": 244,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mafra/SC1",
+            "largura": 244,
+            "altura": 38
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 11942
+    },
+    {
+      "rota": "/prospeccao/nova",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/prospeccao/nova",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Nova campanha"
+        ],
+        "textos": 134,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 89,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar cidades",
+            "largura": 242,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Itajaí/SC1",
+            "largura": 242,
+            "altura": 38
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Mafra/SC1",
+            "largura": 242,
+            "altura": 38
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "Filtrar categorias",
+            "largura": 260,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Restaurante",
+            "largura": 87,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Lanchonete",
+            "largura": 85,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "color-contrast (serious)"
+        ],
+        "nos": [
+          "color-contrast: .sm\\:grid-cols-2.grid.gap-2 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Garimpa empresas que ainda não são clientes.</p>",
+          "color-contrast: .sm\\:grid-cols-3 > .border-primary.bg-accent-soft.p-3 > .mt-0\\.5 :: <p class=\"mt-0.5 text-xs text-muted-foreground\">Recomendado: empresas já cadastradas, sem gastar busca.</p>"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10284
+    },
+    {
+      "rota": "/radar",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 98,
+        "contrasteReprovados": 2,
+        "pioresContrastes": [
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 2,
+        "ids": [
+          "color-contrast (serious)",
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "color-contrast: .flex-wrap.gap-2:nth-child(1) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/6abb35ef-66a9-4950-a269-98aab6041dc2\">Mercado E2E Recompra</a>",
+          "color-contrast: .flex-wrap.gap-2:nth-child(2) > .text-primary.underline-offset-4.hover\\:underline :: <a class=\"font-medium text-primary underline-offset-4 hover:underline\" href=\"/app/contacts/4048ce92-4d17-4bdf-9c9b-52c4ff144a96\">Padaria E2E Voo</a>",
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
+          "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 32198
+    },
+    {
+      "rota": "/radar",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 69,
+        "contrasteReprovados": 2,
+        "pioresContrastes": [
+          {
+            "amostra": "Mercado E2E Recompra",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          },
+          {
+            "amostra": "Padaria E2E Voo",
+            "razao": 3.63,
+            "minimo": 4.5,
+            "passa": false,
+            "corTexto": "rgba(126,119,240,1)",
+            "corFundo": "rgb(255,255,255)",
+            "classe": "font-medium text-primary underline-offset-4 hover:underline"
+          }
+        ],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
+          "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 10423
+    },
+    {
+      "rota": "/radar",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 98,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 22,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Dispensar aviso",
+            "largura": 16,
+            "altura": 16
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Recolher sidebar",
+            "largura": 223,
+            "altura": 32
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "E2E Test Org · Empresa atual. Trocar de ",
+            "largura": 151,
+            "altura": 32
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 271,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
+          "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 8377
+    },
+    {
+      "rota": "/radar",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/radar",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Radar Comercial"
+        ],
+        "textos": 69,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 18,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Abrir navegação",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "TodosE2E AdminE2E Manager",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "input",
+            "tipo": null,
+            "texto": "",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "select",
+            "tipo": null,
+            "texto": "Qualquer período30 dias60 dias90 dias",
+            "largura": 148,
+            "altura": 40
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Saudável",
+            "largura": 72,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Atenção",
+            "largura": 67,
+            "altura": 26
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Risco",
+            "largura": 52,
+            "altura": 26
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 1,
+        "ids": [
+          "label-content-name-mismatch (serious)"
+        ],
+        "nos": [
+          "label-content-name-mismatch: button[aria-label=\"Ver clientes em risco\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver clientes em risco\">",
+          "label-content-name-mismatch: button[aria-label=\"Ver oportunidades de recompra\"] :: <button type=\"button\" class=\"text-left\" aria-label=\"Ver oportunidades de recompra\">"
+        ]
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 5506
+    }
+  ]
+}
