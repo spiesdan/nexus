@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.68.1] — 2026-11-24
+
+### Corrigido
+
+- **Endereço do cliente volta a ser lido da ficha do Mercos** O enriquecimento da 1.68.0 abria a ficha do cliente mas só salvava o CEP: o leitor esperava campo rotulado ("Rua: ...") e a ficha real entrega o endereço em três linhas seguidas — `AVENIDA X 357 - BAIRRO`, `CEP 89580-000`, `CIDADE - Estado`. Agora ele ancora no CEP, lê o vizinho de cima e o de baixo, e converte o estado por extenso para UF. Medido na ficha real: 20 de 20 lidos com rua, número, bairro, CEP, cidade e UF.
+
 ## [1.68.0] — 2026-11-24
 
 ### Adicionado
@@ -9042,7 +9048,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.68.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.68.1...HEAD
+[1.68.1]: https://github.com/spiesdan/nexus/compare/v1.68.0...v1.68.1
 [1.68.0]: https://github.com/spiesdan/nexus/compare/v1.67.0...v1.68.0
 [1.67.0]: https://github.com/spiesdan/nexus/compare/v1.66.0...v1.67.0
 [1.66.0]: https://github.com/spiesdan/nexus/compare/v1.65.2...v1.66.0
