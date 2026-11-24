@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 32 `[x]` · 5 `[~]` · 4 `[!]` · 6 `[ ]` — 47 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 32 `[x]` · 6 `[~]` · 4 `[!]` · 6 `[ ]` — 48 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -235,3 +235,12 @@ ocorrência `plataforma.slo_estourado` se ainda acima de 800 ms.
 **Pendente de deploy:** catálogo PDF (#856, aberto) — o dono vai mergear;
 depois precisa de release para chegar em produção. **Não mexido:** 21 pedidos de
 demonstração (18538–18558, R$ 4.866,40, 3 em cargas) — aguardam decisão do dono.
+
+
+## Defeito da carga — status-blind (24/11/2026)
+
+| id | defeito | estado | dono | motivo (medido) | próximo passo |
+|---|---|---|---|---|---|
+| P1-34 | Pedido entregue continuava ocupando carga: checagem **status-blind** na lista e no POST | `[~]` | G (código) + coordenação (registro) | a lista e o `POST` olhavam **qualquer linha** de `shipment_orders`, mas o índice que deveria responder é **parcial** (só linhas ativas). Pedido concluído aparecia como “em carga” e o operador não conseguia colocá-lo numa carga nova | **#867** → `c309f76d` (`fix/carga-so-ativa`, fragmento `.changes/carga-so-ativa.md`) — mergeado; conserto na main |
+
+**Por que volta se ninguém escrever:** o índice parcial é uma otimização invisível na leitura genérica; sem o predicado de status explícito na lista **e** no `POST`, os dois caminhos discordam do índice. O teste precisa cobrir os dois, não só a listagem. Não é bug de UI — é contrato de consulta.
