@@ -191,14 +191,14 @@ export function NexusKpiSkeleton({
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className={cn(TEXTO_DO_ROTULO, "text-muted-foreground")}>
-            <span className="rounded-md bg-primary/10 text-transparent">Rótulo</span>
+            <span className="block h-3 w-20 rounded-md bg-primary/10" />
           </p>
           <p className={cn(TEXTO_DO_VALOR, "text-foreground")}>
-            <span className="rounded-md bg-primary/10 text-transparent">R$ 0,00</span>
+            <span className="block h-7 w-24 rounded-md bg-primary/10" />
           </p>
           {comRodape ? (
             <div className={TEXTO_DO_RODAPE}>
-              <span className="rounded-md bg-primary/10 text-transparent">comparação</span>
+              <span className="block h-3 w-16 rounded-md bg-primary/10" />
             </div>
           ) : null}
         </div>

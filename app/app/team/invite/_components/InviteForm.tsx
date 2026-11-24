@@ -94,7 +94,7 @@ export function InviteForm() {
           hint={DESCRICAO_DO_PAPEL[role]}
         >
           <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-            <SelectTrigger>
+            <SelectTrigger aria-label={t("Cargo")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

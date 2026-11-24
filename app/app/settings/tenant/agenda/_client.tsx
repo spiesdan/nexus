@@ -264,7 +264,7 @@ export function TiposDeAgendamentoClient({
           <li
             key={tipo.id}
             data-testid={`tipo-${tipo.id}`}
-            className={`rounded-lg border border-border bg-surface p-3 ${tipo.is_active ? "" : "opacity-60"}`}
+            className={`rounded-lg border border-border bg-surface p-3 ${tipo.is_active ? "" : "bg-muted/40"}`}
           >
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm font-medium text-text">{t(tipo.name)}</span>
