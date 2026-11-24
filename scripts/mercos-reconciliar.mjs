@@ -306,6 +306,7 @@ const cobertura = avaliarCobertura({
   censoLido: resultado.censo_lido,
   linhasIlegiveis: resultado.linhas_ilegiveis,
   registrosSemData: resultado.registros_sem_data,
+  censoDaJanela: censoDeclaraJanela,
   erros: resultado.erros_importacao,
 });
 const veredito = avaliarResultado({ cobertura, ausentesDepois: resultado.ausentes_depois });
