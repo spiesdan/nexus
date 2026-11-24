@@ -71,7 +71,7 @@ export const RECOMENDACOES: Record<string, Construtor> = {
     plano(
       "Conferir a UF do município antes da emissão.",
       [
-        "Quando a evidência traz uma única UF possível, ela pode ser corrigida automaticamente pelo job de correção determinística.",
+        "Proposta: corrigir a UF dos contatos com uma única UF possível e aplicar pelo botão revisável — a escrita acontece em job separado, com antes/depois auditado.",
         "Quando há mais de uma UF possível, decida com o dono do cadastro — não escolha pelo nome.",
         "Depois da correção, confirme que cidade/UF resolvem no IBGE.",
       ],

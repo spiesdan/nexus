@@ -37,6 +37,8 @@ export const COLETAS = [
 export type ColetaNome = (typeof COLETAS)[number];
 
 export const FONTES_DA_REGRA: Readonly<Record<string, readonly ColetaNome[]>> = {
+  "fiscal.cliente_sem_endereco_fiscal": ["pedidos", "notas", "notas_pedidos", "contatos_endereco"],
+  "fiscal.uf_divergente_do_ibge": ["contatos_endereco"],
   "fiscal.nota_rejeitada": ["notas"],
   "fiscal.nota_em_emissao_travada": ["notas"],
   "fiscal.nota_pendente_antiga": ["notas"],
