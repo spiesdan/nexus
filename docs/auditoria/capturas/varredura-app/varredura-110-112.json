@@ -1,0 +1,346 @@
+{
+  "geradoEm": "2026-11-24T04:43:27.398Z",
+  "base": "http://localhost:3029",
+  "tempoTotalMs": 19277,
+  "rotas": 2,
+  "medidas": 8,
+  "validas": 8,
+  "invalidas": 0,
+  "porModulo": {
+    "config-e-inteligencia": {
+      "rotas": 2,
+      "medidas": 2,
+      "ok": 2,
+      "contraste": 0,
+      "overflow": 0,
+      "console": 0,
+      "alvo": 0,
+      "axe": 0,
+      "http": 0
+    }
+  },
+  "resumo": [
+    {
+      "rota": "/venda-automatica",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 0,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": false,
+        "axe": false
+      },
+      "falhas": 0,
+      "tempoMs": 8542
+    },
+    {
+      "rota": "/webhooks",
+      "modulo": "config-e-inteligencia",
+      "redirecionaPara": null,
+      "combinacoes": 4,
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
+      "status": [
+        200
+      ],
+      "contraste": 0,
+      "overflow": 0,
+      "consoleErros": 0,
+      "alvosPequenos": 0,
+      "axeCritica": 0,
+      "axeSeria": 0,
+      "defeitos": {
+        "http": false,
+        "contraste": false,
+        "overflow": false,
+        "console": false,
+        "alvo": false,
+        "axe": false
+      },
+      "falhas": 0,
+      "tempoMs": 10153
+    }
+  ],
+  "registros": [
+    {
+      "rota": "/venda-automatica",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/venda-automatica",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Venda Automática"
+        ],
+        "textos": 37,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 4241
+    },
+    {
+      "rota": "/venda-automatica",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/venda-automatica",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Venda Automática"
+        ],
+        "textos": 10,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1580
+    },
+    {
+      "rota": "/venda-automatica",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/venda-automatica",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Venda Automática"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1402
+    },
+    {
+      "rota": "/venda-automatica",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/venda-automatica",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Venda Automática"
+        ],
+        "textos": 11,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1319
+    },
+    {
+      "rota": "/webhooks",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/webhooks",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Webhooks"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3903
+    },
+    {
+      "rota": "/webhooks",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/webhooks",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Webhooks"
+        ],
+        "textos": 25,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2171
+    },
+    {
+      "rota": "/webhooks",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/webhooks",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Webhooks"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2157
+    },
+    {
+      "rota": "/webhooks",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/webhooks",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Webhooks"
+        ],
+        "textos": 25,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1922
+    }
+  ]
+}
