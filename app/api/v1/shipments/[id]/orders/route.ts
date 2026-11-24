@@ -30,6 +30,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * O que OCUPA o pedido: os mesmos estados do índice único parcial
+ * `shipment_orders_order_ativo_unico`. Carga concluída/cancelada não ocupa —
+ * o pedido já viajou e pode ser embarcado de novo se voltar.
+ */
+const STATUS_ATIVOS_NA_CARGA = ["na_carga", "em_rota"] as const;
+
 type Params = { params: Promise<{ id: string }> };
 
 const corpoSchema = z.object({
@@ -66,7 +73,13 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     supabase
       .from("shipment_orders")
       .select("order_id")
-      .eq("organization_id", authz.org.orgId),
+      .eq("organization_id", authz.org.orgId)
+      // Só carga ATIVA ocupa o pedido. O índice `shipment_orders_order_ativo_unico`
+      // é parcial exatamente por isso (`na_carga`, `em_rota`): pedido entregue
+      // numa carga antiga volta a ser embarcável. Sem este filtro, a tela
+      // escondia e a rota recusava com 409 um pedido que o banco aceitaria —
+      // e o operador concluía que "não dá para colocar pedido na carga".
+      .in("status", [...STATUS_ATIVOS_NA_CARGA]),
   ]);
 
   const emAlgumaCarga = new Set(
@@ -179,7 +192,11 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
     .from("shipment_orders")
     .select("order_id")
     .eq("organization_id", authz.org.orgId)
-    .in("order_id", ids);
+    .in("order_id", ids)
+    // A MESMA regra do índice único parcial: entregue/devolvido/cancelado não
+    // ocupa. Antes, a checagem olhava qualquer linha e o pedido que já viajou
+    // ficava proibido para sempre.
+    .in("status", [...STATUS_ATIVOS_NA_CARGA]);
   if (jaEmCarga && jaEmCarga.length > 0) {
     return fail("validation_failed", "Um dos pedidos já está em outra carga.", 409, { requestId });
   }
