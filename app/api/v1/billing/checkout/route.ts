@@ -25,10 +25,18 @@ export async function POST(): Promise<Response> {
   if (!autorizado.ok) return autorizado.response;
 
   const cfg = lerConfigStripe();
-  if (!cfg.secretKey || !cfg.priceId) {
-    return fail("internal_error", "Billing sem STRIPE_SECRET_KEY ou STRIPE_PRICE_ID.", 503, { requestId });
+  if (!cfg.secretKey) {
+    return fail("internal_error", "Billing sem STRIPE_SECRET_KEY.", 503, { requestId });
   }
   const admin = createAdminClient();
+  // A fonte do Price é o PLANO no banco. STRIPE_PRICE_ID do .env é legado,
+  // usado apenas se o plano ainda não tem a referência casada.
+  const { data: plano } = await admin.from("billing_plans")
+    .select("stripe_price_id").eq("ativo", true).limit(1).maybeSingle();
+  const priceId = plano?.stripe_price_id || cfg.priceId;
+  if (!priceId) {
+    return fail("not_found", "Plano sem Price do Stripe — configures billing_plans.stripe_price_id.", 404, { requestId });
+  }
   const orgId = autorizado.org.orgId;
   const idempotencyKey = randomUUID();
   const resposta = await stripeRequest<SessaoStripe>(cfg, "/checkout/sessions", {
@@ -36,7 +44,7 @@ export async function POST(): Promise<Response> {
     idempotencyKey,
     corpo: {
       mode: "subscription",
-      "line_items[0][price]": cfg.priceId,
+      "line_items[0][price]": priceId,
       "line_items[0][quantity]": 1,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/app/billing?sucesso=1`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/app/billing?cancelado=1`,

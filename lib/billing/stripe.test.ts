@@ -9,8 +9,11 @@ function assinar(corpo: string, segredo: string, timestamp: number): string {
 }
 
 describe("Stripe: modo de teste e assinatura", () => {
-  it("chave live é recusada na leitura da configuração", () => {
-    expect(() => lerConfigStripe({ STRIPE_SECRET_KEY: "sk_live_x" })).toThrow(/live recusada/);
+  it("chave live sem confirmação é recusada; com as duas decisões, abre", () => {
+    expect(() => lerConfigStripe({ STRIPE_SECRET_KEY: "sk_live_x" })).toThrow(/decisão explícita/);
+    expect(lerConfigStripe({
+      STRIPE_SECRET_KEY: "sk_live_x", STRIPE_TEST_MODE: "false", STRIPE_LIVE_CONFIRMADO: "sim",
+    }).secretKey).toBe("sk_live_x");
   });
 
   it("assinatura sobre o corpo bruto bate", () => {

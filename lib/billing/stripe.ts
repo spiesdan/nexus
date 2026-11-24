@@ -7,6 +7,8 @@
  */
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { validarConfiguracaoStripe } from "./config";
+
 export interface ConfigStripe {
   secretKey: string;
   webhookSecret: string;
@@ -15,10 +17,8 @@ export interface ConfigStripe {
 }
 
 export function lerConfigStripe(env: Record<string, string | undefined> = process.env): ConfigStripe {
+  validarConfiguracaoStripe(env);
   const secretKey = env.STRIPE_SECRET_KEY ?? "";
-  if (secretKey.startsWith("sk_live_") || secretKey.startsWith("rk_live_")) {
-    throw new Error("STRIPE_SECRET_KEY live recusada: modo de teste obrigatório.");
-  }
   return {
     secretKey,
     webhookSecret: env.STRIPE_WEBHOOK_SECRET ?? "",
