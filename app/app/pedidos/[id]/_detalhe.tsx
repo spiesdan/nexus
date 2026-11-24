@@ -35,7 +35,7 @@ import { numeroMercosEhReferencia, rotuloNumeroDoPedido } from "@/components/ped
 import { margemDoPedido, type CustoDoPedido } from "@/lib/comercial/custo-do-pedido";
 import type { ItemDoPedido, PedidoComercial, StatusDoPedido } from "@/lib/schemas/pedidos";
 
-import { PillDoStatus } from "../_pills";
+import { PillDoStatus, SeloMercos } from "../_pills";
 import { FotosDoProduto } from "../../products/_fotos";
 import { EditorDeItens } from "./_editar-itens";
 
@@ -917,6 +917,7 @@ export function DetalheDoPedido({
 
       <div className="flex flex-wrap items-center gap-3">
         <PillDoStatus status={pedido.status as StatusDoPedido} />
+        <SeloMercos numeroMercos={pedido.numero_mercos} />
       </div>
 
       {/* 0297: o pedido mudou no Mercos DEPOIS de já estar aqui. O aviso é o

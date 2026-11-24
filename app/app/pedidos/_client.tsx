@@ -67,7 +67,7 @@ import {
   type StatusDoPedido,
 } from "@/lib/schemas/pedidos";
 
-import { PillDoStatus } from "./_pills";
+import { PillDoStatus, SeloMercos } from "./_pills";
 
 interface Textos {
   titulo: string;
@@ -1264,7 +1264,7 @@ export function PedidosClient({
                         )}
                         <div className="flex min-w-0 flex-1 items-center gap-3">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                               {/* Link ESTICADO: o número é o único texto do
                                   link (nome acessível e alvo do teste e2e), e o
                                   `after` cobre a linha inteira para o clique em
@@ -1278,6 +1278,7 @@ export function PedidosClient({
                                 <NumeroDoPedido numero={p.numero} numeroMercos={p.numero_mercos} />
                               </Link>
                               <PillDoStatus status={p.status as StatusDoPedido} />
+                              <SeloMercos numeroMercos={p.numero_mercos} />
                             </div>
                             <p className="truncate text-sm font-medium text-text">
                               {p.cliente_nome}
@@ -1421,6 +1422,7 @@ export function PedidosClient({
                       </TableCell>
                       <TableCell>
                         <PillDoStatus status={p.status as StatusDoPedido} />
+                              <SeloMercos numeroMercos={p.numero_mercos} />
                       </TableCell>
                       <TableCell>
                         <span
