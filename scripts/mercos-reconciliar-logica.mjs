@@ -44,18 +44,39 @@ export function mesmoCliente(nomeLista, nomeBanco, documentoLista, documentoBanc
  * caso dos 19669–19672, que apareceriam como "zero ausentes" se a comparação
  * olhasse só o número.
  */
-export function classificarNumero({ nomeLista, documentoLista = null, linhasBanco = [] }) {
-  const identicas = linhasBanco.filter((linha) =>
+export function classificarNumero({ numero, nomeLista = null, documentoLista = null, linhasBanco = [] }) {
+  // REGRA (P0 do desenho, 24/11): `numero_mercos` É a identidade. Nome muda
+  // com o tempo (renome, truncamento em 300, CONSUMIDOR FINAL, fantasia) e
+  // compará-lo gerou 2.884 colisões falsas num censo de 5.930.
+  const peloMercos = linhasBanco.filter((linha) => linha.numero_mercos === numero);
+  if (peloMercos.length > 0) {
+    return { situacao: "importado", pedido_id: peloMercos[0].id ?? null, cliente_local_nome: null };
+  }
+
+  // O número está ocupado por pedido LOCAL — a colisão real, com os dois lados.
+  const peloLocal = linhasBanco.filter((linha) => linha.numero === numero);
+  if (peloLocal.length > 0) {
+    return {
+      situacao: "colisao",
+      pedido_id: peloLocal[0].id ?? null,
+      cliente_local_nome: peloLocal[0].cliente_nome ?? null,
+    };
+  }
+
+  // Reserva para linha antiga SEM `numero_mercos` (o backfill já cobriu as de
+  // origem mercos): só aqui o nome/documento entra como identidade.
+  const semMercos = linhasBanco.filter((linha) => linha.numero_mercos == null);
+  const identicas = semMercos.filter((linha) =>
     mesmoCliente(nomeLista, linha.cliente_nome, documentoLista, linha.cliente_documento),
   );
   if (identicas.length > 0) {
     return { situacao: "importado", pedido_id: identicas[0].id ?? null, cliente_local_nome: null };
   }
-  if (linhasBanco.length > 0) {
+  if (semMercos.length > 0) {
     return {
       situacao: "colisao",
-      pedido_id: linhasBanco[0].id ?? null,
-      cliente_local_nome: linhasBanco[0].cliente_nome ?? null,
+      pedido_id: semMercos[0].id ?? null,
+      cliente_local_nome: semMercos[0].cliente_nome ?? null,
     };
   }
   return { situacao: "ausente", pedido_id: null, cliente_local_nome: null };

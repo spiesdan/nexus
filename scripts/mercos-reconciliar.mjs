@@ -214,6 +214,7 @@ for (const registro of candidatos) {
   const numero = registro.numero;
   const nomeLista = registro.cliente_nome || registro.razao_lista || registro.fantasia_lista || null;
   const classificacao = classificarNumero({
+    numero,
     nomeLista,
     documentoLista: registro.cliente_documento || null,
     linhasBanco: banco.get(numero) ?? [],
@@ -250,7 +251,10 @@ for (const registro of candidatos) {
     linha.pedido_id = anterior.pedido_id ?? linha.pedido_id;
   }
 
-  if (classificacao.situacao === "ausente") resultado.ausentes_por_numero.push(numero);
+  // Ausente só entra na lista do dono quando o DETALHE provou que existe com
+  // itens. Sem detalhe fica em `sem_detalhe`: não é ausente confirmado e não
+  // entra na conta de "verificado".
+  if (situacao === "ausente") resultado.ausentes_por_numero.push(numero);
   if (situacao === "ignorado_sem_itens") resultado.ignorados_sem_itens.push(numero);
   if (situacao === "sem_detalhe") resultado.sem_detalhe.push(numero);
 

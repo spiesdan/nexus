@@ -111,21 +111,31 @@ describe("0344 — série local separada e colisões visíveis", () => {
     ).toBe("0");
   });
 
-  it("0348: endereço da ficha entra só em campo vazio, nunca sobrescreve o operador", () => {
+  it("0348: prova ponta a ponta — contato vazio passa a ter rua, e não sobrescreve o operador", () => {
     const doc = "04490046000197";
+    const contato = "0344eeee-0000-4000-8000-000000000010";
+    const pedido = 19732;
     sql(`
-      insert into public.contacts (organization_id, name, cnpj, source_metadata)
-      values ('${ORG_A}', 'ABBASPEL', '${doc}',
+      insert into public.contacts (id, organization_id, name, cnpj, source_metadata)
+      values ('${contato}', '${ORG_A}', 'ABBASPEL', '${doc}',
               jsonb_build_object('mercos', jsonb_build_object('documento', '04.490.046/0001-97')));
+      insert into public.commercial_orders (organization_id, numero, contact_id, cliente_nome, status, origem)
+      values ('${ORG_A}', ${pedido}, '${contato}', 'ABBASPEL', 'aprovado', 'mercos');
     `);
+    const antes = sql(`select coalesce(logradouro, '<null>') from public.contacts where id='${contato}'`);
     const endereco = `jsonb_build_object(
       'logradouro', 'Rua das Palmeiras', 'numero_end', '123', 'bairro', 'Centro',
       'cep', '89300-000', 'cidade', 'Mafra', 'uf', 'SC'
     )`;
     expect(sql(`select public.fn_mercos_enriquecer_endereco('${ORG_A}', '${doc}', ${endereco})::text`))
       .toContain('"status": "atualizado"');
-    expect(sql(`select logradouro || '|' || bairro from public.contacts where cnpj='${doc}'`))
-      .toBe("Rua das Palmeiras|Centro");
+    const depois = sql(`select coalesce(logradouro, '<null>') || '|' || coalesce(bairro, '<null>') from public.contacts where id='${contato}'`);
+    console.info(
+      `[0348] contato ${contato} (pedido Mercos ${pedido}): ` +
+      `antes logradouro=${antes} → depois logradouro=${depois}`,
+    );
+    expect(antes).toBe("<null>");
+    expect(depois).toBe("Rua das Palmeiras|Centro");
 
     // O operador corrigiu e o ERP não pode desfazer.
     sql(`update public.contacts set logradouro = 'Rua Corrigida Pelo Operador' where cnpj='${doc}'`);
