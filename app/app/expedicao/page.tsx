@@ -6,6 +6,7 @@ import { traduzir } from "@/lib/i18n/dicionario";
 import { cidadesDaCarga } from "@/lib/expedicao/cidades-da-carga";
 import { carregarContatosDaEntrega } from "@/lib/expedicao/endereco-da-entrega";
 import { calcularSituacaoDaExpedicao } from "@/lib/expedicao/situacao-da-expedicao";
+import { calcularExcecoesDoDespacho, chaveValida } from "@/lib/expedicao/excecoes-do-despacho";
 import { COLUNAS_DA_CARGA, STATUS_EMBARCAVEIS, type Carga } from "@/lib/schemas/expedicao";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,7 +21,9 @@ export const dynamic = "force-dynamic";
  * `/app/expedicao/nova`. Aqui só entra o que a operação precisa ver de
  * relance — o que está na rua, o que está na doca e o que já fechou.
  */
-export default async function ExpedicaoPage() {
+export default async function ExpedicaoPage({ searchParams }: { searchParams: Promise<{ excecao?: string }> }) {
+  const { excecao: excecaoParam } = await searchParams;
+  const excecao = chaveValida(excecaoParam) ? excecaoParam : undefined;
   const user = await requireAuth();
   const t = (texto: string) => traduzir(texto, user.idioma);
   const activeOrg = await resolveActiveOrg(user);
@@ -35,7 +38,7 @@ export default async function ExpedicaoPage() {
   const [{ data: cargas }, { data: fila }, { count: avisosNaFila }] = await Promise.all([
     supabase
       .from("shipments")
-      .select(COLUNAS_DA_CARGA)
+      .select(`${COLUNAS_DA_CARGA}, rota_em`)
       .eq("organization_id", activeOrg.orgId)
       .order("created_at", { ascending: false })
       .limit(200),
@@ -69,7 +72,7 @@ export default async function ExpedicaoPage() {
   const { data: itensDasCargas } = idsDasCargas.length
     ? await supabase
         .from("shipment_orders")
-        .select("shipment_id, order_id, status, sequencia, veiculo_id, motorista_id")
+        .select("shipment_id, order_id, status, sequencia, veiculo_id, motorista_id, separado_em")
         .eq("organization_id", activeOrg.orgId)
         .in("shipment_id", idsDasCargas)
         .order("sequencia")
@@ -81,6 +84,7 @@ export default async function ExpedicaoPage() {
     sequencia: number;
     veiculo_id: string | null;
     motorista_id: string | null;
+    separado_em?: string | null;
   }[];
 
   /**
@@ -198,6 +202,17 @@ export default async function ExpedicaoPage() {
     p.semCidade = daCarga.semCidade;
   }
 
+  const enderecosPorPedido = new Map<string, string | null>(
+    ((pedidosDasCargas ?? []) as unknown as { id: string; endereco_entrega: string | null }[]).map(
+      (pedido) => [pedido.id, pedido.endereco_entrega],
+    ),
+  );
+  const excecoes = calcularExcecoesDoDespacho({
+    cargas: (cargas ?? []) as unknown as Parameters<typeof calcularExcecoesDoDespacho>[0]["cargas"],
+    itens,
+    enderecosPorPedido,
+  });
+
   const pedidosNaFila = (fila ?? []) as { id: string; total_cents: number | null }[];
 
   /**
@@ -222,6 +237,8 @@ export default async function ExpedicaoPage() {
         (c) => !motorista || c.status === "em_rota" || c.status === "montando",
       )}
       situacao={situacao}
+      excecoes={excecoes}
+      excecao={excecao}
       progresso={progresso}
       podeCriar={podeCriar}
       motorista={motorista}

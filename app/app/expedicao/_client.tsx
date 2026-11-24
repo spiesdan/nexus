@@ -17,6 +17,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { chaveDeBusca } from "@/lib/expedicao/buscar-embarcavel";
 import type { SituacaoDaExpedicao } from "@/lib/expedicao/situacao-da-expedicao";
+import type { ChaveExcecao, ExcecaoDoDespacho } from "@/lib/expedicao/excecoes-do-despacho";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   numeroDaCarga,
@@ -139,6 +140,8 @@ const ALVOS_DE_TOQUE =
 export function ExpedicaoClient({
   inicial,
   situacao,
+  excecoes = [],
+  excecao,
   progresso = {},
   podeCriar,
   motorista = false,
@@ -152,6 +155,9 @@ export function ExpedicaoClient({
    * pedido aparece em UMA célula: contar de novo no cliente recriaria o erro.
    */
   situacao: SituacaoDaExpedicao;
+  /** Exceções medidas no servidor — cada contagem já leva à lista filtrada. */
+  excecoes?: ExcecaoDoDespacho[];
+  excecao?: ChaveExcecao;
   /**
    * `shipment_id` → paradas/entregues. Vem do servidor porque a lista de cargas
    * não carrega os itens: sem isto a linha da carga diz "em rota" e não diz se
@@ -213,7 +219,11 @@ export function ExpedicaoClient({
   // ── Fila ──────────────────────────────────────────────────────────────────
   const cargasFiltradas = React.useMemo(() => {
     const termo = chaveDeBusca(buscaCarga);
+    const idsDaExcecao = excecao
+      ? new Set(excecoes.find((e) => e.chave === excecao)?.cargaIds ?? [])
+      : null;
     return [...inicial]
+      .filter((c) => (idsDaExcecao ? idsDaExcecao.has(c.id) : true))
       .filter((c) => {
         if (filtroCargas === "todas") return true;
         if (filtroCargas === "em_rota") return c.status === "em_rota";
@@ -239,7 +249,7 @@ export function ExpedicaoClient({
           ORDEM_DO_STATUS[a.status as StatusDaCarga] - ORDEM_DO_STATUS[b.status as StatusDaCarga];
         return porStatus !== 0 ? porStatus : (b.created_at ?? "").localeCompare(a.created_at ?? "");
       });
-  }, [inicial, filtroCargas, buscaCarga, filtroVeiculo, filtroMotorista, progresso]);
+  }, [inicial, filtroCargas, buscaCarga, filtroVeiculo, filtroMotorista, progresso, excecao, excecoes]);
 
   // Opções dos filtros: só o que aparece em alguma carga da fila, ordenado.
   const opcoesDeVeiculo = React.useMemo(
@@ -483,6 +493,54 @@ export function ExpedicaoClient({
           </Link>
         </div>
       )}
+
+      {/* ── EXCEÇÕES: o que exige ação AGORA (medido no servidor). ───────── */}
+      <section aria-label={t("Exceções do despacho")} className="space-y-2">
+        <h2 className="text-sm font-medium text-text">{t("Exige ação agora")}</h2>
+        {excecoes.every((e) => e.quantidade === 0) ? (
+          <div role="status" className="rounded-xl border border-success/40 bg-success-bg px-3.5 py-2.5 text-sm text-success-fg">
+            <CheckCircle size={16} aria-hidden className="mr-1.5 inline" />
+            {t("Nada exige ação agora — boa notícia.")}
+          </div>
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2 2xl:grid-cols-4">
+            {excecoes
+              .filter((e) => e.quantidade > 0)
+              .map((e) => {
+                const ativa = excecao === e.chave;
+                return (
+                  <li key={e.chave}>
+                    <Link
+                      href={ativa ? "/app/expedicao" : `/app/expedicao?excecao=${e.chave}`}
+                      aria-current={ativa ? "page" : undefined}
+                      className={cn(
+                        "flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm transition-colors",
+                        ativa
+                          ? "border-accent bg-accent-soft"
+                          : e.urgente
+                            ? "border-warning/40 bg-warning-bg text-warning-fg hover:bg-warning-bg/80"
+                            : "border-border bg-surface text-text hover:bg-muted/50",
+                      )}
+                    >
+                      <span className="min-w-0 font-medium">{e.rotulo}</span>
+                      <span className="shrink-0 font-semibold tabular-nums">{e.quantidade}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+          </ul>
+        )}
+        {excecao && (
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" role="status">
+            <span>
+              {t("Lista filtrada por exceção:")} {excecoes.find((e) => e.chave === excecao)?.rotulo}
+            </span>
+            <Link href="/app/expedicao" className="font-medium text-accent-ink underline underline-offset-4">
+              {t("Limpar filtro")}
+            </Link>
+          </div>
+        )}
+      </section>
 
       {/* ── A situação da operação ──────────────────────────────────────────
           Uma PARTIÇÃO: cada pedido está em uma célula só. As três células de

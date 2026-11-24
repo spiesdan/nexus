@@ -16,6 +16,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { diaDeReferencia, filtrarEmbarcaveisPor, temCidade } from "@/lib/expedicao/buscar-embarcavel";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { prontidaoDaCarga } from "@/lib/expedicao/prontidao";
 import { numeroDaCarga } from "@/lib/schemas/expedicao";
 import { type MudancaDoMercos, type PedidoComercial } from "@/lib/schemas/pedidos";
 import {
@@ -198,6 +199,13 @@ export function NovaCargaClient({
       setEnviando(false);
     }
   }
+
+  const prontidao = prontidaoDaCarga({
+    selecionados,
+    pedidos: embarcaveis as Array<{ id: string; endereco_entrega?: string | null }>,
+    placa,
+    motorista,
+  });
 
   return (
     <div className="min-h-full space-y-5 p-4 sm:p-6">
@@ -550,9 +558,25 @@ export function NovaCargaClient({
                 </dd>
               </dl>
 
+              <ul className="space-y-1 rounded-lg border border-border bg-surface-elevated p-2.5" data-testid="prontidao-da-carga">
+                {prontidao.itens.map((item) => (
+                  <li key={item.texto} className="flex items-start gap-1.5 text-xs">
+                    <span aria-hidden className={item.tipo === "ok" ? "text-success-fg" : item.tipo === "bloqueio" ? "text-error-fg" : "text-warning-fg"}>
+                      {item.tipo === "ok" ? "✓" : "✗"}
+                    </span>
+                    <span className={item.tipo === "bloqueio" ? "text-error-fg" : item.tipo === "aviso" ? "text-warning-fg" : "text-text"}>
+                      {item.texto}
+                    </span>
+                    <span className="shrink-0 text-[10px] uppercase text-muted-foreground">
+                      {item.tipo === "ok" ? "ok" : item.tipo}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
               <Button
                 className="w-full"
-                disabled={enviando || selecionados.length === 0}
+                disabled={enviando || !prontidao.podeCriar}
                 onClick={() => void criar()}
               >
                 {enviando
