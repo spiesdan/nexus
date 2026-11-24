@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 
 import { ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { isoDoPeriodo, periodoDaAssinatura, vencimentoEfetivo } from "@/lib/billing/periodo-assinatura";
 import { planoEfetivo, type PlanoNoBanco, type PriceStripe } from "@/lib/billing/plano";
 import { lerConfigStripe, stripeRequest } from "@/lib/billing/stripe";
 import { ETAPAS } from "@/lib/billing/notices";
@@ -22,8 +23,15 @@ interface AssinaturaStripe {
   id: string;
   status: string;
   cancel_at_period_end?: boolean;
-  current_period_end?: number;
-  items?: { data: Array<{ price?: { unit_amount?: number; currency?: string } }> };
+  current_period_end?: number | null;
+  current_period_start?: number | null;
+  items?: {
+    data: Array<{
+      price?: { unit_amount?: number; currency?: string };
+      current_period_end?: number | null;
+      current_period_start?: number | null;
+    }>;
+  };
 }
 
 export async function GET(): Promise<Response> {
@@ -84,9 +92,10 @@ export async function GET(): Promise<Response> {
     .eq("organization_id", orgId)
     .order("criado_em", { ascending: false })
     .limit(12);
-  const vencimentoIso = remoto?.current_period_end
-    ? new Date(remoto.current_period_end * 1000).toISOString()
-    : local?.current_period_end ?? null;
+  const periodo = periodoDaAssinatura(remoto);
+  // O valor local já veio do Stripe em rodada anterior: se a resposta atual
+  // não trouxer o campo, ele permanece — nunca vira NULL por omissão.
+  const vencimentoIso = vencimentoEfetivo(isoDoPeriodo(periodo.fim), local?.current_period_end);
   const enviadas = new Set((avisos ?? []).filter((a) => a.resultado === "enviado").map((a) => a.etapa));
   const diasRestantes = vencimentoIso
     ? Math.round(
@@ -115,6 +124,7 @@ export async function GET(): Promise<Response> {
       valor_cents: preco?.unit_amount ?? null,
       moeda: preco?.currency?.toUpperCase() ?? null,
       vencimento: vencimentoIso,
+      periodo_origem: periodo.origem,
       cancela_no_fim: remoto?.cancel_at_period_end ?? local?.cancel_at_period_end ?? false,
       id: remoto?.id ?? local?.stripe_subscription_id ?? null,
     },
