@@ -69,7 +69,7 @@ export default async function NotificationsPage() {
           <p className="font-medium">
             {t("Nesta instalação, os avisos só aparecem com o site aberto.")}
           </p>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-text">
             {/* ⚠️ Sem o nome do produto aqui, e não por estilo: a instalação é
                 white-label e `tests/unit/branding.test.ts` varre `app/` atrás de
                 marca escrita à mão. «o site» diz a mesma coisa e serve a quem
@@ -81,7 +81,7 @@ export default async function NotificationsPage() {
           <pre className="mt-2 overflow-x-auto rounded-lg bg-muted p-2 text-xs">
             <code>npx web-push generate-vapid-keys</code>
           </pre>
-          <p className="mt-2 text-muted-foreground">
+          <p className="mt-2 text-text">
             {t("O resultado vai no arquivo")} <code>.env</code>, {t("em")}{" "}
             <code>VAPID_PUBLIC_KEY</code> {t("e")} <code>VAPID_PRIVATE_KEY</code>.{" "}
             {t("Email ainda não está disponível.")}

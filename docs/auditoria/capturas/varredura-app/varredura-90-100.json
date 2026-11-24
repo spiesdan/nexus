@@ -1,21 +1,21 @@
 {
-  "geradoEm": "2026-11-24T03:53:38.731Z",
+  "geradoEm": "2026-11-24T04:29:39.542Z",
   "base": "http://localhost:3029",
-  "tempoTotalMs": 95151,
+  "tempoTotalMs": 106620,
   "rotas": 10,
   "medidas": 40,
-  "validas": 39,
-  "invalidas": 1,
+  "validas": 40,
+  "invalidas": 0,
   "porModulo": {
     "config-e-inteligencia": {
       "rotas": 10,
       "medidas": 10,
-      "ok": 0,
+      "ok": 7,
       "contraste": 0,
       "overflow": 0,
       "console": 0,
-      "alvo": 10,
-      "axe": 1,
+      "alvo": 3,
+      "axe": 0,
       "http": 0
     }
   },
@@ -34,7 +34,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 10,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -42,11 +42,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8597
+      "falhas": 0,
+      "tempoMs": 11293
     },
     {
       "rota": "/settings/atualizacao",
@@ -62,7 +62,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 5,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -70,11 +70,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8791
+      "falhas": 0,
+      "tempoMs": 10800
     },
     {
       "rota": "/settings/billing",
@@ -90,7 +90,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 3,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -98,27 +98,27 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8076
+      "falhas": 0,
+      "tempoMs": 7961
     },
     {
       "rota": "/settings/canal-oficial",
       "modulo": "config-e-inteligencia",
       "redirecionaPara": "/app/connections?aba=oficial",
       "combinacoes": 4,
-      "validas": 3,
-      "invalidas": 1,
-      "motivo": "Error: sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
+      "validas": 4,
+      "invalidas": 0,
+      "motivo": null,
       "status": [
         200
       ],
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 13,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -126,11 +126,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 3,
-      "tempoMs": 12455
+      "falhas": 0,
+      "tempoMs": 14710
     },
     {
       "rota": "/settings/devices",
@@ -146,7 +146,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 8,
+      "alvosPequenos": 2,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -157,8 +157,8 @@
         "alvo": true,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 6845
+      "falhas": 2,
+      "tempoMs": 9918
     },
     {
       "rota": "/settings/marca",
@@ -174,7 +174,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 8,
+      "alvosPequenos": 2,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -185,8 +185,8 @@
         "alvo": true,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8232
+      "falhas": 2,
+      "tempoMs": 9008
     },
     {
       "rota": "/settings/notifications",
@@ -202,19 +202,19 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 18,
+      "alvosPequenos": 0,
       "axeCritica": 0,
-      "axeSeria": 2,
+      "axeSeria": 0,
       "defeitos": {
         "http": false,
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
-        "axe": true
+        "alvo": false,
+        "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 9032
+      "falhas": 0,
+      "tempoMs": 9051
     },
     {
       "rota": "/settings/profile",
@@ -230,7 +230,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 9,
+      "alvosPequenos": 2,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -241,8 +241,8 @@
         "alvo": true,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8688
+      "falhas": 2,
+      "tempoMs": 8821
     },
     {
       "rota": "/settings/security",
@@ -258,7 +258,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 7,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -266,11 +266,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 8594
+      "falhas": 0,
+      "tempoMs": 8524
     },
     {
       "rota": "/settings/templates",
@@ -286,7 +286,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 10,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -294,11 +294,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 4,
-      "tempoMs": 13428
+      "falhas": 0,
+      "tempoMs": 13616
     }
   ],
   "registros": [
@@ -321,65 +321,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 9,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Cada um pega o que quiser",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Rodízio automático entre os atendentes",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Todos veem tudo",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Os seus, mais os que ainda não têm dono",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Só os seus",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 79,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -390,7 +333,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3841
+      "tempoMs": 5119
     },
     {
       "rota": "/settings/atendimento",
@@ -411,65 +354,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Cada um pega o que quiser",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Rodízio automático entre os atendentes",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Todos veem tudo",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Os seus, mais os que ainda não têm dono",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Só os seus",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 294,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -480,7 +366,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1836
+      "tempoMs": 2267
     },
     {
       "rota": "/settings/atendimento",
@@ -495,71 +381,14 @@
         "h1": [
           "Distribuição de atendimento"
         ],
-        "textos": 54,
+        "textos": 51,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Cada um pega o que quiser",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Rodízio automático entre os atendentes",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Todos veem tudo",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Os seus, mais os que ainda não têm dono",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Só os seus",
-            "largura": 16,
-            "altura": 16
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -570,7 +399,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1448
+      "tempoMs": 1723
     },
     {
       "rota": "/settings/atendimento",
@@ -591,65 +420,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Cada um pega o que quiser",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Rodízio automático entre os atendentes",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Todos veem tudo",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Os seus, mais os que ainda não têm dono",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "input",
-            "tipo": "radio",
-            "texto": "Só os seus",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 294,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -660,7 +432,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1472
+      "tempoMs": 2184
     },
     {
       "rota": "/settings/atualizacao",
@@ -681,44 +453,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 5,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Copiar",
-            "largura": 63,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -729,7 +465,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3030
+      "tempoMs": 3931
     },
     {
       "rota": "/settings/atualizacao",
@@ -750,23 +486,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -777,7 +498,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1893
+      "tempoMs": 2201
     },
     {
       "rota": "/settings/atualizacao",
@@ -798,44 +519,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 5,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Copiar",
-            "largura": 63,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -846,7 +531,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2022
+      "tempoMs": 2533
     },
     {
       "rota": "/settings/atualizacao",
@@ -867,23 +552,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -894,7 +564,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1846
+      "tempoMs": 2135
     },
     {
       "rota": "/settings/billing",
@@ -915,30 +585,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 3,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -949,7 +597,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2902
+      "tempoMs": 2831
     },
     {
       "rota": "/settings/billing",
@@ -970,23 +618,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -997,7 +630,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1677
+      "tempoMs": 1667
     },
     {
       "rota": "/settings/billing",
@@ -1012,36 +645,14 @@
         "h1": [
           "Billing"
         ],
-        "textos": 39,
+        "textos": 38,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 3,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1052,7 +663,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1860
+      "tempoMs": 1603
     },
     {
       "rota": "/settings/billing",
@@ -1073,16 +684,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1093,7 +696,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1637
+      "tempoMs": 1860
     },
     {
       "rota": "/settings/canal-oficial",
@@ -1104,15 +707,30 @@
       "status": 200,
       "urlFinal": "/app/connections?aba=oficial",
       "redirecionaPara": "/app/connections?aba=oficial",
-      "valida": false,
-      "motivo": "Error: sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Conexões"
+        ],
+        "textos": 40,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
       "consoleErros": [],
       "errosDePagina": [],
-      "overflow": null,
-      "contraste": null,
-      "alvosPequenos": null,
-      "axe": null,
-      "tempoMs": 5755
+      "valida": true,
+      "tempoMs": 6021
     },
     {
       "rota": "/settings/canal-oficial",
@@ -1128,71 +746,14 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 22,
+        "textos": 13,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1203,7 +764,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2273
+      "tempoMs": 3046
     },
     {
       "rota": "/settings/canal-oficial",
@@ -1225,65 +786,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 13,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1294,7 +798,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2375
+      "tempoMs": 3210
     },
     {
       "rota": "/settings/canal-oficial",
@@ -1316,65 +820,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1385,7 +832,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2052
+      "tempoMs": 2433
     },
     {
       "rota": "/settings/devices",
@@ -1400,71 +847,14 @@
         "h1": [
           "Dispositivos offline"
         ],
-        "textos": 60,
+        "textos": 57,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 349,
-            "altura": 40
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Eu mesmo",
-            "largura": 349,
-            "altura": 36
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "30 dias90 dias180 dias365 dias",
-            "largura": 349,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Gerar código de pareamento",
-            "largura": 221,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1475,7 +865,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2297
+      "tempoMs": 4111
     },
     {
       "rota": "/settings/devices",
@@ -1490,28 +880,14 @@
         "h1": [
           "Dispositivos offline"
         ],
-        "textos": 29,
+        "textos": 28,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 5,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          },
           {
             "tag": "select",
             "tipo": null,
@@ -1525,13 +901,6 @@
             "texto": "30 dias90 dias180 dias365 dias",
             "largura": 260,
             "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
           }
         ]
       },
@@ -1544,7 +913,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1377
+      "tempoMs": 2043
     },
     {
       "rota": "/settings/devices",
@@ -1559,64 +928,14 @@
         "h1": [
           "Dispositivos offline"
         ],
-        "textos": 59,
+        "textos": 58,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 349,
-            "altura": 40
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Eu mesmo",
-            "largura": 349,
-            "altura": 36
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "30 dias90 dias180 dias365 dias",
-            "largura": 349,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Gerar código de pareamento",
-            "largura": 221,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1627,7 +946,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1562
+      "tempoMs": 2046
     },
     {
       "rota": "/settings/devices",
@@ -1648,22 +967,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 4,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 260,
-            "altura": 40
-          },
           {
             "tag": "select",
             "tipo": null,
@@ -1689,7 +994,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1609
+      "tempoMs": 1718
     },
     {
       "rota": "/settings/marca",
@@ -1710,65 +1015,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 718,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": "color",
-            "texto": "",
-            "largura": 38,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 144,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": "file",
-            "texto": "Escolher arquivo",
-            "largura": 147,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 79,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1779,7 +1027,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3273
+      "tempoMs": 3425
     },
     {
       "rota": "/settings/marca",
@@ -1800,34 +1048,13 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
           {
             "tag": "input",
             "tipo": "color",
             "texto": "",
-            "largura": 38,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 144,
+            "largura": 40,
             "altura": 40
           },
           {
@@ -1835,20 +1062,6 @@
             "tipo": "file",
             "texto": "Escolher arquivo",
             "largura": 147,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 294,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
             "altura": 40
           }
         ]
@@ -1862,7 +1075,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1854
+      "tempoMs": 2358
     },
     {
       "rota": "/settings/marca",
@@ -1877,71 +1090,14 @@
         "h1": [
           "Marca"
         ],
-        "textos": 65,
+        "textos": 64,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 718,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": "color",
-            "texto": "",
-            "largura": 38,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 144,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": "file",
-            "texto": "Escolher arquivo",
-            "largura": 147,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 79,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1952,7 +1108,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1618
+      "tempoMs": 1669
     },
     {
       "rota": "/settings/marca",
@@ -1973,34 +1129,13 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
           {
             "tag": "input",
             "tipo": "color",
             "texto": "",
-            "largura": 38,
-            "altura": 38
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 144,
+            "largura": 40,
             "altura": 40
           },
           {
@@ -2009,20 +1144,6 @@
             "texto": "Escolher arquivo",
             "largura": 147,
             "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 294,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
           }
         ]
       },
@@ -2035,7 +1156,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1487
+      "tempoMs": 1556
     },
     {
       "rota": "/settings/notifications",
@@ -2056,65 +1177,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 18,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via email",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via email",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via push",
-            "largura": 36,
-            "altura": 20
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2125,7 +1189,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3874
+      "tempoMs": 3438
     },
     {
       "rota": "/settings/notifications",
@@ -2146,65 +1210,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 12,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead ganho via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead ganho via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead perdido via in_app",
-            "largura": 36,
-            "altura": 20
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2215,7 +1222,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1811
+      "tempoMs": 1880
     },
     {
       "rota": "/settings/notifications",
@@ -2230,87 +1237,25 @@
         "h1": [
           "Notificações"
         ],
-        "textos": 53,
+        "textos": 52,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 18,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via email",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via email",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via push",
-            "largura": 36,
-            "altura": 20
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
-        "seria": 1,
-        "ids": [
-          "color-contrast (serious)"
-        ],
-        "nos": [
-          "color-contrast: .mt-2:nth-child(2) :: <p class=\"mt-2 text-muted-foreground\">Ligar o Push abaixo já faz o aviso aparecer na bandeja do sistema enquanto você está com o site aberto numa aba. Para receber também com a aba",
-          "color-contrast: .mt-2:nth-child(4) :: <p class=\"mt-2 text-muted-foreground\">O resultado vai no arquivo<!-- --> <code>.env</code>, <!-- -->em<!-- --> <code>VAPID_PUBLIC_KEY</code> <!-- -->e<!-- --> <code>VAPID_PRIVATE_K"
-        ]
+        "seria": 0,
+        "ids": [],
+        "nos": []
       },
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1722
+      "tempoMs": 2175
     },
     {
       "rota": "/settings/notifications",
@@ -2331,81 +1276,19 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 12,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Nova mensagem via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead atribuído a você via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead ganho via in_app",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead ganho via push",
-            "largura": 36,
-            "altura": 20
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Lead perdido via in_app",
-            "largura": 36,
-            "altura": 20
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
-        "seria": 1,
-        "ids": [
-          "color-contrast (serious)"
-        ],
-        "nos": [
-          "color-contrast: .mt-2:nth-child(2) :: <p class=\"mt-2 text-muted-foreground\">Ligar o Push abaixo já faz o aviso aparecer na bandeja do sistema enquanto você está com o site aberto numa aba. Para receber também com a aba",
-          "color-contrast: .mt-2:nth-child(4) :: <p class=\"mt-2 text-muted-foreground\">O resultado vai no arquivo<!-- --> <code>.env</code>, <!-- -->em<!-- --> <code>VAPID_PUBLIC_KEY</code> <!-- -->e<!-- --> <code>VAPID_PRIVATE_K"
-        ]
+        "seria": 0,
+        "ids": [],
+        "nos": []
       },
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1625
+      "tempoMs": 1558
     },
     {
       "rota": "/settings/profile",
@@ -2426,65 +1309,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Seguir o idioma da empresa",
-            "largura": 255,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "America/Sao_Paulo",
-            "largura": 255,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": "url",
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 79,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2495,7 +1321,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3755
+      "tempoMs": 3179
     },
     {
       "rota": "/settings/profile",
@@ -2516,29 +1342,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
           {
             "tag": "button",
             "tipo": "button",
@@ -2552,27 +1357,6 @@
             "texto": "America/Sao_Paulo",
             "largura": 244,
             "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": "url",
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
           }
         ]
       },
@@ -2585,7 +1369,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1600
+      "tempoMs": 1845
     },
     {
       "rota": "/settings/profile",
@@ -2600,71 +1384,14 @@
         "h1": [
           "Perfil"
         ],
-        "textos": 46,
+        "textos": 45,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 9,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Seguir o idioma da empresa",
-            "largura": 255,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "America/Sao_Paulo",
-            "largura": 255,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": "url",
-            "texto": "",
-            "largura": 526,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 79,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2675,7 +1402,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1634
+      "tempoMs": 2128
     },
     {
       "rota": "/settings/profile",
@@ -2696,29 +1423,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
+        "alvosPequenos": 2,
         "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
           {
             "tag": "button",
             "tipo": "button",
@@ -2732,27 +1438,6 @@
             "texto": "America/Sao_Paulo",
             "largura": 244,
             "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": "url",
-            "texto": "",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "submit",
-            "texto": "Salvar",
-            "largura": 244,
-            "altura": 40
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
           }
         ]
       },
@@ -2765,7 +1450,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1699
+      "tempoMs": 1669
     },
     {
       "rota": "/settings/security",
@@ -2786,51 +1471,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 6,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Ativar",
-            "largura": 56,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": "checkbox",
-            "texto": "",
-            "largura": 13,
-            "altura": 13
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Regenerar códigos de recuperação",
-            "largura": 264,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Sair de todos os dispositivos",
-            "largura": 223,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2841,7 +1483,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3722
+      "tempoMs": 3205
     },
     {
       "rota": "/settings/security",
@@ -2862,30 +1504,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 3,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": "checkbox",
-            "texto": "",
-            "largura": 13,
-            "altura": 13
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2896,7 +1516,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1698
+      "tempoMs": 1650
     },
     {
       "rota": "/settings/security",
@@ -2911,64 +1531,14 @@
         "h1": [
           "Segurança"
         ],
-        "textos": 51,
+        "textos": 49,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Ativar",
-            "largura": 56,
-            "altura": 32
-          },
-          {
-            "tag": "input",
-            "tipo": "checkbox",
-            "texto": "",
-            "largura": 13,
-            "altura": 13
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Regenerar códigos de recuperação",
-            "largura": 264,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Sair de todos os dispositivos",
-            "largura": 223,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2979,7 +1549,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1578
+      "tempoMs": 1707
     },
     {
       "rota": "/settings/security",
@@ -3000,30 +1570,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 3,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "input",
-            "tipo": "checkbox",
-            "texto": "",
-            "largura": 13,
-            "altura": 13
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -3034,7 +1582,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1596
+      "tempoMs": 1962
     },
     {
       "rota": "/settings/templates",
@@ -3050,71 +1598,14 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 42,
+        "textos": 41,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 8,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -3125,7 +1616,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4581
+      "tempoMs": 4223
     },
     {
       "rota": "/settings/templates",
@@ -3141,64 +1632,14 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 14,
+        "textos": 23,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -3209,7 +1650,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2911
+      "tempoMs": 3057
     },
     {
       "rota": "/settings/templates",
@@ -3225,71 +1666,14 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 52,
+        "textos": 40,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Dispensar aviso",
-            "largura": 16,
-            "altura": 16
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Recolher sidebar",
-            "largura": 223,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "E2E Test Org · Empresa atual. Trocar de ",
-            "largura": 151,
-            "altura": 32
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -3300,7 +1684,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2536
+      "tempoMs": 3786
     },
     {
       "rota": "/settings/templates",
@@ -3322,58 +1706,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 7,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Abrir navegação",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Números por QR",
-            "largura": 129,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "API Oficial (Meta)",
-            "largura": 135,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Provedor parceiro",
-            "largura": 137,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Conexão",
-            "largura": 80,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Templates da Meta",
-            "largura": 144,
-            "altura": 38
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Open Tanstack query devtools",
-            "largura": 40,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -3384,7 +1718,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3400
+      "tempoMs": 2550
     }
   ]
 }

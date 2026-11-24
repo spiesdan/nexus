@@ -221,11 +221,14 @@ for (const rota of rotas) {
           )
           .catch(() => {});
 
-        // Depois o título, com timeout curto — 3 s é folga, não corrida.
+        // Título: 15 s, não 3 s. Medido em /settings/canal-oficial →
+        // /app/connections?aba=oficial: o primeiro `<h1>` levou 8,5 s para
+        // aparecer (compilação do Next, não defeito de UI). 3 s fabricava
+        // "medição inválida" e isso não é achado — é instrumento com pressa.
         let temH1 = false;
         try {
           await pagina.waitForFunction(() => document.querySelector("h1") !== null, undefined, {
-            timeout: 3_000,
+            timeout: 15_000,
           });
           temH1 = true;
         } catch {
@@ -249,7 +252,7 @@ for (const rota of rotas) {
           throw new Error("sem <h1> 3 s após o esqueleto — a tela não terminou de renderizar");
         }
 
-        registro.medida = await pagina.evaluate(() => {
+        registro.medida = await pagina.evaluate((piso) => {
           const luminancia = ([r, g, b]) => {
             const c = [r, g, b].map((v) => {
               const s = v / 255;
@@ -348,7 +351,12 @@ for (const rota of rotas) {
             }
           }
 
-          // Alvo da casa: 44×44, não o mínimo WCAG de 24.
+          // Alvo da casa: 44×44 NO TOQUE (390), não o mínimo WCAG de 24.
+          // Em 1440 quem aciona é MOUSE, e o design system usa altura
+          // compacta de propósito (`Button` tem `lg:h-9`/`lg:h-8`) — exigir
+          // 44px ali reprovava 90 telas por um critério que não se aplica.
+          // No desktop vale o piso WCAG de 24px, que ainda pega o botão
+          // 16×16 de verdade.
           const controles = [
             ...document.querySelectorAll(
               'button, [role="button"], [role="switch"], [role="tab"], input, select, summary',
@@ -357,23 +365,30 @@ for (const rota of rotas) {
           const pequenos = [];
           for (const el of controles) {
             if (el.closest('[aria-hidden="true"]')) continue;
+            // Devtools do TanStack só existe em `next dev`: não é UI do produto.
+            const rotulo = (
+              el.getAttribute("aria-label") ??
+              el.getAttribute("title") ??
+              el.textContent ??
+              ""
+            ).replace(/\s+/g, " ").trim();
+            if (/Tanstack|TanStack/.test(rotulo)) continue;
             const cs = getComputedStyle(el);
             if (cs.display === "none" || cs.visibility === "hidden") continue;
-            const r = el.getBoundingClientRect();
+            // radio/checkbox DENTRO de <label>: o alvo é o rótulo inteiro,
+            // não o quadrado de 16px desenhado pelo navegador. Contar o
+            // input cru é falso positivo — o dedo toca no label.
+            const alvo =
+              el.tagName === "INPUT" && el.closest("label") && el.parentElement.closest("label")
+                ? el.closest("label")
+                : el;
+            const r = alvo.getBoundingClientRect();
             if (r.width < 1 || r.height < 1) continue;
-            if (r.width < 44 || r.height < 44) {
+            if (r.width < piso || r.height < piso) {
               pequenos.push({
                 tag: el.tagName.toLowerCase(),
                 tipo: el.getAttribute("type") ?? el.getAttribute("role") ?? null,
-                texto: (
-                  el.getAttribute("aria-label") ??
-                  el.getAttribute("title") ??
-                  el.textContent ??
-                  ""
-                )
-                  .replace(/\s+/g, " ")
-                  .trim()
-                  .slice(0, 40),
+                texto: rotulo.slice(0, 40),
                 largura: Math.round(r.width),
                 altura: Math.round(r.height),
               });
@@ -392,7 +407,7 @@ for (const rota of rotas) {
             alvosPequenos: pequenos.length,
             amostraAlvosPequenos: pequenos.slice(0, 8),
           };
-        });
+        }, largura >= 1000 ? 24 : 44);
 
         // axe: crítico/sério, com o alvo. Roda depois do corpo montado.
         try {

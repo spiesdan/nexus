@@ -59,9 +59,9 @@ export function RodapeDeSalvamento({
       ) : null}
       <Button
         type="submit"
-        // 40px: o alvo mínimo que a varredura do módulo cobra. O `h-9` (36px)
-        // do botão padrão fica para ações secundárias.
-        className="h-10 w-full px-5 sm:w-auto"
+        // 44px em QUALQUER largura: é o alvo de toque, não o de cursor.
+        // `h-10` (40px) reprovava na varredura mobile das telas de settings.
+        className="h-11 w-full px-5 sm:w-auto"
         disabled={salvando || !sujo || !podeSalvar}
       >
         {salvando ? t("Salvando…") : t(rotulo)}
