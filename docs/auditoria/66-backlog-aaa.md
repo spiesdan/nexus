@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 27 `[x]` · 3 `[~]` · 4 `[!]` · 7 `[ ]` — 41 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (24/11):** 32 `[x]` · 5 `[~]` · 4 `[!]` · 6 `[ ]` — 47 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -217,3 +217,21 @@ ocorrência `plataforma.slo_estourado` se ainda acima de 800 ms.
 | P1-32 | Teto de enriquecimento de endereço **20 por rodada** | `[x]` | G (worker de endereço) | subir para 60 arrisca estourar o timeout do worker; com cron diário, 20/dia cobre a base em ~3 semanas | acelerar só por **env var** (`MERCOS_MAX_ENDERECOS_POR_RODADA`), nunca mudando código |
 | P1-33 | Censo e artefatos em **`/data/mercos/`**, não `/tmp` | `[x]` | G (coletor/operador) | deploy recriou o container e apagou censo e detalhes no meio do trabalho; trabalho operacional não pode morrer num `update.sh` | mover gravadores de censo/detalhes para volume persistente; `/tmp` só como rascunho descartável |
 
+
+
+## Entregas 1.67.0 → 1.69.1 (23–24/11/2026)
+
+> Registro do que **chegou ao ar**, lido do `CHANGELOG.md` e das tags. Não é
+> promessa de release futura; onde o dono mediu produção, o número está no `40`.
+
+| versão (tag) | o que resolveu |
+|---|---|
+| **1.67.0** (`b3651a881`) | Tabelas `billing_*` preparadas (sem comportamento) · tela dos pedidos do Mercos que ficaram de fora · reconciliação declara o que verificou antes de dizer “zero ausentes” · NF usa endereço do pedido quando falta no cadastro · expedição conta cada pedido uma vez e bloqueia entrega sem endereço · número do Mercos visível quando difere do interno |
+| **1.68.0** (`6eda7c86f`) | Endereço do cliente lido da **ficha** (cache 30 dias, grava só em campo vazio — não desfaz correção do operador) · tela diz se a verificação do Mercos terminou · expedição mostra os quatro filtros e limpa a cabine do motorista |
+| **1.68.1** (`b408c22bf`) | Leitura do endereço da ficha corrigida: a ficha real entrega três linhas seguidas (`AVENIDA X 357 - BAIRRO`, `CEP`, `CIDADE - Estado`), não rótulos — **20/20** lidos com rua, número, bairro, CEP, cidade e UF |
+| **1.69.0** (`892097718`) | Reconciliação do Mercos roda sozinha todo dia às 21:00 UTC, **sem importar** (decisão do dono) · série local começa em **70.000** (6 pedidos 900001–900006 renumerados; ~8 anos de folga) · classificador usa `numero_mercos` como identidade (P1-31 entregue) · tela de colisões removida por decisão do dono, registro/API/cron continuam |
+| **1.69.1** (`02855f3ea`) | Selo “(Mercos)” na lista e na ficha · `update.sh` não devolve a série para 900.000: apêndice 0344 removido, 0350 idempotente em três estados, invariante aplica duas vezes e prova contador em 70006 |
+
+**Pendente de deploy:** catálogo PDF (#856, aberto) — o dono vai mergear;
+depois precisa de release para chegar em produção. **Não mexido:** 21 pedidos de
+demonstração (18538–18558, R$ 4.866,40, 3 em cargas) — aguardam decisão do dono.
