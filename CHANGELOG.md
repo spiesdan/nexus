@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.72.0] — 2026-11-24
+
+### Adicionado
+
+- **Billing do tenant mostra assinatura real e ações de pagamento** A tela de billing sai do placeholder e passa a mostrar plano, valor, moeda, vencimento e avisos D-3/D-2/D-1 vindos da API. Há ações de checkout e portal, estados de pendente/suspensa/sem Stripe, e nenhum dado de cartão ou confirmação local de pagamento.
+
+- **Coletor aceita buscar pedidos antigos por número** O filtro de data da listagem do Mercos não funciona. O coletor passa a aceitar `--numeros 16387,16389,...` e abre o detalhe somente desses números, com o mesmo parser de sempre — é o que permite responder se pedidos antigos ficaram de fora sem varrer 12 horas de scraping.
+
+- **Plano SaaS passa a morar no banco, com R$ 1.699,00 e descrição definidos pelo dono** O plano Nexus (R$ 1.699,00, BRL, mensal, "Servidor, hospedagem, domínio e inteligência artificial") nasce no banco, não em código. Enquanto não há Price casado, a tela e o endpoint leem esses valores do banco. Quando `billing_plans.stripe_price_id` for preenchido, valor e descrição vêm do Stripe. A virada para live continua exigindo duas decisões explícitas no `.env`: `STRIPE_TEST_MODE=false` e `STRIPE_LIVE_CONFIRMADO=sim`.
+
+- **Sentinel agora antecipa nota que vai falhar e corrige UF quando é determinístico** Duas regras novas olham o pedido antes da emissão: uma roda a mesma montagem do destinatário usada pela nota e aponta pedido faturável parado por endereço incompleto; outra encontra cidade/UF que não resolve no IBGE. Quando o município existe em uma única UF, um job separado corrige a UF com auditoria antes/depois. Quando há homônimo (Irati, PR e SC), nada é tocado — a ocorrência pede decisão humana.
+
+### Corrigido
+
+- **Worker do mapa da expedição acompanha a versão do MapLibre** O bump automático levou o `maplibre-gl` para 6.19 e o worker servido em `public/` ficou na versão anterior — o teste que compara byte a byte com `node_modules` reprovou e travou a release. O worker foi atualizado para a 6.19.0, que é a versão que o lockfile já resolve — o arquivo é asset vendorizado e precisa bater byte a byte com a instalada, senão o worker sobe, recebe mensagens de outro protocolo e não responde.
+
 ## [1.71.0] — 2026-11-24
 
 ### Adicionado
@@ -9109,7 +9125,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.71.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.72.0...HEAD
+[1.72.0]: https://github.com/spiesdan/nexus/compare/v1.71.0...v1.72.0
 [1.71.0]: https://github.com/spiesdan/nexus/compare/v1.70.1...v1.71.0
 [1.70.1]: https://github.com/spiesdan/nexus/compare/v1.70.0...v1.70.1
 [1.70.0]: https://github.com/spiesdan/nexus/compare/v1.69.1...v1.70.0
