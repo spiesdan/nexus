@@ -31129,11 +31129,9 @@ comment on table public.billing_events is 'Eventos do webhook Stripe; stripe_eve
 -- NÃO renumedamos nada: a série local passa a nascer em 900000 e a colisão
 -- vira linha visível em `mercos_colisoes`, com os dois clientes nomeados.
 
--- Contador exclusivo de pedido LOCAL. Os 28 pedidos existentes ficam onde
--- estão (renumerar quebraria documento fiscal já emitido).
-update public.commercial_order_counters
-   set ultimo_numero = greatest(ultimo_numero, 900000), updated_at = now()
- where ultimo_numero < 900000;
+-- Contador exclusivo de pedido LOCAL. O piso 900000 destes apêndice foi
+-- REMOVIDO: a migration 0350 é a dona da numeração (série 70000). Mantê-lo
+-- aqui resetava o contador a cada update.sh, mesmo depois da renumeracao.
 
 create or replace function public.fn_proximo_numero_pedido(p_org uuid)
 returns integer
@@ -31887,6 +31885,14 @@ create index if not exists mercos_import_runs_tipo_idx
 -- Os 6 pedidos que usaram 900001..900006 são de HOJE, não têm nota fiscal
 -- (só o vínculo `numero_mercos`), então renumerar é seguro. Os 28 pedidos
 -- locais antigos (18538..19722, alguns com nota) NÃO são tocados.
+--
+-- IDEMPOTENTE EM TRÊS ESTADOS:
+--   (1) instalação fresca / já migrada: só garante o piso 70000, nunca
+--       zera progresso (70006 continua 70006);
+--   (2) instalação com 900001..900006: renumera e deriva o contador;
+--   (3) instalação já renumerada: não há linhas altas, cai em (1).
+-- O apêndice da 0344 no baseline NÃO pode mais empurrar para 900000 — foi
+-- removido; esta migration é a dona da numeração.
 
 do $$
 declare
@@ -31894,48 +31900,53 @@ declare
   v_altas integer;
   v_contador integer;
 begin
-  -- Falha fechada: nada é renumerado se o estado não for exatamente o medido.
   select count(*) into v_altas
     from public.commercial_orders
    where numero between 900001 and 900006;
-  -- Instalação fresca (e instalação já renumerada) não tem as 6 linhas:
-  -- não há o que renumerar, e o update é um no-op idempotente.
+
   if v_altas > 0 then
-  if v_altas <> 6 then
-    raise exception 'serie_70000: esperados 6 pedidos em 900001..900006, achei %', v_altas;
-  end if;
+    if v_altas <> 6 then
+      raise exception 'serie_70000: esperados 6 pedidos em 900001..900006, achei %', v_altas;
+    end if;
 
-  if exists (
-    select 1 from generate_series(900001, 900006) as n
-    where not exists (
-      select 1 from public.commercial_orders c
-       where c.numero = n and c.organization_id = v_org and c.numero_mercos is not null
-    )
-  ) then
-    raise exception 'serie_70000: um dos 6 números altos não é pedido do Mercos na org esperada';
-  end if;
+    if exists (
+      select 1 from generate_series(900001, 900006) as n
+      where not exists (
+        select 1 from public.commercial_orders c
+         where c.numero = n and c.organization_id = v_org and c.numero_mercos is not null
+      )
+    ) then
+      raise exception 'serie_70000: um dos 6 números altos não é pedido do Mercos na org esperada';
+    end if;
 
-  if exists (select 1 from public.commercial_orders where numero between 70001 and 70006) then
-    raise exception 'serie_70000: 70001..70006 já estão ocupados';
-  end if;
+    if exists (select 1 from public.commercial_orders where numero between 70001 and 70006) then
+      raise exception 'serie_70000: 70001..70006 já estão ocupados';
+    end if;
 
-  select ultimo_numero into v_contador
-    from public.commercial_order_counters
-   where organization_id = v_org;
-  if v_contador is distinct from 900000 then
-    raise exception 'serie_70000: contador é %, não 900000', v_contador;
-  end if;
+    select ultimo_numero into v_contador
+      from public.commercial_order_counters
+     where organization_id = v_org;
+    -- Faixa, não valor exato: medido 900006 no deploy, não 900000.
+    if v_contador is null or v_contador < 900000 then
+      raise exception 'serie_70000: contador é %, não está na faixa 900000+', v_contador;
+    end if;
 
-  -- Transação única (a migration roda inteira): o índice único por org nunca
-  -- vê 70001..70006 duplicados porque eles estavam livres e saem juntos.
-  update public.commercial_orders
-     set numero = numero - 830000, updated_at = now()
-   where numero between 900001 and 900006;
+    -- Transação única: o índice único nunca vê 70001..70006 duplicados.
+    update public.commercial_orders
+       set numero = numero - 830000, updated_at = now()
+     where numero between 900001 and 900006;
 
-  -- Valor EXATO: `greatest(900000, 70006)` não serviria — a série alta venceria.
-  update public.commercial_order_counters
-     set ultimo_numero = 70006, updated_at = now()
-   where organization_id = v_org;
+    -- Deriva do contador; o greatest com 70006 cobre contador 900000 (que
+    -- ficaria abaixo dos 6 pedidos recém-renumerados).
+    update public.commercial_order_counters
+       set ultimo_numero = greatest(v_contador - 830000, 70006), updated_at = now()
+     where organization_id = v_org;
+
+  else
+    -- Já migrado (ou instalação fresca): piso, sem zerar progresso.
+    update public.commercial_order_counters
+       set ultimo_numero = 70000, updated_at = now()
+     where organization_id = v_org and ultimo_numero < 70000;
   end if;
 end;
 $$;
