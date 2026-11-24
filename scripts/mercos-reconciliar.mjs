@@ -132,7 +132,10 @@ const censoDeclaraJanela = (() => {
 const naJanela = todos.filter(
   (r) => dentroDaJanela(r, AGORA, JANELA_DIAS) || (censoDeclaraJanela && semData.includes(r)),
 );
-const candidatos = naJanela.sort((a, b) => a.numero - b.numero).slice(0, LIMITE);
+// Do mais NOVO para o mais antigo: com teto de 100 por rodada, olhar primeiro
+// o pedido de seis meses atrás responderia uma pergunta que ninguém fez. O que
+// interessa é o recente — e é o recente que o dono abre na tela.
+const candidatos = naJanela.sort((a, b) => b.numero - a.numero).slice(0, LIMITE);
 
 const admin = createClient(URL_BASE, CHAVE, { auth: { persistSession: false } });
 
