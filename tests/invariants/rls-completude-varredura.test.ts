@@ -106,6 +106,13 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "da vizinha, e escrita negada a authenticated.",
   })),
   {
+    tabela: "product_catalog_exports",
+    razao:
+      "tests/invariants/catalogo-pdf-rls.test.ts (0342) prova, com `set role " +
+      "authenticated` + JWT simulado, leitura própria, zero da vizinha, escrita " +
+      "de agent negada e anon/sem-org sem linha.",
+  },
+  {
     tabela: "prospecting_followups",
     razao:
       "tests/invariants/prospect-membresia-campanhas.test.ts (0339) prova, com " +

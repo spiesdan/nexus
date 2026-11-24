@@ -349,6 +349,26 @@ const RAZOES_DO_DELTA: ReadonlyArray<{ prefixo: string; area: string; razao: str
     razao: "Relatório mensal de gastos da campanha (orçado × prospecção × mídia), com CSV.",
   },
   {
+    prefixo: "app/api/v1/cron/mercos-reconciliacao",
+    area: "Mercos — reconciliação",
+    razao: "Cron de reconciliação do Mercos.",
+  },
+  {
+    prefixo: "app/api/v1/mercos/reconciliacao",
+    area: "Mercos — reconciliação",
+    razao: "Reconciliação Mercos (via upstream).",
+  },
+  {
+    prefixo: "app/api/v1/mercos/colisoes",
+    area: "Mercos — colisões",
+    razao: "Tela de colisões do Mercos (0344).",
+  },
+  {
+    prefixo: "app/api/v1/products/catalogo-pdf",
+    area: "Produtos — catálogo PDF",
+    razao: "Configuração, prévia e download do catálogo em PDF, com logo própria e preço zero.",
+  },
+  {
     prefixo: "app/api/v1/contacts/",
     area: "Contatos",
     razao: "Crédito do cliente e busca de cidades — apoio à venda.",

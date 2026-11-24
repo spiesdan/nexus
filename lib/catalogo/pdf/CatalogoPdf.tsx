@@ -136,7 +136,7 @@ const s = StyleSheet.create({
 function Capa({ ano, logo }: { ano: number; logo: string | Buffer | null }) {
   return (
     <Page size="A4" orientation="portrait" style={s.capa}>
-      <View style={s.capaTopo}>{logo ? <Image src={fonteDeImagem(logo)} style={s.logo} /> : null}</View>
+      <View style={s.capaTopo}>{logo ? <Image src={fonteDeImagem(logo) as never} style={s.logo} /> : null}</View>
       <View style={s.capaMeio}>
         <Text style={s.titulo}>CATÁLOGO</Text>
         <Text style={s.subtitulo}>DE PRODUTOS</Text>
@@ -211,7 +211,7 @@ function PaginaDeSecao({
           <View key={`${produto.codigo}-${indice}`} style={s.cartao}>
             <View style={s.fotoCaixa}>
               {produto.foto ? (
-                <Image src={fonteDeImagem(produto.foto)} style={s.foto} />
+                <Image src={fonteDeImagem(produto.foto) as never} style={s.foto} />
               ) : (
                 <Text style={s.semFoto}>Sem foto</Text>
               )}
