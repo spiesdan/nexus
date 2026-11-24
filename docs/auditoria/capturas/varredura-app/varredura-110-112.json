@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-11-24T04:43:27.398Z",
+  "geradoEm": "2026-11-24T14:30:45.066Z",
   "base": "http://localhost:3029",
-  "tempoTotalMs": 19277,
+  "tempoTotalMs": 18285,
   "rotas": 2,
   "medidas": 8,
   "validas": 8,
@@ -46,7 +46,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 8542
+      "tempoMs": 8119
     },
     {
       "rota": "/webhooks",
@@ -74,7 +74,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 10153
+      "tempoMs": 9603
     }
   ],
   "registros": [
@@ -109,7 +109,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4241
+      "tempoMs": 3745
     },
     {
       "rota": "/venda-automatica",
@@ -142,7 +142,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1580
+      "tempoMs": 1456
     },
     {
       "rota": "/venda-automatica",
@@ -175,7 +175,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1402
+      "tempoMs": 1452
     },
     {
       "rota": "/venda-automatica",
@@ -208,7 +208,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1319
+      "tempoMs": 1466
     },
     {
       "rota": "/webhooks",
@@ -241,7 +241,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3903
+      "tempoMs": 3569
     },
     {
       "rota": "/webhooks",
@@ -274,7 +274,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2171
+      "tempoMs": 2019
     },
     {
       "rota": "/webhooks",
@@ -307,7 +307,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2157
+      "tempoMs": 1994
     },
     {
       "rota": "/webhooks",
@@ -340,7 +340,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1922
+      "tempoMs": 2021
     }
   ]
 }
