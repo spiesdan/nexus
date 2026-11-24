@@ -111,6 +111,30 @@ describe("0344 — série local separada e colisões visíveis", () => {
     ).toBe("0");
   });
 
+  it("0348: endereço da ficha entra só em campo vazio, nunca sobrescreve o operador", () => {
+    const doc = "04490046000197";
+    sql(`
+      insert into public.contacts (organization_id, name, cnpj, source_metadata)
+      values ('${ORG_A}', 'ABBASPEL', '${doc}',
+              jsonb_build_object('mercos', jsonb_build_object('documento', '04.490.046/0001-97')));
+    `);
+    const endereco = `jsonb_build_object(
+      'logradouro', 'Rua das Palmeiras', 'numero_end', '123', 'bairro', 'Centro',
+      'cep', '89300-000', 'cidade', 'Mafra', 'uf', 'SC'
+    )`;
+    expect(sql(`select public.fn_mercos_enriquecer_endereco('${ORG_A}', '${doc}', ${endereco})::text`))
+      .toContain('"status": "atualizado"');
+    expect(sql(`select logradouro || '|' || bairro from public.contacts where cnpj='${doc}'`))
+      .toBe("Rua das Palmeiras|Centro");
+
+    // O operador corrigiu e o ERP não pode desfazer.
+    sql(`update public.contacts set logradouro = 'Rua Corrigida Pelo Operador' where cnpj='${doc}'`);
+    const outro = `jsonb_build_object('logradouro', 'Rua Errada Do Erp', 'bairro', 'Outro')`;
+    sql(`select public.fn_mercos_enriquecer_endereco('${ORG_A}', '${doc}', ${outro})`);
+    expect(sql(`select logradouro from public.contacts where cnpj='${doc}'`))
+      .toBe("Rua Corrigida Pelo Operador");
+  });
+
   it("as três tabelas de reconciliação são isoladas por tenant e negam escrita a authenticated", () => {
     const inserts: Record<string, string> = {
       mercos_colisoes: `insert into public.mercos_colisoes (organization_id, numero_mercos) values ('${ORG_A}', 99999)`,

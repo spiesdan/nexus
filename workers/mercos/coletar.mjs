@@ -29,6 +29,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { buracosParaReprocessar } from "./buracos.mjs";
+import { carregarCache, chaveCache, lerEnderecoDaFicha, salvarCache } from "./endereco-cliente.mjs";
 
 import { chromium } from "@playwright/test";
 
@@ -133,6 +134,54 @@ async function numerosPerdidosNoBanco(jaLidos) {
 
 const MAX_BURACOS = Number(process.env.MERCOS_MAX_BURACOS || "50");
 const alvoReprocesso = [];
+
+// ENDEREÇO DA FICHA DO CLIENTE — 2 requisições por cliente novo (busca pela
+// lista + ficha), cache por documento com validade de 30 dias e teto por
+// rodada. Nunca bloqueia o pedido: é enriquecimento, não pré-requisito.
+const CACHE_ENDERECO = process.env.MERCOS_ENDERECO_CACHE || "/data/mercos/enderecos-clientes.json";
+const MAX_ENDERECOS = Number(process.env.MERCOS_MAX_ENDERECOS_POR_RODADA || "20");
+let cacheEndereco = carregarCache(CACHE_ENDERECO);
+const tentadosEndereco = new Set();
+let enderecosFeitos = 0;
+
+async function enriquecerEndereco(documento) {
+  const chave = chaveCache(documento);
+  if (!chave) return null;
+  if (cacheEndereco[chave]?.endereco) return cacheEndereco[chave].endereco;
+  if (tentadosEndereco.has(chave) || enderecosFeitos >= MAX_ENDERECOS) return null;
+  tentadosEndereco.add(chave);
+  enderecosFeitos++;
+  const aba = await contexto.newPage();
+  try {
+    // O texto do pedido NÃO traz rua/número/bairro/CEP (medido no 19732), e
+    // o pedido só linka a LISTA de clientes. A busca é pelo documento.
+    await aba.goto(`${BASE}/clientes/`, { waitUntil: "domcontentloaded" });
+    const campo = aba.locator(process.env.MERCOS_SELETOR_BUSCA_CLIENTE || 'input[type="text"], input[placeholder]').first();
+    await campo.fill(documento);
+    await campo.press("Enter");
+    await aba.waitForTimeout(1500);
+    const href = await aba.evaluate(() => {
+      const link = [...document.querySelectorAll('a[href*="/clientes/"]')]
+        .find((a) => /\/clientes\/\d+/.test(a.getAttribute("href") || ""));
+      return link?.getAttribute("href") ?? null;
+    });
+    let endereco = lerEnderecoDaFicha([]);
+    if (href) {
+      await aba.goto(new URL(href, BASE).toString(), { waitUntil: "domcontentloaded" });
+      endereco = lerEnderecoDaFicha(await aba.evaluate(() => document.body.innerText.split("\n")));
+    }
+    cacheEndereco[chave] = { lido_em: new Date().toISOString(), endereco };
+    salvarCache(CACHE_ENDERECO, cacheEndereco);
+    return endereco;
+  } catch (err) {
+    // Não gravamos cache de falha: um 503 de hoje não pode virar "sem endereço"
+    // por 30 dias. Na próxima rodada tenta de novo, dentro do teto.
+    console.log(`\n  endereço ${chave}: falha ${err instanceof Error ? err.message : String(err)}`);
+    return null;
+  } finally {
+    await aba.close();
+  }
+}
 
 const STORAGE = process.env.MERCOS_STORAGE_STATE || "";
 const CODIGO_FILE = process.env.MERCOS_CODIGO_FILE || "";
@@ -564,6 +613,11 @@ try {
     dados.cliente = lerCliente(dados.cliente_linhas, {
       documentoRepresentada: dados.documento_representada,
     });
+
+    // Enriquecimento em separado: se a ficha falhar, o pedido segue normal.
+    if (dados.cliente?.documento) {
+      dados.cliente.endereco = await enriquecerEndereco(dados.cliente.documento);
+    }
     delete dados.cliente_linhas;
     delete dados.documento_representada;
 
