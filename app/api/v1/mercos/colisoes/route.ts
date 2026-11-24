@@ -3,9 +3,9 @@
  *
  * A organização vem de `requireRole`, nunca do cliente. Leitura com service
  * role (a tabela é de plataforma/worker) com `organization_id` explícito.
- * Contrato consumido pela tela que o D constrói em paralelo. No mesmo payload
- * vai o resumo da ÚLTIMA reconciliação: sem `status: "completa"` e
- * `ausentes: 0` a tela NÃO pode dizer que nenhum pedido ficou de fora.
+ * Registro consultável: a superfície de UI foi removida por decisão do dono
+ * (24/11), mas a rota fica — o dado continua gravado. No mesmo payload vai o
+ * resumo da ÚLTIMA reconciliação para quem consultar a API depois.
  */
 import { randomUUID } from "node:crypto";
 
@@ -61,6 +61,6 @@ export async function GET(): Promise<Response> {
       }
     : null;
 
-  // `resumo` é o nome original; `reconciliacao` é o que a tela do D lê.
+  // `resumo` é o nome original; `reconciliacao` é o alias do contrato.
   return ok({ itens: data ?? [], resumo, reconciliacao: resumo }, { requestId });
 }
