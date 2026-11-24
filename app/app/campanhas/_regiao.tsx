@@ -34,7 +34,7 @@ export function CampanhaPorRegiaoTab({ podeOperar }: { podeOperar: boolean }) {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-lg border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <Megaphone className="mt-0.5 size-5 text-primary" weight="duotone" aria-hidden />
+          <Megaphone className="mt-0.5 size-5 text-accent-ink" weight="duotone" aria-hidden />
           <div className="space-y-1">
             <h2 className="text-base font-semibold">{t("Campanha por região")}</h2>
             <p className="max-w-2xl text-sm text-muted-foreground">

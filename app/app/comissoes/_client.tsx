@@ -283,7 +283,7 @@ export function ComissoesClient({
             <div className="flex items-center justify-between gap-2">
               <Link
                 href={`/app/pedidos/${l.order_id}`}
-                className="font-medium text-primary underline-offset-4 hover:underline"
+                className="font-medium text-accent-ink underline-offset-4 hover:underline"
               >
                 {numeroDoPedido(l.numero)}
               </Link>
@@ -340,7 +340,7 @@ export function ComissoesClient({
                     <TableCell>
                       <Link
                         href={`/app/pedidos/${l.order_id}`}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-accent-ink underline-offset-4 hover:underline"
                       >
                         {numeroDoPedido(l.numero)}
                       </Link>

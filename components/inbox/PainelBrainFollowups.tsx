@@ -93,7 +93,7 @@ export function BrainNoPainel({ contactId }: { contactId: string }) {
           <p className="leading-relaxed text-muted-foreground">{ctx.resumo}</p>
           <Link
             href={`/app/contacts/${contactId}`}
-            className="font-medium text-primary underline-offset-4 hover:underline"
+            className="font-medium text-accent-ink underline-offset-4 hover:underline"
           >
             {t("Ver no 360")}
           </Link>

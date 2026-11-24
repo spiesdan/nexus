@@ -243,7 +243,7 @@ export function VisaoGeralDoRadar() {
                 </span>
                 <Link
                   href={`/app/contacts/${l.contact_id}`}
-                  className="font-medium text-primary underline-offset-4 hover:underline"
+                  className="font-medium text-accent-ink underline-offset-4 hover:underline"
                 >
                   {l.nome}
                 </Link>
@@ -434,7 +434,7 @@ export function VisaoGeralDoRadar() {
                 <li key={c.contact_id} className="flex flex-wrap items-center gap-2 py-2 text-sm">
                   <Link
                     href={`/app/contacts/${c.contact_id}`}
-                    className="font-medium text-primary underline-offset-4 hover:underline"
+                    className="font-medium text-accent-ink underline-offset-4 hover:underline"
                   >
                     {c.nome}
                   </Link>

@@ -33,7 +33,7 @@ export function DocumentCard({ messageId, mime, sizeBytes, storagePath, isOutbou
       <span
         className={cn(
           "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
-          isOutbound ? "bg-primary-foreground/20" : "bg-primary/10 text-primary",
+          isOutbound ? "bg-primary-foreground/20" : "bg-primary/10 text-accent-ink",
         )}
       >
         <FileText size={20} weight="duotone" aria-hidden />

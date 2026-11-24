@@ -340,7 +340,7 @@ export function ToolPicker({ value, onChange, disabled }: Props) {
           data-testid="toggle-avancado"
           aria-expanded={avancado}
           onClick={() => setAvancado((v) => !v)}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="text-sm font-medium text-accent-ink underline-offset-4 hover:underline"
         >
           {avancado ? t("Esconder a lista completa") : t("Escolher uma a uma (modo avançado)")}
         </button>

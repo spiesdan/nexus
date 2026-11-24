@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-11-24T04:41:54.659Z",
+  "geradoEm": "2026-11-24T14:29:48.394Z",
   "base": "http://localhost:3029",
-  "tempoTotalMs": 202056,
+  "tempoTotalMs": 103869,
   "rotas": 10,
   "medidas": 40,
   "validas": 40,
@@ -79,7 +79,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 25932
+      "tempoMs": 8420
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -107,7 +107,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 19774
+      "tempoMs": 7537
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -135,7 +135,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 17916
+      "tempoMs": 6571
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -163,7 +163,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 43365
+      "tempoMs": 14725
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -190,8 +190,8 @@
         "alvo": true,
         "axe": false
       },
-      "falhas": 1,
-      "tempoMs": 33829
+      "falhas": 2,
+      "tempoMs": 11416
     },
     {
       "rota": "/tarefas",
@@ -219,7 +219,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 11092
+      "tempoMs": 10290
     },
     {
       "rota": "/team",
@@ -247,7 +247,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 11615
+      "tempoMs": 11053
     },
     {
       "rota": "/team/invite",
@@ -275,7 +275,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 6924
+      "tempoMs": 7053
     },
     {
       "rota": "/templates",
@@ -303,7 +303,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 10410
+      "tempoMs": 10442
     },
     {
       "rota": "/titulos",
@@ -331,7 +331,7 @@
         "axe": false
       },
       "falhas": 2,
-      "tempoMs": 17275
+      "tempoMs": 14235
     }
   ],
   "registros": [
@@ -345,87 +345,6 @@
       "urlFinal": "/app/settings/tenant",
       "medida": {
         "temaAplicado": "light",
-        "h1": [
-          "Organização"
-        ],
-        "textos": 56,
-        "contrasteReprovados": 0,
-        "pioresContrastes": [],
-        "naoMedidosPorImagem": 0,
-        "overflow": 0,
-        "estoura": null,
-        "alvosPequenos": 0,
-        "amostraAlvosPequenos": []
-      },
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "consoleErros": [],
-      "errosDePagina": [],
-      "valida": true,
-      "tempoMs": 14125
-    },
-    {
-      "rota": "/settings/tenant",
-      "modulo": "config-e-inteligencia",
-      "tema": "light",
-      "largura": 390,
-      "arquivo": null,
-      "status": 200,
-      "urlFinal": "/app/settings/tenant",
-      "medida": {
-        "temaAplicado": "light",
-        "h1": [
-          "Organização"
-        ],
-        "textos": 27,
-        "contrasteReprovados": 0,
-        "pioresContrastes": [],
-        "naoMedidosPorImagem": 0,
-        "overflow": 0,
-        "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "",
-            "largura": 244,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "",
-            "largura": 244,
-            "altura": 36
-          }
-        ]
-      },
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "consoleErros": [],
-      "errosDePagina": [],
-      "valida": true,
-      "tempoMs": 4857
-    },
-    {
-      "rota": "/settings/tenant",
-      "modulo": "config-e-inteligencia",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": null,
-      "status": 200,
-      "urlFinal": "/app/settings/tenant",
-      "medida": {
-        "temaAplicado": "dark",
         "h1": [
           "Organização"
         ],
@@ -447,7 +366,88 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4380
+      "tempoMs": 3941
+    },
+    {
+      "rota": "/settings/tenant",
+      "modulo": "config-e-inteligencia",
+      "tema": "light",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "light",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 30,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 2,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "America/Sao_Paulo",
+            "largura": 244,
+            "altura": 36
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Português (BR)",
+            "largura": 244,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1538
+    },
+    {
+      "rota": "/settings/tenant",
+      "modulo": "config-e-inteligencia",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/settings/tenant",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Organização"
+        ],
+        "textos": 61,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 1518
     },
     {
       "rota": "/settings/tenant",
@@ -462,7 +462,7 @@
         "h1": [
           "Organização"
         ],
-        "textos": 27,
+        "textos": 30,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -473,14 +473,14 @@
           {
             "tag": "button",
             "tipo": "button",
-            "texto": "",
+            "texto": "America/Sao_Paulo",
             "largura": 244,
             "altura": 36
           },
           {
             "tag": "button",
             "tipo": "button",
-            "texto": "",
+            "texto": "Português (BR)",
             "largura": 244,
             "altura": 36
           }
@@ -495,7 +495,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2570
+      "tempoMs": 1423
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -510,7 +510,7 @@
         "h1": [
           "Tipos de agendamento"
         ],
-        "textos": 93,
+        "textos": 96,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -528,7 +528,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 9254
+      "tempoMs": 2369
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -543,7 +543,7 @@
         "h1": [
           "Tipos de agendamento"
         ],
-        "textos": 63,
+        "textos": 64,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -561,7 +561,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2893
+      "tempoMs": 1805
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -576,7 +576,7 @@
         "h1": [
           "Tipos de agendamento"
         ],
-        "textos": 93,
+        "textos": 96,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -594,7 +594,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4405
+      "tempoMs": 1864
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -609,7 +609,7 @@
         "h1": [
           "Tipos de agendamento"
         ],
-        "textos": 63,
+        "textos": 64,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -627,7 +627,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3222
+      "tempoMs": 1499
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -642,7 +642,7 @@
         "h1": [
           "Formas de pagamento"
         ],
-        "textos": 48,
+        "textos": 51,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -660,7 +660,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 8544
+      "tempoMs": 2187
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -675,7 +675,7 @@
         "h1": [
           "Formas de pagamento"
         ],
-        "textos": 18,
+        "textos": 19,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -708,7 +708,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2962
+      "tempoMs": 1432
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -723,7 +723,7 @@
         "h1": [
           "Formas de pagamento"
         ],
-        "textos": 48,
+        "textos": 51,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -741,7 +741,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3340
+      "tempoMs": 1528
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -756,7 +756,7 @@
         "h1": [
           "Formas de pagamento"
         ],
-        "textos": 18,
+        "textos": 19,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -789,7 +789,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3070
+      "tempoMs": 1424
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -822,7 +822,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 15609
+      "tempoMs": 5164
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -912,7 +912,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 10637
+      "tempoMs": 3133
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -945,7 +945,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 9152
+      "tempoMs": 3309
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -1035,7 +1035,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 7967
+      "tempoMs": 3119
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1051,7 +1051,7 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 40,
+        "textos": 43,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1069,7 +1069,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 16950
+      "tempoMs": 4282
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1085,14 +1085,71 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 13,
+        "textos": 66,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 0,
-        "amostraAlvosPequenos": []
+        "alvosPequenos": 14,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número e2e-escalacao-179338558183",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir e2e-escalacao-1793385581837",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Follow-up Agent E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir Número Follow-up Agent E2E",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número Radar E2E",
+            "largura": 164,
+            "altura": 28
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir Número Radar E2E",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": null,
+            "texto": "Excluir Bill Higiene e Limpeza",
+            "largura": 42,
+            "altura": 44
+          },
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Uso do número Número conectado (E2E)",
+            "largura": 164,
+            "altura": 28
+          }
+        ]
       },
       "axe": {
         "critica": 0,
@@ -1103,7 +1160,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 7987
+      "tempoMs": 2528
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1119,7 +1176,7 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 94,
+        "textos": 95,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1137,7 +1194,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 5952
+      "tempoMs": 2368
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1228,7 +1285,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2940
+      "tempoMs": 2238
     },
     {
       "rota": "/tarefas",
@@ -1261,7 +1318,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3900
+      "tempoMs": 3525
     },
     {
       "rota": "/tarefas",
@@ -1294,7 +1351,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2546
+      "tempoMs": 2497
     },
     {
       "rota": "/tarefas",
@@ -1327,7 +1384,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2490
+      "tempoMs": 2206
     },
     {
       "rota": "/tarefas",
@@ -1360,7 +1417,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2156
+      "tempoMs": 2062
     },
     {
       "rota": "/team",
@@ -1393,7 +1450,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4209
+      "tempoMs": 3787
     },
     {
       "rota": "/team",
@@ -1483,7 +1540,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2588
+      "tempoMs": 2680
     },
     {
       "rota": "/team",
@@ -1516,7 +1573,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2365
+      "tempoMs": 2256
     },
     {
       "rota": "/team",
@@ -1606,7 +1663,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2453
+      "tempoMs": 2330
     },
     {
       "rota": "/team/invite",
@@ -1621,7 +1678,7 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 49,
+        "textos": 47,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1639,7 +1696,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2747
+      "tempoMs": 2380
     },
     {
       "rota": "/team/invite",
@@ -1680,7 +1737,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1390
+      "tempoMs": 1542
     },
     {
       "rota": "/team/invite",
@@ -1695,7 +1752,7 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 49,
+        "textos": 47,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1713,7 +1770,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1437
+      "tempoMs": 1647
     },
     {
       "rota": "/team/invite",
@@ -1728,7 +1785,7 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 18,
+        "textos": 17,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1754,7 +1811,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1350
+      "tempoMs": 1484
     },
     {
       "rota": "/templates",
@@ -1787,7 +1844,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3698
+      "tempoMs": 3805
     },
     {
       "rota": "/templates",
@@ -1820,7 +1877,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2425
+      "tempoMs": 2353
     },
     {
       "rota": "/templates",
@@ -1853,7 +1910,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2339
+      "tempoMs": 2340
     },
     {
       "rota": "/templates",
@@ -1886,7 +1943,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1948
+      "tempoMs": 1944
     },
     {
       "rota": "/titulos",
@@ -1899,82 +1956,6 @@
       "redirecionaPara": "/app/financeiro?aba=titulos",
       "medida": {
         "temaAplicado": "light",
-        "h1": [
-          "Financeiro"
-        ],
-        "textos": 50,
-        "contrasteReprovados": 0,
-        "pioresContrastes": [],
-        "naoMedidosPorImagem": 0,
-        "overflow": 0,
-        "estoura": null,
-        "alvosPequenos": 0,
-        "amostraAlvosPequenos": []
-      },
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "consoleErros": [],
-      "errosDePagina": [],
-      "valida": true,
-      "tempoMs": 5349
-    },
-    {
-      "rota": "/titulos",
-      "modulo": "pedidos-e-vendas",
-      "tema": "light",
-      "largura": 390,
-      "arquivo": null,
-      "status": 200,
-      "urlFinal": "/app/financeiro?aba=titulos",
-      "redirecionaPara": "/app/financeiro?aba=titulos",
-      "medida": {
-        "temaAplicado": "light",
-        "h1": [
-          "Financeiro"
-        ],
-        "textos": 23,
-        "contrasteReprovados": 0,
-        "pioresContrastes": [],
-        "naoMedidosPorImagem": 0,
-        "overflow": 0,
-        "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Situação",
-            "largura": 176,
-            "altura": 36
-          }
-        ]
-      },
-      "axe": {
-        "critica": 0,
-        "seria": 0,
-        "ids": [],
-        "nos": []
-      },
-      "consoleErros": [],
-      "errosDePagina": [],
-      "valida": true,
-      "tempoMs": 4659
-    },
-    {
-      "rota": "/titulos",
-      "modulo": "pedidos-e-vendas",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": null,
-      "status": 200,
-      "urlFinal": "/app/financeiro?aba=titulos",
-      "redirecionaPara": "/app/financeiro?aba=titulos",
-      "medida": {
-        "temaAplicado": "dark",
         "h1": [
           "Financeiro"
         ],
@@ -1996,23 +1977,23 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4054
+      "tempoMs": 4210
     },
     {
       "rota": "/titulos",
       "modulo": "pedidos-e-vendas",
-      "tema": "dark",
+      "tema": "light",
       "largura": 390,
       "arquivo": null,
       "status": 200,
       "urlFinal": "/app/financeiro?aba=titulos",
       "redirecionaPara": "/app/financeiro?aba=titulos",
       "medida": {
-        "temaAplicado": "dark",
+        "temaAplicado": "light",
         "h1": [
           "Financeiro"
         ],
-        "textos": 637,
+        "textos": 24,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -2038,7 +2019,83 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3213
+      "tempoMs": 4170
+    },
+    {
+      "rota": "/titulos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 1440,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro?aba=titulos",
+      "redirecionaPara": "/app/financeiro?aba=titulos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 54,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 721,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 3122
+    },
+    {
+      "rota": "/titulos",
+      "modulo": "pedidos-e-vendas",
+      "tema": "dark",
+      "largura": 390,
+      "arquivo": null,
+      "status": 200,
+      "urlFinal": "/app/financeiro?aba=titulos",
+      "redirecionaPara": "/app/financeiro?aba=titulos",
+      "medida": {
+        "temaAplicado": "dark",
+        "h1": [
+          "Financeiro"
+        ],
+        "textos": 647,
+        "contrasteReprovados": 0,
+        "pioresContrastes": [],
+        "naoMedidosPorImagem": 0,
+        "overflow": 0,
+        "estoura": null,
+        "alvosPequenos": 1,
+        "amostraAlvosPequenos": [
+          {
+            "tag": "button",
+            "tipo": "button",
+            "texto": "Situação",
+            "largura": 176,
+            "altura": 36
+          }
+        ]
+      },
+      "axe": {
+        "critica": 0,
+        "seria": 0,
+        "ids": [],
+        "nos": []
+      },
+      "consoleErros": [],
+      "errosDePagina": [],
+      "valida": true,
+      "tempoMs": 2733
     }
   ]
 }

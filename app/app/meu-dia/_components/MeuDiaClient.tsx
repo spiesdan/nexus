@@ -488,7 +488,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
                   </p>
                   <Link
                     href={`/app/inbox?id=${c.id}`}
-                    className="mt-1 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    className="mt-1 inline-block text-xs font-medium text-accent-ink underline-offset-4 hover:underline"
                   >
                     {t("Responder")}
                   </Link>
@@ -541,7 +541,7 @@ export function MeuDiaClient({ nome, userId }: { nome: string | null; userId: st
                   <p className="text-sm text-text">{r.recomendacao}</p>
                   <Link
                     href={`/app/contacts/${r.contact_id}`}
-                    className="text-xs font-medium text-primary underline-offset-4 hover:underline"
+                    className="text-xs font-medium text-accent-ink underline-offset-4 hover:underline"
                   >
                     {t("Ver cliente")}
                   </Link>

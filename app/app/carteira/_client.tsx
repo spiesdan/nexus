@@ -197,7 +197,7 @@ export function CarteiraClient({
             <div className="flex items-center justify-between gap-2">
               <Link
                 href={`/app/contacts/${l.contact_id}`}
-                className="truncate font-medium text-primary underline-offset-4 hover:underline"
+                className="truncate font-medium text-accent-ink underline-offset-4 hover:underline"
               >
                 {l.nome}
               </Link>
@@ -247,7 +247,7 @@ export function CarteiraClient({
                     <TableCell>
                       <Link
                         href={`/app/contacts/${l.contact_id}`}
-                        className="font-medium text-primary underline-offset-4 hover:underline"
+                        className="font-medium text-accent-ink underline-offset-4 hover:underline"
                       >
                         {l.nome}
                       </Link>

@@ -235,7 +235,7 @@ export function TriggerEditor({ value, onChange, disabled }: Props) {
                       disabled={disabled}
                       className={`rounded-full border px-2 py-1 text-xs ${
                         active
-                          ? "border-primary bg-primary/10 text-primary"
+                          ? "border-primary bg-primary/10 text-accent-ink"
                           : "border-border/60 text-muted-foreground"
                       } disabled:cursor-not-allowed disabled:opacity-50`}
                     >

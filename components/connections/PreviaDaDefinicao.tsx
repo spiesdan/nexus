@@ -77,7 +77,7 @@ export function PreviaDaDefinicao({
                 {botoes
                   .filter((b) => b.texto.trim())
                   .map((b, i) => (
-                    <span key={i} className="text-center text-xs font-medium text-primary">
+                    <span key={i} className="text-center text-xs font-medium text-accent-ink">
                       {b.texto}
                     </span>
                   ))}

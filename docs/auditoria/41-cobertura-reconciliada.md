@@ -548,5 +548,5 @@ quarta medição foi remediada isoladamente quando o swap liberou.
 
 ### Varredura 100–110 (medida, 40/40 válidas)
 
-- **Limpar (0 alvos<44, axe 0):** `/app/settings/tenant/agenda`, `/app/tarefas`, `/app/templates`. Contraste serious/critical corrigido na origem: `nexus-kpi` (skeleton com `text-transparent` virou barra), `agenda` (`opacity-60` virou `bg-muted/40`) e `team/invite` (`SelectTrigger` com `aria-label`).
+- **Limpar (0 alvos<44, axe 0):** `/app/settings/tenant/agenda`, `/app/tarefas`, `/app/templates`. Contraste serious/critical corrigido na origem: `nexus-kpi` (skeleton com `text-transparent` virou barra), `agenda` (`opacity-60` virou `bg-muted/40`), `team/invite` (`SelectTrigger` com `aria-label`) e o token `text-primary` (3,63:1 no claro) trocado por `text-accent-ink` em 25 arquivos; remedição na main atual: `contraste=0` nas 40 combinações.
 - **Pendente com defeito medido:** `/settings/tenant` e `/tenant/formas-pagamento` (selects 36px), `/tenant/pipelines` (52 alvos), `/tenant/whatsapp` (botões 42×44), `/team` (10 alvos), `/team/invite` (1), `/titulos` (1). Nenhum marcado `aplicado` por inferência.

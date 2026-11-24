@@ -78,7 +78,7 @@ export function ComprasDoContato({ contactId }: { contactId: string }) {
             >
               <Link
                 href={`/app/pedidos/${p.id}`}
-                className="font-medium text-primary underline-offset-4 hover:underline"
+                className="font-medium text-accent-ink underline-offset-4 hover:underline"
                 aria-label={`${t("Ver pedido")} ${numeroDoPedido(p.numero)}`}
               >
                 {numeroDoPedido(p.numero)}

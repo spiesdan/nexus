@@ -1260,7 +1260,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                               {e.conversa_id ? (
                                 <Link
                                   href={`/app/inbox?id=${e.conversa_id}`}
-                                  className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                                  className="text-xs font-medium text-accent-ink underline-offset-2 hover:underline"
                                 >
                                   {t("Abrir Inbox")}
                                 </Link>
@@ -1302,7 +1302,7 @@ export function ControleDaCampanha({ id }: { id: string }) {
                           {e.conversa_id ? (
                             <Link
                               href={`/app/inbox?id=${e.conversa_id}`}
-                              className="text-xs font-medium text-primary underline-offset-2 hover:underline"
+                              className="text-xs font-medium text-accent-ink underline-offset-2 hover:underline"
                             >
                               {t("Abrir Inbox")}
                             </Link>

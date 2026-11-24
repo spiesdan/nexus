@@ -47,7 +47,7 @@ function Cartao({
           <p className="mt-1 text-xs text-muted-foreground">{detalhe}</p>
         </>
       )}
-      <Link href={href} className="mt-2 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline">
+      <Link href={href} className="mt-2 inline-block text-xs font-medium text-accent-ink underline-offset-4 hover:underline">
         {hrefLabel}
       </Link>
     </Card>

@@ -165,7 +165,7 @@ export function ContactPickerDialog({
                     onClick={() => pickFromDb(c)}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                      <UserCircle size={22} weight="duotone" className="text-primary" aria-hidden />
+                      <UserCircle size={22} weight="duotone" className="text-accent-ink" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium">{displayName(c)}</span>
@@ -211,7 +211,7 @@ export function ContactPickerDialog({
                 onClick={pickManual}
               >
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
-                  <UserCircle size={22} weight="duotone" className="text-primary" aria-hidden />
+                  <UserCircle size={22} weight="duotone" className="text-accent-ink" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">
