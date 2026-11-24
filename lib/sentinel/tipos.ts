@@ -358,9 +358,12 @@ export interface CorrecaoSentinel {
 export interface ContatoEndereco {
   id: string;
   logradouro: string | null;
+  numero_end: string | null;
   complemento: string | null;
   bairro: string | null;
   cidade: string | null;
+  uf: string | null;
+  cep: string | null;
 }
 
 /** Conversa assumida (claim) sem mensagem há dias — o caso corrigível de v1.5. */

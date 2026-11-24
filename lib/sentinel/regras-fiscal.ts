@@ -5,6 +5,8 @@
  * ou IA. "Causa provável" é uma hipótese escrita a partir do estado observado;
  * a evidência é o que a pessoa confere antes de agir.
  */
+import { montarDestinatario, type ContatoFiscal } from "@/lib/fiscal/destinatario-da-nota";
+import { municipioIbge, normalizarMunicipio, ufsPossiveisDoMunicipio } from "@/lib/fiscal/municipio-ibge";
 import type { Achado, NotaFiscal, Pedido, Snapshot } from "./tipos";
 import {
   corta,
@@ -598,4 +600,111 @@ export function rejeicoesRepetidas(s: Snapshot): Achado[] {
         },
       };
     });
+}
+
+
+/**
+ * PRÉ-EMISSÃO: pedido faturável, sem nota ativa, cujo destinatário NÃO fecha
+ * o TLocal. Usa `montarDestinatario` — a MESMA função que `carregarDestinatario`
+ * chama na emissão — para que a regra do Sentinel e a da NF-e não divirjam.
+ */
+export function clientesSemEnderecoFiscal(s: Snapshot): Achado[] {
+  const pedidosComNota = new Set(
+    s.notasPedidos
+      .filter((v) => {
+        const nota = s.notas.find((n) => n.id === v.invoice_id);
+        return nota != null && NOTA_ATIVA.has(nota.status);
+      })
+      .map((v) => v.order_id),
+  );
+  const contatos = new Map(s.contatosEndereco.map((c) => [c.id, c]));
+  const achados: Achado[] = [];
+
+  for (const pedido of s.pedidos) {
+    if (!pedido.exige_nf || !PEDIDO_COM_NF.has(pedido.status) || pedidosComNota.has(pedido.id)) continue;
+    const contato = pedido.contact_id ? contatos.get(pedido.contact_id) : null;
+    const destinatario = montarDestinatario(
+      { cliente_documento: pedido.cliente_documento, contact_id: pedido.contact_id },
+      contato ? ({ ...contato, name: null, display_name: null } as ContatoFiscal) : null,
+    );
+    // `nome` não está na fotografia do Sentinel; não é falta de endereço.
+    const faltando = destinatario.faltando.filter((f) => f !== "nome");
+    if (faltando.length === 0) continue;
+    achados.push({
+      regra: "fiscal.cliente_sem_endereco_fiscal",
+      categoria: "fiscal",
+      entidadeTipo: "orders",
+      entidadeId: pedido.id,
+      titulo: `Pedido #${pedido.numero} parado: endereço fiscal incompleto`,
+      resumo: `A emissão vai falhar antes da SEFAZ: faltam ${faltando.join(", ")}.`,
+      causaProvavel:
+        "O destinatário é montado do cadastro no momento da emissão; corrigir antes evita a fila de notas rejeitadas.",
+      severidade: "alta",
+      href: `/app/pedidos/${pedido.id}`,
+      evidencia: {
+        pedido_numero: pedido.numero,
+        contact_id: pedido.contact_id,
+        faltando,
+      },
+    });
+  }
+
+  // Cadastro sem pedido faturável parado é risco, não bloqueio: média.
+  const emPedido = new Set(achados.map((a) => a.evidencia.contact_id));
+  for (const contato of s.contatosEndereco) {
+    if (emPedido.has(contato.id)) continue;
+    const destinatario = montarDestinatario(
+      { contact_id: contato.id },
+      { ...contato, name: null, display_name: null } as ContatoFiscal,
+    );
+    const faltando = destinatario.faltando.filter((f) => f !== "nome");
+    if (faltando.length === 0) continue;
+    achados.push({
+      regra: "fiscal.cliente_sem_endereco_fiscal",
+      categoria: "fiscal",
+      entidadeTipo: "contacts",
+      entidadeId: contato.id,
+      titulo: "Cadastro sem endereço fiscal completo",
+      resumo: `A futura nota deste cliente vai parar: faltam ${faltando.join(", ")}.`,
+      causaProvavel: "Cadastro pela metade — corrigir agora evita rejeição quando o pedido faturar.",
+      severidade: "media",
+      href: `/app/contatos/${contato.id}`,
+      evidencia: { contact_id: contato.id, faltando },
+    });
+  }
+  return achados;
+}
+
+/**
+ * UF errada com nome de município que só existe em UM estado é dado errado,
+ * não ambiguidade. Quando o nome existe em mais de uma UF, a regra abre
+ * ocorrência para decisão humana e a autocorreção não mexe.
+ */
+export function ufDivergenteDoIbge(s: Snapshot): Achado[] {
+  return s.contatosEndereco.flatMap((contato) => {
+    if (!contato.cidade || !contato.uf || municipioIbge(contato.cidade, contato.uf)) return [];
+    const ufs = ufsPossiveisDoMunicipio(contato.cidade);
+    const nome = normalizarMunicipio(contato.cidade.split(",")[0] ?? "");
+    if (ufs.length === 0 || ufs.includes(contato.uf.trim().toUpperCase())) return [];
+    return [{
+      regra: "fiscal.uf_divergente_do_ibge",
+      categoria: "fiscal" as const,
+      entidadeTipo: "contacts",
+      entidadeId: contato.id,
+      titulo: `${nome}/${contato.uf.toUpperCase()} não existe no IBGE`,
+      resumo: ufs.length === 1
+        ? `O município existe apenas em ${ufs[0]}. A UF do cadastro está errada.`
+        : `O nome existe em ${ufs.length} UFs (${ufs.join(", ")}). Só uma pessoa pode decidir.`,
+      causaProvavel: "UF digitada diferente do município — a nota é rejeitada na pré-validação.",
+      severidade: "alta" as const,
+      href: `/app/contatos/${contato.id}`,
+      evidencia: {
+        contact_id: contato.id,
+        cidade: contato.cidade,
+        uf_atual: contato.uf,
+        uf_correta: ufs.length === 1 ? ufs[0] : null,
+        ufs_possiveis: ufs,
+      },
+    }] as Achado[];
+  });
 }

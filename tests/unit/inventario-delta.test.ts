@@ -42,12 +42,12 @@ describe("recontagem de rotas da API", () => {
     // 419 → 449: aceite do motorista, checkout, orcamentos-parados, relatorio
     // de gastos, a tela de colisoes do Mercos (0344) e o cron da reconciliação.
 
-    expect(agora.length - baseline.length).toBe(40);
+    expect(agora.length - baseline.length).toBe(41);
   });
 
   it("toda rota nova está nomeada no doc, com área e motivo", () => {
     const novas = agora.filter((caminho) => !baseline.includes(caminho));
-    expect(novas).toHaveLength(40);
+    expect(novas).toHaveLength(41);
     for (const caminho of novas) {
       // O doc mostra a rota HTTP, não o caminho do arquivo; o sufixo é o que
       // distingue [id]/revoke, correcao/conversa/simular etc.
@@ -62,6 +62,7 @@ describe("recontagem de rotas da API", () => {
     expect(secao).toContain("Mercos — colisões");
     expect(secao).toContain("Mercos — reconciliação");
     expect(secao).toContain("Cobrança SaaS — tela e webhook");
+    expect(secao).toContain("Sentinel — correção de UF");
     expect(secao).toContain("Prospecção — gastos da campanha");
     expect(secao).toContain("Configuração — formas de pagamento");
     expect(secao).toContain("/api/v1/payment-methods");
