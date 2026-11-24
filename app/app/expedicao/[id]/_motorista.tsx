@@ -31,6 +31,7 @@ import {
   type DesfechoPendente,
 } from "@/lib/entregas/outbox";
 import { podeRegistrarDesfecho } from "@/lib/entregas/desfecho-com-endereco";
+import { linksDeNavegacao } from "@/lib/entregas/navegacao-externa";
 import { numeroDoPedido } from "@/lib/format/moeda";
 import { situacaoDoNumero } from "@/lib/rotas/entradas";
 import { formatarDistancia, formatarDuracao, haversineM, ordemCompleta } from "@/lib/rotas/roteamento";
@@ -113,6 +114,8 @@ export function ModoMotorista({
   /** Rota da navegação até a próxima parada (desenhada em azul no mapa). */
   const [navegacao, setNavegacao] = React.useState<{ geometria: number[][]; distancia_m: number; duracao_s: number } | null>(null);
   const [calculandoRota, setCalculandoRota] = React.useState(false);
+  /** Falha do OSRM: a contingência deixa de ser discreta e vira o caminho. */
+  const [rotaFalhou, setRotaFalhou] = React.useState(false);
   /** Parada aberta no detalhe (qualquer uma do roteiro, não só a próxima). */
   const [paradaAberta, setParadaAberta] = React.useState<string | null>(null);
   /**
@@ -650,6 +653,7 @@ export function ModoMotorista({
       }
     }
     setCalculandoRota(true);
+    setRotaFalhou(false);
     try {
       const corpo = await apiClient.get<{
         data: { geometria: number[][]; distancia_m: number; duracao_s: number };
@@ -658,7 +662,8 @@ export function ModoMotorista({
       setSeguir(true);
       toast.success(t("Rota calculada — siga a linha azul."));
     } catch {
-      toast.error(t("Não consegui calcular a rota agora. Tente de novo com sinal."));
+      setRotaFalhou(true);
+      toast.error(t("Não consegui calcular a rota. Abra no seu app de navegação."));
     } finally {
       setCalculandoRota(false);
     }
@@ -1162,6 +1167,8 @@ export function ModoMotorista({
               )}
             </div>
 
+            {botoesDeNavegacaoExterna(proxima, rotaFalhou)}
+
             {podeOperar && (
               <>
                 {/* Verde sólido: o desfecho positivo é A ação da cabine e, em
@@ -1487,6 +1494,43 @@ export function ModoMotorista({
     ["na_carga", "em_rota", "em_atendimento"].includes(statusDe(x)),
   );
 
+  /**
+   * CONTINGÊNCIA — um bloco só, visível na folha fechada ou aberta (nunca
+   * nas duas ao mesmo tempo). Sem coordenada confiável, nada aparece.
+   */
+  function botoesDeNavegacaoExterna(parada: ParadaRotaApi, destaque = false) {
+    const links = linksDeNavegacao(parada);
+    if (!links) return null;
+    return (
+      <div
+        role={destaque ? "alert" : undefined}
+        className="mt-2.5 space-y-1.5 border-t border-border pt-2.5"
+      >
+        <p className="text-xs text-muted-foreground">
+          {t("Se o mapa não carregar, abra no seu app de navegação.")}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={links.google}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-accent-ink hover:bg-accent-soft"
+          >
+            {t("Abrir no Google Maps")}
+          </a>
+          <a
+            href={links.waze}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-border bg-surface px-3 text-xs font-medium text-accent-ink hover:bg-accent-soft"
+          >
+            {t("Abrir no Waze")}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const cartaoCompacto = (
     <div className="pb-1">
       {proxima ? (
@@ -1540,6 +1584,8 @@ export function ModoMotorista({
           </button>
 
           {!podeRegistrarDesfecho(proxima) && avisoDeEnderecoDesconhecido()}
+
+          {botoesDeNavegacaoExterna(proxima, rotaFalhou)}
 
           <div className="mt-2.5 flex gap-2">
             {podeNavegar && (
