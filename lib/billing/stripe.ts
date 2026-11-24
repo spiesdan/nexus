@@ -28,7 +28,7 @@ export function lerConfigStripe(env: Record<string, string | undefined> = proces
 }
 
 /** HMAC sobre `timestamp.corpo`, com tolerância curta contra replay. */
-export function assinaturaValida({
+export function verifyInboundSignature({
   corpo,
   assinatura,
   segredo,

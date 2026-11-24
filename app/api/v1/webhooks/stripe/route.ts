@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import type { NextRequest } from "next/server";
 
 import { ok, fail } from "@/lib/api/wrappers";
-import { lerConfigStripe, assinaturaValida } from "@/lib/billing/stripe";
+import { lerConfigStripe, verifyInboundSignature } from "@/lib/billing/stripe";
 import { deveSuspender, eventoEstaAtrasado, statusDaFatura } from "@/lib/billing/webhook-logica";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const corpo = await req.text();
   const cfg = lerConfigStripe();
   const assinatura = req.headers.get("stripe-signature") ?? "";
-  if (!assinaturaValida({ corpo, assinatura, segredo: cfg.webhookSecret })) {
+  if (!verifyInboundSignature({ corpo, assinatura, segredo: cfg.webhookSecret })) {
     return fail("unauthorized", "Assinatura Stripe inválida.", 401);
   }
 
