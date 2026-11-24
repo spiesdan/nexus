@@ -850,19 +850,9 @@ export function PedidosClient({
                   <ArrowsClockwise size={16} className={importandoMercos ? "animate-spin" : ""} />
                   {importandoMercos ? t("Importando do Mercos…") : t("Importar pedidos Mercos")}
                 </Button>
-                {/* A conferência do que ficou de fora entra AQUI, ao lado da
-                    importação — não é item novo de menu: é o desdobramento
-                    natural de quem acabou de importar (auditoria do dono). */}
-                <Button asChild variant="ghost" className="bg-surface">
-                  <Link
-                    href="/app/pedidos/colisoes-mercos"
-                    aria-label={t("Pedidos do Mercos que ficaram de fora")}
-                    title={t("Pedidos do Mercos que ficaram de fora")}
-                  >
-                    <Warning size={16} aria-hidden />
-                    {t("Ficaram de fora")}
-                  </Link>
-                </Button>
+                {/* Decisão do dono (24/11): a superfície de colisões sai.
+                    O dado e a reconciliação continuam gravados e consultáveis
+                    pela API — remover tela não é apagar registro. */}
               </>
             )}
             {/* UM botão de imprimir, com o "o quê" dentro. Antes eram dois botões

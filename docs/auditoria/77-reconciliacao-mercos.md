@@ -1,6 +1,12 @@
+
 # 77 — Reconciliação do Mercos: a resposta para "tenho certeza?"
 
-O bloco novo no topo de `colisoes-mercos` responde, em linguagem de dono, à pergunta que o resumo de colisões sozinho não respondia. Contrato do G: `reconciliacao` com `quando`, `censo_lido`, `censo_esperado`, `ausentes`, `status`. O campo é opcional/nulo — a tela continua funcionando no estado de hoje.
+> **Atualização 24/11:** a tela saiu do sistema por decisão do dono. A rota
+> `GET /api/v1/mercos/colisoes`, a tabela `mercos_colisoes` e a reconciliação
+> no cron **continuam** — este documento registra o que foi medido quando a
+> superfície existia.
+
+O bloco novo no topo de `colisoes-mercos` responde, em linguagem de dono, à pergunta que o resumo de colisões sozinho não respondia. Contrato do G: `reconciliacao` com `quando`, `censo_lido`, `censo_esperado`, `ausentes`, `status`. O campo era opcional/nulo — a tela funcionava mesmo sem ele.
 
 | Estado | Texto | Tom |
 | --- | --- | --- |
