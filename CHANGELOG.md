@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.69.0] — 2026-11-24
+
+### Adicionado
+
+- **Reconciliação do Mercos passa a rodar sozinha todo dia, sem importar por conta própria** O zero ausentes deixou de valer só para a rodada feita à mão: um tick diário às 21:00 UTC enfileira a coleta do censo e a comparação no worker do Mercos. A tela passa a mostrar o resultado da última rodada, incluindo quando ela estiver incompleta. A reconciliação continua sem `--aplicar` — detectar e mostrar é obrigação do sistema, importar é decisão do dono.
+
+### Alterado
+
+- **Série local dos pedidos passa a começar em 70.000** A série anterior (900.000) era grande demais. Com o Mercos em cerca de 19.732 pedidos e crescendo cerca de 500 por mês, começar em 70.000 dá cerca de oito anos de folga antes de alcançar a faixa do ERP. Os seis pedidos que tinham saído em 900001–900006 viram 70001–70006 — não têm nota fiscal, só o vínculo com o Mercos, que permanece. Os pedidos antigos de vendedor não são tocados.
+
+### Corrigido
+
+- **Reconciliação usa numero_mercos como identidade e não confunde nome mudado com colisão** O classificação virava quase todo pedido antigo em colisão porque comparava o nome do cliente, que muda com o tempo. Agora a ordem é: linha com `numero_mercos` igual ao número do Mercos é importado; sem ela, número ocupado por pedido local é colisão; sem nenhuma das duas, é ausente. Pedido sem detalhe coletado fica classificado como sem detalhe e não entra na conta de ausente nem de verificado.
+
+- **Tela de pedidos do Mercos que ficaram de fora removida** Por decisão do dono, a página e a entrada "Ficaram de fora" saem da lista de Pedidos. A rota GET /api/v1/mercos/colisoes, a tabela mercos_colisoes e a reconciliação no cron continuam: o registro permanece, só a superfície foi removida.
+
 ## [1.68.1] — 2026-11-24
 
 ### Corrigido
@@ -9048,7 +9064,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.68.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.69.0...HEAD
+[1.69.0]: https://github.com/spiesdan/nexus/compare/v1.68.1...v1.69.0
 [1.68.1]: https://github.com/spiesdan/nexus/compare/v1.68.0...v1.68.1
 [1.68.0]: https://github.com/spiesdan/nexus/compare/v1.67.0...v1.68.0
 [1.67.0]: https://github.com/spiesdan/nexus/compare/v1.66.0...v1.67.0
