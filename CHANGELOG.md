@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [1.69.1] — 2026-11-24
+
+### Adicionado
+
+- **Pedidos do Mercos ganham selo de origem na lista e na ficha** Pedidos vindos do ERP mostram "(Mercos)" ao lado do status, com ícone decorativo. Pedido local não mostra nada. O selo diz a origem; o número do Mercos continua aparecendo só onde difere do interno.
+
+### Corrigido
+
+- **Atualização não devolve mais a numeração local para 900 mil** O apêndice da 0344 no `baseline.sql` forçava `ultimo_numero = greatest(ultimo_numero, 900000)` em toda aplicação. Depois que a série passou a nascer em 70.000, cada `update.sh` empurrava o contador de volta para 900.000 — e o próximo pedido local nasceria 900001. O apêndice sai, a 0350 passa a ser idempotente em três estados (instalação fresca, já migrada e com números altos) e um invariante aplica o bloco duas vezes seguidas provando que o contador fica em 70006.
+
 ## [1.69.0] — 2026-11-24
 
 ### Adicionado
@@ -9064,7 +9074,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.69.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.69.1...HEAD
+[1.69.1]: https://github.com/spiesdan/nexus/compare/v1.69.0...v1.69.1
 [1.69.0]: https://github.com/spiesdan/nexus/compare/v1.68.1...v1.69.0
 [1.68.1]: https://github.com/spiesdan/nexus/compare/v1.68.0...v1.68.1
 [1.68.0]: https://github.com/spiesdan/nexus/compare/v1.67.0...v1.68.0
