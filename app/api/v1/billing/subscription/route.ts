@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { lerConfigStripe, stripeRequest } from "@/lib/billing/stripe";
+import { ETAPAS } from "@/lib/billing/notices";
 import { registrarVerificacao, resolverVerificacao } from "@/lib/billing/verificacao";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -61,16 +62,44 @@ export async function GET(): Promise<Response> {
     }
   }
 
+  // Avisos D-3/D-2/D-1 já enviados (a própria linha é o in-app) e as etapas
+  // que ainda vêm. Os dados vêm de `billing_notices`, nunca de constante.
+  const { data: avisos } = await admin
+    .from("billing_notices")
+    .select("etapa, canal, enviado_em, resultado, detalhe")
+    .eq("organization_id", orgId)
+    .order("criado_em", { ascending: false })
+    .limit(12);
+  const vencimentoIso = remoto?.current_period_end
+    ? new Date(remoto.current_period_end * 1000).toISOString()
+    : local?.current_period_end ?? null;
+  const enviadas = new Set((avisos ?? []).filter((a) => a.resultado === "enviado").map((a) => a.etapa));
+  const diasRestantes = vencimentoIso
+    ? Math.round(
+        (Date.UTC(
+          new Date(vencimentoIso).getUTCFullYear(),
+          new Date(vencimentoIso).getUTCMonth(),
+          new Date(vencimentoIso).getUTCDate(),
+        ) -
+          Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate())) /
+          86_400_000,
+      )
+    : null;
+  const proximos =
+    diasRestantes == null
+      ? []
+      : ETAPAS.filter((dias) => dias >= diasRestantes && !enviadas.has(dias));
+
   const preco = remoto?.items?.data?.[0]?.price;
   return ok(
     {
+      avisos: avisos ?? [],
+      proximos,
       fonte,
       status: remoto?.status ?? local?.status ?? "sem_assinatura",
       valor_cents: preco?.unit_amount ?? null,
       moeda: preco?.currency?.toUpperCase() ?? null,
-      vencimento: remoto?.current_period_end
-        ? new Date(remoto.current_period_end * 1000).toISOString()
-        : local?.current_period_end ?? null,
+      vencimento: vencimentoIso,
       cancela_no_fim: remoto?.cancel_at_period_end ?? local?.cancel_at_period_end ?? false,
       id: remoto?.id ?? local?.stripe_subscription_id ?? null,
     },
