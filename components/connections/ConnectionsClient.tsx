@@ -382,7 +382,7 @@ export function ConnectionsClient({ wahaConfigured }: { wahaConfigured: boolean 
                         disabled={salvandoFinalidade === c.id}
                       >
                         <SelectTrigger
-                          className="h-7 w-[180px] text-xs"
+                          className="h-11 min-h-11 w-[180px] text-xs"
                           aria-label={`${t("Uso do número")} ${channelLabel(c, t)}`}
                         >
                           <SelectValue />

@@ -47,7 +47,7 @@ export function NomeCell({
 
   return (
     <input
-      className="w-[160px] rounded-md border border-border bg-surface px-2 py-1 text-sm font-medium"
+      className="min-h-11 w-[160px] rounded-md border border-border bg-surface px-2 py-1 text-sm font-medium"
       value={visivel}
       maxLength={80}
       placeholder={t("Nome (ex.: Ana)")}

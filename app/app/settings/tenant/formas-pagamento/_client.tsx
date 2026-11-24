@@ -150,7 +150,7 @@ export function FormasDePagamentoClient({
               <Label htmlFor="pm-tipo">Tipo</Label>
               <select
                 id="pm-tipo"
-                className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                className="min-h-11 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
                 value={novo.tipo}
                 onChange={(e) => setNovo({ ...novo, tipo: e.target.value as "forma" | "prazo", tpag: "", dias_prazo: "" })}
               >
@@ -171,7 +171,7 @@ export function FormasDePagamentoClient({
                 <Label htmlFor="pm-tpag">Código fiscal (tPag)</Label>
                 <select
                   id="pm-tpag"
-                  className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                  className="min-h-11 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
                   value={novo.tpag}
                   onChange={(e) => setNovo({ ...novo, tpag: e.target.value })}
                 >

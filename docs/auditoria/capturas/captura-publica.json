@@ -1,162 +1,118 @@
 {
-  "geradoEm": "2026-11-18T23:37:28.234Z",
-  "base": "http://localhost:3021",
+  "geradoEm": "2026-11-24T14:48:15.353Z",
+  "base": "http://localhost:3030",
   "registros": [
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_dark_1440.png",
-      "esperouH1Ms": 894,
-      "titulo": "Expedição · NEXUS",
-      "h1": [
-        "Carga 031"
-      ],
-      "overflowX": 0,
-      "textos": 100
-    },
-    {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
+      "rota": "/app/settings/tenant/pipelines",
       "tema": "dark",
       "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_dark_390.png",
-      "esperouH1Ms": 1528,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_settings_tenant_pipelines_dark_390.png",
+      "esperouH1Ms": 77,
+      "esperouTelaMs": 2477,
+      "titulo": "Etapas do funil · NEXUS",
       "h1": [
-        "Carga 031"
+        "Etapas do funil"
       ],
       "overflowX": 0,
-      "textos": 96
+      "textos": 340
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
-      "tema": "light",
-      "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_light_1440.png",
-      "esperouH1Ms": 895,
-      "titulo": "Expedição · NEXUS",
-      "h1": [
-        "Carga 031"
-      ],
-      "overflowX": 0,
-      "textos": 96
-    },
-    {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/rota",
-      "tema": "light",
-      "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_rota_light_390.png",
-      "esperouH1Ms": 1176,
-      "titulo": "Expedição · NEXUS",
-      "h1": [
-        "Carga 031"
-      ],
-      "overflowX": 0,
-      "textos": 57
-    },
-    {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
+      "rota": "/app/settings/tenant/pipelines",
       "tema": "dark",
       "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_dark_1440.png",
-      "esperouH1Ms": 1328,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_settings_tenant_pipelines_dark_1440.png",
+      "esperouH1Ms": 25,
+      "esperouTelaMs": 943,
+      "titulo": "Etapas do funil · NEXUS",
       "h1": [
-        "Carga 031"
+        "Etapas do funil"
       ],
       "overflowX": 0,
-      "textos": 56
+      "textos": 341
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
-      "tema": "dark",
+      "rota": "/app/settings/tenant/pipelines",
+      "tema": "light",
       "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_dark_390.png",
-      "esperouH1Ms": 1758,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_settings_tenant_pipelines_light_390.png",
+      "esperouH1Ms": 15,
+      "esperouTelaMs": 936,
+      "titulo": "Etapas do funil · NEXUS",
       "h1": [
-        "Carga 031"
+        "Etapas do funil"
       ],
       "overflowX": 0,
-      "textos": 126
+      "textos": 341
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
+      "rota": "/app/settings/tenant/pipelines",
       "tema": "light",
       "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_light_1440.png",
-      "esperouH1Ms": 1331,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_settings_tenant_pipelines_light_1440.png",
+      "esperouH1Ms": 24,
+      "esperouTelaMs": 921,
+      "titulo": "Etapas do funil · NEXUS",
       "h1": [
-        "Carga 031"
+        "Etapas do funil"
       ],
       "overflowX": 0,
-      "textos": 126
+      "textos": 341
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/fechamento",
-      "tema": "light",
-      "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_fechamento_light_390.png",
-      "esperouH1Ms": 1894,
-      "titulo": "Expedição · NEXUS",
-      "h1": [
-        "Carga 031"
-      ],
-      "overflowX": 0,
-      "textos": 126
-    },
-    {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
-      "tema": "dark",
-      "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_dark_1440.png",
-      "esperouH1Ms": 1091,
-      "titulo": "Expedição · NEXUS",
-      "h1": [
-        "Modo motorista · Carga 031"
-      ],
-      "overflowX": 0,
-      "textos": 77
-    },
-    {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "rota": "/app/team",
       "tema": "dark",
       "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_dark_390.png",
-      "esperouH1Ms": 883,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_team_dark_390.png",
+      "esperouH1Ms": 16,
+      "esperouTelaMs": 1014,
+      "titulo": "Equipe · NEXUS",
       "h1": [
-        "Modo motorista · Carga 031"
+        "Equipe"
       ],
       "overflowX": 0,
-      "textos": 77
+      "textos": 88
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
-      "tema": "light",
+      "rota": "/app/team",
+      "tema": "dark",
       "largura": 1440,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_light_1440.png",
-      "esperouH1Ms": 753,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_team_dark_1440.png",
+      "esperouH1Ms": 29,
+      "esperouTelaMs": 677,
+      "titulo": "Equipe · NEXUS",
       "h1": [
-        "Modo motorista · Carga 031"
+        "Equipe"
       ],
       "overflowX": 0,
-      "textos": 78
+      "textos": 88
     },
     {
-      "rota": "/app/expedicao/ad90f4b3-b0db-4657-9485-2b7638f30401/motorista",
+      "rota": "/app/team",
       "tema": "light",
       "largura": 390,
-      "arquivo": "app_expedicao_ad90f4b3-b0db-4657-9485-2b7638f30401_motorista_light_390.png",
-      "esperouH1Ms": 1073,
-      "titulo": "Expedição · NEXUS",
+      "arquivo": "app_team_light_390.png",
+      "esperouH1Ms": 14,
+      "esperouTelaMs": 635,
+      "titulo": "Equipe · NEXUS",
       "h1": [
-        "Modo motorista · Carga 031"
+        "Equipe"
       ],
       "overflowX": 0,
-      "textos": 78
+      "textos": 88
+    },
+    {
+      "rota": "/app/team",
+      "tema": "light",
+      "largura": 1440,
+      "arquivo": "app_team_light_1440.png",
+      "esperouH1Ms": 13,
+      "esperouTelaMs": 667,
+      "titulo": "Equipe · NEXUS",
+      "h1": [
+        "Equipe"
+      ],
+      "overflowX": 0,
+      "textos": 88
     }
   ]
 }

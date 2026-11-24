@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
  */
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap",
+    "inline-flex min-h-11 min-w-11 items-center justify-center gap-2 whitespace-nowrap lg:min-h-0 lg:min-w-0",
     "rounded-full font-medium tracking-[-0.02em]",
     "transition-[background-color,border-color,color,box-shadow,transform]",
     "duration-fast ease-out",

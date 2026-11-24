@@ -1,7 +1,7 @@
 {
-  "geradoEm": "2026-11-24T14:29:48.394Z",
+  "geradoEm": "2026-11-24T14:46:00.995Z",
   "base": "http://localhost:3029",
-  "tempoTotalMs": 103869,
+  "tempoTotalMs": 105094,
   "rotas": 10,
   "medidas": 40,
   "validas": 40,
@@ -10,22 +10,22 @@
     "config-e-inteligencia": {
       "rotas": 6,
       "medidas": 6,
-      "ok": 1,
+      "ok": 6,
       "contraste": 0,
       "overflow": 0,
       "console": 0,
-      "alvo": 5,
+      "alvo": 0,
       "axe": 0,
       "http": 0
     },
     "sem-grupo": {
       "rotas": 1,
       "medidas": 1,
-      "ok": 0,
+      "ok": 1,
       "contraste": 0,
       "overflow": 0,
       "console": 0,
-      "alvo": 1,
+      "alvo": 0,
       "axe": 0,
       "http": 0
     },
@@ -43,11 +43,11 @@
     "pedidos-e-vendas": {
       "rotas": 1,
       "medidas": 1,
-      "ok": 0,
+      "ok": 1,
       "contraste": 0,
       "overflow": 0,
       "console": 0,
-      "alvo": 1,
+      "alvo": 0,
       "axe": 0,
       "http": 0
     }
@@ -67,7 +67,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 2,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -75,11 +75,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 8420
+      "falhas": 0,
+      "tempoMs": 8554
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -107,7 +107,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 7537
+      "tempoMs": 7940
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -123,7 +123,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 2,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -131,11 +131,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 6571
+      "falhas": 0,
+      "tempoMs": 6624
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -151,7 +151,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 52,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -159,11 +159,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 14725
+      "falhas": 0,
+      "tempoMs": 15550
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -179,7 +179,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 14,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -187,11 +187,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 11416
+      "falhas": 0,
+      "tempoMs": 11994
     },
     {
       "rota": "/tarefas",
@@ -219,7 +219,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 10290
+      "tempoMs": 10278
     },
     {
       "rota": "/team",
@@ -235,7 +235,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 10,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -243,11 +243,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 11053
+      "falhas": 0,
+      "tempoMs": 10918
     },
     {
       "rota": "/team/invite",
@@ -263,7 +263,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 1,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -271,11 +271,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 7053
+      "falhas": 0,
+      "tempoMs": 6790
     },
     {
       "rota": "/templates",
@@ -303,7 +303,7 @@
         "axe": false
       },
       "falhas": 0,
-      "tempoMs": 10442
+      "tempoMs": 10306
     },
     {
       "rota": "/titulos",
@@ -319,7 +319,7 @@
       "contraste": 0,
       "overflow": 0,
       "consoleErros": 0,
-      "alvosPequenos": 1,
+      "alvosPequenos": 0,
       "axeCritica": 0,
       "axeSeria": 0,
       "defeitos": {
@@ -327,11 +327,11 @@
         "contraste": false,
         "overflow": false,
         "console": false,
-        "alvo": true,
+        "alvo": false,
         "axe": false
       },
-      "falhas": 2,
-      "tempoMs": 14235
+      "falhas": 0,
+      "tempoMs": 14042
     }
   ],
   "registros": [
@@ -366,7 +366,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3941
+      "tempoMs": 3934
     },
     {
       "rota": "/settings/tenant",
@@ -381,29 +381,14 @@
         "h1": [
           "Organização"
         ],
-        "textos": 30,
+        "textos": 29,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "America/Sao_Paulo",
-            "largura": 244,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Português (BR)",
-            "largura": 244,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -414,7 +399,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1538
+      "tempoMs": 1590
     },
     {
       "rota": "/settings/tenant",
@@ -447,7 +432,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1518
+      "tempoMs": 1585
     },
     {
       "rota": "/settings/tenant",
@@ -468,23 +453,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "America/Sao_Paulo",
-            "largura": 244,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Português (BR)",
-            "largura": 244,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -495,7 +465,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1423
+      "tempoMs": 1445
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -528,7 +498,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2369
+      "tempoMs": 2744
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -561,7 +531,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1805
+      "tempoMs": 1845
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -594,7 +564,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1864
+      "tempoMs": 1855
     },
     {
       "rota": "/settings/tenant/agenda",
@@ -627,7 +597,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1499
+      "tempoMs": 1496
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -660,7 +630,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2187
+      "tempoMs": 2298
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -681,23 +651,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Forma de pagamentoPrazo de vencimento",
-            "largura": 260,
-            "altura": 40
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Não confirmado — pendência01 — Dinheiro0",
-            "largura": 260,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -708,7 +663,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1432
+      "tempoMs": 1439
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -741,7 +696,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1528
+      "tempoMs": 1520
     },
     {
       "rota": "/settings/tenant/formas-pagamento",
@@ -756,29 +711,14 @@
         "h1": [
           "Formas de pagamento"
         ],
-        "textos": 19,
+        "textos": 18,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 2,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Forma de pagamentoPrazo de vencimento",
-            "largura": 260,
-            "altura": 40
-          },
-          {
-            "tag": "select",
-            "tipo": null,
-            "texto": "Não confirmado — pendência01 — Dinheiro0",
-            "largura": 260,
-            "altura": 40
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -789,7 +729,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1424
+      "tempoMs": 1367
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -822,7 +762,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 5164
+      "tempoMs": 5534
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -843,65 +783,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 52,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Novo» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Em andamento» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Ganho» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Perdido» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Novo lead»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Primeiro contato»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Em qualificação»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Qualificado»",
-            "largura": 210,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -912,7 +795,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3133
+      "tempoMs": 3557
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -945,7 +828,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3309
+      "tempoMs": 3290
     },
     {
       "rota": "/settings/tenant/pipelines",
@@ -966,65 +849,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 52,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Novo» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Em andamento» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Ganho» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de «Perdido» no funil",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Novo lead»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Primeiro contato»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Em qualificação»",
-            "largura": 210,
-            "altura": 36
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Etapa para «Qualificado»",
-            "largura": 210,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1035,7 +861,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3119
+      "tempoMs": 3169
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1051,7 +877,7 @@
         "h1": [
           "Conexões"
         ],
-        "textos": 43,
+        "textos": 42,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1069,7 +895,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4282
+      "tempoMs": 4251
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1091,65 +917,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 14,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número e2e-escalacao-179338558183",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir e2e-escalacao-1793385581837",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número Follow-up Agent E2E",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Número Follow-up Agent E2E",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número Radar E2E",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Número Radar E2E",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Bill Higiene e Limpeza",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número conectado (E2E)",
-            "largura": 164,
-            "altura": 28
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1160,7 +929,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2528
+      "tempoMs": 2750
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1194,7 +963,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2368
+      "tempoMs": 2813
     },
     {
       "rota": "/settings/tenant/whatsapp",
@@ -1216,65 +985,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 14,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número e2e-escalacao-179338558183",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir e2e-escalacao-1793385581837",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número Follow-up Agent E2E",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Número Follow-up Agent E2E",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número Radar E2E",
-            "largura": 164,
-            "altura": 28
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Número Radar E2E",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": null,
-            "texto": "Excluir Bill Higiene e Limpeza",
-            "largura": 42,
-            "altura": 44
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Uso do número Número conectado (E2E)",
-            "largura": 164,
-            "altura": 28
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1285,7 +997,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2238
+      "tempoMs": 2180
     },
     {
       "rota": "/tarefas",
@@ -1318,7 +1030,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3525
+      "tempoMs": 3709
     },
     {
       "rota": "/tarefas",
@@ -1351,7 +1063,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2497
+      "tempoMs": 2281
     },
     {
       "rota": "/tarefas",
@@ -1384,7 +1096,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2206
+      "tempoMs": 2110
     },
     {
       "rota": "/tarefas",
@@ -1417,7 +1129,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2062
+      "tempoMs": 2178
     },
     {
       "rota": "/team",
@@ -1450,7 +1162,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3787
+      "tempoMs": 3806
     },
     {
       "rota": "/team",
@@ -1471,65 +1183,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Admin",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Agent",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Viewer",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Dono do Servidor",
-            "largura": 130,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1540,7 +1195,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2680
+      "tempoMs": 2584
     },
     {
       "rota": "/team",
@@ -1573,7 +1228,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2256
+      "tempoMs": 2295
     },
     {
       "rota": "/team",
@@ -1594,65 +1249,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 10,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Admin",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Agent",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Viewer",
-            "largura": 130,
-            "altura": 36
-          },
-          {
-            "tag": "input",
-            "tipo": null,
-            "texto": "Nome de exibição",
-            "largura": 160,
-            "altura": 30
-          },
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Papel de E2E Dono do Servidor",
-            "largura": 130,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1663,7 +1261,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2330
+      "tempoMs": 2233
     },
     {
       "rota": "/team/invite",
@@ -1678,7 +1276,7 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 47,
+        "textos": 48,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1696,7 +1294,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2380
+      "tempoMs": 2393
     },
     {
       "rota": "/team/invite",
@@ -1717,16 +1315,8 @@
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Cargo",
-            "largura": 294,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1737,7 +1327,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1542
+      "tempoMs": 1468
     },
     {
       "rota": "/team/invite",
@@ -1752,7 +1342,7 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 47,
+        "textos": 49,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1770,7 +1360,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1647
+      "tempoMs": 1511
     },
     {
       "rota": "/team/invite",
@@ -1785,22 +1375,14 @@
         "h1": [
           "Convidar membros"
         ],
-        "textos": 17,
+        "textos": 18,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Cargo",
-            "largura": 294,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -1811,7 +1393,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1484
+      "tempoMs": 1418
     },
     {
       "rota": "/templates",
@@ -1844,7 +1426,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3805
+      "tempoMs": 3840
     },
     {
       "rota": "/templates",
@@ -1877,7 +1459,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2353
+      "tempoMs": 2388
     },
     {
       "rota": "/templates",
@@ -1910,7 +1492,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2340
+      "tempoMs": 2040
     },
     {
       "rota": "/templates",
@@ -1943,7 +1525,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 1944
+      "tempoMs": 2038
     },
     {
       "rota": "/titulos",
@@ -1959,7 +1541,7 @@
         "h1": [
           "Financeiro"
         ],
-        "textos": 52,
+        "textos": 51,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
@@ -1977,7 +1559,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4210
+      "tempoMs": 4873
     },
     {
       "rota": "/titulos",
@@ -1993,22 +1575,14 @@
         "h1": [
           "Financeiro"
         ],
-        "textos": 24,
+        "textos": 647,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Situação",
-            "largura": 176,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2019,7 +1593,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 4170
+      "tempoMs": 3234
     },
     {
       "rota": "/titulos",
@@ -2035,7 +1609,7 @@
         "h1": [
           "Financeiro"
         ],
-        "textos": 54,
+        "textos": 64,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 721,
@@ -2053,7 +1627,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 3122
+      "tempoMs": 3046
     },
     {
       "rota": "/titulos",
@@ -2069,22 +1643,14 @@
         "h1": [
           "Financeiro"
         ],
-        "textos": 647,
+        "textos": 35,
         "contrasteReprovados": 0,
         "pioresContrastes": [],
         "naoMedidosPorImagem": 0,
         "overflow": 0,
         "estoura": null,
-        "alvosPequenos": 1,
-        "amostraAlvosPequenos": [
-          {
-            "tag": "button",
-            "tipo": "button",
-            "texto": "Situação",
-            "largura": 176,
-            "altura": 36
-          }
-        ]
+        "alvosPequenos": 0,
+        "amostraAlvosPequenos": []
       },
       "axe": {
         "critica": 0,
@@ -2095,7 +1661,7 @@
       "consoleErros": [],
       "errosDePagina": [],
       "valida": true,
-      "tempoMs": 2733
+      "tempoMs": 2889
     }
   ]
 }
