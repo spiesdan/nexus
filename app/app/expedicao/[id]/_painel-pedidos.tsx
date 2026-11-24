@@ -21,6 +21,7 @@ import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { comoMoeda } from "@/lib/format/moeda";
 import { NumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
+import { cn } from "@/lib/utils";
 
 interface Elegivel {
   id: string;
@@ -91,13 +92,24 @@ export function PainelDePedidosDisponiveis({
 
   const filtrados = React.useMemo(() => {
     const termo = busca.trim().toLowerCase();
-    return (pedidos ?? []).filter((p) => {
+    const encontrados = (pedidos ?? []).filter((p) => {
       if (status !== "" && p.status !== status) return false;
       if (termo === "") return true;
       return [numeroDoPedido(p.numero), p.numero_mercos, p.cliente_nome, p.cidade, p.endereco_entrega]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(termo));
     });
+    // Busca por número: o pedido daquele número vem PRIMEIRO. Quem só tem o
+    // número em cliente/cidade continua na lista, mas não compete com ele.
+    if (/^\d+$/.test(termo)) {
+      const exato = Number(termo);
+      encontrados.sort((a, b) => {
+        const pontos = (p: Elegivel) =>
+          p.numero === exato || p.numero_mercos === exato ? 0 : 1;
+        return pontos(a) - pontos(b);
+      });
+    }
+    return encontrados;
   }, [pedidos, busca, status]);
 
   function alternar(id: string) {
@@ -149,9 +161,6 @@ export function PainelDePedidosDisponiveis({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant={selecionados.size > 0 ? "info" : "neutral"} className="tabular-nums">
-            {selecionados.size} {t("selecionados")}
-          </Badge>
           <Button
             type="button"
             size="sm"
@@ -225,11 +234,27 @@ export function PainelDePedidosDisponiveis({
               >
                 {t("Limpar seleção")}
               </Button>
-              <span className="text-[11px] text-text-subtle">
-                {t("O alcance é o filtro atual")}: {filtrados.length} {t("de")} {pedidos.length}
+              <span className="text-[11px] text-text-subtle" role="status">
+                {busca.trim() !== "" || status !== ""
+                  ? `${filtrados.length} ${t("resultados")}`
+                  : `${pedidos.length} ${t("pedidos")}`}
               </span>
             </div>
 
+            {pedidos.length > 0 && filtrados.length === 0 && (
+              <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm">
+                <p className="font-medium text-text">{t("Nenhum pedido com esse termo.")}</p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-3 min-h-11"
+                  onClick={() => { setBusca(""); setStatus(""); }}
+                >
+                  {t("Limpar busca")}
+                </Button>
+              </div>
+            )}
             {pedidos.length === 0 && (
               <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
                 {t("Nenhum pedido aguardando embarque nesta organização.")}
@@ -237,10 +262,16 @@ export function PainelDePedidosDisponiveis({
             )}
             {(pedidos.length > 0 || ocupados.length > 0) && (
               <ul className="divide-y divide-border rounded-lg border border-border">
-                {pedidos.map((p) => {
+                {filtrados.map((p) => {
                   const marcado = selecionados.has(p.id);
                   return (
-                    <li key={p.id} className="flex items-start gap-3 px-3 py-2.5">
+                    <li
+                      key={p.id}
+                      className={cn(
+                        "flex items-start gap-3 border-l-2 px-3 py-2.5",
+                        marcado ? "border-accent bg-accent-soft/60" : "border-transparent",
+                      )}
+                    >
                       <label htmlFor={`pedido-${p.id}`} className="min-w-0 flex-1 cursor-pointer">
                         <span className="flex flex-wrap items-baseline justify-between gap-x-2">
                           <span className="text-sm font-medium text-text">
@@ -279,7 +310,7 @@ export function PainelDePedidosDisponiveis({
                           checked={marcado}
                           onChange={() => alternar(p.id)}
                           disabled={desabilitado}
-                          className="sr-only"
+                          className="mt-0.5 h-5 w-5 shrink-0 accent-accent"
                         />
                       </label>
                     </li>
@@ -303,6 +334,9 @@ export function PainelDePedidosDisponiveis({
             )}
 
             <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="text-xs font-medium text-text tabular-nums" role="status">
+                {selecionados.size} {t("selecionados")}
+              </span>
               <Button
                 type="button"
                 onClick={() => void adicionar()}
