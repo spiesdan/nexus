@@ -97,6 +97,10 @@ CRONS="
 # deslocaria a agenda inteira. O import do Mercos só enfileira: o worker
 # dedicado executa, então o timeout de 600s cobre o tick, não o scrape.
 0 20 * * *|600|api/v1/cron/mercos-import
+# Reconciliação diária às 21:00 UTC, uma hora depois do tick do Mercos. O
+# cron SÓ enfileira: o worker coleta o censo e roda a reconciliação SEM
+# aplicar. Importar sozinho é decisão do dono, não do agendamento.
+0 21 * * *|120|api/v1/cron/mercos-reconciliacao
 0 12 * * *|60|api/v1/cron/lgpd-sla-watcher
 30 3 * * *|120|api/v1/cron/kb-conversations-batch
 15 4 * * *|60|api/v1/cron/sync-model-catalog

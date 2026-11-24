@@ -784,7 +784,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 448)
+## Delta de handlers desde o baseline de 17/11 (419 → 449)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -798,6 +798,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |
 | Laya | 1 | Health check do agente Laya. | `/api/v1/laya/saude` |
 | Mercos — colisões | 1 | Pedidos do ERP que não entraram porque o número já estava usado por outro pedido aqui (0344). | `/api/v1/mercos/colisoes` |
+| Mercos — reconciliação | 1 | Tick diário às 21:00 UTC: enfileira o censo e a comparação no worker, sem `--aplicar` — detectar é obrigação, importar é decisão do dono. | `/api/v1/cron/mercos-reconciliacao` |
 | Offline — credencial | 2 | Aparelho do APK: token hasheado `nod_...`, escopo e revogação (0322). | `/api/v1/offline-devices`<br>`/api/v1/offline-devices/:id/revoke` |
 | Configuração — formas de pagamento | 2 | 0334 separa forma (t pag NT 2020.006) de prazo; lista e manutenção para a tela de configuração do tenant. | `/api/v1/payment-methods`<br>`/api/v1/payment-methods/:id` |
 | Prospecção — gastos da campanha | 2 | Painel de gastos no detalhe da campanha: lanca e edita midia manual para comparar orcado com gasto (rotas GET/POST/PATCH/DELETE). | `/api/v1/prospecting/campaigns/:id/gastos`<br>`/api/v1/prospecting/campaigns/:id/gastos/:spendId` |

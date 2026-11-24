@@ -461,6 +461,85 @@ async function processar(admin, run) {
   return { status, novos, pulados, atualizados, itensNovos, clientesNovos, erros: erros.length };
 }
 
+
+/** Roda um processo externo com limite de tempo e devolve o stdout. */
+function executar(script, argumentos, limiteMs) {
+  return new Promise((resolve, reject) => {
+    const filho = spawn(process.execPath, [script, ...argumentos], {
+      env: { ...process.env, MERCOS_EMAIL: EMAIL, MERCOS_SENHA: SENHA, MERCOS_EMPRESA: EMPRESA },
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    const limite = setTimeout(() => {
+      filho.kill("SIGKILL");
+      reject(new Error(`processo excedeu ${Math.round(limiteMs / 1000)}s`));
+    }, limiteMs);
+    filho.stdout.on("data", (b) => { stdout += b.toString(); });
+    filho.stderr.on("data", (b) => { stderr += b.toString(); });
+    filho.on("error", (err) => { clearTimeout(limite); reject(err); });
+    filho.on("close", (code) => {
+      clearTimeout(limite);
+      if (code === 0) resolve(stdout);
+      else reject(new Error(`processo saiu com ${code}: ${stderr.slice(-1500) || stdout.slice(-1500)}`));
+    });
+  });
+}
+
+/**
+ * RECONCILIAÇÃO DIÁRIA — censo primeiro, comparação depois, SEM `--aplicar`.
+ * `run_id` é o dia UTC: rodar de novo no mesmo dia atualiza o mesmo artefato
+ * e não reabre nada (idempotente por construção).
+ */
+async function processarReconciliacao(admin, run) {
+  const org = run.organization_id;
+  const pasta = join(TMP_ROOT, run.id);
+  mkdirSync(pasta, { recursive: true });
+  const lista = join(pasta, "lista.jsonl");
+  const andamento = join(pasta, "reconciliacao-andamento.json");
+  const runId = `diaria-${new Date().toISOString().slice(0, 10)}`;
+  const limite = Number(process.env.MERCOS_RECONCILIAR_LIMITE || "6000");
+
+  log("reconciliacao_inicio", { run: run.id, org, run_id: runId, limite });
+
+  // 1) censo: a LISTA, em minutos. `--so-lista` não abre os 5.930 detalhes.
+  await executar(
+    new URL("./coletar.mjs", import.meta.url).pathname,
+    [
+      "--saida", join(pasta, "pedidos.jsonl"),
+      "--andamento", andamento,
+      "--lista-saida", lista,
+      "--a-partir-de", "0",
+      "--de", dataBr(new Date(Date.now() - 30 * 86400000)),
+      "--ate", dataBr(new Date(Date.now() + 86400000)),
+      "--so-lista",
+    ],
+    Math.min(SCRAPE_TIMEOUT_MS, 1_200_000),
+  );
+
+  // 2) reconciliação somente leitura: detecta e grava o artefato; nunca importa.
+  const stdout = await executar(
+    new URL("../../scripts/mercos-reconciliar.mjs", import.meta.url).pathname,
+    ["--lista", lista, "--org", org, "--run-id", runId, "--limite", String(limite)],
+    Math.min(SCRAPE_TIMEOUT_MS, 600_000),
+  );
+  const resultado = JSON.parse(stdout.trim().split("\n").filter(Boolean).at(-1) ?? "{}");
+
+  await admin
+    .from("mercos_import_runs")
+    .update({
+      status: resultado.status === "completa" && resultado.verificado ? "success" : "partial",
+      finished_at: new Date().toISOString(),
+      summary: { ...resultado, run_id: runId, aplicar: false },
+    })
+    .eq("id", run.id)
+    .eq("organization_id", org);
+
+  log("reconciliacao_fim", { run: run.id, run_id: runId, status: resultado.status, verificado: resultado.verificado, duracao_ms: resultado.duracao_ms });
+  rmSync(pasta, { recursive: true, force: true });
+  return resultado;
+}
+
 async function marcarErro(admin, run, err) {
   const detalhe = err instanceof Error ? err.message : String(err);
   await admin
@@ -491,7 +570,8 @@ async function laco(admin) {
     if (!EMAIL || !SENHA) {
       throw new Error("MERCOS_EMAIL/MERCOS_SENHA ausentes no worker");
     }
-    await processar(admin, run);
+    if (run.tipo === "reconciliacao") await processarReconciliacao(admin, run);
+    else await processar(admin, run);
   } catch (err) {
     await marcarErro(admin, run, err);
   }

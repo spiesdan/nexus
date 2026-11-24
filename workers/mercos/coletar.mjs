@@ -46,6 +46,8 @@ const SAIDA = arg("saida", new URL("./pedidos.jsonl", import.meta.url).pathname)
 const ANDAMENTO = arg("andamento", new URL("./andamento.json", import.meta.url).pathname);
 /** Censo da reconciliação: a LISTA, que leva minutos, não os detalhes (12 h). */
 const LISTA_SAIDA = arg("lista-saida", process.env.MERCOS_LISTA_JSONL || "");
+/** Só o censo: a reconciliação não abre detalhe de quem está presente. */
+const SO_LISTA = process.argv.includes("--so-lista");
 
 const DE = arg("de", "01/09/2026");
 const ATE = arg("ate", "31/12/2026");
@@ -387,6 +389,12 @@ try {
       }) + "\n",
     );
     console.log(`  censo gravado: ${LISTA_SAIDA} (${lista.length} números) + meta`);
+  }
+
+  if (SO_LISTA) {
+    console.log("  modo só-censo: detalhes não abertos");
+    await navegador.close();
+    process.exit(0);
   }
 
   // ─── DETALHE: cabeçalho + itens, com reconciliação ───────────────────────

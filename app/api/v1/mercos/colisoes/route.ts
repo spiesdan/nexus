@@ -61,5 +61,6 @@ export async function GET(): Promise<Response> {
       }
     : null;
 
-  return ok({ itens: data ?? [], resumo }, { requestId });
+  // `resumo` é o nome original; `reconciliacao` é o que a tela do D lê.
+  return ok({ itens: data ?? [], resumo, reconciliacao: resumo }, { requestId });
 }

@@ -31861,6 +31861,20 @@ $$;
 revoke execute on function public.fn_mercos_enriquecer_endereco(uuid, text, jsonb) from public, anon, authenticated;
 grant execute on function public.fn_mercos_enriquecer_endereco(uuid, text, jsonb) to service_role;
 
+-- 0349 — apêndice idempotente: tipo da execução do Mercos (ver migration).
+-- 0349 — TIPO DA EXECUÇÃO DO MERCOS: importação ou reconciliação.
+--
+-- A reconciliação precisa do mesmo navegador, da mesma fila e do mesmo
+-- worker — mas NÃO pode importar sozinha. O tipo viaja na fila para o worker
+-- escolher o caminho; o cron só enfileira, sem `--aplicar`.
+
+alter table public.mercos_import_runs
+  add column if not exists tipo text not null default 'importacao'
+    constraint mercos_import_runs_tipo_valido check (tipo in ('importacao', 'reconciliacao'));
+
+create index if not exists mercos_import_runs_tipo_idx
+  on public.mercos_import_runs (tipo, status, created_at);
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

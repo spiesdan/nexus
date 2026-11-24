@@ -32,7 +32,8 @@ export interface Classificacao {
 }
 
 export function classificarNumero(entrada: {
-  nomeLista: string | null | undefined;
+  numero: number;
+  nomeLista?: string | null | undefined;
   documentoLista?: string | null;
   linhasBanco?: readonly LinhaDoBanco[];
 }): Classificacao;

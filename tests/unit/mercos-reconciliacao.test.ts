@@ -40,36 +40,44 @@ describe("identidade: número + cliente, não número só", () => {
     expect(mesmoCliente("oficina mecanica do ney", "OFICINA MECANICA DO NEY")).toBe(true);
   });
 
-  it("número presente com OUTRO cliente é colisão — os 4 perdidos não viram 'zero ausentes'", () => {
+  it("numero_mercos É a identidade: nome mudou, truncou ou virou CONSUMIDOR FINAL, continua importado", () => {
+    for (const cliente of [
+      "Nome Antigo Da Empresa",
+      "NOME ANTIGO DA EMPRESA LTDA - TRUNCADO EM 300 CARACTERES",
+      "CONSUMIDOR FINAL",
+    ]) {
+      const r = classificarNumero({
+        numero: 19338,
+        nomeLista: "Nome Completamente Diferente",
+        linhasBanco: [{ id: "mercos-19338", numero_mercos: 19338, numero: 900123, cliente_nome: cliente }],
+      });
+      expect(r.situacao).toBe("importado");
+    }
+  });
+
+  it("número ocupado por pedido LOCAL é colisão — os 4 perdidos não viram 'zero ausentes'", () => {
     for (const numero of [19669, 19670, 19671, 19672]) {
       const r = classificarNumero({
+        numero,
         nomeLista: `Cliente Mercos ${numero}`,
-        linhasBanco: [{ id: `local-${numero}`, cliente_nome: `Cliente Local ${numero}` }],
+        linhasBanco: [{ id: `local-${numero}`, numero, numero_mercos: null, cliente_nome: `Cliente Local ${numero}` }],
       });
       expect(r.situacao).toBe("colisao");
       expect(r.cliente_local_nome).toBe(`Cliente Local ${numero}`);
     }
   });
 
-  it("número presente com o MESMO cliente é importado", () => {
-    expect(
-      classificarNumero({
-        nomeLista: "OFICINA MECANICA DO NEY",
-        linhasBanco: [{ id: "mercos-1", cliente_nome: "Oficina Mecanica do Ney" }],
-      }).situacao,
-    ).toBe("importado");
-  });
-
   it("sem linha no banco é ausente por número", () => {
-    expect(classificarNumero({ nomeLista: "X", linhasBanco: [] }).situacao).toBe("ausente");
+    expect(classificarNumero({ numero: 19740, nomeLista: "X", linhasBanco: [] }).situacao).toBe("ausente");
   });
 
-  it("reserva por `numero` cobre importado antigo sem numero_mercos", () => {
+  it("linha antiga com numero = N mas sem numero_mercos é colisão pela regra — nome não resgata", () => {
     const r = classificarNumero({
+      numero: 19680,
       nomeLista: "Cliente Antigo",
       linhasBanco: [{ id: "antigo", numero: 19680, numero_mercos: null, cliente_nome: "Cliente Antigo" }],
     });
-    expect(r.situacao).toBe("importado");
+    expect(r.situacao).toBe("colisao");
   });
 });
 

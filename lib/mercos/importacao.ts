@@ -15,6 +15,8 @@ export interface ExecucaoMercos {
   organization_id: string;
   status: StatusDaImportacao;
   origem: "manual" | "cron";
+  /** 0349: importação normal ou reconciliação somente leitura. */
+  tipo: "importacao" | "reconciliacao";
   requested_by: string | null;
   started_at: string | null;
   finished_at: string | null;
