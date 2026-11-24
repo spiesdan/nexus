@@ -109,6 +109,10 @@ CRONS="
 # intervalo DELA vence (default 6h, configurável). O executor limita a 3 orgs
 # por tick para caber no timeout; rodada vazia não audita.
 */15 * * * *|120|api/v1/cron/sentinel
+# Cobrança SaaS: avisos D-3/D-2/D-1 e reconciliacao local x Stripe. Ambos
+# only-read na origem; nenhum suspende sem fatura vencida confirmada.
+0 6 * * *|120|api/v1/cron/billing-notices
+30 6 * * *|120|api/v1/cron/billing-reconcile
 "
 
 # CRONTAB_PATH é ponto de injeção do teste (tests/shell/scheduler-entrypoint.test.sh).

@@ -794,7 +794,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 453)
+## Delta de handlers desde o baseline de 17/11 (419 → 459)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -804,6 +804,8 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Observabilidade — painel | 1 | Painel de SLOs lido por platform_admin, alimentado pela série 0330–0332. | `/api/v1/admin/observabilidade` |
 | Outros | 1 | Sem razão declarada. | `/api/v1/commercial-orders/orcamentos-parados` |
 | Contatos | 2 | Crédito do cliente e busca de cidades — apoio à venda. | `/api/v1/contacts/:id/credito`<br>`/api/v1/contacts/cidades` |
+| Cobrança SaaS — tela e webhook | 4 | Assinatura lida do Stripe, checkout e portal com tenant da sessão, e webhook com assinatura sobre o corpo bruto e `stripe_event_id` único. | `/api/v1/billing/subscription`<br>`/api/v1/billing/checkout`<br>`/api/v1/billing/portal`<br>`/api/v1/webhooks/stripe` |
+| Cobrança SaaS — crons | 2 | Avisos D-3/D-2/D-1 persistidos e reconciliação local × Stripe. | `/api/v1/cron/billing-notices`<br>`/api/v1/cron/billing-reconcile` |
 | Mercos — reconciliação | 1 | Cron de reconciliação do Mercos. | `/api/v1/cron/mercos-reconciliacao` |
 | Sentinel — cron | 1 | Gatilho agendado da rodada; organização suspensa é ignorada na origem (0329). | `/api/v1/cron/sentinel` |
 | Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |
