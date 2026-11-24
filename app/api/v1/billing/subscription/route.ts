@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 
 import { ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
+import { planoEfetivo, type PlanoNoBanco, type PriceStripe } from "@/lib/billing/plano";
 import { lerConfigStripe, stripeRequest } from "@/lib/billing/stripe";
 import { registrarVerificacao, resolverVerificacao } from "@/lib/billing/verificacao";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -44,6 +45,19 @@ export async function GET(): Promise<Response> {
     .limit(1)
     .maybeSingle();
 
+  // Plano: banco enquanto não há Price; com `stripe_price_id`, o Stripe manda.
+  const { data: planoDb } = await admin.from("billing_plans")
+    .select("nome, descricao, valor_cents, moeda, intervalo, stripe_price_id")
+    .eq("ativo", true).order("created_at", { ascending: true }).limit(1).maybeSingle();
+  let price: PriceStripe | null = null;
+  if (planoDb?.stripe_price_id) {
+    const cfgPlano = lerConfigStripe();
+    const respostaPrice = await stripeRequest<PriceStripe>(cfgPlano, `/prices/${encodeURIComponent(planoDb.stripe_price_id)}`);
+    if (respostaPrice.ok) price = respostaPrice.data;
+    else await registrarVerificacao(admin, orgId, "plano_price", null, respostaPrice.erro);
+  }
+  const plano = planoEfetivo(planoDb as PlanoNoBanco | null, price);
+
   let remoto: AssinaturaStripe | null = null;
   let fonte = "local_cache";
   if (cliente?.stripe_customer_id) {
@@ -65,6 +79,7 @@ export async function GET(): Promise<Response> {
   return ok(
     {
       fonte,
+      plano,
       status: remoto?.status ?? local?.status ?? "sem_assinatura",
       valor_cents: preco?.unit_amount ?? null,
       moeda: preco?.currency?.toUpperCase() ?? null,

@@ -36,14 +36,23 @@ export function lerConfiguracaoBilling(
 }
 
 /** Chamada no boot. Lança com mensagem clara se houver chave live. */
+export const STRIPE_LIVE_SEM_CONFIRMACAO =
+  "Modo live exige STRIPE_TEST_MODE=false E STRIPE_LIVE_CONFIRMADO=sim juntos — " +
+  "cobrar de verdade é decisão explícita do dono, nunca consequência de uma chave aparecer.";
+
 export function validarConfiguracaoStripe(
   env: Record<string, string | undefined> = process.env,
 ): void {
   const chave = env.STRIPE_SECRET_KEY ?? "";
-  if (chave.startsWith("sk_live_") || chave.startsWith("rk_live_")) {
-    throw new Error(BILLING_LIVE_KEY_ERROR);
+  const live = chave.startsWith("sk_live_") || chave.startsWith("rk_live_");
+  const confirmado = env.STRIPE_LIVE_CONFIRMADO === "sim";
+  const modoTeste = env.STRIPE_TEST_MODE !== "false";
+
+  if (live) {
+    if (modoTeste || !confirmado) throw new Error(STRIPE_LIVE_SEM_CONFIRMACAO);
+    return; // caminho live SOMENTE com as duas decisões explícitas
   }
-  if (env.STRIPE_TEST_MODE === "false") {
-    throw new Error("STRIPE_TEST_MODE=false recusado: modo de teste obrigatório nesta fatia.");
+  if (!modoTeste) {
+    throw new Error("STRIPE_TEST_MODE=false recusado: modo de teste obrigatório sem chave live confirmada.");
   }
 }

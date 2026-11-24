@@ -7,13 +7,26 @@ import {
 } from "./config";
 
 describe("configuração da cobrança", () => {
-  it("chave live derruba o boot (sk_live e rk_live)", () => {
+  it("chave live sem confirmação explícita derruba o boot (sk_live e rk_live)", () => {
     expect(() => validarConfiguracaoStripe({ STRIPE_SECRET_KEY: "sk_live_x" })).toThrow(
-      BILLING_LIVE_KEY_ERROR,
+      /decisão explícita do dono/,
     );
     expect(() => validarConfiguracaoStripe({ STRIPE_SECRET_KEY: "rk_live_x" })).toThrow(
-      BILLING_LIVE_KEY_ERROR,
+      /decisão explícita do dono/,
     );
+    expect(BILLING_LIVE_KEY_ERROR).toContain("modo de teste");
+  });
+
+  it("live só com as DUAS decisões: TEST_MODE=false e LIVE_CONFIRMADO=sim", () => {
+    expect(() => validarConfiguracaoStripe({
+      STRIPE_SECRET_KEY: "sk_live_x", STRIPE_TEST_MODE: "false",
+    })).toThrow(/STRIPE_LIVE_CONFIRMADO/);
+    expect(() => validarConfiguracaoStripe({
+      STRIPE_SECRET_KEY: "sk_live_x", STRIPE_LIVE_CONFIRMADO: "sim",
+    })).toThrow(/STRIPE_TEST_MODE=false/);
+    expect(validarConfiguracaoStripe({
+      STRIPE_SECRET_KEY: "sk_live_x", STRIPE_TEST_MODE: "false", STRIPE_LIVE_CONFIRMADO: "sim",
+    })).toBeUndefined();
   });
 
   it("modo de teste é o padrão e STRIPE_TEST_MODE=false é recusado", () => {
