@@ -909,3 +909,31 @@ forma idempotente e com passo visível no log (“pausando automações para apl
 schema”). Gate: `pnpm test:shell`. Sem isso, todo self-hoster com follow-up
 ativo corre o mesmo risco e a mensagem de erro não ajuda ninguém. **Não é
 release agora** — entra na próxima, por decisão do dono. Deploy é do dono.
+
+
+## 44. 24/11/2026 — Decisões do dono sobre o Mercos (produção)
+
+Registro de produção das cinco decisões com o **motivo medido** — detalhe
+operacional em [`66-backlog-aaa.md`](66-backlog-aaa.md), seção “Decisões do
+dono — Mercos”. **Nenhuma escrita em produção foi feita por este registro**;
+são regras de leitura/classificação e de onde o trabalho operacional vive.
+
+1. **19639 fora:** pedido cancelado, 0 itens, R$ 0,00. O sistema recusa por
+   desenho (`itens invalidos`) e está certo — pedido sem item não é pedido;
+   importá-lo criaria linha vazia no histórico. **Não é dívida, é regra.**
+2. **Histórico antigo não é zero:** reconciliação completa (5.930) → **291
+   números ausentes** e **290 sem detalhe**, quase todos 13.8k–19k de meses
+   atrás. Buscar detalhe de todos custaria **~12 h de scraping**; sem pedido
+   explícito do dono, a tela e o doc dizem **“não verificado (histórico)”**
+   com o número — nunca zero fingido. A janela recente (30 dias) está
+   verificada e deu **zero real**.
+3. **Identidade é `numero_mercos`:** comparar nome produziu **2.884 colisões
+   falsas** (renomeado, truncado, CONSUMIDOR FINAL). Regra: `numero_mercos = N`
+   → importado; senão `numero = N` → colisão; senão ausente. Nome só como
+   reserva para linha antiga sem `numero_mercos`.
+4. **Teto de endereço = 20/rodada:** 60 arrisca estourar o timeout do worker;
+   com cron diário, 20/dia cobre a base em ~3 semanas. Acelerar é **env var**,
+   não código.
+5. **`/data/mercos/` para censo e artefatos:** deploy recriou o container e
+   apagou censo/detalhes no meio do trabalho. Trabalho operacional não pode
+   morrer num `update.sh`; `/tmp` vira rascunho descartável.

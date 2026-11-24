@@ -438,3 +438,14 @@ Nenhuma release nova hoje sem pedido do dono (lote 1.63.1 já no ar).
 
 Chave do ciclo: série de produção 267 amostras/p95 2660 ms (alvo 800) — #809
 original dizia 'sem série' e foi rejeitado; G reescreve com os números medidos.
+
+
+## Fila viva — decisões Mercos (24/11/2026)
+
+| worker | fila mínima (≥2) |
+|---|---|
+| D | P0-9 (`update.sh` pausa worker/scheduler) · P1-30 (tela: “não verificado (histórico)”) · workbench Expedição |
+| F | catálogo PDF · P0-4 backend orçamentos parados · painel de gastos (pós-corte) |
+| G | P1-31 (`numero_mercos` como identidade) → P1-32 (teto 20 por env var) → P1-33 (`/data/mercos/`); Stripe em paralelo |
+
+Motivos e números em `66-backlog-aaa.md`, seção “Decisões do dono — Mercos”.
