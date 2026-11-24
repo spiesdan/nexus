@@ -54,17 +54,21 @@ beforeAll(() => {
 });
 
 describe("0344 — série local separada e colisões visíveis", () => {
-  it("org nova começa em 900000; contador antigo (19722) é empurrado para 900000", () => {
-    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("900000");
+  it("org nova começa em 70000; contador antigo (19722) é empurrado para 70000", () => {
+    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("70000");
     sql(`insert into public.commercial_order_counters (organization_id, ultimo_numero)
          values ('${ORG_A}', 19722)
          on conflict (organization_id) do update set ultimo_numero = 19722`);
-    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_A}')`)).toBe("900000");
+    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_A}')`)).toBe("70000");
   });
 
-  it("a migração de dados empurra contadores antigos para 900000 (chamada direta na org B)", () => {
-    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("900001");
-    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("900002");
+  it("série local segue 70001, 70002 ... (chamada direta na org B)", () => {
+    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("70001");
+    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("70002");
+    sql(`insert into public.commercial_order_counters (organization_id, ultimo_numero)
+         values ('${ORG_B}', 70006)
+         on conflict (organization_id) do update set ultimo_numero = 70006`);
+    expect(sql(`select public.fn_proximo_numero_pedido('${ORG_B}')`)).toBe("70007");
   });
 
   it("pedido local 19669 NÃO é renumerado", () => {
@@ -77,7 +81,7 @@ describe("0344 — série local separada e colisões visíveis", () => {
     const r = JSON.parse(importar(ORG_A, 19669, "Cliente Mercos 19669"));
     expect(r.status).toBe("inserted");
     expect(r.numero_mercos).toBe(19669);
-    expect(r.numero).toBeGreaterThanOrEqual(900000);
+    expect(r.numero).toBeGreaterThanOrEqual(70000);
     expect(r.colisao).toBe(true);
 
     const colisao = sql(`
