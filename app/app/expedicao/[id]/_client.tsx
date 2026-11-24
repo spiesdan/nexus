@@ -62,6 +62,7 @@ import {
   X,
 } from "@/lib/ui/icons";
 import { cn } from "@/lib/utils";
+import { mascaraPlaca, placaEhValida } from "@/lib/expedicao/placa";
 import { NumeroDoPedido, rotuloNumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
 
 import { FechamentoCarga } from "./_fechamento";
@@ -169,6 +170,7 @@ export function CargaClient({
   podeOperar,
   podeExcluir,
   podeFechar,
+  veiculosRecentes = [],
   textos,
 }: {
   cargaId: string;
@@ -190,6 +192,7 @@ export function CargaClient({
   podeExcluir: boolean;
   /** Fechar caixa é mexer em dinheiro: o mesmo nível do PUT, `manager`+. */
   podeFechar: boolean;
+  veiculosRecentes?: Array<{ placa: string; motorista: string }>;
   textos: Textos;
 }) {
   const t = useT();
@@ -1413,7 +1416,7 @@ export function CargaClient({
                 id="carga-placa"
                 maxLength={10}
                 value={placa}
-                onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                onChange={(e) => setPlaca(mascaraPlaca(e.target.value))}
                 placeholder="ABC1D23"
               />
             </div>
@@ -1427,6 +1430,29 @@ export function CargaClient({
                 placeholder={t("Ex.: Fiorino branca")}
               />
             </div>
+            {veiculosRecentes.length > 0 && (
+              <div className="space-y-1.5">
+                <Label htmlFor="carga-recente">{t("Usar combinação recente")}</Label>
+                <select
+                  id="carga-recente"
+                  className="min-h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm"
+                  defaultValue=""
+                  onChange={(e) => {
+                    const escolhida = veiculosRecentes[Number(e.target.value)];
+                    if (!escolhida) return;
+                    setPlaca(mascaraPlaca(escolhida.placa));
+                    setMotoristaNome(escolhida.motorista);
+                  }}
+                >
+                  <option value="">{t("Escolher…")}</option>
+                  {veiculosRecentes.map((v, i) => (
+                    <option key={`${v.placa}-${v.motorista}`} value={i}>
+                      {[v.placa, v.motorista].filter(Boolean).join(" · ")}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="carga-motorista">{t("Motorista")}</Label>
               <Input
@@ -1441,7 +1467,15 @@ export function CargaClient({
             <Button variant="ghost" onClick={() => setVeiculoAberto(false)}>
               {t("Cancelar")}
             </Button>
-            <Button onClick={() => void salvarVeiculo()} disabled={salvandoVeiculo}>
+            {placa.trim() !== "" && !placaEhValida(placa) && (
+              <p role="alert" className="text-xs text-error-fg">
+                {t("Placa inválida. Use ABC1D23 (Mercos) ou ABC1234 (antiga).")}
+              </p>
+            )}
+            <Button
+              onClick={() => void salvarVeiculo()}
+              disabled={salvandoVeiculo || (placa.trim() !== "" && !placaEhValida(placa))}
+            >
               {salvandoVeiculo ? t("Salvando…") : t("Salvar")}
             </Button>
           </DialogFooter>

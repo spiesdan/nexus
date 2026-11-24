@@ -45,7 +45,30 @@ export async function contextoDaCarga(id: string) {
     .maybeSingle();
   if (!carga) notFound();
 
+  // Sugestões: as últimas 5 combinações já usadas nesta organização.
+  // É `distinct` no que existe — nenhuma tabela de frota foi criada.
+  const { data: recentes } = await supabase
+    .from("shipments")
+    .select("placa, motorista_nome")
+    .eq("organization_id", activeOrg.orgId)
+    .order("created_at", { ascending: false })
+    .limit(40);
+  const vistas = new Set<string>();
+  const veiculosRecentes: Array<{ placa: string; motorista: string }> = [];
+  for (const linha of (recentes ?? []) as Array<{ placa: string | null; motorista_nome: string | null }>) {
+    if (!linha.placa?.trim() && !linha.motorista_nome?.trim()) continue;
+    const chave = `${linha.placa ?? ""}|${linha.motorista_nome ?? ""}`;
+    if (vistas.has(chave)) continue;
+    vistas.add(chave);
+    veiculosRecentes.push({
+      placa: linha.placa ?? "",
+      motorista: linha.motorista_nome ?? "",
+    });
+    if (veiculosRecentes.length === 5) break;
+  }
+
   return {
+    veiculosRecentes,
     cargaInicial: carga,
     // Modo entregador (0292): a cabine vira tela cheia, sem o cabeçalho da ficha.
     motorista: activeOrg.motorista === true,
