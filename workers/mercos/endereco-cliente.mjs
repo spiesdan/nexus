@@ -33,6 +33,41 @@ const limpo = (valor) => {
   return t && !ehRotulo(t) ? t : null;
 };
 
+/**
+ * O CARTÃO DA FICHA — sem rótulo, em três linhas seguidas.
+ *
+ * Medido na ficha real (cliente da ABBASPEL, 24/11/2026):
+ *
+ *   "(49) 9959-0336"
+ *   "AVENIDA MICHELE SIMONETTI 357 - SAO MIGUEL"   ← logradouro+número - bairro
+ *   "CEP 89580-000"
+ *   "FRAIBURGO - Santa Catarina"                   ← cidade - Estado por extenso
+ *
+ * O parser anterior só entendia campo rotulado ("Rua: ..."), então desta ficha
+ * ele salvava **apenas o CEP** — o cliente continuava sem rua na NF-e.
+ */
+const ESTADO_PARA_UF = {
+  acre: "AC", alagoas: "AL", amapá: "AP", amapa: "AP", amazonas: "AM",
+  bahia: "BA", ceará: "CE", ceara: "CE", "distrito federal": "DF",
+  "espírito santo": "ES", "espirito santo": "ES", goiás: "GO", goias: "GO",
+  maranhão: "MA", maranhao: "MA", "mato grosso": "MT", "mato grosso do sul": "MS",
+  "minas gerais": "MG", pará: "PA", para: "PA", paraíba: "PB", paraiba: "PB",
+  paraná: "PR", parana: "PR", pernambuco: "PE", piauí: "PI", piaui: "PI",
+  "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS",
+  rondônia: "RO", rondonia: "RO", roraima: "RR", "santa catarina": "SC",
+  "são paulo": "SP", "sao paulo": "SP", sergipe: "SE", tocantins: "TO",
+};
+
+/** "AVENIDA X 357 - SAO MIGUEL" → logradouro "AVENIDA X", número "357", bairro "SAO MIGUEL". */
+function separarLinhaDoCartao(linha) {
+  const partes = String(linha).split(" - ");
+  const bairro = partes.length > 1 ? partes.pop().trim() : null;
+  const resto = partes.join(" - ").trim();
+  const m = /^(.*?)[,\s]+(\d{1,6}|s\/?n|sn)$/i.exec(resto);
+  if (m) return { logradouro: m[1].trim() || null, numero_end: m[2].toUpperCase(), bairro };
+  return { logradouro: resto || null, numero_end: null, bairro };
+}
+
 /** Lê o endereço das linhas da ficha. Nunca inventa: ausente é `null`. */
 export function lerEnderecoDaFicha(linhas) {
   const resultado = {
@@ -51,6 +86,26 @@ export function lerEnderecoDaFicha(linhas) {
       const valor = limpo(m[m.length - 1]) ?? limpo(texto[i + 1]);
       if (valor && resultado[campo] == null) resultado[campo] = valor;
       break;
+    }
+  }
+  // ── O CARTÃO SEM RÓTULO (formato real da ficha) ──────────────────────────
+  // Ancora no CEP e lê o vizinho de cima (endereço) e o de baixo (cidade/UF).
+  // Só preenche o que ainda está nulo: página rotulada continua ganhando.
+  if (resultado.logradouro == null || resultado.cidade == null) {
+    const iCep = texto.findIndex((l) => /^cep\s*[: ]\s*\d{5}-?\d{3}$/i.test(l));
+    if (iCep > 0) {
+      const doCartao = separarLinhaDoCartao(texto[iCep - 1]);
+      if (resultado.logradouro == null) resultado.logradouro = doCartao.logradouro;
+      if (resultado.numero_end == null) resultado.numero_end = doCartao.numero_end;
+      if (resultado.bairro == null) resultado.bairro = doCartao.bairro;
+      const cidadeLinha = texto[iCep + 1];
+      const mCidade = /^(.+?)\s+-\s+(.+)$/.exec(cidadeLinha ?? "");
+      if (mCidade) {
+        if (resultado.cidade == null) resultado.cidade = mCidade[1].trim();
+        if (resultado.uf == null) {
+          resultado.uf = ESTADO_PARA_UF[mCidade[2].trim().toLowerCase()] ?? null;
+        }
+      }
     }
   }
   // A UF costuma vir junto da cidade ("Mafra, SC"). Só a aproveitamos quando

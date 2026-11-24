@@ -95,3 +95,31 @@ describe("cache por documento com validade", () => {
     expect(carregarCache(caminho, agora)).toEqual({});
   });
 });
+
+describe("cartão da ficha sem rótulo (formato real medido em 24/11)", () => {
+  // Linhas copiadas da ficha do cliente da ABBASPEL (pedido 19732).
+  const cartao = [
+    "(49) 9959-0336",
+    "AVENIDA MICHELE SIMONETTI 357 - SAO MIGUEL",
+    "CEP 89580-000",
+    "FRAIBURGO - Santa Catarina",
+    "Visualizar mapa",
+  ];
+
+  it("lê rua, número, bairro, CEP, cidade e UF", () => {
+    const e = lerEnderecoDaFicha(cartao);
+    expect(e.logradouro).toBe("AVENIDA MICHELE SIMONETTI");
+    expect(e.numero_end).toBe("357");
+    expect(e.bairro).toBe("SAO MIGUEL");
+    expect(e.cep).toBe("89580-000");
+    expect(e.cidade).toBe("FRAIBURGO");
+    expect(e.uf).toBe("SC");
+  });
+
+  it("sem cartão, continua devolvendo nulo em vez de inventar", () => {
+    const e = lerEnderecoDaFicha(["(49) 9959-0336", "FRAIBURGO - Santa Catarina"]);
+    expect(e.logradouro).toBeNull();
+    expect(e.numero_end).toBeNull();
+    expect(e.bairro).toBeNull();
+  });
+});
