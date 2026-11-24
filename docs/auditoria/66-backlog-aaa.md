@@ -204,3 +204,16 @@ ocorrência `plataforma.slo_estourado` se ainda acima de 800 ms.
   no `update.sh` antes do schema; primeira tentativa de deploy abortou em
   deadlock na `ALTER TABLE ... ENABLE RLS` (40 §43). Entra na próxima release,
   não nesta, por decisão do dono.
+## Decisões do dono — Mercos (24/11/2026)
+
+> Estado aqui é da **decisão** (`[x]` = decidida e registrada), não a implementação.
+> Cada item diz o **motivo** medido; "conforme" nunca é só conclusão.
+
+| id | decisão | estado | dono | motivo (medido) | próximo passo |
+|---|---|---|---|---|---|
+| P1-29 | Pedido **19639 fica fora** — cancelado, 0 itens, R$ 0,00; sistema recusa por desenho (`itens invalidos`) | `[x]` | coordenação + G (importador) | pedido sem item não é pedido; importá-lo criaria linha vazia no histórico. **Não é dívida — é regra** | manter `ignorado_sem_itens` no coletor (spec 23) e não criar exceção |
+| P1-30 | Histórico antigo = **“não verificado (histórico)”**, não zero | `[x]` | D (tela) + coordenação (doc 77) | reconciliação completa (5.930) achou **291 números ausentes** e **290 sem detalhe**, quase todos 13.8k–19k de meses atrás; buscar detalhe de 5.930 custa **~12 h de scraping**. Janela recente (30 dias) está verificada e deu **zero real** | não gastar 12 h sem pedido explícito; tela e doc mostram número + “não verificado (histórico)”; zero só onde a janela foi verificada |
+| P1-31 | Classificador usa **`numero_mercos` como identidade**, não nome | `[x]` | G (classificador) + D (tela de colisões) | comparar nome gerou **2.884 colisões falsas** (renome, truncamento, CONSUMIDOR FINAL) | regra: `numero_mercos = N` → importado; senão `numero = N` → colisão; senão ausente. Nome só como reserva em linha antiga sem `numero_mercos` |
+| P1-32 | Teto de enriquecimento de endereço **20 por rodada** | `[x]` | G (worker de endereço) | subir para 60 arrisca estourar o timeout do worker; com cron diário, 20/dia cobre a base em ~3 semanas | acelerar só por **env var** (`MERCOS_MAX_ENDERECOS_POR_RODADA`), nunca mudando código |
+| P1-33 | Censo e artefatos em **`/data/mercos/`**, não `/tmp` | `[x]` | G (coletor/operador) | deploy recriou o container e apagou censo e detalhes no meio do trabalho; trabalho operacional não pode morrer num `update.sh` | mover gravadores de censo/detalhes para volume persistente; `/tmp` só como rascunho descartável |
+
