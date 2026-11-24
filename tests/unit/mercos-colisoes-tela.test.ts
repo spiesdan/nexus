@@ -13,6 +13,8 @@ import {
   nomeClienteMercos,
   rotuloData,
   rotuloEstado,
+  coberturaDaConferencia,
+  estadoDaConferencia,
   SEM_CLIENTE_LOCAL,
   SEM_CLIENTE_MERCOS,
   type ColisaoMercos,
@@ -89,5 +91,61 @@ describe("colisões do Mercos — o que a tela diz", () => {
     expect(navegacao).toContain('"/app/pedidos/colisoes-mercos"');
     const registro = ler("lib/navigation/registry.ts");
     expect(registro).not.toContain('href: "/app/pedidos/colisoes-mercos"');
+  });
+});
+
+/**
+ * O resumo da reconciliação é a RESPOSTA para "tenho certeza?". O estado
+ * incompleto não pode dizer "nenhum ficou de fora" — e zero ausente nunca
+ * aparece sem a cobertura ao lado.
+ */
+describe("resumo da reconciliação", () => {
+  const completa = {
+    quando: "2026-11-23T22:00:00Z",
+    censo_lido: 5929,
+    censo_esperado: 5929,
+    ausentes: 0,
+    colisoes: 4,
+    ignorados_sem_item: 1,
+    status: "completa" as const,
+  };
+
+  it("tolerante: sem reconciliação, o estado é 'sem' e a tela segue", () => {
+    expect(estadoDaConferencia(null)).toBe("sem");
+    expect(estadoDaConferencia(undefined)).toBe("sem");
+    expect(estadoDaConferencia({ status: null })).toBe("sem");
+  });
+
+  it("quatro estados, decididos por status + ausentes", () => {
+    expect(estadoDaConferencia(completa)).toBe("completa");
+    expect(estadoDaConferencia({ ...completa, ausentes: 3 })).toBe("ausentes");
+    expect(estadoDaConferencia({ ...completa, status: "incompleta" })).toBe("incompleta");
+  });
+
+  it("o número de ausentes nunca aparece sozinho: cobertura sempre ao lado", () => {
+    expect(coberturaDaConferencia(completa, "pt-BR")).toBe(
+      "0 ausentes · 5.929 de 5.929 verificados",
+    );
+    expect(coberturaDaConferencia({ ...completa, censo_lido: 100 }, "pt-BR")).toBe(
+      "0 ausentes · 100 de 5.929 verificados",
+    );
+  });
+
+  it("cópia dos quatro estados está na tela, sem tooltip escondendo 'incompleta'", () => {
+    const tela = ler("app/app/pedidos/colisoes-mercos/_client.tsx");
+    expect(tela).toContain("Nenhum pedido do Mercos ficou de fora.");
+    expect(tela).toContain("pedidos do Mercos ainda não entraram");
+    expect(tela).toContain("Verificação incompleta: olhamos");
+    expect(tela).toContain("Ainda não verificamos os pedidos do Mercos");
+    expect(tela).toContain("A próxima execução termina a verificação");
+    const inicio = tela.indexOf('data-testid="estado-reconciliacao"');
+    const bloco = tela.slice(inicio, inicio + 2200);
+    expect(bloco).not.toContain("title="); // nada de tooltip escondendo "incompleta"
+    expect(tela).toContain('data-testid="estado-reconciliacao"');
+  });
+
+  it("390: duas linhas, não um parágrafo", () => {
+    const tela = ler("app/app/pedidos/colisoes-mercos/_client.tsx");
+    expect(tela).toContain("flex flex-wrap items-baseline gap-x-3 gap-y-1");
   });
 });

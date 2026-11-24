@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useT } from "@/hooks/i18n/useT";
+import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { apiClient } from "@/lib/api/client";
 import { ApiError } from "@/lib/api/types";
 import { comoMoeda } from "@/lib/format/moeda";
@@ -20,11 +21,14 @@ import {
   nomeClienteMercos,
   rotuloData,
   rotuloEstado,
+  coberturaDaConferencia,
+  estadoDaConferencia,
   type ColisaoMercos,
+  type ReconciliacaoMercos,
   type RespostaColisoesMercos,
 } from "@/lib/mercos/colisoes";
 import { ArrowsClockwise, CheckCircle, Package, Warning } from "@/lib/ui/icons";
-import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
+import { cn } from "@/lib/utils";
 
 /** Alvos de 44 px sem repetir a classe em cada botão. */
 const ALVOS = "[&_a]:min-h-11 [&_button]:min-h-11 [&_a]:min-w-11 [&_button]:min-w-11";
@@ -41,6 +45,7 @@ export function ColisoesMercosClient({
   const [carregando, setCarregando] = React.useState(true);
   const [erro, setErro] = React.useState<"indisponivel" | "carga" | null>(null);
   const [importando, setImportando] = React.useState<number | null>(null);
+  const [reconciliacao, setReconciliacao] = React.useState<ReconciliacaoMercos | null>(null);
 
   const carregar = React.useCallback(async () => {
     setCarregando(true);
@@ -50,8 +55,10 @@ export function ColisoesMercosClient({
       // Tolerante a contrato ainda não publicado na main e a lista vazia:
       // resposta sem `itens` é "nada ficou de fora", não é exceção.
       setItens(Array.isArray(resposta?.data?.itens) ? resposta.data.itens : []);
+      setReconciliacao(resposta?.data?.reconciliacao ?? null);
     } catch (e) {
       setItens([]);
+      setReconciliacao(null);
       setErro(e instanceof ApiError && e.status === 404 ? "indisponivel" : "carga");
     } finally {
       setCarregando(false);
@@ -62,6 +69,10 @@ export function ColisoesMercosClient({
     void carregar();
   }, [carregar]);
 
+  const estadoConferencia = estadoDaConferencia(reconciliacao);
+  const ausentes = reconciliacao?.ausentes ?? 0;
+  const cobertura = reconciliacao ? coberturaDaConferencia(reconciliacao, tagDoIdioma) : "";
+  const numero = (n: number | null | undefined) => (n ?? 0).toLocaleString(tagDoIdioma);
   const pendentes = itens.filter((i) => !i.pedido_importado_id).length;
   const resolvidos = itens.length - pendentes;
 
@@ -149,6 +160,52 @@ export function ColisoesMercosClient({
         </Card>
       </div>
 
+      {/* A RESPOSTA para "tenho certeza de que não ficou pedido de fora?".
+          Zero ausente com cobertura incompleta NÃO é prova — por isso o
+          estado incompleto nunca diz "nenhum ficou de fora". */}
+      <div
+        role={estadoConferencia === "incompleta" ? "alert" : "status"}
+        data-testid="estado-reconciliacao"
+        className={cn(
+          "rounded-xl border px-3.5 py-2.5",
+          estadoConferencia === "completa" && "border-success/40 bg-success-bg text-success-fg",
+          estadoConferencia === "ausentes" && "border-warning/40 bg-warning-bg text-warning-fg",
+          estadoConferencia === "incompleta" && "border-warning/40 bg-warning-bg text-warning-fg",
+          estadoConferencia === "sem" && "border-border bg-surface text-text",
+        )}
+      >
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <p className="min-w-0 text-sm font-semibold">
+            {estadoConferencia === "completa"
+              ? t("Nenhum pedido do Mercos ficou de fora.")
+              : estadoConferencia === "ausentes"
+                ? t(`${numero(ausentes)} pedidos do Mercos ainda não entraram`)
+                : estadoConferencia === "incompleta"
+                  ? t(
+                      `Verificação incompleta: olhamos ${numero(reconciliacao?.censo_lido)} de ${numero(reconciliacao?.censo_esperado)} pedidos.`,
+                    )
+                  : t("Ainda não verificamos os pedidos do Mercos contra o nosso cadastro")}
+          </p>
+          {estadoConferencia === "completa" && reconciliacao?.quando ? (
+            <span className="text-xs tabular-nums">
+              {t("verificado em")} {rotuloData(reconciliacao.quando, tagDoIdioma)} · {cobertura}
+            </span>
+          ) : estadoConferencia === "ausentes" || estadoConferencia === "incompleta" ? (
+            <span className="text-xs tabular-nums">{cobertura}</span>
+          ) : null}
+        </div>
+        {estadoConferencia === "incompleta" ? (
+          <p className="mt-1 text-xs">
+            {t("A próxima execução termina a verificação. Zero ausente agora não é prova.")}
+          </p>
+        ) : null}
+        {estadoConferencia === "sem" ? (
+          <p className="mt-1 text-xs">
+            {t("A verificação roda junto com a importação do Mercos.")}
+          </p>
+        ) : null}
+      </div>
+
       <p
         role="status"
         className="rounded-xl border border-info/40 bg-info-bg px-3.5 py-2.5 text-sm text-info-fg"
@@ -166,12 +223,20 @@ export function ColisoesMercosClient({
         </Card>
       ) : !erro && itens.length === 0 ? (
         <Card className="px-4 py-10 text-center">
-          <CheckCircle size={28} aria-hidden className="mx-auto text-success-fg" />
+          {estadoConferencia === "completa" ? (
+            <CheckCircle size={28} aria-hidden className="mx-auto text-success-fg" />
+          ) : (
+            <Warning size={28} aria-hidden className="mx-auto text-warning-fg" />
+          )}
           <p className="mt-3 text-base font-semibold text-text">
-            {t("Nenhum pedido do Mercos ficou de fora.")}
+            {estadoConferencia === "completa"
+              ? t("Nenhum pedido do Mercos ficou de fora.")
+              : t("Ainda não há linhas de colisão para mostrar.")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t("Boa notícia: todos os pedidos do Mercos entraram.")}
+            {estadoConferencia === "completa"
+              ? t("Boa notícia: todos os pedidos do Mercos entraram.")
+              : t("O resumo acima diz o que a verificação conseguiu apurar.")}
           </p>
           <Button asChild variant="outline" className="mt-4">
             <Link href="/app/pedidos">{textos.voltar}</Link>
