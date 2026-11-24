@@ -7,13 +7,20 @@
  * anota no papel (e alguém redigita), ou a entrega "acontece" na hora do
  * envio (mentira no histórico).
  *
- * Armazenamento: `localStorage` (desfechos são JSON pequeno; foto de
- * comprovante continua exigindo conexão — fase futura). O `store` é
- * injetável para testar sem navegador.
+ * Armazenamento: `localStorage` (desfechos são JSON pequeno). Decisão (b):
+ * sem conexão a cabine NÃO aceita foto — registra o desfecho com o motivo
+ * `sem_conexao`, e foto só pode ser enviada online pelo endpoint de proof.
+ * Blob em IndexedDB foi descartado: o outbox guarda só desfechos JSON.
  */
 
 import { randomId } from "@/lib/random-id";
 import type { MotivoDevolucao } from "@/lib/schemas/expedicao";
+
+export const MOTIVO_FOTO_SEM_CONEXAO = "Foto precisa de conexão — desfecho registrado sem foto.";
+
+export function registroDeFoto(conectado: boolean): { estado: "sem_conexao"; motivo: string } | null {
+  return conectado ? null : { estado: "sem_conexao", motivo: MOTIVO_FOTO_SEM_CONEXAO };
+}
 
 export interface DesfechoPendente {
   id: string;
@@ -25,6 +32,8 @@ export interface DesfechoPendente {
   longitude?: number;
   /** ISO-8601 de quando aconteceu (vale no servidor, não a hora do envio). */
   ocorrido_em: string;
+  /** Decisão (b): sem conexão, sem foto — o motivo vai junto do desfecho. */
+  foto?: { estado: "sem_conexao"; motivo: string } | null;
   tentativas: number;
   erro?: string | null;
   criado_em: string;
@@ -74,11 +83,14 @@ function gravarOutbox(lista: DesfechoPendente[], store?: ArmazenLocal | null): v
 }
 
 export function enfileirarDesfecho(
-  entrada: Omit<DesfechoPendente, "id" | "tentativas" | "criado_em" | "erro">,
+  entrada: Omit<DesfechoPendente, "id" | "tentativas" | "criado_em" | "erro" | "foto"> & { conectado?: boolean },
   store?: ArmazenLocal | null,
 ): DesfechoPendente {
+  const conectado = entrada.conectado ?? false;
+  const { conectado: _conectado, ...resto } = entrada;
   const item: DesfechoPendente = {
-    ...entrada,
+    ...resto,
+    foto: registroDeFoto(conectado),
     id: randomId(),
     tentativas: 0,
     erro: null,

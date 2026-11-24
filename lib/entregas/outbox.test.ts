@@ -4,6 +4,7 @@ import {
  carregarOutbox,
   enfileirarDesfecho,
   lerUltimaSincronizacao,
+  MOTIVO_FOTO_SEM_CONEXAO,
   pendentesDaCarga,
   registrarUltimaSincronizacao,
   type ArmazenLocal,
@@ -27,6 +28,17 @@ describe("outbox + último sync da cabine", () => {
     expect(pendentesDaCarga("carga", store)).toHaveLength(1);
     expect(carregarOutbox(store)[0]).toMatchObject({ orderId: "pedido", tentativas: 0 });
     expect(lerUltimaSincronizacao(store)).toBeNull();
+  });
+
+  it("sem conexão: desfecho entra sem foto e com o motivo escrito", () => {
+    const store = memoria();
+    enfileirarDesfecho(
+      { cargaId: "carga", orderId: "pedido-2", status: "entregue", ocorrido_em: "2026-11-23T01:00:00Z" },
+      store,
+    );
+    expect(carregarOutbox(store)[0]?.foto).toEqual({
+      estado: "sem_conexao", motivo: MOTIVO_FOTO_SEM_CONEXAO,
+    });
   });
 
   it("a volta da rede registra o horário da sincronização", () => {
