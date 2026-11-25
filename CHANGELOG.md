@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.1] — 2026-11-25
+
+### Corrigido
+
+- **Navegação por ruas volta a usar o OSRM público por padrão** O padrão de `OSRM_URL` voltou a ser `https://router.project-osrm.org`, como era antes da 2.0.0 — sem configurar nada, a cabine volta a desenhar rotas pelas ruas. Instalações que quiserem evitar terceiros podem apontar a variável para um OSRM próprio já existente. Ficam os aperfeiçoamentos anteriores: timeout de 5 segundos com erro nomeado, falha de rede visível e a contingência Maps/Waze.
+
 ## [2.0.0] — 2026-11-25
 
 ### ⚠️ Requer atenção
@@ -9159,7 +9165,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.1...HEAD
+[2.0.1]: https://github.com/spiesdan/nexus/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/spiesdan/nexus/compare/v1.72.1...v2.0.0
 [1.72.1]: https://github.com/spiesdan/nexus/compare/v1.72.0...v1.72.1
 [1.72.0]: https://github.com/spiesdan/nexus/compare/v1.71.0...v1.72.0
