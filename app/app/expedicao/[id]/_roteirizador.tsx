@@ -1008,6 +1008,10 @@ export function Roteirizador({
       }
       await apiClient.post(`/api/v1/shipments/${cargaId}/rota/iniciar`, {});
       toast.success(t("Rota publicada. O entregador já vê a sequência."));
+      // Sem reload: traz status, rota_em e versão do servidor para o estado
+      // local. Selo "Publicada", faixa "Publicada em … · versão N" e saída do
+      // botão de publicar passam a acontecer juntos.
+      await recarregar();
       aoMudar();
     } catch (e) {
       showApiError(e);

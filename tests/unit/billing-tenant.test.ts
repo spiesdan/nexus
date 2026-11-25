@@ -7,7 +7,7 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { estadoDaAssinatura } from "../../app/app/settings/billing/_client";
+import { estadoDaAssinatura, resumoDoPlano } from "../../app/app/settings/billing/_client";
 
 const RAIZ = path.resolve(__dirname, "../..");
 const ler = (p: string) => fs.readFileSync(path.join(RAIZ, p), "utf8");
@@ -73,5 +73,44 @@ describe("contrato da tela", () => {
 
   it("nenhum 'pagamento confirmado' local", () => {
     expect(client).not.toContain("Pagamento confirmado");
+  });
+});
+
+describe("plano no contrato da API", () => {
+  const t = (s: string) => s;
+
+  it("plano configurado no banco: R$ 1.699,00 · mensal", () => {
+    const dados = {
+      fonte: "stripe",
+      status: "sem_assinatura",
+      plano: { configurado: true, nome: "Nexus", valor_cents: 169900, moeda: "BRL", fonte: "banco", intervalo: "mensal" },
+      valor_cents: null,
+      moeda: null,
+      vencimento: null,
+      cancela_no_fim: false,
+      id: null,
+      avisos: [],
+      proximos: [],
+    };
+    const resumo = resumoDoPlano(dados, "pt-BR", t)!;
+    expect(resumo.nome).toBe("Nexus");
+    expect(resumo.valor).toBe("R$ 1.699,00");
+    expect(resumo.intervalo).toBe("mensal");
+  });
+
+  it("configurado false é 'não configurado', não valor do snapshot", () => {
+    const dados = {
+      fonte: "local_cache",
+      status: "sem_assinatura",
+      plano: { configurado: false, nome: null, valor_cents: null, moeda: null, fonte: "nenhum" },
+      valor_cents: 999,
+      moeda: "BRL",
+      vencimento: null,
+      cancela_no_fim: false,
+      id: null,
+      avisos: [],
+      proximos: [],
+    };
+    expect(resumoDoPlano(dados, "pt-BR", t)).toBeNull();
   });
 });

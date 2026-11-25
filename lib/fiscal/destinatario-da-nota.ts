@@ -295,7 +295,10 @@ export function montarDestinatario(
     faltando.push("cidade/UF (ou o código IBGE do município)");
     if (ambiguidade) faltando.push(ambiguidade);
   }
-  if (uf.length !== 2) faltando.push("UF");
+  // Quando a cidade/UF não resolveu, o rótulo acima JÁ cobre a UF: listar
+  // as duas era o mesmo problema duas vezes (QA local). Só inclui UF quando
+  // o município resolveu e a sigla, ainda assim, está ausente — caso distinto.
+  if (municipio && uf.length !== 2) faltando.push("UF");
   if (!documento) faltando.push("CPF/CNPJ");
 
   // O leiaute da NF-e limita cada campo do TLocal a 60 caracteres (xLgr, nro,

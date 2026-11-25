@@ -155,7 +155,6 @@ describe("montarDestinatario", () => {
       "número do endereço",
       "bairro",
       "cidade/UF (ou o código IBGE do município)",
-      "UF",
       "CPF/CNPJ",
     ]);
   });
@@ -372,7 +371,6 @@ describe("endereço do pedido como reserva fiscal", () => {
       "número do endereço",
       "bairro",
       "cidade/UF (ou o código IBGE do município)",
-      "UF",
     ]);
     expect(depois.faltando).toEqual([]);
     expect(depois.entrega?.numero).toBe(numero);
@@ -449,5 +447,16 @@ describe("resolução determinística da UF no clique de emitir", () => {
     expect(d.corrigido).toBeNull();
     expect(d.faltando).toEqual([]);
     expect(d.entrega?.uf).toBe("SC");
+  });
+});
+
+describe("rótulo de pendência fiscal sem duplicar UF", () => {
+  it("cidade/UF e UF são um só item quando o município não resolve", () => {
+    const d = montarDestinatario(
+      { cliente_nome: "CLIENTE", cliente_documento: "12345678000195" },
+      { id: "sem-cidade", name: "CLIENTE", cnpj: "12345678000195", logradouro: "RUA A", numero_end: "1", bairro: "CENTRO", cidade: null, uf: null },
+    );
+    expect(d.faltando).toContain("cidade/UF (ou o código IBGE do município)");
+    expect(d.faltando).not.toContain("UF");
   });
 });
