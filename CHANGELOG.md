@@ -8,6 +8,20 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.2] — 2026-11-25
+
+### Adicionado
+
+- **Toda tag publicada avisa o Discord automaticamente** O aviso de versão nova dependia de alguém rodar um script local — e quando ninguém lembrava, a versão subia calada (foi o caso da 1.72.1 e da 2.0.0). Agora a própria tag `v*` é o gatilho: o workflow monta a mensagem a partir da seção do CHANGELOG e posta no webhook configurado em secret. Falha no post não derruba a release — canal fora do ar não pode impedir a publicação de uma correção.
+
+### Corrigido
+
+- **Criação de carga aceita pedido que já viajou e remoção não deixa furo na sequência** A criação de carga passou a usar a mesma regra do índice parcial: só `na_carga` e `em_rota` ocupam o pedido. Pedido de carga concluída volta à fila e pode ser embarcado de novo; pedido em carga ativa continua com 409. Tirar um pedido da carga agora apaga e renumera os demais na mesma transação, sem deixar sequência 1,3.
+
+- **Job do aviso no Discord declarado no mapa de gatilhos** O workflow novo (`discord-release.yml::avisar`) entrou sem linha em `GATILHO_ESPERADO`, e o gate que impede job de entrega de ser desligado em silêncio reprovou a suíte. Entrada acrescentada com `condicao: null` (roda sempre que a tag existe) e o efeito escrito: sem ele, a versão sobe calada — foi o que aconteceu com a 1.72.1 e a 2.0.0.
+
+- **Billing lê o plano do contrato, publicação atualiza o estado e pendência não repete UF** A tela de cobrança mostra o plano vindo da API (nome, valor, moeda e periodicidade), não mais "plano não configurado". Publicar a rota atualiza selo, data e versão na hora, sem recarregar, e salva a ordem no mesmo gesto. A pendência fiscal não lista "cidade/UF" e "UF" como duas coisas.
+
 ## [2.0.1] — 2026-11-25
 
 ### Corrigido
@@ -9165,7 +9179,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.2...HEAD
+[2.0.2]: https://github.com/spiesdan/nexus/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/spiesdan/nexus/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/spiesdan/nexus/compare/v1.72.1...v2.0.0
 [1.72.1]: https://github.com/spiesdan/nexus/compare/v1.72.0...v1.72.1
