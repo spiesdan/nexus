@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.5] — 2026-11-25
+
+### Adicionado
+
+- **O dono da instalação vê quem está pagando e quem não está** Existia a tela de cobrança do próprio tenant, e não a da instalação: para saber
+  quais organizações tinham assinatura viva, quais estavam em atraso e quais nunca
+  assinaram, era preciso abrir tenant por tenant. Agora `/admin/billing` lista
+  todas — situação, valor do plano, próximo vencimento, última cobrança e a ação
+  (portal ou criar assinatura) — com quatro contagens no topo e a diferença
+  visível quando alguma organização está em estado não verificado.
+
+  A lista lê o banco local e diz há quanto tempo foi sincronizada: o Stripe é
+  chamado só no clique da ação, nunca organização por organização. Numa instalação
+  sem Stripe configurado a tela abre e explica isso numa faixa, com as ações
+  desativadas — não vira erro nem lista vazia. E organização que tem cliente no
+  Stripe mas cuja assinatura nunca foi lida aparece como **não verificada**, nunca
+  como "sem assinatura": ausência de leitura não é inadimplência.
+
+### Corrigido
+
+- **Tag publicada volta a postar no Discord (o dry-run virou padrão por engano)** A `v2.0.4` subiu sem post. O disparo manual usa `inputs.postar`, que é **vazio** quando o gatilho é a tag — e `${POSTAR:-nao}` caía no modo de diagnóstico. O default passou a ser `sim`, e só o disparo manual escolhe `nao`. É o terceiro modo de falha do mesmo aviso: sem gatilho (1.72.1/2.0.0), delimitador errado (2.0.2), `403` do `urllib` (2.0.3) e default errado (2.0.4) — cada um deixou o canal sem a versão.
+
 ## [2.0.4] — 2026-11-25
 
 ### Corrigido
@@ -9193,7 +9215,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.4...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.5...HEAD
+[2.0.5]: https://github.com/spiesdan/nexus/compare/v2.0.4...v2.0.5
 [2.0.4]: https://github.com/spiesdan/nexus/compare/v2.0.3...v2.0.4
 [2.0.3]: https://github.com/spiesdan/nexus/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/spiesdan/nexus/compare/v2.0.1...v2.0.2
