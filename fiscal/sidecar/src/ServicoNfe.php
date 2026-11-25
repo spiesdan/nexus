@@ -408,6 +408,43 @@ class ServicoNfe
     }
 
     /**
+     * A LOGO SEM CANAL ALFA, COMPOSTA SOBRE BRANCO.
+     *
+     * O `sped-da` renderiza o DANFE com FPDF, que não lê transparência: a área
+     * transparente de um PNG sai **preta**. Não é o logo que está errado — é o
+     * formato de destino que não tem alfa.
+     *
+     * Sem GD (ou imagem que ele não lê), devolve os bytes como vieram: logo é
+     * enfeite, e o chamador já sabe sair sem ela.
+     *
+     * @param string|false $binario
+     */
+    private static function logoOpaco($binario): string
+    {
+        if (!is_string($binario) || $binario === '' || !function_exists('imagecreatefromstring')) {
+            return is_string($binario) ? $binario : '';
+        }
+        $img = @imagecreatefromstring($binario);
+        if ($img === false) {
+            return $binario;
+        }
+        $largura = imagesx($img);
+        $altura = imagesy($img);
+        $tela = imagecreatetruecolor($largura, $altura);
+        $branco = imagecolorallocate($tela, 255, 255, 255);
+        imagefill($tela, 0, 0, $branco);
+        imagealphablending($tela, true);
+        imagesavealpha($img, true);
+        imagecopy($tela, $img, 0, 0, 0, 0, $largura, $altura);
+        ob_start();
+        imagepng($tela);
+        $saida = (string) ob_get_clean();
+        imagedestroy($img);
+        imagedestroy($tela);
+        return $saida !== '' ? $saida : $binario;
+    }
+
+    /**
      * @param string $logoBase64 PNG/JPEG do emitente já em base64 (sem prefixo).
      *   O `sped-da` aceita `data://text/plain;base64,...`; vazio = sem logo.
      * @return array<string,mixed>
@@ -429,7 +466,12 @@ class ServicoNfe
             // Sem logo o DANFE sai igual (o layout reserva o espaço e centraliza
             // os dados do emitente). Com logo, é o do EMITENTE — o arquivo que a
             // própria organização subiu, nunca a marca de quem revende o produto.
-            $logo = $logoBase64 !== '' ? 'data://text/plain;base64,' . $logoBase64 : '';
+            // PNG com transparência virava FUNDO PRETO no PDF: o FPDF não tem
+            // canal alfa, e a área transparente é desenhada como preto. Medido
+            // no DANFE da nota 4677 ("tire o fundo preto da logo"). Achatar
+            // sobre branco aqui é o único ponto que conhece o papel.
+            $logoTratado = $logoBase64 !== '' ? self::logoOpaco(base64_decode($logoBase64)) : '';
+            $logo = $logoTratado !== '' ? 'data://text/plain;base64,' . base64_encode($logoTratado) : '';
             try {
                 $pdf = $danfe->render($logo);
             } catch (\Throwable $e) {
