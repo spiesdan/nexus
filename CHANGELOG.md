@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.7] — 2026-11-25
+
+### Corrigido
+
+- **Recuperação operacional pode forçar o período da coleta do Mercos** `MERCOS_DE` e `MERCOS_ATE` (DD/MM/AAAA), quando preenchidos juntos, substituem a janela derivada do último pedido importado — é o que permite buscar pedidos antigos sem alterar o fluxo normal. A execução registra `recuperacao_periodo` com as duas datas. Vazio no dia a dia; as variáveis devem ser removidas do `.env` depois do backfill.
+
 ## [2.0.6] — 2026-11-25
 
 ### Corrigido
@@ -9221,7 +9227,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.6...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.7...HEAD
+[2.0.7]: https://github.com/spiesdan/nexus/compare/v2.0.6...v2.0.7
 [2.0.6]: https://github.com/spiesdan/nexus/compare/v2.0.5...v2.0.6
 [2.0.5]: https://github.com/spiesdan/nexus/compare/v2.0.4...v2.0.5
 [2.0.4]: https://github.com/spiesdan/nexus/compare/v2.0.3...v2.0.4
