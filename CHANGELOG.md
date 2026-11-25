@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.9] — 2026-11-25
+
+### Corrigido
+
+- **Coleta do Mercos dimensiona o tempo pelo tamanho do alvo e diz o que fazer no estouro** O timeout do coletor era um número fixo (30 min) e não sabia quantos pedidos ia reler. Medido no backfill de jan–fev: censo de ~13 min mais 311 pedidos a 4 s cada, e o processo morreu com `coletor excedeu 1800s` depois de importar zero — sem dizer o tamanho do alvo nem o que fazer. Agora o limite é o maior entre o configurado e um piso que cobre censo (15 min) + detalhe (espera por pedido × 2, folga para o recuo de 429) + margem (5 min), com log `limite_do_coletor_ampliado`; e a mensagem de estouro nomeia o alvo, o tempo só de detalhe e a variável a aumentar.
+
+- **Uma regra com centenas de achados não esconde mais as outras no Sentinel** Medido em produção: o teto de ocorrências da organização é 500, a regra `fiscal.cliente_sem_endereco_fiscal` produziu 524 achados e a execução gravou `achados: 500` com `truncado: true` — **sem nenhuma** ocorrência de `operacao.mercos_importacao_falhou`, embora a importação do Mercos tivesse terminado com erro 11 h antes e a regra tivesse achado. O mecanismo que já existia impedia ENCERRAR a ocorrência de uma regra cortada, mas nunca a criava: a regra ficava num limbo — nem registrada, nem encerrada, nem visível. Agora cada regra que achou algo aparece pelo menos uma vez antes de qualquer regra repetir; o teto continua o mesmo, muda só quem fica de fora (quem tem 500 irmãos, não quem tem um achado só).
+
 ## [2.0.8] — 2026-11-25
 
 ### Corrigido
@@ -9235,7 +9243,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.8...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.9...HEAD
+[2.0.9]: https://github.com/spiesdan/nexus/compare/v2.0.8...v2.0.9
 [2.0.8]: https://github.com/spiesdan/nexus/compare/v2.0.7...v2.0.8
 [2.0.7]: https://github.com/spiesdan/nexus/compare/v2.0.6...v2.0.7
 [2.0.6]: https://github.com/spiesdan/nexus/compare/v2.0.5...v2.0.6
