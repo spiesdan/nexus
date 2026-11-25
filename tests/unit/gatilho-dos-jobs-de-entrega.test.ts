@@ -64,6 +64,14 @@ const DIR = join(process.cwd(), ".github/workflows");
  * que desliga um job de entrega fica visível em code review.
  */
 const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string }> = {
+  // Aviso de versão no Discord: roda só em tag e não bloqueia nada.
+  "discord-release.yml::avisar": {
+    condicao: null,
+    efeito:
+      "Posta a seção do CHANGELOG no canal quando uma tag `v*` é publicada. " +
+      "Se não rodar, a versão sobe calada — foi o que aconteceu com a 1.72.1 e a 2.0.0. " +
+      "Falha no post não derruba a release de propósito.",
+  },
   // --- a cadeia que leva o conserto até a VPS ---------------------------------
   "release.yml::abrir-pr-de-release": {
     condicao: "github.event_name == 'workflow_dispatch'",
