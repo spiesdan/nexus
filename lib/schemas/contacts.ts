@@ -10,8 +10,8 @@
 import { z } from "zod";
 
 import { isValidCnpj, normalizarCnpj } from "@/lib/brasil/cnpj";
+import { normalizePhoneBR } from "@/lib/webhooks/inbound";
 
-const PHONE_REGEX = /^\+\d{8,15}$/;
 const CPF_DIGITS = /^\d{11}$/;
 
 /**
@@ -37,10 +37,27 @@ export const contactCreateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   display_name: z.string().min(1).max(200).optional(),
   email: z.string().email().optional(),
+  /**
+   * TELEFONE: a pessoa digita como fala, o banco guarda E.164.
+   *
+   * Antes o schema exigia `+5511999998888` cru — e recusava `47996751010` e
+   * `(47) 99675-1010`, que é como TODO mundo digita (reclamado em 25/11/2026:
+   * "quero apenas poder colocar 47996751010"). O E.164 é necessidade do canal
+   * (WhatsApp casa por ele), não da pessoa; normalizar na entrada é o trabalho
+   * do sistema, não do operador.
+   *
+   * Aceita: 10 ou 11 dígitos com DDD, com ou sem máscara, com ou sem +55. O
+   * nono dígito é canonicalizado por `normalizePhoneBR`.
+   */
   phone_number: z
     .string()
-    .regex(PHONE_REGEX, "Telefone deve estar em formato E.164 (+5511999998888)")
-    .optional(),
+    .optional()
+    .transform((v) => (v ?? "").trim())
+    .refine(
+      (v) => v === "" || normalizePhoneBR(v) !== null,
+      "Telefone inválido — use (47) 99675-1010 ou +5547996751010",
+    )
+    .transform((v) => (v === "" ? undefined : (normalizePhoneBR(v) ?? undefined))),
   cpf: z.string().refine(isValidCpf, "CPF inválido").optional(),
   /**
    * CNPJ (dado público, 14 dígitos — com ou sem máscara, normaliza na
