@@ -1,12 +1,12 @@
 /**
- * OSRM — provedor de ruas do prórIO servidor.
+ * OSRM — provedor de ruas.
  *
- * NÃO existe default público: `router.project-osrm.org` é serviço compartilhado
- * sem SLA, recebe a posição do cliente e pode sumir/rate-limitar. Sem
- * `OSRM_URL` configurado, a rota devolve `osrm_nao_configurado` e a cabine
- * oferece Google Maps/Waze — nunca chama um terceiro em silêncio.
+ * Decisão do dono (24/11): default público `router.project-osrm.org` voltou.
+ * A instalação pode apontar `OSRM_URL` para um OSRM próprio quando quiser
+ * não depender de terceiro — sem promessa de que já exista no pacote.
  *
- * Timeout curto (5 s): `osrm_timeout` também é erro visível, não giro infinito.
+ * O que FICA do #897: timeout de 5 s com `osrm_timeout` nomeado, erro de rede
+ * visível e contingência Maps/Waze na cabine.
  */
 
 import {
@@ -20,12 +20,13 @@ import {
 export type { Coordenada } from "./roteamento";
 
 const TIMEOUT_MS = 5000;
+const PADRAO_PUBLICO = "https://router.project-osrm.org";
 
-/** Erros que NÃO podem virar heurística local: configuração/timeout são falha visível. */
-export const ERROS_VISIVEIS = new Set(["osrm_nao_configurado", "osrm_timeout"]);
+/** Erros que NÃO podem virar heurística local: timeout e falha de rede são visíveis. */
+export const ERROS_VISIVEIS = new Set(["osrm_timeout", "osrm_indisponivel"]);
 
 export function base(): string {
-  return (process.env.OSRM_URL ?? "").trim().replace(/\/+$/, "");
+  return (process.env.OSRM_URL || PADRAO_PUBLICO).trim().replace(/\/+$/, "") || PADRAO_PUBLICO;
 }
 
 function par(p: Coordenada): string {
@@ -44,16 +45,17 @@ async function getJson(url: string, timeoutMs = TIMEOUT_MS): Promise<unknown> {
     return (await res.json()) as unknown;
   } catch (err) {
     if (controle.signal.aborted) throw new Error("osrm_timeout");
-    throw err;
+    // Falha de rede tem de chegar à tela como erro, nunca como silêncio ou
+    // heurística local disfarçada de rua.
+    if (err instanceof Error && err.message.startsWith("osrm_")) throw err;
+    throw new Error("osrm_indisponivel", { cause: err });
   } finally {
     clearTimeout(limite);
   }
 }
 
 function exigirBase(): string {
-  const url = base();
-  if (!url) throw new Error("osrm_nao_configurado");
-  return url;
+  return base();
 }
 
 export class OsmrmProvider implements RoutingProvider {

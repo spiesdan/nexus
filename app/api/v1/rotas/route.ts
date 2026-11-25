@@ -54,12 +54,6 @@ export async function GET(req: NextRequest): Promise<Response> {
     );
   } catch (erro) {
     const codigo = erro instanceof Error ? erro.message : "";
-    if (codigo === "osrm_nao_configurado") {
-      return fail("unavailable", "Roteamento não configurado nesta instalação — use Google Maps ou Waze.", 503, {
-        requestId,
-        details: { codigo: "osrm_nao_configurado" },
-      });
-    }
     if (codigo === "osrm_timeout") {
       return fail("unavailable", "Roteamento indisponível (sem resposta em 5 s) — use Google Maps ou Waze.", 503, {
         requestId,

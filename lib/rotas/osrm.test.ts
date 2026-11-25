@@ -15,24 +15,25 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("OSRM sem serviço público como padrão", () => {
-  it("sem OSRM_URL: erro nomeado e NENHUMA requisição a terceiro", async () => {
+describe("OSRM: default público de volta, erros continuam visíveis", () => {
+  it("sem OSRM_URL, a URL montada é a do serviço público", async () => {
     vi.stubEnv("OSRM_URL", "");
-    const fetchMock = vi.fn();
+    const fetchMock = vi.fn(async (_url: string) => ({
+      ok: true,
+      json: async () => ({
+        code: "Ok",
+        routes: [{ distance: 1000, duration: 100, geometry: { coordinates: [[0, 0], [1, 1]] } }],
+      }),
+    }));
     vi.stubGlobal("fetch", fetchMock);
-    expect(base()).toBe("");
-    await expect(new OsmrmProvider().rota(pontos)).rejects.toThrow("osrm_nao_configurado");
-    expect(fetchMock).not.toHaveBeenCalled();
+    expect(base()).toBe("https://router.project-osrm.org");
+    const r = await new OsmrmProvider().rota(pontos);
+    expect(r.ruas).toBe(true);
+    const url = String(fetchMock.mock.calls[0]?.[0]);
+    expect(url.startsWith("https://router.project-osrm.org/route/v1/driving/")).toBe(true);
   });
 
-  it("o erro de configuração não é disfarçado pelo fallback local", async () => {
-    vi.stubEnv("OSRM_URL", "");
-    await expect(otimizarComFallback(new OsmrmProvider(), pontos, false))
-      .rejects.toThrow("osrm_nao_configurado");
-    expect(ERROS_VISIVEIS.has("osrm_nao_configurado")).toBe(true);
-  });
-
-  it("timeout de 5 s vira osrm_timeout visível", async () => {
+  it("timeout de 5 s vira osrm_timeout e não é disfarçado pelo fallback", async () => {
     vi.stubEnv("OSRM_URL", "http://osrm.local:5000");
     vi.useFakeTimers();
     vi.stubGlobal("fetch", vi.fn(async (_url: string, init: { signal: AbortSignal }) =>
@@ -40,8 +41,16 @@ describe("OSRM sem serviço público como padrão", () => {
         init.signal.addEventListener("abort", () => reject(new Error("abort")), { once: true });
       }),
     ));
-    const verificado = expect(new OsmrmProvider().rota(pontos)).rejects.toThrow("osrm_timeout");
+    const verificado = expect(otimizarComFallback(new OsmrmProvider(), pontos, false))
+      .rejects.toThrow("osrm_timeout");
     await vi.advanceTimersByTimeAsync(5000);
     await verificado;
+  });
+
+  it("falha de rede vira erro nomeado visível", async () => {
+    vi.stubEnv("OSRM_URL", "http://osrm.local:5000");
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("fetch failed"); }));
+    await expect(new OsmrmProvider().rota(pontos)).rejects.toThrow("osrm_indisponivel");
+    expect(ERROS_VISIVEIS.has("osrm_indisponivel")).toBe(true);
   });
 });
