@@ -310,3 +310,32 @@ describe("ficha do pedido — custo e margem no resumo", () => {
     expect(screen.getByText(/Valor total/)).toBeTruthy();
   });
 });
+
+describe("ficha do pedido — nota cancelada não deixa o pedido sem saída", () => {
+  beforeEach(() => {
+    vi.mocked(apiClient.get).mockImplementation(async (url: string) => {
+      if (url.includes("/timeline")) return { data: [] } as never;
+      if (url.includes("/financeiro/recebiveis")) return { data: [] } as never;
+      if (url.includes("/invoices"))
+        return {
+          data: [
+            {
+              id: "n1",
+              numero: 4673,
+              serie: "1",
+              status: "cancelada",
+              erro: null,
+              chave_acesso: null,
+            },
+          ],
+        } as never;
+      return { data: pedidoDeTeste("entregue") } as never;
+    });
+  });
+
+  it("mostra 'Emitir nova NF-e' quando a única nota está cancelada", async () => {
+    renderizar([]);
+    expect(await screen.findByRole("button", { name: "Emitir nova NF-e" })).toBeTruthy();
+    expect(screen.getByText(/A nota anterior foi cancelada/)).toBeTruthy();
+  });
+});
