@@ -235,13 +235,20 @@ export async function DELETE(
     return fail("validation_failed", "Só pedido ainda na carga pode sair dela.", 422, { requestId });
   }
 
-  const { error } = await supabase
-    .from("shipment_orders")
-    .delete()
-    .eq("shipment_id", id)
-    .eq("order_id", orderId)
-    .eq("organization_id", authz.org.orgId);
+  // Remoção + renumeracao na MESMA transação (0353): preserve 1,2 sem furo.
+  const { data: removido, error } = await supabase.rpc("fn_remover_pedido_da_carga", {
+    p_org: authz.org.orgId,
+    p_shipment: id,
+    p_order: orderId,
+  });
   if (error) return fail("internal_error", "Erro ao tirar o pedido da carga.", 500, { requestId });
+  const resultadoRemocao = removido as unknown as { status: string } | null;
+  if (resultadoRemocao?.status === "nao_encontrado") {
+    return fail("not_found", "Pedido não está nesta carga.", 404, { requestId });
+  }
+  if (resultadoRemocao?.status === "estado_invalido") {
+    return fail("validation_failed", "Só pedido ainda na carga pode sair dela.", 422, { requestId });
+  }
 
   // Sair da carga não desfaz sozinho o `expedido` que o POST da carga gravou:
   // sem esta devolução o pedido some da fila de embarque (que só lê

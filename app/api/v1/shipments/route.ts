@@ -94,11 +94,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     }
     // Já embarcado em outra carga?
+    // Mesma regra do índice parcial `shipment_orders_order_ativo_unico`:
+    // carga CONCLUÍDA não ocupa — o pedido já viajou e pode voltar à fila.
+    const STATUS_ATIVOS_NA_CARGA = ["na_carga", "em_rota"] as const;
     const { data: ocupados } = await supabase
       .from("shipment_orders")
       .select("order_id")
       .eq("organization_id", authz.org.orgId)
-      .in("order_id", ids);
+      .in("order_id", ids)
+      .in("status", [...STATUS_ATIVOS_NA_CARGA]);
     if (ocupados && ocupados.length > 0) {
       return fail("validation_failed", "Um dos pedidos já está em outra carga.", 409, { requestId });
     }

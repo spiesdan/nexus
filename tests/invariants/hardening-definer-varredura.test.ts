@@ -67,6 +67,14 @@ const ANON_PERMITIDO: readonly Excecao[] = [];
  */
 const AUTHENTICATED_PERMITIDO: readonly Excecao[] = [
   {
+    fn: "fn_remover_pedido_da_carga(uuid,uuid,uuid)",
+    razao:
+      "DELETE /api/v1/shipments/[id]/orders/[orderId] chama com o client de " +
+      "sessão, dentro de requireRole('agent'). A função confere membership " +
+      "via fn_user_org_ids(), escopa organization_id em toda escrita e só " +
+      "aceita status na_carga/em_rota (0353).",
+  },
+  {
     fn: "fn_salvar_ordem_rota(uuid,uuid,jsonb,jsonb,integer,timestampwithtimezone)",
     razao:
       "PATCH /api/v1/shipments/[id]/rota/ordem chama com o client de sessão " +
