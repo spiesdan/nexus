@@ -14,6 +14,7 @@
  *  3. **controle**: trocar UMA palavra muda o hash. Sem isso, um normalizador
  *     que devolvesse vazio passaria verde para sempre.
  */
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -38,7 +39,6 @@ describe("prompt mestre íntegro", () => {
     // A régua errada: se alguém gravar o `sha256sum` do .md, este teste cai e
     // explica por quê. O valor do arquivo cru muda com qualquer heading.
     const cru = readFileSync(join(RAIZ, DOC_DO_PROMPT), "utf8");
-    const { createHash } = require("node:crypto") as typeof import("node:crypto");
     const hashCru = createHash("sha256").update(cru, "utf8").digest("hex");
     expect(hashDoPrompt(RAIZ)).not.toBe(hashCru);
   });
