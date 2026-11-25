@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.12] — 2026-11-25
+
+### Adicionado
+
+- **"Enviar por WhatsApp" vai direto para o telefone do cliente** O item abria `wa.me/?text=…` e o WhatsApp pedia para escolher um contato — mesmo com o telefone no cadastro. Agora o destino é o número do cliente (dígitos com DDI, como o `wa.me` exige), e a ação saiu do menu "Mais opções" para a barra da ficha, onde é usada todo dia. Sem telefone no cadastro, o botão continua abrindo o WhatsApp e o `title` diz que falta o telefone — em vez de esconder a ação. Vale para pedido e para orçamento (é a mesma ficha).
+
+### Corrigido
+
+- **Telefone aceita 47996751010 — o E.164 é do sistema, não do operador** O schema exigia `+5511999998888` cru e recusava `47996751010` e `(47) 99675-1010` — que é como todo mundo digita (reclamado em 25/11/2026: "quero apenas poder colocar 47996751010"). O E.164 é necessidade do canal (o WhatsApp casa por ele), não da pessoa. Agora a entrada normaliza: 10 ou 11 dígitos, com ou sem máscara, com ou sem +55; o nono dígito é canonicalizado e o banco continua guardando E.164. O rótulo "Telefone (E.164)" virou "Telefone" e o placeholder mostra o formato do dia a dia.
+
 ## [2.0.11] — 2026-11-25
 
 ### Corrigido
@@ -9265,7 +9275,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.11...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.12...HEAD
+[2.0.12]: https://github.com/spiesdan/nexus/compare/v2.0.11...v2.0.12
 [2.0.11]: https://github.com/spiesdan/nexus/compare/v2.0.10...v2.0.11
 [2.0.10]: https://github.com/spiesdan/nexus/compare/v2.0.9...v2.0.10
 [2.0.9]: https://github.com/spiesdan/nexus/compare/v2.0.8...v2.0.9
