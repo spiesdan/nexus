@@ -1,0 +1,66 @@
+name: discord-release
+
+# A regra é simples e passou a ser automática: **toda tag publicada vira um
+# post no Discord**. Antes isso dependia de alguém lembrar de rodar o script
+# local — e quando ninguém lembrava, a versão subia calada. Agora a tag é o
+# gatilho: se saiu release, o canal sabe.
+#
+# O webhook é secret de repositório (`DISCORD_WEBHOOK_URL`) e nunca é impresso.
+# Falha ao postar NÃO derruba a release: o `|| true` é deliberado — um canal
+# fora do ar não pode impedir a publicação de uma correção.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Montar a mensagem a partir do CHANGELOG
+        id: msg
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSAO="${TAG#v}"
+          node -e '
+            const fs = require("node:fs");
+            const v = process.env.TAG.replace(/^v/, "");
+            const texto = fs.readFileSync("CHANGELOG.md", "utf8");
+            const i = texto.indexOf(`## [${v}]`);
+            if (i < 0) { fs.writeFileSync("/tmp/msg.txt", `**NEXUS ${process.env.TAG}** publicado.`); process.exit(0); }
+            const fim = texto.indexOf("\n## [", i + 5);
+            const secao = texto.slice(i, fim > 0 ? fim : undefined).trim();
+            fs.writeFileSync("/tmp/msg.txt", secao.slice(0, 1800));
+          '
+          {
+            echo "conteudo<<FIM"
+            cat /tmp/msg.txt
+            echo "FIM"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Postar no Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          MSG: ${{ steps.msg.outputs.conteudo }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WEBHOOK}" ]; then echo "sem webhook configurado — nada a postar"; exit 0; fi
+          python3 - <<'PY' || true
+          import json, os, urllib.request
+          req = urllib.request.Request(
+              os.environ["WEBHOOK"],
+              data=json.dumps({"content": os.environ["MSG"][:1900]}).encode(),
+              headers={"Content-Type": "application/json"},
+          )
+          with urllib.request.urlopen(req, timeout=15) as r:
+              print("discord:", r.status)
+          PY
