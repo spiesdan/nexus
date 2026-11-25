@@ -53,6 +53,40 @@ export interface OpcoesExecucao {
 
 const EXECUCAO_ORFA_MS = 30 * 60_000;
 
+/**
+ * O TETO NÃO PODE ESCONDER UMA REGRA INTEIRA.
+ *
+ * Medido em 25/11/2026: `limite_ocorrencias` da org é 500, a regra
+ * `fiscal.cliente_sem_endereco_fiscal` sozinha produziu 524 achados, e a
+ * execução saiu com `truncado: true`, `achados: 500` — **sem nenhuma ocorrência
+ * de `operacao.mercos_importacao_falhou`**, que também tinha achado (importação
+ * do Mercos terminou com erro 11 h antes). A importação quebrada ficou invisível
+ * porque outra regra ocupou o teto.
+ *
+ * `regrasComAchadoForaDoTeto` já impedia ENCERRAR a ocorrência de uma regra
+ * cortada — mas nunca a CRIAVA. Regra com achado e sem espaço ficava num limbo:
+ * nem registrada, nem encerrada, nem visível.
+ *
+ * A regra daqui: **cada regra que achou algo aparece pelo menos uma vez**,
+ * antes de qualquer regra repetir. O resto preenche o teto na ordem original.
+ * O teto continua sendo o teto; o que muda é quem fica de fora — quem tem 500
+ * irmãos, não quem tem um achado só.
+ */
+export function selecionarSobTeto<T extends { regra: string }>(achados: T[], limite: number): T[] {
+  if (limite <= 0) return [];
+  if (achados.length <= limite) return achados;
+
+  const primeiraPorRegra = new Map<string, T>();
+  for (const achado of achados) {
+    if (!primeiraPorRegra.has(achado.regra)) primeiraPorRegra.set(achado.regra, achado);
+  }
+  const garantidos = [...primeiraPorRegra.values()].slice(0, limite);
+  const escolhidos = new Set(garantidos);
+  const restantes = achados.filter((a) => !escolhidos.has(a));
+
+  return [...garantidos, ...restantes.slice(0, limite - garantidos.length)];
+}
+
 function resultadoVazio(status: StatusExecucao, motivo: string | null): ResultadoExecucao {
   return {
     status,
@@ -180,7 +214,7 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
     });
 
     const acimaDoTeto = deteccao.achados.length > config.limiteOcorrencias;
-    const achados = deteccao.achados.slice(0, config.limiteOcorrencias);
+    const achados = selecionarSobTeto(deteccao.achados, config.limiteOcorrencias);
     const truncado =
       coleta.truncado || acimaDoTeto || deteccao.falhas.length > 0 || deteccao.truncadoPorTempo;
 
@@ -226,7 +260,9 @@ export async function executarSentinela(opcoes: OpcoesExecucao): Promise<Resulta
     // descartado seria mentira.
     let encerradas = 0;
     const regrasComAchadoForaDoTeto = new Set(
-      deteccao.achados.slice(config.limiteOcorrencias).map((a) => a.regra),
+      deteccao.achados
+        .filter((a) => !achados.includes(a))
+        .map((a) => a.regra),
     );
     {
       const regrasSeguras = deteccao.regrasAvaliadas.filter(
