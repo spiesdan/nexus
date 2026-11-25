@@ -198,6 +198,45 @@ export default async function NotasPage({
     }
   }
 
+  // PESSOA DA VENDA AVULSA — a nota sem pedido não tem `order_id`, e a grade
+  // mostrava "—" no lugar do cliente (reclamado pelo dono em 25/11/2026, na
+  // própria nota 4677 que ele emitiu). O nome está na nota: `extras.avulsa`.
+  const pessoasAvulsas: Record<string, string> = {};
+  const contatosDeAvulsa = new Set<string>();
+  for (const n of (notas ?? []) as unknown as {
+    id: string;
+    order_id: string | null;
+    extras_fiscais: { avulsa?: { cliente_nome?: string; contato_id?: string | null } } | null;
+  }[]) {
+    if (n.order_id) continue;
+    const avulsa = n.extras_fiscais?.avulsa;
+    const nome = (avulsa?.cliente_nome ?? "").trim();
+    if (nome) pessoasAvulsas[n.id] = nome;
+    else if (avulsa?.contato_id) contatosDeAvulsa.add(avulsa.contato_id);
+  }
+  if (contatosDeAvulsa.size > 0) {
+    // Avulsa criada só com o vínculo do cadastro: o nome vem de lá.
+    const { data: contatos } = await supabase
+      .from("contacts")
+      .select("id, name, display_name")
+      .eq("organization_id", activeOrg.orgId)
+      .in("id", [...contatosDeAvulsa]);
+    const nomePorId = new Map(
+      ((contatos ?? []) as unknown as { id: string; name: string | null; display_name: string | null }[]).map(
+        (c) => [c.id, (c.display_name ?? c.name ?? "").trim()],
+      ),
+    );
+    for (const n of (notas ?? []) as unknown as {
+      id: string;
+      extras_fiscais: { avulsa?: { contato_id?: string | null } } | null;
+    }[]) {
+      const id = n.extras_fiscais?.avulsa?.contato_id;
+      if (!id || pessoasAvulsas[n.id]) continue;
+      const nome = nomePorId.get(id);
+      if (nome) pessoasAvulsas[n.id] = nome;
+    }
+  }
+
   // Cartas de correção (lista da aba de ações): o texto e a sequência saem
   // da mensagem `[n/20] ...`, lida na tela com `lerMensagemCarta`.
   const cartasLista = (
@@ -593,6 +632,7 @@ export default async function NotasPage({
             inicial={(notas ?? []) as unknown as NotaFiscal[]}
             totalNotas={totalNotas ?? null}
             pessoas={pessoas}
+            pessoasAvulsas={pessoasAvulsas}
             operacaoPadrao={
               (config as unknown as { natureza_operacao?: string } | null)?.natureza_operacao ?? ""
             }
