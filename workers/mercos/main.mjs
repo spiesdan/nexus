@@ -19,6 +19,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { CONSUMIDOR_FINAL } from "./cliente.mjs";
 import { janelaDeColeta } from "./janela.mjs";
+import { explicarEstouro, limiteDoColetor } from "./limite-do-coletor.mjs";
 import { STATUS } from "./status.mjs";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -146,7 +147,7 @@ function normalizar(linha) {
   };
 }
 
-function executarColetor({ saida, andamento, aPartirDe, de, ate }) {
+function executarColetor({ saida, andamento, aPartirDe, de, ate, limiteMs = SCRAPE_TIMEOUT_MS, alvo = 0 }) {
   return new Promise((resolve, reject) => {
     const script = new URL("./coletar.mjs", import.meta.url).pathname;
     const filho = spawn(
@@ -175,8 +176,16 @@ function executarColetor({ saida, andamento, aPartirDe, de, ate }) {
     let stderr = "";
     const limite = setTimeout(() => {
       filho.kill("SIGKILL");
-      reject(new Error(`coletor excedeu ${Math.round(SCRAPE_TIMEOUT_MS / 1000)}s`));
-    }, SCRAPE_TIMEOUT_MS);
+      reject(
+        new Error(
+          explicarEstouro({
+            alvo,
+            esperaMs: Number(process.env.MERCOS_ESPERA_MS || 3000),
+            limiteMs,
+          }),
+        ),
+      );
+    }, limiteMs);
     filho.stdout.on("data", (b) => {
       stdout += b.toString();
       if (stdout.length > 200_000) stdout = stdout.slice(-100_000);
@@ -285,7 +294,32 @@ async function processar(admin, run) {
   const andamento = join(pasta, "andamento.json");
 
   log("inicio", { run: run.id, org, maior_numero: maiorNumero, a_partir_de: aPartirDe, revisar_de: revisarDe, alvo: alvo.length ? alvo : undefined, de, ate });
-  const { stdout } = await executarColetor({ saida, andamento, aPartirDe, de, ate });
+  // O limite acompanha o TAMANHO do alvo. Número fixo de 30 min matou o
+  // backfill de 311 pedidos depois de importar zero (25/11/2026): censo de
+  // ~13 min + 311 × 4 s ≫ 1800 s. Quem configurou mais continua com mais.
+  const limiteColetor = limiteDoColetor({
+    alvo: alvo.length,
+    esperaMs: Number(process.env.MERCOS_ESPERA_MS || 3000),
+    baseMs: SCRAPE_TIMEOUT_MS,
+  });
+  if (limiteColetor > SCRAPE_TIMEOUT_MS) {
+    log("limite_do_coletor_ampliado", {
+      run: run.id,
+      alvo: alvo.length,
+      base_s: Math.round(SCRAPE_TIMEOUT_MS / 1000),
+      efetivo_s: Math.round(limiteColetor / 1000),
+    });
+  }
+
+  const { stdout } = await executarColetor({
+    saida,
+    andamento,
+    aPartirDe,
+    de,
+    ate,
+    limiteMs: limiteColetor,
+    alvo: alvo.length,
+  });
 
   let conteudo = "";
   try {
