@@ -3,6 +3,11 @@ import { redirect } from "next/navigation";
 import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { documentoNormalizado, vincularPorDocumento } from "@/lib/expedicao/buscar-embarcavel";
+import {
+  enderecoDaEntrega,
+  type ContatoDaEntrega,
+  type ContatosDaEntrega,
+} from "@/lib/expedicao/endereco-da-entrega";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { STATUS_EMBARCAVEIS } from "@/lib/schemas/expedicao";
 import { COLUNAS_DO_PEDIDO, type PedidoComercial } from "@/lib/schemas/pedidos";
@@ -79,14 +84,18 @@ export default async function NovaCargaPage() {
   const { data: contatosPorId } = idsDeContato.length
     ? await supabase
         .from("contacts")
-        .select("id, cidade, uf")
+        .select(
+          "id, cnpj, name, display_name, logradouro, numero_end, complemento, bairro, cidade, uf, cep",
+        )
         .eq("organization_id", activeOrg.orgId)
         .in("id", idsDeContato)
     : { data: [] as { id: string; cidade: string | null; uf: string | null }[] };
   const { data: contatosPorDocumento } = documentosSemContato.length
     ? await supabase
         .from("contacts")
-        .select("id, cnpj, cidade, uf")
+        .select(
+          "id, cnpj, name, display_name, logradouro, numero_end, complemento, bairro, cidade, uf, cep",
+        )
         .eq("organization_id", activeOrg.orgId)
         .in("cnpj", documentosSemContato)
     : { data: [] as { id: string; cnpj: string | null; cidade: string | null; uf: string | null }[] };
@@ -118,9 +127,32 @@ export default async function NovaCargaPage() {
   // mostrar a cidade do cadastro como as demais.
   const pedidosComContato = vincularPorDocumento(pedidos, idPorDocumento);
 
+  /**
+   * O ENDEREÇO QUE A ENTREGA VAI USAR — resolvido aqui, com o cadastro.
+   *
+   * A prontidão olhava só `endereco_entrega` do pedido e bloqueava a carga de
+   * três pedidos cujo cliente tinha endereço completo (medido em 25/11/2026:
+   * a tela dizia "3 pedidos sem endereço — corrija antes de incluir" e o
+   * operador não tinha onde corrigir). O destino que a rota grava sempre veio
+   * do mesmo resolvedor usado aqui; era a checagem que olhava o lugar errado.
+   */
+  const contatosDaEntrega: ContatosDaEntrega = { porId: new Map(), porDocumento: new Map() };
+  for (const c of (contatosPorId ?? []) as ContatoDaEntrega[]) contatosDaEntrega.porId.set(c.id, c);
+  for (const c of (contatosPorDocumento ?? []) as ContatoDaEntrega[]) {
+    const doc = documentoNormalizado(c.cnpj);
+    if (doc && !contatosDaEntrega.porDocumento.has(doc)) {
+      contatosDaEntrega.porDocumento.set(doc, c);
+    }
+  }
+  const enderecoResolvido: Record<string, string | null> = {};
+  for (const p of pedidosComContato) {
+    enderecoResolvido[p.id] = enderecoDaEntrega(p, contatosDaEntrega);
+  }
+
   return (
     <NovaCargaClient
       embarcaveis={pedidosComContato}
+      enderecoResolvido={enderecoResolvido}
       cidadePorContato={cidadePorContato}
       textos={{
         titulo: t("Nova carga"),
