@@ -64,6 +64,7 @@ const TITULOS_FORA_DO_MENU: Record<string, string> = {
  */
 const PREFIXOS: Array<{ prefixo: string; titulo: string }> = [
   { prefixo: "/admin/tenants/", titulo: "Tenant" },
+  { prefixo: "/admin/billing", titulo: "Cobrança" },
   { prefixo: "/admin/inbox/", titulo: "Conversa (suporte)" },
   { prefixo: "/admin/", titulo: "Admin Plataforma" },
   { prefixo: "/admin", titulo: "Admin Plataforma" },

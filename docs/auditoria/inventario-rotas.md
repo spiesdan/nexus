@@ -794,7 +794,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 460)
+## Delta de handlers desde o baseline de 17/11 (419 → 463)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -807,6 +807,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Sentinel — correção de UF | 1 | Job fora do runner (que é somente leitura): corrige a UF só quando o município existe em uma única UF. | `/api/v1/cron/sentinel-correcoes-uf` |
 | Cobrança SaaS — tela e webhook | 4 | Assinatura lida do Stripe, checkout e portal com tenant da sessão, e webhook com assinatura sobre o corpo bruto e `stripe_event_id` único. | `/api/v1/billing/subscription`<br>`/api/v1/billing/checkout`<br>`/api/v1/billing/portal`<br>`/api/v1/webhooks/stripe` |
 | Cobrança SaaS — crons | 2 | Avisos D-3/D-2/D-1 persistidos e reconciliação local × Stripe. | `/api/v1/cron/billing-notices`<br>`/api/v1/cron/billing-reconcile` |
+| Cobrança SaaS — plataforma | 3 | Lista cross-tenant "quem está pagando e quem não está" (leitura do banco, sem Stripe por linha) e as duas ações por clique: portal e criação de assinatura para OUTRA organização, com escopo `full` e `audit()`. | `/api/v1/admin/billing`<br>`/api/v1/admin/billing/:organizationId/portal`<br>`/api/v1/admin/billing/:organizationId/checkout` |
 | Mercos — reconciliação | 1 | Cron de reconciliação do Mercos. | `/api/v1/cron/mercos-reconciliacao` |
 | Sentinel — cron | 1 | Gatilho agendado da rodada; organização suspensa é ignorada na origem (0329). | `/api/v1/cron/sentinel` |
 | Offline — shell | 3 | Catálogo, identidade e pedidos do APK sem cookie de sessão. | `/api/v1/device/catalog`<br>`/api/v1/device/me`<br>`/api/v1/device/orders` |

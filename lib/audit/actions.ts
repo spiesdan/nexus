@@ -652,6 +652,11 @@ export const AUDIT_ACTIONS = [
   "settings.payment_method.disabled",
   "sentinel.correction_applied",
   "sentinel.correction_reverted",
+  /** Cobrança da instalação vista pelo dono (lista cross-tenant, sem Stripe). */
+  "platform_admin.billing_listed",
+  /** Portal/checkout do Stripe abertos pela plataforma para OUTRA organização. */
+  "platform_admin.billing_portal_opened",
+  "platform_admin.billing_checkout_created",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
