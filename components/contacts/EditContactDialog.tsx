@@ -215,7 +215,7 @@ export function EditContactDialog({ contact, open, onOpenChange }: Props) {
             <Input id="ec-email" type="email" {...form.register("email")} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="ec-phone">{t("Telefone (E.164)")}</Label>
+            <Label htmlFor="ec-phone">{t("Telefone")}</Label>
             <Input id="ec-phone" {...form.register("phone_number")} />
           </div>
           <EnderecoFields
