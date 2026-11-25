@@ -7,6 +7,7 @@ import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast"
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { linkWhatsAppDoCliente } from "@/lib/comercial/whatsapp-do-cliente";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -823,6 +824,19 @@ export function DetalheDoPedido({
   }
 
   const resumoWhats = `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome} — ${comoMoeda(pedido.total_cents, pedido.moeda)}`;
+
+  /**
+   * O WHATSAPP VAI PARA O NÚMERO DO CLIENTE, não para "escolha um contato".
+   *
+   * O item de menu abria `wa.me/?text=` — o WhatsApp pedia para escolher
+   * alguém, mesmo com o telefone do cliente no cadastro (reclamado em
+   * 25/11/2026: "essa opção envia para o número do cadastro do cliente").
+   * Com telefone, o destino já vai na URL; sem telefone, cai no comportamento
+   * antigo e a tela diz POR QUE não deu para abrir direto.
+   */
+  const whatsapp = linkWhatsAppDoCliente(contato?.fone, resumoWhats);
+  const whatsDoCliente = whatsapp.href;
+  const digitosDoCliente = whatsapp.digitos;
   // O texto que acompanha o link quando o operador manda pelo próprio aparelho.
   const mensagemDoOrcamento = linkDoOrcamento
     ? `${numeroDoPedido(pedido.numero)} — ${pedido.cliente_nome}\nTotal: ${comoMoeda(pedido.total_cents, pedido.moeda)}\nAprove por aqui: ${linkDoOrcamento}`
@@ -859,6 +873,24 @@ export function DetalheDoPedido({
                 {t("Marcar como concluído")}
               </Button>
             )}
+            {/* O ENVIO NO DIA A DIA FICA NA BARRA: manda no WhatsApp do
+                CLIENTE, com o telefone do cadastro. Sem telefone, o botão
+                continua abrindo o WhatsApp e o `title` diz o que falta — em vez
+                de esconder a ação e deixar o operador procurando. */}
+            <Button size="sm" variant="outline" asChild>
+              <a
+                href={whatsDoCliente}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={
+                  digitosDoCliente
+                    ? t(`Enviar no WhatsApp ${contato?.fone ?? ""}`)
+                    : t("Cliente sem telefone no cadastro — o WhatsApp vai pedir o contato")
+                }
+              >
+                {t("Enviar por WhatsApp")}
+              </a>
+            </Button>
             <Button size="sm" variant="outline" asChild>
               <Link
                 href={`/api/v1/commercial-orders/${pedido.id}/pdf`}
@@ -881,15 +913,6 @@ export function DetalheDoPedido({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`https://wa.me/?text=${encodeURIComponent(resumoWhats)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {t("Enviar por WhatsApp")}
-                  </a>
-                </DropdownMenuItem>
                 {podeEditar && (pedido.status === "rascunho" || pedido.status === "em_analise") && (
                   <DropdownMenuItem
                     disabled={gerandoLink}
