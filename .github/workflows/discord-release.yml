@@ -6,12 +6,38 @@ name: discord-release
 # gatilho: se saiu release, o canal sabe.
 #
 # O webhook é secret de repositório (`DISCORD_WEBHOOK_URL`) e nunca é impresso.
-# Falha ao postar NÃO derruba a release: o `|| true` é deliberado — um canal
-# fora do ar não pode impedir a publicação de uma correção.
+#
+# ## O que este workflow já errou (e por que cada linha está assim)
+#
+# 1. **Não existia**: 1.72.1 e 2.0.0 subiram caladas.
+# 2. **Heredoc no `GITHUB_OUTPUT`**: a seção do CHANGELOG não termina com
+#    quebra de linha, o `echo "FIM"` colou no conteúdo e o job morreu com
+#    `Matching delimiter not found 'FIM'`. Agora a mensagem vai por ARQUIVO.
+# 3. **`urllib` do Python**: devolveu `HTTP 403 Forbidden` do Discord no runner
+#    do Actions (o mesmo webhook responde 204 de fora). Por isso o POST é por
+#    `curl`, com User-Agent declarado — e o corpo da resposta é impresso, porque
+#    "403" sem corpo não se diagnostica.
+#
+# Falha aqui NÃO derruba a release: este workflow é independente do
+# `release.yml`/`publish-image.yml`. Ele falha em VERMELHO de propósito — aviso
+# que falha calado foi exatamente o que nos custou três versões sem post.
 
 on:
   push:
     tags: ["v*"]
+  # Diagnóstico sem publicar: imprime a mensagem e confere o webhook com GET.
+  # Existe porque testar o aviso exigia cortar uma release de verdade.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag a simular (ex.: v2.0.3)"
+        required: false
+        default: ""
+      postar:
+        description: "Postar de verdade no canal?"
+        type: choice
+        options: ["nao", "sim"]
+        default: "nao"
 
 permissions:
   contents: read
@@ -25,12 +51,11 @@ jobs:
           fetch-depth: 0
 
       - name: Montar a mensagem a partir do CHANGELOG
-        id: msg
         env:
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag || github.ref_name }}
+          POSTAR: ${{ inputs.postar }}
         run: |
           set -euo pipefail
-          VERSAO="${TAG#v}"
           node -e '
             const fs = require("node:fs");
             const v = process.env.TAG.replace(/^v/, "");
@@ -41,32 +66,50 @@ jobs:
             const secao = texto.slice(i, fim > 0 ? fim : undefined).trim();
             fs.writeFileSync("/tmp/msg.txt", secao.slice(0, 1800));
           '
-          # A mensagem vai por ARQUIVO, não por `GITHUB_OUTPUT`. A primeira
-          # versão usava heredoc (`conteudo<<FIM`), e o CHANGELOG não termina com
-          # quebra de linha: o `echo "FIM"` colou na última linha e o job morreu
-          # com `Matching delimiter not found 'FIM'` — a v2.0.2 subiu calada do
-          # mesmo jeito que a 2.0.0, só que por outro motivo. Arquivo não tem
-          # delimitador para errar.
           echo "mensagem montada: $(wc -c < /tmp/msg.txt) bytes"
+          if [ "${POSTAR:-nao}" != "sim" ]; then
+            echo "--- dry-run (postar=nao) ---"
+            head -c 400 /tmp/msg.txt; echo
+          fi
 
       - name: Postar no Discord
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          POSTAR: ${{ inputs.postar }}
         run: |
           set -euo pipefail
-          if [ -z "${WEBHOOK}" ]; then echo "sem webhook configurado — nada a postar"; exit 0; fi
-          python3 - <<'PY' || true
-          import json, os, urllib.request
-          with open("/tmp/msg.txt", encoding="utf-8") as f:
-              corpo = f.read().strip()
-          if not corpo:
-              print("mensagem vazia — nada a postar")
-              raise SystemExit(0)
-          req = urllib.request.Request(
-              os.environ["WEBHOOK"],
-              data=json.dumps({"content": corpo[:1900]}).encode(),
-              headers={"Content-Type": "application/json"},
-          )
-          with urllib.request.urlopen(req, timeout=15) as r:
-              print("discord:", r.status)
-          PY
+          if [ -z "${WEBHOOK}" ]; then
+            echo "sem webhook configurado — nada a postar (instalação de cliente não precisa de aviso)"
+            exit 0
+          fi
+
+          # Corpo em JSON montado por node: escapar markdown/quotes à mão é como
+          # se perde mensagem. 1900 deixa margem para o limite de 2000.
+          node -e '
+            const fs = require("node:fs");
+            const corpo = fs.readFileSync("/tmp/msg.txt", "utf8").trim().slice(0, 1900);
+            if (!corpo) { console.log("mensagem vazia"); process.exit(3); }
+            fs.writeFileSync("/tmp/payload.json", JSON.stringify({ content: corpo }));
+          '
+
+          if [ "${POSTAR:-nao}" != "sim" ]; then
+            # Sem postar: o GET prova que o webhook existe e está ativo, sem
+            # poluir o canal. Era o pedaço que faltava no diagnóstico.
+            printf 'webhook: '
+            curl -sS -m 15 -o /tmp/wh.json -w '%{http_code}\n' "$WEBHOOK"
+            node -e 'const d=require("/tmp/wh.json"); console.log("canal:", d.name || "(sem nome)", "id:", d.channel_id || "?");' || true
+            exit 0
+          fi
+
+          CODIGO="$(curl -sS -m 20 -o /tmp/resposta.txt -w '%{http_code}' \
+            -H "Content-Type: application/json" \
+            -H "User-Agent: nexus-ci (https://github.com/spiesdan/nexus)" \
+            -d @/tmp/payload.json "$WEBHOOK")"
+          echo "discord: HTTP $CODIGO"
+          if [ "$CODIGO" -lt 200 ] || [ "$CODIGO" -ge 300 ]; then
+            # Corpo da resposta é o que diz o motivo (token inválido, canal
+            # removido, rate limit). Imprimir e falhar — vermelho é o sinal.
+            head -c 600 /tmp/resposta.txt || true
+            echo
+            exit 1
+          fi
