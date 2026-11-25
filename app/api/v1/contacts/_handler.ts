@@ -126,6 +126,14 @@ export async function listContactsHandler(
       // zero resultados para um contato que EXISTE, e desistiu — a demanda
       // morreria por uma coluna faltando no OR.
       `display_name.ilike.%${s}%`,
+      // `fantasia` é o nome que a OPERAÇÃO usa. Para PJ, a razão social é
+      // "SERVICO NACIONAL DE APRENDIZAGEM INDUSTRIAL" e todo mundo chama de
+      // "SENAI/SC - CANOINHAS" — medido em 25/11/2026: buscar "SENAI" na nota
+      // avulsa devolvia as cinco fichas de importação repetida (que têm
+      // "SENAI" no `name`) e NÃO devolvia a ficha com CNPJ, endereço e e-mail,
+      // porque o nome fantasia dela não estava no OR. O operador concluiu
+      // "não tem cadastro" e parou a emissão.
+      `fantasia.ilike.%${s}%`,
       `email.ilike.%${s}%`,
       `phone_number.ilike.%${s}%`,
     ];
