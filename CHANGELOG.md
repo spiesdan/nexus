@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.10] — 2026-11-25
+
+### Adicionado
+
+- **Sentinel passa a ver duas fichas do mesmo CNPJ — e a IE em jogo** A view irmã de duplicados agrupa por e-mail e não via o caso que parou a nota 19733 em 25/11: o pedido apontava para a ficha de um CNPJ **sem Inscrição Estadual**, enquanto a outra ficha do mesmo CNPJ tinha a IE e o CNPJ tem IE ativa em SC — a SEFAZ recusou com 232. A view nova agrupa pelo CNPJ de 14 dígitos e conta quantas IEs e UFs distintas aparecem entre as fichas; a regra sobe para severidade alta quando as IEs divergem, porque aí não é só cadastro repetido, é a nota de amanhã parada. Não funde nada: a correção automática da nota já mescla a ficha quando é o caso, e a decisão de consolidar continua humana.
+
+### Corrigido
+
+- **Pedido com nota cancelada volta a ter como emitir outra** O botão "Emitir NF-e" só aparecia quando o pedido tinha **zero** notas. Depois de cancelar a nota (caso real: o pedido 19733 ganhou item novo e a nota 4673 foi cancelada), a ficha mostrava a nota cancelada e **nenhuma ação** — o operador ficou sem próxima ação na tela, embora o backend sempre tenha aceitado (a trava de nota viva é `status <> 'cancelada'`). Agora, quando todas as notas do pedido estão canceladas ou denegadas, aparece "Emitir nova NF-e" com a explicação. Nota em `erro` não entra nessa lista: ela ainda pode ser reenviada, e criar outra duplicaria o documento.
+
+- **Prontidão da carga lê o endereço do cadastro, não só o do pedido** A checagem antes de criar a carga olhava apenas `commercial_orders.endereco_entrega` e bloqueava a carga dizendo "3 pedidos sem endereço — corrija antes de incluir", mesmo com o cliente tendo endereço completo no cadastro — e sem lugar na tela para corrigir. O destino que a rota grava sempre veio de `enderecoDaEntrega` (pedido com rua, senão cadastro); era a checagem que consultava o lugar errado. Agora o servidor resolve o endereço efetivo de cada pedido com o mesmo resolvedor e manda o mapa pronto para a tela: a contagem da revisão e o bloqueio usam exatamente o que a entrega vai levar. Endereço resolvido vazio continua bloqueando — ausência de verdade não vira ok.
+
 ## [2.0.9] — 2026-11-25
 
 ### Corrigido
@@ -9243,7 +9255,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.9...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.10...HEAD
+[2.0.10]: https://github.com/spiesdan/nexus/compare/v2.0.9...v2.0.10
 [2.0.9]: https://github.com/spiesdan/nexus/compare/v2.0.8...v2.0.9
 [2.0.8]: https://github.com/spiesdan/nexus/compare/v2.0.7...v2.0.8
 [2.0.7]: https://github.com/spiesdan/nexus/compare/v2.0.6...v2.0.7
