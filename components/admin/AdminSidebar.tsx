@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   CalendarBlank,
   Palette,
+  Receipt,
   ArrowRight,
 } from "@/lib/ui/icons";
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
@@ -35,6 +36,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/lgpd", label: "LGPD", icon: Scales },
   { href: "/admin/incidents", label: "Incidents", icon: Warning },
   { href: "/admin/usage", label: "Usage", icon: ChartBar },
+  // A cobrança da INSTALAÇÃO: quem paga, quem está em atraso e quem nunca
+  // assinou. É a pergunta do dono do self-host, e não existia porta para ela.
+  { href: "/admin/billing", label: "Cobrança", icon: Receipt },
   { href: "/admin/observabilidade", label: "Observabilidade", icon: ChartLineUp },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/platform-admins", label: "Platform Admins", icon: ShieldCheck },

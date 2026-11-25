@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Cobrança SaaS — quem está pagando, quem está em atraso e quem nunca assinou",
+    "subtitle": "a lista da plataforma lê o banco local; o Stripe só é chamado no clique da ação",
+    "output": "cobranca-saas.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "externo", "label": "Fora da instalação (Stripe)" },
+    { "id": "sync", "label": "Sincronização (webhook + crons)" },
+    { "id": "banco", "label": "Banco local (8 tabelas billing_*)" },
+    { "id": "regra", "label": "Regra pura (de/para estado)" },
+    { "id": "superficie", "label": "Superfícies (plataforma + tenant)" },
+    { "id": "log", "label": "Auditoria" }
+  ],
+  "mainPath": ["orgs", "clientes", "assinaturas", "faturas", "classificacao", "carregador", "rotaAdmin", "telaAdmin"],
+  "nodes": [
+    {
+      "id": "stripe",
+      "lane": "externo",
+      "col": 0,
+      "type": "external",
+      "label": "Stripe (modo de teste)",
+      "sublabel": "chave live é recusada no boot; checkout/portal só no clique, nunca por linha da lista"
+    },
+    {
+      "id": "webhook",
+      "lane": "sync",
+      "col": 1,
+      "type": "service",
+      "label": "POST /api/v1/webhooks/stripe",
+      "sublabel": "assinatura HMAC sobre o corpo bruto + stripe_event_id único; fora de ordem não reaplica"
+    },
+    {
+      "id": "reconcile",
+      "lane": "sync",
+      "col": 2,
+      "type": "service",
+      "label": "cron billing-reconcile",
+      "sublabel": "compara assinatura local × Stripe; falha vira billing_verifications com retry, nunca 'pago'"
+    },
+    {
+      "id": "orgs",
+      "lane": "banco",
+      "col": 0,
+      "type": "table",
+      "label": "organizations",
+      "sublabel": "a lista é uma linha por organização, inclusive quem nunca assinou"
+    },
+    {
+      "id": "clientes",
+      "lane": "banco",
+      "col": 1,
+      "type": "table",
+      "label": "billing_customers",
+      "sublabel": "customer EXISTE + assinatura não lida = nao_verificado, nunca sem_assinatura"
+    },
+    {
+      "id": "assinaturas",
+      "lane": "banco",
+      "col": 2,
+      "type": "table",
+      "label": "billing_subscriptions",
+      "sublabel": "status/current_period_end/cancel_at_period_end; mais de uma ao longo da vida — a viva vence"
+    },
+    {
+      "id": "faturas",
+      "lane": "banco",
+      "col": 3,
+      "type": "table",
+      "label": "billing_invoices",
+      "sublabel": "última cobrança (paga/falhou N×) e vencimento vencido; leitura limitada a 1000 linhas por abertura"
+    },
+    {
+      "id": "plano",
+      "lane": "banco",
+      "col": 4,
+      "type": "table",
+      "label": "billing_plans",
+      "sublabel": "valor no banco (R$ 1.699,00/mensal); stripe_price_id é o único ponteiro para o Price"
+    },
+    {
+      "id": "verificacoes",
+      "lane": "banco",
+      "col": 5,
+      "type": "table",
+      "label": "billing_verifications",
+      "sublabel": "leitura pendente explica o nao_verificado; não é inadimplência"
+    },
+    {
+      "id": "classificacao",
+      "lane": "regra",
+      "col": 3,
+      "type": "module",
+      "label": "lib/billing/visao-plataforma.ts",
+      "sublabel": "de/para estado → rótulo, contagens que expõem a diferença, frescor relativo; sem rede"
+    },
+    {
+      "id": "carregador",
+      "lane": "regra",
+      "col": 4,
+      "type": "module",
+      "label": "lib/billing/visao-plataforma-servidor.ts",
+      "sublabel": "sete consultas ao banco, zero Stripe; agrupa por organization_id e escolhe a assinatura viva"
+    },
+    {
+      "id": "rotaAdmin",
+      "lane": "superficie",
+      "col": 5,
+      "type": "route",
+      "label": "GET /api/v1/admin/billing",
+      "sublabel": "requirePlatformAdmin; 200 mesmo sem Stripe configurado; audit de leitura cross-tenant"
+    },
+    {
+      "id": "telaAdmin",
+      "lane": "superficie",
+      "col": 6,
+      "type": "screen",
+      "label": "/admin/billing",
+      "sublabel": "quatro contagens + não verificadas; faixa quando o Stripe falta; ações portal/criar"
+    },
+    {
+      "id": "rotaPortal",
+      "lane": "superficie",
+      "col": 7,
+      "type": "route",
+      "label": "POST /admin/billing/:id/portal",
+      "sublabel": "escopo full; org do path; audit"
+    },
+    {
+      "id": "rotaCheckout",
+      "lane": "superficie",
+      "col": 8,
+      "type": "route",
+      "label": "POST /admin/billing/:id/checkout",
+      "sublabel": "uma chamada ao Stripe no clique; trava de assinatura viva; audit"
+    },
+    {
+      "id": "telaTenant",
+      "lane": "superficie",
+      "col": 9,
+      "type": "screen",
+      "label": "/app/settings/billing",
+      "sublabel": "a visão do próprio tenant, que já existia — mesma regra de estado, outra porta"
+    },
+    {
+      "id": "rotaTenant",
+      "lane": "superficie",
+      "col": 10,
+      "type": "route",
+      "label": "/api/v1/billing/*",
+      "sublabel": "subscription consulta o Stripe; checkout/portal usam o tenant da sessão"
+    },
+    {
+      "id": "audit",
+      "lane": "log",
+      "col": 11,
+      "type": "table",
+      "label": "api_audit_log",
+      "sublabel": "leitura cross-tenant e as duas mutações da plataforma, com organization_id e ator"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "stripe", "to": "webhook", "label": "eventos" },
+    { "id": "e2", "from": "stripe", "to": "reconcile", "label": "leitura por assinatura" },
+    { "id": "e3", "from": "stripe", "to": "rotaPortal", "label": "billing_portal/sessions" },
+    { "id": "e4", "from": "stripe", "to": "rotaCheckout", "label": "checkout/sessions" },
+    { "id": "e5", "from": "stripe", "to": "rotaTenant", "label": "subscriptions/prices" },
+    { "id": "e6", "from": "webhook", "to": "clientes", "label": "customer criado" },
+    { "id": "e7", "from": "webhook", "to": "assinaturas", "label": "status e período" },
+    { "id": "e8", "from": "webhook", "to": "faturas", "label": "invoice.paid/payment_failed" },
+    { "id": "e9", "from": "reconcile", "to": "assinaturas", "label": "corrige divergência" },
+    { "id": "e10", "from": "reconcile", "to": "verificacoes", "label": "falha vira retry" },
+    { "id": "e11", "from": "orgs", "to": "clientes", "label": "uma org pode não ter customer" },
+    { "id": "e12", "from": "clientes", "to": "assinaturas", "label": "customer_id" },
+    { "id": "e13", "from": "assinaturas", "to": "faturas", "label": "subscription_id" },
+    { "id": "e14", "from": "faturas", "to": "classificacao", "label": "atraso vence status ativo" },
+    { "id": "e15", "from": "assinaturas", "to": "classificacao", "label": "status" },
+    { "id": "e16", "from": "clientes", "to": "classificacao", "label": "existe sem leitura → nao_verificado" },
+    { "id": "e17", "from": "verificacoes", "to": "classificacao", "label": "motivo da falha" },
+    { "id": "e18", "from": "orgs", "to": "classificacao", "label": "linha por organização" },
+    { "id": "e19", "from": "classificacao", "to": "carregador", "label": "estado + textos" },
+    { "id": "e20", "from": "carregador", "to": "rotaAdmin", "label": "visão pronta" },
+    { "id": "e21", "from": "carregador", "to": "telaAdmin", "label": "render no servidor" },
+    { "id": "e22", "from": "telaAdmin", "to": "rotaPortal", "label": "clique Portal" },
+    { "id": "e23", "from": "telaAdmin", "to": "rotaCheckout", "label": "clique Criar assinatura" },
+    { "id": "e24", "from": "rotaPortal", "to": "audit", "label": "platform_admin.billing_portal_opened" },
+    { "id": "e25", "from": "rotaCheckout", "to": "audit", "label": "platform_admin.billing_checkout_created" },
+    { "id": "e26", "from": "rotaAdmin", "to": "audit", "label": "platform_admin.billing_listed" },
+    { "id": "e27", "from": "plano", "to": "carregador", "label": "valor exibido" },
+    { "id": "e28", "from": "plano", "to": "rotaTenant", "label": "valor e Price" },
+    { "id": "e29", "from": "telaTenant", "to": "rotaTenant", "label": "carrega estado" },
+    { "id": "e30", "from": "rotaTenant", "to": "assinaturas", "label": "último estado local" },
+    { "id": "e31", "from": "plano", "to": "telaTenant", "label": "nome/valor/intervalo" }
+  ]
+}

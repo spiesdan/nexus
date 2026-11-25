@@ -42,6 +42,8 @@ const FORA_DE_UMA_ORGANIZACAO: Readonly<Record<string, string>> = {
     "lista administradores de plataforma — escopo é a plataforma, não um tenant",
   "app/api/v1/admin/tenants/route.ts":
     "lista/cria organizações — a própria tela de plataforma",
+  "app/api/v1/admin/billing/route.ts":
+    "lista a cobrança de TODAS as organizações — é a pergunta do dono da instalação; a leitura é agregação por organização dentro do carregador (lib/billing/visao-plataforma-servidor.ts), que filtra por organization_id em cada tabela billing_*",
   "app/api/v1/cron/attendant-heartbeat/route.ts": "cron: varre todas as organizações por desenho",
   "app/api/v1/cron/automatic-sales/route.ts": "cron: varre todas as organizações por desenho",
   "app/api/v1/cron/data-retention/route.ts": "cron: poda por política, em todas as organizações",

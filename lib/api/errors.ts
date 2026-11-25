@@ -169,6 +169,25 @@ export const ApiErrorCodes = {
    * ignorar vermelho — que é o que o `ApiErrorToast` já registra para a agenda.
    */
   fiscal_nao_configurado: "fiscal_nao_configurado",
+
+  /**
+   * COBRANÇA SAAS — a instalação existe sem Stripe e a tela precisa dizer isso.
+   *
+   * Separado de `upstream_unavailable` pela mesma razão do fiscal: não é o
+   * Stripe caindo (vermelho, "tente de novo"), é a ausência de configuração
+   * numa instalação que simplesmente não cobra (informativo). O detalhe vem da
+   * trava de `lib/billing/stripe-estado.ts`, que nunca deixa o render virar 500.
+   */
+  stripe_nao_configurado: "stripe_nao_configurado",
+  /**
+   * O plano do banco não tem `stripe_price_id` e não há `STRIPE_PRICE_ID` no
+   * .env. Criar assinatura é impossível até alguém apontar o Price — e a
+   * mensagem diz exatamente qual coluna preencher.
+   */
+  plano_sem_price: "plano_sem_price",
+  /** A organização não tem `billing_customers`; o portal do Stripe não existe para ela. */
+  sem_cliente_stripe: "sem_cliente_stripe",
+
   unavailable: "unavailable", // 503: dependência de config ausente (ex.: pool do engine sem SUPABASE_DB_URL)
   waha_error: "waha_error",
   ai_provider_error: "ai_provider_error",
