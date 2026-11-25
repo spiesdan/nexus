@@ -29,10 +29,12 @@ describe("exceções do despacho", () => {
   });
 
   it(" conta só o que existe, sem duplicar carga", () => {
-    expect(porChave.precisa_atencao.cargaIds).toEqual(["rota1"]);
-    expect(porChave.sem_localizacao.cargaIds).toEqual(["mont1"]);
-    expect(porChave.sem_motorista_veiculo.cargaIds).toEqual(["mont1"]);
-    expect(porChave.prontas_para_sair.cargaIds).toEqual(["mont2"]);
+    // `noUncheckedIndexedAccess`: o mapa é indexado por chave dinâmica, então
+    // o teste acessa com `?.` e falha de forma legível se a família sumir.
+    expect(porChave.precisa_atencao?.cargaIds).toEqual(["rota1"]);
+    expect(porChave.sem_localizacao?.cargaIds).toEqual(["mont1"]);
+    expect(porChave.sem_motorista_veiculo?.cargaIds).toEqual(["mont1"]);
+    expect(porChave.prontas_para_sair?.cargaIds).toEqual(["mont2"]);
   });
 
   it("zero exceções é estado válido", () => {
