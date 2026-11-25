@@ -566,6 +566,46 @@ export function clientesDuplicadosPorEmail(s: Snapshot): Achado[] {
 }
 
 /**
+ * MESMO CNPJ EM FICHAS DIFERENTES — a duplicata com consequência fiscal.
+ *
+ * Não é a irmã do e-mail. CNPJ é identidade fiscal: duas fichas do mesmo CNPJ
+ * podem divergir em Inscrição Estadual, e o pedido pode apontar para a pior.
+ * Caso real (25/11/2026): o pedido 19733 apontava para a ficha SEM IE, a outra
+ * ficha do mesmo CNPJ tinha a IE desde 23/11, e a SEFAZ recusou a nota com
+ * `232 — IE do destinatário não informada`.
+ *
+ * Severidade sobe quando as IEs divergem: aí não é só cadastro duplicado, é a
+ * nota de amanhã parada. Não funde nada — a decisão do dono é mostrar, não
+ * resolver sozinho.
+ */
+export function clientesDuplicadosPorCnpj(s: Snapshot): Achado[] {
+  return s.clientesDuplicadosCnpj.map((d) => {
+    const ieDivergente = d.ies_distintas > 1;
+    return {
+      regra: "operacao.cliente_duplicado_cnpj",
+      categoria: "operacao" as const,
+      entidadeTipo: "contacts",
+      entidadeId: hashCurto(`cnpj:${d.cnpj}`),
+      titulo: `${d.total} fichas com o mesmo CNPJ`,
+      resumo: ieDivergente
+        ? "As fichas divergem na Inscrição Estadual. O pedido que apontar para a ficha sem IE tem a nota recusada pela SEFAZ (rejeição 232)."
+        : "O mesmo CNPJ aparece em cadastros diferentes. Endereço e IE podem divergir entre eles.",
+      causaProvavel:
+        "Importação do Mercos antes do de-para, cadastro manual duplicado ou captação que não casou com o cliente existente.",
+      severidade: ieDivergente ? ("alta" as const) : ("media" as const),
+      href: "/app/contacts",
+      evidencia: {
+        cnpj: d.cnpj,
+        total: d.total,
+        ies_distintas: d.ies_distintas,
+        ufs_distintas: d.ufs_distintas,
+        contatos: d.ids.slice(0, 20),
+      },
+    };
+  });
+}
+
+/**
  * Lead duplicado — a identidade vem do que o produto JÁ normaliza.
  *
  * Não existe coluna de e-mail/telefone no lead: a identidade mora no contato

@@ -165,6 +165,13 @@ export const REGRAS: readonly Regra[] = [
     detectar: operacao.recebiveisComParcelaInvalida,
   },
   {
+    id: "operacao.cliente_duplicado_cnpj",
+    categoria: "operacao",
+    descricao:
+      "Mesmo CNPJ em fichas diferentes — quando as IEs divergem, a nota do pedido que aponta para a ficha errada é recusada com 232.",
+    detectar: operacao.clientesDuplicadosPorCnpj,
+  },
+  {
     id: "operacao.mercos_importacao_travada",
     categoria: "operacao",
     descricao: "Importação Mercos presa em fila/execução há mais de 45 minutos.",

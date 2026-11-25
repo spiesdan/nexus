@@ -20,6 +20,7 @@ import type {
   CampanhaProspeccao,
   CampanhaVenda,
   ClienteDuplicado,
+  ClienteDuplicadoCnpj,
   ContatoEndereco,
   ConversaParada,
   CorrecaoSentinel,
@@ -145,6 +146,7 @@ export async function coletarSnapshot(
     campanhasProspeccao,
     campanhasVenda,
     clientesDuplicados,
+    clientesDuplicadosCnpj,
     contatosEndereco,
     conversasParadas,
   ] = await Promise.all([
@@ -328,6 +330,15 @@ export async function coletarSnapshot(
         .limit(TETO_DUPLICADOS + 1),
       TETO_DUPLICADOS,
     ),
+    coletar<ClienteDuplicadoCnpj>(
+      "clientes_duplicados_cnpj",
+      admin
+        .from("sentinel_contatos_cnpj_duplicados")
+        .select("organization_id, cnpj, total, ids, ies_distintas, ufs_distintas")
+        .eq("organization_id", organizationId)
+        .limit(TETO_DUPLICADOS + 1),
+      TETO_DUPLICADOS,
+    ),
     coletar<ContatoEndereco>(
       "contatos_endereco",
       admin
@@ -462,6 +473,7 @@ export async function coletarSnapshot(
     { nome: "campanhas_prospeccao", coleta: campanhasProspeccao },
     { nome: "campanhas_venda", coleta: campanhasVenda },
     { nome: "clientes_duplicados", coleta: clientesDuplicados },
+    { nome: "clientes_duplicados_cnpj", coleta: clientesDuplicadosCnpj },
     { nome: "contatos_endereco", coleta: contatosEndereco },
     { nome: "conversas_paradas", coleta: conversasParadas },
     { nome: "ocorrencias_correcao", coleta: ocorrenciasCorrecao },
@@ -511,6 +523,7 @@ export async function coletarSnapshot(
       campanhasProspeccao: campanhasProspeccao.dados,
       campanhasVenda: campanhasVenda.dados,
       clientesDuplicados: clientesDuplicados.dados,
+      clientesDuplicadosCnpj: clientesDuplicadosCnpj.dados,
       correcoes,
       contatosEndereco: contatosEndereco.dados,
       conversasParadas: conversasParadas.dados,

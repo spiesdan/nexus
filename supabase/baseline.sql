@@ -33427,3 +33427,35 @@ create policy "conversations_select" on public.conversations
 
 comment on policy "conversations_select" on public.conversations is
   'RLS set-based (0340): mesmo escopo de fn_can_view_conversation/channel, expresso com subqueries hashed para ser sargável. Sem mudança de índice.';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0354 — Cliente duplicado por CNPJ (com IE/UF em jogo)
+--
+-- A irmã `sentinel_contatos_duplicados` agrupa por e-mail. Duas fichas do mesmo
+-- CNPJ divergem em campo FISCAL: uma tem IE, a outra não — e é assim que a
+-- SEFAZ recusa com 232 (caso real: pedido 19733, 25/11/2026). Idempotente.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace view public.sentinel_contatos_cnpj_duplicados
+with (security_invoker = true)
+as
+select
+  c.organization_id,
+  regexp_replace(c.cnpj, '[^0-9]', '', 'g') as cnpj,
+  count(*)::integer as total,
+  (array_agg(c.id order by c.created_at))[1:20] as ids,
+  count(distinct coalesce(nullif(btrim(c.ie), ''), '(sem)'))::integer as ies_distintas,
+  count(distinct coalesce(nullif(btrim(c.uf), ''), '(sem)'))::integer as ufs_distintas
+from public.contacts c
+where c.cnpj is not null
+  and length(regexp_replace(c.cnpj, '[^0-9]', '', 'g')) = 14
+  and c.is_anonymized = false
+  and c.is_merged_into is null
+group by c.organization_id, regexp_replace(c.cnpj, '[^0-9]', '', 'g')
+having count(*) > 1;
+
+revoke all on public.sentinel_contatos_cnpj_duplicados from anon;
+grant select on public.sentinel_contatos_cnpj_duplicados to authenticated;
+grant select on public.sentinel_contatos_cnpj_duplicados to service_role;
+
+comment on view public.sentinel_contatos_cnpj_duplicados is
+  'Clientes com o mesmo CNPJ (14 dígitos) na organização, com quantas IEs e UFs distintas aparecem entre as fichas. Agregado para o detector; não funde nada.';

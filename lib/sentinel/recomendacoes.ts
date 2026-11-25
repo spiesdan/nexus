@@ -563,6 +563,26 @@ export const RECOMENDACOES: Record<string, Construtor> = {
       },
     ),
 
+  "operacao.cliente_duplicado_cnpj": () =>
+    plano(
+      "Consolidar as fichas do mesmo CNPJ, começando pela Inscrição Estadual.",
+      [
+        "Compare as fichas: IE, UF e endereço — a divergência de IE é o que para a nota.",
+        "Preencha a ficha que os pedidos usam com a IE publicada (a tela de correção da nota já consulta).",
+        "Decida qual ficha vira principal e mescle a outra, se for o caso.",
+        "Reemita a nota que tiver sido recusada com 232.",
+      ],
+      ["CNPJ confirmado", "IE publicada na UF", "ficha principal"],
+      {
+        fonte: ["contacts", "commercial_orders", "invoices"],
+        risco: "alto",
+        reversibilidade: "irreversivel",
+        confianca: "alta",
+        limitacao:
+          "CNPJ igual é a mesma pessoa jurídica; ainda assim, mesclar apaga histórico — a decisão é humana.",
+      },
+    ),
+
   "operacao.lead_duplicado": () =>
     plano(
       "Manter um lead aberto por identidade e funil.",
