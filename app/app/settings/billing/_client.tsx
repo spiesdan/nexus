@@ -31,7 +31,18 @@ interface Aviso {
   detalhe: string | null;
 }
 
-interface Assinatura {
+export interface PlanoNaTela {
+  configurado: boolean;
+  nome: string | null;
+  descricao?: string | null;
+  valor_cents: number | null;
+  moeda: string | null;
+  intervalo?: string | null;
+  fonte?: string;
+}
+
+export interface Assinatura {
+  plano?: PlanoNaTela | null;
   fonte: string;
   status: string;
   valor_cents: number | null;
@@ -41,6 +52,22 @@ interface Assinatura {
   id: string | null;
   avisos: Aviso[];
   proximos: number[];
+}
+
+/** O valor vem de `plano` (banco/Stripe), não do snapshot da assinatura. */
+export function resumoDoPlano(
+  dados: Assinatura | null,
+  tagIdioma: string,
+  t: (texto: string) => string,
+) {
+  const plano = dados?.plano;
+  if (!plano?.configurado || plano.valor_cents == null || !plano.moeda) return null;
+  return {
+    nome: plano.nome ?? t("Plano"),
+    valor: `${(plano.valor_cents / 100).toLocaleString(tagIdioma, { style: "currency", currency: plano.moeda })}`,
+    intervalo: plano.intervalo === "anual" ? "anual" : "mensal",
+    fonte: plano.fonte ?? "banco",
+  };
 }
 
 const ESTADOS_QUE_PAGAM = new Set(["past_due", "unpaid", "incomplete", "incomplete_expired", "canceled"]);
@@ -121,10 +148,8 @@ export function BillingClient({
     suspensa: "error",
   };
 
-  const valor =
-    dados?.valor_cents != null && dados.moeda
-      ? `${(dados.valor_cents / 100).toLocaleString(tagIdioma, { style: "currency", currency: dados.moeda })}`
-      : t("plano não configurado");
+  const planoResumo = resumoDoPlano(dados, tagIdioma, t);
+  const valor = planoResumo ? `${planoResumo.nome} · ${planoResumo.valor} · ${planoResumo.intervalo}` : t("plano não configurado");
   const vencimento = dados?.vencimento
     ? new Date(dados.vencimento).toLocaleDateString(tagIdioma, {
         day: "2-digit",
