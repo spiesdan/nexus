@@ -2,7 +2,8 @@
  * Tests for EPIC-05 contact schemas (Wave 1).
  *
  * Covers:
- *  - E.164 phone validator (accept/reject)
+ *  - telefone: entrada aceita formato local/mascarado e normaliza para E.164
+ *    (o E.164 é exigência do canal, não de quem digita — decisão de 25/11/2026)
  *  - Email parsing
  *  - CPF check-digit (valid, invalid, repeated digits)
  *  - lgpdAnonymizeSchema requires justification ≥ 10 chars
@@ -52,8 +53,17 @@ describe("contactCreateSchema", () => {
     expect(parsed.source).toBe("manual");
   });
 
-  it("rejects non-E.164 phones", () => {
+  it("aceita telefone local e normaliza para E.164", () => {
+    // Antes este caso era "rejects non-E.164": exigir o formato cru do canal
+    // recusava o que a pessoa digita. A regra mudou em 25/11/2026 — o teste
+    // mudou junto, e o que ele protege agora é a NORMALIZAÇÃO.
     const r = contactCreateSchema.safeParse({ phone_number: "11999998888" });
+    expect(r.success).toBe(true);
+    expect(r.success && r.data.phone_number).toBe("+5511999998888");
+  });
+
+  it("recusa o que não é telefone", () => {
+    const r = contactCreateSchema.safeParse({ phone_number: "ligar depois" });
     expect(r.success).toBe(false);
   });
 
