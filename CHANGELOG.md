@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.3] — 2026-11-25
+
+### Corrigido
+
+- **Aviso no Discord usa arquivo em vez de heredoc e não perde mais a mensagem** O workflow do aviso falhou na primeira tag que pegou (`v2.0.2`) com `Matching delimiter not found 'FIM'`: a seção do CHANGELOG não termina com quebra de linha, então o `echo "FIM"` colou na última linha do conteúdo. A mensagem agora é lida de arquivo, sem delimitador para errar, e mensagem vazia não posta nada em vez de postar vazio.
+
 ## [2.0.2] — 2026-11-25
 
 ### Adicionado
@@ -9179,7 +9185,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.2...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.3...HEAD
+[2.0.3]: https://github.com/spiesdan/nexus/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/spiesdan/nexus/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/spiesdan/nexus/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/spiesdan/nexus/compare/v1.72.1...v2.0.0
