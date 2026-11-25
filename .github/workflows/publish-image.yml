@@ -522,11 +522,30 @@ jobs:
           # canal deixaria de ser o mesmo manifesto que a versão.
           dono=$(echo "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')
           numero="${VERSAO#v}"
+          # RETENTATIVA, e o motivo é medido: a v2.0.5 falhou aqui com
+          # `nexus-ocr:2.0.5: not found` minutos depois de a imagem ter sido
+          # empurrada com sucesso (o log do build mostra `pushing manifest`). Reexecutar o job, sem mudar uma
+          # linha, passou — é propagação do registro, não defeito de build. Sem
+          # retentativa, `stable` fica na versão anterior e quem instala no
+          # default recebe código velho sobre banco já migrado.
+          #
+          # O nome do registro aqui é DERIVADO (`${REGISTRY}/${dono}`), nunca
+          # escrito: `namespace-das-imagens` mantém a âncora única.
           for img in nexus nexus-worker nexus-scheduler nexus-fiscal-sidecar nexus-mercos nexus-ocr nexus-rota; do
             echo "::group::${img}"
-            docker buildx imagetools create \
-              --tag "${REGISTRY}/${dono}/${img}:stable" \
-              "${REGISTRY}/${dono}/${img}:${numero}"
+            for tentativa in 1 2 3 4 5; do
+              if docker buildx imagetools create \
+                --tag "${REGISTRY}/${dono}/${img}:stable" \
+                "${REGISTRY}/${dono}/${img}:${numero}"; then
+                break
+              fi
+              if [ "${tentativa}" = "5" ]; then
+                echo "::error::${img}: a tag ${numero} não apareceu no registro depois de 5 tentativas"
+                exit 1
+              fi
+              echo "${img}: tentativa ${tentativa} não achou a tag no registro; esperando $((tentativa * 20))s"
+              sleep $((tentativa * 20))
+            done
             echo "::endgroup::"
           done
           echo "stable agora aponta para ${numero} nas sete imagens"
