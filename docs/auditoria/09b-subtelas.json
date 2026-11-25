@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-20T12:08:20.610Z",
+  "geradoEm": "2026-11-25T00:49:18.153Z",
   "telas": [
     {
       "rota": "/",
@@ -1071,7 +1071,14 @@
       "abas": [],
       "modais": [],
       "gavetas": [],
-      "rotasIrmaes": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/_client.tsx",
+          "linha": 459
+        }
+      ],
       "semTitulo": 0
     },
     {
@@ -1080,27 +1087,27 @@
       "modais": [
         {
           "tipo": "modal",
-          "rotulo": "Adicionar pedido à carga",
-          "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1384
-        },
-        {
-          "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1473
+          "linha": 1410
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 598
+          "linha": 709
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir endereço da entrega",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1351
         },
         {
           "tipo": "modal",
           "rotulo": "Trocar carga",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 1399
+          "linha": 1650
         }
       ],
       "gavetas": [],
@@ -1109,7 +1116,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 874
+          "linha": 850
         }
       ],
       "semTitulo": 0
@@ -1120,27 +1127,27 @@
       "modais": [
         {
           "tipo": "modal",
-          "rotulo": "Adicionar pedido à carga",
-          "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1384
-        },
-        {
-          "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1473
+          "linha": 1410
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 598
+          "linha": 709
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir endereço da entrega",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1351
         },
         {
           "tipo": "modal",
           "rotulo": "Trocar carga",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 1399
+          "linha": 1650
         }
       ],
       "gavetas": [],
@@ -1149,7 +1156,7 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 874
+          "linha": 850
         }
       ],
       "semTitulo": 0
@@ -1160,27 +1167,27 @@
       "modais": [
         {
           "tipo": "modal",
-          "rotulo": "Adicionar pedido à carga",
-          "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1384
-        },
-        {
-          "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1473
+          "linha": 1410
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 598
+          "linha": 709
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir endereço da entrega",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1351
         },
         {
           "tipo": "modal",
           "rotulo": "Trocar carga",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 1399
+          "linha": 1650
         }
       ],
       "gavetas": [],
@@ -1189,7 +1196,47 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 874
+          "linha": 850
+        }
+      ],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/expedicao/[id]/resumo",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Veículo e motorista",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 1410
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 709
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir endereço da entrega",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1351
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Trocar carga",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1650
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [
+        {
+          "tipo": "nav-rota",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/[id]/_client.tsx",
+          "linha": 850
         }
       ],
       "semTitulo": 0
@@ -1200,27 +1247,27 @@
       "modais": [
         {
           "tipo": "modal",
-          "rotulo": "Adicionar pedido à carga",
-          "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1384
-        },
-        {
-          "tipo": "modal",
           "rotulo": "Veículo e motorista",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 1473
+          "linha": 1410
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 598
+          "linha": 709
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Corrigir endereço da entrega",
+          "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
+          "linha": 1351
         },
         {
           "tipo": "modal",
           "rotulo": "Trocar carga",
           "arquivo": "app/app/expedicao/[id]/_motorista.tsx",
-          "linha": 1399
+          "linha": 1650
         }
       ],
       "gavetas": [],
@@ -1229,14 +1276,21 @@
           "tipo": "nav-rota",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/[id]/_client.tsx",
-          "linha": 874
+          "linha": 850
         }
       ],
       "semTitulo": 0
     },
     {
       "rota": "/app/expedicao/nova",
-      "abas": [],
+      "abas": [
+        {
+          "tipo": "aba-caseira",
+          "rotulo": "(rótulo dinâmico)",
+          "arquivo": "app/app/expedicao/nova/_client.tsx",
+          "linha": 211
+        }
+      ],
       "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
@@ -1457,13 +1511,13 @@
           "tipo": "gaveta",
           "rotulo": "Ficha do contato",
           "arquivo": "components/inbox/InboxLayout.tsx",
-          "linha": 359
+          "linha": 369
         },
         {
           "tipo": "gaveta",
           "rotulo": "Ficha do contato",
           "arquivo": "components/inbox/InboxLayout.tsx",
-          "linha": 378
+          "linha": 388
         }
       ],
       "rotasIrmaes": [],
@@ -1663,13 +1717,13 @@
           "tipo": "modal",
           "rotulo": "Prévia do pedido",
           "arquivo": "app/app/pedidos/novo/_editor.tsx",
-          "linha": 1319
+          "linha": 1350
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/pedidos/novo/_editor.tsx",
-          "linha": 1459
+          "linha": 1499
         },
         {
           "tipo": "modal",
@@ -1805,6 +1859,14 @@
           "linha": 31
         }
       ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/products/catalogo-pdf",
+      "abas": [],
+      "modais": [],
       "gavetas": [],
       "rotasIrmaes": [],
       "semTitulo": 0
@@ -2166,6 +2228,14 @@
     },
     {
       "rota": "/app/settings/tenant/agenda",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/app/settings/tenant/formas-pagamento",
       "abas": [],
       "modais": [],
       "gavetas": [],
