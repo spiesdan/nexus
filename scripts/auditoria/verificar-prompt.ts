@@ -24,18 +24,34 @@
  *
  * Regravar o hash só é legítimo quando o USUÁRIO mudou o prompt. Fazer isso
  * para "consertar" uma divergência é falsificar a lei.
+ *
+ * ## O hash do arquivo NÃO é o hash da lei
+ *
+ * Medido em 25/11/2026: `sha256sum docs/auditoria/PROMPT-MESTRE-AAA.md` devolve
+ * `c37217c4…`, enquanto o registro guarda `ee40a0a2…` — e o prompt estava
+ * íntegro. A diferença é a normalização (headings, negrito, linhas vazias). Foi
+ * assim que o backlog passou a acusar "hash inválido": medindo com a régua
+ * errada. Quem quiser conferir de fora chama este script, não `sha256sum`.
+ *
+ * A normalização vive aqui e é EXPORTADA porque `tests/unit/prompt-mestre-integro.test.ts`
+ * a usa: gate que só roda quando alguém lembra não é gate.
  */
 import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const RAIZ = process.cwd();
-const DOC = join(RAIZ, "docs", "auditoria", "PROMPT-MESTRE-AAA.md");
-const HASH = join(RAIZ, "docs", "auditoria", "prompt-mestre.sha256");
-const GRAVAR = process.argv.includes("--gravar");
+/** Documento cujo conteúdo é a lei. */
+export const DOC_DO_PROMPT = join("docs", "auditoria", "PROMPT-MESTRE-AAA.md");
+/** Arquivo com o hash da versão aprovada da lei. */
+export const ARQUIVO_DO_HASH = join("docs", "auditoria", "prompt-mestre.sha256");
 
-function corpoDoPrompt(): string {
-  const md = readFileSync(DOC, "utf8");
+/**
+ * O corpo que entra no hash: conteúdo, sem a estrutura de formatação.
+ *
+ * `espacos` existe para o teste provar que UMA palavra muda o hash; trocar o
+ * texto por outro é a única forma honesta de simular "o usuário mudou a lei".
+ */
+export function normalizarPrompt(md: string): string {
   const linhas = md
     .split("\n")
     .map((l) => l.trim())
@@ -44,18 +60,32 @@ function corpoDoPrompt(): string {
   return linhas.join("\n") + "\n";
 }
 
-const hash = createHash("sha256").update(corpoDoPrompt(), "utf8").digest("hex");
-
-if (GRAVAR) {
-  writeFileSync(HASH, hash + "\n");
-  console.log(`gravado: ${hash}`);
-  process.exit(0);
+/** SHA-256 do corpo normalizado do prompt lido de `raiz`. */
+export function hashDoPrompt(raiz: string): string {
+  const md = readFileSync(join(raiz, DOC_DO_PROMPT), "utf8");
+  return createHash("sha256").update(normalizarPrompt(md), "utf8").digest("hex");
 }
 
-const esperado = readFileSync(HASH, "utf8").trim();
-if (hash !== esperado) {
-  console.error(`PROMPT ALTERADO.\n  esperado: ${esperado}\n  atual:    ${hash}`);
-  console.error("Se a mudança não veio do usuário, reverta. Se veio, revise e regrave com --gravar.");
-  process.exit(1);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const RAIZ = process.cwd();
+  const HASH = join(RAIZ, ARQUIVO_DO_HASH);
+  const GRAVAR = process.argv.includes("--gravar");
+
+  const hash = hashDoPrompt(RAIZ);
+
+  if (GRAVAR) {
+    writeFileSync(HASH, hash + "\n");
+    console.log(`gravado: ${hash}`);
+    process.exit(0);
+  }
+
+  const esperado = readFileSync(HASH, "utf8").trim();
+  if (hash !== esperado) {
+    console.error(`PROMPT ALTERADO.\n  esperado: ${esperado}\n  atual:    ${hash}`);
+    console.error("Se a mudança não veio do usuário, reverta. Se veio, revise e regrave com --gravar.");
+    process.exit(1);
+  }
+  console.log(
+    `ok: prompt íntegro (${hash.slice(0, 16)}…) — ${normalizarPrompt(readFileSync(join(RAIZ, DOC_DO_PROMPT), "utf8")).split("\n").length - 1} linhas`,
+  );
 }
-console.log(`ok: prompt íntegro (${hash.slice(0, 16)}…) — ${corpoDoPrompt().split("\n").length - 1} linhas`);

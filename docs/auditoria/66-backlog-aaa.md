@@ -4,7 +4,7 @@
 > por item: **id · item · estado · dono · evidência · próximo passo**.
 > Estados: `[x]` fechado · `[~]` em curso · `[!]` bloqueado · `[ ]` não iniciado.
 > **Nada sem dono.**
-> **Placar (24/11):** 38 `[x]` · 1 `[~]` · 4 `[!]` · 5 `[ ]` — 48 itens (contagem só das linhas de tabela; a legenda não entra).
+> **Placar (25/11):** 39 `[x]` · 1 `[~]` · 4 `[!]` · 4 `[ ]` — 48 itens (contagem só das linhas de tabela; a legenda não entra).
 > coordenação não deixa slot vazio.
 
 ## P0
@@ -68,7 +68,7 @@
 
 | id | item | estado | dono | evidência | próximo passo |
 |---|---|---|---|---|---|
-| P2-1 | `prompt-mestre.sha256` inválido (registra `ee40a0a2…`, arquivo mede `c37217c4…`) | `[ ]` | coordenação | hashes fornecidos pelo dono | recalcular hash e corrigir registro |
+| P2-1 | `prompt-mestre.sha256` inválido (registra `ee40a0a2…`, arquivo mede `c37217c4…`) | `[x]` | coordenação | **não estava inválido**: `c37217c4…` é o `sha256sum` do ARQUIVO cru; o registro guarda o hash do corpo normalizado (headings, negrito e linhas vazias fora). `verificar-prompt.ts` responde `ok: prompt íntegro (ee40a0a2…) — 370 linhas`. Gate novo `tests/unit/prompt-mestre-integro.test.ts` (4 casos, incluindo o controle de que uma palavra muda o hash) | — ; **não regravar o hash** — regravar para "consertar" seria falsificar a lei |
 | P2-2 | Docs com contagens antigas (F-11) | `[ ]` | coordenação | F-11 em `docs/auditoria/` | trocar número por comando onde couber |
 | P2-3 | Reclassificar fragmento `observabilidade-sonda`? | `[!]` | **BLOQUEADO — dono** | fragmento `capacidade_nova` definou 1.62.0 | dono decide; mudança só com reclassificação honesta |
 
