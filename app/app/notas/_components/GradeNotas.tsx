@@ -93,6 +93,7 @@ export function GradeNotas({
   inicial,
   totalNotas = null,
   pessoas,
+  pessoasAvulsas = {},
   operacaoPadrao,
   ambientePadrao,
   podeEmitir,
@@ -102,6 +103,8 @@ export function GradeNotas({
   /** Total da organização (sem o teto de 200). `null` = não medido. */
   totalNotas?: number | null;
   pessoas: Record<string, string>;
+  /** Nota sem pedido (venda avulsa): o nome vem da própria nota, por id dela. */
+  pessoasAvulsas?: Record<string, string>;
   operacaoPadrao: string;
   ambientePadrao: string;
   podeEmitir: boolean;
@@ -172,7 +175,10 @@ export function GradeNotas({
     const numero = n.numero !== null ? `${n.numero}/${n.serie}` : "";
     const chave = (n.chave_acesso ?? "").toLowerCase();
     const protocolo = (n.protocolo ?? "").toLowerCase();
-    const pessoa = (n.order_id ? (pessoas[n.order_id] ?? "") : "").toLowerCase();
+    const pessoa = (n.order_id
+      ? (pessoas[n.order_id] ?? "")
+      : (pessoasAvulsas[n.id] ?? "")
+    ).toLowerCase();
     return numero.includes(b) || chave.includes(b) || protocolo.includes(b) || pessoa.includes(b);
   });
 
@@ -283,7 +289,7 @@ export function GradeNotas({
         new Date(n.created_at).toLocaleDateString(tagIdioma),
         n.numero === null ? "" : String(n.numero),
         n.serie,
-        n.order_id ? (pessoas[n.order_id] ?? "") : "",
+        n.order_id ? (pessoas[n.order_id] ?? "") : (pessoasAvulsas[n.id] ?? ""),
         (n.total_cents / 100).toFixed(2).replace(".", ","),
         ambientePadrao === "producao" ? textos.producao : textos.homologacao,
       ]
