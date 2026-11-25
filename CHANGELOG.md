@@ -8,6 +8,14 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.8] — 2026-11-25
+
+### Corrigido
+
+- **Variáveis do Mercos documentadas passam a chegar ao container** `MERCOS_DE` e `MERCOS_ATE` foram criadas no `.env.example` e lidas pelo worker, mas **não** estavam no `docker-compose.prod.yml` — o `.env` da VPS dizia `01/01/2026` e `echo $MERCOS_DE` dentro do container respondia vazio. A recuperação de período simplesmente não acontecia. As duas entraram no compose, e um gate novo reprova a suíte quando uma `MERCOS_*` documentada no `.env.example` não é entregue ao container: env documentada e env entregue não podem divergir, porque a distância entre as duas é um recurso que não existe.
+
+- **O prompt mestre (a lei) ganha gate em vez de depender de alguém lembrar** O verificador de integridade existia, mas não rodava em gate nenhum — e foi assim que o backlog passou a acusar "hash inválido" por semanas quando o prompt estava íntegro: comparava-se o `sha256sum` do arquivo cru (`c37217c4…`) com o hash do corpo normalizado (`ee40a0a2…`), que remove heading, negrito e linha vazia. Mediado: `ok: prompt íntegro — 370 linhas`. O gate novo reprova a suíte se uma palavra, um número ou a ordem das seções mudar, e tem o controle que impede o teste de passar por vacuidade (mudar uma palavra muda o hash; reformatar heading não muda). O registro **não** foi regravado: regravar para "consertar" divergência seria falsificar a lei.
+
 ## [2.0.7] — 2026-11-25
 
 ### Corrigido
@@ -9227,7 +9235,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.7...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.8...HEAD
+[2.0.8]: https://github.com/spiesdan/nexus/compare/v2.0.7...v2.0.8
 [2.0.7]: https://github.com/spiesdan/nexus/compare/v2.0.6...v2.0.7
 [2.0.6]: https://github.com/spiesdan/nexus/compare/v2.0.5...v2.0.6
 [2.0.5]: https://github.com/spiesdan/nexus/compare/v2.0.4...v2.0.5
