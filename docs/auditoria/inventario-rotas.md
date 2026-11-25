@@ -794,7 +794,7 @@ Prefixo de quatro segmentos; agrupa o que o router separa em dezenas de arquivos
 | `/auth/confirm` | GET | redirect | 154 | `app/auth/confirm/route.ts` |
 | `/icone-512` | GET | force-dynamic | 53 | `app/icone-512/route.ts` |
 
-## Delta de handlers desde o baseline de 17/11 (419 → 463)
+## Delta de handlers desde o baseline de 17/11 (419 → 466)
 
 Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-1711.txt`), não um número decorado. O total do gerador acima inclui dois `route.ts` fora de `app/api` (`/auth/confirm`, `/icone-512`); esta seção compara só `app/api/**`.
 
@@ -822,6 +822,7 @@ Baseline = lista versionada de caminhos (`scripts/auditoria/inventario-baseline-
 | Sentinel — job | 3 | Nível 2 para job travado: simular/aplicar/reverter com CAS (0325). | `/api/v1/sentinel/occurrences/:id/correcao`<br>`/api/v1/sentinel/occurrences/:id/correcao/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/simular` |
 | Sentinel — conversa | 3 | Nível 2 para claim parado: simular/aplicar/reverter com CAS e motivo (0328). | `/api/v1/sentinel/occurrences/:id/correcao/conversa`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/reverter`<br>`/api/v1/sentinel/occurrences/:id/correcao/conversa/simular` |
 | Expedição — aceite do motorista | 1 | 0336 grava a versão da rota aplicada no aparelho, com CAS na versão atual; sem isto o escritório não sabia se o motorista estava na nova sequência. | `/api/v1/shipments/:id/rota/confirmar` |
+| Contatos — duplicados | 3 | 0355: a fila de revisão humana — listar grupos candidatos, fundir o vencedor confirmado e descartar "não é a mesma pessoa". Nenhuma fusão automática. | `/api/v1/contacts/duplicados`<br>`/api/v1/contacts/duplicados/fundir`<br>`/api/v1/contacts/duplicados/descartar` |
 
 Nenhuma rota removida no período — o delta é só acréscimo.
 

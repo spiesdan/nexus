@@ -1,5 +1,5 @@
 {
-  "geradoEm": "2026-11-25T00:49:18.153Z",
+  "geradoEm": "2026-11-25T19:21:27.113Z",
   "telas": [
     {
       "rota": "/",
@@ -114,6 +114,14 @@
     },
     {
       "rota": "/admin/audit/[entryId]",
+      "abas": [],
+      "modais": [],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
+      "rota": "/admin/billing",
       "abas": [],
       "modais": [],
       "gavetas": [],
@@ -815,6 +823,27 @@
       "semTitulo": 0
     },
     {
+      "rota": "/app/clientes/duplicados",
+      "abas": [],
+      "modais": [
+        {
+          "tipo": "modal",
+          "rotulo": "Fundir {n} ficha(s) em {nome}?",
+          "arquivo": "app/app/clientes/duplicados/_client.tsx",
+          "linha": 422
+        },
+        {
+          "tipo": "modal",
+          "rotulo": "Não é a mesma pessoa?",
+          "arquivo": "app/app/clientes/duplicados/_client.tsx",
+          "linha": 487
+        }
+      ],
+      "gavetas": [],
+      "rotasIrmaes": [],
+      "semTitulo": 0
+    },
+    {
       "rota": "/app/comissoes",
       "abas": [],
       "modais": [],
@@ -1288,7 +1317,7 @@
           "tipo": "aba-caseira",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/expedicao/nova/_client.tsx",
-          "linha": 211
+          "linha": 215
         }
       ],
       "modais": [],
@@ -1632,7 +1661,7 @@
           "tipo": "aba",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/page.tsx",
-          "linha": 560
+          "linha": 599
         }
       ],
       "modais": [
@@ -1646,13 +1675,13 @@
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 880
+          "linha": 886
         },
         {
           "tipo": "modal",
           "rotulo": "(rótulo dinâmico)",
           "arquivo": "app/app/notas/_components/GradeNotas.tsx",
-          "linha": 926
+          "linha": 932
         },
         {
           "tipo": "modal",

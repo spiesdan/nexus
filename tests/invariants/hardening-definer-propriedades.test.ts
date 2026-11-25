@@ -142,6 +142,12 @@ const CONFIA_NO_CHAMADOR: Readonly<Record<string, string>> = {
   fn_mercos_fundir_duplicados:
     "sem call site em TS: fusão de duplicados do Mercos por SQL; invariante " +
     "mercos-cadastro-1_para_1 exercita",
+  fn_contatos_duplicados:
+    "app/api/v1/contacts/duplicados/route.ts — admin.rpc com authz.org.orgId " +
+    "(requireRole agent); a função só lê a org recebida",
+  fn_fundir_contatos:
+    "app/api/v1/contacts/duplicados/fundir/route.ts — admin.rpc com " +
+    "authz.org.orgId (requireRole manager); recusa id de outra organização",
   fn_sincronizar_pedido_mercos:
     "sem call site em TS: sincronização do Mercos por SQL; invariantes " +
     "revisao-mercos e mercos-pago-e-entregue exercitam",

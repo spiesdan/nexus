@@ -42,12 +42,12 @@ describe("recontagem de rotas da API", () => {
     // 419 → 449: aceite do motorista, checkout, orcamentos-parados, relatorio
     // de gastos, a tela de colisoes do Mercos (0344) e o cron da reconciliação.
 
-    expect(agora.length - baseline.length).toBe(44);
+    expect(agora.length - baseline.length).toBe(47);
   });
 
   it("toda rota nova está nomeada no doc, com área e motivo", () => {
     const novas = agora.filter((caminho) => !baseline.includes(caminho));
-    expect(novas).toHaveLength(44);
+    expect(novas).toHaveLength(47);
     for (const caminho of novas) {
       // O doc mostra a rota HTTP, não o caminho do arquivo; o sufixo é o que
       // distingue [id]/revoke, correcao/conversa/simular etc.

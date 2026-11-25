@@ -325,6 +325,21 @@ export const NAV_DESTINATIONS: NavDestination[] = [
     sidebar: true,
   },
   {
+    // A fila de decisão humana que nasceu da 0355: o sistema mostra os grupos
+    // que NÃO funde sozinho (mesmo nome + cidade, sem CNPJ, com histórico) e o
+    // gestor escolhe o vencedor. Sem sidebar — a dobra do grupo Vendas é
+    // medida, e a porta principal é o botão dentro de Clientes; aqui é o ⌘K.
+    // A leitura é agent+ (a fila é visível para quem atende); fundir e
+    // descartar são manager porque repontam pedido e não voltam sozinhos.
+    href: "/app/clientes/duplicados",
+    label: "Clientes duplicados",
+    description:
+      "Fichas com o mesmo nome e cidade que esperam decisão: fundir nesta ou não é a mesma pessoa.",
+    icon: UsersThree,
+    group: "vendas",
+    minRole: "agent",
+  },
+  {
     // ⚠️ Esta tela nasceu porque a FERRAMENTA já existia sem ela. O agente de IA
     // vinha com "procurar produto na loja" ligada por padrão, lendo uma tabela
     // que ninguém nunca preencheu — e o efeito não era silêncio: era o agente

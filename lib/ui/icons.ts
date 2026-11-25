@@ -88,6 +88,7 @@ export {
   // conversation
   ChatCircle,
   Phone,
+  Envelope,
   Paperclip,
   Microphone,
   Image as ImageIcon,

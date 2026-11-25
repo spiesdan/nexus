@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Clientes duplicados — a fila onde só um humano decide",
+    "subtitle": "o sistema mostra o grupo e os números; quem escolhe o vencedor é a pessoa. Nada funde sozinho.",
+    "output": "clientes-duplicados.html",
+    "quality_profile": "standard"
+  },
+  "lanes": [
+    { "id": "humano", "label": "O que o humano vê" },
+    { "id": "borda", "label": "Borda HTTP" },
+    { "id": "regra", "label": "Decision no banco" },
+    { "id": "dados", "label": "Dados" },
+    { "id": "volta", "label": "O laço de retorno" }
+  ],
+  "mainPath": ["porta", "tela", "api_get", "lista", "api_fundir", "fusao", "contatos", "audit"],
+  "nodes": [
+    {
+      "id": "porta",
+      "lane": "humano",
+      "col": 1,
+      "type": "frontend",
+      "label": "Botão \"Revisar duplicados\" + ⌘K",
+      "sublabel": "/app/contacts (header) · lib/navigation/registry.ts (manager)"
+    },
+    {
+      "id": "tela",
+      "lane": "humano",
+      "col": 2,
+      "type": "frontend",
+      "label": "/app/clientes/duplicados",
+      "sublabel": "fichas LADO A LADO · rádio do vencedor · confirmação com pedidos/conversas que vão passar"
+    },
+    {
+      "id": "api_get",
+      "lane": "borda",
+      "col": 1,
+      "type": "api",
+      "label": "GET /api/v1/contacts/duplicados",
+      "sublabel": "agent+ · teto 200 com meta.truncado · org do authz"
+    },
+    {
+      "id": "api_fundir",
+      "lane": "borda",
+      "col": 3,
+      "type": "api",
+      "label": "POST /contacts/duplicados/fundir",
+      "sublabel": "manager · 422 se vazio ou vencedor na lista · audit com ids e contagens"
+    },
+    {
+      "id": "api_descartar",
+      "lane": "borda",
+      "col": 5,
+      "type": "api",
+      "label": "POST /contacts/duplicados/descartar",
+      "sublabel": "manager · upsert idempotente · motivo obrigatório · audit"
+    },
+    {
+      "id": "lista",
+      "lane": "regra",
+      "col": 1,
+      "type": "service",
+      "label": "fn_contatos_duplicados(org, limite)",
+      "sublabel": "mesmo nome normalizado + mesma cidade · sem CNPJ · com histórico · exclui descartados"
+    },
+    {
+      "id": "fusao",
+      "lane": "regra",
+      "col": 3,
+      "type": "service",
+      "label": "fn_fundir_contatos(org, vencedor, perdedores)",
+      "sublabel": "descobre TODA tabela com contact_id no catálogo · funde conversa 1:1 sem perder mensagem · service role only"
+    },
+    {
+      "id": "contatos",
+      "lane": "dados",
+      "col": 2,
+      "type": "database",
+      "label": "contacts + tabelas com contact_id",
+      "sublabel": "perdedor vira is_merged_into; pedido/conversa/lead repontados não voltam sozinhos"
+    },
+    {
+      "id": "descartes",
+      "lane": "dados",
+      "col": 4,
+      "type": "database",
+      "label": "contact_duplicate_dismissals",
+      "sublabel": "unique(org, chave) · leitura membro · escrita manager"
+    },
+    {
+      "id": "audit",
+      "lane": "volta",
+      "col": 3,
+      "type": "database",
+      "label": "api_audit_log",
+      "sublabel": "contact.merged (ids, repontados, conflitos) · contact.duplicate_dismissed (motivo)"
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "porta", "to": "tela", "label": "quem decide chega pela tela de Clientes ou pelo ⌘K" },
+    { "id": "e2", "from": "tela", "to": "api_get", "label": "carrega a fila; erro NÃO vira vazio" },
+    { "id": "e3", "from": "api_get", "to": "lista", "label": "rpc com a org da sessão" },
+    { "id": "e4", "from": "lista", "to": "descartes", "label": "not exists na chave estável — o grupo descartado não volta" },
+    { "id": "e5", "from": "tela", "to": "api_fundir", "label": "vencedor + perdedores + motivo, depois da confirmação explícita" },
+    { "id": "e6", "from": "api_fundir", "to": "fusao", "label": "rpc atômica; recusa id de outra org" },
+    { "id": "e7", "from": "fusao", "to": "contatos", "label": "reponta pedidos/conversas/leads; marca is_merged_into" },
+    { "id": "e8", "from": "tela", "to": "api_descartar", "label": "não é a mesma pessoa, com motivo" },
+    { "id": "e9", "from": "api_descartar", "to": "descartes", "label": "upsert (org, chave) — idempotente" },
+    { "id": "e10", "from": "api_fundir", "to": "audit", "label": "uma fusão = uma linha com o que foi repontado" },
+    { "id": "e11", "from": "api_descartar", "to": "audit", "label": "um descarte = uma linha com o motivo" },
+    { "id": "e12", "from": "fusao", "to": "lista", "label": "depois da fusão o grupo deixa de ter perdedor vivo" }
+  ]
+}

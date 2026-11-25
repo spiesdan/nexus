@@ -288,6 +288,15 @@ const PROVA_PROPRIA: readonly Excecao[] = [
       "vê 0 linhas da org A, `writeCountAs` recusa escrita cross-org e " +
       "viewer não escreve nem na própria org (migration 0311).",
   },
+  {
+    tabela: "contact_duplicate_dismissals",
+    razao:
+      "tests/invariants/clientes-duplicados.test.ts (0355) — `countAs` do " +
+      "membro da org A lê o próprio descarte e 0 do vizinho; `writeCountAs` " +
+      "recusa o agent e aceita o manager na própria org; anon sem privilégio " +
+      "de SELECT. Fica fora de TABLES porque a escrita é manager e o usuário " +
+      "semeado lá é agent.",
+  },
   // F-17 — 39 tabelas que estavam em DEBITO_CONHECIDO e ganharam prova
   // comportamental real (JWT simulado + contagem cross-org + controle positivo)
   // em rls-camadas-restantes-do-debito.test.ts. A lista vive em módulo próprio
