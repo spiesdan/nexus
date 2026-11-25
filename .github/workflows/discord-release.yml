@@ -53,7 +53,11 @@ jobs:
       - name: Montar a mensagem a partir do CHANGELOG
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
-          POSTAR: ${{ inputs.postar }}
+          # `inputs.postar` é VAZIO quando o gatilho é a tag. Sem o `|| 'sim'`,
+          # `${POSTAR:-nao}` caía no dry-run e a v2.0.4 subiu sem post — o mesmo
+          # silêncio de antes, agora por default errado. Tag posta; só o disparo
+          # manual escolhe `nao`.
+          POSTAR: ${{ inputs.postar || 'sim' }}
         run: |
           set -euo pipefail
           node -e '
@@ -75,7 +79,7 @@ jobs:
       - name: Postar no Discord
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          POSTAR: ${{ inputs.postar }}
+          POSTAR: ${{ inputs.postar || 'sim' }}
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK}" ]; then
