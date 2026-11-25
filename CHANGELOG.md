@@ -8,6 +8,30 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.0] — 2026-11-25
+
+### ⚠️ Requer atenção
+
+- **Roteamento de ruas exige OSRM próprio; comprovante sem conexão é registrado com motivo** Configure seu próprio OSRM (ou aceite Google Maps/Waze) antes de usar rotas por ruas nesta instalação.
+
+### Adicionado
+
+- **Cabeçalho da carga diz a próxima ação, Resumo vira página e Nova carga tem 3 passos** As subtelas da carga passam a mostrar no cabeçalho a próxima ação, com um só botão em destaque. A raiz continua Paradas; Resumo vira a primeira página da navegação. Nova carga passa a ter três passos (Pedidos, Equipe, Revisão) sem perder a seleção ao voltar.
+
+- **Despacho mostra exceções com link filtrante e Nova carga mostra prontidão** O topo da expedição diz o que exige ação agora (atenção, localização, escala, prontas para sair), com contagem que já filtra a lista. Nova carga mostra o que está pronto, o que é aviso e o que bloqueia. A placa passa a ser validada e sugere combinações recentes, sem criar tabela de frota.
+
+- **Cabine oferece Google Maps e Waze quando a rota não carrega** Quando a parada tem coordenada, a cabine mostra links oficiais para Google Maps e Waze em nova aba, com texto explicando que são alternativas se o mapa não carregar. Sem coordenada, nada aparece. A entrega continua sendo registrada na cabine.
+
+### Alterado
+
+- **Roteamento de ruas exige OSRM próprio; comprovante sem conexão é registrado com motivo** O OSRM público deixou de ser padrão. Sem `OSRM_URL`, a rota responde "roteamento não configurado — use Google Maps ou Waze" e nenhuma requisição sai para terceiros. Timeout de 5 segundos vira erro nomeado em vez de espera indefinida. Configure `OSRM_URL` no `.env` da VPS (runbook em docs/runbooks/geodados.md) para voltar a ter ruas.
+
+  Na cabine, sem conexão a foto do comprovante não é aceita: o desfecho entra na fila com o motivo "Foto precisa de conexão — desfecho registrado sem foto". Foto continua disponível pelo endpoint de proof quando houver sinal.
+
+### Corrigido
+
+- **Checkout reusa o cliente do Stripe e não cobra duas vezes** O checkout passa a enviar o `customer` já vinculado à organização, em vez de deixar o Stripe criar outro. Quando existe assinatura ativa, em trial ou em atraso, a rota devolve 409 e aponta o portal — nenhuma sessão é criada. A chave de idempotência passa a derivar de organização, preço e janela curta, então dois cliques seguidos devolvem a mesma sessão.
+
 ## [1.72.1] — 2026-11-24
 
 ### Corrigido
@@ -9133,7 +9157,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v1.72.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/spiesdan/nexus/compare/v1.72.1...v2.0.0
 [1.72.1]: https://github.com/spiesdan/nexus/compare/v1.72.0...v1.72.1
 [1.72.0]: https://github.com/spiesdan/nexus/compare/v1.71.0...v1.72.0
 [1.71.0]: https://github.com/spiesdan/nexus/compare/v1.70.1...v1.71.0
