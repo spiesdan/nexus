@@ -303,6 +303,23 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
     }
   }
 
+  /**
+   * Nota CANCELADA não é nota viva: o pedido pode — e deve — emitir outra.
+   *
+   * Medido em 25/11/2026: a nota 4673 foi autorizada e depois cancelada porque
+   * o pedido ganhou item novo. A ficha do pedido mostrava a nota cancelada e
+   * **nenhum jeito de emitir de novo** — o botão "Emitir NF-e" só aparecia com
+   * zero notas. O backend sempre aceitou (a trava é `status <> 'cancelada'`);
+   * era a tela que escondia a saída, e o operador ficou sem próxima ação.
+   *
+   * `denegada` entra na mesma lista por outro motivo: denegação não autoriza o
+   * fato, então também não impede uma nota nova. `erro` NÃO entra: essa nota
+   * ainda pode ser reenviada, e criar outra duplicaria o documento.
+   */
+  const notasTerminais = new Set(["cancelada", "denegada"]);
+  const temNotaViva = (notas ?? []).some((n) => !notasTerminais.has(n.status));
+  const podeEmitirNova = notas !== null && notas.length > 0 && !temNotaViva;
+
   return (
     <Card className="hover-raise space-y-2 p-4">
       <p className="text-xs font-semibold tracking-wide text-muted-foreground">{t("FISCAL")}</p>
@@ -355,6 +372,22 @@ function FiscalDoPedido({ pedidoId }: { pedidoId: string }) {
               </span>
             </li>
           ))}
+          {podeEmitirNova && (
+            <li className="flex flex-wrap items-center gap-2 border-t pt-2">
+              <span className="text-xs text-muted-foreground">
+                {t("A nota anterior foi cancelada — o pedido pode receber outra.")}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="ml-auto"
+                onClick={() => void emitir()}
+                disabled={emitindo}
+              >
+                {emitindo ? t("Enviando…") : t("Emitir nova NF-e")}
+              </Button>
+            </li>
+          )}
         </ul>
       )}
     </Card>
