@@ -307,6 +307,7 @@ export function snapshot(over: Partial<Snapshot> = {}): Snapshot {
     campanhasProspeccao: [],
     campanhasVenda: [],
     clientesDuplicados: [],
+    clientesDuplicadosCnpj: [],
     correcoes: [],
     contatosEndereco: [],
     conversasParadas: [],

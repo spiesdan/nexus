@@ -26,6 +26,7 @@ export const COLETAS = [
   "campanhas_prospeccao",
   "campanhas_venda",
   "clientes_duplicados",
+  "clientes_duplicados_cnpj",
   "contatos_endereco",
   "conversas_paradas",
   "ocorrencias_correcao",
@@ -69,6 +70,7 @@ export const FONTES_DA_REGRA: Readonly<Record<string, readonly ColetaNome[]>> = 
   "campanha.cidade_invalida": ["campanhas_prospeccao", "campanhas_venda"],
   "campanha.cidade_repetida": ["campanhas_prospeccao"],
   "operacao.cliente_duplicado_email": ["clientes_duplicados"],
+  "operacao.cliente_duplicado_cnpj": ["clientes_duplicados_cnpj"],
   "operacao.lead_duplicado": ["leads_abertos"],
   "plataforma.slo_estourado": ["slo_api"],
   "operacao.correcao_sem_reversao": [

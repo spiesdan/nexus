@@ -284,6 +284,22 @@ export interface ClienteDuplicado {
 }
 
 /**
+ * Mesmo CNPJ em fichas diferentes — e as IEs que aparecem entre elas.
+ *
+ * Não é a mesma coisa que e-mail repetido: CNPJ é a identidade FISCAL. Duas
+ * fichas do mesmo CNPJ com IEs diferentes (uma com, outra sem) é o que faz a
+ * SEFAZ recusar a nota com 232, e o pedido pode estar apontando para a pior.
+ */
+export interface ClienteDuplicadoCnpj {
+  organization_id: string;
+  cnpj: string;
+  total: number;
+  ids: string[];
+  ies_distintas: number;
+  ufs_distintas: number;
+}
+
+/**
  * Produto controlado e a soma do razão. A view devolve inclusive produto sem
  * nenhuma movimentação (`movimentos = 0`, `ultimo_movimento = null`): razão
  * vazio com saldo cacheado também é divergência. O detector decide o piso e a
@@ -408,6 +424,7 @@ export interface Snapshot {
   campanhasProspeccao: CampanhaProspeccao[];
   campanhasVenda: CampanhaVenda[];
   clientesDuplicados: ClienteDuplicado[];
+  clientesDuplicadosCnpj: ClienteDuplicadoCnpj[];
   correcoes: CorrecaoSentinel[];
   contatosEndereco: ContatoEndereco[];
   conversasParadas: ConversaParada[];
@@ -444,6 +461,7 @@ export function snapshotVazio(organizationId: string, agoraMs = 0): Snapshot {
     campanhasProspeccao: [],
     campanhasVenda: [],
     clientesDuplicados: [],
+    clientesDuplicadosCnpj: [],
     correcoes: [],
     contatosEndereco: [],
     conversasParadas: [],
