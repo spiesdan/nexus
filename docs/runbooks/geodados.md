@@ -26,7 +26,7 @@ RAM que não devem competir com o app, o WAHA e o Postgres do cliente.
 | `GEOCODER_URL` | `https://nominatim.openstreetmap.org/search` | endpoint `/search` do Nominatim |
 | `GEOCODER_MIN_INTERVALO_MS` | `1100` | espera mínima entre chamadas, por processo. `0` = instância própria |
 | `GEOCODER_UA` | `Nexus-Rotas/1.0` | User-Agent; a política do Nominatim exige identificação |
-| `OSRM_URL` | *(vazio)* | base do OSRM próprio (app e serviço `rota`). **Sem default público**: vazio = sem ruas, cabine oferece Google Maps/Waze. Timeout 5 s vira `osrm_timeout`. |
+| `OSRM_URL` | `https://router.project-osrm.org` | opcional; vazio usa o serviço público. Para não depender de terceiro, aponte para um OSRM próprio já existente (não há serviço no compose). Timeout 5 s vira `osrm_timeout`; a cabine mantém Maps/Waze. |
 
 Nada disso exige release: é configuração de ambiente. No kit de instalação as três primeiras são
 gravadas pelo `install.sh` a partir do valor que estiver no ambiente — quem já tem a instância
