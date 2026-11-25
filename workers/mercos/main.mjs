@@ -18,6 +18,7 @@ import { spawn } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 
 import { CONSUMIDOR_FINAL } from "./cliente.mjs";
+import { janelaDeColeta } from "./janela.mjs";
 import { STATUS } from "./status.mjs";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
@@ -265,8 +266,19 @@ async function processar(admin, run) {
         ? new Date(ultimo.created_at)
         : new Date(Date.now() - 30 * 86400000);
   if (inicioDaRevisao && inicioDaRevisao < inicio) inicio = inicioDaRevisao;
-  const de = dataBr(new Date(inicio.getTime() - 86400000));
-  const ate = dataBr(new Date(Date.now() + 86400000));
+  // Recuperação operacional: MERCOS_DE + MERCOS_ATE (DD/MM/AAAA) substituem
+  // a janela derivada. Vazio no fluxo normal — não fica ligado no .env.
+  const janela = janelaDeColeta({
+    agoraMs: Date.now(),
+    ultimoCreatedAt: inicio.toISOString(),
+    overrideDe: process.env.MERCOS_DE || null,
+    overrideAte: process.env.MERCOS_ATE || null,
+  });
+  const de = janela.de;
+  const ate = janela.ate;
+  if (janela.recuperacao) {
+    log("recuperacao_periodo", { run: run.id, org, de, ate });
+  }
   const pasta = join(TMP_ROOT, run.id);
   mkdirSync(pasta, { recursive: true });
   const saida = join(pasta, "pedidos.jsonl");
