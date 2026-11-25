@@ -185,7 +185,7 @@ export function CargaClient({
     created_at?: string;
   };
   /** Qual das quatro telas da carga esta rota renderiza. */
-  secao: "paradas" | "rota" | "fechamento" | "motorista";
+  secao: "paradas" | "resumo" | "rota" | "fechamento" | "motorista";
   /** Login de entregador (0292): a cabine ocupa a tela, sem cabeçalho da ficha. */
   motorista?: boolean;
   podeOperar: boolean;
@@ -722,6 +722,64 @@ export function CargaClient({
     );
   }
 
+  if (secao === "resumo") {
+    const semEndereco = pendentes.filter((i) => !i.pedido.endereco_entrega).length;
+    const semMotorista = !carga.motorista_nome?.trim() || !carga.placa?.trim();
+    const pendencias = [
+      semEndereco > 0 ? `${semEndereco} ${t("sem endereço")}` : null,
+      naoSeparados.length > 0 ? `${naoSeparados.length} ${t("sem separar")}` : null,
+      semMotorista ? t("sem motorista / veículo") : null,
+    ].filter(Boolean);
+    return (
+      <div className={cn("space-y-5 pb-24", ALVOS_DE_TOQUE)}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-2xl font-medium tracking-tight text-text">
+            {t("Resumo da carga")} · {numeroDaCarga(carga.numero)}
+          </h1>
+          <Badge variant={VARIANTE_DA_CARGA[carga.status] ?? "neutral"}>
+            {ROTULO_DA_CARGA[carga.status] ?? carga.status}
+          </Badge>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Card className="p-4">
+            <p className="text-xs text-muted-foreground">{t("Progresso")}</p>
+            <p className="text-2xl font-semibold tabular-nums text-text">
+              {concluidas.length}/{itens.length}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("paradas com desfecho")}</p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs text-muted-foreground">{t("Pendências")}</p>
+            <p className="mt-1 text-sm text-text">
+              {pendencias.length > 0 ? pendencias.join(" · ") : t("nenhuma pendência")}
+            </p>
+          </Card>
+          <Card className="p-4">
+            <p className="text-xs text-muted-foreground">{t("Próxima ação")}</p>
+            <p className="mt-1 text-sm text-text">{passo.titulo}</p>
+          </Card>
+        </div>
+        {/* Um lugar só para a ação: o cabeçalho compartilhado não está
+            nesta página, então ela fica aqui, uma vez. */}
+        {passo.acao && <div className="max-w-sm">{passo.acao}</div>}
+        <nav aria-label={t("Páginas da expedição")} className="flex flex-wrap items-center gap-2">
+          <span aria-current="page" className="min-h-11 rounded-full bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">
+            {t("Resumo")}
+          </span>
+          {[
+            [`/app/expedicao/${cargaId}`, t("Pedidos e paradas")],
+            [`/app/expedicao/${cargaId}/rota`, t("Mapa e ordem")],
+            [`/app/expedicao/${cargaId}/fechamento`, t("Fechamento")],
+          ].map(([href, rotulo]) => (
+            <Link key={href} href={href!} className="min-h-11 rounded-full border border-border px-3 py-2 text-sm text-accent-ink hover:bg-accent-soft">
+              {rotulo}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    );
+  }
+
   return (
     <div className={cn("space-y-5 pb-24", ALVOS_DE_TOQUE)}>
       {/* Cabeçalho fixo: na ficha longa, número e ações acompanham a rolagem
@@ -763,19 +821,21 @@ export function CargaClient({
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{linhaDaCarga}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {[
+                  carga.motorista_nome ?? t("Sem motorista"),
+                  carga.placa ?? t("Sem veículo"),
+                  `${itens.length} ${t("pedidos")}`,
+                  `${concluidas.length} ${t("conferidos")}`,
+                  `${pendentes.length} ${t("pendentes")}`,
+                ].join(" · ")}
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              {podeOperar && (carga.status === "montando" || carga.status === "em_rota") && (
-                <Button variant="outline" size="sm" onClick={abrirVeiculo} className="min-h-11">
-                  <PencilSimple size={14} aria-hidden />
-                  {t("Veículo")}
-                </Button>
-              )}
-              {/* SÓ AÇÕES DE NATUREZA DIFERENTE NO TOPO. A ação do próximo
-                  passo vive EXCLUSIVAMENTE no cartão "Próximo passo" — repeti-la
-                  aqui com outro nome ("Sair para rota" × "Iniciar rota", por
-                  exemplo) fazia o operador adivinhar qual era a real. */}
+              {/* UMA ação em destaque: a do próximo passo, promovida do
+                  cartão para o cabeçalho. Veículo e demais ações ficam no
+                  menu — nada compete com a próxima ação. */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" aria-label={t("Mais ações")} className="min-h-11">
@@ -783,6 +843,11 @@ export function CargaClient({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {podeOperar && (carga.status === "montando" || carga.status === "em_rota") && (
+                    <DropdownMenuItem onSelect={abrirVeiculo}>
+                      <PencilSimple size={14} aria-hidden /> {t("Veículo")}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link href={`/api/v1/shipments/${carga.id}/romaneio`} target="_blank" rel="noopener noreferrer">
                       <FileText size={14} aria-hidden /> {textos.romaneio}
@@ -812,11 +877,26 @@ export function CargaClient({
           </div>
         </div>
 
+        {/* PRÓXIMA AÇÃO — a frase e o botão mudam com o estado. Um só
+            destaque; o cartão abaixo não repete o botão. */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border px-4 py-2 sm:px-6" data-testid="proxima-acao">
+          <p className="min-w-0 flex-1 text-xs text-text" role="status">
+            <span className="font-semibold">{t("Próxima ação")}:</span>{" "}
+            {passo.titulo}. {passo.detalhe}
+          </p>
+          {passo.acao ? (
+            <div className="shrink-0 [&_button]:w-auto [&_button]:min-h-11">{passo.acao}</div>
+          ) : (
+            <span className="text-xs text-muted-foreground">{t("Nenhuma ação pendente")}</span>
+          )}
+        </div>
+
         {/* TRÊS PÁGINAS DE VERDADE: link do Next, não âncora nem aba. O
             cabeçalho é o mesmo; a página atual é marcada para leitor de tela
             e para quem olha (aria-current + borda). */}
         <nav aria-label={t("Páginas da expedição")} className="flex items-center gap-0.5 overflow-x-auto border-t border-border px-3 sm:px-5">
           {[
+            { href: `/app/expedicao/${cargaId}/resumo`, chave: "resumo", rotulo: t("Resumo") },
             { href: `/app/expedicao/${cargaId}`, chave: "paradas", rotulo: t("Pedidos e paradas") },
             { href: `/app/expedicao/${cargaId}/rota`, chave: "rota", rotulo: t("Mapa e ordem") },
             { href: `/app/expedicao/${cargaId}/fechamento`, chave: "fechamento", rotulo: t("Fechamento") },
@@ -996,7 +1076,7 @@ export function CargaClient({
               <p className="text-sm font-semibold text-text">{passo.titulo}</p>
               <p className="text-xs leading-relaxed text-text">{passo.detalhe}</p>
             </div>
-            {passo.acao && <div className="w-full shrink-0 sm:w-auto">{passo.acao}</div>}
+
           </div>
 
           {/* ── O trabalho: paradas, rota e caixa ───────────────────────────── */}

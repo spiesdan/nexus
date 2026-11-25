@@ -29,10 +29,10 @@ describe("exceções do despacho", () => {
   });
 
   it(" conta só o que existe, sem duplicar carga", () => {
-    expect(porChave.precisa_atencao.cargaIds).toEqual(["rota1"]);
-    expect(porChave.sem_localizacao.cargaIds).toEqual(["mont1"]);
-    expect(porChave.sem_motorista_veiculo.cargaIds).toEqual(["mont1"]);
-    expect(porChave.prontas_para_sair.cargaIds).toEqual(["mont2"]);
+    expect(porChave.precisa_atencao!.cargaIds).toEqual(["rota1"]);
+    expect(porChave.sem_localizacao!.cargaIds).toEqual(["mont1"]);
+    expect(porChave.sem_motorista_veiculo!.cargaIds).toEqual(["mont1"]);
+    expect(porChave.prontas_para_sair!.cargaIds).toEqual(["mont2"]);
   });
 
   it("zero exceções é estado válido", () => {

@@ -70,6 +70,9 @@ export function NovaCargaClient({
   const [ate, setAte] = React.useState("");
   const [filtrosAbertos, setFiltrosAbertos] = React.useState(false);
   const [selecionados, setSelecionados] = React.useState<string[]>([]);
+  // Passos são botões, não abas: a seleção fica no estado do componente e
+  // sobrevive a voltar/avançar.
+  const [passo, setPasso] = React.useState<1 | 2 | 3>(1);
   const [enviando, setEnviando] = React.useState(false);
 
   const cidadeDoContato = React.useCallback(
@@ -230,7 +233,31 @@ export function NovaCargaClient({
         }
       />
 
+      {/* TRÊS PASSOS, UMA PÁGINA — navegação por botão; a seleção não some. */}
+      <nav aria-label={t("Passos da nova carga")} className="flex flex-wrap gap-2">
+        {([
+          [1, t("1 · Pedidos")],
+          [2, t("2 · Equipe")],
+          [3, t("3 · Revisão")],
+        ] as const).map(([n, rotulo]) => (
+          <button
+            key={n}
+            type="button"
+            aria-current={passo === n ? "step" : undefined}
+            onClick={() => setPasso(n)}
+            className={
+              passo === n
+                ? "min-h-11 rounded-full bg-accent px-3 text-sm font-medium text-accent-foreground"
+                : "min-h-11 rounded-full border border-border px-3 text-sm text-accent-ink"
+            }
+          >
+            {rotulo}
+          </button>
+        ))}
+      </nav>
+
       {/* ── 1. Quem leva ─────────────────────────────────────────────────── */}
+      {passo === 2 && (
       <Card className="p-4">
         <fieldset className="space-y-3">
           <legend className="w-full">
@@ -283,7 +310,9 @@ export function NovaCargaClient({
           </div>
         </fieldset>
       </Card>
+      )}
 
+      {passo === 1 && (
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* ── 2. O que leva ───────────────────────────────────────────────── */}
         <Card className="overflow-hidden p-0">
@@ -592,6 +621,52 @@ export function NovaCargaClient({
           </Card>
         </aside>
       </div>
+      )}
+
+      {passo === 3 && (
+        <Card className="space-y-3 p-4">
+          <h2 className="text-base font-semibold text-text">{t("Revisão da carga")}</h2>
+          <ul className="space-y-1 text-sm text-text">
+            <li>{t("Pedidos")}: {jaSelecionados.length}</li>
+            <li>{t("Motorista")}: {motorista.trim() || t("não informado")}</li>
+            <li>{t("Placa")}: {placa.trim() || t("não informada")}</li>
+            <li>{t("Endereços")}: {jaSelecionados.filter((p) => !p.endereco_entrega?.trim()).length} {t("sem endereço")}</li>
+          </ul>
+          <ul className="space-y-1 rounded-lg border border-border p-2.5 text-xs">
+            {prontidao.itens.map((item) => (
+              <li key={item.texto} className={item.tipo === "bloqueio" ? "text-error-fg" : item.tipo === "aviso" ? "text-warning-fg" : "text-text"}>
+                {item.tipo === "ok" ? "✓" : "✗"} {item.texto} ({item.tipo})
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setPasso(2)} className="min-h-11">
+              {t("Voltar à equipe")}
+            </Button>
+            <Button
+              onClick={() => void criar()}
+              disabled={enviando || !prontidao.podeCriar}
+              className="min-h-11"
+            >
+              {enviando ? t("Criando…") : `${t("Confirmar carga")} (${selecionados.length})`}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Avançar: o rótulo diz o QUE falta, sem abas. */}
+      {passo < 3 && (
+        <Button
+          className="min-h-11"
+          onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
+        >
+          {passo === 1
+            ? selecionados.length === 0
+              ? t("Continuar: escolha os pedidos")
+              : t("Continuar: equipe e veículo")
+            : t("Continuar: revisão")}
+        </Button>
+      )}
     </div>
   );
 }
