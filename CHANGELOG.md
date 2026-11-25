@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.6] — 2026-11-25
+
+### Corrigido
+
+- **Promoção da tag `stable` tenta de novo quando o registro ainda não serve a imagem** A `v2.0.5` falhou em `promover-stable` com `ghcr.io/spiesdan/nexus-ocr:2.0.5: not found` minutos depois de a imagem ter sido publicada — as outras cinco já tinham sido reapontadas. Reexecutar o job, sem mudar nenhuma linha, passou: é propagação do registro, não defeito de build. Agora a promoção tenta cinco vezes com espera crescente e só falha quando a tag realmente não aparece. Sem isso, `stable` fica na versão anterior — e quem instala no default (ou roda `update.sh --to stable`) recebe código velho sobre banco já migrado.
+
 ## [2.0.5] — 2026-11-25
 
 ### Adicionado
@@ -9215,7 +9221,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.5...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.6...HEAD
+[2.0.6]: https://github.com/spiesdan/nexus/compare/v2.0.5...v2.0.6
 [2.0.5]: https://github.com/spiesdan/nexus/compare/v2.0.4...v2.0.5
 [2.0.4]: https://github.com/spiesdan/nexus/compare/v2.0.3...v2.0.4
 [2.0.3]: https://github.com/spiesdan/nexus/compare/v2.0.2...v2.0.3
