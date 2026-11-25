@@ -50,10 +50,13 @@ function diaCurto(chave: string | null | undefined): string {
  */
 export function NovaCargaClient({
   embarcaveis,
+  enderecoResolvido,
   cidadePorContato,
   textos,
 }: {
   embarcaveis: PedidoComercial[];
+  /** Pedido → endereço efetivo da entrega (cadastro incluído), resolvido no servidor. */
+  enderecoResolvido?: Record<string, string | null>;
   /** `contact_id` → "CIDADE/UF". A cidade do cadastro, para o filtro achar quem não tem endereço no pedido. */
   cidadePorContato: Record<string, string>;
   textos: { titulo: string; subtitulo: string; voltar: string };
@@ -206,6 +209,7 @@ export function NovaCargaClient({
   const prontidao = prontidaoDaCarga({
     selecionados,
     pedidos: embarcaveis as Array<{ id: string; endereco_entrega?: string | null }>,
+    enderecoResolvido,
     placa,
     motorista,
   });
@@ -630,7 +634,13 @@ export function NovaCargaClient({
             <li>{t("Pedidos")}: {jaSelecionados.length}</li>
             <li>{t("Motorista")}: {motorista.trim() || t("não informado")}</li>
             <li>{t("Placa")}: {placa.trim() || t("não informada")}</li>
-            <li>{t("Endereços")}: {jaSelecionados.filter((p) => !p.endereco_entrega?.trim()).length} {t("sem endereço")}</li>
+            <li>
+              {t("Endereços")}:{" "}
+              {jaSelecionados.filter(
+                (p) => !(enderecoResolvido?.[p.id] ?? p.endereco_entrega ?? "").trim(),
+              ).length}{" "}
+              {t("sem endereço")}
+            </li>
           </ul>
           <ul className="space-y-1 rounded-lg border border-border p-2.5 text-xs">
             {prontidao.itens.map((item) => (
