@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.11] — 2026-11-25
+
+### Corrigido
+
+- **Busca de contato acha pelo nome fantasia (SENAI, não só a razão social)** Quem procurava "SENAI" na nota avulsa recebia as cinco fichas de importação repetida — que têm "SENAI" no `name` — e **não** recebia a ficha com CNPJ, endereço e e-mail, porque o nome dela é a razão social "SERVICO NACIONAL DE APRENDIZAGEM INDUSTRIAL" e o fantasia não estava no OR da busca. O operador concluiu "não tem cadastro" e parou a emissão. `fantasia` entrou na busca de contatos; é o nome que a operação usa para PJ.
+
+- **Logo do DANFE não sai mais com fundo preto** O DANFE é renderizado com FPDF (`sped-da`), que não tem canal alfa: a área transparente do PNG é desenhada como preto — medido no DANFE da nota 4677, reclamado pelo dono. O logo não estava errado; o formato de destino é que não suporta transparência. O sidecar agora compõe a imagem sobre BRANCO com GD antes de entregá-la ao FPDF, com prova de pixel (`rgb=255,255,255` no canto de um PNG 4×4 totalmente transparente). Sem GD, ou imagem ilegível, o logo passa como veio — logo é enfeite, DANFE sem logo é melhor que DANFE que falha.
+
+- **Nota avulsa mostra o cliente na coluna Pessoa** A grade de notas resolvia a pessoa pelo **pedido de origem** (`pessoas[order_id]`). Venda avulsa não tem pedido — `order_id` é nulo por desenho — então a coluna saía com "—" mesmo com o cliente preenchido na nota. O nome está no próprio documento (`extras_fiscais.avulsa.cliente_nome`, com o cadastro como reserva quando só há `contato_id`). A grade, o filtro de busca e a exportação CSV passam a ler de lá. Caso real: a nota 4677 (SENAI/Caninhas, R$ 216,00) aparecia sem pessoa.
+
 ## [2.0.10] — 2026-11-25
 
 ### Adicionado
@@ -9255,7 +9265,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.10...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.11...HEAD
+[2.0.11]: https://github.com/spiesdan/nexus/compare/v2.0.10...v2.0.11
 [2.0.10]: https://github.com/spiesdan/nexus/compare/v2.0.9...v2.0.10
 [2.0.9]: https://github.com/spiesdan/nexus/compare/v2.0.8...v2.0.9
 [2.0.8]: https://github.com/spiesdan/nexus/compare/v2.0.7...v2.0.8
