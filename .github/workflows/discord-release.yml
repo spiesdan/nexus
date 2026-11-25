@@ -41,24 +41,30 @@ jobs:
             const secao = texto.slice(i, fim > 0 ? fim : undefined).trim();
             fs.writeFileSync("/tmp/msg.txt", secao.slice(0, 1800));
           '
-          {
-            echo "conteudo<<FIM"
-            cat /tmp/msg.txt
-            echo "FIM"
-          } >> "$GITHUB_OUTPUT"
+          # A mensagem vai por ARQUIVO, não por `GITHUB_OUTPUT`. A primeira
+          # versão usava heredoc (`conteudo<<FIM`), e o CHANGELOG não termina com
+          # quebra de linha: o `echo "FIM"` colou na última linha e o job morreu
+          # com `Matching delimiter not found 'FIM'` — a v2.0.2 subiu calada do
+          # mesmo jeito que a 2.0.0, só que por outro motivo. Arquivo não tem
+          # delimitador para errar.
+          echo "mensagem montada: $(wc -c < /tmp/msg.txt) bytes"
 
       - name: Postar no Discord
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          MSG: ${{ steps.msg.outputs.conteudo }}
         run: |
           set -euo pipefail
           if [ -z "${WEBHOOK}" ]; then echo "sem webhook configurado — nada a postar"; exit 0; fi
           python3 - <<'PY' || true
           import json, os, urllib.request
+          with open("/tmp/msg.txt", encoding="utf-8") as f:
+              corpo = f.read().strip()
+          if not corpo:
+              print("mensagem vazia — nada a postar")
+              raise SystemExit(0)
           req = urllib.request.Request(
               os.environ["WEBHOOK"],
-              data=json.dumps({"content": os.environ["MSG"][:1900]}).encode(),
+              data=json.dumps({"content": corpo[:1900]}).encode(),
               headers={"Content-Type": "application/json"},
           )
           with urllib.request.urlopen(req, timeout=15) as r:
