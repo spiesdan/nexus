@@ -278,6 +278,22 @@ services:
       # Recuperação pontual: força a coleta a partir de um número antigo.
       # Vazio no fluxo normal (usa o maior pedido já importado).
       MERCOS_A_PARTIR_DE: ${MERCOS_A_PARTIR_DE:-}
+      # Recuperação de PERÍODO: sem as duas, a janela é derivada do último
+      # pedido importado. Com as duas, a coleta vai exatamente de `DE` a `ATE`
+      # (DD/MM/AAAA). Vazio no fluxo normal.
+      #
+      # Elas existem porque `MERCOS_A_PARTIR_DE` sozinho não alcança pedido
+      # antigo: o coletor percorre a LISTA por período, e um número de fevereiro
+      # nunca aparece numa janela de novembro. Medido em 25/11/2026: 311 pedidos
+      # de jan–fev/2026 existem no ERP e não estavam no banco.
+      #
+      # As duas entram AQUI porque env documentada no `.env.example` e lida pelo
+      # worker, mas não passada pelo compose, é env que não existe: o valor fica
+      # no arquivo e o container nasce com ela vazia. Aconteceu com estas duas no
+      # dia em que foram criadas — o `.env` dizia `01/01/2026` e
+      # `docker exec ... echo $MERCOS_DE` respondia vazio.
+      MERCOS_DE: ${MERCOS_DE:-}
+      MERCOS_ATE: ${MERCOS_ATE:-}
       # O primeiro login de um dispositivo novo pede código por e-mail. O
       # worker espera até 1h por ele (arquivo no volume), em vez de falhar
       # na hora; depois disso a sessão persiste e o cron não pede mais.
