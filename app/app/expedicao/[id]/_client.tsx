@@ -171,6 +171,7 @@ export function CargaClient({
   podeExcluir,
   podeFechar,
   veiculosRecentes = [],
+  geocodificarAoAbrir = false,
   textos,
 }: {
   cargaId: string;
@@ -193,6 +194,8 @@ export function CargaClient({
   /** Fechar caixa é mexer em dinheiro: o mesmo nível do PUT, `manager`+. */
   podeFechar: boolean;
   veiculosRecentes?: Array<{ placa: string; motorista: string }>;
+  /** `?geocodificar=1`: o "Resolver" do despacho abre a rota já em lote (P0-2). */
+  geocodificarAoAbrir?: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -1465,6 +1468,7 @@ export function CargaClient({
         <Roteirizador
           cargaId={cargaId}
           podeOperar={podeOperar}
+          geocodificarAoAbrir={geocodificarAoAbrir}
           aoMudar={() => void recarregar()}
           aoTrocarVeiculo={abrirVeiculo}
         />

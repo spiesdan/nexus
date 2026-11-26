@@ -76,4 +76,31 @@ describe("faixa de situação da expedição", () => {
     expect(vazia.totalDePedidos).toBe(0);
     expect(vazia.valorAguardandoCents).toBe(0);
   });
+
+  it("0360 — o resumo agregado vence o array paginado (200 × 482)", () => {
+    // O array só traz os primeiros 200; o banco contou 482. A célula e o valor
+    // têm de mostrar o agregado, não a página.
+    const comResumo = calcularSituacaoDaExpedicao({
+      cargas,
+      itens,
+      pedidosElegiveis,
+      filaResumo: { pedidos: 482, valorCents: 1_875_000 },
+    });
+    expect(comResumo.pedidos.aguardando).toBe(482);
+    expect(comResumo.valorAguardandoCents).toBe(1_875_000);
+    // A partição continua fechando: a soma das células é o total exibido.
+    expect(comResumo.totalDePedidos).toBe(
+      comResumo.pedidos.naRua +
+        comResumo.pedidos.montando +
+        comResumo.pedidos.concluidas +
+        comResumo.pedidos.aguardando,
+    );
+    // O array segue disponível para o mapa de partição (compatibilidade).
+    expect(comResumo.situacaoPorPedido["p1"]).toBe("aguardando");
+  });
+
+  it("sem resumo, o array continua sendo a fonte (compatibilidade)", () => {
+    expect(situacao.pedidos.aguardando).toBe(2);
+    expect(situacao.valorAguardandoCents).toBe(1000 + 5000);
+  });
 });

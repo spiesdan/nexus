@@ -39,6 +39,7 @@ import { numeroDaCarga } from "@/lib/schemas/expedicao";
 
 import { MapaRota, type PontoParadaMapa } from "./_mapa-rota";
 import { estadoDoGps } from "@/lib/rotas/gps-estado";
+import { paradasSemCoordenada } from "@/lib/rotas/paradas-sem-coordenada";
 import { qtdNaoSeparados } from "@/lib/entregas/separacao";
 import { PainelRecuperacao } from "./_recuperacao";
 
@@ -299,11 +300,14 @@ function entradaMarcada(p: Pick<ParadaRotaApi, "entrada" | "geo_fonte">): boolea
 export function Roteirizador({
   cargaId,
   podeOperar,
+  geocodificarAoAbrir = false,
   aoMudar,
   aoTrocarVeiculo,
 }: {
   cargaId: string;
   podeOperar: boolean;
+  /** `?geocodificar=1` no link "Resolver": dispara o lote uma vez ao abrir. */
+  geocodificarAoAbrir?: boolean;
   aoMudar: () => void;
   aoTrocarVeiculo?: () => void;
 }) {
@@ -325,6 +329,12 @@ export function Roteirizador({
    * do servidor e o botão de tentar de novo.
    */
   const [erroGeo, setErroGeo] = React.useState<string | null>(null);
+  /**
+   * P0-2 — o lote automático roda UMA vez por abertura. A ref não é otimização:
+   * o `recarregar` de cada lote muda `rota`, o efeito reavaliaria e o operador
+   * veria o mesmo lote disparando de novo a cada render.
+   */
+  const geoAutomaticoFeito = React.useRef(false);
   /**
    * WORKBENCH SEM ABAS. No celular o MAPA é um bloco recolhível: a lista vem
    * primeiro e o mapa abre só quando a pessoa pede. Em `lg` ele está sempre
@@ -509,6 +519,27 @@ export function Roteirizador({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cargaId, statusCarga]);
+
+  /**
+   * O LOTE AUTOMÁTICO DO "RESOLVER" (P0-2).
+   *
+   * A exceção "sem localização" no despacho abre esta página com
+   * `?geocodificar=1`. Aqui o lote é disparado uma única vez, com o progresso
+   * visível; `geocodificarTudo` já para quando não há mais pendentes. Se todas
+   * as paradas já têm pino, NÃO chama a API — a tela diz que já está tudo no
+   * mapa, em vez de fingir trabalho.
+   */
+  React.useEffect(() => {
+    if (!geocodificarAoAbrir || !podeOperar || !rota || geoAutomaticoFeito.current) return;
+    geoAutomaticoFeito.current = true;
+    // Já está tudo no mapa: não chama a API. A mensagem é derivada de `semCoord`
+    // no render, não de um setState dentro do efeito.
+    if (paradasSemCoordenada(rota.paradas).length === 0) return;
+    void geocodificarTudo("geo");
+    // `geocodificarTudo` é declaração de função (hoisted) e a ref impede que a
+    // mudança de `rota` durante os lotes reative o disparo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [geocodificarAoAbrir, podeOperar, rota]);
 
   if (!rota) {
     return (
@@ -1541,8 +1572,8 @@ export function Roteirizador({
           <p className="mt-1 truncate text-[11px] text-muted-foreground">
             {semCoord.length > 0
               ? semCoord.length === 1
-                ? t("1 sem localização")
-                : `${semCoord.length} ${t("sem localização")}`
+                ? t("1 sem coordenada")
+                : `${semCoord.length} ${t("sem coordenada")}`
               : t("todas localizadas")}
           </p>
         </div>
@@ -1745,6 +1776,26 @@ export function Roteirizador({
         </div>
       ) : null}
 
+      {geocodificarAoAbrir && semCoord.length === 0 ? (
+        <div
+          role="status"
+          data-testid="geocodificacao-automatica"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-success/40 bg-success-bg px-3.5 py-2.5 text-sm text-success-fg"
+        >
+          <span>{t("Todas as paradas desta carga já estão no mapa.")}</span>
+        </div>
+      ) : geocodificarAoAbrir && (trabalhando === "geo" || progressoGeo) ? (
+        <div
+          role="status"
+          data-testid="geocodificacao-automatica"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-info/40 bg-info-bg px-3.5 py-2.5 text-sm text-info-fg"
+        >
+          <span>
+            {`${t("Geocodificação em lote")}${progressoGeo ? ` · ${progressoGeo}` : "…"}`}
+          </span>
+        </div>
+      ) : null}
+
       {erroGeo ? (
         <div
           role="alert"
@@ -1780,6 +1831,11 @@ export function Roteirizador({
                   <p className="text-sm font-medium text-text">{t("Planejar rota")}</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-1.5">
+                  {semCoord.length > 0 && (
+                    <Badge variant="warning">
+                      {`${semCoord.length} ${t("sem coordenada")}`}
+                    </Badge>
+                  )}
                   <Badge variant={proposta || propostaMulti ? "info" : "neutral"}>
                     {proposta || propostaMulti ? t("Ordem sugerida") : t("Ordem manual")}
                   </Badge>

@@ -37,6 +37,20 @@ export interface PedidoElegivelParaSituacao {
   total_cents: number | null;
 }
 
+/**
+ * O RESUMO AGREGADO DA FILA (migration 0360).
+ *
+ * A lista de pedidos elegíveis que chega do PostgREST é paginada (`.limit(200)`),
+ * e somar esse array subcontava a faixa quando a operação tinha 482 pedidos.
+ * Quando o servidor entrega o agregado, ELE é a verdade da célula "aguardando";
+ * o array continua servindo para o `situacaoPorPedido` (os testes de partição e
+ * a compatibilidade com carga antiga).
+ */
+export interface FilaResumo {
+  pedidos: number;
+  valorCents: number;
+}
+
 export interface SituacaoDaExpedicao {
   /** Número de CARGAS — os rótulos grandes e os filtros da faixa. */
   cargas: { naRua: number; montando: number; concluidas: number };
@@ -71,10 +85,16 @@ export function calcularSituacaoDaExpedicao({
   cargas,
   itens,
   pedidosElegiveis,
+  filaResumo,
 }: {
   cargas: CargaParaSituacao[];
   itens: ItemParaSituacao[];
   pedidosElegiveis: PedidoElegivelParaSituacao[];
+  /**
+   * Contagem e soma feitas no banco (0360), sem o teto da listagem. Quando
+   * presente, vence o array paginado na célula "aguardando" e no valor.
+   */
+  filaResumo?: FilaResumo;
 }): SituacaoDaExpedicao {
   const statusPorCarga = new Map(cargas.map((c) => [c.id, c.status]));
 
@@ -109,11 +129,25 @@ export function calcularSituacaoDaExpedicao({
   const pedidos = { naRua: 0, montando: 0, concluidas: 0, aguardando: 0 };
   for (const situacao of Object.values(situacaoPorPedido)) pedidos[CHAVE_DO_CONTADOR[situacao]] += 1;
 
+  // O agregado do banco vence a listagem paginada. O array só desenhou o
+  // `situacaoPorPedido`; contar por ele aqui é o defeito de 200 × 482.
+  if (filaResumo) {
+    pedidos.aguardando = Number.isFinite(filaResumo.pedidos)
+      ? Math.max(0, Math.trunc(filaResumo.pedidos))
+      : pedidos.aguardando;
+    valorAguardandoCents = Number.isFinite(filaResumo.valorCents)
+      ? Math.max(0, Math.trunc(filaResumo.valorCents))
+      : valorAguardandoCents;
+  }
+
+  const totalDePedidos =
+    pedidos.naRua + pedidos.montando + pedidos.concluidas + pedidos.aguardando;
+
   return {
     cargas: cargasContagem,
     pedidos,
     valorAguardandoCents,
-    totalDePedidos: Object.keys(situacaoPorPedido).length,
+    totalDePedidos,
     situacaoPorPedido,
   };
 }
