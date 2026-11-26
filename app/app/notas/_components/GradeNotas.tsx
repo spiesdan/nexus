@@ -747,7 +747,13 @@ export function GradeNotas({
                         {n.serie}
                       </TableCell>
                       <TableCell className="max-w-56 truncate">
-                        {n.order_id ? (pessoas[n.order_id] ?? "—") : "—"}
+                        {/* A CÉLULA é a que o dono olha — e ela não tinha sido
+                            corrigida junto com o filtro e o CSV. Nota avulsa
+                            (sem `order_id`) caía sempre no "—", mesmo com o
+                            cliente na própria nota. */}
+                        {n.order_id
+                          ? (pessoas[n.order_id] ?? "—")
+                          : (pessoasAvulsas[n.id] ?? "—")}
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
                         {comoMoeda(n.total_cents, "BRL")}
