@@ -210,7 +210,16 @@ describe("POST /api/v1/shipments/[id]/orders", () => {
 
     const insercao = gravados.find((g) => g.tabela === "shipment_orders" && g.operacao === "insert");
     expect(insercao?.carga).toEqual([
-      { organization_id: ORG, shipment_id: CARGA, order_id: PEDIDO, sequencia: 3, status: "na_carga" },
+      {
+        organization_id: ORG,
+        shipment_id: CARGA,
+        order_id: PEDIDO,
+        sequencia: 3,
+        status: "na_carga",
+        // 0362: guarda o status comercial do embarque para a devolução
+        // restaurar o valor certo em vez do `aprovado` fixo.
+        status_comercial_ao_embarcar: "aprovado",
+      },
     ]);
 
     // O destino com snapshot nasce junto (0308): sem ele a parada não tem
