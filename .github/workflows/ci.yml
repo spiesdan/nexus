@@ -103,3 +103,63 @@ jobs:
 
       - name: RLS isolation + governance invariants
         run: pnpm test:db
+
+  # ---------------------------------------------------------------------------
+  # FRAGMENTO DE VERSÃO — o gate que faltava onde dói.
+  #
+  # Três vezes em dois dias o mesmo padrão: PR com código entra, `.changes/`
+  # fica vazio, e a **release** falha lá na frente com "nenhum fragmento: não há
+  # versão a cortar". O erro aparece no pior lugar — depois do merge, no
+  # fechamento da versão — e o conserto custa um PR extra só de fragmento.
+  #
+  # Aqui ele aparece no PR, com o nome do arquivo que falta.
+  #
+  # O que NÃO exige fragmento: mudança só de documentação, de `.changes/` ou de
+  # CI. E o PR de release (`release/*`) fica de fora por construção — ele CONSOME
+  # fragmentos, não declara versão.
+  # ---------------------------------------------------------------------------
+  fragmento:
+    if: >
+      github.event_name == 'pull_request' &&
+      !startsWith(github.head_ref, 'release/') &&
+      !contains(github.event.pull_request.labels.*.name, 'sem-fragmento')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Todo PR que muda código declara a versão
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$BASE"
+          MUDADOS=$(git diff --name-only "origin/$BASE...HEAD")
+
+          CODIGO=$(printf '%s\n' "$MUDADOS" | grep -cE '^(app|lib|workers|components|supabase|scripts)/' || true)
+          FRAGMENTOS=$(printf '%s\n' "$MUDADOS" | grep -cE '^\.changes/[^/]+\.md$' || true)
+
+          echo "arquivos de código alterados: $CODIGO"
+          echo "fragmentos em .changes/:       $FRAGMENTOS"
+
+          if [ "$CODIGO" -eq 0 ]; then
+            echo "Só documentação/CI — não precisa de fragmento."
+            exit 0
+          fi
+
+          if [ "$FRAGMENTOS" -eq 0 ]; then
+            echo "::error::Este PR muda código e não traz fragmento em .changes/."
+            echo "Crie '.changes/<slug>.md' com:"
+            echo "---"
+            echo "impacto: nada_mudou | exige_acao | perda_de_funcao"
+            echo "secao: adicionado | alterado | corrigido | removido | seguranca"
+            echo "titulo: uma linha, no vocabulário de quem usa"
+            echo "---"
+            echo "e o texto do que muda. Ver docs/doctrine/versionamento.md."
+            echo "Mudança que não deve gerar versão (raro): rótulo 'sem-fragmento' no PR, com o motivo no corpo."
+            exit 1
+          fi
+
+          echo "Fragmento presente — a release vai conseguir cortar versão."

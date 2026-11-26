@@ -64,6 +64,16 @@ const DIR = join(process.cwd(), ".github/workflows");
  * que desliga um job de entrega fica visível em code review.
  */
 const GATILHO_ESPERADO: Record<string, { condicao: string | null; efeito: string }> = {
+  // O gate de fragmento: só em PR (e fora do PR de release). Efeito de estar
+  // desligado: PR sem `.changes/` volta a entrar e a release falha no fim.
+  "ci.yml::fragmento": {
+    // `>` porque o `if:` usa escalar de bloco (a expressão é longa) — o teste
+    // compara a linha crua para que reformatar não passe em silêncio.
+    condicao:
+      "> github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release/') && !contains(github.event.pull_request.labels.*.name, 'sem-fragmento')",
+    efeito:
+      "Reprova PR que muda código sem fragmento em `.changes/`. Sem ele, o erro só aparece na release, depois do merge.",
+  },
   // Aviso de versão no Discord: roda só em tag e não bloqueia nada.
   "discord-release.yml::avisar": {
     condicao: null,
