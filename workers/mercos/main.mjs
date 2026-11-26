@@ -147,7 +147,16 @@ function normalizar(linha) {
   };
 }
 
-function executarColetor({ saida, andamento, aPartirDe, de, ate, limiteMs = SCRAPE_TIMEOUT_MS, alvo = 0 }) {
+function executarColetor({
+  saida,
+  andamento,
+  aPartirDe,
+  de,
+  ate,
+  limiteMs = SCRAPE_TIMEOUT_MS,
+  alvo = 0,
+  numeros = [],
+}) {
   return new Promise((resolve, reject) => {
     const script = new URL("./coletar.mjs", import.meta.url).pathname;
     const filho = spawn(
@@ -166,6 +175,14 @@ function executarColetor({ saida, andamento, aPartirDe, de, ate, limiteMs = SCRA
         ate,
         "--espera",
         process.env.MERCOS_ESPERA_MS || "3000",
+        // RECUPERAÇÃO POR NÚMERO: sem este repasse, `revisar_numeros` filtrava
+        // só a IMPORTAÇÃO e o coletor lia o período inteiro.
+        //
+        // Medido em 26/11/2026: um lote de 40 números leu **1.970 detalhes** em
+        // 2 h e morreu no teto — porque o coletor percorre a lista de
+        // jan–fev/2026 (≈5.900 pedidos) e abre cada um. O filtro de número
+        // existia no coletor (`--numeros`), mas o worker nunca o passava.
+        ...(numeros.length > 0 ? ["--numeros", numeros.join(",")] : []),
       ],
       {
         env: { ...process.env, MERCOS_EMAIL: EMAIL, MERCOS_SENHA: SENHA, MERCOS_EMPRESA: EMPRESA },
@@ -319,6 +336,7 @@ async function processar(admin, run) {
     ate,
     limiteMs: limiteColetor,
     alvo: alvo.length,
+    numeros: [...alvo],
   });
 
   let conteudo = "";
