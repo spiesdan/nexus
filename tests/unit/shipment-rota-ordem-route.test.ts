@@ -34,7 +34,13 @@ const PARADA_B = "parada-b";
 
 type Gravado = { tabela: string; operacao: string; carga: unknown };
 
-function banco(linhas: Record<string, Record<string, unknown>[]>) {
+function banco(
+  linhas: Record<string, Record<string, unknown>[]>,
+  respostaRpc: { data: unknown; error: { message: string } | null } = {
+    data: { rota_versao: 4, paradas: 2 },
+    error: null,
+  },
+) {
   const gravados: Gravado[] = [];
   const proto: Record<string, unknown> = {
     __tabela: "",
@@ -70,6 +76,10 @@ function banco(linhas: Record<string, Record<string, unknown>[]>) {
       const cadeia = Object.create(proto);
       cadeia.__tabela = tabela;
       return cadeia;
+    },
+    rpc(nome: string, args: unknown) {
+      gravados.push({ tabela: "rpc", operacao: nome, carga: args });
+      return Promise.resolve(respostaRpc);
     },
   };
   return { cliente, gravados };
@@ -127,7 +137,18 @@ function mockCarregar(ordemPersistida: string[]) {
       longitude: -50.2,
       geo_status: "ok",
       geo_fonte: "nominatim:numero",
-      pedidos: [],
+      // Um item por parada: o caminho atômico manda a cobertura completa para
+      // a RPC; sem item, `itens` sairia vazio e a asserção do contrato não
+      // mediria nada.
+      pedidos: [
+        {
+          shipment_order_id: `${chave}-so`,
+          order_id: `${chave}-pedido`,
+          numero: i + 1,
+          total_cents: 0,
+          status: "na_carga",
+        },
+      ],
       itens: [],
       total_cents: 0,
       janela_inicio: null,
@@ -148,13 +169,35 @@ function put(corpo: unknown) {
   });
 }
 
+/**
+ * O MODO VEM DA ENV EXTERNA, não de mutação em tempo de execução.
+ *
+ * `ROTA_ORDEM_ATOMIC=true pnpm exec vitest run <este arquivo>` mede o caminho
+ * atômico; sem a variável, mede o legado. O nome tem de ser o da produção
+ * (`lib/rotas/ordem-atomica.ts`). Setar `process.env` dentro do teste não
+ * funciona: o valor que o módulo lê é fixado na transformação — medido em
+ * 26/11/2026 (o teste via "true", a rota continuava no caminho legado). Cada
+ * modo roda só os testes que lhe pertencem; nenhum fica sem asserção própria.
+ */
+const { MODO_ATOMICO } = vi.hoisted(() => ({
+  MODO_ATOMICO: process.env.ROTA_ORDEM_ATOMIC === "true",
+}));
+
+// A decisão da rota é lida de `process.env` dentro de `rotaOrdemAtomicaLigada`.
+// No Vitest/jsdom o módulo importado via alias não enxerga a env que o arquivo
+// de teste vê (medido em 26/11/2026: o teste lê "true", a função lê `undefined`).
+// Mockar a decisão mantém o que este teste existe para medir: o RAMO da rota.
+vi.mock("@/lib/rotas/ordem-atomica", () => ({
+  rotaOrdemAtomicaLigada: () => MODO_ATOMICO,
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   sessao();
 });
 
 describe("PATCH /api/v1/shipments/[id]/rota/ordem", () => {
-  it("com proposta no body grava a geometria enviada (não invalida)", async () => {
+  it.skipIf(MODO_ATOMICO)("com proposta no body grava a geometria enviada (não invalida)", async () => {
     const { cliente, gravados } = banco({ shipments: [carga as never] });
     vi.mocked(createClient).mockReturnValue(cliente as never);
     mockCarregar([PARADA_A, PARADA_B]);
@@ -187,9 +230,14 @@ describe("PATCH /api/v1/shipments/[id]/rota/ordem", () => {
       ruas: true,
       modo: "tsp",
     });
+    // Flag desligada = caminho legado: N updates + versão lida+1, sem RPC.
+    expect(gravados.some((g) => g.tabela === "rpc")).toBe(false);
+    expect((gravado?.carga as { rota_versao: number }).rota_versao).toBe(
+      carga.rota_versao + 1,
+    );
   });
 
-  it("reordena manualmente sem proposta: invalida a geometria antiga", async () => {
+  it.skipIf(MODO_ATOMICO)("reordena manualmente sem proposta: invalida a geometria antiga", async () => {
     const { cliente, gravados } = banco({ shipments: [carga as never] });
     vi.mocked(createClient).mockReturnValue(cliente as never);
     mockCarregar([PARADA_A, PARADA_B]);
@@ -207,7 +255,7 @@ describe("PATCH /api/v1/shipments/[id]/rota/ordem", () => {
     expect(payload.duracao_s).toBeNull();
   });
 
-  it("ordem igual (só ajuste de config) sem proposta não invalida", async () => {
+  it.skipIf(MODO_ATOMICO)("ordem igual (só ajuste de config) sem proposta não invalida", async () => {
     const { cliente, gravados } = banco({ shipments: [carga as never] });
     vi.mocked(createClient).mockReturnValue(cliente as never);
     mockCarregar([PARADA_A, PARADA_B]);
@@ -224,5 +272,102 @@ describe("PATCH /api/v1/shipments/[id]/rota/ordem", () => {
     // continua valendo (só mudou o que o body trouxe).
     expect(payload.rota_geojson).toBeUndefined();
     expect(payload.distancia_m).toBeUndefined();
+  });
+
+  it.skipIf(!MODO_ATOMICO)("flag LIGADA: chama fn_salvar_ordem_rota com a cobertura e o CAS da versão", async () => {
+    const { cliente, gravados } = banco({ shipments: [carga as never] });
+    vi.mocked(createClient).mockReturnValue(cliente as never);
+    mockCarregar([PARADA_A, PARADA_B]);
+
+    const { PATCH } = await import("@/app/api/v1/shipments/[id]/rota/ordem/route");
+    const res = await PATCH(
+      put({
+        ordem: [PARADA_A, PARADA_B],
+        geometria: [
+          [0, 0],
+          [1, 1],
+        ],
+        provedor: "osrm",
+        ruas: true,
+        modo: "tsp",
+        distancia_m: 120000,
+        duracao_s: 3600,
+      }),
+      { params: Promise.resolve({ id: CARGA }) },
+    );
+    expect(res.status).toBe(200);
+
+    const rpc = gravados.find((g) => g.tabela === "rpc");
+    expect(rpc?.operacao).toBe("fn_salvar_ordem_rota");
+    expect(rpc?.carga).toEqual(
+      expect.objectContaining({
+        p_org: ORG,
+        p_shipment: CARGA,
+        p_itens: [
+          { id: `${PARADA_A}-so`, sequencia: 1 },
+          { id: `${PARADA_B}-so`, sequencia: 2 },
+        ],
+        p_versao_esperada: carga.rota_versao,
+        p_rota_em: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        p_carga: expect.objectContaining({
+          limpar_geojson: false,
+          distancia_m: 120000,
+          duracao_s: 3600,
+          rota_geojson: {
+            geometria: [
+              [0, 0],
+              [1, 1],
+            ],
+            provedor: "osrm",
+            ruas: true,
+            modo: "tsp",
+          },
+        }),
+      }),
+    );
+
+    // A RPC é a única escrita: nem sequência por fora, nem versão por fora.
+    expect(gravados.some((g) => g.tabela === "shipments" && g.operacao === "update")).toBe(false);
+    expect(gravados.some((g) => g.tabela === "shipment_orders")).toBe(false);
+  });
+
+  it.skipIf(!MODO_ATOMICO)("flag LIGADA: erro de concorrência da RPC é fail-closed — 409 e nada gravado", async () => {
+    const { cliente, gravados } = banco(
+      { shipments: [carga as never] },
+      { data: null, error: { message: "concorrencia_ou_status" } },
+    );
+    vi.mocked(createClient).mockReturnValue(cliente as never);
+    mockCarregar([PARADA_A, PARADA_B]);
+
+    const { PATCH } = await import("@/app/api/v1/shipments/[id]/rota/ordem/route");
+    const res = await PATCH(
+      put({ ordem: [PARADA_B, PARADA_A], retornar_origem: false, tempo_parada_min: 10 }),
+      { params: Promise.resolve({ id: CARGA }) },
+    );
+
+    expect(res.status).toBe(409);
+    const corpo = (await res.json()) as { error: { message: string } };
+    expect(corpo.error.message).toContain("nada foi gravado");
+    expect(gravados.some((g) => g.tabela === "shipments" && g.operacao === "update")).toBe(false);
+    expect(gravados.some((g) => g.tabela === "shipment_orders")).toBe(false);
+  });
+
+  it.skipIf(!MODO_ATOMICO)("flag LIGADA: erro interno da RPC vira 500, sem escrita parcial", async () => {
+    const { cliente, gravados } = banco(
+      { shipments: [carga as never] },
+      { data: null, error: { message: "boom" } },
+    );
+    vi.mocked(createClient).mockReturnValue(cliente as never);
+    mockCarregar([PARADA_A, PARADA_B]);
+
+    const { PATCH } = await import("@/app/api/v1/shipments/[id]/rota/ordem/route");
+    const res = await PATCH(
+      put({ ordem: [PARADA_A, PARADA_B], retornar_origem: true, tempo_parada_min: 12 }),
+      { params: Promise.resolve({ id: CARGA }) },
+    );
+
+    expect(res.status).toBe(500);
+    expect(gravados.some((g) => g.tabela === "shipments" && g.operacao === "update")).toBe(false);
+    expect(gravados.some((g) => g.tabela === "shipment_orders")).toBe(false);
   });
 });
