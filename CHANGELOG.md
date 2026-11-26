@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.13] — 2026-11-26
+
+### Adicionado
+
+- **Tela de revisão de clientes duplicados, com fusão confirmada** Cliente duplicado por nome e cidade não pode ser fundido pelo sistema — duas pessoas com o mesmo nome na mesma cidade não são a mesma pessoa —, mas também não havia onde um humano decidir: 117 grupos e 2.075 fichas ficavam num limbo. A tela `/app/clientes/duplicados` mostra as fichas lado a lado (telefone, e-mail, endereço, nº de pedidos, última compra), deixa escolher o vencedor e diz, antes do clique, quantos pedidos e conversas vão passar. A RPC `fn_fundir_contatos` descobre no catálogo todas as tabelas com `contact_id` e reponta numa transação; "não é a mesma pessoa" fica registrado e o grupo não volta. Fundir exige manager.
+
+### Corrigido
+
+- **Recuperação por número deixa de ler o período inteiro no Mercos** `revisar_numeros` filtrava só a **importação**: o coletor continuava percorrendo a lista do período e abrindo o detalhe de **todos** os pedidos. Medido em 26/11/2026 — um lote de 40 números leu 1.970 detalhes em 2 h e morreu no teto, três vezes, com limites diferentes (30 min, 90 min, 2 h, 3 h). O filtro existia no coletor (`--numeros`), mas o worker nunca o repassava. Agora o alvo vai junto: um lote de 40 lê 40, e a recuperação deixa de ser uma corrida contra o tempo do ERP.
+
 ## [2.0.12] — 2026-11-25
 
 ### Adicionado
@@ -9275,7 +9285,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.12...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.13...HEAD
+[2.0.13]: https://github.com/spiesdan/nexus/compare/v2.0.12...v2.0.13
 [2.0.12]: https://github.com/spiesdan/nexus/compare/v2.0.11...v2.0.12
 [2.0.11]: https://github.com/spiesdan/nexus/compare/v2.0.10...v2.0.11
 [2.0.10]: https://github.com/spiesdan/nexus/compare/v2.0.9...v2.0.10
