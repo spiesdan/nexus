@@ -20,12 +20,10 @@ import {
   ImpersonateBanner,
   type ImpersonatingInfo,
 } from "@/components/app/ImpersonateBanner";
-import { ConexaoCaidaBanner } from "@/components/app/ConexaoCaidaBanner";
 import { IdiomaProvider } from "@/lib/i18n/IdiomaProvider";
 import { RegistrarServiceWorker } from "./_components/RegistrarServiceWorker";
 import { SincronizadorOffline } from "./_components/SincronizadorOffline";
 import { ConfirmacaoProvider } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
-import { listarConexoesCaidas, type ConexaoCaida } from "@/lib/channels/health";
 import { tituloDaRota } from "@/lib/navigation/titulos";
 
 /**
@@ -94,7 +92,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
    * a página que este layout monta reusa a MESMA resolução em vez de pagar o
    * GoTrue de novo.
    */
-  const [orgResultado, marcaInstalacao, conexoesCaidas, store, enrolled, needsMfaGate] =
+  const [orgResultado, marcaInstalacao, store, enrolled, needsMfaGate] =
     await Promise.all([
       activeOrg
         ? admin
@@ -104,14 +102,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             .maybeSingle()
         : Promise.resolve({ data: null }),
       activeOrg ? marcaDaInstalacao() : Promise.resolve(null),
-      // A conexão caiu? A consulta mora no seam (`lib/channels/health`), não aqui:
-      // tela que monta o select de `channel_sessions` à mão foi o que deixou três
-      // seletores oferecendo canal arquivado, e o invariante `canais-selecionaveis`
-      // existe por causa disso. De quebra, o filtro de estados fica LITERALMENTE o
-      // mesmo que decide o aviso da Central — duas listas divergiriam com o tempo.
-      activeOrg
-        ? listarConexoesCaidas(admin, activeOrg.orgId)
-        : Promise.resolve<ConexaoCaida[]>([]),
       cookies(),
       isMfaEnrolled(),
       // A decisão deixou de ser uma constante de papel: ela lê a política de quem
@@ -254,7 +244,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           aviso que só sabia apontar para o lugar de onde a pessoa vinha, e
           comia ~40px da altura do mapa, que na cabine é o produto inteiro.
         */}
-        {activeOrg?.motorista ? null : <ConexaoCaidaBanner caidas={conexoesCaidas} />}
         <RegistrarServiceWorker />
         {/*
           O DRENO DA FILA OFFLINE. Estava importado e NUNCA renderizado desde
