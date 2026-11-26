@@ -137,17 +137,34 @@ instalação fresca. `followup-journey`, `webhooks` e `capacidades-do-agente` es
 `.github/workflows/publish-image.yml`: `imagens-ok` = as três imagens Docker constroem. **Obrigatório
 desde 2026-08-13.**
 
-**Os cinco são checks obrigatórios** na branch protection da `main` — medido em 2026-08-14 @ `741c4ec8`:
+**A proteção da `main` se MEDE, não se lembra.** Ela não está no repositório: não viaja
+com `git push`, não aparece em PR e não é copiada quando se cria o repo — vive na configuração
+do GitHub daquele repositório. Este bloco afirma o estado de lá, então a única forma honesta de
+escrevê-lo é com o comando que responde:
+
+```bash
+gh api repos/spiesdan/nexus/branches/main/protection \
+  --jq '{checks: .required_status_checks.contexts, pr: (.required_pull_request_reviews != null), admins: .enforce_admins.enabled}'
+```
+
+Em **2026-11-26**, depois de aferir que o repo `spiesdan/nexus` (criado em 22/09/2026) estava
+com `protected: false` e **zero** checks exigidos:
 
 ```console
 $ gh api repos/spiesdan/nexus/branches/main/protection --jq '.required_status_checks.contexts|join(", ")'
-verify, build-and-size, invariants, e2e, imagens-ok
+verify, invariants, e2e, build-and-size, imagens-ok, fragmento
 ```
 
-> Este bloco estava errado em quatro pontos até 2026-08-14 (dizia "três checks", "28 das 32
-> specs", "e2e não é obrigatório ainda" e listava como excluídas três specs que já rodavam).
-> A pior era a do `e2e`: quem lesse mediria um PR contra a régua errada. **Reconte antes de
-> citar** — `ls tests/e2e/*.spec.ts | wc -l` e o comando acima.
+Com PR obrigatório (0 aprovações — o dono trabalha sozinho), force-push proibido e
+`enforce_admins: true`, para que a régua valha também para quem tem o token do dono. Prova:
+`git push origin HEAD:main` de um clone novo devolve
+`protected branch hook declined — 6 of 6 required status checks are expected`.
+
+> O bloco anterior dizia "os cinco são checks obrigatórios, medido em 14/08/2026" — e era
+> **falso desde 22/09/2026**: a proteção mora no GitHub, o repo nasceu depois da medição e não
+> herdou nada. Três releases falharam DEPOIS do merge por fragmento ausente, porque nada
+> segurava o merge. Se este parágrafo um dia envelhecer, o conserto é rodar o comando acima —
+> nunca reescrever o texto de memória.
 
 ## Padrões de código (observados no repo, não inventados)
 
