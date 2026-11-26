@@ -8,6 +8,18 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.16] — 2026-11-26
+
+### Corrigido
+
+- **AGENTS.md mede a proteção da main em vez de afirmar de memória** O arquivo afirmava, com comando e data, que cinco checks eram obrigatórios na branch protection. A proteção não está no repositório — ela vive na configuração do GitHub — e o repo `spiesdan/nexus` nasceu em 22/09/2026, depois daquela medição, sem herdar nada: estava `protected: false`, com zero checks exigidos. Foi por isso que três releases falharam depois do merge. O texto agora traz o comando que responde, o estado medido em 26/11 (seis checks, PR obrigatório, sem force-push, sem bypass de admin) e a prova de que funciona.
+
+- **AGENTS.md perde os dois últimos números que não se medem** O arquivo já está na régua "conte, não cite" desde 18/11/2026, mas duas linhas ainda afirmavam número: "89 rotas o usam" (service role) e "`Idempotency-Key` em 1 rota". O medido hoje é 284 arquivos com service role e 8 rotas com idempotência — a primeira errada por 3×, a segunda por 8×. Ambas passam a trazer o comando, com a data da medição ao lado para o número não ser lido como estado atual.
+
+- **PR que muda código sem fragmento reprova no CI, não na release** Três vezes em dois dias o mesmo padrão: PR com código entrou, `.changes/` ficou vazio e a **release** falhou depois do merge com "nenhum fragmento: não há versão a cortar" — cada vez custando um PR extra só de fragmento. O job `fragmento` reprova no PR, com a lista de campos do fragmento na própria mensagem. PR de release (`release/*`) e mudança só de documentação/CI não exigem; e o rótulo `sem-fragmento` existe para o caso raro, com motivo no corpo do PR.
+
+- **O total do dia separa venda, orçamento e cancelado** O cabeçalho do dia somava todo cartão num número só: "8 pedidos · R$ 10.345,80" incluía três "Em orçamento" (R$ 7.006,00) e um cancelado — quem lê aquele total como venda do dia lê errado. Agora o dia mostra as três parcelas com o próprio nome: "5 pedidos · R$ 3.339,80 · 3 orçamentos · R$ 7.006,00 · 1 cancelado · R$ 1.320,00", e as três fecham com o total do dia. A regra é por status (`rascunho` é o rótulo "Em orçamento"), mora em `lib/pedidos/partir-do-dia.ts` e tem teste que cobra a soma fechando.
+
 ## [2.0.15] — 2026-11-26
 
 ### Corrigido
@@ -9297,7 +9309,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.15...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.16...HEAD
+[2.0.16]: https://github.com/spiesdan/nexus/compare/v2.0.15...v2.0.16
 [2.0.15]: https://github.com/spiesdan/nexus/compare/v2.0.14...v2.0.15
 [2.0.14]: https://github.com/spiesdan/nexus/compare/v2.0.13...v2.0.14
 [2.0.13]: https://github.com/spiesdan/nexus/compare/v2.0.12...v2.0.13
