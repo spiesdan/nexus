@@ -4,8 +4,8 @@
 > Fonte: segmento de rota (`page.tsx` + arquivos locais + imports relativos),
 > com comentários removidos. Não editar à mão.
 
-**162 telas** medidas; **53** têm ao menos uma subtela.
-Total: **88 abas**, **78 modais**, **12 gavetas**.
+**164 telas** medidas; **54** têm ao menos uma subtela.
+Total: **88 abas**, **80 modais**, **12 gavetas**.
 
 > **O que este número é.** Inventário **estático** com nome e arquivo — o que abrir.
 > **O que não é.** Prova de que a subtela abre, renderiza ou está correta: isso exige
@@ -33,6 +33,7 @@ Total: **88 abas**, **78 modais**, **12 gavetas**.
 | `/app/ai/routers/[id]` | (rótulo dinâmico) `app/app/ai/agents/[id]/_components/AgentForm.tsx:527` | — | — |
 | `/app/ai/usage` | — | Orçamento de IA `components/ai/BudgetCard.tsx:331` | — |
 | `/app/campanhas` | Campanha `app/app/campanhas/_client.tsx:47`<br>Prospecção `app/app/campanhas/_client.tsx:48`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:299`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:300`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:307`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:316`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:325`<br>(rótulo dinâmico) `app/app/prospeccao/_client.tsx:335` | Campanha por região `app/app/campanhas/_criar-regiao.tsx:257`<br>Enviar mensagem para   empresas `app/app/prospeccao/_disparo.tsx:398`<br>Importar arquivo `app/app/prospeccao/_importar-arquivo.tsx:95` | (rótulo dinâmico) `components/shell/ContextualDrawer.tsx:37` |
+| `/app/clientes/duplicados` | — | Fundir {n} ficha(s) em {nome}? `app/app/clientes/duplicados/_client.tsx:422`<br>Não é a mesma pessoa? `app/app/clientes/duplicados/_client.tsx:487` | — |
 | `/app/compras` | Pedidos `app/app/compras/_client.tsx:121`<br>Fornecedores `app/app/compras/_client.tsx:129` | Nova compra `app/app/compras/_client.tsx:523`<br>Novo fornecedor `app/app/compras/_client.tsx:702` | — |
 | `/app/compras/[id]` | — | (rótulo dinâmico) `app/app/compras/[id]/_client.tsx:457` | — |
 | `/app/connections` | Números por QR `components/connections/ConexoesShell.tsx:39`<br>API Oficial (Meta) `components/connections/ConexoesShell.tsx:40`<br>Provedor parceiro `components/connections/ConexoesShell.tsx:42`<br>Conexão `components/connections/ConexoesShell.tsx:53`<br>Modelos do parceiro `components/connections/ConexoesShell.tsx:54`<br>Conexão `components/connections/ConexoesShell.tsx:68`<br>Templates da Meta `components/connections/ConexoesShell.tsx:70` | — | — |
@@ -44,7 +45,7 @@ Total: **88 abas**, **78 modais**, **12 gavetas**.
 | `/app/expedicao/[id]/motorista` | — | Veículo e motorista `app/app/expedicao/[id]/_client.tsx:1410`<br>(rótulo dinâmico) `app/app/expedicao/[id]/_motorista.tsx:709`<br>Corrigir endereço da entrega `app/app/expedicao/[id]/_motorista.tsx:1351`<br>Trocar carga `app/app/expedicao/[id]/_motorista.tsx:1650` | — |
 | `/app/expedicao/[id]/resumo` | — | Veículo e motorista `app/app/expedicao/[id]/_client.tsx:1410`<br>(rótulo dinâmico) `app/app/expedicao/[id]/_motorista.tsx:709`<br>Corrigir endereço da entrega `app/app/expedicao/[id]/_motorista.tsx:1351`<br>Trocar carga `app/app/expedicao/[id]/_motorista.tsx:1650` | — |
 | `/app/expedicao/[id]/rota` | — | Veículo e motorista `app/app/expedicao/[id]/_client.tsx:1410`<br>(rótulo dinâmico) `app/app/expedicao/[id]/_motorista.tsx:709`<br>Corrigir endereço da entrega `app/app/expedicao/[id]/_motorista.tsx:1351`<br>Trocar carga `app/app/expedicao/[id]/_motorista.tsx:1650` | — |
-| `/app/expedicao/nova` | (rótulo dinâmico) `app/app/expedicao/nova/_client.tsx:211` | — | — |
+| `/app/expedicao/nova` | (rótulo dinâmico) `app/app/expedicao/nova/_client.tsx:215` | — | — |
 | `/app/financeiro` | Contas a receber `app/app/financeiro/_client.tsx:281`<br>Contas a pagar `app/app/financeiro/_client.tsx:282`<br>Cobranças `app/app/financeiro/_client.tsx:283`<br>Conciliação `app/app/financeiro/_client.tsx:284`<br>Fluxo de caixa `app/app/financeiro/_client.tsx:285`<br>Títulos `app/app/financeiro/_client.tsx:286` | — | — |
 | `/app/fiscal` | — | Associar item ao catálogo `app/app/fiscal/_components/AssociarProduto.tsx:145` | — |
 | `/app/fiscal/notas/[id]` | — | Associar item ao catálogo `app/app/fiscal/_components/AssociarProduto.tsx:145` | — |
@@ -52,7 +53,7 @@ Total: **88 abas**, **78 modais**, **12 gavetas**.
 | `/app/inbox` | — | — | Ficha do contato `components/inbox/InboxLayout.tsx:369`<br>Ficha do contato `components/inbox/InboxLayout.tsx:388` |
 | `/app/kanban` | — | Importar leads de uma planilha `app/app/kanban/_components/ImportarLeads.tsx:82` | — |
 | `/app/lgpd/requests/[id]` | — | Prévia de dados do titular `app/app/lgpd/requests/[id]/PreviewPanel.tsx:58` | — |
-| `/app/notas` | (rótulo dinâmico) `app/app/notas/page.tsx:560` | Corrigir nota `app/app/notas/_components/CorrigirNota.tsx:412`<br>(rótulo dinâmico) `app/app/notas/_components/GradeNotas.tsx:880`<br>(rótulo dinâmico) `app/app/notas/_components/GradeNotas.tsx:926`<br>Associar item ao catálogo `app/app/notas/_components/ProdutoParaItem.tsx:64` | — |
+| `/app/notas` | (rótulo dinâmico) `app/app/notas/page.tsx:599` | Corrigir nota `app/app/notas/_components/CorrigirNota.tsx:412`<br>(rótulo dinâmico) `app/app/notas/_components/GradeNotas.tsx:886`<br>(rótulo dinâmico) `app/app/notas/_components/GradeNotas.tsx:932`<br>Associar item ao catálogo `app/app/notas/_components/ProdutoParaItem.tsx:64` | — |
 | `/app/pedidos/[id]` | — | Foto do produto `components/fotos/LightboxDeFotos.tsx:31` | — |
 | `/app/pedidos/novo` | Pessoa jurídica `components/contacts/NewContactDialog.tsx:126`<br>Pessoa física `components/contacts/NewContactDialog.tsx:127` | Prévia do pedido `app/app/pedidos/novo/_editor.tsx:1350`<br>(rótulo dinâmico) `app/app/pedidos/novo/_editor.tsx:1499`<br>Adicionar produtos com IA / Confira os produtos encontrados `app/app/pedidos/novo/_ia.tsx:442`<br>Trocar a tabela muda estes preços `app/app/pedidos/novo/_reprecificacao.tsx:37`<br>Novo cliente `components/contacts/NewContactDialog.tsx:119` | — |
 | `/app/pipelines/[id]` | — | Excluir `components/kanban/BulkActionBar.tsx:199`<br>Novo Lead `components/kanban/NewLeadDialog.tsx:147` | — |

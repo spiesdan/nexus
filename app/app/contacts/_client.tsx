@@ -1,7 +1,8 @@
 "use client";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useT } from "@/hooks/i18n/useT";
-import { Plus, UploadSimple } from "@/lib/ui/icons";
+import { Plus, UploadSimple, UsersThree } from "@/lib/ui/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { NexusErrorState } from "@/components/nexus-ui/feedback/NexusErrorState";
@@ -143,6 +144,15 @@ export function ContactsListClient() {
             faltava as ações empilharem entre si.
           */
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            {/* A fila de revisão de duplicados nasce aqui: é onde o operador
+                vê o cadastro. A tela consulta para agent+ e só deixa fundir
+                ou descartar com gestor — o botão não é um link morto. */}
+            <Button asChild variant="outline" className="w-full sm:w-auto">
+              <Link href="/app/clientes/duplicados">
+                <UsersThree size={16} weight="bold" aria-hidden />
+                <span>{t("Revisar duplicados")}</span>
+              </Link>
+            </Button>
             <Button
               variant="outline"
               onClick={() => setImportOpen(true)}

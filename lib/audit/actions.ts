@@ -657,6 +657,13 @@ export const AUDIT_ACTIONS = [
   /** Portal/checkout do Stripe abertos pela plataforma para OUTRA organização. */
   "platform_admin.billing_portal_opened",
   "platform_admin.billing_checkout_created",
+  /**
+   * Revisão de clientes duplicados (0355): o humano escolheu o vencedor e
+   * confirmou a fusão, ou decidiu que não é a mesma pessoa. O `metadata`
+   * carrega ids, contagens repontadas e o motivo — pedido repontado não
+   * volta sozinho, então a trilha é o que permite reconstruir a decisão.
+   */
+  "contact.duplicate_dismissed",
 ] as const;
 
 /** Um código de auditoria. Derivado de `AUDIT_ACTIONS` — não redigite a lista. */
