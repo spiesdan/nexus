@@ -18,6 +18,7 @@ import {
 } from "@/components/filters/FilterBar";
 import { useConfirmar } from "@/components/nexus-ui/forms/ConfirmacaoProvider";
 import { useT } from "@/hooks/i18n/useT";
+import { partirDoDia } from "@/lib/pedidos/partir-do-dia";
 import { useDebouncedCallback } from "@/hooks/useDebouncedCallback";
 import { Button } from "@/components/ui/button";
 import { NumeroDoPedido, rotuloNumeroDoPedido } from "@/components/pedidos/numero-do-pedido";
@@ -1213,7 +1214,31 @@ export function PedidosClient({
         // fica na mesma linha de leitura.
         <div className="space-y-5">
           {porDia.map((g) => {
-            const totalDoDia = g.itens.reduce((soma, p) => soma + (p.total_cents ?? 0), 0);
+            /**
+             * ORÇAMENTO NÃO É PEDIDO — e cancelado também não.
+             *
+             * O cabeçalho do dia somava TODOS os cartões: "8 pedidos ·
+             * R$ 10.345,80" incluía três "Em orçamento" (R$ 7.006) e um
+             * cancelado. Quem lê o número como venda do dia lê errado — e é
+             * exatamente para isso que o cabeçalho existe (reclamação do dono,
+             * 26/11/2026: "separe pedido de orçamento, pois orçamento não é
+             * pedido").
+             *
+             * A regra é por STATUS, não por heurística: `rascunho` é o rótulo
+             * "Em orçamento" e `cancelado` é passado. Cada parcela aparece com
+             * o próprio nome, e a soma das linhas fecha o total — número que não
+             * fecha consigo mesmo é o defeito que a faixa da Expedição teve.
+             */
+            /**
+             * ORÇAMENTO NÃO É PEDIDO — e cancelado também não.
+             *
+             * O cabeçalho do dia somava TODOS os cartões: "8 pedidos ·
+             * R$ 10.345,80" incluía três "Em orçamento" (R$ 7.006) e um
+             * cancelado. Quem lê o número como venda do dia lê errado.
+             * A partição mora em `lib/pedidos/partir-do-dia.ts`, com teste.
+             */
+            const partes = partirDoDia(g.itens);
+            const moeda = g.itens[0]?.moeda ?? "BRL";
             return (
               <section key={g.chave} aria-label={g.rotulo}>
                 <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
@@ -1226,9 +1251,25 @@ export function PedidosClient({
                     </span>
                     <span className="hidden sm:inline">{g.rotulo}</span>
                   </p>
-                  <p className="shrink-0 text-[11px] whitespace-nowrap text-text-subtle tabular-nums">
-                    {g.itens.length} {g.itens.length === 1 ? t("pedido") : t("pedidos")} ·{" "}
-                    {comoMoeda(totalDoDia, g.itens[0]?.moeda ?? "BRL")}
+                  <p className="shrink-0 text-right text-[11px] whitespace-nowrap text-text-subtle tabular-nums">
+                    <span className="text-text">
+                      {partes.vendas.n}{" "}
+                      {partes.vendas.n === 1 ? t("pedido") : t("pedidos")} ·{" "}
+                      {comoMoeda(partes.vendas.total, moeda)}
+                    </span>
+                    {partes.orcamentos.n > 0 && (
+                      <span className="ml-2 text-text-subtle">
+                        · {partes.orcamentos.n}{" "}
+                        {partes.orcamentos.n === 1 ? t("orçamento") : t("orçamentos")} ·{" "}
+                        {comoMoeda(partes.orcamentos.total, moeda)}
+                      </span>
+                    )}
+                    {partes.cancelados.n > 0 && (
+                      <span className="ml-2 text-error-fg">
+                        · {partes.cancelados.n} {t("cancelado")} ·{" "}
+                        {comoMoeda(partes.cancelados.total, moeda)}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <div className="divide-y divide-border overflow-hidden rounded-xl border border-border fill-well">
