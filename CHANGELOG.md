@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.14] — 2026-11-26
+
+### Corrigido
+
+- **Nota avulsa mostra o cliente na coluna Pessoa (a célula, não só o filtro)** A correção anterior trocou o mapa da **busca** e do **CSV**, mas a célula da tabela continuou lendo `pessoas[order_id]` — e venda avulsa não tem pedido, então a coluna seguia mostrando "—". Reclamação do dono na própria nota 4677, depois do deploy. Agora a célula usa `pessoasAvulsas[invoice_id]` com o mesmo fallback, e um teste renderiza a grade e cobra o nome **no texto da tela** — a diferença entre "a prop chegou" e "o nome aparece".
+
 ## [2.0.13] — 2026-11-26
 
 ### Adicionado
@@ -9285,7 +9291,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.13...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.14...HEAD
+[2.0.14]: https://github.com/spiesdan/nexus/compare/v2.0.13...v2.0.14
 [2.0.13]: https://github.com/spiesdan/nexus/compare/v2.0.12...v2.0.13
 [2.0.12]: https://github.com/spiesdan/nexus/compare/v2.0.11...v2.0.12
 [2.0.11]: https://github.com/spiesdan/nexus/compare/v2.0.10...v2.0.11
