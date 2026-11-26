@@ -1251,21 +1251,29 @@ export function PedidosClient({
                     </span>
                     <span className="hidden sm:inline">{g.rotulo}</span>
                   </p>
-                  <p className="shrink-0 text-right text-[11px] whitespace-nowrap text-text-subtle tabular-nums">
-                    <span className="text-text">
+                  {/*
+                    LEGÍVEL, não "informação de rodapé". A linha era 11px cinza e
+                    o dono pediu maior: é o número que responde "quanto vendi
+                    hoje" — o resto da tela existe para ele. O primário (venda)
+                    sobe para 15/16px com peso; as parcelas menores ficam em 12px,
+                    ainda legíveis, para não competir com o número principal.
+                    `flex-wrap` porque em 390px três parcelas não cabem numa linha.
+                  */}
+                  <p className="flex shrink-0 flex-wrap items-baseline justify-end gap-x-2 gap-y-0.5 text-right text-xs text-text-subtle tabular-nums sm:whitespace-nowrap">
+                    <span className="text-[15px] font-semibold text-text sm:text-base">
                       {partes.vendas.n}{" "}
                       {partes.vendas.n === 1 ? t("pedido") : t("pedidos")} ·{" "}
                       {comoMoeda(partes.vendas.total, moeda)}
                     </span>
                     {partes.orcamentos.n > 0 && (
-                      <span className="ml-2 text-text-subtle">
+                      <span className="text-text-subtle">
                         · {partes.orcamentos.n}{" "}
                         {partes.orcamentos.n === 1 ? t("orçamento") : t("orçamentos")} ·{" "}
                         {comoMoeda(partes.orcamentos.total, moeda)}
                       </span>
                     )}
                     {partes.cancelados.n > 0 && (
-                      <span className="ml-2 text-error-fg">
+                      <span className="text-error-fg">
                         · {partes.cancelados.n} {t("cancelado")} ·{" "}
                         {comoMoeda(partes.cancelados.total, moeda)}
                       </span>
