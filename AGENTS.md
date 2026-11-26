@@ -174,7 +174,8 @@ verify, build-and-size, invariants, e2e, imagens-ok
   Toda mudança de schema tem que aparecer aqui **como apêndice idempotente**, senão
   não chega em quem instalou. Ver doutrina de Migrations em `CLAUDE.md`.
 - **`supabase/migrations/*.sql` já aplicadas** — nunca edite. Corrija com migration nova.
-- **`lib/supabase/admin.ts`** — service role **bypassa RLS**. 89 rotas o usam; toda
+- **`lib/supabase/admin.ts`** — service role **bypassa RLS**. Quase todos os handlers o usam — conte,
+  não cite (o comando está em §Limitações conhecidas); toda
   query precisa filtrar `organization_id` manualmente, resolvido de fonte confiável
   (cookie/JWT/webhook secret/path token), **nunca do body**.
 - **`lib/auth/public-paths.ts`** — adicionar path aqui remove a checagem de auth de borda.
@@ -259,7 +260,7 @@ Medido em 2026-11-18 @ `232c5fbf`. **Os números saíram de propósito** — con
   Esta linha dizia "existe em 2 pontos; login e signup estão sem" — era o estado anterior à
   issue #64, e o `docs/threat-model.md` ainda carrega a versão velha, com nota de reauditoria.
 - Fallback do rate limit é **em memória** e **declarado**: sem Redis alcançável o contador é por processo, o log da transição é `error` em produção e `/api/v1/health` responde **503** (`rate_limit.backend = memoria`) em produção e `degraded` em dev. Ver `docs/auditoria/p3-02-rate-limit-declarado.md`.
-- `Idempotency-Key` implementado em **1** rota, apesar de o contrato prometer nos POSTs de criação.
+- `Idempotency-Key` implementado em poucas rotas, apesar de o contrato prometer nos POSTs de criação. Quantas: `git grep -l 'Idempotency-Key' -- 'app/api/**/route.ts' | wc -l` (medido em 26/11/2026: 8).
 - **`.env.example` está completo** — medido em 2026-08-14: das 45 chaves de `lib/env.ts`, a
   única ausente é `NODE_ENV`, que não é configuração do operador. Esta linha dizia que faltavam
   6, "incluindo 3 secrets"; os três (`IMPERSONATE_COOKIE_SECRET`, `INTERNAL_CRON_SECRET`,
