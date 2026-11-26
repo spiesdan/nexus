@@ -220,6 +220,9 @@ export async function POST(req: NextRequest, { params }: Params): Promise<Respon
         order_id: orderId,
         sequencia: base + i + 1,
         status: "na_carga",
+        // 0362: guarda o status comercial do embarque para a devolução restaurar
+        // o valor certo (faturado/concluído não viram "aprovado" ao sair).
+        status_comercial_ao_embarcar: porId.get(orderId)?.status ?? null,
       })),
     )
     .select("id, order_id, sequencia");

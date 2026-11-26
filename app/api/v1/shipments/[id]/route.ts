@@ -275,12 +275,25 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
   // desde a 0214.
   const { data: itensDaCarga } = await supabase
     .from("shipment_orders")
-    .select("order_id")
+    .select("order_id, status_comercial_ao_embarcar")
     .eq("shipment_id", id)
     .eq("organization_id", authz.org.orgId);
-  const idsDosPedidos = ((itensDaCarga ?? []) as Array<{ order_id: string }>).map(
-    (i) => i.order_id,
-  );
+  const itens = (itensDaCarga ?? []) as Array<{
+    order_id: string;
+    status_comercial_ao_embarcar: string | null;
+  }>;
+  const idsDosPedidos = itens.map((i) => i.order_id);
+
+  // 0362: cada pedido volta para o status que tinha ao embarcar. Uma carga pode
+  // misturar `faturado` e `aprovado`; um único update fixo apagava essa
+  // diferença. Carga legada (coluna NULL) cai no `aprovado` de antes.
+  const porStatusDeVolta = new Map<string, string[]>();
+  for (const item of itens) {
+    const status = item.status_comercial_ao_embarcar ?? "aprovado";
+    const lista = porStatusDeVolta.get(status) ?? [];
+    lista.push(item.order_id);
+    porStatusDeVolta.set(status, lista);
+  }
 
   const { error } = await supabase
     .from("shipments")
@@ -289,16 +302,16 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
     .eq("organization_id", authz.org.orgId);
   if (error) return fail("internal_error", "Erro ao excluir a carga.", 500, { requestId });
 
-  // De volta para a fila. Só `expedido` regride, e só para `aprovado`: um
-  // pedido que já seguiu para `entregue` (ou que outra carga pegou no meio do
-  // caminho) não é desfeito — a exclusão devolve o que ESTA carga tinha levado.
+  // De volta para a fila. Só `expedido` regride: um pedido que já seguiu para
+  // `entregue` (ou que outra carga pegou no meio do caminho) não é desfeito —
+  // a exclusão devolve o que ESTA carga tinha levado.
   let devolvidos = 0;
-  if (idsDosPedidos.length > 0) {
+  for (const [statusDeVolta, ids] of porStatusDeVolta) {
     const { data: voltaram, error: erroVolta } = await supabase
       .from("commercial_orders")
-      .update({ status: "aprovado" })
+      .update({ status: statusDeVolta })
       .eq("organization_id", authz.org.orgId)
-      .in("id", idsDosPedidos)
+      .in("id", ids)
       .eq("status", "expedido")
       .select("id");
     if (erroVolta) {
@@ -306,6 +319,7 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
         organizationId: authz.org.orgId,
         shipmentId: id,
         pedidos: idsDosPedidos.length,
+        status_de_volta: statusDeVolta,
         requestId,
       });
       return fail(
@@ -315,7 +329,7 @@ export async function DELETE(_req: NextRequest, { params }: Params): Promise<Res
         { requestId },
       );
     }
-    devolvidos = (voltaram ?? []).length;
+    devolvidos += (voltaram ?? []).length;
   }
 
   await audit({

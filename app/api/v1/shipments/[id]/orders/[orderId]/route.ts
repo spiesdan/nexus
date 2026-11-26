@@ -223,13 +223,17 @@ export async function DELETE(
 
   const { data: item } = await supabase
     .from("shipment_orders")
-    .select("id, status")
+    .select("id, status, status_comercial_ao_embarcar")
     .eq("shipment_id", id)
     .eq("order_id", orderId)
     .eq("organization_id", authz.org.orgId)
     .maybeSingle();
   if (!item) return fail("not_found", "Pedido não está nesta carga.", 404, { requestId });
-  const st = (item as unknown as { status: string }).status;
+  const itemRow = item as unknown as {
+    status: string;
+    status_comercial_ao_embarcar: string | null;
+  };
+  const st = itemRow.status;
   // Entregue/devolvido é histórico da rota — não sai; volta pela operação.
   if (st !== "na_carga" && st !== "em_rota") {
     return fail("validation_failed", "Só pedido ainda na carga pode sair dela.", 422, { requestId });
@@ -252,10 +256,13 @@ export async function DELETE(
 
   // Sair da carga não desfaz sozinho o `expedido` que o POST da carga gravou:
   // sem esta devolução o pedido some da fila de embarque (que só lê
-  // `aprovado`/`faturado`) e a tela promete "de volta na fila" sem entregar.
+  // `aprovado`/`concluido`/`faturado`) e a tela promete "de volta na fila" sem
+  // entregar. O status devolvido é o que o pedido tinha ao embarcar (0362) —
+  // `aprovado` fixo fazia um `faturado` voltar como se não tivesse nota.
+  const statusDeVolta = itemRow.status_comercial_ao_embarcar ?? "aprovado";
   await supabase
     .from("commercial_orders")
-    .update({ status: "aprovado" })
+    .update({ status: statusDeVolta })
     .eq("organization_id", authz.org.orgId)
     .eq("id", orderId)
     .eq("status", "expedido");
