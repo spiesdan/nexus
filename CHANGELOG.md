@@ -8,6 +8,12 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.15] — 2026-11-26
+
+### Corrigido
+
+- **Expedição deixa de subcontar a fila, de esconder pino ausente e de aceitar carga parada** Três defeitos medidos na instalação: (1) a faixa "Aguardando embarque" calculava sobre um array limitado a 200 e mostrava 200 quando havia 482 pedidos — contagem e valor agora vêm de `fn_expedicao_fila` (security invoker, RLS do usuário preservada); (2) 27 de 28 paradas ativas sem coordenada e a exceção "Sem localização" não tinha ação — cada carga ganhou "3 sem coordenada" e o botão Resolver, que abre a rota já geocodificando uma vez; (3) carga 34 estava em montagem há 388 h sem aparecer em exceção — nova família `montagem_parada` (> 24 h) com a idade na linha da carga.
+
 ## [2.0.14] — 2026-11-26
 
 ### Corrigido
@@ -9291,7 +9297,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.14...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.15...HEAD
+[2.0.15]: https://github.com/spiesdan/nexus/compare/v2.0.14...v2.0.15
 [2.0.14]: https://github.com/spiesdan/nexus/compare/v2.0.13...v2.0.14
 [2.0.13]: https://github.com/spiesdan/nexus/compare/v2.0.12...v2.0.13
 [2.0.12]: https://github.com/spiesdan/nexus/compare/v2.0.11...v2.0.12
