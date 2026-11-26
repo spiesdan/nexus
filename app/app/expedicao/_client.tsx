@@ -16,8 +16,12 @@ import { Input } from "@/components/ui/input";
 import { useT } from "@/hooks/i18n/useT";
 import { apiClient } from "@/lib/api/client";
 import { chaveDeBusca } from "@/lib/expedicao/buscar-embarcavel";
+import {
+  diasDeMontagemParada,
+  type ChaveExcecao,
+  type ExcecaoDoDespacho,
+} from "@/lib/expedicao/excecoes-do-despacho";
 import type { SituacaoDaExpedicao } from "@/lib/expedicao/situacao-da-expedicao";
-import type { ChaveExcecao, ExcecaoDoDespacho } from "@/lib/expedicao/excecoes-do-despacho";
 import { comoMoeda } from "@/lib/format/moeda";
 import {
   numeroDaCarga,
@@ -63,6 +67,11 @@ export interface ProgressoDaCarga {
   cidades: string[];
   /** Paradas cujo endereço não resolve cidade — dito, não escondido. */
   semCidade: number;
+  /**
+   * Paradas cujo destino (0308) ainda não tem latitude/longitude. É o que o
+   * "Resolver" da linha manda geocodificar em lote (P0-2).
+   */
+  semCoordenada?: number;
   /**
    * Veículos e motoristas da distribuição confirmada (migration 0307), já com
    * a placa/o nome resolvidos no servidor. Vazio = carga anterior à
@@ -250,6 +259,14 @@ export function ExpedicaoClient({
         return porStatus !== 0 ? porStatus : (b.created_at ?? "").localeCompare(a.created_at ?? "");
       });
   }, [inicial, filtroCargas, buscaCarga, filtroVeiculo, filtroMotorista, progresso, excecao, excecoes]);
+
+  // P0-2 — quais cargas têm parada sem endereço/pino. A linha afetada ganha
+  // uma ação ("Resolver") que abre a rota já geocodificando em lote; a família
+  // sozinha só dava o número e mandava a pessoa procurar a carga.
+  const idsSemLocalizacao = React.useMemo(
+    () => new Set(excecoes.find((e) => e.chave === "sem_localizacao")?.cargaIds ?? []),
+    [excecoes],
+  );
 
   // Opções dos filtros: só o que aparece em alguma carga da fila, ordenado.
   const opcoesDeVeiculo = React.useMemo(
@@ -522,7 +539,7 @@ export function ExpedicaoClient({
                             : "border-border bg-surface text-text hover:bg-muted/50",
                       )}
                     >
-                      <span className="min-w-0 font-medium">{e.rotulo}</span>
+                      <span className="min-w-0 font-medium">{t(e.rotulo)}</span>
                       <span className="shrink-0 font-semibold tabular-nums">{e.quantidade}</span>
                     </Link>
                   </li>
@@ -533,7 +550,7 @@ export function ExpedicaoClient({
         {excecao && (
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" role="status">
             <span>
-              {t("Lista filtrada por exceção:")} {excecoes.find((e) => e.chave === excecao)?.rotulo}
+              {t("Lista filtrada por exceção:")} {t(excecoes.find((e) => e.chave === excecao)?.rotulo ?? "")}
             </span>
             <Link href="/app/expedicao" className="font-medium text-accent-ink underline underline-offset-4">
               {t("Limpar filtro")}
@@ -780,6 +797,7 @@ export function ExpedicaoClient({
               ponto="bg-info"
               cargas={emRotaFiltradas}
               progresso={progresso}
+              idsSemLocalizacao={idsSemLocalizacao}
               aberto={gruposAbertos.em_rota ?? false}
               aoAbrir={() => setGruposAbertos((g) => ({ ...g, em_rota: !g.em_rota }))}
               concluindoId={concluindoId}
@@ -792,6 +810,7 @@ export function ExpedicaoClient({
               ponto="bg-warning"
               cargas={montandoFiltradas}
               progresso={progresso}
+              idsSemLocalizacao={idsSemLocalizacao}
               aberto={gruposAbertos.montando ?? false}
               aoAbrir={() => setGruposAbertos((g) => ({ ...g, montando: !g.montando }))}
               concluindoId={concluindoId}
@@ -888,6 +907,7 @@ function GrupoDaFila({
   ponto,
   cargas,
   progresso,
+  idsSemLocalizacao,
   aberto,
   aoAbrir,
   concluindoId,
@@ -899,6 +919,7 @@ function GrupoDaFila({
   ponto: string;
   cargas: Carga[];
   progresso: Record<string, ProgressoDaCarga>;
+  idsSemLocalizacao: Set<string>;
   aberto: boolean;
   aoAbrir: () => void;
   concluindoId: string | null;
@@ -940,6 +961,7 @@ function GrupoDaFila({
             concluindo={concluindoId === c.id}
             aoConcluir={aoConcluir}
             motorista={motorista}
+            resolverLocalizacao={idsSemLocalizacao.has(c.id)}
             textos={textos}
           />
         ))}
@@ -966,6 +988,7 @@ function LinhaDaCarga({
   concluindo,
   aoConcluir,
   motorista,
+  resolverLocalizacao = false,
   textos,
 }: {
   carga: Carga;
@@ -973,6 +996,8 @@ function LinhaDaCarga({
   concluindo: boolean;
   aoConcluir: (c: Carga) => void;
   motorista: boolean;
+  /** A carga está na família "sem localização": oferece a ação, não só o número. */
+  resolverLocalizacao?: boolean;
   textos: Textos;
 }) {
   const t = useT();
@@ -981,6 +1006,7 @@ function LinhaDaCarga({
   const prontaParaConcluir =
     carga.status === "em_rota" && progresso.total > 0 && paradasEmAberto === 0;
   const semPedidos = progresso.total === 0;
+  const diasParada = diasDeMontagemParada(carga);
   // Depois da distribuição, a carga pode sair em MAIS DE UM veículo: mostrar
   // só `shipments.placa` (o veículo legado) esconderia a segunda perna da rota.
   const veiculoETripulacao =
@@ -1029,6 +1055,33 @@ function LinhaDaCarga({
               </span>
             )}
           </p>
+        )}
+
+        {((progresso.semCoordenada ?? 0) > 0 || diasParada !== null) && (
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-medium text-warning-fg">
+            {(progresso.semCoordenada ?? 0) > 0 && (
+              <span className="tabular-nums">
+                {progresso.semCoordenada} {t("sem coordenada")}
+              </span>
+            )}
+            {diasParada !== null && (
+              <span className="tabular-nums">
+                {diasParada === 1
+                  ? t("Montagem parada há 1 dia")
+                  : t(`Montagem parada há ${diasParada} dias`)}
+              </span>
+            )}
+          </p>
+        )}
+
+        {resolverLocalizacao && (
+          <Link
+            href={`/app/expedicao/${carga.id}/rota?geocodificar=1`}
+            className="relative z-10 mt-0.5 inline-flex min-h-11 items-center gap-1 rounded-md px-1 text-xs font-medium text-accent-ink underline-offset-4 hover:underline"
+          >
+            <MapPin size={12} aria-hidden />
+            {t("Resolver")}
+          </Link>
         )}
 
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">

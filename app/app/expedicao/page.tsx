@@ -35,30 +35,35 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     !motorista && (user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.agent);
 
   const supabase = await createClient();
-  const [{ data: cargas }, { data: fila }, { count: avisosNaFila }] = await Promise.all([
-    supabase
-      .from("shipments")
-      .select(`${COLUNAS_DA_CARGA}, rota_em`)
-      .eq("organization_id", activeOrg.orgId)
-      .order("created_at", { ascending: false })
-      .limit(200),
-    // Só o suficiente para o número e o valor da faixa de situação. A lista
-    // de pedidos (com cliente, cidade e busca) vive em `/nova`.
-    supabase
-      .from("commercial_orders")
-      .select("id, total_cents")
-      .eq("organization_id", activeOrg.orgId)
-      .in("status", [...STATUS_EMBARCAVEIS])
-      .limit(200),
-    // migration 0299 — o aviso "saiu para entrega" só sai pelo número de
-    // expedição. Com ele fora do ar, o aviso fica na fila; a tela precisa dizer
-    // isso, senão o despachante acha que o cliente foi avisado quando não foi.
-    supabase
-      .from("shipment_notices")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", activeOrg.orgId)
-      .in("status", ["pendente", "enviando"]),
-  ]);
+  const [{ data: cargas }, { data: fila }, { data: filaResumoRpc }, { count: avisosNaFila }] =
+    await Promise.all([
+      supabase
+        .from("shipments")
+        .select(`${COLUNAS_DA_CARGA}, rota_em`)
+        .eq("organization_id", activeOrg.orgId)
+        .order("created_at", { ascending: false })
+        .limit(200),
+      // Compatibilidade e prévia: a lista de pedidos (com cliente, cidade e
+      // busca) vive em `/nova`. A CONTAGEM da faixa não sai daqui — um array
+      // paginado mentia (200 × 482).
+      supabase
+        .from("commercial_orders")
+        .select("id, total_cents")
+        .eq("organization_id", activeOrg.orgId)
+        .in("status", [...STATUS_EMBARCAVEIS])
+        .limit(200),
+      // 0360 — contagem e soma no banco, sem teto de página. Invoker: a RLS da
+      // sessão continua valendo para as três tabelas que a consulta lê.
+      supabase.rpc("fn_expedicao_fila", { p_org: activeOrg.orgId }),
+      // migration 0299 — o aviso "saiu para entrega" só sai pelo número de
+      // expedição. Com ele fora do ar, o aviso fica na fila; a tela precisa dizer
+      // isso, senão o despachante acha que o cliente foi avisado quando não foi.
+      supabase
+        .from("shipment_notices")
+        .select("id", { count: "exact", head: true })
+        .eq("organization_id", activeOrg.orgId)
+        .in("status", ["pendente", "enviando"]),
+    ]);
 
   /**
    * O ANDAMENTO DE CADA CARGA.
@@ -72,7 +77,7 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
   const { data: itensDasCargas } = idsDasCargas.length
     ? await supabase
         .from("shipment_orders")
-        .select("shipment_id, order_id, status, sequencia, veiculo_id, motorista_id, separado_em")
+        .select("shipment_id, order_id, status, sequencia, veiculo_id, motorista_id, separado_em, destination_id")
         .eq("organization_id", activeOrg.orgId)
         .in("shipment_id", idsDasCargas)
         .order("sequencia")
@@ -85,6 +90,7 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     veiculo_id: string | null;
     motorista_id: string | null;
     separado_em?: string | null;
+    destination_id?: string | null;
   }[];
 
   /**
@@ -152,6 +158,33 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     ((motoristasDaFrota ?? []) as unknown as { id: string; nome: string }[]).map((m) => [m.id, m.nome]),
   );
 
+  /**
+   * QUANTAS PARADAS DA CARGA AINDA NÃO TÊM PINO (P0-2).
+   *
+   * O painel de despacho mostrava só o total da família "sem localização".
+   * Para o operador decidir em qual carga apertar "Resolver" primeiro, a linha
+   * precisa do número por carga. A coordenada mora no DESTINO (0308), não no
+   * contato; carga anterior à migration fica sem contagem em vez de acusar
+   * falso positivo.
+   */
+  const idsDeDestino = [
+    ...new Set(itens.map((i) => i.destination_id).filter((d): d is string => Boolean(d))),
+  ];
+  const { data: destinosDasCargas } = idsDeDestino.length
+    ? await supabase
+        .from("shipment_destinations")
+        .select("id, latitude, longitude")
+        .eq("organization_id", activeOrg.orgId)
+        .in("id", idsDeDestino)
+    : { data: [] as { id: string; latitude: number | null; longitude: number | null }[] };
+  const destinoPorId = new Map(
+    ((destinosDasCargas ?? []) as unknown as {
+      id: string;
+      latitude: number | null;
+      longitude: number | null;
+    }[]).map((d) => [d.id, d]),
+  );
+
   const progresso: Record<string, ProgressoDaCarga> = {};
   // P1-3: os filtros de veículo e motorista sumiam quando a atribuição vivia
   // só no campo legado da carga (o caso medido: 69 itens, 0 veiculo_id).
@@ -192,7 +225,17 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     const nome = item.motorista_id ? nomePorId.get(item.motorista_id) : undefined;
     if (nome && !p.motoristas.includes(nome)) p.motoristas.push(nome);
   }
+  const semCoordenadaPorCarga = new Map<string, Set<string>>();
+  for (const item of itens) {
+    if (!item.destination_id) continue;
+    const destino = destinoPorId.get(item.destination_id);
+    if (destino?.latitude != null && destino.longitude != null) continue;
+    const chaves = semCoordenadaPorCarga.get(item.shipment_id) ?? new Set<string>();
+    chaves.add(item.destination_id);
+    semCoordenadaPorCarga.set(item.shipment_id, chaves);
+  }
   for (const [shipmentId, p] of Object.entries(progresso)) {
+    p.semCoordenada = semCoordenadaPorCarga.get(shipmentId)?.size ?? 0;
     const daCarga = cidadesDaCarga(
       itens.filter((i) => i.shipment_id === shipmentId),
       pedidoPorId,
@@ -211,9 +254,26 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     cargas: (cargas ?? []) as unknown as Parameters<typeof calcularExcecoesDoDespacho>[0]["cargas"],
     itens,
     enderecosPorPedido,
+    semCoordenadaPorCarga: new Map(
+      [...semCoordenadaPorCarga].map(([shipmentId, chaves]) => [shipmentId, chaves.size]),
+    ),
   });
 
   const pedidosNaFila = (fila ?? []) as { id: string; total_cents: number | null }[];
+
+  /**
+   * O AGREGADO DA FILA (0360). O PostgREST devolve `bigint` como número ou
+   * string conforme o driver; normalizar aqui evita `"482"` virar concatenação
+   * no valor. `undefined` quando a RPC falha — nesse caso o array (limitado)
+   * continua sendo a fonte, como antes.
+   */
+  const linhaDoResumo = (filaResumoRpc as { pedidos: number; valor_cents: number }[] | null)?.[0];
+  const filaResumo = linhaDoResumo
+    ? {
+        pedidos: Number(linhaDoResumo.pedidos) || 0,
+        valorCents: Number(linhaDoResumo.valor_cents) || 0,
+      }
+    : undefined;
 
   /**
    * A faixa de situação é UMA PARTIÇÃO feita aqui, na origem, com os mesmos
@@ -225,6 +285,7 @@ export default async function ExpedicaoPage({ searchParams }: { searchParams: Pr
     cargas: (cargas ?? []) as unknown as { id: string; status: string }[],
     itens,
     pedidosElegiveis: pedidosNaFila,
+    filaResumo,
   });
 
   return (
