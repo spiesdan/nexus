@@ -23,10 +23,10 @@ import { semearContato, semearProduto } from "./helpers/pedidos";
 test.setTimeout(900_000);
 
 const RAIZ = "evidence/nfe-avulsa";
-// SÓ 1440 por ora: a busca de produto não renderiza resultados em 390 — defeito
-// de produto em correção pelo Frontend. Quando a branch do fix chegar, a rodada
-// volta a ter as duas viewports (e o vídeo).
-const VIEWPORTS = [{ px: 1440, altura: 900 }] as const;
+const VIEWPORTS = [
+  { px: 1440, altura: 900 },
+  { px: 390, altura: 844 },
+] as const;
 
 function dimensoes(png: Buffer): { largura: number; altura: number } {
   return { largura: png.readUInt32BE(16), altura: png.readUInt32BE(20) };
@@ -92,6 +92,11 @@ async function capturar(page: Page, nome: string, viewport: number, altura: numb
   });
 }
 
+/** A lista da BUSCA — em 390 o `<select>` de abas também tem `role=option`. */
+function resultados(page: Page) {
+  return page.getByTestId("produto-resultados").getByRole("option");
+}
+
 async function buscarProduto(page: Page, termo: string) {
   const caixa = page.getByTestId("nfe-busca-produto");
   const input = caixa.getByRole("combobox");
@@ -146,11 +151,11 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     // 2. busca com resultado
     await buscarProduto(page, sementes.produto);
     await expect(page.getByTestId("produto-resultados")).toBeVisible({ timeout: 60_000 });
-    await expect(page.getByRole("option").first()).toBeVisible({ timeout: 60_000 });
+    await expect(resultados(page).first()).toBeVisible({ timeout: 60_000 });
     await capturar(page, "busca-resultado", viewport.px, viewport.altura);
 
     // 3. item selecionado, com NCM
-    await page.getByRole("option").first().click();
+    await resultados(page).first().click();
     await expect(page.getByTestId("nfe-item")).toBeVisible({ timeout: 60_000 });
     await expect(page.getByTestId("nfe-item-ncm")).toContainText("19059090");
     await capturar(page, "item-ncm", viewport.px, viewport.altura);

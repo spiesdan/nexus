@@ -20,7 +20,9 @@ efêmero, nenhuma nota emitida contra a SEFAZ.
 > campos, nenhum POST. Falha de envio (abort/500 simulados): `nfe-erro`
 > visível, nenhuma nota criada, reenvio com a mesma `Idempotency-Key`.
 
-## Pendente
+## 390 e vídeo
 
-390×844 e vídeo: parados até o Frontend entregar o fix da lista de resultados
-da busca de produto no mobile (o campo existe, a lista não renderiza).
+O mesmo roteiro roda em 390×844, e o vídeo cobre os três fluxos. Causa da
+primeira falha em 390: **seletor nosso**, não defeito de tela — em 390 o
+`<select>` de abas mobile também tem `role="option"`, e o `getByRole("option")`
+casava com "Notas". A busca agora é escopada em `produto-resultados`.

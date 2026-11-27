@@ -93,7 +93,7 @@ test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => 
   await caixa.fill(produto);
   await expect(page.getByTestId("produto-resultados")).toBeVisible({ timeout: 60_000 });
   await page.waitForTimeout(600);
-  await page.getByRole("option").first().click();
+  await page.getByTestId("produto-resultados").getByRole("option").first().click();
   await expect(page.getByTestId("nfe-item-ncm")).toContainText("19059090");
   await page.waitForTimeout(600);
 

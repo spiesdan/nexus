@@ -141,19 +141,17 @@ jobs:
         timeout-minutes: 25
         run: pnpm exec playwright test tests/e2e/tmp-captura-avulsa.spec.ts --workers=1
 
-      # PAUSADO: a busca de produto não renderiza em 390 (defeito de produto em
-      # correção pelo Frontend). O vídeo volta junto com a rodada de 390.
-      - name: Capturar o vídeo (390) — pausado
+      - name: Capturar o vídeo (390)
         id: video
-        if: false
         timeout-minutes: 15
         run: pnpm exec playwright test tests/e2e/tmp-captura-avulsa-video.spec.ts --workers=1
 
       - name: Falhar se alguma captura não passou
         if: always()
         run: |
-          echo "imagens: ${{ steps.imagens.outcome }}"
+          echo "imagens: ${{ steps.imagens.outcome }} / vídeo: ${{ steps.video.outcome }}"
           [ "${{ steps.imagens.outcome }}" = "success" ]
+          [ "${{ steps.video.outcome }}" = "success" ]
 
       - uses: actions/upload-artifact@v7
         if: always()
