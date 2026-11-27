@@ -203,6 +203,23 @@ const linhasPorOrg = orgs.flatMap((o) =>
 linhas.length = 0;
 linhas.push(...linhasPorOrg);
 
+// Só colunas que EXISTEM em `prospecting_searches`. As do estado visual
+// (`progresso`, `degradada`, `degradacao_motivo`, `motivo_zero`,
+// `parada_solicitada_em`) são derivadas no cliente por `_buscas-estado.ts`;
+// mandá-las no insert dá PGRST204 e o seed morre.
+const COLUNAS_REAIS = new Set([
+  "organization_id", "categorias", "cidade", "estado", "pais", "latitude", "longitude",
+  "raio_km", "max_empresas", "provider", "status", "total_celulas", "celulas_processadas",
+  "encontradas", "novas", "duplicadas", "erros", "requisicoes", "custo_estimado_cents",
+  "ultimo_erro", "search_hash", "created_at", "finished_at", "started_at",
+]);
+for (const chave of [...new Set(linhas.flatMap((l) => Object.keys(l)))]) {
+  if (!COLUNAS_REAIS.has(chave)) {
+    console.log(`descartando coluna inexistente no insert: ${chave}`);
+    for (const l of linhas) delete l[chave];
+  }
+}
+
 const chaves = [...new Set(linhas.flatMap((l) => Object.keys(l)))];
 const normalizadas = linhas.map((l) =>
   Object.fromEntries(chaves.map((k) => [k, k in l ? l[k] : k === "degradada" ? false : null])),
