@@ -311,7 +311,14 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
       console.log(`[achado] nfe-emitir OBSTRUÍDO em ${viewport.px}px por ${noCentro} — captura com clique forçado`);
     }
 
-    await page.getByTestId("nfe-emitir").click({ force: obstruido, timeout: 20_000 });
+    if (obstruido) {
+      // Clique por JS: o botão está atrás do dock (medido: dockTop 787, botão
+      // 780–824), então hit-testing nunca passa. O handler do React é o mesmo,
+      // e o POST sai — a imagem existe e o achado fica registrado.
+      await page.getByTestId("nfe-emitir").evaluate((el) => (el as HTMLElement).click());
+    } else {
+      await page.getByTestId("nfe-emitir").click({ timeout: 20_000 });
+    }
     const apareceu = await page
       .getByTestId("nfe-erro")
       .waitFor({ state: "visible", timeout: 15_000 })
