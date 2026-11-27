@@ -33,3 +33,4 @@ sentinel-painel.spec.ts
 smoke.spec.ts
 vps-webhook-outbound-ssrf.spec.ts
 webhooks.spec.ts
+expedicao-lacunas-qa.spec.ts

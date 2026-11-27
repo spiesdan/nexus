@@ -41,6 +41,7 @@ export const TRANSVERSAIS: Record<string, string> = {
   "gps-sem-sinal": "estado do GPS na rota (J4) — ausente/desatualizado nunca é 'online'; transversal à cabine",
   "fila-offline-retry-conflito": "desfecho offline da cabine (J4) — retry/idempotência/conflito; bloqueio declarado onde exige aparelho real",
   "cabine-mobile-workbench": "cabine em viewport 390 com as abas do workbench (J4) — contrato de viewport da expedição",
+  "expedicao-lacunas-qa": "contrato transversal da expedição (J4): ordem manual × recálculo, descarte de proposta e estados de erro/carregando/vazio — não é a jornada ponta a ponta",
   "abas-canonicas-nas-telas": "contrato de abas (6 telas) — vale para todas",
   "error-pages": "404/403/500/503 + documentos legais",
   "filterbar-unica-nas-listas": "contrato de barra de filtros (compras/estoque/carteira)",
