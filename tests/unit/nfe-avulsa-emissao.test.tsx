@@ -124,6 +124,7 @@ describe("emissão da NF-e avulsa", () => {
     expect(screen.getByTestId("nfe-item-sem-preco")).toBeVisible();
     expect(screen.getByTestId("nfe-emitir")).toBeDisabled();
     expect(screen.queryByTestId("nfe-formulario-pronto")).toBeNull();
+    expect(post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
     expect(screen.queryByTestId("nfe-item-sem-preco")).toBeNull();
     expect(screen.getByTestId("nfe-formulario-pronto")).toBeVisible();
@@ -167,6 +168,7 @@ describe("emissão da NF-e avulsa", () => {
     expect(screen.getByTestId("nfe-item-sem-preco")).toBeVisible();
     expect(screen.getByTestId("nfe-emitir")).toBeDisabled();
     expect(screen.queryByTestId("nfe-formulario-pronto")).toBeNull();
+    expect(post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
     expect(screen.queryByTestId("nfe-item-sem-preco")).toBeNull();
     expect(screen.getByTestId("nfe-formulario-pronto")).toBeVisible();
