@@ -75,23 +75,60 @@ async function enquadrar(page: Page, cartao: Locator): Promise<void> {
   await cartao.evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
   await page.waitForTimeout(150);
 
+  const margem = 12;
+  let ultima: { topo: number; base: number; limite: number } = { topo: -1, base: -1, limite: -1 };
+
   for (let tentativa = 0; tentativa < 12; tentativa++) {
     const medida = await cartao.evaluate((el, seletor) => {
       const r = el.getBoundingClientRect();
       const dock = document.querySelector(seletor);
       const topoDock = dock ? dock.getBoundingClientRect().top : window.innerHeight;
       const limite = topoDock > 0 ? topoDock : window.innerHeight;
-      return { topo: Math.round(r.top), base: Math.round(r.bottom), limite: Math.round(limite) };
+      return {
+        topo: Math.round(r.top),
+        base: Math.round(r.bottom),
+        limite: Math.round(limite),
+        alturaCartao: Math.round(r.height),
+        alturaTela: window.innerHeight,
+        // Qual container de fato rola nesta tela — sem isto o ajuste pode ir
+        // para o lugar errado e o laço só repete a mesma medida.
+        rolando:
+          document.querySelector("main") instanceof HTMLElement
+            ? {
+                scrollTop: Math.round((document.querySelector("main") as HTMLElement).scrollTop),
+                scrollHeight: (document.querySelector("main") as HTMLElement).scrollHeight,
+                clientHeight: (document.querySelector("main") as HTMLElement).clientHeight,
+              }
+            : null,
+      };
     }, DOCK);
+    ultima = medida;
 
-    const margem = 12;
-    if (medida.topo >= 0 && medida.base <= medida.limite - margem) return;
+    if (medida.topo >= 0 && medida.base <= medida.limite - margem) {
+      console.log(
+        `[enquadrar] ok em ${tentativa} tentativa(s): topo=${medida.topo} base=${medida.base} limite=${medida.limite}`,
+      );
+      return;
+    }
 
-    // Positivo = precisa descer (cartão passa do dock); negativo = subir.
+    // Cartão mais alto que a área segura não cabe por rolagem nenhuma — nesse
+    // caso o problema é de layout, e reportar é melhor que ajustar a foto.
+    const alturaSegura = medida.limite - margem;
+    if (medida.alturaCartao > alturaSegura) {
+      throw new Error(
+        `cartão de ${medida.alturaCartao}px não cabe na área segura de ${alturaSegura}px ` +
+          `(tela ${medida.alturaTela}px, limite ${medida.limite}px)`,
+      );
+    }
+
     const delta =
       medida.base > medida.limite - margem
         ? Math.min(medida.base - (medida.limite - margem), 260)
         : -Math.min(margem - medida.topo, 260);
+
+    console.log(
+      `[enquadrar] tentativa ${tentativa}: topo=${medida.topo} base=${medida.base} limite=${medida.limite} delta=${delta} main=${JSON.stringify(medida.rolando)}`,
+    );
 
     await cartao.evaluate((el, d) => {
       let no: HTMLElement | null = el.parentElement;
@@ -108,7 +145,9 @@ async function enquadrar(page: Page, cartao: Locator): Promise<void> {
     await page.waitForTimeout(150);
   }
 
-  throw new Error("não consegui enquadrar o cartão inteiro acima do dock");
+  throw new Error(
+    `não consegui enquadrar o cartão inteiro acima do dock (última medida: ${JSON.stringify(ultima)})`,
+  );
 }
 
 test("captura dos seis estados visuais do Radar", async ({ page }) => {
@@ -122,6 +161,12 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
 
   const titulo = page.getByRole("heading", { name: "Buscas no mapa" });
   await expect(titulo).toBeVisible({ timeout: 180_000 });
+
+  // Rolagem suave faz a medição ler uma posição que já não vale no instante
+  // seguinte; aqui toda rolagem é imediata e determinística.
+  await page.addStyleTag({
+    content: "html,body,*{scroll-behavior:auto !important;animation:none !important}",
+  });
   await expect(page.getByText("restaurante · padaria")).toBeVisible({ timeout: 60_000 });
 
   for (const viewport of VIEWPORTS) {
