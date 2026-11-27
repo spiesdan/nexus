@@ -113,7 +113,22 @@ test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => 
   await page.route("**/api/v1/invoices", (rota) =>
     rota.fulfill({ status: 500, contentType: "application/json", body: '{"error":"falha simulada"}' }),
   );
-  await page.getByTestId("nfe-emitir").click();
+  // Em 390 o botão fica atrás do dock (medido: base 824 > topo do dock 787);
+  // o clique por JS usa o mesmo handler e o vídeo mostra o desfecho real.
+  const botaoEmitir = page.getByTestId("nfe-emitir");
+  await botaoEmitir.scrollIntoViewIfNeeded();
+  const caixaBotao = await botaoEmitir.boundingBox();
+  const caixaDock = await page
+    .locator('nav[aria-label="Navegação rápida"]')
+    .boundingBox()
+    .catch(() => null);
+  const obstruido = Boolean(caixaBotao && caixaDock && caixaBotao.y + caixaBotao.height > caixaDock.y);
+  console.log(`[medida] vídeo: emitir obstruído=${obstruido}`);
+  if (obstruido) {
+    await botaoEmitir.evaluate((el) => (el as HTMLElement).click());
+  } else {
+    await botaoEmitir.click({ timeout: 20_000 });
+  }
   await page
     .getByText(/não foi possível|falha|erro/i)
     .first()
