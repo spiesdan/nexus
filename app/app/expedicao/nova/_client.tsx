@@ -715,22 +715,25 @@ export function NovaCargaClient({
               dockPresenteNaTela
                 ? "bottom-[calc(3.5rem_+_1px_+_env(safe-area-inset-bottom))]"
                 : // Sem dock não há de que compor: a barra desce até o
-                  // rodapé e o `env()` dela cobre o home indicator, senão
-                  // ficava 57 px flutuando sobre o vazio.
-                  "bottom-0 pb-[calc(0.625rem_+_env(safe-area-inset-bottom))]",
+                  // rodapé. O `env()` do home indicator vai num wrapper, porque
+                  // o gate de espaçamento só aceita valor arbitrário que começa
+                  // com `env(` — `calc()` nele reprova.
+                  "bottom-0",
             )}
             style={tecladoPx > 0 ? { bottom: tecladoPx } : undefined}
           >
-            <Button
-              className="min-h-11 w-full md:w-auto"
-              onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
-            >
-              {passo === 1
-                ? selecionados.length === 0
-                  ? t("Continuar: escolha os pedidos")
-                  : t("Continuar: equipe e veículo")
-                : t("Continuar: revisão")}
-            </Button>
+            <div className={cn(!dockPresenteNaTela && "pb-[env(safe-area-inset-bottom)] md:pb-0")}>
+              <Button
+                className="min-h-11 w-full md:w-auto"
+                onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
+              >
+                {passo === 1
+                  ? selecionados.length === 0
+                    ? t("Continuar: escolha os pedidos")
+                    : t("Continuar: equipe e veículo")
+                  : t("Continuar: revisão")}
+              </Button>
+            </div>
           </div>
         </>
       )}

@@ -56,6 +56,12 @@ test("ação do cabeçalho leva à página onde o alvo existe", async ({ page })
 
   await acaoRota.click();
   await expect(page).toHaveURL(new RegExp(`/app/expedicao/${id}(#parada-.+)?$`));
+  // A prova é onde a pessoa CHEGA, não que o botão existe: a parada precisa
+  // estar na viewport e com o foco (leitor de tela anuncia o cartão aberto).
+  const idDaParada = hrefRota!.split("#parada-")[1]!;
+  const paradaRota = page.locator(`#parada-${idDaParada}`);
+  await expect(paradaRota).toBeInViewport();
+  await expect(paradaRota).toBeFocused();
   const separado = page.getByLabel(`Separado: ${numero}`);
   await expect(separado).toBeVisible({ timeout: 20_000 });
 
@@ -65,9 +71,15 @@ test("ação do cabeçalho leva à página onde o alvo existe", async ({ page })
     name: "Conferir separação",
   });
   await expect(acaoFechamento).toBeVisible({ timeout: 20_000 });
+  const hrefFechamento = await acaoFechamento.getAttribute("href");
   await expect(acaoFechamento).toHaveAttribute("href", /#parada-/);
   await acaoFechamento.click();
   await expect(page).toHaveURL(new RegExp(`/app/expedicao/${id}(#parada-.+)?$`));
+  const paradaFechamento = page.locator(
+    `#parada-${hrefFechamento!.split("#parada-")[1]!}`,
+  );
+  await expect(paradaFechamento).toBeInViewport();
+  await expect(paradaFechamento).toBeFocused();
   await expect(page.getByLabel(`Separado: ${numero}`)).toBeVisible({ timeout: 20_000 });
 
   // 3. Tudo separado: /fechamento manda para a página que PUBLICA.
@@ -81,9 +93,9 @@ test("ação do cabeçalho leva à página onde o alvo existe", async ({ page })
   ).toHaveAttribute("href", `/app/expedicao/${id}/rota`, { timeout: 20_000 });
 
   // 4. Em /rota, com tudo separado, o banner NÃO duplica o "Publicar rota" da
-  // página: uma ação por tela.
+  // página: uma ação por tela. E, sem ação para oferecer, a faixa não aparece
+  // (a promessa vazia que o Design UX reprovou).
   await page.goto(`/app/expedicao/${id}/rota`);
   await expect(page.getByTestId("publicar-rota")).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByTestId("proxima-acao").getByRole("link")).toHaveCount(0);
-  await expect(page.getByTestId("proxima-acao").getByRole("button")).toHaveCount(0);
+  await expect(page.getByTestId("proxima-acao")).toHaveCount(0);
 });

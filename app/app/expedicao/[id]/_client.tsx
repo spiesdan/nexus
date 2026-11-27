@@ -291,10 +291,7 @@ export function CargaClient({
     if (!alvo || hashDaParadaFeito.current === alvo) return;
     if (!detalhe.itens.some((i) => i.id === alvo)) return;
     hashDaParadaFeito.current = alvo;
-    setAbertaId(alvo);
-    const quadro = window.requestAnimationFrame(() =>
-      rolarPara(document.getElementById(`parada-${alvo}`), { block: "center" }),
-    );
+    const quadro = window.requestAnimationFrame(() => focarParada(alvo));
     return () => window.cancelAnimationFrame(quadro);
   }, [secao, detalhe]);
 
@@ -501,9 +498,19 @@ export function CargaClient({
     }
   }
 
+  /**
+   * ROLA ATÉ A PARADA E LEVA O FOCO JUNTO.
+   *
+   * `scrollIntoView` sozinho deixa o foco onde estava — no botão do cabeçalho,
+   * às vezes em outra página. Quem usa teclado ou leitor de tela continuava no
+   * lugar antigo: o Design UX pediu foco, não só rolagem (27/11/2026).
+   */
   function focarParada(id: string) {
     setAbertaId(id);
-    rolarPara(document.getElementById(`parada-${id}`), { block: "center" });
+    const elemento = document.getElementById(`parada-${id}`);
+    rolarPara(elemento, { block: "center" });
+    // `preventScroll`: a rolagem é a do `rolarPara`, que respeita reduce-motion.
+    window.requestAnimationFrame(() => elemento?.focus({ preventScroll: true }));
   }
 
   /*
@@ -989,21 +996,23 @@ export function CargaClient({
           </div>
         </div>
 
-        {/* PRÓXIMA AÇÃO — a frase e o botão mudam com o estado. Um só
-            destaque; o cartão abaixo não repete o botão. */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border px-4 py-2 sm:px-6" data-testid="proxima-acao">
-          <p className="min-w-0 flex-1 text-xs text-text" role="status">
-            <span className="font-semibold">{t("Próxima ação")}:</span>{" "}
-            {passo.titulo}. {passo.detalhe}
-          </p>
-          {acaoDaPagina ? (
-          <div className="shrink-0 [&_a]:w-auto [&_a]:min-h-11 [&_button]:w-auto [&_button]:min-h-11">
-            <BotaoDaAcao acao={acaoDaPagina} />
+        {/* PRÓXIMA AÇÃO — só existe quando há ação para oferecer.
+            A faixa prometia "Próxima ação" e, em /fechamento com tudo fechado,
+            mostrava a frase sem botão nenhum (Design UX, 27/11/2026). Sem
+            ação, a faixa não aparece: o estado continua no selo e no cartão
+            "Próximo passo" abaixo. Concluir a carga a partir do fechamento é
+            lacuna de produto, não algo para inventar aqui. */}
+        {acaoDaPagina && (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border px-4 py-2 sm:px-6" data-testid="proxima-acao">
+            <p className="min-w-0 flex-1 text-xs text-text" role="status">
+              <span className="font-semibold">{t("Próxima ação")}:</span>{" "}
+              {passo.titulo}. {passo.detalhe}
+            </p>
+            <div className="shrink-0 [&_a]:w-auto [&_a]:min-h-11 [&_button]:w-auto [&_button]:min-h-11">
+              <BotaoDaAcao acao={acaoDaPagina} />
+            </div>
           </div>
-        ) : carga.status === "cancelada" || carga.status === "concluida" ? (
-          <span className="text-xs text-muted-foreground">{t("Nenhuma ação pendente")}</span>
-        ) : null}
-        </div>
+        )}
 
         {/* TRÊS PÁGINAS DE VERDADE: link do Next, não âncora nem aba. O
             cabeçalho é o mesmo; a página atual é marcada para leitor de tela
@@ -1237,6 +1246,7 @@ export function CargaClient({
                         <li
                           key={i.id}
                           id={`parada-${i.id}`}
+                          tabIndex={-1}
                           className={cn(
                             "scroll-mt-44 overflow-hidden rounded-xl border border-border bg-surface transition-colors",
                             ehProxima && "border-accent/40",
@@ -1487,6 +1497,7 @@ export function CargaClient({
                           <li
                             key={i.id}
                             id={`parada-${i.id}`}
+                            tabIndex={-1}
                             className="scroll-mt-44 overflow-hidden rounded-xl border border-border bg-surface"
                           >
                             <div className="flex items-start gap-3 p-3">

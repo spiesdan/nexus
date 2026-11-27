@@ -52,8 +52,12 @@ describe("nova carga — barra de avanço acima do dock", () => {
     expect(cliente).toContain("md:static");
   });
 
-  it("sem dock a barra desce ao rodapé, também com safe area", () => {
-    expect(cliente).toContain('"bottom-0 pb-[calc(0.625rem_+_env(safe-area-inset-bottom))]"');
+  it("sem dock a barra desce ao rodapé e a safe area vai num wrapper", () => {
+    // `bottom-0` no caso ausente; o `env()` do home indicator fica num
+    // wrapper (o gate de espaçamento recusa `calc()` em valor arbitrário).
+    expect(cliente).toContain('"bottom-0"');
+    expect(cliente).toContain('"pb-[env(safe-area-inset-bottom)] md:pb-0"');
+    expect(cliente).not.toContain("pb-[calc(");
     // O atributo de diagnóstico é o que o e2e lê.
     expect(cliente).toContain('data-dock={dockPresenteNaTela ? "presente" : "ausente"}');
   });

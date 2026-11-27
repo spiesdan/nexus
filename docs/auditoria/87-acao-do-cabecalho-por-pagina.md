@@ -22,7 +22,10 @@ que rola até `#parada-<id>` — um id que só existe em "Pedidos e paradas".
 
 Os dois traços são decisões, não esquecimentos: o "Publicar rota" e o "Gravar
 fechamento" já estão na página, e repeti-los no banner recriaria o par de CTAs
-que a mesma auditoria pediu para desfazer. Uma ação por tela.
+que a mesma auditoria pediu para desfazer. Uma ação por tela. E sem ação para
+oferecer, a faixa "Próxima ação" **não aparece**: ela prometia uma ação e
+mostrava a frase sem botão (Design UX, 27/11/2026). O estado continua no selo e
+no cartão "Próximo passo".
 
 Nada de regra de negócio nova: todo comportamento usa caminho que já existia —
 o mesmo `focarParada`, o mesmo link para `/rota`, o mesmo `POST /rota/finalizar`
@@ -32,7 +35,10 @@ de "Fechar a carga", e navegação para a parada onde o alvo vive.
 
 `#parada-<id>` é resolvido num efeito, uma vez por hash, quando os itens chegam
 (o cartão só existe depois do fetch). A ação vira link — antes era um botão que
-não levava a lugar nenhum.
+não levava a lugar nenhum — e o salto **leva o foco junto**: o cartão recebe
+`tabIndex={-1}` e é focado depois da rolagem, então teclado e leitor de tela
+chegam ao mesmo lugar que os olhos. A prova é a spec com `toBeInViewport` e
+`toBeFocused`, não só a existência do botão.
 
 ## Mobile (dívidas do PR #959)
 
@@ -40,7 +46,9 @@ não levava a lugar nenhum.
    rota em `SEM_DOCK`). A barra de avanço da nova carga assumia que ele estava
    lá e ficava 57 px acima do rodapé. A regra virou `dockPresente()` — a mesma
    que o dock usa para renderizar — publicada por `DockPresence`; sem dock a
-   barra desce a `bottom: 0` com `env(safe-area-inset-bottom)`.
+   barra desce a `bottom: 0` e a safe area do aparelho entra num wrapper
+   (`pb-[env(safe-area-inset-bottom)]`; o gate de espaçamento recusa `calc()`
+   em valor arbitrário).
 2. **Teclado no passo 2.** A barra `fixed` ficava ancorada no rodapé de baixo
    do teclado. Ela agora mede a sobra pelo `visualViewport` e sobe junto,
    mantendo o dock na página (sem `SEM_DOCK` novo).
