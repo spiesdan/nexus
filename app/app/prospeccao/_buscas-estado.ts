@@ -7,13 +7,24 @@
  * uma função — e é isso que o teste fixa, em vez de um `if` no JSX que some
  * quando alguém reorganiza o cartão.
  *
- * Puro de propósito: importa só o contrato do motor e o rótulo comercial.
+ * Puro de propósito: importa só o rótulo comercial.
+ *
+ * O formato do `progresso` é ESPELHADO aqui (e não importado de
+ * `lib/prospeccao/checkpoint`) porque esta tela sobe sozinha, antes do #969: a
+ * `main` ainda não tem o módulo do motor Maps. Quando o #969 entrar, o import
+ * pode substituir o espelho — o formato é o mesmo do contrato.
  */
-import {
-  resumo as resumoDoProgresso,
-  type ProgressoDaBusca,
-} from "@/lib/prospeccao/checkpoint";
 import { ROTULO_STATUS_BUSCA } from "@/lib/schemas/prospeccao";
+
+export interface ProgressoDaBusca {
+  termos_total: number;
+  termos_concluidos: string[];
+  termos_falhos: string[];
+  termo_atual: string | null;
+  tentativas: number;
+  bloqueio: { motivo: string; em: string } | null;
+  termos_encontradas?: Record<string, number>;
+}
 
 export type StatusDaBusca =
   | "queued"
@@ -122,7 +133,7 @@ export function percentualDaBusca(busca: BuscaDaTela): number {
   }
   if (usaTermosDaBusca(busca)) {
     const termos = termosDaBusca(busca);
-    return termos ? limitar(resumoDoProgresso(termos, busca.categorias).percentual) : 0;
+    return termos ? percentualPorTermo(termos) : 0;
   }
   const total = busca.total_celulas ?? 0;
   if (total > 0) {
@@ -291,4 +302,11 @@ export interface CapacidadeDoPlaces {
 
 function limitar(valor: number): number {
   return Math.min(100, Math.max(0, Math.round(valor)));
+}
+
+/** Mesma conta do resumo do motor: termos fechados sobre o total. */
+function percentualPorTermo(p: ProgressoDaBusca): number {
+  if (p.termos_total <= 0) return 0;
+  const fechados = p.termos_concluidos.length + p.termos_falhos.length;
+  return limitar((fechados / p.termos_total) * 100);
 }
