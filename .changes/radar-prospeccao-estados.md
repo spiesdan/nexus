@@ -11,7 +11,7 @@ degradada → parcial → zero, com o progresso por termo (nunca por célula),
 
 As saídas do zero e da degradada viram ação: ampliar o raio, buscar no OSM ou no
 Google Places. O Places só aparece desabilitado quando falta a flag ou a chave —
-com o motivo visível — e, quando disponível, a tela diz se a chave é **da
-organização** ou **da instalação**. Repetir uma busca usa a latitude/longitude da
-listagem, então a área coberta é a mesma. O Maps sai do seletor de provedor até
-12/12, porque a rota ainda o recusa.
+com o motivo visível — e, quando disponível, a tela diz se a chave é
+**da organização** ou **da instalação**. Repetir uma busca usa a
+latitude/longitude da listagem, então a área coberta é a mesma. O Maps sai do
+seletor de provedor até 12/12, porque a rota ainda o recusa.

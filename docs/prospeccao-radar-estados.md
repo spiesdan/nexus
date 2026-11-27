@@ -89,8 +89,9 @@ Buscar preenchida nem pede a cidade de novo.
 | 5 | `zero` | **zero** | `completed` + `motivo_zero=sem_resultados` + `encontradas=0` | "Nenhum resultado nesta região" + "0 encontrados em {cidade}" |
 | 6 | `degradada` | **degradada** | `degradada=true` + `degradacao_motivo` | selo "Descoberta degradada" + motivo integral |
 
-**12 imagens**: os seis nomes visuais × `-1440.png` e `-390.png`, em
-`evidence/radar-estados/`. Mesmo seed e mesmo filtro nas duas larguras.
+**12 imagens**: os seis nomes visuais × as larguras 1440 e 390 px (sufixos
+`-1440` e `-390`), em `evidence/radar-estados/`. Mesmo seed e mesmo filtro nas
+duas larguras.
 
 `carregando` é **nome de captura**, não texto de tela: o QA não deve procurar
 essa palavra no DOM.
