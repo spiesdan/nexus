@@ -127,12 +127,19 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize({ width: viewport.px, height: viewport.altura });
 
-    // O dock aparece por CSS (`md:hidden`); esperar ele montar é o que evita
-    // medir o limite contra uma barra que ainda não existe.
+    // O dock aparece por CSS (`md:hidden`): em 1440 ele EXISTE no DOM e está
+    // invisível — `waitFor visible` ali nunca resolve (custou uma rodada).
+    // Espera-se a estabilidade da posição, e só quando ele está visível.
     const dock = page.locator(DOCK);
-    if ((await dock.count()) > 0) {
-      await dock.first().waitFor({ state: "visible", timeout: 30_000 });
-      await page.waitForTimeout(300);
+    if ((await dock.count()) > 0 && (await dock.first().isVisible())) {
+      let anterior = -2;
+      for (let i = 0; i < 10; i++) {
+        const caixaDock = await dock.first().boundingBox();
+        const y = caixaDock ? Math.round(caixaDock.y) : -1;
+        if (y === anterior) break;
+        anterior = y;
+        await page.waitForTimeout(150);
+      }
     }
 
     // ── A LISTA: página inteira ───────────────────────────────────────────
