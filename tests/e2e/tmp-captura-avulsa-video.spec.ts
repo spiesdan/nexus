@@ -16,6 +16,24 @@ import { semearContato, semearProduto } from "./helpers/pedidos";
 test.use({ viewport: { width: 390, height: 844 }, video: "on" });
 test.setTimeout(600_000);
 
+/** CNPJ com dígitos verificadores válidos — o PATCH de contato recusa 422 sem isso. */
+function cnpjDoCarimbo(carimbo: number): string {
+  const base = String(carimbo).slice(-12).padStart(12, "0");
+  const digito = (numeros: number[]): number => {
+    const pesos =
+      numeros.length === 12
+        ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const soma = numeros.reduce((s, n, i) => s + n * pesos[i]!, 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const n = [...base].map(Number);
+  const d1 = digito(n);
+  const d2 = digito([...n, d1]);
+  return `${base}${d1}${d2}`;
+}
+
 test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => {
   const carimbo = Date.now();
   await loginComoAdmin(page, lerCreds());
@@ -28,7 +46,7 @@ test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => 
   const cadastro = await page.request.patch(`/api/v1/contacts/${id}`, {
     data: {
       tipo_pessoa: "J",
-      cnpj: `91${String(carimbo).slice(-12).padStart(12, "0")}`,
+      cnpj: cnpjDoCarimbo(carimbo),
       ie: "123456789",
       logradouro: "Rua das Nacoes",
       numero_end: "1000",
