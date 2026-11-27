@@ -162,6 +162,32 @@ function linkDoMapa(endereco: string | null): string | null {
 const ALVOS_DE_TOQUE =
   "[&_a]:min-h-11 [&_button]:min-h-11 [&_a]:min-w-11 [&_button]:min-w-11 [&_input]:min-h-11";
 
+/**
+ * A ação do banner pode ser um link (outra página/alvo) ou um gesto que já
+ * existe nesta tela (rolar até a parada, fechar a carga). Quem escolhe é a
+ * matriz de `acaoDaPagina`; aqui só se pinta o botão.
+ */
+type AcaoDaPagina =
+  | { rotulo: string; href: string; variante?: "outline" | "default" }
+  | { rotulo: string; aoClicar: () => void; variante?: "outline" | "default" };
+
+function BotaoDaAcao({ acao }: { acao: AcaoDaPagina }) {
+  return "href" in acao ? (
+    <Button className="w-full" size="sm" variant={acao.variante ?? "default"} asChild>
+      <Link href={acao.href}>{acao.rotulo}</Link>
+    </Button>
+  ) : (
+    <Button
+      className="w-full"
+      size="sm"
+      variant={acao.variante ?? "default"}
+      onClick={acao.aoClicar}
+    >
+      {acao.rotulo}
+    </Button>
+  );
+}
+
 export function CargaClient({
   cargaId,
   secao,
@@ -247,6 +273,30 @@ export function CargaClient({
       router.replace(`/app/expedicao/${cargaId}/${alvo}`);
     }
   }, [secao, cargaId, router]);
+
+  /**
+   * `#parada-<id>` — O ALVO DO LINK ENTRE PÁGINAS.
+   *
+   * A ação do cabeçalho em `/rota` e `/fechamento` manda para a parada que
+   * precisa de conferência ou desfecho. O `id` só existe depois que os itens
+   * chegam, então o salto é feito aqui, uma vez por hash — o ref impede que o
+   * `recarregar` de um clique repita o pulo.
+   */
+  const hashDaParadaFeito = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (secao !== "paradas" || !detalhe) return;
+    const alvo = window.location.hash.startsWith("#parada-")
+      ? decodeURIComponent(window.location.hash.slice("#parada-".length))
+      : "";
+    if (!alvo || hashDaParadaFeito.current === alvo) return;
+    if (!detalhe.itens.some((i) => i.id === alvo)) return;
+    hashDaParadaFeito.current = alvo;
+    setAbertaId(alvo);
+    const quadro = window.requestAnimationFrame(() =>
+      rolarPara(document.getElementById(`parada-${alvo}`), { block: "center" }),
+    );
+    return () => window.cancelAnimationFrame(quadro);
+  }, [secao, detalhe]);
 
   /**
    * FECHAR A CARGA — o único status que ainda muda por este arquivo.
@@ -576,7 +626,6 @@ export function CargaClient({
         tom: "neutro" as const,
         titulo: t("Carga cancelada"),
         detalhe: t("Os pedidos voltaram para a fila de embarque."),
-        acao: null,
       };
     }
     if (carga.status === "concluida") {
@@ -587,7 +636,6 @@ export function CargaClient({
           concluidas.length === 1
             ? t("1 parada com desfecho. O romaneio e o fechamento ficam registrados.")
             : `${concluidas.length} ${t("paradas com desfecho. O romaneio e o fechamento ficam registrados.")}`,
-        acao: null,
       };
     }
     if (carga.status === "em_rota") {
@@ -596,11 +644,6 @@ export function CargaClient({
           tom: "sucesso" as const,
           titulo: t("Pronta para concluir"),
           detalhe: t("Todas as paradas têm desfecho. Falta fechar a carga."),
-          acao: podeOperar ? (
-            <Button className="w-full" size="sm" onClick={() => void mudarStatus("concluida")}>
-              {t("Fechar a carga")}
-            </Button>
-          ) : null,
         };
       }
       return {
@@ -612,16 +655,6 @@ export function CargaClient({
         detalhe: proxima
           ? `${t("Próxima")}: ${proxima.pedido.cliente_nome}. ${t("A carga só conclui com todas entregues ou devolvidas.")}`
           : t("A carga só conclui com todas entregues ou devolvidas."),
-        acao: podeOperar ? (
-          <Button
-            className="w-full"
-            size="sm"
-            variant="outline"
-            onClick={() => proxima && focarParada(proxima.id)}
-          >
-            {t("Registrar desfecho")}
-          </Button>
-        ) : null,
       };
     }
     // montando
@@ -630,7 +663,6 @@ export function CargaClient({
         tom: "aviso" as const,
         titulo: t("Carga sem pedidos"),
         detalhe: t("Inclua pedidos para liberar a saída desta carga."),
-        acao: null,
       };
     }
     if (naoSeparados.length > 0) {
@@ -643,38 +675,106 @@ export function CargaClient({
             ? t("Faltam separar 1 pedido")
             : `${naoSeparados.length} ${t("pedidos faltam separar")}`,
         detalhe: t("A rota só sai com tudo conferido."),
-        acao: (
-          <Button
-            className="w-full"
-            size="sm"
-            variant="outline"
-            onClick={() => proximaNaoSeparada && focarParada(proximaNaoSeparada.id)}
-          >
-            {t("Conferir separação")}
-          </Button>
-        ),
       };
     }
     return {
       tom: "sucesso" as const,
       titulo: t("Pronta para sair"),
       detalhe: t("Tudo conferido. A rota pode começar."),
-      /**
-       * PUBLICAR SÓ PELA TELA QUE SALVA A ORDEM.
-       *
-       * Aqui havia um POST que iniciava a rota direto da ficha, sem gravar a
-       * ordem pendente — a sequência ajustada em "Mapa e ordem" nunca chegava
-       * ao aparelho do entregador, e o cliente era avisado de uma rota que não
-       * era a da tela. Agora o banner leva para `/rota`, onde `publicarRota`
-       * salva e só então inicia: um gesto, um caminho. O rótulo diz o que
-       * acontece, para ninguém procurar um "Sair" que não publica.
-       */
-      acao: podeOperar ? (
-        <Button className="w-full" size="sm" asChild>
-          <Link href={`/app/expedicao/${cargaId}/rota`}>{t("Revisar e publicar")}</Link>
-        </Button>
-      ) : null,
     };
+  })();
+
+  /**
+   * A AÇÃO PERTENCE À PÁGINA.
+   *
+   * O banner é o MESMO nas quatro páginas, mas a ação que ele promete só existe
+   * onde o alvo existe: `focarParada` rola até `#parada-<id>`, e esse id só é
+   * renderizado em "Pedidos e paradas". Em `/rota` e `/fechamento` o clique
+   * resultava em 0 scroll, 0 diálogo, 0 navegação (auditoria 27/11/2026, P0).
+   *
+   * A matriz é por estado × página, e cada linha usa um caminho que JÁ existe:
+   *
+   * | Estado                  | Pedidos e paradas        | Mapa e ordem                | Fechamento                  | Resumo                       |
+   * |-------------------------|--------------------------|-----------------------------|-----------------------------|------------------------------|
+   * | Separação pendente      | rola até a parada        | vai para a parada           | vai para a parada           | vai para a parada            |
+   * | Pronta para sair        | vai para /rota           | (a página publica)          | vai para /rota              | vai para /rota               |
+   * | Em rota, com pendência  | rola até o desfecho      | vai para a parada           | vai para a parada           | vai para a parada            |
+   * | Em rota, tudo fechado   | fecha a carga            | vai para o fechamento       | (a página grava o caixa)    | vai para o fechamento        |
+   *
+   * "A página publica" e "a página grava o caixa" não são botão morto: são a
+   * ação que já está na página, uma por tela. Duplicá-la no banner recriaria o
+   * par de CTAs que a auditoria pediu para desfazer.
+   */
+  const acaoDaPagina: AcaoDaPagina | null = (() => {
+    if (carga.status === "cancelada" || carga.status === "concluida") return null;
+
+    const emMontagem = carga.status === "montando";
+    const conferir = emMontagem && naoSeparados.length > 0;
+    const publicar = emMontagem && !conferir && itens.length > 0;
+    const desfecho = !emMontagem && pendentes.length > 0;
+    const fechar = !emMontagem && pendentes.length === 0;
+    const alvo = conferir ? proximaNaoSeparada?.id : desfecho ? proxima?.id : null;
+    const rotuloDoAlvo = conferir ? t("Conferir separação") : t("Registrar desfecho");
+
+    if (secao === "paradas") {
+      if (alvo && (conferir || podeOperar)) {
+        return { rotulo: rotuloDoAlvo, aoClicar: () => focarParada(alvo), variante: "outline" };
+      }
+      if (publicar && podeOperar) {
+        return { rotulo: t("Revisar e publicar"), href: `/app/expedicao/${cargaId}/rota` };
+      }
+      if (fechar && podeOperar) {
+        return {
+          rotulo: t("Fechar a carga"),
+          aoClicar: () => void mudarStatus("concluida"),
+        };
+      }
+      return null;
+    }
+
+    if (secao === "rota") {
+      if (alvo && (conferir || podeOperar)) {
+        return {
+          rotulo: rotuloDoAlvo,
+          href: `/app/expedicao/${cargaId}#parada-${alvo}`,
+          variante: "outline",
+        };
+      }
+      if (fechar) {
+        return { rotulo: t("Ir para o fechamento"), href: `/app/expedicao/${cargaId}/fechamento` };
+      }
+      return null;
+    }
+
+    if (secao === "fechamento") {
+      if (alvo && (conferir || podeOperar)) {
+        return {
+          rotulo: rotuloDoAlvo,
+          href: `/app/expedicao/${cargaId}#parada-${alvo}`,
+          variante: "outline",
+        };
+      }
+      if (publicar) {
+        return { rotulo: t("Revisar e publicar"), href: `/app/expedicao/${cargaId}/rota` };
+      }
+      return null;
+    }
+
+    // Resumo: informa o caminho, não executa a transição.
+    if (alvo) {
+      return {
+        rotulo: rotuloDoAlvo,
+        href: `/app/expedicao/${cargaId}#parada-${alvo}`,
+        variante: "outline",
+      };
+    }
+    if (publicar) {
+      return { rotulo: t("Revisar e publicar"), href: `/app/expedicao/${cargaId}/rota` };
+    }
+    if (fechar) {
+      return { rotulo: t("Ir para o fechamento"), href: `/app/expedicao/${cargaId}/fechamento` };
+    }
+    return null;
   })();
 
   if (secao === "motorista" && motorista) {
@@ -773,7 +873,7 @@ export function CargaClient({
         </div>
         {/* Um lugar só para a ação: o cabeçalho compartilhado não está
             nesta página, então ela fica aqui, uma vez. */}
-        {passo.acao && <div className="max-w-sm">{passo.acao}</div>}
+        {acaoDaPagina && <div className="max-w-sm"><BotaoDaAcao acao={acaoDaPagina} /></div>}
         <nav aria-label={t("Páginas da expedição")} className="flex flex-wrap items-center gap-2">
           <span aria-current="page" className="min-h-11 rounded-full bg-accent px-3 py-2 text-sm font-medium text-accent-foreground">
             {t("Resumo")}
@@ -896,11 +996,13 @@ export function CargaClient({
             <span className="font-semibold">{t("Próxima ação")}:</span>{" "}
             {passo.titulo}. {passo.detalhe}
           </p>
-          {passo.acao ? (
-            <div className="shrink-0 [&_a]:w-auto [&_a]:min-h-11 [&_button]:w-auto [&_button]:min-h-11">{passo.acao}</div>
-          ) : (
-            <span className="text-xs text-muted-foreground">{t("Nenhuma ação pendente")}</span>
-          )}
+          {acaoDaPagina ? (
+          <div className="shrink-0 [&_a]:w-auto [&_a]:min-h-11 [&_button]:w-auto [&_button]:min-h-11">
+            <BotaoDaAcao acao={acaoDaPagina} />
+          </div>
+        ) : carga.status === "cancelada" || carga.status === "concluida" ? (
+          <span className="text-xs text-muted-foreground">{t("Nenhuma ação pendente")}</span>
+        ) : null}
         </div>
 
         {/* TRÊS PÁGINAS DE VERDADE: link do Next, não âncora nem aba. O
