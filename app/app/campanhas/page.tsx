@@ -5,6 +5,7 @@ import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { CATEGORIAS_COMERCIAIS } from "@/lib/prospeccao/categorias";
 import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { listaDeBuscasDaPagina } from "@/lib/prospeccao/lista-da-pagina";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -37,7 +38,7 @@ export default async function CampanhasPage() {
     user.is_platform_admin || ROLE_RANK[activeOrg.role] >= ROLE_RANK.manager;
 
   const supabase = await createClient();
-  const { data: buscas } = await supabase
+  const { data: buscas, error: erroBuscas } = await supabase
     .from("prospecting_searches")
     .select(
       "id, categorias, cidade, estado, latitude, longitude, raio_km, max_empresas, provider, status, " +
@@ -48,6 +49,10 @@ export default async function CampanhasPage() {
     .eq("organization_id", activeOrg.orgId)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  // Erro de query não vira lista vazia: a aba mostra o estado de erro com
+  // "Tentar de novo", em vez de dizer "Nenhuma busca ainda" sem ter lido.
+  const listaDaPagina = listaDeBuscasDaPagina(buscas, erroBuscas);
 
   /**
    * CAPACIDADE DO PLACES — a tela precisa saber ANTES do clique.
@@ -89,7 +94,8 @@ export default async function CampanhasPage() {
   return (
     <CampanhasClient
       podeOperar={podeBuscar}
-      buscasIniciais={(Array.isArray(buscas) ? buscas : []) as unknown as BuscaResumo[]}
+      buscasIniciais={listaDaPagina.buscas as unknown as BuscaResumo[]}
+      erroInicialBuscas={listaDaPagina.erro}
       categorias={CATEGORIAS_COMERCIAIS}
       podeBuscar={podeBuscar}
       podeGerenciar={podeGerenciar}

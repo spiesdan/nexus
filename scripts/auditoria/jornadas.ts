@@ -37,6 +37,7 @@ import { join } from "node:path";
  * "não classifiquei" de "não é classificação de jornada".
  */
 export const TRANSVERSAIS: Record<string, string> = {
+  "campanhas-pesquisas": "honestidade da leitura da aba Pesquisas em /app/campanhas: busca semeada aparece e falha de GET vira erro com tentar de novo, nunca vazio — não é jornada de venda",
   "multi-campanha-retomada": "membresia multi-campanha, retomada 48h e matching sem case (P1-28) — 1 prova real, 6 bloqueios declarados por falta de call site / WABA",
   "gps-sem-sinal": "estado do GPS na rota (J4) — ausente/desatualizado nunca é 'online'; transversal à cabine",
   "fila-offline-retry-conflito": "desfecho offline da cabine (J4) — retry/idempotência/conflito; bloqueio declarado onde exige aparelho real",

@@ -233,6 +233,7 @@ jobs:
         ${{ (github.event_name == 'pull_request' && 'smoke') || (github.event_name == 'push' && 'critical') || (github.event_name == 'schedule' && 'full') || inputs.suite || 'full' }}
       SPECS_PARTE_1: >-
         smoke.spec.ts auth.spec.ts error-pages.spec.ts
+        campanhas-pesquisas.spec.ts
         icone-da-marca.spec.ts
         password-recovery.spec.ts signup-journey.spec.ts
         rbac-roles.spec.ts inbox-scope.spec.ts reset-password-mfa.spec.ts
