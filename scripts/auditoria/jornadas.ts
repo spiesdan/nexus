@@ -37,7 +37,6 @@ import { join } from "node:path";
  * "não classifiquei" de "não é classificação de jornada".
  */
 export const TRANSVERSAIS: Record<string, string> = {
-  "tmp-captura-radar": "captura de evidência do Radar Maps (12 imagens em 1440/390) para o aceite do Design UX; não é jornada — a publicação do artifact é do DevOps",
   "multi-campanha-retomada": "membresia multi-campanha, retomada 48h e matching sem case (P1-28) — 1 prova real, 6 bloqueios declarados por falta de call site / WABA",
   "gps-sem-sinal": "estado do GPS na rota (J4) — ausente/desatualizado nunca é 'online'; transversal à cabine",
   "fila-offline-retry-conflito": "desfecho offline da cabine (J4) — retry/idempotência/conflito; bloqueio declarado onde exige aparelho real",
