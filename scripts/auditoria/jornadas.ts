@@ -42,6 +42,8 @@ export const TRANSVERSAIS: Record<string, string> = {
   "fila-offline-retry-conflito": "desfecho offline da cabine (J4) — retry/idempotência/conflito; bloqueio declarado onde exige aparelho real",
   "cabine-mobile-workbench": "cabine em viewport 390 com as abas do workbench (J4) — contrato de viewport da expedição",
   "expedicao-lacunas-qa": "contrato transversal da expedição (J4): ordem manual × recálculo, descarte de proposta e estados de erro/carregando/vazio — não é a jornada ponta a ponta",
+  "expedicao-acao-do-cabecalho": "contrato transversal da ficha da carga (J4): cada aba declara a própria ação de cabeçalho — vale para todas as abas, não para um fluxo",
+  "expedicao-nova-barra-mobile": "contrato transversal de viewport da nova carga (J4): barra de avançar compõe com dock e teclado em 390 px",
   "abas-canonicas-nas-telas": "contrato de abas (6 telas) — vale para todas",
   "error-pages": "404/403/500/503 + documentos legais",
   "filterbar-unica-nas-listas": "contrato de barra de filtros (compras/estoque/carteira)",
