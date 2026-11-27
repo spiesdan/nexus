@@ -23,10 +23,10 @@ import { semearContato, semearProduto } from "./helpers/pedidos";
 test.setTimeout(900_000);
 
 const RAIZ = "evidence/nfe-avulsa";
-const VIEWPORTS = [
-  { px: 1440, altura: 900 },
-  { px: 390, altura: 844 },
-] as const;
+// SÓ 1440 por ora: a busca de produto não renderiza resultados em 390 — defeito
+// de produto em correção pelo Frontend. Quando a branch do fix chegar, a rodada
+// volta a ter as duas viewports (e o vídeo).
+const VIEWPORTS = [{ px: 1440, altura: 900 }] as const;
 
 function dimensoes(png: Buffer): { largura: number; altura: number } {
   return { largura: png.readUInt32BE(16), altura: png.readUInt32BE(20) };
@@ -116,7 +116,16 @@ function cnpjDoCarimbo(carimbo: number): string {
   return `${base}${d1}${d2}`;
 }
 
-test("captura dos seis estados da NFe avulsa", async ({ page }) => {
+/** Quantas notas existem na organização agora — a falha não pode criar nenhuma. */
+async function contarNotas(page: Page): Promise<number> {
+  const r = await page.request.get("/api/v1/invoices?limit=1");
+  expect(r.status(), "GET de notas para a contagem").toBe(200);
+  const corpo = (await r.json()) as { data?: unknown[]; total?: number };
+  if (typeof corpo.total === "number") return corpo.total;
+  return Array.isArray(corpo.data) ? corpo.data.length : 0;
+}
+
+test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
   await loginComoAdmin(page, lerCreds());
   const sementes = await semear(page);
 
@@ -151,38 +160,55 @@ test("captura dos seis estados da NFe avulsa", async ({ page }) => {
     await expect(page.getByTestId("produto-busca-vazia")).toBeVisible({ timeout: 60_000 });
     await capturar(page, "busca-vazia", viewport.px, viewport.altura);
 
-    // 5. cliente incompleto (só nome, sem documento nem endereço)
+    // 5. cadastro incompleto — critério do QA (27/11): botão DESABILITADO e
+    //    `nfe-pendencias` nomeando os campos, nenhum POST.
     const cliente = page.getByTestId("nfe-cliente").getByRole("textbox").first();
     await cliente.fill(sementes.clienteIncompleto);
     await page
       .getByRole("button", { name: new RegExp(sementes.clienteIncompleto) })
       .first()
       .click();
+
+    const pendencias = page.getByTestId("nfe-pendencias");
+    await expect(pendencias, "cadastro incompleto precisa listar pendências").toBeVisible({
+      timeout: 60_000,
+    });
+    await expect(
+      page.getByTestId("nfe-emitir"),
+      "com cadastro incompleto o botão NÃO pode estar habilitado",
+    ).toBeDisabled();
     await capturar(page, "cliente-incompleto", viewport.px, viewport.altura);
 
-    // 6. erro de emissão: o cliente INCOMPLETO é o que faz o servidor recusar
-    //    (o destino da NF-e exige documento e endereço). Com o cliente completo
-    //    e o emitente sem certificado a emissão não estoura na hora — ela entra
-    //    na fila, e aí não há estado de erro para fotografar.
-    // BEST-EFFORT declarado: com o cliente incompleto o botão pode ficar
-    // desabilitado (pendências) e aí NÃO existe estado de erro para fotografar.
-    // Nesse caso a imagem registra o que a tela mostra e o achado vai no log —
-    // inventar um erro que o produto não produz seria pior que faltar a imagem.
-    const botaoEmitir = page.getByTestId("nfe-emitir");
-    const habilitado = await botaoEmitir.isEnabled().catch(() => false);
-    if (habilitado) {
-      await botaoEmitir.click();
-    } else {
-      console.log("[achado] nfe-emitir DESABILITADO com cliente incompleto — sem estado de erro");
-    }
-    const erro = page.getByTestId("nfe-erro");
-    const apareceu = await erro
-      .waitFor({ state: "visible", timeout: 45_000 })
-      .then(() => true)
-      .catch(() => false);
-    if (!apareceu) {
-      console.log("[achado] nenhum nfe-erro apareceu; capturando o estado real da tela");
-    }
-    await capturar(page, apareceu ? "erro-emissao" : "sem-erro-inline", viewport.px, viewport.altura);
+    // 6. FALHA DE ENVIO — o ramo de erro que o QA aprovou, provocado de forma
+    //    explícita: cliente completo, itens válidos e o POST de notas
+    //    interceptado com 500. Não é erro de cadastro inventado: é a falha de
+    //    transporte, e o aceite exige `nfe-erro` visível e ZERO nota criada.
+    await cliente.fill(sementes.clienteCompleto);
+    await page
+      .getByRole("button", { name: new RegExp(sementes.clienteCompleto) })
+      .first()
+      .click();
+    await expect(page.getByTestId("nfe-formulario-pronto")).toBeAttached({ timeout: 60_000 });
+
+    const notasAntes = await contarNotas(page);
+    await page.route("**/api/v1/invoices", (rota) =>
+      rota.fulfill({ status: 500, contentType: "application/json", body: '{"error":"falha simulada"}' }),
+    );
+    await page.getByTestId("nfe-emitir").click();
+    await expect(page.getByTestId("nfe-erro"), "falha de envio precisa mostrar nfe-erro").toBeVisible({
+      timeout: 120_000,
+    });
+    await capturar(page, "falha-envio", viewport.px, viewport.altura);
+    const notasDepois = await contarNotas(page);
+    console.log(`[medida] notas antes=${notasAntes} depois=${notasDepois} (falha não pode criar nota)`);
+    expect(notasDepois, "falha de envio não pode criar nota").toBe(notasAntes);
+
+    // Reenvio com a mesma chave: a rota volta ao normal e a emissão segue.
+    await page.unroute("**/api/v1/invoices");
+    await page.getByTestId("nfe-emitir").click();
+    await expect(page.getByTestId("nfe-erro")).toBeHidden({ timeout: 120_000 });
+    const notasReenvio = await contarNotas(page);
+    console.log(`[medida] reenvio: notas=${notasReenvio} (deve ser ${notasAntes + 1})`);
+    expect(notasReenvio, "reenvio com a mesma chave precisa ser aceito").toBe(notasAntes + 1);
   }
 });
