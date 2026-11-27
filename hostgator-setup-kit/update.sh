@@ -366,6 +366,9 @@ export OCR_IMAGE="${IMG_OCR}:${VERSAO_ALVO}"
 # O solver de rotas também: o app e o solver falam um contrato HTTP nosso, e
 # versões diferentes dos dois lados é resposta que a tela não entende.
 export ROTA_IMAGE="${IMG_ROTA}:${VERSAO_ALVO}"
+# O sidecar de prospecção também, embora desligado por profile: sem este export
+# ele cairia no default `:stable` do compose no dia em que a flag fosse ligada.
+export MAPS_SCRAPER_IMAGE="${IMG_MAPS_SCRAPER}:${VERSAO_ALVO}"
 gravar_imagens .env "$VERSAO_ALVO"
 
 # O segredo do sidecar tem de existir ANTES do `dc pull`, e não só antes do

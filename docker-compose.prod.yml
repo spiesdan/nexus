@@ -391,6 +391,57 @@ services:
     logging: *default-logging
     networks: [internal]
 
+  # O sidecar de descoberta por Google Maps (upstream MIT `gosom/google-maps-scraper`,
+  # binário montado no NOSSO CI a partir do commit fixo 3176636 = v1.21.0).
+  #
+  # ── Por que ele NÃO sobe por padrão ────────────────────────────────────
+  #
+  # Ele é o único serviço que sai para a internet do lado de FORA do nosso
+  # domínio em nome da empresa, e o recurso que o usa ainda está em piloto. O
+  # `profiles: [maps]` é a flag: sem `--profile maps` o `docker compose up -d`
+  # do update.sh NÃO o sobe, e o `pull` também o ignora. Para ligar, o `.env`
+  # recebe `MAPS_SCRAPER_ENABLED=1` e o `dc()` do kit passa `--profile maps`.
+  #
+  # Sem `depends_on` nos dois sentidos e sem `ports`: o app e o fiscal sobem
+  # sem ele, e se ele cair ninguém mais sente. Quando ligado, o app fala com
+  # ele por HTTP em `http://maps-scraper:8080`, na rede interna.
+  maps-scraper:
+    profiles: ["maps"]
+    image: ${MAPS_SCRAPER_IMAGE:-ghcr.io/spiesdan/nexus-maps-scraper:stable}
+    pull_policy: ${MAPS_SCRAPER_PULL_POLICY:-always}
+    restart: unless-stopped
+    # 512m sai de MEDIÇÃO, não de estimativa: sob `--memory=512m` com job
+    # fast_mode real pela API, o pico ficou em 24 MiB (prova de 27/11/2026,
+    # 4 buscas, 19-20 negócios cada). O binário é Go estático e não abre
+    # navegador — a imagem oficial de 2 GiB é que carrega Chromium.
+    mem_limit: 512m
+    # Non-root já vem da imagem (`USER nonroot:nonroot`); estes são os cintos:
+    # nenhum shell para escalar, nenhuma capability, e o FS de fora read-only.
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    # O upstream grava o banco de jobs e o CSV em `-data-folder`. Com o rootfs
+    # read-only o volume nomeado FALHA na primeira escrita (não há shell para
+    # `chown`), então é tmpfs com 1777 — o job é descartável por definição.
+    tmpfs:
+      - /data:rw,noexec,nosuid,size=256m,mode=1777
+    command: ["-web", "-data-folder", "/data", "-addr", ":8080"]
+    environment:
+      # Repetido de propósito: o default também está ENV na imagem, e um
+      # `-e` explícito no compose é o que deixa a decisão auditável no arquivo.
+      DISABLE_TELEMETRY: "1"
+    healthcheck:
+      # O probe é o segundo binário Go do mesmo build: distroless não tem
+      # shell, curl nem wget para um `CMD-SHELL`.
+      test: ["CMD", "/usr/local/bin/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging: *default-logging
+    networks: [internal]
+
   redis:
     image: redis:7-alpine
     restart: unless-stopped
