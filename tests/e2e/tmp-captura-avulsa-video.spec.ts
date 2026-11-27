@@ -78,6 +78,13 @@ test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => 
   });
 
   await page.goto("/app/notas?aba=emitir", { waitUntil: "domcontentloaded", timeout: 240_000 });
+  // A tela de emissão abre em modo "pedido"; a venda avulsa é o seletor
+  // `nota-avulsa` (o mesmo testid que o PR entrega). Sem este clique o bloco da
+  // avulsa nem monta, e `nfe-itens-vazio` não existe no DOM.
+  const seletorAvulsa = page.getByTestId("nota-avulsa");
+  if ((await seletorAvulsa.count()) > 0) {
+    await seletorAvulsa.first().click();
+  }
   await expect(page.getByTestId("nfe-itens-vazio")).toBeVisible({ timeout: 120_000 });
   await page.waitForTimeout(800);
 
