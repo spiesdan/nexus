@@ -208,6 +208,13 @@ export function ConfigTab({
     ? METADADOS_PROVIDERS.find((p) => p.nome === consumo.provider_ativo)?.rotulo ?? consumo.provider_ativo
     : "";
 
+  // Até 12/12 o Maps não é opção de busca: a rota o recusa com mensagem
+  // própria. O seletor não pode oferecer o que a busca não aceita. Se a
+  // configuração JÁ aponta para ele, o valor atual aparece desabilitado (não é
+  // uma opção; é a leitura do que está gravado) e o operador precisa escolher
+  // outro para salvar.
+  const opcoesDeProvider = METADADOS_PROVIDERS.filter((p) => p.nome !== "maps_browser");
+
   return (
     <div className="space-y-4">
       <MensagensPorCategoria categorias={categorias} podeEditar={podeGerenciar} />
@@ -222,7 +229,12 @@ export function ConfigTab({
               value={form.provider_ativo}
               onChange={(e) => setForm((f) => ({ ...f, provider_ativo: e.target.value }))}
             >
-              {METADADOS_PROVIDERS.map((p) => (
+              {form.provider_ativo === "maps_browser" && (
+                <option value="maps_browser" disabled>
+                  {t("Maps (indisponível até 12/12)")}
+                </option>
+              )}
+              {opcoesDeProvider.map((p) => (
                 <option key={p.nome} value={p.nome}>
                   {p.rotulo}
                 </option>

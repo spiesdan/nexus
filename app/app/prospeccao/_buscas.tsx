@@ -29,18 +29,20 @@ import { cn } from "@/lib/utils";
 import {
   PROVIDER_OSM,
   PROVIDER_PLACES,
+  blocoDeEstado,
   comoListaBuscas,
   deveMostrarDegradada,
   deveMostrarParcial,
-  deveMostrarZero,
+  entradaDeRepeticao,
   estaAtiva,
   estaParando,
   percentualDaBusca,
   raioAmpliado,
+  rotuloDoProgresso,
   rotuloDoStatus,
-  termosConcluidosDaBusca,
   termosDaBusca,
   type BuscaDaTela,
+  type CapacidadePlaces,
 } from "./_buscas-estado";
 
 const TOM_DO_STATUS: Record<string, "neutral" | "info" | "warning" | "success" | "error"> = {
@@ -70,12 +72,15 @@ export function BuscasTab({
   podeGerenciar,
   hrefEmpresas,
   aoIrParaBuscar,
+  places,
 }: {
   iniciais: BuscaDaTela[];
   podeOperar: boolean;
   podeGerenciar: boolean;
   hrefEmpresas: (buscaId: string) => string;
   aoIrParaBuscar: () => void;
+  /** Capacidade do Google Places resolvida no servidor (flag + chave). */
+  places: CapacidadePlaces;
 }) {
   const t = useT();
   const [buscas, setBuscas] = React.useState<BuscaDaTela[]>(iniciais);
@@ -126,19 +131,18 @@ export function BuscasTab({
     busca: BuscaDaTela,
     opcoes: { raioKm?: number; provider?: string },
   ): Promise<void> {
+    const entrada = entradaDeRepeticao(busca, opcoes);
+    if (!entrada) {
+      setErrosDeAcao((atual) => ({
+        ...atual,
+        [busca.id]: t("Esta busca não tem cidade nem coordenada para repetir."),
+      }));
+      return;
+    }
     setOcupada(`${busca.id}:repetir`);
     setErrosDeAcao((atual) => ({ ...atual, [busca.id]: "" }));
     try {
-      await apiClient.post("/api/v1/prospecting/searches", {
-        categorias: busca.categorias,
-        ...(busca.cidade ? { cidade: busca.cidade } : {}),
-        ...(busca.estado ? { estado: busca.estado } : {}),
-        raio_km: opcoes.raioKm ?? busca.raio_km,
-        max_empresas: busca.max_empresas ?? 500,
-        // Sem `forcar`, o cache devolveria a mesma busca de zero resultados.
-        forcar: true,
-        ...(opcoes.provider ? { provider: opcoes.provider } : {}),
-      });
+      await apiClient.post("/api/v1/prospecting/searches", entrada);
       toast.success(t("Nova busca criada. O progresso aparece aqui."));
       await carregar();
     } catch (e) {
@@ -163,7 +167,18 @@ export function BuscasTab({
       <div className="space-y-3" aria-busy="true">
         <TituloDaLista total={null} />
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-36 rounded-2xl" />
+          <Card key={i} className="space-y-3 p-4">
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+            <Skeleton className="h-1.5 w-full rounded-full" />
+            <Skeleton className="h-3 w-1/4" />
+            <div className="flex gap-2">
+              <Skeleton className="h-11 w-24" />
+              <Skeleton className="h-11 w-20" />
+            </div>
+          </Card>
         ))}
       </div>
     );
@@ -213,6 +228,7 @@ export function BuscasTab({
               key={busca.id}
               busca={busca}
               podeOperar={podeOperar}
+              places={places}
               hrefEmpresas={hrefEmpresas(busca.id)}
               ocupada={ocupada}
               erroDaAcao={errosDeAcao[busca.id]}
@@ -246,9 +262,91 @@ function TituloDaLista({ total }: { total: number | null }) {
   );
 }
 
+/**
+ * AS TRÊS SAÍDAS DO ZERO/DEGRADADA — sempre no mesmo lugar.
+ *
+ * OSM é sempre possível. Places aparece DESABILITADO, com o motivo visível,
+ * quando a flag ou a chave não existem (a capacidade vem do server component);
+ * nunca some e nunca fica clicável para falhar depois. `maps_browser` não é
+ * opção antes de 12/12 — a rota recusa com mensagem própria, e a tela não a
+ * oferece.
+ */
+function AcoesDeOutroProvider({
+  busca,
+  places,
+  ocupadoNeste,
+  novoRaio,
+  mostrarAmpliar = false,
+  aoRepetir,
+}: {
+  busca: BuscaDaTela;
+  places: CapacidadePlaces;
+  ocupadoNeste: string | null;
+  novoRaio: number;
+  mostrarAmpliar?: boolean;
+  aoRepetir: (
+    busca: BuscaDaTela,
+    opcoes: { raioKm?: number; provider?: string },
+  ) => Promise<void>;
+}) {
+  const t = useT();
+  const idDoMotivo = `places-motivo-${busca.id}`;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap gap-2">
+        {mostrarAmpliar && (
+          <Button
+            type="button"
+            size="sm"
+            className="min-h-11"
+            disabled={ocupadoNeste !== null}
+            onClick={() => void aoRepetir(busca, { raioKm: novoRaio })}
+          >
+            {t("Ampliar para {km} km e repetir").replace("{km}", String(novoRaio))}
+          </Button>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11"
+          disabled={ocupadoNeste !== null}
+          onClick={() => void aoRepetir(busca, { provider: PROVIDER_OSM })}
+        >
+          {t("Buscar no OSM")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          className="min-h-11"
+          disabled={!places.habilitado || ocupadoNeste !== null}
+          aria-describedby={places.habilitado ? undefined : idDoMotivo}
+          onClick={() => void aoRepetir(busca, { provider: PROVIDER_PLACES })}
+        >
+          {t("Buscar no Google Places")}
+        </Button>
+      </div>
+      {places.habilitado && places.origem && (
+        <p className="text-xs text-muted-foreground">
+          {places.origem === "tenant"
+            ? t("Google Places pago com a chave da organização.")
+            : t("Google Places pago com a chave da instalação.")}
+        </p>
+      )}
+      {!places.habilitado && places.motivo && (
+        <p id={idDoMotivo} className="text-xs text-muted-foreground">
+          {t("Google Places indisponível:")} {places.motivo}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function CartaoDaBusca({
   busca,
   podeOperar,
+  places,
   hrefEmpresas,
   ocupada,
   erroDaAcao,
@@ -258,6 +356,7 @@ function CartaoDaBusca({
 }: {
   busca: BuscaDaTela;
   podeOperar: boolean;
+  places: CapacidadePlaces;
   hrefEmpresas: string;
   ocupada: string | null;
   erroDaAcao?: string;
@@ -270,16 +369,17 @@ function CartaoDaBusca({
 }) {
   const t = useT();
   const pct = percentualDaBusca(busca);
+  const progresso = rotuloDoProgresso(busca);
   const termos = termosDaBusca(busca);
-  const contagem = termosConcluidosDaBusca(busca);
+  const bloco = blocoDeEstado(busca);
   const parando = estaParando(busca);
   const ativa = estaAtiva(busca);
   const parcial = deveMostrarParcial(busca);
-  const zero = deveMostrarZero(busca);
   const degradada = deveMostrarDegradada(busca);
   const ocupadoNeste = ocupada?.startsWith(`${busca.id}:`) ? ocupada : null;
   const local = [busca.cidade, busca.estado].filter(Boolean).join("/");
   const novoRaio = raioAmpliado(busca.raio_km);
+  const podeRepetir = entradaDeRepeticao(busca, {}) !== null;
 
   return (
     <li>
@@ -304,7 +404,7 @@ function CartaoDaBusca({
           </div>
         </div>
 
-        {parando && (
+        {bloco === "parando" && (
           <div
             role="status"
             className="flex items-start gap-2 rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning-fg"
@@ -323,9 +423,7 @@ function CartaoDaBusca({
         <div className="space-y-1.5">
           <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
             <span className="text-muted-foreground">
-              {termos
-                ? `${contagem.concluidos} ${t("de")} ${contagem.total} ${t("termos")}`
-                : `${busca.celulas_processadas ?? 0} ${t("de")} ${busca.total_celulas ?? 0} ${t("células")}`}
+              {`${progresso.concluidos} ${t("de")} ${progresso.total} ${t(progresso.unidade)}`}
             </span>
             <span className="font-medium text-text tabular-nums">{pct}%</span>
           </div>
@@ -394,7 +492,7 @@ function CartaoDaBusca({
           ))}
         </dl>
 
-        {parcial && (
+        {bloco === "parcial" && (
           <div className="rounded-lg border border-warning/40 bg-warning-bg px-3 py-2 text-xs text-warning-fg">
             <p className="font-semibold">{t("Resultado parcial")}</p>
             <p className="mt-0.5">
@@ -404,55 +502,34 @@ function CartaoDaBusca({
           </div>
         )}
 
-        {zero && (
+        {bloco === "zero" && (
           <div className="space-y-2 rounded-lg border border-border bg-stage-2 px-3 py-2.5">
             <div>
               <p className="text-sm font-medium text-text">{t("Nenhum resultado nesta região")}</p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {t("0 encontrados para {termos} em {local}.").replace(
-                  "{termos}",
-                  busca.categorias.join(", "),
-                ).replace("{local}", local || t("esta área"))}{" "}
+                {`0 ${t("encontrados em")} ${local || t("esta área")}.`}{" "}
                 {t("Nada foi trocado automaticamente — escolha como seguir:")}
               </p>
             </div>
-            {podeOperar && (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  className="min-h-11"
-                  disabled={ocupadoNeste !== null}
-                  onClick={() => void aoRepetir(busca, { raioKm: novoRaio })}
-                >
-                  {t("Ampliar para {km} km e repetir").replace("{km}", String(novoRaio))}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={ocupadoNeste !== null}
-                  onClick={() => void aoRepetir(busca, { provider: PROVIDER_OSM })}
-                >
-                  {t("Buscar no OSM")}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={ocupadoNeste !== null}
-                  onClick={() => void aoRepetir(busca, { provider: PROVIDER_PLACES })}
-                >
-                  {t("Buscar no Google Places")}
-                </Button>
-              </div>
+            {podeOperar && podeRepetir && (
+              <AcoesDeOutroProvider
+                busca={busca}
+                places={places}
+                ocupadoNeste={ocupadoNeste}
+                novoRaio={novoRaio}
+                mostrarAmpliar
+                aoRepetir={aoRepetir}
+              />
+            )}
+            {podeOperar && !podeRepetir && (
+              <p className="text-xs text-muted-foreground">
+                {t("Esta busca não tem cidade nem coordenada — não é possível repetir.")}
+              </p>
             )}
           </div>
         )}
 
-        {degradada && (
+        {bloco === "degradada" && (
           <div className="space-y-2 rounded-lg border border-error/30 bg-error-bg/50 px-3 py-2.5 text-xs">
             <div>
               <p className="text-sm font-medium text-error-fg">{t("Descoberta degradada")}</p>
@@ -464,29 +541,19 @@ function CartaoDaBusca({
                 {t("Não existe troca automática de provedor. Escolha como seguir:")}
               </p>
             </div>
-            {podeOperar && (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={ocupadoNeste !== null}
-                  onClick={() => void aoRepetir(busca, { provider: PROVIDER_OSM })}
-                >
-                  {t("Buscar no OSM")}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  className="min-h-11"
-                  disabled={ocupadoNeste !== null}
-                  onClick={() => void aoRepetir(busca, { provider: PROVIDER_PLACES })}
-                >
-                  {t("Buscar no Google Places")}
-                </Button>
-              </div>
+            {podeOperar && podeRepetir && (
+              <AcoesDeOutroProvider
+                busca={busca}
+                places={places}
+                ocupadoNeste={ocupadoNeste}
+                novoRaio={novoRaio}
+                aoRepetir={aoRepetir}
+              />
+            )}
+            {podeOperar && !podeRepetir && (
+              <p className="text-xs text-muted-foreground">
+                {t("Esta busca não tem cidade nem coordenada — não é possível repetir.")}
+              </p>
             )}
           </div>
         )}
@@ -518,7 +585,7 @@ function CartaoDaBusca({
               <Link href={hrefEmpresas}>{t("Ver empresas")}</Link>
             </Button>
           )}
-          {podeOperar && ativa && !parando && (
+          {podeOperar && busca.status === "running" && !parando && (
             <Button
               size="sm"
               variant="outline"
