@@ -4,10 +4,13 @@ import { requireAuth, resolveActiveOrg } from "@/lib/auth/server";
 import { ROLE_RANK } from "@/lib/auth/types";
 import { traduzir } from "@/lib/i18n/dicionario";
 import { CATEGORIAS_COMERCIAIS } from "@/lib/prospeccao/categorias";
+import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import { CampanhasClient } from "./_client";
 import type { BuscaResumo } from "../prospeccao/_client";
+import type { CapacidadePlaces } from "../prospeccao/_buscas-estado";
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +40,51 @@ export default async function CampanhasPage() {
   const { data: buscas } = await supabase
     .from("prospecting_searches")
     .select(
-      "id, categorias, cidade, estado, raio_km, max_empresas, status, " +
+      "id, categorias, cidade, estado, latitude, longitude, raio_km, max_empresas, provider, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
-        "requisicoes, custo_estimado_cents, ultimo_erro, created_at, finished_at",
+        "requisicoes, custo_estimado_cents, progresso, motivo_zero, degradada, " +
+        "degradacao_motivo, parada_solicitada_em, ultimo_erro, created_at, finished_at",
     )
     .eq("organization_id", activeOrg.orgId)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  /**
+   * CAPACIDADE DO PLACES — a tela precisa saber ANTES do clique.
+   *
+   * A rota de busca só aceita Places com a flag da instalação ligada E uma
+   * chave (organização ou instalação). Nenhuma rota diz isso ao cliente, então
+   * o cálculo mora aqui, no único ponto que já fala com o servidor e com a
+   * organização: o botão nasce desabilitado com o motivo, em vez de falhar
+   * depois do clique ou sumir em silêncio.
+   */
+  let places: CapacidadePlaces;
+  if (!googlePlacesHabilitado()) {
+    places = {
+      habilitado: false,
+      motivo: t("Busca no Google Places desligada nesta instalação."),
+      origem: null,
+    };
+  } else {
+    try {
+      const chave = await resolverChaveGoogle(createAdminClient(), activeOrg.orgId);
+      places = chave.chave
+        ? { habilitado: true, motivo: null, origem: chave.origem }
+        : {
+            habilitado: false,
+            motivo: t(
+              "Sem chave do Google (organização ou instalação). Configure em Configurações → Prospecção.",
+            ),
+            origem: "nenhuma",
+          };
+    } catch {
+      places = {
+        habilitado: false,
+        motivo: t("Não foi possível confirmar a chave do Google agora."),
+        origem: null,
+      };
+    }
+  }
 
   return (
     <CampanhasClient
@@ -53,6 +94,7 @@ export default async function CampanhasPage() {
       podeBuscar={podeBuscar}
       podeGerenciar={podeGerenciar}
       usuarioId={user.id}
+      places={places}
       textos={{
         titulo: t("Prospecção"),
         subtitulo: t("Encontre empresas por região e categoria e leve ao CRM."),

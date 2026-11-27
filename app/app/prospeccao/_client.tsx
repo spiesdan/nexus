@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { LockKey, MagnifyingGlass, Plus } from "@phosphor-icons/react";
+import { LockKey, Plus } from "@phosphor-icons/react";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusEmptyState } from "@/components/nexus-ui/feedback/NexusEmptyState";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
@@ -18,25 +18,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { CampanhasTab } from "./_campanhas";
 import { ConfigTab } from "./_config";
+import { BuscasTab } from "./_buscas";
+import type { BuscaDaTela, CapacidadePlaces } from "./_buscas-estado";
 import { EmpresasTab } from "./_empresas";
 import { MercadoTab } from "./_mercado";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
-import { ROTULO_STATUS_BUSCA } from "@/lib/schemas/prospeccao";
-import { comoMoeda } from "@/lib/format/moeda";
 
-export interface BuscaResumo {
-  id: string;
-  categorias: string[];
-  cidade: string | null;
-  estado: string | null;
-  raio_km: number;
+/**
+ * O que a página entrega à aba: o resumo da lista MAIS os campos derivados do
+ * contrato Maps (`degradada`, `progresso`, `motivo_zero`, `estado_parada`…).
+ * O detalhe tem os mesmos campos — a leitura fica em `_buscas-estado.ts`.
+ */
+export interface BuscaResumo extends BuscaDaTela {
   max_empresas: number;
-  status: string;
   total_celulas: number;
   celulas_processadas: number;
-  encontradas: number;
-  novas: number;
-  duplicadas: number;
   erros: number;
   requisicoes: number;
   custo_estimado_cents: number;
@@ -77,29 +73,6 @@ interface Textos {
   buscaCriada: string;
   reutilizada: string;
   exemploCidade: string;
-}
-
-const STATUS_COR: Record<string, string> = {
-  queued: "bg-yellow-100 text-yellow-800",
-  running: "bg-blue-100 text-blue-800",
-  paused: "bg-muted text-muted-foreground",
-  completed: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800",
-  cancelled: "bg-muted text-muted-foreground",
-};
-
-/**
- * Normaliza qualquer formato que chegue da API/servidor para lista.
- * A API responde o envelope canônico `{ data }`, mas em erro parcial,
- * `null` ou objeto inesperado a tela NÃO pode quebrar (`buscas.some is
- * not a function`) — vira lista vazia com estado empty desenhado.
- */
-export function comoListaBuscas(valor: unknown): BuscaResumo[] {
-  if (Array.isArray(valor)) return valor as BuscaResumo[];
-  if (valor && typeof valor === "object" && Array.isArray((valor as { data?: unknown }).data)) {
-    return (valor as { data: BuscaResumo[] }).data;
-  }
-  return [];
 }
 
 /** Parâmetros que significam "quero ver a aba Empresas" (deep-link, B1). */
@@ -148,6 +121,7 @@ export function ProspeccaoClient({
   podeGerenciar,
   usuarioId,
   textos,
+  places,
 }: {
   buscasIniciais: BuscaResumo[];
   categorias: MacroCategoria[];
@@ -155,6 +129,8 @@ export function ProspeccaoClient({
   podeGerenciar: boolean;
   usuarioId: string;
   textos: Textos;
+  /** Resolvido no servidor: flag da instalação + chave do Google. */
+  places: CapacidadePlaces;
 }) {
   const t = useT();
   const paramsUrl = useSearchParams();
@@ -201,35 +177,12 @@ export function ProspeccaoClient({
     comWhatsapp: false,
     soSemCliente: false,
   });
-  const [buscas, setBuscas] = React.useState<BuscaResumo[]>(() => comoListaBuscas(buscasIniciais));
   const [marcadas, setMarcadas] = React.useState<string[]>([]);
   const [cidade, setCidade] = React.useState("");
   const [uf, setUf] = React.useState("");
   const [raio, setRaio] = React.useState("30");
   const [maximo, setMaximo] = React.useState("500");
   const [criando, setCriando] = React.useState(false);
-
-  const recarregar = React.useCallback(async () => {
-    try {
-      const corpo = await apiClient.get<{ data: unknown }>("/api/v1/prospecting/searches");
-      setBuscas(comoListaBuscas(corpo?.data));
-    } catch (e) {
-      showApiError(e);
-    }
-  }, []);
-
-  // Polling enquanto houver busca ativa (1 tick/min no servidor; 10s aqui é
-  // o meio-termo entre frescor e requisições à toa).
-  // `buscas` é sempre array (estado inicial + recarregar normalizam), mas o
-  // acesso defensivo aqui impede qualquer regressão futura de voltar a
-  // quebrar a tela inteira.
-  const listaBuscas = comoListaBuscas(buscas);
-  const temAtiva = listaBuscas.some((b) => b.status === "queued" || b.status === "running");
-  React.useEffect(() => {
-    if (!temAtiva) return;
-    const timer = setInterval(() => void recarregar(), 10000);
-    return () => clearInterval(timer);
-  }, [temAtiva, recarregar]);
 
   function alternar(busca: string) {
     setMarcadas((m) => (m.includes(busca) ? m.filter((x) => x !== busca) : [...m, busca]));
@@ -262,7 +215,6 @@ export function ProspeccaoClient({
       const r = corpo?.data ?? {};
       toast.success(r.reutilizada ? textos.reutilizada : textos.buscaCriada);
       setMarcadas([]);
-      await recarregar();
       // Encontrar empresas é assíncrono: cai na aba Pesquisas para ver o
       // progresso; "Ver empresas" (com os critérios) leva aos resultados.
       trocarAba("pesquisas");
@@ -270,15 +222,6 @@ export function ProspeccaoClient({
       showApiError(e);
     } finally {
       setCriando(false);
-    }
-  }
-
-  async function acao(id: string, acao: "pause" | "resume" | "cancel") {
-    try {
-      await apiClient.patch(`/api/v1/prospecting/searches/${id}`, { acao });
-      await recarregar();
-    } catch (e) {
-      showApiError(e);
     }
   }
 
@@ -511,84 +454,14 @@ export function ProspeccaoClient({
         </TabsContent>
 
         <TabsContent value="pesquisas" className="mt-4">
-          {listaBuscas.length === 0 ? (
-            <NexusEmptyState icon={MagnifyingGlass} headline={textos.vazias} />
-          ) : (
-            <ul className="space-y-3">
-              {listaBuscas.map((b) => {
-                const pct =
-                  b.total_celulas > 0
-                    ? Math.round((b.celulas_processadas / b.total_celulas) * 100)
-                    : 0;
-                const ativa = b.status === "queued" || b.status === "running";
-                return (
-                  <li key={b.id} className="rounded-lg border p-4">
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <strong>{b.categorias.join(", ")}</strong>
-                      <span className="text-muted-foreground">
-                        {[b.cidade, b.estado].filter(Boolean).join("/")} · {b.raio_km} km
-                      </span>
-                      <span
-                        className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COR[b.status] ?? ""}`}
-                      >
-                        {t(
-                          ROTULO_STATUS_BUSCA[b.status as keyof typeof ROTULO_STATUS_BUSCA] ??
-                            b.status,
-                        )}
-                      </span>
-                    </div>
-                    {(ativa || b.total_celulas > 0) && (
-                      <div className="mt-2">
-                        <div className="h-2 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className="h-full bg-primary transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {textos.progresso} {pct}% · {textos.encontradas} {b.encontradas} ·{" "}
-                          {textos.novas} {b.novas} · {textos.duplicadas} {b.duplicadas} ·{" "}
-                          {textos.erros} {b.erros} · {textos.custo}{" "}
-                          {comoMoeda(b.custo_estimado_cents, "BRL")}
-                        </p>
-                      </div>
-                    )}
-                    {b.ultimo_erro && (
-                      <p className="mt-1 text-xs text-destructive">{b.ultimo_erro}</p>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={hrefEmpresas(b.id)}>{textos.verEmpresas}</Link>
-                      </Button>
-                      {podeBuscar && b.status === "running" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void acao(b.id, "pause")}
-                        >
-                          {textos.pausar}
-                        </Button>
-                      )}
-                      {podeBuscar && b.status === "paused" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => void acao(b.id, "resume")}
-                        >
-                          {textos.continuar}
-                        </Button>
-                      )}
-                      {podeBuscar && (ativa || b.status === "paused") && (
-                        <Button size="sm" variant="ghost" onClick={() => void acao(b.id, "cancel")}>
-                          {textos.cancelar}
-                        </Button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+          <BuscasTab
+            iniciais={buscasIniciais}
+            podeOperar={podeBuscar}
+            podeGerenciar={podeGerenciar}
+            places={places}
+            hrefEmpresas={hrefEmpresas}
+            aoIrParaBuscar={() => trocarAba("buscar")}
+          />
         </TabsContent>
 
         <TabsContent value="empresas" className="mt-4">
