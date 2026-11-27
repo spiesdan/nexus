@@ -164,8 +164,25 @@ test("captura dos seis estados da NFe avulsa", async ({ page }) => {
     //    (o destino da NF-e exige documento e endereço). Com o cliente completo
     //    e o emitente sem certificado a emissão não estoura na hora — ela entra
     //    na fila, e aí não há estado de erro para fotografar.
-    await page.getByTestId("nfe-emitir").click();
-    await expect(page.getByTestId("nfe-erro")).toBeVisible({ timeout: 120_000 });
-    await capturar(page, "erro-emissao", viewport.px, viewport.altura);
+    // BEST-EFFORT declarado: com o cliente incompleto o botão pode ficar
+    // desabilitado (pendências) e aí NÃO existe estado de erro para fotografar.
+    // Nesse caso a imagem registra o que a tela mostra e o achado vai no log —
+    // inventar um erro que o produto não produz seria pior que faltar a imagem.
+    const botaoEmitir = page.getByTestId("nfe-emitir");
+    const habilitado = await botaoEmitir.isEnabled().catch(() => false);
+    if (habilitado) {
+      await botaoEmitir.click();
+    } else {
+      console.log("[achado] nfe-emitir DESABILITADO com cliente incompleto — sem estado de erro");
+    }
+    const erro = page.getByTestId("nfe-erro");
+    const apareceu = await erro
+      .waitFor({ state: "visible", timeout: 45_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!apareceu) {
+      console.log("[achado] nenhum nfe-erro apareceu; capturando o estado real da tela");
+    }
+    await capturar(page, apareceu ? "erro-emissao" : "sem-erro-inline", viewport.px, viewport.altura);
   }
 });
