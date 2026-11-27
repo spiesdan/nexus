@@ -205,10 +205,10 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     await expect(page.getByTestId("nfe-emitir")).toBeEnabled({ timeout: 60_000 });
 
     const notasAntes = await contarNotas(page);
-    let postsDeNota = 0;
+    let postsDaEmissao = 0;
     page.on("request", (req) => {
       if (req.method() === "POST" && new URL(req.url()).pathname === "/api/v1/invoices") {
-        postsDeNota += 1;
+        postsDaEmissao += 1;
       }
     });
     await page.route(
@@ -228,13 +228,13 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
       .then(() => true)
       .catch(() => false);
     console.log(
-      `[medida] falha de envio: POST disparado=${postsDeNota} nfe-erro=${apareceu ? "visível" : "AUSENTE"}`,
+      `[medida] falha de envio: POST disparado=${postsDaEmissao} nfe-erro=${apareceu ? "visível" : "AUSENTE"}`,
     );
     await capturar(page, apareceu ? "falha-envio" : "falha-envio-sem-erro", viewport.px, viewport.altura);
 
     const notasDepois = await contarNotas(page);
     console.log(`[medida] notas antes=${notasAntes} depois=${notasDepois}`);
-    expect(postsDeNota, "o POST da nota precisa ter saído para a falha valer como prova").toBeGreaterThan(0);
+    expect(postsDaEmissao, "o POST da nota precisa ter saído para a falha valer como prova").toBeGreaterThan(0);
     expect(notasDepois, "falha de envio não pode criar nota").toBe(notasAntes);
 
     await page.unroute((url) => url.pathname === "/api/v1/invoices");
