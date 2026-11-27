@@ -13,6 +13,41 @@ export interface CargaEmRota {
   numeroPedido: string;
 }
 
+/**
+ * O FORMULÁRIO DE CARGA TEM TRÊS PASSOS — e a placa só existe no segundo.
+ *
+ * Medido no critical da main em 26/11/2026 (run 45919018146): as specs
+ * pousavam em `/app/expedicao/nova`, viam a fila do passo 1 e tentavam
+ * preencher `#placa` — que o componente só renderiza quando `passo === 2`
+ * (`app/app/expedicao/nova/_client.tsx`). Resultado: 300 s de timeout no
+ * MESMO seletor, em duas specs, sem nenhum defeito de produto.
+ *
+ * Esta função percorre o caminho do operador, pelos botões da própria tela:
+ * passo 1 (pedidos, já marcados por quem chama) → "Continuar: equipe e
+ * veículo" → passo 2 (placa/veículo/motorista) → "Continuar: revisão". O
+ * passo 3 confirma, e quem chama clica em "Confirmar carga" — o rótulo leva a
+ * contagem entre parênteses, de propósito.
+ */
+export async function preencherEquipeNaNovaCarga(
+  page: Page,
+  dados: { placa: string; veiculo?: string; motorista: string },
+): Promise<void> {
+  // 1 → 2. O botão só diz "equipe e veículo" quando há pedido marcado; se a
+  // seleção sumir, este passo falha aqui — que é o lugar certo para falhar.
+  await page.getByRole("button", { name: "Continuar: equipe e veículo" }).click();
+  await expect(page.locator("#placa")).toBeVisible({ timeout: 20_000 });
+  await page.locator("#placa").fill(dados.placa);
+  await page.locator("#veiculo").fill(dados.veiculo ?? "HR");
+  await page.locator("#motorista").fill(dados.motorista);
+
+  // 2 → 3. A revisão é uma tela de verdade (não um toast): esperar o título
+  // prova que o passo avançou antes de confirmar.
+  await page.getByRole("button", { name: "Continuar: revisão" }).click();
+  await expect(page.getByRole("heading", { name: "Revisão da carga" })).toBeVisible({
+    timeout: 20_000,
+  });
+}
+
 export async function criarCargaEmRota(page: Page, prefixo: string): Promise<CargaEmRota> {
   const carimbo = Date.now();
   const sufixo = String(carimbo).slice(-6);
@@ -24,11 +59,9 @@ export async function criarCargaEmRota(page: Page, prefixo: string): Promise<Car
   await page.goto("/app/expedicao");
   await page.getByRole("link", { name: "Nova carga" }).click();
   await page.waitForURL(/\/app\/expedicao\/nova$/);
-  await page.locator("#placa").fill(placa);
-  await page.locator("#veiculo").fill("HR");
-  await page.locator("#motorista").fill(`Motorista ${sufixo}`);
   await page.locator("label").filter({ hasText: numeroPedido }).getByRole("checkbox").check();
-  await page.getByRole("button", { name: /^Criar carga/ }).click();
+  await preencherEquipeNaNovaCarga(page, { placa, motorista: `Motorista ${sufixo}` });
+  await page.getByRole("button", { name: /^Confirmar carga/ }).click();
   await page.waitForURL(/\/app\/expedicao\/[0-9a-f-]+$/, { timeout: 30_000 });
   const id = new URL(page.url()).pathname.split("/").pop();
   if (!id) throw new Error("carga criada sem id na URL");

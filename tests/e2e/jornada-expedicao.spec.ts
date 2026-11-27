@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { preencherEquipeNaNovaCarga } from "./helpers/expedicao";
 import { rotuloDoPedido, semearPedido, semearProduto } from "./helpers/pedidos";
 
 test.setTimeout(300_000);
@@ -58,17 +59,18 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
     timeout: 20_000,
   });
 
-  // Placa no formato do produto (ABC1D23) e o pedido marcado.
-  await page.locator("#placa").fill(placa);
-  await page.locator("#veiculo").fill("HR");
-  await page.locator("#motorista").fill(`Motorista ${carimbo}`);
+  // O PEDIDO MARCADO no passo 1, e então os passos 2 e 3 como o operador faz:
+  // a placa só existe no passo "Equipe" e a criação é confirmada na revisão.
+  // Antes, esta spec preenchia `#placa` direto na fila — campo que o passo 1
+  // não renderiza — e o critical gastava 300 s de timeout (run 45919018146).
   await page.locator("label").filter({ hasText: numero }).getByRole("checkbox").check();
+  await preencherEquipeNaNovaCarga(page, { placa, motorista: `Motorista ${carimbo}` });
   // SEM `exact: true`, e isso não é tolerância — é a forma do rótulo.
-  // O botão mostra o que está marcado: `Criar carga (1)`, `Criar carga (3)`.
-  // Com `exact`, o teste só passaria no instante em que a seleção estivesse
-  // vazia, que é o estado em que o botão não faz nada. Medido no CI em
-  // 09/10/2026: 300 s de timeout esperando um nome que nunca aparece exato.
-  await page.getByRole("button", { name: /^Criar carga/ }).click();
+  // O botão mostra o que está marcado: `Confirmar carga (1)`, `Confirmar carga
+  // (3)`. Com `exact`, o teste só passaria no instante em que a seleção
+  // estivesse vazia, que é o estado em que o botão não faz nada. Medido no CI
+  // em 09/10/2026: 300 s de timeout esperando um nome que nunca aparece exato.
+  await page.getByRole("button", { name: /^Confirmar carga/ }).click();
 
   const toast = page.locator("[data-sonner-toast]").filter({ hasText: "Carga criada" }).first();
   await expect(toast).toBeVisible({ timeout: 20_000 });

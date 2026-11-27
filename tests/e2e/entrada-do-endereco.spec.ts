@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
+import { preencherEquipeNaNovaCarga } from "./helpers/expedicao";
 import { rotuloDoPedido, semearContato, semearPedido, semearProduto } from "./helpers/pedidos";
 
 test.setTimeout(300_000);
@@ -71,9 +72,10 @@ test("endereço sem número — aviso, entrada marcada, memória e confirmação
   await expect(page.getByTestId(`carga-pedido-${pedido.numero}`)).toBeVisible({
     timeout: 20_000,
   });
-  await page.locator("#placa").fill("XYZ9K88");
-  await page.locator("#veiculo").fill("HR");
-  await page.locator("#motorista").fill(`Motorista ${carimbo}`);
+  // Os dois pedidos marcados no passo 1; equipe no passo 2; confirmação na
+  // revisão. A placa deixou de existir na fila quando a montagem virou três
+  // passos — preenchê-la aqui era o timeout de 300 s do critical (run
+  // 45919018146), não um defeito do produto.
   await page
     .locator("label")
     .filter({ hasText: rotuloDoPedido(pedido.numero) })
@@ -87,7 +89,11 @@ test("endereço sem número — aviso, entrada marcada, memória e confirmação
     .filter({ hasText: rotuloDoPedido(pedidoIrmao.numero) })
     .getByRole("checkbox")
     .check();
-  await page.getByRole("button", { name: /^Criar carga/ }).click();
+  await preencherEquipeNaNovaCarga(page, {
+    placa: "XYZ9K88",
+    motorista: `Motorista ${carimbo}`,
+  });
+  await page.getByRole("button", { name: /^Confirmar carga/ }).click();
   await page.locator("[data-sonner-toast]").filter({ hasText: "Carga criada" }).first().waitFor({
     state: "visible",
     timeout: 20_000,
