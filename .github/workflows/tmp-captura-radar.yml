@@ -1,0 +1,186 @@
+name: tmp-captura-radar
+
+# TEMPORÁRIO — job de captura visual, pedido pelo BOSS. Não é deploy, não toca
+# produção e não é check de PR: roda só por `workflow_dispatch`, num branch
+# descartável (`tmp/captura-radar-ci`), e morre com ele.
+#
+# O que faz: sobe o MESMO ambiente do job `e2e` (Supabase local + baseline.sql +
+# build de produção com as NEXT_PUBLIC_* embutidas), semeia os seis estados do
+# Radar com `scripts/tmp-semear-radar.mjs`, roda só
+# `tests/e2e/tmp-captura-radar.spec.ts` e publica as 12 imagens como artifact.
+#
+# Por que no CI e não na máquina do dono: três `next build` em worktrees
+# travaram o computador dele hoje (carga média 112). O build é a parte pesada;
+# ela não precisa acontecer na máquina de quem revisa.
+#
+# O setup é cópia deliberada do `.github/workflows/e2e.yml` (mesma CLI do
+# Supabase 2.122.1, mesmo baseline, mesmo restart do Realtime). Duplicar aqui é
+# consciente: é um workflow descartável, e alterar o job `e2e` — check
+# obrigatório — para servir uma captura pontual seria trocar o gate por um
+# atalho.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  captura:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      E2E_PORT: "3001"
+      # CI é um IP só para todos os acessos; o teto de produção (60/5min) é
+      # irreal aqui. O teto por conta não muda — é ele que barra brute force.
+      AUTH_RATE_LIMIT_LOGIN_IP: "1000"
+      # `off`, não vazio: vazio seleciona o Sentry da comunidade (ver e2e.yml).
+      SENTRY_DSN: "off"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Versão FIXA: o v3 recusa `[inbucket]` no config.toml e o `supabase
+      # start` morre antes de qualquer teste (ver e2e.yml).
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.1
+
+      - name: Autenticar no GHCR (cota de pull maior que anônimo)
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Subir Supabase local (sem a cadeia de migrations)
+        run: |
+          mv supabase/migrations /tmp/migrations-off
+          mkdir -p supabase/migrations
+          for tentativa in 1 2 3 4 5; do
+            supabase start && break
+            echo "supabase start falhou (tentativa $tentativa/5) — esperando e tentando de novo"
+            sleep $((tentativa * 30))
+          done
+          supabase status
+
+      - name: Habilitar extensões exigidas pelo baseline
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q <<'SQL'
+          create schema if not exists extensions;
+          create extension if not exists "uuid-ossp" with schema extensions;
+          create extension if not exists pgcrypto with schema extensions;
+          create extension if not exists vector with schema public;
+          create extension if not exists citext with schema public;
+          create extension if not exists pg_trgm with schema public;
+          SQL
+
+      - name: Aplicar o baseline.sql (o mesmo que o install.sh do kit aplica)
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+            -v ON_ERROR_STOP=1 -q -f supabase/baseline.sql
+
+      # O Realtime sobe antes do baseline e não reconhece a publication depois:
+      # assina e não entrega, em silêncio (ver e2e.yml).
+      - name: Reiniciar o Realtime (a publication nasceu no passo anterior)
+        run: |
+          IDS=$(docker ps -q --filter name=supabase_realtime)
+          if [ -z "$IDS" ]; then
+            echo "::error::Nenhum container supabase_realtime — o stack não subiu como esperado."
+            exit 1
+          fi
+          docker restart $IDS
+          for i in $(seq 1 30); do
+            estado=$(docker inspect -f '{{.State.Health.Status}}' $IDS 2>/dev/null || echo desconhecido)
+            [ "$estado" = "healthy" ] && { echo "realtime saudável em ~$((i*2))s"; break; }
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' $IDS
+
+      - name: Exportar credenciais do stack local
+        run: |
+          supabase status -o env > /tmp/sb.env
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(grep '^API_URL=' /tmp/sb.env | cut -d'"' -f2)"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(grep '^ANON_KEY=' /tmp/sb.env | cut -d'"' -f2)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(grep '^SERVICE_ROLE_KEY=' /tmp/sb.env | cut -d'"' -f2)"
+          } >> "$GITHUB_ENV"
+
+      - name: Gerar o .env.e2e (ambiente da suíte)
+        run: pnpm e2e:env
+
+      - name: Publicar o .env.e2e no ambiente do job
+        run: grep -vE '^[[:space:]]*(#|$)' .env.e2e >> "$GITHUB_ENV"
+
+      # `e2e:build`, não `build`: as NEXT_PUBLIC_* são embutidas no bundle.
+      - name: Build de produção (com o ambiente do E2E)
+        run: pnpm e2e:build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Restaurar Chromium do cache
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Instalar o browser
+        run: |
+          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
+            sudo "$(which pnpm)" exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
+
+      - name: Semear credenciais de teste
+        run: |
+          cp .env.e2e .env.local
+          pnpm exec tsx scripts/seed-e2e-credentials.ts
+
+      # Os seis estados do Radar: uma busca por estado, cada uma com categoria
+      # exclusiva. O seed apaga só o que ele marcou (`search_hash`).
+      - name: Semear os seis estados do Radar
+        run: node scripts/tmp-semear-radar.mjs
+
+      # Só a spec da captura. `--workers=1` como no e2e: um banco, um login.
+      - name: Capturar as 12 telas
+        id: captura
+        timeout-minutes: 25
+        run: pnpm exec playwright test tests/e2e/tmp-captura-radar.spec.ts --workers=1
+
+      - name: Falhar se a captura não passou
+        if: always()
+        run: |
+          echo "captura: ${{ steps.captura.outcome }}"
+          [ "${{ steps.captura.outcome }}" = "success" ]
+
+      # `always()`: imagem é evidência. Se a captura morrer no meio, as que
+      # saíram continuam servindo para o QA ver até onde foi.
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: radar-estados-capturas
+          path: evidence/radar-estados/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: radar-estados-diagnostico
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+      - name: Diagnóstico do ambiente (sem secrets)
+        if: failure()
+        run: |
+          supabase status -o env | sed -E 's/=(.*)/=<oculto>/' || true
+          docker ps -a
+          df -h
+          free -h
