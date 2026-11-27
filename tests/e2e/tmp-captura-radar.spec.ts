@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
 
@@ -11,23 +11,28 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
  *
  * ── O que a imagem tem de ser ───────────────────────────────────────────────
  *
- * A PÁGINA na viewport, com o cartão à vista — não o recorte do cartão. O
- * parecer do Design UX (27/11) recusou os recortes como aceite: 1104×251 não
- * prova hierarquia (título, aba Pesquisas), largura de coluna, ausência de
- * corte nem a rolagem horizontal em 390. O recorte continua existindo, mas
- * como ANEXO DE DETALHE, em `cartoes/`.
+ * A PÁGINA na viewport, com o cartão INTEIRO acima do dock — não o recorte do
+ * cartão, e não um cartão meio encoberto. O parecer do Design UX (27/11)
+ * recusou recortes como aceite; o QA (27/11) recusou três imagens em 390
+ * porque o rodapé do cartão ("Cancelar", "Ver empresas", "Continuar") ficava
+ * ATRÁS do dock inferior — rolagem que para "no cartão" e não "no cartão
+ * visível".
  *
- * Por isso `page.screenshot()` (viewport inteira) e não `locator.screenshot()`.
- * O teste CONFERE as dimensões do PNG depois de cada captura: é a diferença
- * entre "capturei a página" e "achei que capturei" — um `clip` ou um
- * deviceScaleFactor 2 passariam despercebidos no nome do arquivo.
+ * Duas capturas por estado seriam prova contraditória, então há uma só: página
+ * inteira da viewport, com o cartão enquadrado. O recorte do cartão continua
+ * existindo como ANEXO, em `cartoes/`.
  *
- * 12 imagens de estado + 2 da lista inteira (uma por largura, sem rolar) +
- * os recortes em `cartoes/`.
+ * A LISTA é documentação do todo: só o `fullPage` mostra os seis cartões; uma
+ * viewport com 2 ou 3 cartões não é "a lista".
+ *
+ * O teste CONFERE o que produziu (dimensões do PNG lidas do IHDR, cartão dentro
+ * do limite do dock, página no topo antes da lista) — nome de arquivo certo com
+ * conteúdo errado é exatamente o que passou despercebido duas vezes.
  */
 test.setTimeout(600_000);
 
 const RAIZ = "evidence/radar-estados";
+const DOCK = 'nav[aria-label="Navegação rápida"]';
 
 const ESTADOS = [
   { nome: "carregando", texto: "marcenaria" },
@@ -48,6 +53,64 @@ function dimensoes(png: Buffer): { largura: number; altura: number } {
   return { largura: png.readUInt32BE(16), altura: png.readUInt32BE(20) };
 }
 
+/** O dock inferior só existe abaixo de `md`; no desktop o limite é a tela. */
+async function limiteInferior(page: Page): Promise<number> {
+  return page.evaluate((seletor) => {
+    const dock = document.querySelector(seletor);
+    if (!dock) return window.innerHeight;
+    const r = dock.getBoundingClientRect();
+    return r.height > 0 ? r.top : window.innerHeight;
+  }, DOCK);
+}
+
+/**
+ * Rola até o cartão ficar INTEIRO entre o topo e o dock.
+ *
+ * `scrollIntoView({block:"center"})` põe o cartão no meio da JANELA, e o dock
+ * cobre o rodapé dela — é por isso que três imagens saíram com botão atrás da
+ * barra. Aqui: centraliza, mede contra o limite real e ajusta o container que
+ * de fato rola (o app shell rola um `div`, não a janela).
+ */
+async function enquadrar(page: Page, cartao: Locator): Promise<void> {
+  await cartao.evaluate((el) => el.scrollIntoView({ block: "center", inline: "nearest" }));
+  await page.waitForTimeout(150);
+
+  for (let tentativa = 0; tentativa < 12; tentativa++) {
+    const medida = await cartao.evaluate((el, seletor) => {
+      const r = el.getBoundingClientRect();
+      const dock = document.querySelector(seletor);
+      const topoDock = dock ? dock.getBoundingClientRect().top : window.innerHeight;
+      const limite = topoDock > 0 ? topoDock : window.innerHeight;
+      return { topo: Math.round(r.top), base: Math.round(r.bottom), limite: Math.round(limite) };
+    }, DOCK);
+
+    const margem = 12;
+    if (medida.topo >= 0 && medida.base <= medida.limite - margem) return;
+
+    // Positivo = precisa descer (cartão passa do dock); negativo = subir.
+    const delta =
+      medida.base > medida.limite - margem
+        ? Math.min(medida.base - (medida.limite - margem), 260)
+        : -Math.min(margem - medida.topo, 260);
+
+    await cartao.evaluate((el, d) => {
+      let no: HTMLElement | null = el.parentElement;
+      while (no) {
+        const estilo = getComputedStyle(no);
+        if (/(auto|scroll)/.test(estilo.overflowY) && no.scrollHeight > no.clientHeight + 4) {
+          no.scrollTop += d;
+          return;
+        }
+        no = no.parentElement;
+      }
+      window.scrollBy(0, d);
+    }, delta);
+    await page.waitForTimeout(150);
+  }
+
+  throw new Error("não consegui enquadrar o cartão inteiro acima do dock");
+}
+
 test("captura dos seis estados visuais do Radar", async ({ page }) => {
   fs.mkdirSync(path.join(RAIZ, "cartoes"), { recursive: true });
 
@@ -56,60 +119,52 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
     waitUntil: "domcontentloaded",
     timeout: 240_000,
   });
-  await expect(page.getByRole("heading", { name: "Buscas no mapa" })).toBeVisible({
-    timeout: 180_000,
-  });
+
+  const titulo = page.getByRole("heading", { name: "Buscas no mapa" });
+  await expect(titulo).toBeVisible({ timeout: 180_000 });
   await expect(page.getByText("restaurante · padaria")).toBeVisible({ timeout: 60_000 });
 
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize({ width: viewport.px, height: viewport.altura });
 
-    // ── Voltar ao TOPO, e não só "pedir" o topo ───────────────────────────
-    //
-    // `window.scrollTo(0,0)` sozinho NÃO bastou: em 390 a imagem começou no
-    // meio do cartão "padaria em execução", sem título nem aba. O app shell
-    // rola um container interno, não a janela — então a rolagem vinha da
-    // passada anterior (a de 1440) e o `scrollTo` do window era no-op.
-    //
-    // Aqui: zera o scroll de TODOS os elementos, espera a condição valer de
-    // fato (`scrollY` e todo `scrollTop` em 0) e SÓ ENTÃO captura. E confere
-    // pelo DOM que o topo está enquadrado: o `h2` tem de estar na faixa de
-    // cima da tela, senão a imagem tem o nome certo e o conteúdo errado.
-    await page.evaluate(() => {
-      window.scrollTo(0, 0);
-      for (const el of Array.from(document.querySelectorAll("*"))) {
-        if (el instanceof HTMLElement && el.scrollTop > 0) el.scrollTop = 0;
-      }
-    });
-    await page.waitForFunction(() => {
-      if (window.scrollY !== 0) return false;
-      return Array.from(document.querySelectorAll("*")).every(
-        (el) => !(el instanceof HTMLElement) || el.scrollTop === 0,
-      );
-    });
+    // O dock aparece por CSS (`md:hidden`); esperar ele montar é o que evita
+    // medir o limite contra uma barra que ainda não existe.
+    const dock = page.locator(DOCK);
+    if ((await dock.count()) > 0) {
+      await dock.first().waitFor({ state: "visible", timeout: 30_000 });
+      await page.waitForTimeout(300);
+    }
 
-    const titulo = page.getByRole("heading", { name: "Buscas no mapa" });
-    await expect(titulo).toBeVisible({ timeout: 30_000 });
+    // ── A LISTA: página inteira ───────────────────────────────────────────
+    // `fullPage` porque a viewport mostra 2-3 dos 6 cartões; emendar rolagem
+    // seria produzir a imagem que o QA reprovou. O topo é conferido no DOM.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(titulo).toBeVisible();
     const caixaTitulo = await titulo.boundingBox();
-    const yTitulo = caixaTitulo ? Math.round(caixaTitulo.y) : -1;
-    console.log(`[medida] topo em ${viewport.px}: y do título = ${yTitulo}px`);
-    expect(yTitulo, `o título precisa estar na faixa de cima em ${viewport.px}px`).toBeLessThan(320);
+    console.log(
+      `[medida] topo em ${viewport.px}: título em y=${Math.round(caixaTitulo?.y ?? -1)}px`,
+    );
+    expect(caixaTitulo?.y ?? -1).toBeGreaterThanOrEqual(0);
 
-    const lista = await page.screenshot({ path: `${RAIZ}/lista-${viewport.px}.png` });
-    expect(dimensoes(lista), `lista em ${viewport.px}px deve ser a viewport inteira`).toEqual({
-      largura: viewport.px,
-      altura: viewport.altura,
-    });
+    const lista = await page.screenshot({ path: `${RAIZ}/lista-${viewport.px}.png`, fullPage: true });
+    const dimLista = dimensoes(lista);
+    expect(dimLista.largura, `lista em ${viewport.px}px mantém a largura da viewport`).toBe(
+      viewport.px,
+    );
+    // A página inteira é mais alta que a viewport — é o que prova os 6 cartões.
+    expect(
+      dimLista.altura,
+      `lista em ${viewport.px}px precisa passar da dobra (altura ${viewport.altura})`,
+    ).toBeGreaterThan(viewport.altura);
+    console.log(`[medida] lista em ${viewport.px}: ${dimLista.largura}x${dimLista.altura}`);
 
+    // ── OS SEIS ESTADOS: página na viewport, cartão inteiro acima do dock ──
     for (const estado of ESTADOS) {
       const cartao = page.locator("li").filter({ hasText: estado.texto }).first();
       await expect(cartao, `cartão do estado ${estado.nome}`).toBeVisible({ timeout: 60_000 });
-      await cartao.scrollIntoViewIfNeeded();
-      await page.waitForTimeout(200);
+      await enquadrar(page, cartao);
 
-      const pagina = await page.screenshot({
-        path: `${RAIZ}/${estado.nome}-${viewport.px}.png`,
-      });
+      const pagina = await page.screenshot({ path: `${RAIZ}/${estado.nome}-${viewport.px}.png` });
       expect(
         dimensoes(pagina),
         `${estado.nome} em ${viewport.px}px deve ser a página na viewport`,
@@ -120,7 +175,6 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
     }
 
     if (viewport.px === 390) {
-      // Overflow horizontal medido, não estimado (exigência do checklist).
       const overflow = await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
