@@ -85,7 +85,7 @@ function reposDoKit(): string[] {
   // lista pelo motivo do resto: imagem nossa precisa ser construída e pinada
   // pelo CI, senão o `update.sh` não a traz e o serviço fica numa versão que
   // ninguém atualiza.
-  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL", "IMG_MERCOS", "IMG_OCR", "IMG_ROTA"].map((chave) => {
+  return ["IMG_APP", "IMG_WORKER", "IMG_SCHEDULER", "IMG_FISCAL", "IMG_MERCOS", "IMG_OCR", "IMG_ROTA", "IMG_MAPS_SCRAPER"].map((chave) => {
     const m = COMUM.match(new RegExp(`^${chave}="\\$\\{IMG_NS\\}/([^"]+)"$`, "m"));
     if (!m?.[1]) {
       throw new Error(
@@ -156,6 +156,7 @@ describe("o sidecar fiscal, o importador do Mercos, o OCR e o solver de rotas ta
     ["nexus-mercos", "MERCOS_IMAGE"],
     ["nexus-ocr", "OCR_IMAGE"],
     ["nexus-rota", "ROTA_IMAGE"],
+    ["nexus-maps-scraper", "MAPS_SCRAPER_IMAGE"],
   ] as const) {
     it(`o default de ${chave} no compose usa o namespace de IMG_NS`, () => {
       const m = COMPOSE.match(new RegExp(`^\\s*image: \\$\\{${chave}:-([^}]+)\\}`, "m"));

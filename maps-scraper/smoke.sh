@@ -18,7 +18,13 @@
 # NÃO se contorna.
 set -euo pipefail
 
-IMG="${1:-ghcr.io/spiesdan/nexus-maps-scraper:local}"
+# O namespace NÃO se repete aqui: a âncora única é `IMG_NS` em
+# hostgator-setup-kit/_common.sh, e `namespace-das-imagens` reprova qualquer
+# arquivo que volte a escrever o literal. Lido do arquivo, com fallback local
+# para rodar de um checkout sem o kit ao lado.
+AQUI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+NS_PADRAO="$(sed -n 's/^IMG_NS="\(.*\)"$/\1/p' "$AQUI/../hostgator-setup-kit/_common.sh" 2>/dev/null || true)"
+IMG="${1:-${NS_PADRAO:-localhost}/nexus-maps-scraper:local}"
 TMP="$(mktemp -d)"
 CID=""
 limpar() {

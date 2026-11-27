@@ -1514,6 +1514,13 @@ esac
   # nosso, e um lado velho com o outro novo é resposta que a tela não entende.
   envq ROTA_IMAGE "${IMG_ROTA}:${TAG_ALVO}"
   envq ROTA_PULL_POLICY "$PULL_POLICY_ALVO"
+  # O sidecar de prospecção nasce DESLIGADO (profile `maps`), mas a imagem já
+  # vai pinada: ligar a flag não pode significar cair em `:stable`.
+  envq MAPS_SCRAPER_IMAGE "${IMG_MAPS_SCRAPER}:${TAG_ALVO}"
+  envq MAPS_SCRAPER_PULL_POLICY "$PULL_POLICY_ALVO"
+  # A flag nasce DESLIGADA. O sidecar existe no compose, mas sem `--profile
+  # maps` ele não sobe, não é puxado e não aparece em `docker compose ps`.
+  envq MAPS_SCRAPER_ENABLED "0"
   envq DOMAIN "$DOMAIN"
   envq ACME_EMAIL "$ACME_EMAIL"
   printf '# Proxy reverso: "caddy" (o kit sobe o dele nas portas 80/443) ou "traefik"\n'
