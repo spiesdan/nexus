@@ -63,11 +63,37 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
 
   for (const viewport of VIEWPORTS) {
     await page.setViewportSize({ width: viewport.px, height: viewport.altura });
-    // A lista inteira é capturada do TOPO: depois de rolar até um cartão, a
-    // página não volta sozinha, e a "lista sem rolar" viraria um recorte do
-    // meio da tela com o mesmo nome.
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(300);
+
+    // ── Voltar ao TOPO, e não só "pedir" o topo ───────────────────────────
+    //
+    // `window.scrollTo(0,0)` sozinho NÃO bastou: em 390 a imagem começou no
+    // meio do cartão "padaria em execução", sem título nem aba. O app shell
+    // rola um container interno, não a janela — então a rolagem vinha da
+    // passada anterior (a de 1440) e o `scrollTo` do window era no-op.
+    //
+    // Aqui: zera o scroll de TODOS os elementos, espera a condição valer de
+    // fato (`scrollY` e todo `scrollTop` em 0) e SÓ ENTÃO captura. E confere
+    // pelo DOM que o topo está enquadrado: o `h2` tem de estar na faixa de
+    // cima da tela, senão a imagem tem o nome certo e o conteúdo errado.
+    await page.evaluate(() => {
+      window.scrollTo(0, 0);
+      for (const el of Array.from(document.querySelectorAll("*"))) {
+        if (el instanceof HTMLElement && el.scrollTop > 0) el.scrollTop = 0;
+      }
+    });
+    await page.waitForFunction(() => {
+      if (window.scrollY !== 0) return false;
+      return Array.from(document.querySelectorAll("*")).every(
+        (el) => !(el instanceof HTMLElement) || el.scrollTop === 0,
+      );
+    });
+
+    const titulo = page.getByRole("heading", { name: "Buscas no mapa" });
+    await expect(titulo).toBeVisible({ timeout: 30_000 });
+    const caixaTitulo = await titulo.boundingBox();
+    const yTitulo = caixaTitulo ? Math.round(caixaTitulo.y) : -1;
+    console.log(`[medida] topo em ${viewport.px}: y do título = ${yTitulo}px`);
+    expect(yTitulo, `o título precisa estar na faixa de cima em ${viewport.px}px`).toBeLessThan(320);
 
     const lista = await page.screenshot({ path: `${RAIZ}/lista-${viewport.px}.png` });
     expect(dimensoes(lista), `lista em ${viewport.px}px deve ser a viewport inteira`).toEqual({
