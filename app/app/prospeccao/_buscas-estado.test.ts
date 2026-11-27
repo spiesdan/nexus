@@ -202,7 +202,13 @@ describe("busca no mapa — leitura dos quatro estados", () => {
       total: 2,
       unidade: "termos",
     });
-    const semCheckpoint = busca({ progresso: {}, total_celulas: 0, celulas_processadas: 0 });
+    const semCheckpoint = busca({
+      // Busca antiga: o jsonb pode vir `{}` (sem checkpoint) — o contrato
+      // prevê isso; o tipo do motor descreve o formato preenchido.
+      progresso: {} as unknown as BuscaDaTela["progresso"],
+      total_celulas: 0,
+      celulas_processadas: 0,
+    });
     expect(rotuloDoProgresso(semCheckpoint)).toEqual({
       concluidos: 0,
       total: 2,
@@ -214,7 +220,8 @@ describe("busca no mapa — leitura dos quatro estados", () => {
   it("busca antiga sem checkpoint cai nas células, não inventa termos", () => {
     const legado = busca({
       provider: "osm_overpass",
-      progresso: {},
+      // JSON antigo sem checkpoint; ver o comentário acima.
+      progresso: {} as unknown as BuscaDaTela["progresso"],
       total_celulas: 40,
       celulas_processadas: 10,
     });

@@ -6,7 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { comoListaBuscas } from "@/app/app/prospeccao/_client";
+import { comoListaBuscas } from "@/app/app/prospeccao/_buscas-estado";
 
 const BUSCA = {
   id: "b1",
