@@ -193,31 +193,50 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     expect(postsDeNota, "cadastro incompleto não pode criar nota").toBe(0);
     await capturar(page, "cliente-incompleto", viewport.px, viewport.altura);
 
-    // 6. FALHA DE ENVIO — cliente completo e itens válidos; o POST de nota é
-    //    interceptado com 500. O produto sinaliza por TOAST (showApiError), não
-    //    por `nfe-erro` inline: a janela é curta e a asserção é no texto.
+    // 6. FALHA DE ENVIO — cliente completo, itens válidos e o POST da NOTA
+    //    interceptado com 500. Dois cuidados que a rodada anterior não teve:
+    //    esperar `nfe-formulario-pronto` (sem isso o botão pode estar
+    //    desabilitado e o clique nunca dispara) e casar a rota EXATA —
+    //    `/api/v1/invoices/validar` é outra chamada, e derrubá-la mediria a
+    //    pré-validação, não a emissão.
     await cliente.fill(sementes.clienteCompleto);
     await page.getByRole("button", { name: new RegExp(sementes.clienteCompleto) }).first().click();
-    await page.waitForTimeout(500);
+    await expect(page.getByTestId("nfe-formulario-pronto")).toBeAttached({ timeout: 60_000 });
+    await expect(page.getByTestId("nfe-emitir")).toBeEnabled({ timeout: 60_000 });
 
     const notasAntes = await contarNotas(page);
-    await page.route("**/api/v1/invoices", (rota) =>
-      rota.fulfill({ status: 500, contentType: "application/json", body: '{"error":"falha simulada"}' }),
+    let postsDeNota = 0;
+    page.on("request", (req) => {
+      if (req.method() === "POST" && new URL(req.url()).pathname === "/api/v1/invoices") {
+        postsDeNota += 1;
+      }
+    });
+    await page.route(
+      (url) => url.pathname === "/api/v1/invoices",
+      (rota) =>
+        rota.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: '{"error":"falha simulada"}',
+        }),
     );
-    await page.getByTestId("nfe-emitir").click();
 
-    const toast = page.getByText(/não foi possível|falha|erro/i).first();
-    const apareceu = await toast
+    await page.getByTestId("nfe-emitir").click();
+    const erro = page.getByTestId("nfe-erro");
+    const apareceu = await erro
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
-    console.log(`[medida] toast de erro na falha de envio: ${apareceu ? "visível" : "AUSENTE"}`);
-    await capturar(page, apareceu ? "falha-envio" : "falha-envio-sem-toast", viewport.px, viewport.altura);
+    console.log(
+      `[medida] falha de envio: POST disparado=${postsDeNota} nfe-erro=${apareceu ? "visível" : "AUSENTE"}`,
+    );
+    await capturar(page, apareceu ? "falha-envio" : "falha-envio-sem-erro", viewport.px, viewport.altura);
 
     const notasDepois = await contarNotas(page);
     console.log(`[medida] notas antes=${notasAntes} depois=${notasDepois}`);
+    expect(postsDeNota, "o POST da nota precisa ter saído para a falha valer como prova").toBeGreaterThan(0);
     expect(notasDepois, "falha de envio não pode criar nota").toBe(notasAntes);
 
-    await page.unroute("**/api/v1/invoices");
+    await page.unroute((url) => url.pathname === "/api/v1/invoices");
   }
 });
