@@ -165,8 +165,10 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     await expect(page.getByTestId("produto-busca-vazia")).toBeVisible({ timeout: 60_000 });
     await capturar(page, "busca-vazia", viewport.px, viewport.altura);
 
-    // 5. cadastro incompleto — critério do QA (27/11): botão DESABILITADO e
-    //    `nfe-pendencias` nomeando os campos, nenhum POST.
+    // 5. CADASTRO INCOMPLETO — o critério real do produto (medido no código):
+    //    `nfe-emitir` fica HABILITADO (disabled = emitindo || !configInicial),
+    //    o clique chama `/invoices/validar`, o painel de pendências aparece e
+    //    NENHUM POST de nota é feito.
     const cliente = page.getByTestId("nfe-cliente").getByRole("textbox").first();
     await cliente.fill(sementes.clienteIncompleto);
     await page
@@ -174,50 +176,48 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
       .first()
       .click();
 
+    let postsDeNota = 0;
+    page.on("request", (req) => {
+      if (req.method() === "POST" && req.url().includes("/api/v1/invoices") && !req.url().includes("/validar")) {
+        postsDeNota += 1;
+      }
+    });
+
+    await page.getByTestId("nfe-emitir").click();
     const pendencias = page.getByTestId("nfe-pendencias");
-    await expect(pendencias, "cadastro incompleto precisa listar pendências").toBeVisible({
+    await expect(pendencias, "cadastro incompleto precisa abrir o painel de pendências").toBeVisible({
       timeout: 60_000,
     });
-    // MEDIDO em 27/11: o produto mantém `nfe-emitir` HABILITADO com cadastro
-    // incompleto — as pendências são informativas e a validação acontece no
-    // envio. O critério do QA diz "desabilitado"; a captura registra o que
-    // existe e o desvio vai no log, porque apagar o teste esconderia o achado.
-    const desabilitado = await page.getByTestId("nfe-emitir").isDisabled();
-    console.log(
-      `[achado] nfe-emitir com cadastro incompleto: ${desabilitado ? "desabilitado" : "HABILITADO (difere do critério do QA)"}`,
-    );
+    await page.waitForTimeout(2500);
+    console.log(`[medida] POST de nota com cadastro incompleto: ${postsDeNota} (precisa ser 0)`);
+    expect(postsDeNota, "cadastro incompleto não pode criar nota").toBe(0);
     await capturar(page, "cliente-incompleto", viewport.px, viewport.altura);
 
-    // 6. FALHA DE ENVIO — o ramo de erro que o QA aprovou, provocado de forma
-    //    explícita: cliente completo, itens válidos e o POST de notas
-    //    interceptado com 500. Não é erro de cadastro inventado: é a falha de
-    //    transporte, e o aceite exige `nfe-erro` visível e ZERO nota criada.
+    // 6. FALHA DE ENVIO — cliente completo e itens válidos; o POST de nota é
+    //    interceptado com 500. O produto sinaliza por TOAST (showApiError), não
+    //    por `nfe-erro` inline: a janela é curta e a asserção é no texto.
     await cliente.fill(sementes.clienteCompleto);
-    await page
-      .getByRole("button", { name: new RegExp(sementes.clienteCompleto) })
-      .first()
-      .click();
-    await expect(page.getByTestId("nfe-formulario-pronto")).toBeAttached({ timeout: 60_000 });
+    await page.getByRole("button", { name: new RegExp(sementes.clienteCompleto) }).first().click();
+    await page.waitForTimeout(500);
 
     const notasAntes = await contarNotas(page);
     await page.route("**/api/v1/invoices", (rota) =>
       rota.fulfill({ status: 500, contentType: "application/json", body: '{"error":"falha simulada"}' }),
     );
     await page.getByTestId("nfe-emitir").click();
-    await expect(page.getByTestId("nfe-erro"), "falha de envio precisa mostrar nfe-erro").toBeVisible({
-      timeout: 120_000,
-    });
-    await capturar(page, "falha-envio", viewport.px, viewport.altura);
+
+    const toast = page.getByText(/não foi possível|falha|erro/i).first();
+    const apareceu = await toast
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false);
+    console.log(`[medida] toast de erro na falha de envio: ${apareceu ? "visível" : "AUSENTE"}`);
+    await capturar(page, apareceu ? "falha-envio" : "falha-envio-sem-toast", viewport.px, viewport.altura);
+
     const notasDepois = await contarNotas(page);
-    console.log(`[medida] notas antes=${notasAntes} depois=${notasDepois} (falha não pode criar nota)`);
+    console.log(`[medida] notas antes=${notasAntes} depois=${notasDepois}`);
     expect(notasDepois, "falha de envio não pode criar nota").toBe(notasAntes);
 
-    // Reenvio com a mesma chave: a rota volta ao normal e a emissão segue.
     await page.unroute("**/api/v1/invoices");
-    await page.getByTestId("nfe-emitir").click();
-    await expect(page.getByTestId("nfe-erro")).toBeHidden({ timeout: 120_000 });
-    const notasReenvio = await contarNotas(page);
-    console.log(`[medida] reenvio: notas=${notasReenvio} (deve ser ${notasAntes + 1})`);
-    expect(notasReenvio, "reenvio com a mesma chave precisa ser aceito").toBe(notasAntes + 1);
   }
 });

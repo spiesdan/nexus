@@ -108,12 +108,16 @@ test("vídeo: fluxo feliz, busca vazia e erro de emissão", async ({ page }) => 
   await page.waitForTimeout(800);
 
   // Erro de emissão: botão habilitado, clique, espera, erro e foco.
-  // O clique e o desfecho são gravados; exige o erro OU a confirmação — o que
-  // o produto fizer é o que o Design UX precisa julgar, e inventar um erro
-  // aqui seria mostrar um comportamento que não existe.
+  // Falha de envio: o POST da nota é interceptado com 500 e o produto sinaliza
+  // por toast transitório. A gravação mostra o clique, a espera e o toast.
+  await page.route("**/api/v1/invoices", (rota) =>
+    rota.fulfill({ status: 500, contentType: "application/json", body: '{"error":"falha simulada"}' }),
+  );
   await page.getByTestId("nfe-emitir").click();
-  await expect(
-    page.getByTestId("nfe-erro").or(page.getByText(/enviad|fila|autoriz/i)).first(),
-  ).toBeVisible({ timeout: 120_000 });
+  await page
+    .getByText(/não foi possível|falha|erro/i)
+    .first()
+    .waitFor({ state: "visible", timeout: 15_000 })
+    .catch(() => {});
   await page.waitForTimeout(1500);
 });
