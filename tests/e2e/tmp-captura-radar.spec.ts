@@ -240,12 +240,17 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
     // dock nem move o cartão para fora do fluxo — só devolve a rolagem que o
     // produto não tem. O defeito vai no relatório para ser corrigido no produto.
     if (viewport.px === 390) {
-      await page.addStyleTag({
-        content: "main{padding-bottom:calc(6rem + 96px) !important}",
+      // `addStyleTag` não pegou (scrollHeight do scroller seguiu 3289): a regra
+      // no <head> perdeu para a cascata do app. Inline `important` no ELEMENTO
+      // que de fato rola é o caminho direto — e o log prova se a altura mudou.
+      const antesDepois = await page.evaluate(() => {
+        const main = document.querySelector("main") as HTMLElement | null;
+        if (!main) return null;
+        const antes = main.scrollHeight;
+        main.style.setProperty("padding-bottom", "calc(6rem + 200px)", "important");
+        return { antes, depois: main.scrollHeight };
       });
-      console.log(
-        "[aviso] 390: main sem padding suficiente para o dock; 96px temporários para a captura",
-      );
+      console.log(`[aviso] 390: padding temporário no main — ${JSON.stringify(antesDepois)}`);
       await page.waitForTimeout(200);
     }
 
