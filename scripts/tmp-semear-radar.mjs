@@ -11,12 +11,16 @@ if (!url || !key) {
 const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" };
 const api = (p) => `${url}/rest/v1/${p}`;
 
-const org = await (await fetch(api("organizations?select=id&limit=1"), { headers })).json();
-if (!Array.isArray(org) || org.length === 0) {
+// A tela filtra por `activeOrg.orgId`, e `limit=1` devolve uma org ARBITRÁRIA:
+// num banco com mais de uma organização as linhas caíam fora da sessão do teste
+// (medido: 18 `li` no DOM e 0 com área). Aqui o seed vai para TODAS — no banco
+// efêmero do CI isso é seguro e torna a medição independente de ordenação.
+const orgs = await (await fetch(api("organizations?select=id"), { headers })).json();
+if (!Array.isArray(orgs) || orgs.length === 0) {
   console.error("nenhuma organização na base local");
   process.exit(1);
 }
-const organization_id = org[0].id;
+console.log(`organizações no banco: ${orgs.length} (${orgs.map((o) => o.id).join(", ")})`);
 
 await fetch(api("prospecting_searches?search_hash=eq.seed-radar-estados"), {
   method: "DELETE",
@@ -189,6 +193,11 @@ const linhas = [
     created_at: iso(0),
   },
 ];
+
+// uma cópia do conjunto por organização
+const linhasPorOrg = orgs.flatMap((o) => linhas.map((l) => ({ ...l, organization_id: o.id })));
+linhas.length = 0;
+linhas.push(...linhasPorOrg);
 
 const chaves = [...new Set(linhas.flatMap((l) => Object.keys(l)))];
 const normalizadas = linhas.map((l) =>
