@@ -236,8 +236,11 @@ export function ProspeccaoClient({
     return `/app/prospeccao?${qs.toString()}`;
   }
 
+  // No mobile, o fim da lista precisa da própria folga: o `pb-24` do shell não
+  // chegava a este container e o último cartão do Radar ficava 41 px atrás do
+  // dock no scroll máximo (medido pelo DevOps em 390). Desktop mantém `sm:p-6`.
   return (
-    <div className="min-h-full space-y-4 p-4 sm:p-6">
+    <div className="min-h-full space-y-4 p-4 pb-24 sm:p-6">
       {/* `headingLevel={2}`: esta tela é SUBTELA de `/app/campanhas`, que já
           desenha o `h1` da página. Sem isso a rota tinha dois títulos de nível 1
           — medido em produção em 16/11/2026 (`h1-em-producao.json`): "Campanha"
