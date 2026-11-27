@@ -10,3 +10,4 @@ inbox-scope.spec.ts
 expedicao-lacunas-qa.spec.ts
 expedicao-acao-do-cabecalho.spec.ts
 expedicao-nova-barra-mobile.spec.ts
+campanhas-pesquisas.spec.ts

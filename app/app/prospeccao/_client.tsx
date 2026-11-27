@@ -116,6 +116,7 @@ function abaInicial(params: URLSearchParams): string {
 
 export function ProspeccaoClient({
   buscasIniciais,
+  erroInicialBuscas,
   categorias,
   podeBuscar,
   podeGerenciar,
@@ -124,6 +125,8 @@ export function ProspeccaoClient({
   places,
 }: {
   buscasIniciais: BuscaResumo[];
+  /** A leitura do servidor falhou: a aba abre no estado de erro, não no vazio. */
+  erroInicialBuscas?: boolean;
   categorias: MacroCategoria[];
   podeBuscar: boolean;
   podeGerenciar: boolean;
@@ -459,6 +462,7 @@ export function ProspeccaoClient({
         <TabsContent value="pesquisas" className="mt-4">
           <BuscasTab
             iniciais={buscasIniciais}
+            erroInicial={erroInicialBuscas}
             podeOperar={podeBuscar}
             podeGerenciar={podeGerenciar}
             places={places}

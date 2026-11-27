@@ -46,6 +46,9 @@ import {
   type CapacidadePlaces,
 } from "./_buscas-estado";
 
+/** O GET da lista usa `.limit(100)`: exatamente 100 significa corte, não total. */
+const LIMITE_DA_LISTA = 100;
+
 const TOM_DO_STATUS: Record<string, "neutral" | "info" | "warning" | "success" | "error"> = {
   queued: "neutral",
   running: "info",
@@ -69,6 +72,7 @@ const TOM_DO_STATUS: Record<string, "neutral" | "info" | "warning" | "success" |
  */
 export function BuscasTab({
   iniciais,
+  erroInicial,
   podeOperar,
   podeGerenciar,
   hrefEmpresas,
@@ -76,6 +80,8 @@ export function BuscasTab({
   places,
 }: {
   iniciais: BuscaDaTela[];
+  /** A leitura do servidor falhou: não abrir dizendo "Nenhuma busca ainda". */
+  erroInicial?: boolean;
   podeOperar: boolean;
   podeGerenciar: boolean;
   hrefEmpresas: (buscaId: string) => string;
@@ -86,7 +92,7 @@ export function BuscasTab({
   const t = useT();
   const [buscas, setBuscas] = React.useState<BuscaDaTela[]>(iniciais);
   const [carregando, setCarregando] = React.useState(iniciais.length === 0);
-  const [erro, setErro] = React.useState(false);
+  const [erro, setErro] = React.useState(Boolean(erroInicial));
   const [ocupada, setOcupada] = React.useState<string | null>(null);
   const [errosDeAcao, setErrosDeAcao] = React.useState<Record<string, string>>({});
 
@@ -191,6 +197,7 @@ export function BuscasTab({
         title={t("Não foi possível carregar as buscas")}
         description={t("A lista não veio. Tente de novo — as buscas em andamento continuam no servidor.")}
         onRetry={() => void carregar()}
+        retryLabel={t("Tentar de novo")}
       />
     );
   }
@@ -198,6 +205,12 @@ export function BuscasTab({
   return (
     <div className="space-y-3">
       <TituloDaLista total={buscas.length} />
+
+      {buscas.length === LIMITE_DA_LISTA && (
+        <p data-testid="buscas-corte" className="text-xs text-muted-foreground">
+          {t("Mostrando as 100 buscas mais recentes.")}
+        </p>
+      )}
 
       {erro && buscas.length > 0 && (
         <div
@@ -223,7 +236,7 @@ export function BuscasTab({
           primary={{ label: t("Encontrar empresas"), onClick: aoIrParaBuscar }}
         />
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3" data-testid="buscas-lista">
           {buscas.map((busca) => (
             <CartaoDaBusca
               key={busca.id}
@@ -255,7 +268,7 @@ function TituloDaLista({ total }: { total: number | null }) {
         </p>
       </div>
       {total !== null && (
-        <Badge variant="neutral">
+        <Badge variant="neutral" data-testid="buscas-total">
           {total} {total === 1 ? t("busca") : t("buscas")}
         </Badge>
       )}
