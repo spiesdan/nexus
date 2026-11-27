@@ -128,10 +128,9 @@ test("captura dos seis estados da NFe avulsa", async ({ page }) => {
   // A tela de emissão abre em modo "pedido"; a venda avulsa é o seletor
   // `nota-avulsa` (o mesmo testid que o PR entrega). Sem este clique o bloco da
   // avulsa nem monta, e `nfe-itens-vazio` não existe no DOM.
-  const seletorAvulsa = page.getByTestId("nota-avulsa");
-  if ((await seletorAvulsa.count()) > 0) {
-    await seletorAvulsa.first().click();
-  }
+  // O `nota-avulsa` do PR é container; quem troca o modo é o BOTÃO. Sem este
+  // clique a tela fica em "NF-e de pedido" e o formulário da avulsa nem monta.
+  await page.getByRole("button", { name: /venda avulsa/i }).first().click();
     await expect(page.getByTestId("nfe-itens-vazio")).toBeVisible({ timeout: 120_000 });
     await capturar(page, "vazia", viewport.px, viewport.altura);
 
