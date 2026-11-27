@@ -8,6 +8,22 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.3.0] — 2026-11-27
+
+### Adicionado
+
+- **Prospecção aceita OSM ou Google na mesma busca, e a lista traz as coordenadas** A criação de uma busca de prospecção passa a aceitar o provider explícito entre
+  os habilitados: OpenStreetMap é sempre opção, Google Places entra quando a
+  instalação permite e há chave (do tenant ou da instalação), e sem o campo vale o
+  provider configurado. A escolha fica registrada na auditoria com a origem
+  (explícita ou configuração), e provider desconhecido ou não habilitado devolve
+  erro nomeado em vez de mensagem genérica. A descoberta pelo sidecar Maps segue
+  fora do seletor até 12/12.
+
+  A listagem das buscas passa a devolver latitude e longitude, então uma busca
+  criada por coordenada pode ser repetida na mesma área sem informar cidade outra
+  vez.
+
 ## [2.2.0] — 2026-11-27
 
 ### Adicionado
@@ -9421,7 +9437,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.2.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/spiesdan/nexus/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/spiesdan/nexus/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/spiesdan/nexus/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/spiesdan/nexus/compare/v2.0.18...v2.1.0
