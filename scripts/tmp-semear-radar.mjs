@@ -195,7 +195,17 @@ const linhas = [
 ];
 
 // uma cópia do conjunto por organização
-const linhasPorOrg = orgs.flatMap((o) => linhas.map((l) => ({ ...l, organization_id: o.id })));
+// `latitude`/`longitude` NÃO podem ser nulos: a área/mapa da tela filtra por
+// `comGeo` (`_empresas.tsx:736-739`) e é isso que produzia 18 `li` sem área e
+// `candidatos=0`. Coordenadas em torno de São Paulo, uma por estado da lista.
+const linhasPorOrg = orgs.flatMap((o) =>
+  linhas.map((l, i) => ({
+    ...l,
+    organization_id: o.id,
+    latitude: l.latitude ?? (-23.5505 - i * 0.01).toFixed(5),
+    longitude: l.longitude ?? (-46.6333 - i * 0.01).toFixed(5),
+  })),
+);
 linhas.length = 0;
 linhas.push(...linhasPorOrg);
 

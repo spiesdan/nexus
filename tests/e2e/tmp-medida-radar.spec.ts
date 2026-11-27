@@ -84,6 +84,7 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
 
   await page.screenshot({ path: `${RAIZ}/radar-390-ultimo-cartao.png` });
 
+  expect(medida.candidatos, "precisa haver 6 cartões medíveis (nunca 0)").toBe(6);
   expect(sobraRolagem, "scrollTop + clientHeight >= scrollHeight - 1").toBeGreaterThanOrEqual(-1);
   expect(gap, "gap entre o último cartão e o dock >= 8 px").toBeGreaterThanOrEqual(8);
   expect(overflow, "sem rolagem horizontal").toBeLessThanOrEqual(0);
