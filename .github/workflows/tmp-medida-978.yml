@@ -1,19 +1,10 @@
 name: tmp-medida-978
 
-# TEMPORÁRIO — captura visual + vídeo da NFe de venda avulsa (PR #973, v2.1.0),
-# pedido pelo BOSS/Design UX. Não é deploy, não é check de PR e vive num branch
-# descartável (`tmp/captura-avulsa`), que morre com o job.
-#
-# Mesmo ambiente do `e2e`: Supabase local + baseline.sql + build de produção
-# com as NEXT_PUBLIC_* embutidas. O código capturado é o merge da 2.1.0
-# (0ae5abed) — o mesmo que está no ar.
-#
-# Nada é emitido de verdade: o emitente fica em homologação e sem certificado,
-# então o "erro de emissão" é a recusa honesta do próprio produto.
+# TEMPORÁRIO — prova em pixel do #978 (folga do dock sob o botão de emitir da
+# avulsa em 390). Roda o MESMO ambiente do e2e (Supabase local + baseline +
+# build do head do PR) e publica os números. Branch descartável.
 
 on:
-  # `push` e não `workflow_dispatch`: a API de dispatch só acha workflow na
-  # branch default, e este arquivo existe só no branch descartável.
   push:
     branches: ["tmp/medida-978"]
   workflow_dispatch: {}
@@ -22,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  captura:
+  medida:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -31,35 +22,27 @@ jobs:
       SENTRY_DSN: "off"
     steps:
       - uses: actions/checkout@v7
-
       - uses: pnpm/action-setup@v6
-
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
-
       - uses: supabase/setup-cli@v3
         with:
           version: 2.122.1
-
-      - name: Autenticar no GHCR (cota de pull maior que anônimo)
+      - name: Autenticar no GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Subir Supabase local (sem a cadeia de migrations)
         run: |
           mv supabase/migrations /tmp/migrations-off
           mkdir -p supabase/migrations
           for tentativa in 1 2 3 4 5; do
             supabase start && break
-            echo "supabase start falhou (tentativa $tentativa/5) — esperando e tentando de novo"
             sleep $((tentativa * 30))
           done
           supabase status
-
-      - name: Habilitar extensões exigidas pelo baseline
+      - name: Extensões do baseline
         run: |
           psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q <<'SQL'
           create schema if not exists extensions;
@@ -69,28 +52,15 @@ jobs:
           create extension if not exists citext with schema public;
           create extension if not exists pg_trgm with schema public;
           SQL
-
-      - name: Aplicar o baseline.sql (o mesmo que o install.sh do kit aplica)
-        run: |
-          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
-            -v ON_ERROR_STOP=1 -q -f supabase/baseline.sql
-
-      - name: Reiniciar o Realtime (a publication nasceu no passo anterior)
+      - name: Baseline
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q -f supabase/baseline.sql
+      - name: Reiniciar o Realtime
         run: |
           IDS=$(docker ps -q --filter name=supabase_realtime)
-          if [ -z "$IDS" ]; then
-            echo "::error::Nenhum container supabase_realtime — o stack não subiu como esperado."
-            exit 1
-          fi
+          [ -n "$IDS" ] || { echo "::error::sem realtime"; exit 1; }
           docker restart $IDS
-          for i in $(seq 1 30); do
-            estado=$(docker inspect -f '{{.State.Health.Status}}' $IDS 2>/dev/null || echo desconhecido)
-            [ "$estado" = "healthy" ] && { echo "realtime saudável em ~$((i*2))s"; break; }
-            sleep 2
-          done
-          docker inspect -f '{{.State.Health.Status}}' $IDS
-
-      - name: Exportar credenciais do stack local
+          sleep 10
+      - name: Credenciais do stack
         run: |
           supabase status -o env > /tmp/sb.env
           {
@@ -98,25 +68,17 @@ jobs:
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(grep '^ANON_KEY=' /tmp/sb.env | cut -d'"' -f2)"
             echo "SUPABASE_SERVICE_ROLE_KEY=$(grep '^SERVICE_ROLE_KEY=' /tmp/sb.env | cut -d'"' -f2)"
           } >> "$GITHUB_ENV"
-
-      - name: Gerar o .env.e2e (ambiente da suíte)
-        run: pnpm e2e:env
-
-      - name: Publicar o .env.e2e no ambiente do job
-        run: grep -vE '^[[:space:]]*(#|$)' .env.e2e >> "$GITHUB_ENV"
-
-      - name: Build de produção (com o ambiente do E2E)
+      - run: pnpm e2e:env
+      - run: grep -vE '^[[:space:]]*(#|$)' .env.e2e >> "$GITHUB_ENV"
+      - name: Build de produção
         run: pnpm e2e:build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
-
-      - name: Restaurar Chromium do cache
+      - uses: actions/cache@v4
         id: cache-chromium
-        uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
       - name: Instalar o browser
         run: |
           if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
@@ -124,48 +86,32 @@ jobs:
           else
             pnpm exec playwright install --with-deps chromium
           fi
-
       - name: Semear credenciais de teste
         run: |
           cp .env.e2e .env.local
           pnpm exec tsx scripts/seed-e2e-credentials.ts
-
-      # O seed da cifra é obrigatório: sem a chave em `private.app_secrets`, o
-      # PUT de fiscal-settings recusa a senha do certificado — e a captura
-      # precisa da configuração do emitente gravada.
       - name: Semear a chave de cifra do fiscal
         run: pnpm exec tsx scripts/seed-e2e-fiscal-cifra.ts
-
-      - name: Capturar os 6 estados (imagens)
-        id: imagens
-        timeout-minutes: 25
+      - name: Medir a folga do botão no 390
+        id: medida
+        timeout-minutes: 20
         run: pnpm exec playwright test tests/e2e/tmp-medida-avulsa-390.spec.ts --workers=1
-
+      - name: Veredito
         if: always()
         run: |
-          echo "medicao: ${{ steps.imagens.outcome }}"
-          [ "${{ steps.imagens.outcome }}" = "success" ]
-
+          echo "medicao: ${{ steps.medida.outcome }}"
+          [ "${{ steps.medida.outcome }}" = "success" ]
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: medida-978
-          path: evidence/medida-978/
-          retention-days: 14
-
-      - uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: medida-978-diagnostico
           path: |
+            evidence/medida-978/
             test-results/**/*.png
             test-results/**/*.md
           retention-days: 14
-
-      - name: Diagnóstico do ambiente (sem secrets)
+      - name: Diagnóstico
         if: failure()
         run: |
-          supabase status -o env | sed -E 's/=(.*)/=<oculto>/' || true
           docker ps -a
           df -h
-          free -h
