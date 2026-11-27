@@ -26,13 +26,22 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
   await loginComoAdmin(page, lerCreds());
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.goto("/app/campanhas?subtela=prospeccao&aba=pesquisas", {
+  await page.goto("/app/prospeccao?aba=empresas", {
     waitUntil: "domcontentloaded",
     timeout: 240_000,
   });
-  await expect(page.getByRole("heading", { name: "Buscas no mapa" })).toBeVisible({
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
     timeout: 180_000,
   });
+
+  // Se não houver cartão, o diagnóstico vem da própria API — não de suposição.
+  const cartoesVisiveis = await page.locator("li").evaluateAll((els) =>
+    els.filter((e) => e.getBoundingClientRect().height > 0).length,
+  );
+  if (cartoesVisiveis === 0) {
+    const resposta = await page.request.get("/api/v1/prospecting/prospects?limite=6");
+    console.log(`[diagnostico] GET prospects status=${resposta.status()} corpo=${(await resposta.text()).slice(0, 600)}`);
+  }
 
   // Rola até o FIM da lista: é lá que o defeito aparecia.
   await page.evaluate(() => {
