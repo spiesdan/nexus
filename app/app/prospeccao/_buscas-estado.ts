@@ -140,14 +140,27 @@ export function termosConcluidosDaBusca(busca: BuscaDaTela): {
  * A API já manda `parcial`/`parcial_motivo` para Maps. Quando a descoberta
  * está degradada, o bloco próprio dela explica o motivo; repetir o mesmo fato
  * como "parcial" só faria barulho.
+ *
+ * Busca que ainda corre NÃO é "parcial": 1 de 2 termos é o progresso normal, e
+ * o selo "Parcial" ali alarmaria sem motivo. Parcial é o desfecho — pausada,
+ * cancelada, terminada ou já pedindo para parar — com cobertura incompleta ou
+ * termo morto. A listagem não traz `parcial`; a cobertura vem de `progresso`,
+ * que é o dado do contrato, não uma dedução.
  */
 export function deveMostrarParcial(busca: BuscaDaTela): boolean {
   if (busca.degradada) return false;
-  if (busca.parcial === true) return true;
-  // Fallback para a listagem antiga, sem os campos derivados: busca terminada
-  // com termo falho é parcial pelo próprio contrato.
+  const ativa = busca.status === "queued" || busca.status === "running";
+  if (ativa && !estaParando(busca)) return false;
+  return parcialDaBusca(busca);
+}
+
+/** Cobertura incompleta ou termo falho — `parcial` do detalhe, senão `progresso`. */
+export function parcialDaBusca(busca: BuscaDaTela): boolean {
+  if (typeof busca.parcial === "boolean") return busca.parcial;
   const termos = termosDaBusca(busca);
-  return Boolean(termos && busca.status === "completed" && termos.termos_falhos.length > 0);
+  if (!termos) return false;
+  const fechados = termos.termos_concluidos.length + termos.termos_falhos.length;
+  return fechados < termos.termos_total || termos.termos_falhos.length > 0;
 }
 
 /** ZERO — terminou sem nenhum negócio; a tela precisa oferecer saída. */

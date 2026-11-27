@@ -8,6 +8,7 @@ import {
   estaAtiva,
   estaParando,
   parouDeFato,
+  parcialDaBusca,
   percentualDaBusca,
   raioAmpliado,
   rotuloDoStatus,
@@ -127,6 +128,13 @@ describe("busca no mapa — leitura dos quatro estados", () => {
     expect(estaAtiva(EM_ANDAMENTO)).toBe(true);
     expect(deveMostrarZero(EM_ANDAMENTO)).toBe(false);
     expect(deveMostrarDegradada(EM_ANDAMENTO)).toBe(false);
+  });
+
+  it("em andamento não vira 'Parcial': 1 de 2 é o progresso normal", () => {
+    // O selo "Parcial" é de desfecho (pausada/terminada/parando), não de busca
+    // que ainda corre — senão todo progresso 50% pareceria problema.
+    expect(deveMostrarParcial(EM_ANDAMENTO)).toBe(false);
+    expect(parcialDaBusca(EM_ANDAMENTO)).toBe(true);
   });
 
   it("parando não aparece como pausada: status segue Procurando e há prazo", () => {
