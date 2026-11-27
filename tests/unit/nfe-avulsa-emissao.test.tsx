@@ -36,8 +36,27 @@ vi.mock("@/app/app/pedidos/novo/_cliente", () => ({
     <button onClick={() => aoEscolher(ID, "Maria da Silva")}>escolher</button>
   ),
 }));
-vi.mock("@/app/app/notas/_components/ProdutoParaItem", () => ({
-  ProdutoParaItem: () => null,
+vi.mock("@/app/app/pedidos/novo/_produtos", () => ({
+  ProductSearch: ({ aoAdicionar }: { aoAdicionar: (p: unknown, q: number) => void }) => (
+    <button
+      type="button"
+      onClick={() =>
+        aoAdicionar(
+          {
+            id: "22222222-2222-4222-8222-222222222222",
+            nome: "Pão",
+            codigo: "PAO-1",
+            unidade: "UN",
+            ncm: "19059090",
+            preco_cents: 1000,
+          },
+          1,
+        )
+      }
+    >
+      adicionar produto
+    </button>
+  ),
 }));
 
 import { EmitirNota } from "@/app/app/notas/_components/EmitirNota";
@@ -99,14 +118,16 @@ describe("emissão da NF-e avulsa", () => {
     fireEvent.click(screen.getByText("escolher"));
     await waitFor(() => expect((screen.getByLabelText("CPF ou CNPJ") as HTMLInputElement).value).toBe("42040906991"));
 
-    fireEvent.change(screen.getByLabelText("Descrição"), { target: { value: "Pão" } });
-    fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "1000" } });
+    fireEvent.click(screen.getByText("adicionar produto"));
+    await screen.findByTestId("nfe-item");
+    fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
     // O que o operador digita no campo visível vence o que veio do cadastro.
     fireEvent.change(screen.getByLabelText("CPF ou CNPJ"), {
       target: { value: "11111111111" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "emitir" }));
+    expect(screen.getByTestId("nfe-emitir")).toBeEnabled();
+    fireEvent.click(screen.getByTestId("nfe-emitir"));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
 
     const [rotaValidar, corpoValidar] = post.mock.calls[0] as [string, { extras: Record<string, unknown> }];
@@ -134,10 +155,12 @@ describe("emissão da NF-e avulsa", () => {
     await waitFor(() =>
       expect((screen.getByLabelText("CPF ou CNPJ") as HTMLInputElement).value).toBe("42040906991"),
     );
-    fireEvent.change(screen.getByLabelText("Descrição"), { target: { value: "Pão" } });
-    fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "1000" } });
+    fireEvent.click(screen.getByText("adicionar produto"));
+    await screen.findByTestId("nfe-item");
+    fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
 
-    fireEvent.click(screen.getByRole("button", { name: "emitir" }));
+    expect(screen.getByTestId("nfe-emitir")).toBeEnabled();
+    fireEvent.click(screen.getByTestId("nfe-emitir"));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     expect(post.mock.calls[0]?.[0]).toBe("/api/v1/invoices/validar");
     expect(await screen.findByText(/Cliente: ajuste logradouro/)).toBeTruthy();

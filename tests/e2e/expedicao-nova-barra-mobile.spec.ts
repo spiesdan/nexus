@@ -20,6 +20,18 @@ import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
  */
 test.use({ viewport: { width: 390, height: 844 } });
 
+/**
+ * Teto de 120 s de propósito: este arquivo loga DUAS vezes, e o segundo login
+ * pode cair no guard de janela do TOTP (`helpers/login-admin.ts`), que espera
+ * até ~30 s pela próxima janela antes de digitar o código. Com o teto padrão
+ * de 30 s o teste morria no fim da espera — com as asserções já verdadeiras —,
+ * e o vermelho se lia como produto. Medido no run 45987189842: 29,7 s de
+ * `waitForTimeout` e `data-dock="ausente"` presente.
+ *
+ * O teto só dá tempo à espera; nenhuma asserção foi afrouxada.
+ */
+test.describe.configure({ timeout: 120_000 });
+
 test("barra fica acima do dock, dentro da viewport curta e sobe com o teclado", async ({
   page,
 }) => {

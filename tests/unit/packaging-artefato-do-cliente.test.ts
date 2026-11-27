@@ -77,10 +77,10 @@ function lerServicos(yaml: string): Map<string, string> {
 const servicos = lerServicos(compose);
 
 /** Só as imagens que NÓS publicamos. Upstream tem regra própria, mais abaixo. */
-const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos", "ocr", "rota"] as const;
+const NOSSOS = ["app", "worker", "scheduler", "fiscal", "mercos", "ocr", "rota", "maps-scraper"] as const;
 
 describe("packaging — o artefato que o cliente instala", () => {
-  it("o parser enxerga os 10 serviços de produção", () => {
+  it("o parser enxerga os 12 serviços de produção", () => {
     // Guarda do próprio instrumento: se o parser parar de enxergar os serviços,
     // todos os testes abaixo passariam vazios — verde por não ter medido nada.
     //
@@ -106,6 +106,7 @@ describe("packaging — o artefato que o cliente instala", () => {
         "app",
         "caddy",
         "fiscal",
+        "maps-scraper",
         "mercos",
         "ocr",
         "redis",

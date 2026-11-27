@@ -60,7 +60,7 @@ function job(yml: string, nome: string): string {
 /** O passo da sonda, isolado: o cabeçalho `- name:` até o próximo passo. */
 function passoDaSonda(yml: string): string {
   const linhas = yml.split("\n");
-  const i = linhas.findIndex((l) => l.includes("- name: As sete imagens são baixáveis"));
+  const i = linhas.findIndex((l) => l.includes("- name: As imagens são baixáveis"));
   if (i === -1) return "";
   const fim = linhas.findIndex((l, n) => n > i && /^ {6}- /.test(l));
   return linhas.slice(i, fim === -1 ? undefined : fim).join("\n");

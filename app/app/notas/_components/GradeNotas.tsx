@@ -754,6 +754,15 @@ export function GradeNotas({
                         {n.order_id
                           ? (pessoas[n.order_id] ?? "—")
                           : (pessoasAvulsas[n.id] ?? "—")}
+                        {!n.order_id && (
+                          <Badge
+                            variant="neutral"
+                            className="ml-1.5 align-middle"
+                            data-testid="nota-avulsa"
+                          >
+                            {t("Avulsa")}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-medium whitespace-nowrap tabular-nums">
                         {comoMoeda(n.total_cents, "BRL")}

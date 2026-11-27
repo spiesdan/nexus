@@ -16,10 +16,20 @@ COMPOSE_TRAEFIK="docker-compose.traefik.yml"
 # Todo `docker compose` do kit passa por aqui: com proxy externo, um comando sem
 # o override subiria o Caddy e ele iria bater de frente com o Traefik.
 dc() {
+  # O sidecar de prospecção vive no profile `maps` do compose. Ele só entra na
+  # conta quando a flag está ligada no `.env` — sem ela, `pull`, `up` e `logs`
+  # continuam valendo só para o parque padrão, e um serviço que ainda não é
+  # produção não pode aparecer num `up -d` de rotina.
+  #
+  # String e não array de propósito: `${array[@]}` vazio estoura sob `set -u`
+  # em bash antigo (o 3.2 do macOS, que é onde o `test:shell` roda), e o kit
+  # precisa funcionar igual no VPS e na máquina de quem testa.
+  local perfil=""
+  [ "${MAPS_SCRAPER_ENABLED:-0}" = "1" ] && perfil="--profile maps"
   if [ "${REVERSE_PROXY:-caddy}" = "traefik" ]; then
-    docker compose -f "$COMPOSE" -f "$COMPOSE_TRAEFIK" "$@"
+    docker compose $perfil -f "$COMPOSE" -f "$COMPOSE_TRAEFIK" "$@"
   else
-    docker compose -f "$COMPOSE" "$@"
+    docker compose $perfil -f "$COMPOSE" "$@"
   fi
 }
 
@@ -686,6 +696,12 @@ IMG_OCR="${IMG_NS}/nexus-ocr"
 # O solver de rotas (F5) também é pino: o app e o solver falam um contrato HTTP
 # versionado, e um `up -d` não pode levar só um dos lados para outra release.
 IMG_ROTA="${IMG_NS}/nexus-rota"
+# O sidecar de prospecção (Google Maps em modo HTTP). Ele NÃO sobe por padrão —
+# vive no profile `maps` do compose e só entra quando o dono liga a flag. Mas a
+# imagem é pino igual às outras: no dia em que o profile for ligado, o `.env`
+# precisa ter o NÚMERO da versão, senão o serviço cairia em `:stable` enquanto o
+# resto do parque está pinado.
+IMG_MAPS_SCRAPER="${IMG_NS}/nexus-maps-scraper"
 
 # A última versão publicada (ex.: "1.2.1"), ou vazio se não deu para saber.
 #
@@ -878,6 +894,13 @@ gravar_imagens() {
   set_env_var "$envfile" OCR_PULL_POLICY       "$politica"
   set_env_var "$envfile" ROTA_IMAGE            "${IMG_ROTA}:${versao}"
   set_env_var "$envfile" ROTA_PULL_POLICY       "$politica"
+  # O sidecar de prospecção é gravado aqui de propósito, mesmo desligado: no dia
+  # em que o profile `maps` for ligado, o pino já está certo. Ele NÃO entra em
+  # `pin_incompleto`: aquele laço acusa serviço no canal móvel entre os que a
+  # instalação roda, e um serviço desligado por profile não é meia-instalação —
+  # acusá-lo faria todo `update.sh` de quem nunca ligou a flag gritar à toa.
+  set_env_var "$envfile" MAPS_SCRAPER_IMAGE    "${IMG_MAPS_SCRAPER}:${versao}"
+  set_env_var "$envfile" MAPS_SCRAPER_PULL_POLICY "$politica"
   set_env_var "$envfile" SCHEDULER_PULL_POLICY "$politica"
 }
 
