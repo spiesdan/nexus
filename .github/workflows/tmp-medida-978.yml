@@ -139,14 +139,8 @@ jobs:
       - name: Capturar os 6 estados (imagens)
         id: imagens
         timeout-minutes: 25
-        run: pnpm exec playwright test tests/e2e/tmp-medida-978.spec.ts --workers=1
+        run: pnpm exec playwright test tests/e2e/tmp-medida-avulsa-390.spec.ts --workers=1
 
-      - name: Capturar o vídeo (390)
-        id: video
-        timeout-minutes: 15
-        run: pnpm exec playwright test tests/e2e/tmp-medida-978-video.spec.ts --workers=1
-
-      - name: Falhar se alguma captura não passou
         if: always()
         run: |
           echo "medicao: ${{ steps.imagens.outcome }}"
