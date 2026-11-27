@@ -311,7 +311,10 @@ export class MapsBrowserProvider implements BusinessDiscoveryProvider {
     }
   }
 
-  private async post(caminho: string, corpo: unknown): Promise<Response> {
+  private async pedirJson(
+    caminho: string,
+    init: { method: string; corpo?: unknown },
+  ): Promise<Record<string, unknown>> {
     this.exigir();
     const url = `${this.baseUrl}${caminho}`;
     let ultimoErro: unknown = null;
@@ -321,12 +324,12 @@ export class MapsBrowserProvider implements BusinessDiscoveryProvider {
       const limite = setTimeout(() => controle.abort(), this.timeoutMs);
       try {
         const res = await this.fetchImpl(url, {
-          method: "POST",
+          method: init.method,
           headers: {
-            "Content-Type": "application/json",
+            ...(init.corpo !== undefined ? { "Content-Type": "application/json" } : {}),
             ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
           },
-          body: JSON.stringify(corpo),
+          ...(init.corpo !== undefined ? { body: JSON.stringify(init.corpo) } : {}),
           signal: controle.signal,
         });
         // 429/5xx esperam e repetem; 4xx de entrada não melhora repetindo.
@@ -338,10 +341,19 @@ export class MapsBrowserProvider implements BusinessDiscoveryProvider {
           const textoErro = await res.text().catch(() => "");
           throw new Error(`maps_browser_${res.status}: ${textoErro.slice(0, 300)}`);
         }
-        return res;
+        const json = (await res.json()) as unknown;
+        if (!json || typeof json !== "object" || Array.isArray(json)) {
+          throw new Error("maps_browser_json_invalido: resposta do job não é objeto.");
+        }
+        return json as Record<string, unknown>;
       } catch (erro) {
         ultimoErro = erro;
-        if (erro instanceof Error && /^maps_browser_\d{3}:/.test(erro.message)) throw erro;
+        if (
+          erro instanceof Error &&
+          /^(maps_browser_\d{3}:|maps_browser_json_invalido)/.test(erro.message)
+        ) {
+          throw erro;
+        }
         if (tentativa < this.tentativas) {
           await this.dormir(500 * 2 ** (tentativa - 1) + Math.random() * 250);
           continue;
@@ -354,27 +366,78 @@ export class MapsBrowserProvider implements BusinessDiscoveryProvider {
     throw new Error(`maps_browser_indisponivel: ${motivo}`);
   }
 
+  /**
+   * O job do sidecar é assíncrono: cria (POST /api/v1/jobs), confere o modo no
+   * detalhe e faz polling até completed. `fast_mode` NÃO é recomendação: o
+   * upstream aceita `FastMode` e ignora em silêncio; sem o campo certo o job
+   * sobe Chromium, que não existe na imagem distroless. Se o detalhe não
+   * confirmar `true`, aborta ANTES de deixar rodar.
+   */
   async search(params: BusinessSearchParams): Promise<BusinessSearchResult> {
-    const corpo = {
-      keyword: params.categoria,
-      city: params.cidade ?? null,
-      state: params.uf ?? null,
-      latitude: params.latitude,
-      longitude: params.longitude,
-      radius_m: params.raioMetros,
-      limit: params.limite,
-      language: "pt-BR",
-      region: "BR",
-      // Contrato do sidecar: todo job roda em fast mode (HTTP, sem navegador).
-      fast_mode: true,
-      ...(params.paginaToken ? { page_token: params.paginaToken } : {}),
-    };
-    const res = await this.post("/v1/search", corpo);
-    const negocios = lerRespostaDoScraper(await res.text());
+    const criado = await this.pedirJson("/api/v1/jobs", {
+      method: "POST",
+      corpo: {
+        // Campos do ScrapeRequest do gosom (v1.21.0): `fast_mode` snake_case.
+        name: `${params.categoria}${params.cidade ? ` — ${params.cidade}` : ""}`,
+        keyword: params.categoria,
+        lang: "pt",
+        max_depth: 2,
+        email: false,
+        geo_coordinates: `${params.latitude},${params.longitude}`,
+        zoom: 15,
+        radius: params.raioMetros / 1000,
+        fast_mode: true,
+        extra_reviews: false,
+        timeout: Math.ceil(this.timeoutMs / 1000),
+      },
+    });
+    const jobId = typeof criado.job_id === "string" ? criado.job_id : null;
+    if (!jobId) throw new Error("maps_browser_json_invalido: criação de job sem job_id.");
+
+    let detalhe = await this.pedirJson(`/api/v1/jobs/${encodeURIComponent(jobId)}`, {
+      method: "GET",
+    });
+    const fastMode = detalhe.fast_mode ?? (detalhe.request as Record<string, unknown> | undefined)?.fast_mode;
+    if (fastMode !== true) {
+      throw new Error(
+        "sidecar_em_modo_navegador: o job não confirmou fast_mode=true; abortado antes de rodar (a imagem distroless não tem Chromium).",
+      );
+    }
+
+    const limite = Date.now() + this.timeoutMs;
+    while (detalhe.status === "pending" || detalhe.status === "running") {
+      if (Date.now() > limite) {
+        throw new Error("maps_browser_timeout: job não concluiu dentro do limite do termo.");
+      }
+      await this.dormir(1000);
+      detalhe = await this.pedirJson(`/api/v1/jobs/${encodeURIComponent(jobId)}`, {
+        method: "GET",
+      });
+      const aindaFast = detalhe.fast_mode ?? (detalhe.request as Record<string, unknown> | undefined)?.fast_mode;
+      if (aindaFast !== true) {
+        throw new Error("sidecar_em_modo_navegador: o job perdeu fast_mode=true durante a execução.");
+      }
+    }
+
+    if (detalhe.status === "failed") {
+      throw new Error(`maps_browser_job_falhou: ${String(detalhe.error ?? "sem motivo")}`);
+    }
+    if (detalhe.status !== "completed") {
+      throw new Error(`maps_browser_job_status: ${String(detalhe.status ?? "desconhecido")}`);
+    }
+    if (!Array.isArray(detalhe.results)) {
+      throw new Error("maps_browser_json_invalido: job concluído sem lista de resultados.");
+    }
+
+    const negocios = detalhe.results.flatMap((linha, i) => {
+      const n = mapearLinhaScraper(linha);
+      if (!n) throw new Error(`maps_browser_json_invalido: resultado ${i + 1} sem nome.`);
+      return [n];
+    });
+
     return {
       negocios: negocios.slice(0, params.limite),
-      // O sidecar pagina internamente; se um dia expuser token, vem por header.
-      proximaPaginaToken: res.headers.get("x-next-page-token"),
+      proximaPaginaToken: null,
       requisicoes: 1,
       detalhes: 0,
     };

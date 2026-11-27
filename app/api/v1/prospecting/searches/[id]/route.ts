@@ -11,6 +11,11 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
+import {
+  criarProgresso,
+  resumo,
+  type ProgressoDaBusca,
+} from "@/lib/prospeccao/checkpoint";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +25,7 @@ const COLUNAS =
   "id, categorias, cidade, estado, pais, latitude, longitude, raio_km, max_empresas, " +
   "provider, status, grid_size_km, grid_overlap_pct, total_celulas, celulas_processadas, " +
   "encontradas, novas, duplicadas, erros, requisicoes, detalhes, custo_estimado_cents, " +
-  "ultimo_erro, created_at, started_at, finished_at";
+  "progresso, motivo_zero, degradada, ultimo_erro, created_at, started_at, finished_at";
 
 export async function GET(_req: NextRequest, { params }: Params): Promise<Response> {
   const requestId = randomUUID();
@@ -37,12 +42,29 @@ export async function GET(_req: NextRequest, { params }: Params): Promise<Respon
     .single();
 
   if (error || !data) return fail("not_found", "Busca não encontrada.", 404, { requestId });
-  const busca = data as unknown as Record<string, unknown> & { total_celulas: number; celulas_processadas: number };
+  const busca = data as unknown as Record<string, unknown> & {
+    total_celulas: number;
+    celulas_processadas: number;
+    provider: string;
+    categorias: string[];
+    progresso: ProgressoDaBusca | null;
+  };
+  const mapa = busca.provider === "maps_browser";
+  const progresso =
+    mapa && busca.progresso && typeof busca.progresso.termos_total === "number"
+      ? busca.progresso
+      : criarProgresso(busca.categorias ?? []);
+  const r = resumo(progresso, busca.categorias ?? []);
   return ok(
     {
       ...busca,
-      progresso_pct:
-        busca.total_celulas > 0 ? Math.round((busca.celulas_processadas / busca.total_celulas) * 100) : 0,
+      progresso_pct: mapa
+        ? r.percentual
+        : busca.total_celulas > 0
+          ? Math.round((busca.celulas_processadas / busca.total_celulas) * 100)
+          : 0,
+      parcial_motivo: mapa ? r.motivo : null,
+      parcial: mapa ? r.parcial : null,
     },
     { requestId },
   );

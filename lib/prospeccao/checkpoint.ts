@@ -31,6 +31,8 @@ export interface ProgressoDaBusca {
   termo_atual: string | null;
   tentativas: number;
   bloqueio: BloqueioDaBusca | null;
+  /** Quantos negócios cada termo trouxe; a soma é `encontradas` (idempotente). */
+  termos_encontradas?: Record<string, number>;
 }
 
 export interface ResumoDaBusca {
@@ -64,7 +66,28 @@ export function criarProgresso(termos: string[]): ProgressoDaBusca {
     termo_atual: lista[0] ?? null,
     tentativas: 0,
     bloqueio: null,
+    termos_encontradas: {},
   };
+}
+
+/** Registra quantos negócios o termo trouxe (sobrescreve em retomada). */
+export function registrarEncontrados(
+  p: ProgressoDaBusca,
+  termo: string,
+  encontrados: number,
+): ProgressoDaBusca {
+  return {
+    ...p,
+    termos_encontradas: {
+      ...(p.termos_encontradas ?? {}),
+      [termo]: Math.max(0, Math.trunc(encontrados)),
+    },
+  };
+}
+
+/** Soma dos encontrados por termo; nunca depende de contador em memória. */
+export function totalEncontrado(p: ProgressoDaBusca): number {
+  return Object.values(p.termos_encontradas ?? {}).reduce((s, n) => s + n, 0);
 }
 
 /**

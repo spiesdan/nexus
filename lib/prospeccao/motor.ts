@@ -14,6 +14,29 @@ import {
   type ProspectExistente,
 } from "@/lib/prospeccao/dedup";
 import {
+  decidirDedupMaps,
+  existenteDeProspect,
+  placeIdDeExternalId,
+} from "@/lib/prospeccao/dedup-maps";
+import {
+  bloquear,
+  concluirTermo,
+  criarProgresso,
+  iniciarTermo,
+  proximoTermo,
+  registrarEncontrados,
+  registrarFalha,
+  resumo,
+  totalEncontrado,
+  type ProgressoDaBusca,
+} from "@/lib/prospeccao/checkpoint";
+import {
+  avaliarTravas,
+  inicioDaHoraUtc,
+  inicioDoDiaUtc,
+  jitterDeTermo,
+} from "@/lib/prospeccao/travas";
+import {
   extrairDominio,
   normalizarNome,
   normalizarTelefone,
@@ -148,19 +171,27 @@ interface LinhaBusca {
   requisicoes: number;
   detalhes: number;
   custo_estimado_cents: number;
+  progresso: ProgressoDaBusca | Record<string, never> | null;
+  motivo_zero: string | null;
+  degradada: boolean;
 }
 
 async function lerSettings(admin: SupabaseClient, orgId: string) {
   const { data } = await admin
     .from("prospecting_settings")
     .select(
-      "limite_diario, requisicoes_por_minuto, provider_ativo, " +
+      "limite_diario, limite_por_busca, limite_buscas_hora, limite_buscas_dia, jitter_ms, " +
+        "requisicoes_por_minuto, provider_ativo, " +
         "orcamento_mensal_cents, preco_busca_cents, preco_detalhe_cents",
     )
     .eq("organization_id", orgId)
     .maybeSingle();
   const linha = data as unknown as {
     limite_diario: number;
+    limite_por_busca: number;
+    limite_buscas_hora: number;
+    limite_buscas_dia: number;
+    jitter_ms: number;
     requisicoes_por_minuto: number;
     provider_ativo: string;
     orcamento_mensal_cents: number | null;
@@ -170,6 +201,10 @@ async function lerSettings(admin: SupabaseClient, orgId: string) {
   return {
     temLinha: Boolean(linha),
     limite_diario: linha?.limite_diario ?? 2000,
+    limite_por_busca: linha?.limite_por_busca ?? 500,
+    limite_buscas_hora: linha?.limite_buscas_hora ?? 20,
+    limite_buscas_dia: linha?.limite_buscas_dia ?? 100,
+    jitter_ms: linha?.jitter_ms ?? 1500,
     requisicoes_por_minuto: linha?.requisicoes_por_minuto ?? 60,
     provider_ativo: linha?.provider_ativo ?? "google_places",
     orcamento_mensal_cents: linha?.orcamento_mensal_cents ?? null,
@@ -231,6 +266,9 @@ export async function processarTick(
     return res;
   };
 
+  if (busca.provider === "maps_browser") {
+    return processarMapas(admin, busca, criar, res);
+  }
   if (busca.provider !== "google_places" && busca.provider !== "osm_overpass") {
     return falhar(`provider "${busca.provider}" sem executor ligado.`);
   }
@@ -462,6 +500,206 @@ export async function processarTick(
   return res;
 }
 
+/**
+ * O CAMINHO MAPS — termo × cidade, não célula.
+ *
+ * O sidecar devolve até ~21 por termo e não pagina por célula; quebrar a cidade
+ * em grade só multiplicaria chamadas e risco de bloqueio. O checkpoint é o
+ * `progresso` jsonb; a conclusão de cada termo grava contadores + progresso no
+ * RPC (uma transação) DEPOIS dos upserts idempotentes por place_id.
+ */
+async function processarMapas(
+  admin: SupabaseClient,
+  busca: LinhaBusca,
+  criar: typeof criarProvider,
+  res: TickResult,
+): Promise<TickResult> {
+  const settings = await lerSettings(admin, busca.organization_id);
+  const ativo = settings.temLinha ? settings.provider_ativo : "maps_browser";
+  if (ativo !== "maps_browser") {
+    await admin
+      .from("prospecting_searches")
+      .update({
+        status: "failed",
+        ultimo_erro: `Provider maps_browser desligado nas configurações (ativo: ${ativo}).`,
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", busca.id);
+    res.status = "failed";
+    return res;
+  }
+
+  const agora = new Date();
+  const { data: recentes } = await admin
+    .from("prospecting_searches")
+    .select("created_at")
+    .eq("organization_id", busca.organization_id)
+    .gte("created_at", inicioDoDiaUtc(agora));
+  const criadas = ((recentes ?? []) as { created_at: string }[]).map((r) => r.created_at);
+  const hoje = criadas.filter((c) => c >= inicioDoDiaUtc(agora)).length;
+  const ultimaHora = criadas.filter((c) => c >= inicioDaHoraUtc(agora)).length;
+  const trava = avaliarTravas(ultimaHora, hoje, {
+    por_hora: settings.limite_buscas_hora,
+    por_dia: settings.limite_buscas_dia,
+    jitter_ms: settings.jitter_ms,
+  });
+
+  const termos = busca.categorias.length > 0 ? busca.categorias : ["empresas"];
+  let progresso: ProgressoDaBusca =
+    busca.progresso &&
+    typeof busca.progresso === "object" &&
+    typeof (busca.progresso as ProgressoDaBusca).termos_total === "number"
+      ? (busca.progresso as ProgressoDaBusca)
+      : criarProgresso(termos);
+
+  if (!trava.ok) {
+    progresso = bloquear(progresso, trava.motivo ?? "travas da organização", agora.toISOString());
+    await admin
+      .from("prospecting_searches")
+      .update({
+        status: "paused",
+        progresso,
+        ultimo_erro: (trava.motivo ?? "travas da organização").slice(0, 500),
+      })
+      .eq("id", busca.id);
+    res.status = "paused";
+    return res;
+  }
+
+  if (busca.latitude === null || busca.longitude === null) {
+    await admin
+      .from("prospecting_searches")
+      .update({
+        status: "failed",
+        ultimo_erro: "Busca sem coordenadas (geocodificação falhou na criação).",
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", busca.id);
+    res.status = "failed";
+    return res;
+  }
+
+  let provider;
+  try {
+    provider = criar("maps_browser");
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    await admin
+      .from("prospecting_searches")
+      .update({
+        status: "failed",
+        ultimo_erro: msg.slice(0, 500),
+        finished_at: new Date().toISOString(),
+      })
+      .eq("id", busca.id);
+    res.status = "failed";
+    return res;
+  }
+
+  if (busca.status === "queued") {
+    await admin
+      .from("prospecting_searches")
+      .update({ status: "running", started_at: new Date().toISOString() })
+      .eq("id", busca.id);
+    res.status = "running";
+  }
+
+  const limite = Math.max(
+    1,
+    Math.min(20, busca.max_empresas, settings.limite_por_busca, 20),
+  );
+  const maxTermos = celulasPorTick();
+  let processados = 0;
+
+  while (processados < maxTermos) {
+    // Kill-switch: a rota PATCH grava paused/cancelled; o tick para ANTES do
+    // próximo termo e deixa o progresso onde está.
+    const { data: estado } = await admin
+      .from("prospecting_searches")
+      .select("status")
+      .eq("id", busca.id)
+      .maybeSingle();
+    const statusAtual = (estado as { status?: string } | null)?.status;
+    if (statusAtual === "paused" || statusAtual === "cancelled" || statusAtual === "failed") {
+      res.status = statusAtual;
+      return res;
+    }
+
+    const termo = proximoTermo(progresso, termos);
+    if (!termo) break;
+    progresso = iniciarTermo(progresso, termo);
+
+    try {
+      const r = await provider.search({
+        categoria: termo,
+        latitude: busca.latitude,
+        longitude: busca.longitude,
+        raioMetros: busca.raio_km * 1000,
+        limite,
+        cidade: busca.cidade,
+        uf: busca.estado,
+      });
+      const ing = await ingerirNegocios(admin, busca, r.negocios, termo, true);
+      progresso = registrarEncontrados(progresso, termo, r.negocios.length);
+      progresso = concluirTermo(progresso, termo);
+      await admin.rpc("fn_concluir_termo_maps", {
+        p_org: busca.organization_id,
+        p_search: busca.id,
+        p_progresso: progresso,
+        p_encontradas: totalEncontrado(progresso),
+        p_motivo_zero: totalEncontrado(progresso) === 0 ? "sem_resultados" : null,
+      });
+      res.novas += ing.novas;
+      res.duplicadas += ing.duplicadas;
+      res.celulas += 1;
+      processados += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      res.erros += 1;
+      progresso = registrarFalha(progresso, termo, msg);
+      const bloqueado = /bloque|captcha|403|429|sem_permissao|em_modo_navegador/i.test(msg);
+      if (bloqueado) {
+        progresso = bloquear(progresso, msg, new Date().toISOString());
+      }
+      await admin
+        .from("prospecting_searches")
+        .update({
+          progresso,
+          ultimo_erro: msg.slice(0, 500),
+          ...(bloqueado ? { status: "paused" } : {}),
+        })
+        .eq("id", busca.id);
+      logger.warn("[prospeccao] termo maps falhou", {
+        search: busca.id,
+        termo,
+        error: msg,
+      });
+      if (bloqueado) {
+        res.status = "paused";
+        return res;
+      }
+      // Falha comum: o mesmo termo volta se ainda tem tentativa; senão o
+      // próximo assume e a busca fecha parcial no fim.
+    }
+
+    const jitter = jitterDeTermo(settings.jitter_ms);
+    if (jitter > 0) await new Promise((r) => setTimeout(r, jitter));
+  }
+
+  const { data: final } = await admin
+    .from("prospecting_searches")
+    .select("status, progresso")
+    .eq("id", busca.id)
+    .maybeSingle();
+  const finalRow = final as { status?: string; progresso?: ProgressoDaBusca } | null;
+  res.status = finalRow?.status ?? "running";
+  if (finalRow?.progresso) {
+    const r = resumo(finalRow.progresso, termos);
+    if (r.completa) res.status = "completed";
+  }
+  return res;
+}
+
 async function ingerirNegocios(
   admin: SupabaseClient,
   busca: Pick<LinhaBusca, "organization_id" | "provider" | "latitude" | "longitude" | "raio_km"> & {
@@ -507,7 +745,7 @@ async function ingerirNegocios(
     const { data } = await admin
       .from("business_prospects")
       .select(
-        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude",
+        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude, cep, cidade, logradouro",
       )
       .eq("organization_id", busca.organization_id)
       .eq("provider", busca.provider)
@@ -518,7 +756,7 @@ async function ingerirNegocios(
     const q = admin
       .from("business_prospects")
       .select(
-        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude",
+        "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude, cep, cidade, logradouro",
       )
       .eq("organization_id", busca.organization_id)
       .limit(2000);
@@ -531,9 +769,105 @@ async function ingerirNegocios(
     }
   }
 
+  // Maps: nome + CEP/endereço pode estar fora dos índices de telefone/domínio.
+  if (busca.provider === "maps_browser") {
+    const nomes = [...new Set(candidatos.map((c) => c.nome_normalizado).filter(Boolean))];
+    if (nomes.length > 0) {
+      const { data } = await admin
+        .from("business_prospects")
+        .select(
+          "id, provider, external_id, nome_normalizado, telefone_normalizado, dominio, endereco, latitude, longitude, cep, cidade, logradouro",
+        )
+        .eq("organization_id", busca.organization_id)
+        .in("nome_normalizado", nomes)
+        .limit(2000);
+      for (const e of (data ?? []) as unknown as ProspectExistente[]) {
+        if (!existentes.some((x) => x.id === e.id)) existentes.push(e);
+      }
+    }
+  }
+
   const vistos = new Map(existentes.map((e) => [e.id, e]));
+  const maps = busca.provider === "maps_browser";
+  const existentesMaps = existentes.map((e) =>
+    existenteDeProspect({
+      id: e.id,
+      external_id: e.external_id,
+      telefone_normalizado: e.telefone_normalizado,
+      // A coluna é `nome_normalizado`; a função normaliza de novo, então é a
+      // mesma comparação e não precisa de outra query.
+      nome: e.nome_normalizado,
+      cep: (e as unknown as { cep?: string | null }).cep ?? null,
+      endereco: e.endereco,
+      cidade: (e as unknown as { cidade?: string | null }).cidade ?? null,
+      logradouro: (e as unknown as { logradouro?: string | null }).logradouro ?? null,
+    }),
+  );
 
   for (const c of candidatos) {
+    if (maps) {
+      const decisaoMaps = decidirDedupMaps(
+        {
+          placeId: c.bruto.placeId ?? placeIdDeExternalId(c.external_id),
+          telefone: c.bruto.telefone,
+          nome: c.bruto.nome,
+          cep: c.bruto.cep ?? null,
+          endereco: c.bruto.endereco,
+          cidade: c.bruto.cidade,
+          logradouro: c.bruto.logradouro ?? null,
+        },
+        existentesMaps,
+      );
+      if (!decisaoMaps.gravar && decisaoMaps.comQuem) {
+        duplicadas++;
+        await admin
+          .from("business_prospects")
+          .update({ last_verified_at: new Date().toISOString() })
+          .eq("id", decisaoMaps.comQuem);
+        if (busca.id !== null) {
+          await vincularResultado(
+            admin,
+            { organization_id: busca.organization_id, id: busca.id },
+            decisaoMaps.comQuem,
+            false,
+          );
+        }
+        continue;
+      }
+      const inserido = await inserirProspect(
+        admin,
+        busca,
+        c,
+        categoriaBusca,
+        categoriaPedida,
+        decisaoMaps.degrau === "provavel" ? decisaoMaps.comQuem : null,
+      );
+      if (inserido) {
+        // "Provável" conta como já existia, mas NÃO bloqueia a gravação.
+        if (decisaoMaps.degrau === "provavel") duplicadas++;
+        else novas++;
+        existentesMaps.push({
+          id: inserido,
+          placeId: c.bruto.placeId ?? placeIdDeExternalId(c.external_id),
+          telefone: c.telefone_normalizado,
+          nome: c.bruto.nome,
+          cep: c.bruto.cep ?? null,
+          endereco: c.bruto.endereco,
+          cidade: c.bruto.cidade,
+          logradouro: c.bruto.logradouro ?? null,
+        });
+        if (busca.id !== null) {
+          await vincularResultado(
+            admin,
+            { organization_id: busca.organization_id, id: busca.id },
+            inserido,
+            decisaoMaps.degrau === "novo",
+          );
+        }
+      }
+      continue;
+    }
+
     const decisao = decidirDedup(c, [...vistos.values()]);
     if (decisao.nivel === "proximidade_sugestao" || decisao.nivel === "novo") {
       const inserido = await inserirProspect(
@@ -692,12 +1026,12 @@ async function inserirProspect(
       dominio: c.dominio,
       email: b.email,
       endereco: b.endereco,
-      logradouro: partes.logradouro,
+      logradouro: partes.logradouro ?? b.logradouro ?? null,
       numero_end: partes.numero,
       bairro: partes.bairro ?? b.bairro,
       cidade: partes.cidade ?? b.cidade,
       estado: partes.estado ?? b.estado,
-      cep: partes.cep,
+      cep: partes.cep ?? b.cep ?? null,
       pais: b.pais ?? "BR",
       latitude: b.latitude,
       longitude: b.longitude,

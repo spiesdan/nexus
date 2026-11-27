@@ -138,38 +138,91 @@ const PARAMS = {
   limite: 20,
 };
 
+function respostaJson(obj: unknown, status = 200): Response {
+  const texto = JSON.stringify(obj);
+  return {
+    status,
+    ok: status >= 200 && status < 300,
+    headers: new Headers(),
+    text: async () => texto,
+    json: async () => JSON.parse(texto) as unknown,
+  } as unknown as Response;
+}
+
 describe("MapsBrowserProvider (HTTP)", () => {
-  it("manda fast_mode=true e devolve o JSONL achatado", async () => {
-    const fetchImpl = vi.fn(async () => resposta(200, JSON.stringify([LINHA]))) as unknown as typeof fetch;
+  it("cria job com fast_mode=true, confere no detalhe e lê results", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "pending" }))
+      .mockResolvedValueOnce(
+        respostaJson({ job_id: "j1", status: "completed", fast_mode: true, results: [LINHA] }),
+      ) as unknown as typeof fetch;
     const p = provider(fetchImpl);
     const r = await p.search(PARAMS);
 
     expect(r.negocios).toHaveLength(1);
     expect(r.requisicoes).toBe(1);
-    const [, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0]!;
-    const enviado = JSON.parse(String((init as RequestInit).body));
+    const chamadas = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls;
+    const [urlPost, initPost] = chamadas[0]!;
+    expect(String(urlPost)).toContain("/api/v1/jobs");
+    const enviado = JSON.parse(String((initPost as RequestInit).body));
     expect(enviado).toMatchObject({
       keyword: "Oficina mecânica",
-      limit: 20,
       fast_mode: true,
-      radius_m: 8000,
+      geo_coordinates: "-26.1772,-50.39",
     });
+    expect(String(chamadas[1]![0])).toContain("/api/v1/jobs/j1");
+  });
+
+  it("aborta se o detalhe não confirmar fast_mode=true (FastMode é ignorado)", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "pending" }))
+      .mockResolvedValueOnce(
+        respostaJson({ job_id: "j1", status: "running", fast_mode: false }),
+      ) as unknown as typeof fetch;
+
+    await expect(provider(fetchImpl).search(PARAMS)).rejects.toThrow(/sidecar_em_modo_navegador/);
+    // POST + 1 GET; não deixa o job rodar nem faz retry.
+    expect((fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+  });
+
+  it("aborta se o detalhe não trouxer fast_mode (campo ausente é falha)", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "running" }))
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "running" })) as unknown as typeof fetch;
+
+    await expect(provider(fetchImpl).search(PARAMS)).rejects.toThrow(/sidecar_em_modo_navegador/);
   });
 
   it("repete em 503 e aceita o sucesso seguinte", async () => {
     const fetchImpl = vi
       .fn()
       .mockResolvedValueOnce(resposta(503, "indisponivel"))
-      .mockResolvedValueOnce(resposta(200, JSON.stringify([LINHA]))) as unknown as typeof fetch;
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "pending" }))
+      .mockResolvedValueOnce(
+        respostaJson({ job_id: "j1", status: "completed", fast_mode: true, results: [LINHA] }),
+      ) as unknown as typeof fetch;
     const r = await provider(fetchImpl).search(PARAMS);
     expect(r.negocios).toHaveLength(1);
-    expect((fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(2);
+    expect((fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(3);
   });
 
   it("400 de entrada não repete", async () => {
     const fetchImpl = vi.fn(async () => resposta(400, "termo invalido")) as unknown as typeof fetch;
     await expect(provider(fetchImpl).search(PARAMS)).rejects.toThrow(/maps_browser_400/);
     expect((fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
+  });
+
+  it("job failed devolve erro nomeado", async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(respostaJson({ job_id: "j1", status: "pending" }))
+      .mockResolvedValueOnce(
+        respostaJson({ job_id: "j1", status: "failed", fast_mode: true, error: "BLOQUEIO_DETECTADO" }),
+      ) as unknown as typeof fetch;
+    await expect(provider(fetchImpl).search(PARAMS)).rejects.toThrow(/maps_browser_job_falhou/);
   });
 
   it("sem URL configurada falha com motivo nomeado", async () => {
