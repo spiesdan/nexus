@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { useDockPresente } from "@/components/shell/DockPresence";
 import { nexusToast } from "@/components/nexus-ui/feedback/nexus-toast";
 import { NexusPageHeader } from "@/components/nexus-ui/layout/NexusPageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +78,34 @@ export function NovaCargaClient({
   // sobrevive a voltar/avançar.
   const [passo, setPasso] = React.useState<1 | 2 | 3>(1);
   const [enviando, setEnviando] = React.useState(false);
+
+  /*
+   * O TECLADO É UMA VIEWPORT MENOR, e o `fixed` não sabe disso.
+   *
+   * Com o teclado aberto no passo 2 (placa/motorista), o iOS encolhe a
+   * viewport VISUAL mantendo a de layout: a barra `fixed` continua ancorada no
+   * rodapé de baixo do teclado, fora do alcance. Aqui a sobra é medida pelo
+   * `visualViewport` e sobe a barra acima do teclado; o dock continua na
+   * página, atrás do teclado, sem `SEM_DOCK` novo.
+   */
+  const dockPresenteNaTela = useDockPresente();
+  const [tecladoPx, setTecladoPx] = React.useState(0);
+  React.useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const medir = () => {
+      const coberto = window.innerHeight - (vv.height + vv.offsetTop);
+      // Trocas de barra do navegador mexem alguns px; teclado cobre centenas.
+      setTecladoPx(coberto > 120 ? Math.round(coberto) : 0);
+    };
+    medir();
+    vv.addEventListener("resize", medir);
+    vv.addEventListener("scroll", medir);
+    return () => {
+      vv.removeEventListener("resize", medir);
+      vv.removeEventListener("scroll", medir);
+    };
+  }, []);
 
   const cidadeDoContato = React.useCallback(
     (id: string | null | undefined) => (id ? (cidadePorContato[id] ?? null) : null),
@@ -678,7 +707,20 @@ export function NovaCargaClient({
       {passo < 3 && (
         <>
           <div aria-hidden className="h-4 md:hidden" />
-          <div className="fixed inset-x-0 bottom-[calc(3.5rem_+_1px_+_env(safe-area-inset-bottom))] z-30 border-t border-border bg-background px-4 py-2.5 md:static md:z-auto md:border-0 md:bg-transparent md:p-0">
+          <div
+            data-testid="barra-avancar"
+            data-dock={dockPresenteNaTela ? "presente" : "ausente"}
+            className={cn(
+              "fixed inset-x-0 z-30 border-t border-border bg-background px-4 py-2.5 md:static md:z-auto md:border-0 md:bg-transparent md:p-0",
+              dockPresenteNaTela
+                ? "bottom-[calc(3.5rem_+_1px_+_env(safe-area-inset-bottom))]"
+                : // Sem dock não há de que compor: a barra desce até o
+                  // rodapé e o `env()` dela cobre o home indicator, senão
+                  // ficava 57 px flutuando sobre o vazio.
+                  "bottom-0 pb-[calc(0.625rem_+_env(safe-area-inset-bottom))]",
+            )}
+            style={tecladoPx > 0 ? { bottom: tecladoPx } : undefined}
+          >
             <Button
               className="min-h-11 w-full md:w-auto"
               onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
