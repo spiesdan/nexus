@@ -55,6 +55,11 @@ curl -s -o /dev/null -w "%{http_code}\n" https://<DOMAIN>/
 # 404      = labels perdidas, refaça o deploy com os dois -f
 ```
 
+Se o deploy já quebrou e a pergunta é "como volto", vá direto ao
+[§5](#5-rollback-por-tag-de-imagem). Para o retrato da instalação (disco, RAM,
+backup, A1, versão, borda), `bash hostgator-setup-kit/saude.sh` — leitura apenas,
+seguro a qualquer hora. Ver [`operacao-vps.md`](operacao-vps.md).
+
 ---
 
 ## 3. Fluxo completo (do código à produção)
@@ -198,3 +203,91 @@ Consequência prática para quem opera: o deploy pode ser repetido sem medo (o
 baseline é idempotente), e ele falha alto e cedo quando a conexão do `.env` não
 é o dono do banco. O gate é `tests/shell/deploy-aplica-schema.test.sh`
 (roda no `pnpm test:shell`).
+
+---
+
+## 5. Rollback por tag de imagem
+
+Voltar de versão é **trocar sete tags no `.env` e recriar os contêineres** — nada
+de `git checkout` na VPS (o código que roda vem da imagem, não do clone) e nada
+de construir de novo.
+
+### 5.1 O que está no ar agora
+
+```bash
+cd /var/www/crm
+grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env
+```
+
+As sete apontam sempre para a **mesma** versão. É essa uniformidade que faz o
+rollback ser uma linha de `sed` em vez de sete edições à mão — o `update.sh` já
+grava as sete juntas, e é o rollback de `.env` que ele faz quando um passo falha
+no meio de uma atualização.
+
+### 5.2 Voltar para uma versão anterior
+
+```bash
+# 1) guarde a atual, para poder voltar do rollback
+cp .env .env.bak-$(date +%Y%m%d-%H%M%S)
+
+# 2) troque SÓ o número da tag nas sete imagens (ex.: volta de 2.0.17 para 2.0.16)
+NOVA=2.0.16
+sed -i -E "s#(ghcr\.io/spiesdan/nexus[^:]*:)[0-9]+\.[0-9]+\.[0-9]+#\1${NOVA}#" .env
+
+# 3) confira antes de recriar
+grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env
+
+# 4) recrie com os MESMOS -f do deploy (§1) — sem eles o domínio cai para 404
+docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml \
+  --env-file .env up -d app worker scheduler fiscal mercos ocr rota
+```
+
+> Numa instalação servida pelo **Caddy do compose** (`REVERSE_PROXY=caddy`, que é o
+> `default`), o passo 4 é só com `-f docker-compose.prod.yml`: o override do Traefik
+> declara a rede `traefik` como externa e o `up` aborta. Confira com
+> `grep '^REVERSE_PROXY=' .env` antes.
+>
+> O caminho mais curto e o preferido é `bash hostgator-setup-kit/update.sh --to vX.Y.Z --force`:
+> ele puxa a tag, faz backup, grava as sete imagens e confere o health — o `--force`
+> é o que autoriza descer de versão (sem ele, o script recusa ir para trás).
+
+### 5.3 Provar que voltou
+
+```bash
+# a) a versão que responde é a que você pediu
+curl -fsS https://<DOMAIN>/api/v1/health
+#    → {"status":"healthy","version":"2.0.16",...}
+
+# b) o domínio ainda roteia (404 = labels perdidas)
+curl -s -o /dev/null -w "%{http_code}\n" https://<DOMAIN>/
+#    → 307
+
+# c) nada unhealthy, nada reiniciando
+bash hostgator-setup-kit/saude.sh
+```
+
+### 5.4 O limite do rollback: banco
+
+**Rollback de imagem não desfaz migration.** O `update.sh` aplica
+`supabase/baseline.sql` (append-only e idempotente) *antes* de subir a versão
+nova, e não existe "down". Na prática:
+
+| o que a versão nova fez | rollback de imagem basta? |
+|---|---|
+| só código (a maioria) | sim |
+| coluna/tabela nova, nada removido | sim — a versão antiga ignora o que não conhece |
+| coluna removida/renomeada, dado reescrito | **não** — `bash hostgator-setup-kit/restore.sh` com o dump que o `update.sh` fez antes |
+
+Por isso o `update.sh` faz backup antes e aborta se o backup falhar. Rodou com
+`--skip-backup`, não há dump *desta* atualização — o restore cai no último backup
+que existir. Em produção isso não é hipótese: o `backup.sh` só roda dentro do
+`update.sh`, então "o último backup" pode ser de dias antes. Ver
+[`operacao-vps.md`](operacao-vps.md).
+
+### 5.5 O que NÃO é rollback
+
+- `docker compose down && up` — derruba o site e sobe a **mesma** versão.
+- `APP_IMAGE=...` no shell — o compose lê o `.env`; a variável vale só para aquele
+  comando e o próximo `up -d` a desfaz.
+- Reverter a `main` no GitHub — não muda a imagem que a VPS já baixou.
+- Editar o `compose` à mão — a versão publicada já traz o que ela precisa.
