@@ -105,4 +105,5 @@ wizard-do-funcionario.spec.ts
 gps-sem-sinal.spec.ts
 fila-offline-retry-conflito.spec.ts
 cabine-mobile-workbench.spec.ts
+expedicao-lacunas-qa.spec.ts
 multi-campanha-retomada.spec.ts

@@ -7,3 +7,4 @@ criador-pedido-acessivel-320.spec.ts
 risk-radar.spec.ts
 jornada-venda.spec.ts
 inbox-scope.spec.ts
+expedicao-lacunas-qa.spec.ts
