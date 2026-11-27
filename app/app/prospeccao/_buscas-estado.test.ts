@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  blocoDeEstado,
   comoListaBuscas,
   deveMostrarDegradada,
   deveMostrarParcial,
   deveMostrarZero,
+  entradaDeRepeticao,
   estaAtiva,
   estaParando,
   parouDeFato,
   parcialDaBusca,
   percentualDaBusca,
+  placesDisponivel,
   raioAmpliado,
+  rotuloDoProgresso,
   rotuloDoStatus,
   termosConcluidosDaBusca,
   type BuscaDaTela,
@@ -142,8 +146,9 @@ describe("busca no mapa — leitura dos quatro estados", () => {
     expect(estaParando(PARANDO)).toBe(true);
     expect(parouDeFato(PARANDO)).toBe(false);
     expect(PARANDO.parada_maxima_s).toBe(125);
-    // O parcial continua visível durante a parada: o resultado não some.
-    expect(deveMostrarParcial(PARANDO)).toBe(true);
+    // Enquanto ainda corre, o bloco é "Parando…", não "Parcial" (design W1).
+    expect(blocoDeEstado(PARANDO)).toBe("parando");
+    expect(deveMostrarParcial(PARANDO)).toBe(false);
   });
 
   it("parado é o fim declarado do pedido de parada", () => {
@@ -155,6 +160,7 @@ describe("busca no mapa — leitura dos quatro estados", () => {
 
   it("parcial: motivo legível e achados preservados (termo falho)", () => {
     expect(deveMostrarParcial(PARCIAL)).toBe(true);
+    expect(blocoDeEstado(PARCIAL)).toBe("parcial");
     expect(PARCIAL.parcial_motivo).toContain("1 de 2");
     expect(PARCIAL.encontradas).toBe(40);
     expect(percentualDaBusca(PARCIAL)).toBe(100);
@@ -163,6 +169,7 @@ describe("busca no mapa — leitura dos quatro estados", () => {
 
   it("zero: motivo_zero com 0 encontrados exige as três saídas", () => {
     expect(deveMostrarZero(ZERO)).toBe(true);
+    expect(blocoDeEstado(ZERO)).toBe("zero");
     expect(ZERO.motivo_zero).toBe("sem_resultados");
     expect(ZERO.encontradas).toBe(0);
     // Com resultado, o mesmo motivo não vira bloco de zero.
@@ -173,9 +180,35 @@ describe("busca no mapa — leitura dos quatro estados", () => {
 
   it("degradada: motivo próprio e sem bloco de parcial duplicado", () => {
     expect(deveMostrarDegradada(DEGRADADA)).toBe(true);
+    expect(blocoDeEstado(DEGRADADA)).toBe("degradada");
     expect(DEGRADADA.degradacao_motivo).toContain("fast_mode");
     expect(deveMostrarParcial(DEGRADADA)).toBe(false);
     expect(deveMostrarZero(DEGRADADA)).toBe(false);
+  });
+
+  it("um bloco só: a ordem parando → degradada → parcial → zero decide", () => {
+    expect(blocoDeEstado({ ...DEGRADADA, estado_parada: "parando", status: "running" })).toBe(
+      "parando",
+    );
+    expect(blocoDeEstado({ ...ZERO, degradada: true, degradacao_motivo: "sidecar fora" })).toBe(
+      "degradada",
+    );
+    expect(blocoDeEstado(EM_ANDAMENTO)).toBe(null);
+  });
+
+  it("progresso por termo: Maps nunca mostra 'células'", () => {
+    expect(rotuloDoProgresso(EM_ANDAMENTO)).toEqual({
+      concluidos: 1,
+      total: 2,
+      unidade: "termos",
+    });
+    const semCheckpoint = busca({ progresso: {}, total_celulas: 0, celulas_processadas: 0 });
+    expect(rotuloDoProgresso(semCheckpoint)).toEqual({
+      concluidos: 0,
+      total: 2,
+      unidade: "termos",
+    });
+    expect(percentualDaBusca(semCheckpoint)).toBe(0);
   });
 
   it("busca antiga sem checkpoint cai nas células, não inventa termos", () => {
@@ -201,5 +234,67 @@ describe("busca no mapa — leitura dos quatro estados", () => {
     expect(comoListaBuscas({ data: [ZERO] })).toEqual([ZERO]);
     expect(comoListaBuscas(null)).toEqual([]);
     expect(comoListaBuscas({ data: "x" })).toEqual([]);
+  });
+});
+
+/**
+ * A repetição usa o que a listagem devolve desde o PR #969: `latitude` e
+ * `longitude` da busca original, para que "2× raio" cubra a mesma área.
+ * Cidade só entra como fallback quando a listagem não trouxe coordenada.
+ */
+describe("repetir busca — corpo enviado ao POST", () => {
+  it("busca por cidade, sem coordenada na listagem: manda cidade/UF", () => {
+    const corpo = entradaDeRepeticao(EM_ANDAMENTO, { provider: "osm_overpass" });
+    expect(corpo).toEqual({
+      categorias: EM_ANDAMENTO.categorias,
+      cidade: "Canoinhas",
+      estado: "SC",
+      raio_km: 30,
+      max_empresas: 20,
+      forcar: true,
+      provider: "osm_overpass",
+    });
+    expect(corpo).not.toHaveProperty("latitude");
+  });
+
+  it("com cidade E coordenada, a coordenada vence — mesma área da busca", () => {
+    const comCoordenada = busca({ latitude: -26.12, longitude: -50.34 });
+    const corpo = entradaDeRepeticao(comCoordenada, {});
+    expect(corpo).toMatchObject({
+      latitude: -26.12,
+      longitude: -50.34,
+      forcar: true,
+    });
+    expect(corpo).not.toHaveProperty("cidade");
+  });
+
+  it("busca por área manda lat/lng e não cidade", () => {
+    const area = busca({
+      cidade: null,
+      estado: null,
+      latitude: -26.12,
+      longitude: -50.34,
+      raio_km: 15,
+      max_empresas: 100,
+    });
+    expect(entradaDeRepeticao(area, { raioKm: 30 })).toEqual({
+      categorias: area.categorias,
+      latitude: -26.12,
+      longitude: -50.34,
+      raio_km: 30,
+      max_empresas: 100,
+      forcar: true,
+    });
+  });
+
+  it("sem cidade e sem coordenada não há corpo — a tela não desenha a ação", () => {
+    expect(entradaDeRepeticao(busca({ cidade: null }), {})).toBeNull();
+  });
+
+  it("Places só aparece habilitado com flag e chave", () => {
+    expect(placesDisponivel(true, true)).toBe(true);
+    expect(placesDisponivel(false, true)).toBe(false);
+    expect(placesDisponivel(true, false)).toBe(false);
+    expect(placesDisponivel(false, false)).toBe(false);
   });
 });

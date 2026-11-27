@@ -19,7 +19,7 @@ import { apiClient } from "@/lib/api/client";
 import { CampanhasTab } from "./_campanhas";
 import { ConfigTab } from "./_config";
 import { BuscasTab } from "./_buscas";
-import type { BuscaDaTela } from "./_buscas-estado";
+import type { BuscaDaTela, CapacidadePlaces } from "./_buscas-estado";
 import { EmpresasTab } from "./_empresas";
 import { MercadoTab } from "./_mercado";
 import type { MacroCategoria } from "@/lib/prospeccao/categorias";
@@ -121,6 +121,7 @@ export function ProspeccaoClient({
   podeGerenciar,
   usuarioId,
   textos,
+  places,
 }: {
   buscasIniciais: BuscaResumo[];
   categorias: MacroCategoria[];
@@ -128,6 +129,8 @@ export function ProspeccaoClient({
   podeGerenciar: boolean;
   usuarioId: string;
   textos: Textos;
+  /** Resolvido no servidor: flag da instalação + chave do Google. */
+  places: CapacidadePlaces;
 }) {
   const t = useT();
   const paramsUrl = useSearchParams();
@@ -455,6 +458,7 @@ export function ProspeccaoClient({
             iniciais={buscasIniciais}
             podeOperar={podeBuscar}
             podeGerenciar={podeGerenciar}
+            places={places}
             hrefEmpresas={hrefEmpresas}
             aoIrParaBuscar={() => trocarAba("buscar")}
           />

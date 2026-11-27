@@ -29,6 +29,8 @@ export interface BuscaDaTela {
   categorias: string[];
   cidade: string | null;
   estado?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   raio_km: number;
   max_empresas?: number;
   provider?: string | null;
@@ -72,6 +74,13 @@ export function comoListaBuscas(valor: unknown): BuscaDaTela[] {
 export const PROVIDER_OSM = "osm_overpass";
 export const PROVIDER_PLACES = "google_places";
 
+/** Capacidade do Places resolvida no servidor (flag + chave) e de quem é a chave. */
+export interface CapacidadePlaces {
+  habilitado: boolean;
+  motivo: string | null;
+  origem: "tenant" | "instalacao" | "nenhuma" | null;
+}
+
 export function rotuloDoStatus(status: string): string {
   return ROTULO_STATUS_BUSCA[status as StatusDaBusca] ?? status;
 }
@@ -104,21 +113,51 @@ export function termosDaBusca(busca: BuscaDaTela): ProgressoDaBusca | null {
  *
  * Maps usa o resumo do motor (mesma conta do detalhe da API: termos fechados
  * sobre o total) — nunca a grade de células, que é de outro provider. Sem
- * checkpoint, cai nas células; sem nada, 0.
+ * checkpoint, 0%; a contagem exibida é "0 de N termos" (N = categorias), não
+ * "0 de 0 células" — que era o que a captura de `carregando` reprovava.
  */
 export function percentualDaBusca(busca: BuscaDaTela): number {
   if (typeof busca.progresso_pct === "number" && Number.isFinite(busca.progresso_pct)) {
     return limitar(busca.progresso_pct);
   }
-  const termos = termosDaBusca(busca);
-  if (busca.provider === "maps_browser" && termos) {
-    return limitar(resumoDoProgresso(termos, busca.categorias).percentual);
+  if (usaTermosDaBusca(busca)) {
+    const termos = termosDaBusca(busca);
+    return termos ? limitar(resumoDoProgresso(termos, busca.categorias).percentual) : 0;
   }
   const total = busca.total_celulas ?? 0;
   if (total > 0) {
     return limitar(Math.round(((busca.celulas_processadas ?? 0) / total) * 100));
   }
   return 0;
+}
+
+/**
+ * A tela do Radar fala em TERMOS para o Maps, sempre. `células` é vocabulário
+ * do caminho antigo (grade) e só aparece em provider que não é Maps.
+ */
+export function usaTermosDaBusca(busca: BuscaDaTela): boolean {
+  return busca.provider === "maps_browser" || termosDaBusca(busca) !== null;
+}
+
+/** "0 de N termos" — N cai nas categorias quando o checkpoint não existe. */
+export function rotuloDoProgresso(busca: BuscaDaTela): {
+  concluidos: number;
+  total: number;
+  unidade: "termos" | "células";
+} {
+  if (usaTermosDaBusca(busca)) {
+    const termos = termosDaBusca(busca);
+    return {
+      concluidos: termos?.termos_concluidos.length ?? 0,
+      total: termos?.termos_total ?? busca.categorias.length,
+      unidade: "termos",
+    };
+  }
+  return {
+    concluidos: busca.celulas_processadas ?? 0,
+    total: busca.total_celulas ?? 0,
+    unidade: "células",
+  };
 }
 
 export function termosConcluidosDaBusca(busca: BuscaDaTela): {
@@ -143,14 +182,16 @@ export function termosConcluidosDaBusca(busca: BuscaDaTela): {
  *
  * Busca que ainda corre NÃO é "parcial": 1 de 2 termos é o progresso normal, e
  * o selo "Parcial" ali alarmaria sem motivo. Parcial é o desfecho — pausada,
- * cancelada, terminada ou já pedindo para parar — com cobertura incompleta ou
- * termo morto. A listagem não traz `parcial`; a cobertura vem de `progresso`,
- * que é o dado do contrato, não uma dedução.
+ * cancelada, terminada — com cobertura incompleta ou termo morto. Enquanto o
+ * pedido de parada não se completa, o bloco é "Parando…": o design não quer os
+ * dois ao mesmo tempo. A listagem não traz `parcial`; a cobertura vem de
+ * `progresso`, que é o dado do contrato, não uma dedução.
  */
 export function deveMostrarParcial(busca: BuscaDaTela): boolean {
   if (busca.degradada) return false;
+  if (estaParando(busca)) return false;
   const ativa = busca.status === "queued" || busca.status === "running";
-  if (ativa && !estaParando(busca)) return false;
+  if (ativa) return false;
   return parcialDaBusca(busca);
 }
 
@@ -173,6 +214,22 @@ export function deveMostrarDegradada(busca: BuscaDaTela): boolean {
   return busca.degradada === true;
 }
 
+export type BlocoDeEstado = "parando" | "degradada" | "parcial" | "zero" | null;
+
+/**
+ * UM bloco explicativo por cartão, na ordem fixada pela spec:
+ * parando → degradada → parcial → zero. Antes eles eram independentes e uma
+ * busca parando com cobertura incompleta mostrava "Parando…" e "Resultado
+ * parcial" ao mesmo tempo (W1 do design).
+ */
+export function blocoDeEstado(busca: BuscaDaTela): BlocoDeEstado {
+  if (estaParando(busca)) return "parando";
+  if (deveMostrarDegradada(busca)) return "degradada";
+  if (deveMostrarParcial(busca)) return "parcial";
+  if (deveMostrarZero(busca)) return "zero";
+  return null;
+}
+
 /**
  * "Ampliar o raio e repetir" — o dobro, com teto do próprio contrato (500 km).
  * Fica na tela da busca porque o botão diz o número que vai usar; não é regra
@@ -181,6 +238,55 @@ export function deveMostrarDegradada(busca: BuscaDaTela): boolean {
 export function raioAmpliado(raioKm: number): number {
   const atual = Number.isFinite(raioKm) && raioKm > 0 ? Math.trunc(raioKm) : 30;
   return Math.min(500, atual * 2);
+}
+
+/**
+ * CORPO DA REPETIÇÃO — a MESMA coordenada que a listagem devolveu (PR #969),
+ * com a cidade só como fallback. Em zero, ampliar o raio a partir da cidade
+ * pode cobrir área diferente da busca original; lat/lng mantém o centro.
+ *
+ * `null` quando não há nem coordenada nem cidade — a tela então não desenha a
+ * ação, em vez de oferecer um botão que a rota recusaria.
+ */
+export function entradaDeRepeticao(
+  busca: BuscaDaTela,
+  opcoes: { raioKm?: number; provider?: string },
+): Record<string, unknown> | null {
+  const cidade = busca.cidade?.trim();
+  const porArea = busca.latitude != null && busca.longitude != null;
+  if (!cidade && !porArea) return null;
+  return {
+    categorias: busca.categorias,
+    ...(porArea
+      ? { latitude: busca.latitude, longitude: busca.longitude }
+      : { cidade, ...(busca.estado ? { estado: busca.estado } : {}) }),
+    raio_km: opcoes.raioKm ?? busca.raio_km,
+    max_empresas: busca.max_empresas ?? 500,
+    // Sem `forcar`, o cache devolveria a mesma busca de zero resultados.
+    forcar: true,
+    ...(opcoes.provider ? { provider: opcoes.provider } : {}),
+  };
+}
+
+/**
+ * PLACES SÓ EXISTE COM FLAG **E** CHAVE — a mesma regra da rota.
+ *
+ * Quando falta uma das duas, o botão aparece desabilitado com o motivo, nunca
+ * some nem fica clicável para falhar depois. Quem resolve as duas é o server
+ * component da página (env da instalação + chave da organização/instalação).
+ */
+export function placesDisponivel(flagLigada: boolean, temChave: boolean): boolean {
+  return flagLigada && temChave;
+}
+
+/** De quem é a chave que paga a busca no Google (contrato: dizer na tela). */
+export type OrigemDaChave = "tenant" | "instalacao" | "nenhuma";
+
+export interface CapacidadeDoPlaces {
+  habilitado: boolean;
+  motivo: string | null;
+  /** `tenant` = organização; `instalacao` = chave da instalação. */
+  origem: OrigemDaChave | null;
 }
 
 function limitar(valor: number): number {
