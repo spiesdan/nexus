@@ -647,14 +647,28 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     expect(res.status).toBe(403);
   });
 
-  it("GET sem linha → configurado: false", async () => {
+  it("GET sem linha → configurado: false e origem da chave da instalação", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: "AIza-instalacao", origem: "instalacao" });
     session("manager", makeDb());
     const res = await rotaSettings.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/settings"));
     expect(res.status).toBe(200);
-    expect((await res.json()).data).toEqual({ configurado: false });
+    expect((await res.json()).data).toEqual({
+      configurado: false,
+      tem_chave: true,
+      chave_origem: "instalacao",
+    });
   });
 
-  it("GET com chave cifrada → a chave NUNCA volta, só tem_chave", async () => {
+  it("GET sem chave nenhuma → chave_origem: nenhuma", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: null, origem: "nenhuma" });
+    session("manager", makeDb());
+    const res = await rotaSettings.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/settings"));
+    const corpo = await res.json();
+    expect(corpo.data).toMatchObject({ configurado: false, tem_chave: false, chave_origem: "nenhuma" });
+  });
+
+  it("GET com chave do tenant → origem tenant, e a chave NUNCA volta", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: "AIza-tenant", origem: "tenant" });
     const db = makeDb({
       prospecting_settings: [{ ...CFG_OSM, google_api_key_encrypted: "CIFRA_TESTE" }],
     });
@@ -663,8 +677,10 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     const corpo = await res.json();
     expect(corpo.data.configurado).toBe(true);
     expect(corpo.data.tem_chave).toBe(true);
+    expect(corpo.data.chave_origem).toBe("tenant");
     expect(corpo.data.google_api_key_encrypted).toBeUndefined();
     expect(JSON.stringify(corpo.data)).not.toContain("CIFRA_TESTE");
+    expect(JSON.stringify(corpo.data)).not.toContain("AIza-tenant");
   });
 
   it("PUT de agent → 403, sem gravação", async () => {

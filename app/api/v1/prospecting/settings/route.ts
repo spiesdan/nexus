@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import { settingsPutSchema } from "@/lib/schemas/prospeccao";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { encryptWebhookSecret } from "@/lib/webhooks/secrets";
 
 export const dynamic = "force-dynamic";
@@ -41,10 +42,31 @@ export async function GET(_req: NextRequest): Promise<Response> {
     });
     return fail("internal_error", "Erro ao ler a configuração.", 500, { requestId });
   }
-  if (!data) return ok({ configurado: false }, { requestId });
+  // A tela precisa saber DE QUEM é a chave, não só se existe: o custo do
+  // Google pode ser do dono da instalação. O resolver devolve a origem
+  // (tenant → instalação → nenhuma) e a chave NUNCA entra na resposta.
+  const chave = await resolverChaveGoogle(createAdminClient(), authz.org.orgId);
+  if (!data) {
+    return ok(
+      {
+        configurado: false,
+        tem_chave: chave.chave !== null,
+        chave_origem: chave.origem,
+      },
+      { requestId },
+    );
+  }
   const linha = data as unknown as Record<string, unknown> & { google_api_key_encrypted: unknown };
   const { google_api_key_encrypted: _, ...resto } = linha;
-  return ok({ configurado: true, tem_chave: Boolean(linha.google_api_key_encrypted), ...resto }, { requestId });
+  return ok(
+    {
+      configurado: true,
+      tem_chave: chave.chave !== null,
+      chave_origem: chave.origem,
+      ...resto,
+    },
+    { requestId },
+  );
 }
 
 export async function PUT(req: NextRequest): Promise<Response> {
