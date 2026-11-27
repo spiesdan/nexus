@@ -81,6 +81,40 @@ async function semear(page: Page): Promise<Sementes> {
   });
   expect(config.status(), "emitente de homologação semeado").toBeLessThan(300);
 
+  // CERTIFICADO + senha decifrável: sem isso o `/validar` devolve `ok:false`,
+  // o clique abre o painel de pendências e o POST da nota NUNCA sai — foi
+  // exatamente o que produziu "500 sem nfe-erro" nas rodadas anteriores.
+  const up = await page.request.post("/api/v1/fiscal-settings/certificado", {
+    multipart: {
+      arquivo: {
+        name: "e2e.pfx",
+        mimeType: "application/x-pkcs12",
+        buffer: Buffer.from([0x30, 0x82, 0x00, 0x05, 0x02, 0x01, 0x00, 0x00, 0x00]),
+      },
+    },
+  });
+  expect(up.status(), "upload do certificado A1 de teste").toBeLessThan(300);
+  const comSenha = await page.request.put("/api/v1/fiscal-settings", {
+    data: {
+      serie: "1",
+      natureza_operacao: "Venda",
+      cfop_padrao: "5102",
+      emitente_documento: "27493187000169",
+      ie: "123456",
+      crt: "1",
+      logradouro: "Rua da Empresa",
+      numero_end: "9",
+      bairro: "Centro",
+      municipio: "Mafra",
+      codigo_municipio: "4209102",
+      uf: "SC",
+      cep: "89300000",
+      ambiente: "homologacao",
+      certificado_senha: "1234",
+    },
+  });
+  expect(comSenha.status(), "senha do certificado gravada (cifra ativa)").toBeLessThan(300);
+
   return { produto, clienteCompleto, clienteIncompleto };
 }
 
