@@ -618,7 +618,10 @@ export function EmitirNota({
     };
     const checagem = extrasFiscaisSchema.safeParse(extrasCandidatos);
     if (!checagem.success) {
-      toast.error(checagem.error.issues[0]?.message ?? t("Dados adicionais inválidos."));
+      // O motivo não pode ficar só no toast: ele some e o operador não tem
+      // onde reler o que faltou. A faixa inline é o anúncio; o botão já está
+      // bloqueado pela prontidão do payload.
+      setErroEmissao(checagem.error.issues[0]?.message ?? t("Dados adicionais inválidos."));
       return;
     }
     if (emitindoRef.current) return;
@@ -748,8 +751,21 @@ export function EmitirNota({
   }
 
   const itensSemNcm = avulsa.itens.filter((i) => i.descricao.trim() !== "" && !i.ncm.trim());
+  /**
+   * PRONTIDÃO PELO PAYLOAD, não pela contagem de linhas. O item só está
+   * emitível com descrição, quantidade > 0 e preço > 0 — os mesmos campos que
+   * `emitirAvulsa` filtra antes do schema. Sem isso, o catálogo entrava com
+   * preço vazio, o botão dizia "pronto", o filtro esvaziava o payload e o
+   * operador só via um toast transitório.
+   */
+  const itemDaAvulsaValido = (i: ItemDaVendaAvulsa): boolean =>
+    i.descricao.trim() !== "" && Math.trunc(Number(i.quantidade)) > 0 && Number(i.preco_cents) > 0;
+  const itensSemPreco = avulsa.itens.filter(
+    (i) => i.descricao.trim() !== "" && !(Number(i.preco_cents) > 0),
+  );
+  const payloadPronto = avulsa.itens.length > 0 && avulsa.itens.every(itemDaAvulsaValido);
   const podeEmitirAvulsa =
-    modo === "avulsa" && avulsa.itens.length > 0 && itensSemNcm.length === 0 && Boolean(configInicial);
+    modo === "avulsa" && payloadPronto && itensSemNcm.length === 0 && Boolean(configInicial);
 
   /**
    * A CHAVE NASCE AQUI, não no clique nem no render: quando o formulário fica
@@ -1434,6 +1450,11 @@ export function EmitirNota({
                         {t("Sem NCM no cadastro — esta nota não emite. Corrija o produto antes.")}
                       </p>
                     )}
+                    {!(Number(item.preco_cents) > 0) && (
+                      <p data-testid="nfe-item-sem-preco" className="text-xs text-error-fg">
+                        {t("Informe o preço de venda — a nota não emite sem ele.")}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label>{t("Qtd.")}</Label>
@@ -1525,12 +1546,7 @@ export function EmitirNota({
             data-testid="nfe-emitir"
             aria-busy={emitindo}
             onClick={() => void emitir()}
-            disabled={
-              emitindo ||
-              !configInicial ||
-              avulsa.itens.length === 0 ||
-              itensSemNcm.length > 0
-            }
+            disabled={emitindo || !podeEmitirAvulsa}
           >
             {emitindo ? t("Enviando…") : textos.emitir}
           </Button>

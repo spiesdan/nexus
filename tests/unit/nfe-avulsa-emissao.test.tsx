@@ -120,7 +120,14 @@ describe("emissão da NF-e avulsa", () => {
 
     fireEvent.click(screen.getByText("adicionar produto"));
     await screen.findByTestId("nfe-item");
+    // Catálogo NÃO preenche preço: a linha avisa e a emissão fica bloqueada.
+    expect(screen.getByTestId("nfe-item-sem-preco")).toBeVisible();
+    expect(screen.getByTestId("nfe-emitir")).toBeDisabled();
+    expect(screen.queryByTestId("nfe-formulario-pronto")).toBeNull();
+    expect(post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
+    expect(screen.queryByTestId("nfe-item-sem-preco")).toBeNull();
+    expect(screen.getByTestId("nfe-formulario-pronto")).toBeVisible();
     // O que o operador digita no campo visível vence o que veio do cadastro.
     fireEvent.change(screen.getByLabelText("CPF ou CNPJ"), {
       target: { value: "11111111111" },
@@ -157,7 +164,14 @@ describe("emissão da NF-e avulsa", () => {
     );
     fireEvent.click(screen.getByText("adicionar produto"));
     await screen.findByTestId("nfe-item");
+    // Catálogo NÃO preenche preço: a linha avisa e a emissão fica bloqueada.
+    expect(screen.getByTestId("nfe-item-sem-preco")).toBeVisible();
+    expect(screen.getByTestId("nfe-emitir")).toBeDisabled();
+    expect(screen.queryByTestId("nfe-formulario-pronto")).toBeNull();
+    expect(post).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("Preço (centavos)"), { target: { value: "10" } });
+    expect(screen.queryByTestId("nfe-item-sem-preco")).toBeNull();
+    expect(screen.getByTestId("nfe-formulario-pronto")).toBeVisible();
 
     expect(screen.getByTestId("nfe-emitir")).toBeEnabled();
     fireEvent.click(screen.getByTestId("nfe-emitir"));
