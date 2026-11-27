@@ -306,7 +306,12 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     console.log(
       `[medida] botão emitir: ${JSON.stringify(caixaBotao)} dock: ${JSON.stringify(caixaDock)} centro=${noCentro}`,
     );
-    const obstruido = typeof noCentro === "string" && /testid=|nav/.test(noCentro) && !noCentro.includes("nfe-emitir");
+    // Obstrução por INTERSEÇÃO com o dock, não pelo elemento no centro: o
+    // centro do botão cai num `svg` do próprio botão, então o teste de centro
+    // dava "livre" e o clique real ficava 20 s esperando hit-test.
+    const obstruido = Boolean(
+      caixaBotao && caixaDock && caixaBotao.y + caixaBotao.height > caixaDock.y,
+    );
     if (obstruido) {
       console.log(`[achado] nfe-emitir OBSTRUÍDO em ${viewport.px}px por ${noCentro} — captura com clique forçado`);
     }
