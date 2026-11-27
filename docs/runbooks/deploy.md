@@ -275,7 +275,7 @@ cp .env .env.bak-$(date +%Y%m%d-%H%M%S)
 
 # 2) troque SÓ o número da tag nas sete imagens (ex.: volta de 2.0.17 para 2.0.16)
 NOVA=2.0.16
-sed -i -E "s#(ghcr\.io/spiesdan/nexus[^:]*:)[0-9]+\.[0-9]+\.[0-9]+#\1${NOVA}#" .env
+sed -i -E "s#^([A-Z_]+_IMAGE=[^:]+:)[0-9]+\.[0-9]+\.[0-9]+$#\1${NOVA}#" .env
 
 # 3) confira antes de recriar
 grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env

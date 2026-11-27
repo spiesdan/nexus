@@ -19,6 +19,12 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 KIT="$REPO_ROOT/hostgator-setup-kit"
 
+# O namespace das imagens vem de `_common.sh`, nunca literal: a catraca de
+# `tests/unit/namespace-das-imagens.test.ts` reprova a repetição, e um fork que
+# publica as próprias imagens ficaria vermelho sem ter quebrado nada.
+NS="$(sed -n 's/^IMG_NS="\(.*\)"$/\1/p' "$KIT/_common.sh" | head -1)"
+[ -n "$NS" ] || { echo "não consegui ler IMG_NS de _common.sh"; exit 1; }
+
 # `saude.sh` é alvo Linux (lê /proc, `date -d`). Num macOS o `date -d` do BSD não
 # existe e o cálculo do A1 não roda — o teste inteiro viraria falso verde. Em vez
 # de fingir, declara o skip; quem valida é o CI (Ubuntu) e o `pnpm test:shell` lá.
@@ -53,11 +59,12 @@ espera_nao() {
 PROJ="$WORK/projeto"
 mkdir -p "$PROJ/backups" "$WORK/bin"
 printf 'services:\n  app:\n    image: x\n' > "$PROJ/docker-compose.prod.yml"
-cat > "$PROJ/.env" <<'ENV'
+{ cat <<'ENV'
 NEXT_PUBLIC_APP_URL="https://exemplo.test"
-APP_IMAGE=ghcr.io/spiesdan/nexus:2.0.18
 REVERSE_PROXY="caddy"
 ENV
+  printf 'APP_IMAGE=%s/nexus:2.0.18\n' "$NS"
+} > "$PROJ/.env"
 : > "$PROJ/backups/db-20260101-000000.sql.gz"
 
 # ── Dublês ──────────────────────────────────────────────────────────────────

@@ -65,6 +65,11 @@ reporta com o comando e a saída; conserta quem tem a mão na VPS.
    0 6 * * * cd /var/www/crm && { BACKUP_RETENTION=30 bash hostgator-setup-kit/backup.sh >> backups/backup.log 2>&1; echo "rc=$? $(date -Is)" >> backups/backup.log; }
    ```
 
+   > **Até a release com `BACKUP_RETENTION` chegar, a retenção efetiva é 14.** O
+   > script que roda na VPS hoje ignora a variável e mantém o número fixo antigo.
+   > Não leia "30" e acredite: confira com `bash -c 'grep -c BACKUP_RETENTION
+   > /var/www/crm/hostgator-setup-kit/backup.sh'` — zero significa que ainda é 14.
+
 2. **Nada avisa se a VPS inteira morrer** além da rotina diária: não há uptime
    externo batendo em `/api/v1/health` de fora. Isso cobre um ponto por dia, não
    minutos.
@@ -79,6 +84,29 @@ reporta com o comando e a saída; conserta quem tem a mão na VPS.
 
 5. **Restart acumulado** (ex.: `supabase_auth_selfhost: 2`) é informativo: o
    contador não zera sozinho e não diz *quando* reiniciou.
+
+## 4b. O backup já foi restaurado uma vez (27/11/2026)
+
+Backup nunca lido não é backup; backup lido mas nunca restaurado também não.
+Em 27/11 o dump do dia foi restaurado num banco descartável (`nexus_restore_check`,
+criado e dropado no mesmo cluster, sem tocar em produção):
+
+| medida | resultado |
+|---|---|
+| tempo de restore | 21 s para 24 MB comprimidos |
+| tabelas `public` | 279 no restaurado = 279 em produção |
+| `mercos_reconciliacoes` | 35.872 = 35.872 |
+| `contacts` | 15.397 = 15.397 |
+| `event_log` | 13.084 = 13.084 |
+| `commercial_orders` | 12.371 = 12.371 |
+| `organizations` | 17 = 17 |
+
+Apareceram **65 erros de privilégio** (`permission denied to change default
+privileges`, `grant options cannot be granted back to your own grantor`,
+`permission denied for table secrets`). São de `GRANT`/privilégio padrão, não de
+dado: nenhuma tabela ficou vazia por causa deles. Na restauração de verdade use
+`restore.sh`, que conecta como dono do banco — restaurar como `postgres` num
+Supabase self-host é o que produz esses avisos.
 
 ## 5. Baseline de 27/11/2026 (pós-`2.0.17`)
 
