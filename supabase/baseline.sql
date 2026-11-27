@@ -32852,6 +32852,74 @@ grant execute on function public.fn_expedicao_fila(uuid) to authenticated, servi
 comment on function public.fn_expedicao_fila(uuid) is
   'Fila da expedição por organização: pedidos embarcáveis ainda fora de carga viva e a soma em centavos. Invoker: a RLS do chamador continua valendo.';
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0361 — A fila da expedição conta o pedido `concluido`.
+--
+-- A 0360 só contava aprovado/faturado, mas o contrato da Expedição inclui
+-- `concluido` (venda fechada no ERP, sem nota) — e é o status com que o pedido
+-- importado do Mercos nasce. Resultado: a lista mostrava o pedido e a faixa
+-- não o contava. Só o predicado muda; STABLE/INVOKER/grants continuam iguais.
+-- ─────────────────────────────────────────────────────────────────────────────
+create or replace function public.fn_expedicao_fila(p_org uuid)
+returns table (pedidos integer, valor_cents bigint)
+  language sql
+  stable
+  security invoker
+  set search_path to 'public', 'pg_temp'
+as $$
+  select
+    count(*)::integer,
+    coalesce(sum(o.total_cents), 0)::bigint
+  from public.commercial_orders o
+  where o.organization_id = p_org
+    and o.status in ('aprovado', 'concluido', 'faturado')
+    and not exists (
+      select 1
+        from public.shipment_orders so
+        join public.shipments s on s.id = so.shipment_id
+       where so.organization_id = p_org
+         and so.order_id = o.id
+         and s.status <> 'cancelada'
+    );
+$$;
+
+alter function public.fn_expedicao_fila(uuid) owner to postgres;
+
+revoke all on function public.fn_expedicao_fila(uuid) from public, anon;
+grant execute on function public.fn_expedicao_fila(uuid) to authenticated, service_role;
+
+comment on function public.fn_expedicao_fila(uuid) is
+  'Fila da expedição por organização: pedidos embarcáveis (aprovado/concluído/faturado) ainda fora de carga viva e a soma em centavos. Invoker: a RLS do chamador continua valendo.';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0362 — O status comercial que o pedido tinha ao embarcar.
+--
+-- Embarcar leva o pedido para `expedido`; sair da carga o devolvia para
+-- `aprovado` fixo e perdia o status anterior (um `faturado` voltava como
+-- `aprovado`). A coluna guarda o instante do embarque; a devolução restaura
+-- esse valor (NULL em carga legada → fallback aprovado).
+-- ─────────────────────────────────────────────────────────────────────────────
+alter table public.shipment_orders
+  add column if not exists status_comercial_ao_embarcar text;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+     where conname = 'shipment_orders_status_ao_embarcar_valido'
+  ) then
+    alter table public.shipment_orders
+      add constraint shipment_orders_status_ao_embarcar_valido
+      check (
+        status_comercial_ao_embarcar is null
+        or status_comercial_ao_embarcar in ('aprovado', 'concluido', 'faturado')
+      );
+  end if;
+end $$;
+
+comment on column public.shipment_orders.status_comercial_ao_embarcar is
+  'Status comercial do pedido no instante em que entrou nesta carga. Usado para devolvê-lo ao status certo ao sair da carga (NULL = carga anterior à 0362; fallback aprovado).';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES

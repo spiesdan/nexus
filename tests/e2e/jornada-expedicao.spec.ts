@@ -20,11 +20,12 @@ test.setTimeout(300_000);
  *   não uma página — o passo é provado pelo link "Romaneio e fechamento
  *   (PDF)" na ficha;
  * - **rota**: a ficha tem a subtela "/rota" ("Mapa da rota" + "Ordem de
- *   entrega"), e o passo operacional é "Sair para rota" (bloqueado até TODOS
- *   os pedidos separados — a régua "Faltam separar N pedidos" fica nas
- *   paradas);
+ *   entrega"). Publicar só existe LÁ: o banner "Pronta para sair" leva para
+ *   `/rota` ("Revisar e publicar"), e `publicarRota` grava a ordem e só então
+ *   inicia — a ficha não chama `/rota/iniciar`. A régua "Faltam separar N
+ *   pedidos" trava o passo até todos separados;
  * - **entrega**: botão "Entregue" por parada → card "Paradas concluídas"
- *   sobe para 1/1 → "Concluir carga" destrava → status "Concluída".
+ *   sobe para 1/1 → "Fechar a carga" aparece → status "Concluída".
  *
  * "Romaneio" como página não existe no produto (§86 atendido pelo PDF); rota,
  * fechamento e motorista SÃO subtelas da carga.
@@ -83,35 +84,38 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   await expect(romaneio).toBeVisible();
   await expect(romaneio).toHaveAttribute("href", /\/api\/v1\/shipments\/.+\/romaneio/);
 
-  // 4. Rota: com 1 pedido não separado, "Sair para rota" fica travado e a
-  // régua diz quanto falta. Separar destrava.
-  const sairRota = page.getByRole("button", { name: "Sair para rota" });
-  await expect(sairRota).toBeDisabled();
+  // 4. Rota: com 1 pedido não separado, publicar não é oferecido — a régua diz
+  // quanto falta e a ação do banner é conferir a separação.
   await expect(page.getByText(/Faltam separar 1 pedido/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Revisar e publicar" })).toHaveCount(0);
   // Checkbox controlado: o `check()` do Playwright valida o estado logo após o
   // clique, mas ele só vira true quando o PATCH + recarregar voltam — por isso
   // `click` + `toBeChecked` com timeout.
   const separado = page.getByLabel(`Separado: ${numero}`);
   await separado.click();
   await expect(separado).toBeChecked({ timeout: 15_000 });
-  await expect(sairRota).toBeEnabled({ timeout: 15_000 });
+  const revisar = page.getByRole("link", { name: "Revisar e publicar" });
+  await expect(revisar).toBeVisible({ timeout: 15_000 });
 
-  // 5. Saída para rota → status "Em rota" e "Concluir carga" ainda travado
-  // (a parada não foi entregue).
-  await sairRota.click();
-  // Confirmação nova do design wave: avisar clientes e tirar a carga de
-  // "montando" não pode acontecer por clique acidental.
-  await page.getByRole("alertdialog").getByRole("button", { name: "Iniciar rota" }).click();
+  // 5. Publicar SÓ pela tela de rota — ela salva a ordem e então inicia, com
+  // confirmação (avisar os clientes não pode ser clique acidental).
+  await revisar.click();
+  await page.waitForURL(/\/app\/expedicao\/[0-9a-f-]+\/rota$/, { timeout: 20_000 });
+  await page.getByTestId("publicar-rota").click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Publicar rota" }).click();
   await expect(page.getByText(new RegExp(`Em rota · ${placa}`))).toBeVisible({ timeout: 20_000 });
-  const concluir = page.getByRole("button", { name: "Concluir carga" });
-  await expect(concluir).toBeDisabled();
 
-  // 6. Entrega da parada → card "Paradas concluídas" 1/1 → conclusão libera.
+  // 6. Entrega da parada → card "Paradas concluídas" 1/1 → "Fechar a carga".
+  // O desfecho mora na ficha; a rota acabou de ser publicada.
+  await page.goto(page.url().replace(/\/rota$/, ""));
+  await expect(page.getByRole("heading", { level: 1, name: /^Carga \d{3}$/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Fechar a carga" })).toHaveCount(0);
   await page.getByRole("button", { name: "Entregue", exact: true }).click();
   // O design wave pede confirmação para avançar o pedido para 'entregue'.
   await page.getByRole("alertdialog").getByRole("button", { name: "Entregar" }).click();
   await expect(page.getByText("1/1", { exact: true })).toBeVisible({ timeout: 20_000 });
-  await expect(concluir).toBeEnabled();
-  await concluir.click();
+  const fechar = page.getByRole("button", { name: "Fechar a carga" });
+  await expect(fechar).toBeVisible({ timeout: 20_000 });
+  await fechar.click();
   await expect(page.getByText(new RegExp(`Concluída · ${placa}`))).toBeVisible({ timeout: 20_000 });
 });

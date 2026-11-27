@@ -61,6 +61,9 @@ describe("0360 — fn_expedicao_fila", () => {
         ('${ORG_A}', 4, 'Cliente A4', 'rascunho', 9999),
         ('${ORG_A}', 5, 'Cliente A5', 'aprovado', 4000),
         ('${ORG_A}', 6, 'Cliente A6', 'aprovado', 7000),
+        -- 0302/0361: é o status com que o pedido importado do Mercos nasce e
+        -- É embarcável (STATUS_EMBARCAVEIS). A 0360 não o contava.
+        ('${ORG_A}', 7, 'Cliente A7', 'concluido', 5000),
         ('${ORG_B}', 1, 'Cliente B1', 'aprovado', 5000);
 
       insert into public.shipments (id, organization_id, numero, status)
@@ -74,7 +77,9 @@ describe("0360 — fn_expedicao_fila", () => {
 
     const a = sql(`select pedidos || '|' || valor_cents from public.fn_expedicao_fila('${ORG_A}');`);
     const b = sql(`select pedidos || '|' || valor_cents from public.fn_expedicao_fila('${ORG_B}');`);
-    expect(a).toBe("3|6000");
+    // 4 = aprovado (1, 3) + faturado (2) + concluido (7). A função da 0360
+    // devolvia "3|6000" aqui — é a fixture que reprova o conserto ausente.
+    expect(a).toBe("4|11000");
     expect(b).toBe("1|5000");
 
     // Carga cancelada devolve os pedidos para a fila — o mesmo conceito da faixa.
@@ -82,7 +87,7 @@ describe("0360 — fn_expedicao_fila", () => {
     const comCancelada = sql(
       `select pedidos || '|' || valor_cents from public.fn_expedicao_fila('${ORG_A}');`,
     );
-    expect(comCancelada).toBe("5|17000");
+    expect(comCancelada).toBe("6|22000");
 
     sql(`delete from public.organizations where id in ('${ORG_A}', '${ORG_B}');`);
   });

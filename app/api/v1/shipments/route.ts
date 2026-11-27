@@ -70,6 +70,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     mercos_ultima_mudanca: { em: string; campos: Array<{ campo: string; de: string | number | null; para: string | number | null }> } | null;
   }> = [];
 
+  // 0362: status comercial de cada pedido no instante do embarque. Vive fora do
+  // bloco de elegibilidade porque o insert dos itens usa este mapa depois.
+  const statusComercialPorPedido = new Map<string, string>();
+
   // Elegibilidade + existência, um a um, antes de criar qualquer coisa.
   if (ids.length > 0) {
     const { data: pedidos, error } = await supabase
@@ -79,6 +83,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       .in("id", ids);
     if (error) return fail("internal_error", "Erro ao ler os pedidos.", 500, { requestId });
     const porId = new Map((pedidos ?? []).map((p) => [(p as unknown as { id: string }).id, p]));
+    for (const [idDoPedido, pedido] of porId) {
+      statusComercialPorPedido.set(idDoPedido, (pedido as unknown as { status: string }).status);
+    }
     for (const pid of ids) {
       const ped = porId.get(pid) as unknown as { numero: number; status: string } | undefined;
       if (!ped) {
@@ -156,6 +163,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         order_id,
         sequencia: i + 1,
         status: "na_carga",
+        // 0362: o status comercial que o pedido tinha AQUI é o que a devolução
+        // restaura. Sem ele, um `faturado` voltava da carga como `aprovado`.
+        status_comercial_ao_embarcar: statusComercialPorPedido.get(order_id) ?? null,
       })),
     );
     if (erroItens) {

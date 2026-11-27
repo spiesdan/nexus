@@ -57,14 +57,33 @@ function fake(porTabela: Record<string, (op: string) => Registro>) {
   });
 }
 
-function tabelas(statusDaCarga = "montando", erroAoExcluir: unknown = null) {
+type ItemDaCarga = {
+  id: string;
+  order_id: string;
+  sequencia: number;
+  status: string;
+  separado_em: string | null;
+  status_comercial_ao_embarcar?: string | null;
+};
+
+const ITEM_PADRAO: ItemDaCarga = {
+  id: "i1",
+  order_id: "o1",
+  sequencia: 1,
+  status: "na_carga",
+  separado_em: null,
+  status_comercial_ao_embarcar: "aprovado",
+};
+
+function tabelas(
+  statusDaCarga = "montando",
+  erroAoExcluir: unknown = null,
+  itens: ItemDaCarga[] = [ITEM_PADRAO],
+) {
   return {
     shipments: (op: string) =>
       op === "delete" ? { data: null, error: erroAoExcluir } : { data: { id: "s1", status: statusDaCarga }, error: null },
-    shipment_orders: () => ({
-      data: [{ id: "i1", order_id: "o1", sequencia: 1, status: "na_carga", separado_em: null }],
-      error: null,
-    }),
+    shipment_orders: () => ({ data: itens, error: null }),
     commercial_orders: (op: string) =>
       op === "update"
         ? { data: [{ id: "o1" }], error: null }
@@ -121,6 +140,59 @@ describe("DELETE /api/v1/shipments/[id]", () => {
     expect(daDevolucao).toContainEqual(["status", "expedido"]);
     expect(daDevolucao).toContainEqual(["organization_id", ORG_ID]);
     expect(daDevolucao).toContainEqual(["id", ["o1"]]);
+  });
+
+  it("restaura o status de cada pedido — faturado não volta como aprovado", async () => {
+    // 0362: a carga pode misturar status comerciais. O `aprovado` fixo apagava
+    // a diferença; NULL (carga legada) cai no fallback.
+    vi.mocked(createClient).mockResolvedValue({
+      from: fake(
+        tabelas("montando", null, [
+          {
+            id: "iF",
+            order_id: "oF",
+            sequencia: 1,
+            status: "na_carga",
+            separado_em: null,
+            status_comercial_ao_embarcar: "faturado",
+          },
+          {
+            id: "iA",
+            order_id: "oA",
+            sequencia: 2,
+            status: "na_carga",
+            separado_em: null,
+            status_comercial_ao_embarcar: "aprovado",
+          },
+          {
+            id: "iL",
+            order_id: "oL",
+            sequencia: 3,
+            status: "na_carga",
+            separado_em: null,
+            status_comercial_ao_embarcar: null,
+          },
+        ]),
+      ),
+    } as never);
+
+    const res = await excluir("s1");
+    expect(res.status).toBe(200);
+    const corpo = (await res.json()) as { data: { pedidos_devolvidos: number } };
+    // Um lote por status distinto (faturado; aprovado+NULL) — o fake devolve
+    // uma linha por update.
+    expect(corpo.data.pedidos_devolvidos).toBe(2);
+
+    const daDevolucao = chamadas
+      .filter((c) => c.tabela === "commercial_orders" && c.op === "update")
+      .map((c) => c.args);
+
+    expect(daDevolucao).toContainEqual([{ status: "faturado" }]);
+    expect(daDevolucao).toContainEqual([{ status: "aprovado" }]);
+    expect(daDevolucao).toContainEqual(["id", ["oF"]]);
+    expect(daDevolucao).toContainEqual(["id", ["oA", "oL"]]);
+    // Só `expedido` regride: entregue (ou reembarcado) não é desfeito.
+    expect(daDevolucao).toContainEqual(["status", "expedido"]);
   });
 
   it("não exclui carga encerrada — e não mexe em pedido nenhum", async () => {

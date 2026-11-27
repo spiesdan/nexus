@@ -36,8 +36,12 @@ export async function criarCargaEmRota(page: Page, prefixo: string): Promise<Car
   const separado = page.getByLabel(`Separado: ${numeroPedido}`);
   await separado.click();
   await expectSeparado(page, separado);
-  await page.getByRole("button", { name: "Sair para rota" }).click();
-  await page.getByRole("alertdialog").getByRole("button", { name: "Iniciar rota" }).click();
+  // Publicar tem UM caminho: a ficha leva para /rota, e é `publicarRota` que
+  // grava a ordem pendente antes de a rota sair.
+  await page.getByRole("link", { name: "Revisar e publicar" }).click();
+  await page.waitForURL(/\/app\/expedicao\/[0-9a-f-]+\/rota$/);
+  await page.getByTestId("publicar-rota").click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Publicar rota" }).click();
   await expect(page.getByText(/Em rota ·/)).toBeVisible({ timeout: 30_000 });
 
   return { id, placa, numeroPedido };

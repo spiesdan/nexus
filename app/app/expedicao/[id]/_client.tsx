@@ -248,23 +248,22 @@ export function CargaClient({
     }
   }, [secao, cargaId, router]);
 
+  /**
+   * FECHAR A CARGA — o único status que ainda muda por este arquivo.
+   *
+   * A PUBLICAÇÃO SAIU DAQUI. Antes, a ficha iniciava a rota por conta própria
+   * (status `em_rota` → POST na rota de início), sem gravar a ordem que o
+   * operador acabou de ajustar em `/rota`: o entregador recebia a sequência
+   * anterior e o cliente era avisado de uma rota que não era a da tela.
+   * Publicar tem UM caminho — `publicarRota`, em `_roteirizador.tsx`, que
+   * salva a ordem e só então inicia. O banner "Pronta para sair" leva para lá.
+   */
   async function mudarStatus(status: string) {
-    // Sair/concluir passam pela rota (carimba início/fim); o resto, direto.
-    const rota = status === "em_rota" ? "iniciar" : status === "concluida" ? "finalizar" : null;
-    // Iniciar a rota é irreversível pelo botão e NOTIFICA todos os clientes.
-    // A confirmação existe para o clique errado não virar mensagem no celular
-    // de quem está esperando.
-    if (status === "em_rota") {
-      const ok = await confirmar({
-        title: t("Iniciar a rota? Os clientes serão avisados e a carga sai de 'montando'."),
-        confirmLabel: t("Iniciar rota"),
-        cancelLabel: t("Cancelar"),
-      });
-      if (!ok) return;
-    }
+    // Publicar (`em_rota`) NÃO passa por aqui — ver o comentário acima.
+    if (status !== "concluida") return;
     try {
-      if (rota) await apiClient.post(`/api/v1/shipments/${cargaId}/rota/${rota}`, {});
-      else await apiClient.patch(`/api/v1/shipments/${cargaId}`, { status });
+      // Concluir passa pela rota (carimba o fim).
+      await apiClient.post(`/api/v1/shipments/${cargaId}/rota/finalizar`, {});
       await recarregar();
     } catch (e) {
       showApiError(e);
@@ -660,9 +659,19 @@ export function CargaClient({
       tom: "sucesso" as const,
       titulo: t("Pronta para sair"),
       detalhe: t("Tudo conferido. A rota pode começar."),
+      /**
+       * PUBLICAR SÓ PELA TELA QUE SALVA A ORDEM.
+       *
+       * Aqui havia um POST que iniciava a rota direto da ficha, sem gravar a
+       * ordem pendente — a sequência ajustada em "Mapa e ordem" nunca chegava
+       * ao aparelho do entregador, e o cliente era avisado de uma rota que não
+       * era a da tela. Agora o banner leva para `/rota`, onde `publicarRota`
+       * salva e só então inicia: um gesto, um caminho. O rótulo diz o que
+       * acontece, para ninguém procurar um "Sair" que não publica.
+       */
       acao: podeOperar ? (
-        <Button className="w-full" size="sm" onClick={() => void mudarStatus("em_rota")}>
-          {textos.sairRota}
+        <Button className="w-full" size="sm" asChild>
+          <Link href={`/app/expedicao/${cargaId}/rota`}>{t("Revisar e publicar")}</Link>
         </Button>
       ) : null,
     };
@@ -888,7 +897,7 @@ export function CargaClient({
             {passo.titulo}. {passo.detalhe}
           </p>
           {passo.acao ? (
-            <div className="shrink-0 [&_button]:w-auto [&_button]:min-h-11">{passo.acao}</div>
+            <div className="shrink-0 [&_a]:w-auto [&_a]:min-h-11 [&_button]:w-auto [&_button]:min-h-11">{passo.acao}</div>
           ) : (
             <span className="text-xs text-muted-foreground">{t("Nenhuma ação pendente")}</span>
           )}
