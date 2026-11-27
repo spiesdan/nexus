@@ -20,6 +20,12 @@ name: tmp-captura-radar
 # atalho.
 
 on:
+  # `push` e não só `workflow_dispatch`: a API de dispatch procura o workflow
+  # pelo nome na branch DEFAULT, e este arquivo existe só num branch
+  # descartável — `gh workflow run --ref` devolve 404. O push deste branch é o
+  # gatilho, e ele é explícito: só esta ref dispara.
+  push:
+    branches: ["tmp/captura-radar-ci"]
   workflow_dispatch: {}
 
 permissions:
