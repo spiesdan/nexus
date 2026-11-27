@@ -2,11 +2,13 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Sidebar } from "@/components/shell/Sidebar";
-import { MobileDock } from "@/components/shell/MobileDock";
+import { DockPresenceProvider } from "@/components/shell/DockPresence";
+import { MobileDock, dockPresente } from "@/components/shell/MobileDock";
 import { TopBar } from "@/components/shell/TopBar";
 import { AssistentePainel } from "@/components/assistente/AssistentePainel";
 import { AssistenteProvider } from "@/components/assistente/AssistenteProvider";
 import { useT } from "@/hooks/i18n/useT";
+import { useAuth } from "@/hooks/auth/AuthProvider";
 import { useInboundMessageAlerts } from "@/hooks/notifications/useInboundMessageAlerts";
 import { useCrmAlerts } from "@/hooks/notifications/useCrmAlerts";
 import { useNotifyOpenFromServiceWorker } from "@/lib/notifications/notify_open";
@@ -29,6 +31,13 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
   useNotifyOpenFromServiceWorker();
   const t = useT();
   const caminho = usePathname();
+  const { user, activeOrg } = useAuth();
+  // A MESMA regra do `MobileDock`, para as barras fixas que compõem com ele.
+  const comDock = dockPresente(
+    user.is_platform_admin,
+    activeOrg?.role ?? null,
+    caminho ?? "",
+  );
 
   if (motorista) {
     // A CABINE (`/app/expedicao/[id]/motorista`) NÃO tem barra: o mapa vai de
@@ -68,8 +77,9 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
     );
   }
   return (
+    <DockPresenceProvider presente={comDock}>
     <AssistenteProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-background">
+      <div className="flex h-screen w-full overflow-hidden bg-background" data-dock={comDock ? "presente" : "ausente"}>
         {/* Primeiro alvo do Tab. A casca tem TopBar + Sidebar antes do conteúdo, e
           sem este atalho quem navega por teclado atravessa a navegação inteira
           em TODA tela. `focus:not-sr-only` o revela só quando recebe foco. */}
@@ -138,5 +148,6 @@ export function AppShell({ sidebarCollapsed, motorista = false, children }: AppS
         <AssistentePainel />
       </div>
     </AssistenteProvider>
+    </DockPresenceProvider>
   );
 }

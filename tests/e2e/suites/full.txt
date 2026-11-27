@@ -106,4 +106,6 @@ gps-sem-sinal.spec.ts
 fila-offline-retry-conflito.spec.ts
 cabine-mobile-workbench.spec.ts
 expedicao-lacunas-qa.spec.ts
+expedicao-acao-do-cabecalho.spec.ts
+expedicao-nova-barra-mobile.spec.ts
 multi-campanha-retomada.spec.ts

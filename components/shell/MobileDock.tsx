@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useT } from "@/hooks/i18n/useT";
 import { Plus } from "@/lib/ui/icons";
 import { useAuth } from "@/hooks/auth/AuthProvider";
-import { ROLE_RANK } from "@/lib/auth/types";
+import { ROLE_RANK, type Role } from "@/lib/auth/types";
 import { searchable, type NavDestination } from "@/lib/navigation/registry";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,28 @@ const NOVO_PEDIDO = { href: "/app/pedidos/novo", minRole: "agent" } as const;
 // escondê-lo.
 const SEM_DOCK = ["/app/pedidos/novo"];
 
+/** Destinos que este papel vê no dock — a mesma filtragem do sidebar. */
+export function destinosDoDock(admin: boolean, role: Role | null): NavDestination[] {
+  return DESTINOS.map((href) => searchable(admin, role).find((d) => d.href === href)).filter(
+    (d): d is NavDestination => d !== undefined,
+  );
+}
+
+/**
+ * O DOCK APARECE NESTA TELA? — a regra em um lugar só.
+ *
+ * `MobileDock` renderiza por ela e o `AppShell` publica a resposta para as
+ * barras fixas que compõem com o dock (`DockPresence`). Duas cópias da mesma
+ * condição é como uma barra acaba 57 px acima do rodapé quando o dock devolve
+ * `null`.
+ */
+export function dockPresente(admin: boolean, role: Role | null, pathname: string): boolean {
+  if (SEM_DOCK.some((rota) => pathname === rota || pathname.startsWith(rota + "/"))) {
+    return false;
+  }
+  return destinosDoDock(admin, role).length > 0;
+}
+
 export function MobileDock() {
   const t = useT();
   const pathname = usePathname();
@@ -29,16 +51,10 @@ export function MobileDock() {
   const role = activeOrg?.role ?? null;
   const admin = user.is_platform_admin;
 
-  if (SEM_DOCK.some((rota) => pathname === rota || pathname.startsWith(rota + "/"))) {
-    return null;
-  }
+  if (!dockPresente(admin, role, pathname)) return null;
 
-  const itens = DESTINOS.map((href) => searchable(admin, role).find((d) => d.href === href)).filter(
-    (d): d is NavDestination => d !== undefined,
-  );
+  const itens = destinosDoDock(admin, role);
   const podeCriarPedido = role !== null && ROLE_RANK[role] >= ROLE_RANK[NOVO_PEDIDO.minRole];
-
-  if (itens.length === 0) return null;
 
   return (
     // Landmark PRÓPRIO ("Navegação rápida"), não "Navegação principal": dois

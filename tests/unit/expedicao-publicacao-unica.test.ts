@@ -73,21 +73,25 @@ describe("publicação da rota — um caminho só, e ele salva antes de iniciar"
     expect(CODIGO_DA_FICHA).toContain("/rota/finalizar");
   });
 
-  it("o banner 'Pronta para sair' leva para /rota, com rótulo que diz o que acontece", () => {
-    const banner = aPartirDe(CODIGO_DA_FICHA, 't("Pronta para sair")', 900);
-    expect(banner).toContain("/app/expedicao/${cargaId}/rota");
-    expect(banner).toContain('t("Revisar e publicar")');
-    expect(banner).not.toContain("mudarStatus");
-    // Navegação, não ação de rede: o banner é um link.
-    expect(banner).toContain("<Link");
+  it("a ação de sair leva para /rota, com rótulo que diz o que acontece", () => {
+    // O P0 da auditoria de 27/11/2026 tirou o botão do banner e o pôs na matriz
+    // de `acaoDaPagina`: a ação pertence à página, e o alvo existe onde a
+    // página sabe executá-la. O que este teste trava continua o mesmo — quem
+    // publica passa por `/rota`, onde `publicarRota` salva a ordem antes de
+    // iniciar, e o rótulo diz o que vai acontecer.
+    const matriz = aPartirDe(CODIGO_DA_FICHA, "const acaoDaPagina", 2400);
+    expect(matriz).toContain("/app/expedicao/${cargaId}/rota");
+    expect(matriz).toContain('t("Revisar e publicar")');
   });
 
-  it("o banner não fala com a API: nada de apiClient no bloco da ação", () => {
+  it("o botão da ação não fala com a API: nada de apiClient no componente", () => {
     // O defeito era um POST disparado da ficha, sem passar pela tela que salva.
-    // Um link que carrega a ação primária não chama API nenhuma.
-    const banner = aPartirDe(CODIGO_DA_FICHA, 't("Pronta para sair")', 900);
-    expect(banner).not.toContain("apiClient");
-    expect(banner).not.toContain("fetch(");
+    // Hoje a ação com `href` é um link; a sem `href` só chama função de tela.
+    const botao = aPartirDe(CODIGO_DA_FICHA, "function BotaoDaAcao", 500);
+    expect(botao).not.toContain("apiClient");
+    expect(botao).not.toContain("fetch(");
+    // Navegação, não ação de rede: o ramo com `href` é um link.
+    expect(botao).toContain("<Link");
   });
 
   it("publicarRota grava a ordem ANTES de iniciar", () => {
