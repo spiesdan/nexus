@@ -23,6 +23,8 @@ import { semearContato, semearProduto } from "./helpers/pedidos";
 test.setTimeout(900_000);
 
 const RAIZ = "evidence/nfe-avulsa";
+/** Dock inferior mobile — o suspeito de cobrir o botão em 390. */
+const DOCK = 'nav[aria-label="Navegação rápida"]';
 const VIEWPORTS = [
   { px: 1440, altura: 900 },
   { px: 390, altura: 844 },
