@@ -20,7 +20,11 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { env } from "@/lib/env";
-import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import {
+  googlePlacesHabilitado,
+  mapsBrowserHabilitado,
+  resolverChaveGoogle,
+} from "@/lib/prospeccao/chave";
 import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
@@ -138,10 +142,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     );
   }
   const provider = providerAtivo;
-  if (provider === "maps_browser") {
+  if (provider === "maps_browser" && !mapsBrowserHabilitado()) {
     return fail(
       "validation_failed",
-      "Provider via navegador desligado (esqueleto). Use osm_overpass (grátis) ou google_places.",
+      "Descoberta pelo Maps desligada nesta instalação (MAPS_BROWSER_ENABLED=true e MAPS_BROWSER_URL). Use osm_overpass (grátis) ou google_places; a descoberta está degradada.",
       422,
       { requestId },
     );

@@ -12,6 +12,9 @@ export interface BusinessSearchParams {
   categoria: string;
   latitude: number;
   longitude: number;
+  /** Cidade/UF quando o provider trabalha por nome de lugar (sidecar Maps). */
+  cidade?: string | null;
+  uf?: string | null;
   /** Raio da célula em metros (o grid quebra a região em células). */
   raioMetros: number;
   /** Teto de resultados desta célula (paginação do provider). */
@@ -23,6 +26,12 @@ export interface BusinessSearchParams {
 export interface NegocioDescoberto {
   /** ID no provider (place_id, hash da URL...). NULL quando não há. */
   idExterno: string | null;
+  /** `maps_browser` grava de onde veio; os demais providers podem omitir. */
+  provider?: string | null;
+  /** `place_id` bruto do Google Maps (a identidade que não muda). */
+  placeId?: string | null;
+  /** CID do Google Maps (identidade alternativa; não substitui o place_id). */
+  cid?: string | null;
   nome: string;
   categoriaPrincipal: string | null;
   categoriasSecundarias: string[];
@@ -30,6 +39,8 @@ export interface NegocioDescoberto {
   website: string | null;
   email: string | null;
   endereco: string | null;
+  /** Rua/logradouro separado quando o provider entrega as partes (Maps). */
+  logradouro?: string | null;
   bairro: string | null;
   cidade: string | null;
   estado: string | null;

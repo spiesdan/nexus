@@ -325,6 +325,11 @@ const schema = z.object({
   GOOGLE_MAPS_API_KEY: z.string().optional().default(""),
   GOOGLE_PLACES_ENABLED: z.enum(["true", "false"]).optional().default("true"),
   MAPS_BROWSER_ENABLED: z.enum(["true", "false"]).optional().default("false"),
+  // Endereço do sidecar (ex.: http://maps-browser:8080). Vazio = desligado;
+  // a rota recusa maps_browser e a tela oferece OSM/Places (degradada).
+  MAPS_BROWSER_URL: z.string().optional().default(""),
+  // Token opcional do sidecar (Authorization: Bearer), nunca no browser.
+  MAPS_BROWSER_TOKEN: z.string().optional().default(""),
   // Overpass: espelho público padrão; trocar sem código (uso justo do espelho).
   OSM_OVERPASS_URL: z.string().optional().default(""),
   // Expansão de categoria (§5 da spec 19): "true" faz o motor varrer termos
