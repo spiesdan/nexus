@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { nexusToast as toast } from "@/components/nexus-ui/feedback/nexus-toast";
 
 import { showApiError } from "@/components/feedback/ApiErrorToast";
+import { ApiError } from "@/lib/api/types";
 import { useTagDeIdioma } from "@/hooks/i18n/useLocaleDeData";
 import { useT } from "@/hooks/i18n/useT";
 import { Button } from "@/components/ui/button";
@@ -30,10 +31,11 @@ import { type PedidoComercial } from "@/lib/schemas/pedidos";
 import type { ContatoFiscal, DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
 import { camposDaAvulsa, precedenciaDigitado } from "@/lib/fiscal/avulsa-preenchimento";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { randomId } from "@/lib/random-id";
 import { Receipt } from "@/lib/ui/icons";
 
 import type { Produto } from "@/lib/schemas/produtos";
-import { ProdutoParaItem } from "./ProdutoParaItem";
+import { ProductSearch, type PrecoDeTabela, type UltimoPreco } from "../../pedidos/novo/_produtos";
 import { CustomerSelector } from "../../pedidos/novo/_cliente";
 import type { Textos } from "./textos";
 
@@ -315,9 +317,46 @@ export function EmitirNota({
     cliente_nome: "",
     cliente_documento: "",
     frete_cents: "0",
-    itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+    // V1: só item de catálogo — a lista nasce vazia e o produto entra pelo
+    // ProductSearch (NCM vem do cadastro; texto livre fica para janeiro).
+    itens: [],
     contato_id: "",
   });
+
+  /** Catálogo para o ProductSearch — carregado uma vez, como no seletor antigo. */
+  const [produtos, setProdutos] = React.useState<Produto[]>([]);
+  const [carregandoProdutos, setCarregandoProdutos] = React.useState(false);
+  const buscaProdutoRef = React.useRef<HTMLInputElement | null>(null);
+  const [erroEmissao, setErroEmissao] = React.useState<string | null>(null);
+/** Um clique = uma nota: o ref barra o segundo clique antes do re-render. */
+  const emitindoRef = React.useRef(false);
+  /**
+   * CHAVE ESTÁVEL DA EMISSÃO — criada quando o formulário fica pronto e
+   * reutilizada em retry/reenvio até a nota sair; nova só depois do sucesso.
+   * O `randomId()` automático do client muda a cada chamada e não fecha o
+   * duplo envio (a rota faz reserva forte por chave, route.ts:74-110).
+   */
+  const chaveIdempotenciaRef = React.useRef<string | null>(null);
+  const precosVazios = React.useMemo(() => new Map<string, UltimoPreco>(), []);
+
+  React.useEffect(() => {
+    let vivo = true;
+    setCarregandoProdutos(true);
+    apiClient
+      .get<{ data: Produto[] }>("/api/v1/products?limite=2000")
+      .then((r) => {
+        if (vivo) setProdutos(Array.isArray(r.data) ? r.data : []);
+      })
+      .catch((e: unknown) => {
+        if (vivo) showApiError(e);
+      })
+      .finally(() => {
+        if (vivo) setCarregandoProdutos(false);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const alterar =
     (campo: keyof ExtrasDoFormulario) =>
@@ -504,26 +543,40 @@ export function EmitirNota({
   }
 
   /**
-   * NF-E AVULSA — o operador escolheu o produto no catálogo (`ProdutoParaItem`):
-   * o item nasce com descrição + NCM + unidade do cadastro e o vínculo
-   * (`product_id`/`codigo`) que o resolver do drain usa para casar o fato à
-   * classificação fiscal. Preço da venda continua com o operador.
+   * V1 CATÁLOGO-ONLY: o produto escolhido no ProductSearch vira item com
+   * descrição, NCM e unidade do cadastro — NCM não se digita e não há palpite.
+   * Preço continua com o operador (fato do balcão, não do catálogo). Repetir o
+   * mesmo produto soma a quantidade na mesma linha.
    */
-  function selecionarProdutoDoItem(idx: number, produto: Produto) {
-    setAvulsa({
-      ...avulsa,
-      itens: avulsa.itens.map((x, j) =>
-        j === idx
-          ? {
-              ...x,
-              descricao: produto.nome,
-              codigo: produto.codigo ?? "",
-              unidade: produto.unidade ?? "",
-              ncm: produto.ncm ?? "",
-              product_id: produto.id,
-            }
-          : x,
-      ),
+  function adicionarProdutoDoCatalogo(produto: Produto, quantidade: number) {
+    setAvulsa((a) => {
+      const idx = a.itens.findIndex((i) => i.product_id === produto.id);
+      if (idx >= 0) {
+        return {
+          ...a,
+          itens: a.itens.map((x, j) =>
+            j === idx
+              ? { ...x, quantidade: String(Math.max(1, (Number(x.quantidade) || 0) + quantidade)) }
+              : x,
+          ),
+        };
+      }
+      return {
+        ...a,
+        itens: [
+          ...a.itens,
+          {
+            descricao: produto.nome,
+            quantidade: String(Math.max(1, quantidade)),
+            preco_cents: "",
+            desconto_pct: "0",
+            ncm: produto.ncm ?? "",
+            codigo: produto.codigo ?? "",
+            unidade: produto.unidade ?? "",
+            product_id: produto.id,
+          },
+        ],
+      };
     });
   }
 
@@ -568,8 +621,11 @@ export function EmitirNota({
       toast.error(checagem.error.issues[0]?.message ?? t("Dados adicionais inválidos."));
       return;
     }
+    if (emitindoRef.current) return;
+    emitindoRef.current = true;
     setEmitindo(true);
     setPendencias(null);
+    setErroEmissao(null);
     try {
       // A avulsa passa pela MESMA pré-validação do pedido, com o payload cheio:
       // a rota devolve pendências nomeadas antes de a SEFAZ consumir número.
@@ -580,20 +636,33 @@ export function EmitirNota({
         setPendencias(prev.data.pendencias);
         return;
       }
-      await apiClient.post("/api/v1/invoices", { extras: checagem.data });
+      // Chave estável da emissão: nasce no formulário pronto e é reusada em
+      // retry/reenvio até a nota sair; o client não gera outra por chamada.
+      const chaveIdempotencia = chaveIdempotenciaRef.current ?? randomId();
+      chaveIdempotenciaRef.current = chaveIdempotencia;
+      await apiClient.post(
+        "/api/v1/invoices",
+        { extras: checagem.data },
+        { idempotencyKey: chaveIdempotencia },
+      );
+      chaveIdempotenciaRef.current = null;
       toast.success(t("Venda avulsa enfileirada para emissão"));
       setAvulsa({
         cliente_nome: "",
         cliente_documento: "",
         frete_cents: "0",
-        itens: [{ descricao: "", quantidade: "1", preco_cents: "", desconto_pct: "0", ncm: "" }],
+        itens: [],
         contato_id: "",
       });
       router.push("/app/notas?aba=notas");
       router.refresh();
     } catch (e) {
+      setErroEmissao(
+        e instanceof ApiError ? e.message : t("Não foi possível emitir a nota. Tente de novo."),
+      );
       showApiError(e);
     } finally {
+      emitindoRef.current = false;
       setEmitindo(false);
     }
   }
@@ -677,6 +746,20 @@ export function EmitirNota({
       setEmitindo(false);
     }
   }
+
+  const itensSemNcm = avulsa.itens.filter((i) => i.descricao.trim() !== "" && !i.ncm.trim());
+  const podeEmitirAvulsa =
+    modo === "avulsa" && avulsa.itens.length > 0 && itensSemNcm.length === 0 && Boolean(configInicial);
+
+  /**
+   * A CHAVE NASCE AQUI, não no clique nem no render: quando o formulário fica
+   * pronto. O efeito só cria se ainda não existe; retry e reenvio da mesma tela
+   * reusam a mesma chave, e o sucesso a zera para a próxima emissão.
+   */
+  React.useEffect(() => {
+    if (!podeEmitirAvulsa) return;
+    if (!chaveIdempotenciaRef.current) chaveIdempotenciaRef.current = randomId();
+  }, [podeEmitirAvulsa]);
 
   return (
     <Card className="hover-raise space-y-4 p-4 sm:p-5">
@@ -1253,18 +1336,20 @@ export function EmitirNota({
               "Venda sem pedido (balcão): a nota nasce da venda informada, sem precisar gerar pedido.",
             )}
           </p>
-          <CustomerSelector
-            contatos={[]}
-            contatoId={avulsa.contato_id || null}
-            clienteNome={avulsa.cliente_nome}
-            aoEscolher={aoEscolherClienteAvulso}
-            mostrarResumo={false}
-            textos={{
-              cliente: textos.cliente,
-              buscarCliente: textos.buscarCliente,
-              clienteAvulso: textos.clienteAvulso,
-            }}
-          />
+          <div data-testid="nfe-cliente">
+            <CustomerSelector
+              contatos={[]}
+              contatoId={avulsa.contato_id || null}
+              clienteNome={avulsa.cliente_nome}
+              aoEscolher={aoEscolherClienteAvulso}
+              mostrarResumo={false}
+              textos={{
+                cliente: textos.cliente,
+                buscarCliente: textos.buscarCliente,
+                clienteAvulso: textos.clienteAvulso,
+              }}
+            />
+          </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label htmlFor="av-doc">{t("CPF ou CNPJ")}</Label>
@@ -1293,145 +1378,171 @@ export function EmitirNota({
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2" data-testid="nfe-itens">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                 {t("Itens da venda")}
               </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  setAvulsa({
-                    ...avulsa,
-                    itens: [
-                      ...avulsa.itens,
-                      {
-                        descricao: "",
-                        quantidade: "1",
-                        preco_cents: "",
-                        desconto_pct: "0",
-                        ncm: "",
-                      },
-                    ],
-                  })
-                }
-              >
-                {t("Adicionar item")}
-              </Button>
+              <p className="text-xs text-muted-foreground">
+                {t("Só produto do catálogo — o NCM vem do cadastro.")}
+              </p>
             </div>
-            {avulsa.itens.map((item, idx) => (
-              <div
-                key={idx}
-                className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-6"
+
+            <div
+              data-testid="nfe-busca-produto"
+              className="rounded-lg border border-border bg-surface p-2"
+            >
+              <ProductSearch
+                produtos={produtos}
+                tabela={null as PrecoDeTabela | null}
+                ultimosPrecos={precosVazios}
+                inputRef={buscaProdutoRef}
+                aoAdicionar={adicionarProdutoDoCatalogo}
+                textos={{
+                  produtos: t("Produtos"),
+                  buscarProduto: t("Buscar produto por nome ou código…"),
+                }}
+              />
+              {carregandoProdutos && (
+                <p className="mt-1 text-xs text-muted-foreground">{t("Carregando catálogo…")}</p>
+              )}
+            </div>
+
+            {avulsa.itens.length === 0 ? (
+              <p
+                data-testid="nfe-itens-vazio"
+                className="rounded-lg border border-dashed border-border px-3 py-4 text-sm text-muted-foreground"
               >
-                <div className="space-y-1.5 sm:col-span-3">
-                  <Label>{t("Descrição")}</Label>
-                  <Input
-                    aria-label={t("Descrição")}
-                    value={item.descricao}
-                    onChange={(e) =>
-                      setAvulsa({
-                        ...avulsa,
-                        itens: avulsa.itens.map((x, j) =>
-                          j === idx ? { ...x, descricao: e.target.value } : x,
-                        ),
-                      })
-                    }
-                  />
+                {t("Nenhum item. Busque um produto do catálogo acima para começar.")}
+              </p>
+            ) : (
+              avulsa.itens.map((item, idx) => (
+                <div
+                  key={item.product_id ?? idx}
+                  data-testid="nfe-item"
+                  className="grid grid-cols-1 gap-2 rounded-lg border border-border bg-muted/30 p-3 sm:grid-cols-6"
+                >
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label>{t("Produto")}</Label>
+                    <p className="truncate text-sm text-text">{item.descricao}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {item.codigo || t("sem código")} · {t("NCM")}{" "}
+                      <span data-testid="nfe-item-ncm">{item.ncm || t("sem NCM")}</span>
+                    </p>
+                    {!item.ncm && (
+                      <p data-testid="nfe-item-sem-ncm" className="text-xs text-error-fg">
+                        {t("Sem NCM no cadastro — esta nota não emite. Corrija o produto antes.")}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("Qtd.")}</Label>
+                    <Input
+                      aria-label={t("Qtd.")}
+                      type="number"
+                      min={1}
+                      value={item.quantidade}
+                      onChange={(e) =>
+                        setAvulsa({
+                          ...avulsa,
+                          itens: avulsa.itens.map((x, j) =>
+                            j === idx ? { ...x, quantidade: e.target.value } : x,
+                          ),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("Preço (centavos)")}</Label>
+                    <Input
+                      aria-label={t("Preço (centavos)")}
+                      type="number"
+                      min={0}
+                      value={item.preco_cents}
+                      onChange={(e) =>
+                        setAvulsa({
+                          ...avulsa,
+                          itens: avulsa.itens.map((x, j) =>
+                            j === idx ? { ...x, preco_cents: e.target.value } : x,
+                          ),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>{t("Desconto (%)")}</Label>
+                    <Input
+                      aria-label={t("Desconto (%)")}
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={item.desconto_pct}
+                      onChange={(e) =>
+                        setAvulsa({
+                          ...avulsa,
+                          itens: avulsa.itens.map((x, j) =>
+                            j === idx ? { ...x, desconto_pct: e.target.value } : x,
+                          ),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })
+                      }
+                    >
+                      {t("Remover")}
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>{t("Qtd.")}</Label>
-                  <Input
-                    aria-label={t("Qtd.")}
-                    type="number"
-                    min={1}
-                    value={item.quantidade}
-                    onChange={(e) =>
-                      setAvulsa({
-                        ...avulsa,
-                        itens: avulsa.itens.map((x, j) =>
-                          j === idx ? { ...x, quantidade: e.target.value } : x,
-                        ),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("Preço (centavos)")}</Label>
-                  <Input
-                    aria-label={t("Preço (centavos)")}
-                    type="number"
-                    min={0}
-                    value={item.preco_cents}
-                    onChange={(e) =>
-                      setAvulsa({
-                        ...avulsa,
-                        itens: avulsa.itens.map((x, j) =>
-                          j === idx ? { ...x, preco_cents: e.target.value } : x,
-                        ),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("Desconto (%)")}</Label>
-                  <Input
-                    aria-label={t("Desconto (%)")}
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={item.desconto_pct}
-                    onChange={(e) =>
-                      setAvulsa({
-                        ...avulsa,
-                        itens: avulsa.itens.map((x, j) =>
-                          j === idx ? { ...x, desconto_pct: e.target.value } : x,
-                        ),
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{t("NCM")}</Label>
-                  <Input
-                    aria-label={t("NCM")}
-                    value={item.ncm}
-                    onChange={(e) =>
-                      setAvulsa({
-                        ...avulsa,
-                        itens: avulsa.itens.map((x, j) =>
-                          j === idx ? { ...x, ncm: e.target.value } : x,
-                        ),
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex items-end gap-2">
-                  <ProdutoParaItem
-                    onSelecionar={(produto) => selecionarProdutoDoItem(idx, produto)}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setAvulsa({ ...avulsa, itens: avulsa.itens.filter((_, j) => j !== idx) })
-                    }
-                  >
-                    {t("Remover")}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-          <Button onClick={() => void emitir()} disabled={emitindo || !configInicial}>
+          {erroEmissao && (
+            <p
+              role="alert"
+              data-testid="nfe-erro"
+              className="rounded-lg border border-error/30 bg-error-bg/50 px-3 py-2 text-sm text-error-fg"
+            >
+              {erroEmissao}
+            </p>
+          )}
+          {itensSemNcm.length > 0 && (
+            <p className="text-xs text-error-fg">
+              {t("Há item sem NCM no cadastro — a nota não emite até corrigir o produto.")}
+            </p>
+          )}
+          {podeEmitirAvulsa && (
+            <span data-testid="nfe-formulario-pronto" className="sr-only">
+              {t("Formulário pronto para emitir")}
+            </span>
+          )}
+          <Button
+            data-testid="nfe-emitir"
+            aria-busy={emitindo}
+            onClick={() => void emitir()}
+            disabled={
+              emitindo ||
+              !configInicial ||
+              avulsa.itens.length === 0 ||
+              itensSemNcm.length > 0
+            }
+          >
             {emitindo ? t("Enviando…") : textos.emitir}
           </Button>
         </div>
       )}
 
       {pendencias !== null && pendencias.length > 0 && (
-        <div className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm" role="alert">
+        <div
+          data-testid="nfe-pendencias"
+          className="rounded-lg border border-warning/40 bg-warning-bg p-3 text-sm"
+          role="alert"
+        >
           <p className="font-medium">
             {pendencias.length} {textos.pendencias}
           </p>
