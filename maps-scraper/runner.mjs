@@ -45,6 +45,13 @@ const raio = Number(args.raio ?? 8000); // metros — é a unidade do sidecar
 const depth = Number(args.depth ?? 2);
 const timeoutS = Number(args.timeout ?? 180);
 const saida = args.saida ?? null;
+// `array` = contrato congelado do adaptador (uma linha = array de negócios).
+// `objeto` = formato do importador legado (scripts/importar-prospecao-*.ts),
+// que faz JSON.parse por linha e espera UM negócio por linha.
+const formato = args.formato ?? "array";
+if (!["array", "objeto"].includes(formato)) {
+  falhar("ARGUMENTO_INVALIDO", "--formato aceita 'array' ou 'objeto'");
+}
 
 async function chamar(caminho, init) {
   let resp;
@@ -122,14 +129,30 @@ const pegar = (linha, nome) => {
   const v = linha[col[nome] ?? -1];
   return v === undefined || v === "" || v === "null" ? undefined : v;
 };
+const jsonDeCampo = (v) => {
+  if (!v) return null;
+  try {
+    const p = JSON.parse(v);
+    return p && typeof p === "object" ? p : null;
+  } catch {
+    return null;
+  }
+};
 
-const jsonl = registros
+// Formato CONGELADO pelo adaptador (commit 96edde72b):
+// - uma linha = ARRAY de negócios (não um objeto por linha);
+// - site em `web_site`;
+// - `complete_address` como OBJETO (no CSV ele vem como string JSON);
+// - `cid` como string de 19 dígitos.
+// O CSV do sidecar entrega `website` e `complete_address` textual; a conversão
+// é aqui, para o adaptador não precisar saber que o transporte foi CSV.
+const negocios = registros
   .filter((l) => l.length > 1)
   .map((l) => ({
     title: pegar(l, "title"),
     category: pegar(l, "category"),
     address: pegar(l, "address"),
-    complete_address: pegar(l, "complete_address"),
+    complete_address: jsonDeCampo(pegar(l, "complete_address")),
     phone: pegar(l, "phone"),
     web_site: pegar(l, "website"),
     place_id: pegar(l, "place_id"),
@@ -138,14 +161,17 @@ const jsonl = registros
     longitude: Number(pegar(l, "longitude")),
     review_rating: Number(pegar(l, "review_rating")),
     review_count: Number(pegar(l, "review_count")),
+    open_hours: jsonDeCampo(pegar(l, "open_hours")),
     link: pegar(l, "link"),
   }))
-  .map((r) => JSON.stringify(r))
-  .join("\n");
+  .filter((r) => r.title || r.place_id);
 
-if (!jsonl) falhar("SEM_RESULTADOS", `job ${id} sem nenhum negócio`);
+if (!negocios.length) falhar("SEM_RESULTADOS", `job ${id} sem nenhum negócio`);
 
-const texto = jsonl + "\n";
+const texto =
+  formato === "array"
+    ? JSON.stringify(negocios) + "\n"
+    : negocios.map((n) => JSON.stringify(n)).join("\n") + "\n";
 if (saida) await writeFile(saida, texto);
 process.stdout.write(texto);
-process.stderr.write(JSON.stringify({ ok: true, job: id, negocios: jsonl.split("\n").filter(Boolean).length }) + "\n");
+process.stderr.write(JSON.stringify({ ok: true, job: id, negocios: negocios.length, formato }) + "\n");

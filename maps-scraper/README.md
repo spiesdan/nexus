@@ -73,8 +73,17 @@ Quem consome CSV: o site vem em **`website`**; no JSON do CLI o mesmo dado se
 chama **`web_site`**. `complete_address` é string no CSV e objeto no JSON.
 `cid` é string de 19 dígitos — não converter para número.
 
-`runner.mjs` converte o CSV para o JSONL que
-`scripts/importar-prospecao-maps-scraper.ts` já importa (com `web_site`).
+`runner.mjs` converte o CSV para o formato do adaptador: **uma linha = array de
+negócios**, site em `web_site`, `complete_address` como objeto e `cid` string.
+Com `--formato objeto` ele emite um negócio por linha, que é o que o importador
+legado (`scripts/importar-prospecao-maps-scraper.ts`) lê — os dois consumidores
+têm formatos diferentes, então o formato é explícito e não implícito.
+
+> **Divergência aberta (27/11/2026):** o adaptador do Backend chama
+> `POST /v1/search` esperando JSON síncrono. O sidecar v1.21.0 **não tem** essa
+> rota: ele expõe `POST /api/v1/jobs` (assíncrono, id + download em CSV) e o
+> `runner.mjs` é CLI, não servidor HTTP. Ou o adaptador aponta para a API de jobs,
+> ou alguém escreve a fachada `/v1/search` — decisão de produto, não deste arquivo.
 
 ## Limites conhecidos
 
