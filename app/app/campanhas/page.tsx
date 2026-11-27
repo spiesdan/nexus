@@ -42,8 +42,7 @@ export default async function CampanhasPage() {
     .select(
       "id, categorias, cidade, estado, latitude, longitude, raio_km, max_empresas, provider, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
-        "requisicoes, custo_estimado_cents, progresso, motivo_zero, degradada, " +
-        "degradacao_motivo, parada_solicitada_em, ultimo_erro, created_at, finished_at",
+        "requisicoes, custo_estimado_cents, ultimo_erro, created_at, finished_at",
     )
     .eq("organization_id", activeOrg.orgId)
     .order("created_at", { ascending: false })
