@@ -312,6 +312,7 @@ export function ProductSearch({
       {filtrados.length > 0 && (
         <ul
           id="resultados-produto"
+          data-testid="produto-resultados"
           role="listbox"
           aria-label={t("Resultados da busca de produtos")}
           className="rounded-lg border bg-background shadow-sm"
@@ -365,7 +366,11 @@ export function ProductSearch({
         </p>
       ) : null}
       {filtrados.length === 0 && busca.trim() !== "" && !buscandoRemoto && (
-        <p id="busca-produto-ajuda" className="px-1 text-xs text-muted-foreground">
+        <p
+          id="busca-produto-ajuda"
+          data-testid="produto-busca-vazia"
+          className="px-1 text-xs text-muted-foreground"
+        >
           {t("Nenhum produto encontrado.")}
         </p>
       )}
