@@ -83,6 +83,20 @@ export async function semearContatoComEndereco(page: Page, nome: string): Promis
   return contactId;
 }
 
+/**
+ * PLACA VÁLIDA — a prontidão da carga reprova placa fora do formato Mercos.
+ *
+ * `ABC${sufixo}` com sufixo de 6 dígitos gerava "ABC123456", 9 caracteres, e
+ * `lib/expedicao/prontidao.ts` bloqueava com "Placa inválida — use ABC1D23 ou
+ * ABC1234". O "Confirmar carga" do passo 3 ficava `disabled` e as specs de GPS
+ * morriam no timeout, sem defeito de produto. Formato do produto: 3 letras +
+ * dígito + letra + 2 dígitos, único por carimbo para a base reaproveitada.
+ */
+export function placaDoCarimbo(carimbo: number): string {
+  const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  return `ABC${carimbo % 10}${letras[Math.floor(carimbo / 10) % 26]}${String(carimbo % 100).padStart(2, "0")}`;
+}
+
 export async function criarCargaEmRota(page: Page, prefixo: string): Promise<CargaEmRota> {
   const carimbo = Date.now();
   const sufixo = String(carimbo).slice(-6);
@@ -91,7 +105,7 @@ export async function criarCargaEmRota(page: Page, prefixo: string): Promise<Car
   const contactId = await semearContatoComEndereco(page, cliente);
   const pedido = await semearPedido(page, cliente, { produtoId, contactId });
   const numeroPedido = rotuloDoPedido(pedido.numero);
-  const placa = `ABC${sufixo.slice(0, 7)}`;
+  const placa = placaDoCarimbo(carimbo);
 
   await page.goto("/app/expedicao");
   await page.getByRole("link", { name: "Nova carga" }).click();

@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
-import { preencherEquipeNaNovaCarga, semearContatoComEndereco } from "./helpers/expedicao";
+import {
+  placaDoCarimbo,
+  preencherEquipeNaNovaCarga,
+  semearContatoComEndereco,
+} from "./helpers/expedicao";
 import { rotuloDoPedido, semearPedido, semearProduto } from "./helpers/pedidos";
 
 test.setTimeout(300_000);
@@ -34,11 +38,10 @@ test.setTimeout(300_000);
 test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluído", async ({ page }) => {
   const carimbo = Date.now();
   const cliente = `Cliente Jornada Expedicao ${carimbo}`;
-  // Placa única por execução. Era "ABC1D23" fixo, e a segunda rodada numa base
-  // reaproveitada encontrava a carga da primeira ainda aberta — o teste morria
-  // no meio, sem nenhum defeito de produto. Formato do produto: ABC1D23.
-  const letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const placa = `ABC${carimbo % 10}${letras[Math.floor(carimbo / 10) % 26]}${String(carimbo % 100).padStart(2, "0")}`;
+  // Placa única por execução, no formato do produto. Era "ABC1D23" fixo, e a
+  // segunda rodada numa base reaproveitada encontrava a carga da primeira
+  // ainda aberta — o teste morria no meio, sem nenhum defeito de produto.
+  const placa = placaDoCarimbo(carimbo);
 
   await loginComoAdmin(page, lerCreds());
   const produtoId = await semearProduto(page, `Produto Jornada Expedicao ${carimbo}`);
@@ -85,9 +88,20 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
   // impresso que não existe mais.
   await expect(page.getByRole("heading", { level: 1, name: /^Carga \d{3}$/ })).toBeVisible();
   await expect(page.getByText(new RegExp(`Montando · ${placa}`))).toBeVisible();
-  const romaneio = page.getByRole("link", { name: /^Romaneio \(PDF\)$/ });
+  // O romaneio mora no menu "Mais ações": o cabeçalho promove só a próxima
+  // ação. O Radix não monta o conteúdo de um menu fechado, então a spec abre o
+  // menu como o operador — antes ela procurava um link que não existia no DOM
+  // e o critical gastava 300 s. `menuitem`, não `link`: é o papel que o Radix
+  // dá ao item mesmo quando o `asChild` clona o `<a href>` (mesmo padrão de
+  // `imprimir-pedidos-mesma-aba.spec.ts`).
+  await page.getByRole("button", { name: "Mais ações" }).click();
+  const romaneio = page.getByRole("menuitem", { name: /^Romaneio \(PDF\)$/ });
   await expect(romaneio).toBeVisible();
   await expect(romaneio).toHaveAttribute("href", /\/api\/v1\/shipments\/.+\/romaneio/);
+  // Menu aberto é overlay: fecha antes de clicar na parada, senão ele
+  // intercepta o ponteiro do próximo passo.
+  await page.keyboard.press("Escape");
+  await expect(romaneio).toHaveCount(0);
 
   // 4. Rota: com 1 pedido não separado, publicar não é oferecido — a régua diz
   // quanto falta e a ação do banner é conferir a separação.
