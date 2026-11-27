@@ -142,28 +142,47 @@ test("captura dos seis estados visuais do Radar", async ({ page }) => {
       }
     }
 
-    // ── A LISTA: página inteira ───────────────────────────────────────────
-    // `fullPage` porque a viewport mostra 2-3 dos 6 cartões; emendar rolagem
-    // seria produzir a imagem que o QA reprovou. O topo é conferido no DOM.
-    await page.evaluate(() => window.scrollTo(0, 0));
+    // ── A LISTA: a página inteira ─────────────────────────────────────────
+    // `fullPage: true` NÃO funciona aqui: quem rola é o `<main>` do app shell
+    // (`h-screen overflow-auto`), o documento tem exatamente a altura da
+    // viewport, e o "fullPage" saía 1440×900 com 2-3 dos 6 cartões.
+    //
+    // A saída sem emenda: erguer a VIEWPORT até a altura real do main. O shell
+    // é `h-dvh`, então ele acompanha, tudo entra num quadro só — mesma largura,
+    // sem header repetido (que é o defeito de emendar capturas).
+    await page.evaluate(() => {
+      const main = document.querySelector("main");
+      if (main) main.scrollTop = 0;
+      window.scrollTo(0, 0);
+    });
     await expect(titulo).toBeVisible();
-    const caixaTitulo = await titulo.boundingBox();
-    console.log(
-      `[medida] topo em ${viewport.px}: título em y=${Math.round(caixaTitulo?.y ?? -1)}px`,
-    );
-    expect(caixaTitulo?.y ?? -1).toBeGreaterThanOrEqual(0);
 
-    const lista = await page.screenshot({ path: `${RAIZ}/lista-${viewport.px}.png`, fullPage: true });
+    const precisa = await page.evaluate(() => {
+      const main = document.querySelector("main");
+      const topo = main ? main.getBoundingClientRect().top : 0;
+      const conteudo = main ? main.scrollHeight : document.documentElement.scrollHeight;
+      return Math.ceil(topo + conteudo);
+    });
+    const alturaLista = Math.min(Math.max(precisa, viewport.altura), 6000);
+    console.log(`[medida] lista em ${viewport.px}: altura necessária ${precisa}px`);
+
+    await page.setViewportSize({ width: viewport.px, height: alturaLista });
+    await page.waitForTimeout(400);
+
+    const lista = await page.screenshot({ path: `${RAIZ}/lista-${viewport.px}.png` });
     const dimLista = dimensoes(lista);
     expect(dimLista.largura, `lista em ${viewport.px}px mantém a largura da viewport`).toBe(
       viewport.px,
     );
-    // A página inteira é mais alta que a viewport — é o que prova os 6 cartões.
     expect(
       dimLista.altura,
-      `lista em ${viewport.px}px precisa passar da dobra (altura ${viewport.altura})`,
+      `lista em ${viewport.px}px precisa conter a lista inteira (não caberia em ${viewport.altura})`,
     ).toBeGreaterThan(viewport.altura);
     console.log(`[medida] lista em ${viewport.px}: ${dimLista.largura}x${dimLista.altura}`);
+
+    // volta ao tamanho da viewport para as capturas de estado
+    await page.setViewportSize({ width: viewport.px, height: viewport.altura });
+    await page.waitForTimeout(300);
 
     // ── OS SEIS ESTADOS: página na viewport, cartão inteiro acima do dock ──
     for (const estado of ESTADOS) {
