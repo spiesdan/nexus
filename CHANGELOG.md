@@ -8,6 +8,24 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.18] — 2026-11-27
+
+### Adicionado
+
+- **Cobertura de QA para ordem, descarte e estados da expedição** Três testes e2e fecham lacunas da matriz de aceitação: ordem manual sobrevive
+  ao recálculo, descarte de proposta volta à ordem persistida sem gravar, e os
+  estados de erro/carregando/vazio da ficha e da lista. É cobertura de teste;
+  nenhum comportamento de produto mudou.
+
+### Corrigido
+
+- **Permissão de frota e das RPCs da expedição conferida no banco** A escrita na frota passa a exigir papel de gestor também no banco, e as duas
+  RPCs da expedição passam a exigir papel de agente. Antes a checagem existia só
+  na tela, então quem tivesse a chave e conhecesse a rota conseguia escrever.
+
+  É correção de permissão: nenhuma tela muda para quem já podia usar, e nenhum
+  passo extra é pedido ao operador da VPS.
+
 ## [2.0.17] — 2026-11-27
 
 ### Corrigido
@@ -9332,7 +9350,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.17...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.18...HEAD
+[2.0.18]: https://github.com/spiesdan/nexus/compare/v2.0.17...v2.0.18
 [2.0.17]: https://github.com/spiesdan/nexus/compare/v2.0.16...v2.0.17
 [2.0.16]: https://github.com/spiesdan/nexus/compare/v2.0.15...v2.0.16
 [2.0.15]: https://github.com/spiesdan/nexus/compare/v2.0.14...v2.0.15
