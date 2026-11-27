@@ -174,6 +174,8 @@ interface LinhaBusca {
   progresso: ProgressoDaBusca | Record<string, never> | null;
   motivo_zero: string | null;
   degradada: boolean;
+  degradacao_motivo: string | null;
+  parada_solicitada_em: string | null;
 }
 
 async function lerSettings(admin: SupabaseClient, orgId: string) {
@@ -211,6 +213,30 @@ async function lerSettings(admin: SupabaseClient, orgId: string) {
     preco_busca_cents: linha?.preco_busca_cents ?? null,
     preco_detalhe_cents: linha?.preco_detalhe_cents ?? null,
   };
+}
+
+/** Marca a busca como degradada com motivo legível (a rota devolve os dois). */
+export async function marcarDegradada(
+  admin: SupabaseClient,
+  busca: Pick<LinhaBusca, "id">,
+  motivo: string,
+): Promise<void> {
+  const texto = motivo.slice(0, 500);
+  const { error } = await admin
+    .from("prospecting_searches")
+    .update({
+      degradada: true,
+      degradacao_motivo: texto,
+      status: "paused",
+      ultimo_erro: texto,
+    })
+    .eq("id", busca.id);
+  if (error) {
+    logger.warn("[prospeccao] falha ao marcar degradada", {
+      search: busca.id,
+      error: error.message,
+    });
+  }
 }
 
 export async function processarTick(
@@ -517,15 +543,9 @@ async function processarMapas(
   const settings = await lerSettings(admin, busca.organization_id);
   const ativo = settings.temLinha ? settings.provider_ativo : "maps_browser";
   if (ativo !== "maps_browser") {
-    await admin
-      .from("prospecting_searches")
-      .update({
-        status: "failed",
-        ultimo_erro: `Provider maps_browser desligado nas configurações (ativo: ${ativo}).`,
-        finished_at: new Date().toISOString(),
-      })
-      .eq("id", busca.id);
-    res.status = "failed";
+    const motivo = `Descoberta Maps indisponível: provider ativo é ${ativo}; a busca caiu para o caminho degradado.`;
+    await marcarDegradada(admin, busca, motivo);
+    res.status = "paused";
     return res;
   }
 
@@ -584,15 +604,8 @@ async function processarMapas(
     provider = criar("maps_browser");
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await admin
-      .from("prospecting_searches")
-      .update({
-        status: "failed",
-        ultimo_erro: msg.slice(0, 500),
-        finished_at: new Date().toISOString(),
-      })
-      .eq("id", busca.id);
-    res.status = "failed";
+    await marcarDegradada(admin, busca, msg);
+    res.status = "paused";
     return res;
   }
 
@@ -616,12 +629,25 @@ async function processarMapas(
     // próximo termo e deixa o progresso onde está.
     const { data: estado } = await admin
       .from("prospecting_searches")
-      .select("status")
+      .select("status, parada_solicitada_em")
       .eq("id", busca.id)
       .maybeSingle();
-    const statusAtual = (estado as { status?: string } | null)?.status;
+    const estadoAtual = estado as
+      | { status?: string; parada_solicitada_em?: string | null }
+      | null;
+    const statusAtual = estadoAtual?.status;
     if (statusAtual === "paused" || statusAtual === "cancelled" || statusAtual === "failed") {
       res.status = statusAtual;
+      return res;
+    }
+    if (statusAtual === "running" && estadoAtual?.parada_solicitada_em) {
+      // Fecha o termo em curso (se houver) e só então declara parado; a rota
+      // mostra "parando" enquanto o status ainda é running.
+      await admin
+        .from("prospecting_searches")
+        .update({ status: "paused" })
+        .eq("id", busca.id);
+      res.status = "paused";
       return res;
     }
 
@@ -658,6 +684,9 @@ async function processarMapas(
       res.erros += 1;
       progresso = registrarFalha(progresso, termo, msg);
       const bloqueado = /bloque|captcha|403|429|sem_permissao|em_modo_navegador/i.test(msg);
+      const degradou = /sidecar_|maps_browser_(desligado|sem_url|indisponivel|timeout|job_falhou)|em_modo_navegador/i.test(
+        msg,
+      );
       if (bloqueado) {
         progresso = bloquear(progresso, msg, new Date().toISOString());
       }
@@ -667,6 +696,9 @@ async function processarMapas(
           progresso,
           ultimo_erro: msg.slice(0, 500),
           ...(bloqueado ? { status: "paused" } : {}),
+          ...(degradou
+            ? { degradada: true, degradacao_motivo: msg.slice(0, 500) }
+            : {}),
         })
         .eq("id", busca.id);
       logger.warn("[prospeccao] termo maps falhou", {

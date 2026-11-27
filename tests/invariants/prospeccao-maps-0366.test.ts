@@ -38,6 +38,18 @@ describe("0366 — prospecção Maps", () => {
     expect(def).toContain("jsonb_typeof(progresso) = 'object'");
   });
 
+  it("0368: degradacao_motivo e parada_solicitada_em existem", () => {
+    const colunas = sql(`
+      select column_name || '|' || data_type || '|' || is_nullable
+        from information_schema.columns
+       where table_schema = 'public' and table_name = 'prospecting_searches'
+         and column_name in ('degradacao_motivo', 'parada_solicitada_em')
+       order by column_name;
+    `);
+    expect(colunas).toContain("degradacao_motivo|text|YES");
+    expect(colunas).toContain("parada_solicitada_em|timestamp with time zone|YES");
+  });
+
   it("travas nascem nos padrões do plano: 20/h, 100/dia e jitter 1500 ms", () => {
     const defs = sql(`
       select column_name || '|' || coalesce(column_default, '')

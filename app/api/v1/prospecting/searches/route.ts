@@ -29,6 +29,7 @@ import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
 import { criarProgresso, resumo, type ProgressoDaBusca } from "@/lib/prospeccao/checkpoint";
+import { estadoDeParada, PARADA_MAXIMA_S } from "@/lib/prospeccao/parada";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import { MENSAGEM_ORCAMENTO_ATINGIDO, orcamentoDoMes, registrarCacheHit } from "@/lib/prospeccao/uso";
 import { buscaCreateSchema } from "@/lib/schemas/prospeccao";
@@ -93,7 +94,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
       "id, categorias, cidade, estado, raio_km, max_empresas, provider, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
         "requisicoes, custo_estimado_cents, progresso, motivo_zero, degradada, " +
-        "ultimo_erro, created_at, finished_at",
+        "degradacao_motivo, parada_solicitada_em, ultimo_erro, created_at, finished_at",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -110,9 +111,20 @@ export async function GET(_req: NextRequest): Promise<Response> {
   return ok(
     ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => {
       const p = row.progresso as ProgressoDaBusca | null;
-      if (row.provider !== "maps_browser") return { ...row, parcial_motivo: null };
+      const estado = {
+        ...row,
+        estado_parada: estadoDeParada(
+          String(row.status ?? ""),
+          (row.parada_solicitada_em as string | null) ?? null,
+        ),
+        parada_maxima_s: PARADA_MAXIMA_S,
+      };
+      if (row.provider !== "maps_browser") return { ...estado, parcial_motivo: null };
       const progresso = p && typeof p.termos_total === "number" ? p : criarProgresso((row.categorias as string[]) ?? []);
-      return { ...row, parcial_motivo: resumo(progresso, (row.categorias as string[]) ?? []).motivo };
+      return {
+        ...estado,
+        parcial_motivo: resumo(progresso, (row.categorias as string[]) ?? []).motivo,
+      };
     }),
     { requestId },
   );
@@ -283,7 +295,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       search_hash: hash,
       created_by: authz.user.id,
     })
-    .select("id, provider, progresso, motivo_zero, degradada")
+    .select(
+      "id, provider, progresso, motivo_zero, degradada, degradacao_motivo, parada_solicitada_em",
+    )
     .single();
 
   if (error || !data) {
@@ -314,6 +328,8 @@ export async function POST(req: NextRequest): Promise<Response> {
         criada.provider === "maps_browser"
           ? resumo(progresso, entrada.categorias ?? []).motivo
           : null,
+      estado_parada: null,
+      parada_maxima_s: PARADA_MAXIMA_S,
     },
     { requestId, status: 201 },
   );
