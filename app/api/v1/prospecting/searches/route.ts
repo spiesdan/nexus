@@ -20,10 +20,16 @@ import { fail, ok } from "@/lib/api/wrappers";
 import { requireRole } from "@/lib/auth/require-role";
 import { logger } from "@/lib/logger";
 import { env } from "@/lib/env";
-import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import {
+  googlePlacesHabilitado,
+  mapsBrowserHabilitado,
+  resolverChaveGoogle,
+} from "@/lib/prospeccao/chave";
 import { custoEfetivo } from "@/lib/prospeccao/custos";
 import { gerarGrade } from "@/lib/prospeccao/grade";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
+import { criarProgresso, resumo, type ProgressoDaBusca } from "@/lib/prospeccao/checkpoint";
+import { estadoDeParada, PARADA_MAXIMA_S } from "@/lib/prospeccao/parada";
 import { criarProvider } from "@/lib/prospeccao/providers/registro";
 import { MENSAGEM_ORCAMENTO_ATINGIDO, orcamentoDoMes, registrarCacheHit } from "@/lib/prospeccao/uso";
 import { buscaCreateSchema } from "@/lib/schemas/prospeccao";
@@ -85,9 +91,10 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_searches")
     .select(
-      "id, categorias, cidade, estado, raio_km, max_empresas, provider, status, " +
+      "id, categorias, cidade, estado, latitude, longitude, raio_km, max_empresas, provider, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
-        "requisicoes, custo_estimado_cents, ultimo_erro, created_at, finished_at",
+        "requisicoes, custo_estimado_cents, progresso, motivo_zero, degradada, " +
+        "degradacao_motivo, parada_solicitada_em, ultimo_erro, created_at, finished_at",
     )
     .eq("organization_id", authz.org.orgId)
     .order("created_at", { ascending: false })
@@ -101,7 +108,26 @@ export async function GET(_req: NextRequest): Promise<Response> {
     });
     return fail("internal_error", "Erro ao listar as buscas.", 500, { requestId });
   }
-  return ok(data ?? [], { requestId });
+  return ok(
+    ((data ?? []) as unknown as Record<string, unknown>[]).map((row) => {
+      const p = row.progresso as ProgressoDaBusca | null;
+      const estado = {
+        ...row,
+        estado_parada: estadoDeParada(
+          String(row.status ?? ""),
+          (row.parada_solicitada_em as string | null) ?? null,
+        ),
+        parada_maxima_s: PARADA_MAXIMA_S,
+      };
+      if (row.provider !== "maps_browser") return { ...estado, parcial_motivo: null };
+      const progresso = p && typeof p.termos_total === "number" ? p : criarProgresso((row.categorias as string[]) ?? []);
+      return {
+        ...estado,
+        parcial_motivo: resumo(progresso, (row.categorias as string[]) ?? []).motivo,
+      };
+    }),
+    { requestId },
+  );
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -124,24 +150,40 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "Informe ao menos a cidade (busca estadual usa campanha).", 422, { requestId });
   }
 
-  const admin = createAdminClient();
-  const { ttl, teto, providerAtivo, grade: cfgGrade, orcamentoMensalCents, preco } =
-    await cfgDaBusca(admin, authz.org.orgId);
-  // Provider escolhido é o da Configuração → Prospecção (a tela nem manda);
-  // quem mandar diferente é recusado na hora, igual o motor recusaria depois.
-  if (entrada.provider && entrada.provider !== providerAtivo) {
+  // Provider explícito: a tela do zero/degradada oferece OSM/Places em um
+  // clique. Sem o campo, vale `provider_ativo` (comportamento intacto).
+  const explicito = entrada.provider;
+  if (
+    explicito &&
+    explicito !== "osm_overpass" &&
+    explicito !== "google_places" &&
+    explicito !== "maps_browser"
+  ) {
     return fail(
       "validation_failed",
-      `Provider ${entrada.provider} desligado nas configurações (Configurações → Prospecção).`,
+      `Provider "${explicito}" desconhecido. Use osm_overpass (grátis) ou google_places.`,
       422,
       { requestId },
     );
   }
-  const provider = providerAtivo;
-  if (provider === "maps_browser") {
+  if (explicito === "maps_browser") {
+    // O CTO segura o Maps como opção até 12/12; hoje ele não entra no seletor.
     return fail(
       "validation_failed",
-      "Provider via navegador desligado (esqueleto). Use osm_overpass (grátis) ou google_places.",
+      "maps_browser ainda não é uma opção de busca. Use osm_overpass (grátis) ou google_places.",
+      422,
+      { requestId },
+    );
+  }
+
+  const admin = createAdminClient();
+  const { ttl, teto, providerAtivo, grade: cfgGrade, orcamentoMensalCents, preco } =
+    await cfgDaBusca(admin, authz.org.orgId);
+  const provider = explicito ?? providerAtivo;
+  if (provider === "maps_browser" && !mapsBrowserHabilitado()) {
+    return fail(
+      "validation_failed",
+      "Descoberta pelo Maps desligada nesta instalação (MAPS_BROWSER_ENABLED=true e MAPS_BROWSER_URL). Use osm_overpass (grátis) ou google_places; a descoberta está degradada.",
       422,
       { requestId },
     );
@@ -161,6 +203,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       { requestId },
     );
   }
+  const providerOrigem = explicito ? "explicito" : "configuracao";
 
   // Cache (§7/§30): o hash usa só a entrada (cidade/UF/raio/provider), então o
   // hit vem ANTES do geocode — mesma pesquisa dentro do TTL não paga nem uma
@@ -269,7 +312,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       search_hash: hash,
       created_by: authz.user.id,
     })
-    .select("id")
+    .select(
+      "id, provider, progresso, motivo_zero, degradada, degradacao_motivo, parada_solicitada_em",
+    )
     .single();
 
   if (error || !data) {
@@ -288,7 +333,23 @@ export async function POST(req: NextRequest): Promise<Response> {
     resourceType: "prospecting_searches",
     resourceId: (data as unknown as { id: string }).id,
     requestId,
+    // Quem pediu qual provider, e se veio do corpo ou da configuração.
+    metadata: { provider, provider_origem: providerOrigem },
   });
 
-  return ok({ ...(data as unknown as Record<string, unknown>), total_celulas: totalCelulas }, { requestId, status: 201 });
+  const criada = data as unknown as Record<string, unknown>;
+  const progresso = (criada.progresso ?? {}) as ProgressoDaBusca;
+  return ok(
+    {
+      ...criada,
+      total_celulas: totalCelulas,
+      parcial_motivo:
+        criada.provider === "maps_browser"
+          ? resumo(progresso, entrada.categorias ?? []).motivo
+          : null,
+      estado_parada: null,
+      parada_maxima_s: PARADA_MAXIMA_S,
+    },
+    { requestId, status: 201 },
+  );
 }

@@ -15,6 +15,8 @@ export type NomeDeProvider = (typeof PROVIDERS_CONHECIDOS)[number];
 export interface OpcoesDeProvider {
   chaveGoogle?: string;
   browserHabilitado?: boolean;
+  mapsBrowserUrl?: string;
+  mapsBrowserToken?: string;
   timeoutMs?: number;
   tentativas?: number;
 }
@@ -29,7 +31,13 @@ export function criarProvider(nome: string, opts: OpcoesDeProvider = {}): Busine
     case "osm_overpass":
       return new OSMOverpassProvider({ timeoutMs: opts.timeoutMs, tentativas: opts.tentativas });
     case "maps_browser":
-      return new MapsBrowserProvider(opts.browserHabilitado ?? false);
+      return new MapsBrowserProvider({
+        habilitado: opts.browserHabilitado ?? process.env.MAPS_BROWSER_ENABLED === "true",
+        baseUrl: opts.mapsBrowserUrl ?? process.env.MAPS_BROWSER_URL,
+        token: opts.mapsBrowserToken ?? process.env.MAPS_BROWSER_TOKEN,
+        timeoutMs: opts.timeoutMs,
+        tentativas: opts.tentativas,
+      });
     default:
       throw new Error(`provider_desconhecido: "${nome}". Conhecidos: ${PROVIDERS_CONHECIDOS.join(", ")}.`);
   }
@@ -37,8 +45,8 @@ export function criarProvider(nome: string, opts: OpcoesDeProvider = {}): Busine
 
 /**
  * Metadados para a tela de Configuração (seletor de provider) — sem segredo
- * aqui. O esqueleto `maps_browser` fica FORA: é rejeitado pela rota e não é
- * opção real (§1 da spec 19 — a UI só oferece o que existe).
+ * aqui. `maps_browser` entra como experimental: a rota só aceita com
+ * `MAPS_BROWSER_ENABLED=true` e `MAPS_BROWSER_URL` configurada.
  */
 export const METADADOS_PROVIDERS: { nome: NomeDeProvider; rotulo: string; descricao: string }[] = [
   {
@@ -50,5 +58,10 @@ export const METADADOS_PROVIDERS: { nome: NomeDeProvider; rotulo: string; descri
     nome: "osm_overpass",
     rotulo: "OpenStreetMap (grátis)",
     descricao: "Diretório aberto, sem chave e sem custo. Nome, endereço e mapa; telefone/site quando cadastrados, sem avaliações. Cobertura varia por cidade.",
+  },
+  {
+    nome: "maps_browser",
+    rotulo: "Google Maps (sidecar experimental)",
+    descricao: "Descoberta pelo sidecar próprio, sem chave. Traz telefone, site, nota e total de avaliações; cobertura varia por cidade e a instalação precisa do sidecar ligado.",
   },
 ];
