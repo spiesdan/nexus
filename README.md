@@ -12,6 +12,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-1%20comando-orange)](hostgator-setup-kit/)
 [![CI](https://github.com/spiesdan/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/spiesdan/nexus/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/spiesdan/nexus?sort=semver)](https://github.com/spiesdan/nexus/releases/latest)
 
 [**⚡ Instalar**](#-instalar-na-sua-vps-o-caminho-principal) · [**🔄 Atualizar**](#-atualizar) · [**🧭 Visão**](VISION.md) · [**🏗️ Arquitetura**](ARCHITECTURE.md) · [**🤝 Contribuir**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
 
@@ -19,10 +20,21 @@
 
 ---
 
+## Em 30 segundos
+
+**O que é:** CRM + agentes de IA para WhatsApp, rodando na sua infraestrutura.
+**Licença:** MIT para o código; a marca e os logotipos não são licenciados.
+**Você paga:** só a infraestrutura que usar — VPS com Docker (2 vCPU / 4 GB), domínio, banco Supabase (nuvem grátis ou self-hosted), consumo do provedor de IA e **WAHA Plus** (licença do fornecedor; o WAHA Core não atende multi-tenant). O Nexus não cobra mensalidade.
+**Você precisa ter:** uma chave de IA (OpenRouter, Anthropic ou OpenAI) e um número de WhatsApp.
+**Instala em:** um comando; atualiza pela tela ou por `update.sh`, com backup antes.
+**Não tem:** SLA nem suporte garantido; backup, TLS e operação da VPS são seus.
+
+> A tela **Billing** existe para quem opera a instalação cobrar os próprios clientes (opcional; exige Stripe). Ela não é uma assinatura do Nexus.
+
 > ### ☁️ Rode este CRM em produção com 1 comando
 >
 > O Nexus foi desenvolvido em **parceria com a HostGator**: o [`hostgator-setup-kit/`](hostgator-setup-kit/)
-> instala o CRM completo (app + WhatsApp + banco) numa VPS com um único comando, e o
+> instala o CRM (app + WhatsApp) numa VPS e aplica o schema no seu Supabase com um único comando; o
 > [runbook de produção](docs/runbooks/waha-hostgator.md) já assume esse ambiente.
 >
 > **[👉 Assinar a VPS HostGator com desconto da parceria](https://www.hostgator.com.br/52708-141-3-52.html)** —
@@ -80,7 +92,7 @@ Se faltar Docker, o instalador pergunta e instala sozinho.
 |---|---|
 | **VPS com Docker** | [HostGator](https://www.hostgator.com.br/52708-141-3-52.html) (parceria) — ou qualquer VPS com Docker. 4 GB de RAM recomendados |
 | **Domínio** | Um registro **A** apontando pro IP da VPS (ex.: `crm.suaempresa.com.br`) |
-| **Banco** | Conta grátis no [supabase.com](https://supabase.com) — 3 chaves + connection string do **Session pooler** |
+| **Banco** | [Supabase](https://supabase.com) — conta grátis na nuvem ou instância self-hosted; 3 chaves + connection string do **Session pooler** |
 | **IA** | Uma chave de **OpenRouter**, **Anthropic** ou **OpenAI** — o instalador pergunta qual você quer |
 | **WhatsApp** | Seu número, conectado por QR code no onboarding (ou o canal oficial da Meta) |
 
@@ -160,7 +172,7 @@ O comando faz, nesta ordem: (1) confere se há mesmo versão nova — se não ho
 (conserta sozinho dados bagunçados por versões antigas); (5) puxa a imagem nova do app;
 (6) confere a saúde no fim.
 
-**O alvo é a última versão publicada** (`v1.2.3`), não o topo da `main` — atualizar leva sempre
+**O alvo é a última versão publicada** (veja [Releases](https://github.com/spiesdan/nexus/releases/latest)), não o topo da `main` — atualizar leva sempre
 a uma versão marcada e descrita no [`CHANGELOG.md`](CHANGELOG.md), nunca a um commit não testado.
 Ele **recusa** voltar pra uma versão anterior à instalada (isso desligaria coisas que você já tem);
 pra isso existe `--force`, de propósito.
@@ -233,7 +245,7 @@ Por baixo, cada evento vira uma linha em `event_log` — nenhum trigger de banco
 | **Agente de IA** | **Agentes** · **Follow-ups** · **Roteadores** · **Provedores** e **Credenciais** · **Conhecimento** (RAG) · **Memória** · **Skills** · **Casos** · **Alertas** · **Propostas** · **Execuções** · **Uso e orçamento** |
 | **Canais** | **Conexões** (QR ou canal oficial da Meta, com saúde, reconexão e templates) · **Nuvemshop** · **Webhooks** |
 | **Análise** | **Desempenho** (funil e performance por atendente) · **Evolução da IA** · **Audit Log** |
-| **Organização** | **Equipe** · **Distribuição de atendimento** · **Organização** · **LGPD** · **API Tokens** · **Segurança** (MFA, códigos de recuperação, sessões) · Perfil, Notificações, Billing |
+| **Organização** | **Equipe** · **Distribuição de atendimento** · **Organização** · **LGPD** · **API Tokens** · **Segurança** (MFA, códigos de recuperação, sessões) · Perfil, Notificações, Billing (cobrança do operador para os próprios clientes; opcional, exige Stripe) |
 
 Toda tela tem porta na navegação — o CI reprova tela que existe mas em que só se chega digitando a URL.
 
@@ -249,7 +261,7 @@ Toda tela tem porta na navegação — o CI reprova tela que existe mas em que s
 | **Auth** | Supabase Auth via `@supabase/ssr` | Cookie SameSite=Strict, HttpOnly |
 | **Realtime** | Supabase Realtime | postgres_changes + broadcast |
 | **Storage** | Supabase Storage (URLs assinadas) | Bucket privado `whatsapp-media` |
-| **WhatsApp** | WAHA Plus (engine NOWEB) + Meta Cloud API | QR pra começar rápido; canal oficial pra escala |
+| **WhatsApp** | WAHA Plus (engine NOWEB; licença do fornecedor) + Meta Cloud API | QR pra começar rápido; canal oficial pra escala |
 | **Filas** | `event_log` table + workers (cron) | Trigger de banco nunca faz HTTP |
 | **Rate limit** | Upstash Redis (sliding window) | Serverless, free tier suficiente |
 | **AI** | Vercel AI SDK v7 — OpenRouter, Anthropic, OpenAI e Google | Instalador pergunta qual; troca depois pela tela |
@@ -311,7 +323,7 @@ Nexus/
 │   ├── app/                # Rotas autenticadas: inbox, radar, kanban, contacts,
 │   │                       #   connections, ai/*, integrations, metrics, lgpd,
 │   │                       #   audit, team, settings
-│   └── api/v1/             # API REST canônica (196 route handlers)
+│   └── api/v1/             # API REST canônica (462 route handlers)
 ├── components/             # React (ui/, inbox/, kanban/, shell/, ...)
 ├── lib/                    # supabase/, waha/, channels/, ai/, agent-engine/,
 │                           #   api/, routing/, navigation/, env.ts
@@ -335,24 +347,24 @@ pnpm test:db       # Postgres efêmero + baseline install/update + invariantes
 pnpm test:e2e      # Playwright (requer dev server)
 ```
 
-**Estes checks são obrigatórios** pra mergear na `main`. A lista abaixo já disse "quatro" e depois "cinco" — **meça, não confie nela**:
+**Estes são os checks obrigatórios** pra mergear na `main` — **seis** hoje. A lista envelhece; **meça na fonte**:
 
 ```bash
 gh api repos/spiesdan/nexus/branches/main/protection \
   --jq '.required_status_checks.contexts|join(", ")'
-# em 2026-08-14: verify, build-and-size, invariants, e2e, imagens-ok
+# em 2026-11-27: verify, invariants, e2e, build-and-size, imagens-ok, fragmento
 ```
-
 
 | Check | O que faz |
 |---|---|
 | `verify` | typecheck + lint + `lint:channels` + `test:unit` + `test:shell` |
 | `invariants` | sobe um Postgres limpo, aplica o `baseline.sql` em modo **install** e depois em modo **update** — as duas passadas com `ON_ERROR_STOP=1`, que é o que torna a segunda uma prova de idempotência e não só um "terminou" —, e roda os invariantes de RBAC, atribuição, escopo, roteamento, follow-up, webhooks e automações |
 | `build-and-size` | `pnpm build` em Node 22 |
-| `e2e` | sobe Supabase local, aplica o `baseline.sql` e roda **48 das 49 specs** Playwright pelo frontend |
+| `e2e` | sobe Supabase local, aplica o `baseline.sql` e roda a suíte do evento: **smoke** no PR, **critical** no push da `main`, **full** no noturno. O disco tem **113 specs**; **duas** ficam fora do CI (`vps-fresh-onboarding` e `inbox-tempo-real`, com motivo em `FORA_DO_CI`) |
 | `imagens-ok` | reprova quando qualquer uma das três imagens Docker (`app`, `worker`, `scheduler`) não constrói — é o artefato que o self-hoster instala |
+| `fragmento` | PR que muda `app/`, `lib/`, `workers/`, `components/`, `supabase/` ou `scripts/` exige um fragmento em `.changes/`; doc/CI é isento. O rótulo `sem-fragmento` (raro, com motivo) é a saída |
 
-A única spec fora do `e2e` é `vps-fresh-onboarding` — ela precisa de WAHA + Redis + Resend + Nuvemshop de verdade. Ela é a **P0** da nossa doutrina de QA visual, então `e2e` verde **não** prova a jornada de instalação fresca; essa se prova numa VPS.
+`e2e` verde em PR prova o **smoke**, não a suíte inteira. As duas specs fora do CI são a **P0** da doutrina de QA visual — `e2e` verde **não** prova a jornada de instalação fresca; essa se prova numa VPS.
 
 Entre os invariantes está o **teste de isolamento RLS**: cria 2 organizações, simula os claims JWT pelo mesmo caminho `auth.uid()` / `fn_user_org_ids()` que as policies de produção usam, e prova que um usuário da org A enxerga **zero linhas** da org B em `conversations`, `messages`, `contacts` e `crm_leads`. Antes disso, um caso de controle prova que as linhas da org B realmente existem — sem ele, o teste passaria com a tabela vazia.
 
@@ -428,7 +440,7 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 - **Escolha de provedor de IA** — OpenRouter, Anthropic ou OpenAI, decidido na instalação e trocável por parte do sistema pela tela.
 - **Follow-up vivo** — retomada de conversa esfriada com tempo adaptativo, gatilhos por etapa do funil e por caso, fila com rodízio, e o Radar do que corre risco de morrer sem resposta.
 - **LGPD** — export e redact via workers, anonimização em cascata, consentimento auditado.
-- **Self-host** — `hostgator-setup-kit` (app + WhatsApp + banco com 1 comando), `baseline.sql` auto-curativo, **atualização pela tela** com backup automático, runbook de produção.
+- **Self-host** — `hostgator-setup-kit` (app + WhatsApp na VPS; schema no seu Supabase, com 1 comando), `baseline.sql` auto-curativo, **atualização pela tela** com backup automático, runbook de produção.
 - **Webhooks & automação** — fontes de captação + regras QUANDO/SE/ENTÃO + gatilhos pra sistemas externos.
 - **Governança de atendimento** — RBAC server-side em toda a API, atribuição e transferência auditadas (IA como assignee de 1ª classe), visualização por papel (RLS) + métricas por atendente, roteamento automático com fila e painel de gestão, e contrato de governança pra agentes de IA externos ([`docs/specs/14`](docs/specs/14-contrato-governanca-agentes-externos.md)).
 - **Operação visível** — motivo da retenção anti-ban traduzido na conversa, central de avisos com severidade, aviso de mensagem presa, controle de proteção de envio (janela/ritmo/teto), capacidades declaradas do agente e propostas do flywheel aplicáveis como versão nova (com gate humano).
@@ -444,7 +456,7 @@ Pra **vulnerabilidades de segurança**, **NÃO abra issue pública** — use o [
 
 ## 💬 Comunidade
 
-- **Discussões:** [GitHub Discussions](https://github.com/spiesdan/nexus/discussions) — pra perguntas, ideias, showcase.
+- **Perguntas e ideias:** abra uma [issue](https://github.com/spiesdan/nexus/issues/new/choose) com a label `question` — o Discussions está desligado neste repositório.
 - **Issues:** [GitHub Issues](https://github.com/spiesdan/nexus/issues) — bugs e tasks.
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
@@ -470,8 +482,7 @@ Este é um projeto **self-host**: cada pessoa roda o CRM na **própria infraestr
 (VPS, banco Supabase e chave de IA próprios). Isso implica:
 
 - **Suporte é por contato e "as-is".** Dúvidas e bugs entram como
-  [Issues](https://github.com/spiesdan/nexus/issues) ou
-  [Discussions](https://github.com/spiesdan/nexus/discussions). Não há SLA nem
+  [Issues](https://github.com/spiesdan/nexus/issues). Não há SLA nem
   suporte garantido.
 - **Você é responsável pela sua instalação.** Atualizações não são automáticas (você clica
   ou roda `update.sh` quando quiser), e manter/backup do seu servidor é com você.

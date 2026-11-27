@@ -1,0 +1,4 @@
+# Dono padrão de revisão: mantenedor do repositório.
+# Times maiores podem substituir por `* @spiesdan @time` e ligar
+# `require_code_owner_reviews` na proteção da main.
+* @spiesdan
