@@ -39,6 +39,16 @@ import { CustomerSelector } from "../../pedidos/novo/_cliente";
 import type { Textos } from "./textos";
 
 /**
+ * SEMENTE DA SESSÃO — compõe a chave de idempotência de cada clique.
+ *
+ * Fora do render de propósito: `Math.random` no corpo do componente é impuro
+ * (e o lint reprova). Uma semente por carregamento + contador por tentativa dá
+ * chave única para "um clique = uma nota", inclusive quando o navegador repete
+ * a requisição.
+ */
+const SEMENTE_DA_SESSAO = Math.random().toString(36).slice(2);
+
+/**
  * Faturado + o destinatário já resolvido do cadastro (nome, CPF/CNPJ e o
  * TLocal com cMun do IBGE). Vem pronto do servidor: a tela não recalcula a
  * regra, só preenche e deixa corrigir.
@@ -327,6 +337,10 @@ export function EmitirNota({
   const [carregandoProdutos, setCarregandoProdutos] = React.useState(false);
   const buscaProdutoRef = React.useRef<HTMLInputElement | null>(null);
   const [erroEmissao, setErroEmissao] = React.useState<string | null>(null);
+  /** Um clique = uma nota: o ref barra o segundo clique antes do re-render. */
+  const emitindoRef = React.useRef(false);
+  /** Contador da tentativa desta sessão — compõe a chave de idempotência. */
+  const tentativaRef = React.useRef(0);
   const precosVazios = React.useMemo(() => new Map<string, UltimoPreco>(), []);
 
   React.useEffect(() => {
@@ -611,6 +625,8 @@ export function EmitirNota({
       toast.error(checagem.error.issues[0]?.message ?? t("Dados adicionais inválidos."));
       return;
     }
+    if (emitindoRef.current) return;
+    emitindoRef.current = true;
     setEmitindo(true);
     setPendencias(null);
     setErroEmissao(null);
@@ -624,7 +640,14 @@ export function EmitirNota({
         setPendencias(prev.data.pendencias);
         return;
       }
-      await apiClient.post("/api/v1/invoices", { extras: checagem.data });
+      // A chave de idempotência é do clique: um envio repetido pelo navegador
+      // devolve a MESMA nota, em vez de consumir outro número.
+      const chaveIdempotencia = `nfe-${SEMENTE_DA_SESSAO}-${++tentativaRef.current}`;
+      await apiClient.post(
+        "/api/v1/invoices",
+        { extras: checagem.data },
+        { headers: { "Idempotency-Key": chaveIdempotencia } },
+      );
       toast.success(t("Venda avulsa enfileirada para emissão"));
       setAvulsa({
         cliente_nome: "",
@@ -641,6 +664,7 @@ export function EmitirNota({
       );
       showApiError(e);
     } finally {
+      emitindoRef.current = false;
       setEmitindo(false);
     }
   }
