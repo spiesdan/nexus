@@ -252,6 +252,12 @@ titulo "Versão"
 TAG_ENV="$(grep -E '^APP_IMAGE=' .env 2>/dev/null | head -1 | sed 's#.*:##')"
 DOMINIO="$(grep -E '^NEXT_PUBLIC_APP_URL=' .env 2>/dev/null | head -1 \
   | sed -E 's#^NEXT_PUBLIC_APP_URL=##; s#^["'"'"']##; s#["'"'"']$##; s#^https?://##; s#/.*$##')"
+# Qual proxy publica esta instalação. O `install.sh` grava no `.env`, e as duas
+# rotas quebram de jeitos diferentes: sem esta variável, o alerta de 404 mandava
+# o operador do Caddy rodar o comando que derruba o `up` dele.
+PROXY="$(grep -E '^REVERSE_PROXY=' .env 2>/dev/null | head -1 \
+  | sed -E 's#^REVERSE_PROXY=##; s#["'"'"']##g')"
+PROXY="${PROXY:-caddy}"
 VER_RODANDO=""
 [ -n "$DOMINIO" ] && VER_RODANDO="$(curl -fsS --max-time 10 "https://$DOMINIO/api/v1/health" 2>/dev/null \
   | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')"
@@ -276,7 +282,13 @@ else
   CODIGO="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "https://$DOMINIO/" 2>/dev/null)"
   case "$CODIGO" in
     2*|3*) ok "https://$DOMINIO/ devolve $CODIGO" ;;
-    404)   alerta "https://$DOMINIO/ devolve 404 — labels do Traefik perdidas? Rode o deploy com os DOIS -f" ;;
+    404)
+      if [ "$PROXY" = "traefik" ]; then
+        alerta "https://$DOMINIO/ devolve 404 — labels do Traefik perdidas (up sem o override?). Refaça com os DOIS -f, §1.2 do runbook."
+      else
+        alerta "https://$DOMINIO/ devolve 404 — o app respondeu não achei a rota (ou Host fora do Caddyfile). Alcançar o app é 502/503; aqui ele respondeu. Veja: docker compose -f docker-compose.prod.yml logs --tail=50 app"
+      fi ;;
+    50*)   alerta "https://$DOMINIO/ devolve $CODIGO — o proxy não alcança o app (fora da rede internal ou caído). Rode: docker compose -f docker-compose.prod.yml up -d app caddy" ;;
     000|"") alerta "https://$DOMINIO/ não respondeu" ;;
     *)     alerta "https://$DOMINIO/ devolve $CODIGO" ;;
   esac

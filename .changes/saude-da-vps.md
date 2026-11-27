@@ -33,3 +33,10 @@ antes de qualquer efeito. Dois deploys ao mesmo tempo agora terminam com o
 segundo recusado em vez de recriar o parque em paralelo. O arquivo fica dentro de
 `.git/` porque um `.update.lock` não rastreado na raiz faz o próprio
 `git checkout` do update abortar.
+
+O `deploy.md` deixou de tratar o Traefik da hospedagem como padrão de toda VPS:
+os dois caminhos (Caddy do compose × proxy do host) aparecem com o comando, a
+verificação e o significado do 404 de cada um — passar os dois `-f` numa
+instalação com Caddy aborta o `up`, e esquecer o override numa com Traefik
+derruba o domínio em 404. O `saude.sh` segue a mesma régua: o alerta de borda
+nomeia o proxy que a instalação realmente usa.

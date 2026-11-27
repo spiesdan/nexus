@@ -6,18 +6,41 @@ está documentado no fim.
 
 ---
 
-## 1. O comando
+## 1. O comando — e por que são DOIS comandos
+
+O deploy não constrói nada na VPS: o CI publica a imagem e a VPS só puxa. Mas
+**qual `docker compose` rodar** depende do proxy reverso que a instalação
+escolheu, e isso fica gravado no `.env`:
 
 ```bash
 cd /var/www/crm
+grep '^REVERSE_PROXY=' .env        # caddy (padrão) | traefik
+```
+
+O `install.sh` decide na instalação (e grava no `.env`): VPS "crua" recebe o
+**Caddy do próprio compose**; VPS entregue com um proxy já ocupando 80/443
+(Hostinger, Coolify, Dokploy, CapRover…) recebe `REVERSE_PROXY=traefik` e passa a
+usar o **proxy da hospedagem**. Os dois caminhos existem, e o script do kit
+(`_common.sh` → `dc()`) escolhe sozinho — quem digita à mão precisa saber qual é
+o seu.
+
+### 1.1 Caddy do compose (`REVERSE_PROXY=caddy`, o padrão)
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d app
+```
+
+O compose sobe o `caddy` nas portas 80/443 com o `Caddyfile` do repositório. Os
+erros se distinguem pelo código: `404` é o **app** respondendo "não achei a rota"
+(ou um Host que não casa com o `Caddyfile`); `502`/`503` é o Caddy sem alcançar o
+`app` — fora da rede `internal` ou caído.
+
+### 1.2 Proxy do host (`REVERSE_PROXY=traefik`)
+
+```bash
 docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d app
 ```
 
-### Os DOIS `-f` são obrigatórios. Sempre.
-
-Esta é a pegadinha que já derrubou o site inteiro em produção (2026-08-05).
-
-A VPS (Hostinger) vem com um **Traefik próprio** ocupando as portas 80/443.
 `docker-compose.traefik.yml` é o ÚNICO lugar que:
 
 - coloca no contêiner `app` as labels de roteamento
@@ -26,34 +49,54 @@ A VPS (Hostinger) vem com um **Traefik próprio** ocupando as portas 80/443.
 - desliga o `caddy` do compose base por profile (senão dois processos brigam
   pela mesma porta).
 
-Rodar só com `-f docker-compose.prod.yml` recria o contêiner **sem labels
-nenhuma**. O Traefik deixa de enxergá-lo e o domínio inteiro passa a responder
-`404 page not found` — não é erro do Next, é o 404 genérico do Traefik. A app
-está no ar, saudável, e inalcançável.
+Rodar só com `-f docker-compose.prod.yml` numa instalação assim recria o
+contêiner **sem labels nenhuma**. O Traefik deixa de enxergá-lo e o domínio
+passa a responder `404 page not found` — não é erro do Next, é o 404 genérico do
+Traefik. A app está no ar, saudável, e inalcançável.
+
+> ⚠️ **Os dois `-f` não são universais.** Numa instalação com o Caddy do compose,
+> passar o override aborta o `up` com `network traefik declared as external, but
+> could not be found` (medido em 24/10/2026) — e aí o deploy morre no meio, com
+> o parque em estado misto. O erro clássico de 2026-08-05 foi o oposto: uma
+> instalação **com** Traefik recebeu `up -d` com um `-f` só e o site inteiro
+> ficou em 404, healthy no `docker ps`. Cada caminho tem o seu jeito de quebrar.
 
 ---
 
 ## 2. Verificação pós-deploy (não pule)
 
-`healthy` no `docker ps` **não prova que o site está acessível** — o healthcheck
-é um probe TCP interno e passa mesmo com o roteamento quebrado. Verifique as
-duas coisas:
+`healthy` no `docker ps` **não prova que o site está acessível**: o healthcheck
+é um probe TCP interno e passa mesmo com o roteamento quebrado.
+
+**Primeiro, qual proxy esta instalação usa:**
 
 ```bash
-# 1) as labels do Traefik existem?
-#    O nome do contêiner é <pasta-do-projeto>-app-1, então pergunte ao compose
-#    em vez de chutar. Aqui um -f só basta: o `ps -q` resolve pelo nome do
-#    projeto + serviço, não pelo conteúdo do arquivo (medido: com um -f ou com
-#    os dois, devolve o MESMO contêiner). Quem precisa dos dois é o `up -d`.
+grep '^REVERSE_PROXY=' .env
+docker ps --format '{{.Names}}' | grep -E 'caddy|traefik'   # quem está no ar
+```
+
+**Depois, a verificação do caminho certo:**
+
+```bash
+# (a) só em REVERSE_PROXY=traefik — as labels existem?
+#     O `ps -q` resolve pelo nome do projeto + serviço, não pelo conteúdo do
+#     arquivo: com um -f ou com os dois devolve o MESMO contêiner (medido).
+#     Quem precisa dos dois é o `up -d`, não esta consulta.
 docker inspect "$(docker compose -f docker-compose.prod.yml ps -q app)" \
   --format '{{.Config.Labels}}' | grep -o 'traefik.enable:[^ ]*'
 # esperado: traefik.enable:true   (vazio = roteamento quebrado)
 
-# 2) o domínio responde?
+# (b) o domínio responde? vale para os dois caminhos
 curl -s -o /dev/null -w "%{http_code}\n" https://<DOMAIN>/
 # esperado: 307 (redireciona pro login)
-# 404      = labels perdidas, refaça o deploy com os dois -f
 ```
+
+Se vier `404`, o conserto depende do proxy:
+
+| instalação | o que o 404 significa | comando |
+|---|---|---|
+| `REVERSE_PROXY=caddy` | `404` = o app não achou a rota; `502/503` = o Caddy não alcança o app | `docker compose -f docker-compose.prod.yml up -d app caddy` |
+| `REVERSE_PROXY=traefik` | labels perdidas (up sem o override) | refaça o `up -d` com os **dois** `-f` do §1.2 |
 
 Se o deploy já quebrou e a pergunta é "como volto", vá direto ao
 [§5](#5-rollback-por-tag-de-imagem). Para o retrato da instalação (disco, RAM,
@@ -237,15 +280,18 @@ sed -i -E "s#(ghcr\.io/spiesdan/nexus[^:]*:)[0-9]+\.[0-9]+\.[0-9]+#\1${NOVA}#" .
 # 3) confira antes de recriar
 grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env
 
-# 4) recrie com os MESMOS -f do deploy (§1) — sem eles o domínio cai para 404
-docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml \
+# 4) recrie com os MESMOS -f do deploy — qual é o seu está no §1
+#    Caddy do compose (padrão):
+docker compose -f docker-compose.prod.yml \
   --env-file .env up -d app worker scheduler fiscal mercos ocr rota
+#    Proxy do host (REVERSE_PROXY=traefik):
+# docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml \
+#   --env-file .env up -d app worker scheduler fiscal mercos ocr rota
 ```
 
-> Numa instalação servida pelo **Caddy do compose** (`REVERSE_PROXY=caddy`, que é o
-> `default`), o passo 4 é só com `-f docker-compose.prod.yml`: o override do Traefik
-> declara a rede `traefik` como externa e o `up` aborta. Confira com
-> `grep '^REVERSE_PROXY=' .env` antes.
+> O `-f` errado não é neutro: no caminho com Caddy, o override aborta o `up`
+> (`network traefik declared as external`); no caminho com Traefik, esquecer o
+> override recria o parque **sem labels** e o domínio cai para 404.
 >
 > O caminho mais curto e o preferido é `bash hostgator-setup-kit/update.sh --to vX.Y.Z --force`:
 > ele puxa a tag, faz backup, grava as sete imagens e confere o health — o `--force`
