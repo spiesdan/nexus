@@ -39,16 +39,6 @@ import { CustomerSelector } from "../../pedidos/novo/_cliente";
 import type { Textos } from "./textos";
 
 /**
- * SEMENTE DA SESSÃO — compõe a chave de idempotência de cada clique.
- *
- * Fora do render de propósito: `Math.random` no corpo do componente é impuro
- * (e o lint reprova). Uma semente por carregamento + contador por tentativa dá
- * chave única para "um clique = uma nota", inclusive quando o navegador repete
- * a requisição.
- */
-const SEMENTE_DA_SESSAO = Math.random().toString(36).slice(2);
-
-/**
  * Faturado + o destinatário já resolvido do cadastro (nome, CPF/CNPJ e o
  * TLocal com cMun do IBGE). Vem pronto do servidor: a tela não recalcula a
  * regra, só preenche e deixa corrigir.
@@ -337,10 +327,15 @@ export function EmitirNota({
   const [carregandoProdutos, setCarregandoProdutos] = React.useState(false);
   const buscaProdutoRef = React.useRef<HTMLInputElement | null>(null);
   const [erroEmissao, setErroEmissao] = React.useState<string | null>(null);
-  /** Um clique = uma nota: o ref barra o segundo clique antes do re-render. */
+/** Um clique = uma nota: o ref barra o segundo clique antes do re-render. */
   const emitindoRef = React.useRef(false);
-  /** Contador da tentativa desta sessão — compõe a chave de idempotência. */
-  const tentativaRef = React.useRef(0);
+  /**
+   * CHAVE ESTÁVEL DA EMISSÃO — criada quando o formulário fica pronto e
+   * reutilizada em retry/reenvio até a nota sair; nova só depois do sucesso.
+   * O `randomId()` automático do client muda a cada chamada e não fecha o
+   * duplo envio (a rota faz reserva forte por chave, route.ts:74-110).
+   */
+  const chaveIdempotenciaRef = React.useRef<string | null>(null);
   const precosVazios = React.useMemo(() => new Map<string, UltimoPreco>(), []);
 
   React.useEffect(() => {
@@ -640,14 +635,16 @@ export function EmitirNota({
         setPendencias(prev.data.pendencias);
         return;
       }
-      // A chave de idempotência é do clique: um envio repetido pelo navegador
-      // devolve a MESMA nota, em vez de consumir outro número.
-      const chaveIdempotencia = `nfe-${SEMENTE_DA_SESSAO}-${++tentativaRef.current}`;
+      // Chave estável da emissão: nasce no formulário pronto e é reusada em
+      // retry/reenvio até a nota sair; o client não gera outra por chamada.
+      const chaveIdempotencia = chaveIdempotenciaRef.current ?? crypto.randomUUID();
+      chaveIdempotenciaRef.current = chaveIdempotencia;
       await apiClient.post(
         "/api/v1/invoices",
         { extras: checagem.data },
-        { headers: { "Idempotency-Key": chaveIdempotencia } },
+        { idempotencyKey: chaveIdempotencia },
       );
+      chaveIdempotenciaRef.current = null;
       toast.success(t("Venda avulsa enfileirada para emissão"));
       setAvulsa({
         cliente_nome: "",
@@ -750,6 +747,18 @@ export function EmitirNota({
   }
 
   const itensSemNcm = avulsa.itens.filter((i) => i.descricao.trim() !== "" && !i.ncm.trim());
+  const podeEmitirAvulsa =
+    modo === "avulsa" && avulsa.itens.length > 0 && itensSemNcm.length === 0 && Boolean(configInicial);
+
+  /**
+   * A CHAVE NASCE AQUI, não no clique nem no render: quando o formulário fica
+   * pronto. O efeito só cria se ainda não existe; retry e reenvio da mesma tela
+   * reusam a mesma chave, e o sucesso a zera para a próxima emissão.
+   */
+  React.useEffect(() => {
+    if (!podeEmitirAvulsa) return;
+    if (!chaveIdempotenciaRef.current) chaveIdempotenciaRef.current = crypto.randomUUID();
+  }, [podeEmitirAvulsa]);
 
   return (
     <Card className="hover-raise space-y-4 p-4 sm:p-5">
@@ -1506,8 +1515,14 @@ export function EmitirNota({
               {t("Há item sem NCM no cadastro — a nota não emite até corrigir o produto.")}
             </p>
           )}
+          {podeEmitirAvulsa && (
+            <span data-testid="nfe-formulario-pronto" className="sr-only">
+              {t("Formulário pronto para emitir")}
+            </span>
+          )}
           <Button
             data-testid="nfe-emitir"
+            aria-busy={emitindo}
             onClick={() => void emitir()}
             disabled={
               emitindo ||
