@@ -175,6 +175,18 @@ async function prepararEmissao(page: Page, produto: string, clienteNome: string)
   await page.getByTestId("nfe-busca-produto").getByRole("combobox").fill(produto);
   await page.getByTestId("produto-resultados").getByRole("option").first().click();
   await expect(page.getByTestId("nfe-item-ncm")).toContainText("19059090", { timeout: 60_000 });
+  // ACHADO medido em 27/11: o item vindo do catálogo entra com o PREÇO VAZIO.
+  // `emitir()` filtra item com `preco_cents <= 0`, então a linha é descartada,
+  // `itens` fica vazio, o schema reprova e o clique retorna sem POST e sem
+  // `erroEmissao` — só um toast transitório. `nfe-formulario-pronto` continua
+  // dizendo "pronto". Aqui o preço é preenchido para a captura valer; o achado
+  // vai no relatório.
+  const preco = page.getByTestId("nfe-item").getByLabel("Preço (centavos)").first();
+  const precoAtual = await preco.inputValue();
+  if (!precoAtual || Number(precoAtual) <= 0) {
+    console.log("[achado] catálogo adicionou item com preço vazio; preenchendo 1000 para a captura");
+    await preco.fill("1000");
+  }
   const cliente = page.getByTestId("nfe-cliente").getByRole("textbox").first();
   await cliente.fill(clienteNome);
   await page.getByRole("button", { name: new RegExp(clienteNome) }).first().click();
