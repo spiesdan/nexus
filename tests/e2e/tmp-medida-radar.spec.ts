@@ -48,11 +48,12 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
     const dock = document.querySelector(seletor);
     const topoDock = dock ? dock.getBoundingClientRect().top : window.innerHeight;
 
-    const cartoes = Array.from(document.querySelectorAll("li"));
-    const ultimo = cartoes
-      .map((el) => ({ el, r: el.getBoundingClientRect() }))
-      .filter(({ r }) => r.height > 0)
-      .sort((a, b) => b.r.bottom - a.r.bottom)[0];
+    const todos = Array.from(document.querySelectorAll("li"));
+    const candidatos = todos
+      .map((el) => ({ texto: (el.textContent ?? "").trim().slice(0, 24), r: el.getBoundingClientRect() }))
+      .filter(({ r }) => r.height > 0 && r.width > 0)
+      .sort((a, b) => b.r.bottom - a.r.bottom);
+    const ultimo = candidatos[0];
 
     return {
       scrollTop: Math.round(rolagem.scrollTop),
@@ -62,11 +63,13 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
       cardBottom: ultimo ? Math.round(ultimo.r.bottom) : -1,
       scrollWidth: document.documentElement.scrollWidth,
       clientWidth: document.documentElement.clientWidth,
-      cartoes: cartoes.length,
+      cartoes: todos.length,
+      candidatos: candidatos.length,
+      topo3: candidatos.slice(0, 3).map((c) => `${c.texto}|bottom=${Math.round(c.r.bottom)}`),
     };
   }, DOCK);
 
-  const gap = medida.dockTop - medida.cardBottom;
+  const gap = medida.cardBottom >= 0 ? medida.dockTop - medida.cardBottom : Number.NaN;
   const sobraRolagem = medida.scrollTop + medida.clientHeight - medida.scrollHeight;
   const overflow = medida.scrollWidth - medida.clientWidth;
 
@@ -76,7 +79,8 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
   );
   console.log(`[medida] 390: dockTop=${medida.dockTop} cardBottom=${medida.cardBottom} gap=${gap}px`);
   console.log(`[medida] 390: scrollWidth=${medida.scrollWidth} clientWidth=${medida.clientWidth} overflow=${overflow}px`);
-  console.log(`[medida] 390: cartoes=${medida.cartoes}`);
+  console.log(`[medida] 390: cartoes=${medida.cartoes} candidatos=${medida.candidatos}`);
+  console.log(`[medida] 390: top3 ${JSON.stringify(medida.topo3)}`);
 
   await page.screenshot({ path: `${RAIZ}/radar-390-ultimo-cartao.png` });
 
