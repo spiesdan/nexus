@@ -510,8 +510,11 @@ export default async function NotasPage({
     }
   }
 
+  // `pb-24` no mobile: o dock fixo (57 px) cobria 37 px do botão de emitir no
+  // fim do formulário em 390 (produção: botão 780,5–824,5, dock a partir de
+  // 787). A folga é desta tela, não da barra; no desktop `md:pb-6` mantém.
   return (
-    <div className="flex h-full flex-col gap-4 p-6">
+    <div className="flex h-full flex-col gap-4 p-6 pb-24 md:pb-6">
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
       {/* A situação em quatro números. "A emitir" é porta para a aba de
