@@ -8,6 +8,28 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.2.0] — 2026-11-27
+
+### Adicionado
+
+- **Radar de prospecção mostra os estados da busca, a origem da chave e repete por coordenada** A aba Pesquisas do Radar passa a acompanhar a busca do mapa pelo que o contrato
+  devolve: cada cartão mostra **um** bloco explicativo, na ordem parando →
+  degradada → parcial → zero, com o progresso por termo (nunca por célula),
+  "Pausar" só enquanto a busca corre e o parcial preservado quando ela para.
+
+  As saídas do zero e da degradada viram ação: ampliar o raio, buscar no OSM ou no
+  Google Places. O Places só aparece desabilitado quando falta a flag ou a chave —
+  com o motivo visível — e, quando disponível, a tela diz se a chave é
+  **da organização** ou **da instalação**. Repetir uma busca usa a
+  latitude/longitude da listagem, então a área coberta é a mesma. O Maps sai do
+  seletor de provedor até 12/12, porque a rota ainda o recusa.
+
+### Corrigido
+
+- **Fim da lista do Radar deixa de ficar atrás do dock no celular** No viewport de 390 px, o último cartão da aba Pesquisas terminava 41 px atrás
+  da barra inferior no scroll máximo. O container da tela ganhou a folga que o
+  shell não alcançava; no desktop nada muda.
+
 ## [2.1.1] — 2026-11-27
 
 ### Adicionado
@@ -9399,7 +9421,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.1.1...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/spiesdan/nexus/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/spiesdan/nexus/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/spiesdan/nexus/compare/v2.0.18...v2.1.0
 [2.0.18]: https://github.com/spiesdan/nexus/compare/v2.0.17...v2.0.18
