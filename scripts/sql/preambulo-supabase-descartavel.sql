@@ -163,6 +163,22 @@ create or replace function auth.uid() returns uuid
     )::uuid
   $fn$;
 
+-- Stub de auth.jwt() — o Supabase real o tem (é o que `auth.jwt() ->> 'role'`
+-- lê em funções como fn_remover_pedido_da_carga, 0353). Sem ele, uma definer
+-- que chame `auth.jwt()` funciona em produção e quebra no gate com
+-- "function auth.jwt() does not exist". Corpo fiel: claims em `request.jwt.claims`
+-- (o que PostgREST/testes gravam) e o GUC legado singular.
+create or replace function auth.jwt() returns jsonb
+  language sql stable
+  as $fn$
+    select coalesce(
+      nullif(current_setting('request.jwt.claim', true), ''),
+      nullif(current_setting('request.jwt.claims', true), '')
+    )::jsonb
+  $fn$;
+
+grant execute on function auth.jwt() to anon, authenticated, service_role;
+
 grant usage on schema auth, extensions, storage to anon, authenticated, service_role;
 grant select on auth.users to anon, authenticated, service_role;
 
