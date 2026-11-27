@@ -160,13 +160,10 @@ test("captura dos seis estados da NFe avulsa", async ({ page }) => {
       .click();
     await capturar(page, "cliente-incompleto", viewport.px, viewport.altura);
 
-    // 6. erro de emissão: cliente completo + emitente sem certificado
-    await cliente.fill(sementes.clienteCompleto);
-    await page
-      .getByRole("button", { name: new RegExp(sementes.clienteCompleto) })
-      .first()
-      .click();
-    await expect(page.getByTestId("nfe-formulario-pronto")).toBeAttached({ timeout: 60_000 });
+    // 6. erro de emissão: o cliente INCOMPLETO é o que faz o servidor recusar
+    //    (o destino da NF-e exige documento e endereço). Com o cliente completo
+    //    e o emitente sem certificado a emissão não estoura na hora — ela entra
+    //    na fila, e aí não há estado de erro para fotografar.
     await page.getByTestId("nfe-emitir").click();
     await expect(page.getByTestId("nfe-erro")).toBeVisible({ timeout: 120_000 });
     await capturar(page, "erro-emissao", viewport.px, viewport.altura);
