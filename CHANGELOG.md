@@ -8,6 +8,55 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.1.1] — 2026-11-27
+
+### Adicionado
+
+- **Descoberta de negócios por Google Maps em modo HTTP, sem Places API** Um serviço próprio (`maps-scraper`, atrás do profile `maps` — desligado por
+  padrão) lista negócios de uma região sem Places API, sem chave e sem conta. A
+  imagem empacota o binário `google-maps-scraper` 1.21.0 (MIT, commit 3176636) em
+  distroless, sem o Chromium da imagem oficial: ~28 MB comprimida em vez de 2,0 GiB.
+
+  Medido em 10 buscas seguidas: 2,1–3,0 s por busca, pico de 28,3 MB de RAM, zero
+  CAPTCHA/403, 12,4 a 12,8 dos 13 campos por registro. O modo navegador do mesmo
+  binário custa 1,03 GB e 35 s — por isso não entra.
+
+  O serviço não publica porta e não sobe sem a flag; o `runner.mjs` fala com a API
+  de jobs dele e entrega JSONL no formato que o importador de prospecção já lê.
+
+### Corrigido
+
+- **e2e da barra mobile deixa de estourar no guard de TOTP** O segundo login de `expedicao-nova-barra-mobile.spec.ts` pode cair no guard de
+  janela do TOTP de `tests/e2e/helpers/login-admin.ts`, que espera até ~30 s pela
+  próxima janela. Com o teto padrão de 30 s o teste estourava no fim da espera, já
+  com as duas asserções verdadeiras (run 45987189842: 29,7 s de `waitForTimeout` e
+  `data-dock="ausente"` presente), e o vermelho do e2e era lido como produto.
+
+  O teto do arquivo passa a 120 s. Nenhuma asserção, seletor ou nome de check
+  mudou. Auditoria dos specs que logam 2+ vezes no mesmo arquivo: os outros nove já
+  tinham teto (`test.setTimeout` de arquivo ou `describe.configure`).
+
+## [2.1.0] — 2026-11-27
+
+### Adicionado
+
+- **Venda avulsa emite NF-e só com produto do catálogo** A emissão de NF-e de venda avulsa passa a usar o produto do catálogo: descrição
+  e NCM vêm do cadastro e o NCM deixa de ser digitável, então nota sem NCM não
+  emite. A nota sai na grade identificada como "Avulsa", sem pedido e sem
+  recebível, e um clique gera uma nota com chave de idempotência estável por
+  emissão. Texto livre e sugestão de NCM ficam fora desta versão; a prova é o
+  typecheck completo e o plano de teste do QA no CI.
+
+### Corrigido
+
+- **Ação da carga por página e barra da nova carga no celular** A ação do cabeçalho da carga passa a pertencer à página que está aberta: fora de
+  Pedidos e paradas ela não fica mais morta, porque cada aba declara o próprio
+  botão. Na nova carga, a barra de avançar passa a compor com o dock quando ele
+  existe e com o teclado aberto, em vez de flutuar 57 px acima do rodapé.
+
+  São dois consertos de tela, provados por duas specs novas de e2e; nenhuma regra
+  de negócio mudou.
+
 ## [2.0.18] — 2026-11-27
 
 ### Adicionado
@@ -9350,7 +9399,9 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.18...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/spiesdan/nexus/compare/v2.1.0...v2.1.1
+[2.1.0]: https://github.com/spiesdan/nexus/compare/v2.0.18...v2.1.0
 [2.0.18]: https://github.com/spiesdan/nexus/compare/v2.0.17...v2.0.18
 [2.0.17]: https://github.com/spiesdan/nexus/compare/v2.0.16...v2.0.17
 [2.0.16]: https://github.com/spiesdan/nexus/compare/v2.0.15...v2.0.16
