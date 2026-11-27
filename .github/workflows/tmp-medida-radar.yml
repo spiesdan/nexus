@@ -15,7 +15,7 @@ on:
   # `push` e não `workflow_dispatch`: a API de dispatch só acha workflow na
   # branch default, e este arquivo existe só no branch descartável.
   push:
-    branches: ["tmp/captura-avulsa"]
+    branches: ["tmp/radar-medida"]
   workflow_dispatch: {}
 
 permissions:
