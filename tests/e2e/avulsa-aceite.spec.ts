@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { expect, test } from "@playwright/test";
 
 import { carregarEnvLocal } from "../../scripts/lib/env-de-teste";
+import { encryptWebhookSecret } from "@/lib/webhooks/secrets";
 
 import { semearContatoComEndereco } from "./helpers/expedicao";
 import { lerCreds, loginComoAdmin, semearCredenciais } from "./helpers/login-admin";
@@ -25,8 +26,23 @@ const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_R
 });
 
 const CNPJ_EMITENTE = "11222333000181";
-/** Sintetico, so comprimento: o destinatario valida 11/14 digitos. */
-const CNPJ_SINTETICO = "12345678000199";
+/** CNPJ sintetico com digitos verificadores validos (o cadastro valida). */
+function cnpjDeTeste(carimbo: number): string {
+  const base = String(carimbo).slice(-12).padStart(12, "0");
+  const digito = (numeros: number[]): number => {
+    const pesos =
+      numeros.length === 12
+        ? [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]
+        : [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const soma = numeros.reduce((s, n, i) => s + n * pesos[i]!, 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+  const n = [...base].map(Number);
+  const d1 = digito(n);
+  const d2 = digito([...n, d1]);
+  return `${base}${d1}${d2}`;
+}
 const NCMS = [
   "84713012",
   "19059090",
@@ -56,15 +72,32 @@ test.beforeAll(async () => {
     .maybeSingle();
   fiscalAnterior = (data as Record<string, unknown> | null) ?? null;
 
+  // A senha do certificado precisa ser decifravel: o J13 deixa nula de
+  // proposito e por isso a validacao devolve "falta: Senha do certificado".
+  const senhaCifrada = await encryptWebhookSecret(admin, "senha-e2e-avulsa");
+  if (!senhaCifrada) throw new Error("a chave de cifra do ambiente nao esta disponivel");
+
+  const { error: erroOrg } = await admin
+    .from("organizations")
+    .update({ legal_name: "Empresa E2E Avulsa Ltda" })
+    .eq("id", orgId);
+  if (erroOrg) throw new Error(`nao consegui gravar legal_name: ${erroOrg.message}`);
+
   const { error } = await admin.from("fiscal_settings").upsert(
     {
+      ...(fiscalAnterior ?? {}),
       organization_id: orgId,
       ambiente: "homologacao",
       provedor: "stub",
+      serie: "1",
+      natureza_operacao: "Venda",
+      cfop_padrao: "5102",
       emitente_documento: CNPJ_EMITENTE,
-      uf: "SP",
+      ie: "123456",
+      uf: "SC",
+      codigo_municipio: "4209102",
       certificado_path: "certificado.pfx",
-      certificado_senha_encrypted: null,
+      certificado_senha_encrypted: senhaCifrada,
       entrada_ativa: false,
     },
     { onConflict: "organization_id" },
@@ -86,7 +119,12 @@ test("avulsa: catalogo com NCM, uma nota por chave e grade sem recebivel", async
 
   const carimbo = Date.now();
   const cliente = `Cliente Avulsa ${carimbo}`;
-  await semearContatoComEndereco(page, cliente);
+  const cnpjCliente = cnpjDeTeste(carimbo);
+  const contactId = await semearContatoComEndereco(page, cliente);
+  const enderecoCompleto = await page.request.patch(`/api/v1/contacts/${contactId}`, {
+    data: { cnpj: cnpjCliente, cep: "89300000" },
+  });
+  expect(enderecoCompleto.status(), "contato com CNPJ e CEP").toBe(200);
 
   const produtos: { nome: string; ncm: string }[] = [];
   for (let i = 0; i < NCMS.length; i += 1) {
@@ -105,7 +143,7 @@ test("avulsa: catalogo com NCM, uma nota por chave e grade sem recebivel", async
     await page.getByRole("button", { name: "NF-e de venda avulsa" }).click();
     await buscaCliente.fill(cliente);
     await page.getByRole("button", { name: new RegExp(cliente) }).first().click();
-    await page.locator("#av-doc").fill(CNPJ_SINTETICO);
+    await page.locator("#av-doc").fill(cnpjCliente);
   }
 
   async function adicionarProduto(nome: string) {
