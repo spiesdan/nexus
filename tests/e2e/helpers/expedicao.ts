@@ -5,7 +5,7 @@
  */
 import { expect, type Page } from "@playwright/test";
 
-import { rotuloDoPedido, semearPedido, semearProduto } from "./pedidos";
+import { rotuloDoPedido, semearContato, semearPedido, semearProduto } from "./pedidos";
 
 export interface CargaEmRota {
   id: string;
@@ -48,11 +48,48 @@ export async function preencherEquipeNaNovaCarga(
   });
 }
 
+/**
+ * CONTATO COM ENDEREÇO COMPLETO — a precondição que a prontidão da carga cobra.
+ *
+ * `semearPedido` não grava endereço e `semearContato` nasce sem nenhum. A
+ * prontidão da montagem (`lib/expedicao/prontidao.ts`) bloqueia pedido sem
+ * endereço — "N pedidos sem endereço — corrija antes de incluir" —, e o botão
+ * "Confirmar carga" do passo 3 fica `disabled`. Medido em 26/11/2026: as specs
+ * de jornada e de GPS passavam dos três passos e paravam ali, sem nenhum
+ * defeito de produto.
+ *
+ * A regra é a mesma de `entrada-do-endereco.spec.ts`: cadastro estruturado
+ * (`logradouro`…`uf`) via PATCH do contato, e o pedido nasce com `contact_id`.
+ * O complemento leva o carimbo porque a memória de entrada do Nexus é chaveada
+ * pelo endereço normalizado — sem ele, uma execução herda a marcação da
+ * anterior.
+ */
+export async function semearContatoComEndereco(page: Page, nome: string): Promise<string> {
+  const contactId = await semearContato(page, nome);
+  const patch = await page.request.patch(`/api/v1/contacts/${contactId}`, {
+    data: {
+      logradouro: "Rua Marechal Deodoro",
+      numero_end: "123",
+      complemento: `Lote E2E ${Date.now()}`,
+      bairro: "Centro",
+      cidade: "Mafra",
+      uf: "SC",
+    },
+  });
+  expect(
+    patch.status(),
+    `não deu para gravar o endereço do contato "${nome}" — a prontidão da carga vai bloquear`,
+  ).toBe(200);
+  return contactId;
+}
+
 export async function criarCargaEmRota(page: Page, prefixo: string): Promise<CargaEmRota> {
   const carimbo = Date.now();
   const sufixo = String(carimbo).slice(-6);
   const produtoId = await semearProduto(page, `Produto ${prefixo} ${sufixo}`);
-  const pedido = await semearPedido(page, `Cliente ${prefixo} ${sufixo}`, { produtoId });
+  const cliente = `Cliente ${prefixo} ${sufixo}`;
+  const contactId = await semearContatoComEndereco(page, cliente);
+  const pedido = await semearPedido(page, cliente, { produtoId, contactId });
   const numeroPedido = rotuloDoPedido(pedido.numero);
   const placa = `ABC${sufixo.slice(0, 7)}`;
 

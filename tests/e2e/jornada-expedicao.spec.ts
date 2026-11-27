@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { lerCreds, loginComoAdmin } from "./helpers/login-admin";
-import { preencherEquipeNaNovaCarga } from "./helpers/expedicao";
+import { preencherEquipeNaNovaCarga, semearContatoComEndereco } from "./helpers/expedicao";
 import { rotuloDoPedido, semearPedido, semearProduto } from "./helpers/pedidos";
 
 test.setTimeout(300_000);
@@ -42,7 +42,10 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
 
   await loginComoAdmin(page, lerCreds());
   const produtoId = await semearProduto(page, `Produto Jornada Expedicao ${carimbo}`);
-  const pedido = await semearPedido(page, cliente, { produtoId });
+  // O endereço é precondição da montagem (prontidão), não do que esta jornada
+  // mede: sem ele o "Confirmar carga" do passo 3 nasce desabilitado.
+  const contactId = await semearContatoComEndereco(page, cliente);
+  const pedido = await semearPedido(page, cliente, { produtoId, contactId });
   const numero = rotuloDoPedido(pedido.numero);
 
   // 1. A lista mostra a situação em números — o pedido em si vive na subtela.
