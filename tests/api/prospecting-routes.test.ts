@@ -46,7 +46,7 @@ import { fail } from "@/lib/api/wrappers";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { requireRole } from "@/lib/auth/require-role";
 import { ROLE_RANK, type AuthUser, type Role } from "@/lib/auth/types";
-import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { googlePlacesHabilitado, mapsBrowserHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
 import { MENSAGEM_ORCAMENTO_ATINGIDO } from "@/lib/prospeccao/uso";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -63,6 +63,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/prospeccao/chave", () => ({
   googlePlacesHabilitado: vi.fn(() => true),
+  mapsBrowserHabilitado: vi.fn(() => false),
   resolverChaveGoogle: vi.fn(async () => ({ chave: "AIza-teste", origem: "instalacao" })),
 }));
 vi.mock("@/lib/prospeccao/providers/registro", () => ({
@@ -647,14 +648,28 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     expect(res.status).toBe(403);
   });
 
-  it("GET sem linha → configurado: false", async () => {
+  it("GET sem linha → configurado: false e origem da chave da instalação", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: "AIza-instalacao", origem: "instalacao" });
     session("manager", makeDb());
     const res = await rotaSettings.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/settings"));
     expect(res.status).toBe(200);
-    expect((await res.json()).data).toEqual({ configurado: false });
+    expect((await res.json()).data).toEqual({
+      configurado: false,
+      tem_chave: true,
+      chave_origem: "instalacao",
+    });
   });
 
-  it("GET com chave cifrada → a chave NUNCA volta, só tem_chave", async () => {
+  it("GET sem chave nenhuma → chave_origem: nenhuma", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: null, origem: "nenhuma" });
+    session("manager", makeDb());
+    const res = await rotaSettings.GET(req("GET", undefined, "http://localhost/api/v1/prospecting/settings"));
+    const corpo = await res.json();
+    expect(corpo.data).toMatchObject({ configurado: false, tem_chave: false, chave_origem: "nenhuma" });
+  });
+
+  it("GET com chave do tenant → origem tenant, e a chave NUNCA volta", async () => {
+    vi.mocked(resolverChaveGoogle).mockResolvedValue({ chave: "AIza-tenant", origem: "tenant" });
     const db = makeDb({
       prospecting_settings: [{ ...CFG_OSM, google_api_key_encrypted: "CIFRA_TESTE" }],
     });
@@ -663,8 +678,10 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     const corpo = await res.json();
     expect(corpo.data.configurado).toBe(true);
     expect(corpo.data.tem_chave).toBe(true);
+    expect(corpo.data.chave_origem).toBe("tenant");
     expect(corpo.data.google_api_key_encrypted).toBeUndefined();
     expect(JSON.stringify(corpo.data)).not.toContain("CIFRA_TESTE");
+    expect(JSON.stringify(corpo.data)).not.toContain("AIza-tenant");
   });
 
   it("PUT de agent → 403, sem gravação", async () => {
@@ -680,6 +697,32 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     const res = await rotaSettings.PUT(req("PUT", { orcamento_mensal_cents: -1 }, "http://localhost/api/v1/prospecting/settings"));
     expect(res.status).toBe(422);
     expect((await res.json()).error.code).toBe("validation_failed");
+  });
+
+  it("PUT com maps_browser e sidecar desligado → 422 nomeado, sem gravar", async () => {
+    vi.mocked(mapsBrowserHabilitado).mockReturnValue(false);
+    const db = makeDb({ prospecting_settings: [CFG_OSM] });
+    session("manager", db);
+    const res = await rotaSettings.PUT(
+      req("PUT", { provider_ativo: "maps_browser" }, "http://localhost/api/v1/prospecting/settings"),
+    );
+    expect(res.status).toBe(422);
+    const corpo = await res.json();
+    expect(corpo.error.code).toBe("validation_failed");
+    expect(corpo.error.message).toContain("maps_browser_ainda_nao_liberado");
+    expect(db.inseridos).toHaveLength(0);
+  });
+
+  it("PUT com maps_browser e sidecar liberado → 200 e grava", async () => {
+    vi.mocked(mapsBrowserHabilitado).mockReturnValue(true);
+    const db = makeDb({ prospecting_settings: [CFG_OSM] });
+    session("manager", db);
+    const res = await rotaSettings.PUT(
+      req("PUT", { provider_ativo: "maps_browser" }, "http://localhost/api/v1/prospecting/settings"),
+    );
+    expect(res.status).toBe(200);
+    const linhas = db.tabelas.prospecting_settings ?? [];
+    expect(linhas[0]?.provider_ativo).toBe("maps_browser");
   });
 
   it("PUT válido grava centavos, cifra a chave e audita (upsert na org)", async () => {
