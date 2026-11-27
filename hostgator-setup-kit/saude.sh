@@ -183,6 +183,19 @@ if [ "$BK_AGENDADO" = "nao" ]; then
 fi
 fala "  ${D}destino: $BDIR · $(du -sh "$BDIR" 2>/dev/null | awk '{print $1}') no total${Z}"
 
+# O cron grava `rc=<código>` no fim de cada execução. Sem ler isso, um backup
+# que falha toda noite só aparece quando o dump fica velho — e no dia em que
+# alguém precisa restaurar. A idade do dump é a rede de segurança; o rc é o
+# aviso imediato.
+BK_LOG="$BDIR/backup.log"
+if [ -f "$BK_LOG" ]; then
+  ultimo_rc="$(grep '^rc=' "$BK_LOG" 2>/dev/null | tail -1)"
+  rc_num="${ultimo_rc#rc=}"; rc_num="${rc_num%% *}"
+  if [ -n "${rc_num:-}" ] && [ "$rc_num" != "0" ]; then
+    alerta "a última execução agendada do backup falhou (rc=$rc_num) — ver $BK_LOG"
+  fi
+fi
+
 # ── 4. Certificado fiscal (A1) ───────────────────────────────────────────────
 titulo "Certificado fiscal (A1)"
 DB="$(docker ps --format '{{.Names}}' 2>/dev/null | grep -m1 'supabase_db' || true)"

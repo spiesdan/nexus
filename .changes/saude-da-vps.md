@@ -1,7 +1,7 @@
 ---
 impacto: nada_mudou
 secao: adicionado
-titulo: Um comando único diz se a instalação está saudável (disco, RAM, backup, A1, versão, borda)
+titulo: Um comando diz se a instalação está saudável, o backup ganha agenda e retenção, e o update recusa deploy concorrente
 ---
 
 `hostgator-setup-kit/saude.sh` lê o estado da instalação e responde em uma tela:
@@ -22,3 +22,14 @@ sem deploy é uma semana sem backup.
 O `docs/runbooks/deploy.md` ganhou a seção de rollback por tag de imagem, que não
 existia: as sete tags no `.env`, os `-f` certos para cada tipo de instalação, a
 prova e o limite (rollback de imagem não desfaz migration).
+
+O `backup.sh` passou a aceitar `BACKUP_RETENTION` (padrão 14, o que já existia):
+quem emite nota fiscal escolhe guardar 30 dias sem editar o script, e o teste
+prova que `BACKUP_RETENTION=3` mantém 3 arquivos, não 14.
+
+O `update.sh` ganhou o lock que a política citava e nenhum script aplicava:
+`flock` em `.git/nexus-update.lock` (na raiz em instalação sem git), adquirido
+antes de qualquer efeito. Dois deploys ao mesmo tempo agora terminam com o
+segundo recusado em vez de recriar o parque em paralelo. O arquivo fica dentro de
+`.git/` porque um `.update.lock` não rastreado na raiz faz o próprio
+`git checkout` do update abortar.

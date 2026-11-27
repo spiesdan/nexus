@@ -55,14 +55,14 @@ reporta com o comando e a saída; conserta quem tem a mão na VPS.
 
 ## 4. Lacunas medidas (o que hoje NÃO tem monitoramento)
 
-1. **Backup não é agendado.** Os dumps em `/var/www/crm/backups` existem porque
-   houve `update.sh` — e o mais antigo é de dois dias antes. Numa semana sem
-   deploy, a semana inteira fica sem backup. Conserto é uma linha, e é decisão do
-   dono:
+1. **Backup agendado desde 27/11/2026**, no cron do host (03:00 de São Paulo,
+   `0 6 * * *` em UTC), com retenção de **30 dias** (`BACKUP_RETENTION=30`) e o
+   `rc` de cada execução em `backups/backup.log` — o `saude.sh` lê as duas coisas
+   e alerta tanto no dump velho quanto na última execução que falhou. Antes disso,
+   os dumps existiam só porque houve `update.sh`.
 
    ```bash
-   crontab -e
-   # 0 3 * * * cd /var/www/crm && bash hostgator-setup-kit/backup.sh
+   0 6 * * * cd /var/www/crm && { BACKUP_RETENTION=30 bash hostgator-setup-kit/backup.sh >> backups/backup.log 2>&1; echo "rc=$? $(date -Is)" >> backups/backup.log; }
    ```
 
 2. **Nada avisa se a VPS inteira morrer** além da rotina diária: não há uptime

@@ -65,21 +65,30 @@ else
   exit 1
 fi
 
-# Retenção: mantém os 14 mais recentes de cada tipo.
+# Retenção: mantém os N mais recentes de cada tipo (N em `BACKUP_RETENTION`, padrão 14).
 #
 # Sem `xargs -r`: é opção GNU, e no macOS o `xargs` do BSD recusa ("illegal
 # option -- r"). Como o `_common.sh` liga `pipefail`, a recusa derrubava o
 # backup ANTES de limpar — medido pelo `tests/shell/backup-uploads.test.sh`
 # (16 arquivos, retenção não rodava). `xargs rm -f` sem entrada roda `rm -f`
 # sem argumento, que é no-op: mesma semântica, portátil.
-step "Limpando backups antigos (mantém 14)"
-ls -1t "$BACKUP_DIR"/db-*.sql.gz 2>/dev/null | tail -n +15 | xargs rm -f
-ls -1t "$BACKUP_DIR"/waha-*.tgz 2>/dev/null | tail -n +15 | xargs rm -f
+# 14 era número fixo, e é curto para quem emite nota fiscal: um erro de
+# cadastro descoberto no fechamento do mês já não tem de onde voltar. O padrão
+# continua 14 — nada muda para quem já instalou — e quem precisa de mais define
+# `BACKUP_RETENTION` no disco. Nesta instalação, 30 dias custam ~750 MB (dump de
+# 24 MB + mídia), 1,3% de um disco com 59 GB livres.
+RETENCAO="${BACKUP_RETENTION:-14}"
+case "$RETENCAO" in ''|*[!0-9]*) RETENCAO=14 ;; esac
+[ "$RETENCAO" -ge 2 ] || RETENCAO=2
+
+step "Limpando backups antigos (mantém $RETENCAO)"
+ls -1t "$BACKUP_DIR"/db-*.sql.gz 2>/dev/null | tail -n +$((RETENCAO + 1)) | xargs rm -f
+ls -1t "$BACKUP_DIR"/waha-*.tgz 2>/dev/null | tail -n +$((RETENCAO + 1)) | xargs rm -f
 # Rótulo por rótulo, não `uploads-*` de uma vez: o glob mistura fotos, mídia e
 # storage, e "14 de cada tipo" viraria "14 no total" — o volume de mídia
 # expulsaria o backup das fotos.
 for rotulo in $(ls -1 "$BACKUP_DIR"/uploads-*.tgz 2>/dev/null \
                   | sed -nE 's#.*/uploads-(.+)-[0-9]{8}-[0-9]{6}\.tgz#\1#p' | sort -u); do
-  ls -1t "$BACKUP_DIR"/uploads-"$rotulo"-*.tgz 2>/dev/null | tail -n +15 | xargs rm -f
+  ls -1t "$BACKUP_DIR"/uploads-"$rotulo"-*.tgz 2>/dev/null | tail -n +$((RETENCAO + 1)) | xargs rm -f
 done
 c_grn "✓ backup concluído em $BACKUP_DIR"

@@ -14,6 +14,42 @@
 # um script do kit "não encontrado" no meio da atualização.
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 source "$KIT_DIR/_common.sh"
+
+# ── 0-. Um deploy por vez ────────────────────────────────────────────────────
+# A política de deploy promete um lock (`.update.lock`) e nenhum script o
+# aplicava: dois `update.sh` ao mesmo tempo — o da tela a cada 5 minutos e um
+# disparado à mão, por exemplo — puxam imagens, aplicam baseline e recriam o
+# parque em paralelo. O segundo `up -d` no meio do primeiro deixa serviço
+# recém-criado sem health, e o sintoma que o dono vê é "a atualização travou".
+#
+# `flock` no descritor 9 é atômico e morre com o processo: não há lock órfão
+# para limpar à mão depois de um reboot ou de um Ctrl+C.
+#
+# A aquisição vem ANTES do `enter_project`, de propósito: um segundo deploy não
+# deve nem trocar de diretório para descobrir que não é a vez dele.
+#
+# O arquivo mora dentro de `.git/`, e não na raiz do projeto, porque o próprio
+# update faz `git checkout <tag>`: um `.update.lock` não rastreado na raiz é
+# recusado pelo git com "untracked working tree files would be overwritten" no
+# instante em que a tag alvo tiver o arquivo — e o deploy morre por causa do
+# próprio mecanismo que deveria protegê-lo (medido em `tests/shell/update-guard`).
+# Instalação sem git (cópia por rsync, por exemplo) mantém o caminho clássico.
+PROJETO_DIR="$(cd "$KIT_DIR/.." && pwd)"
+if [ -d "$PROJETO_DIR/.git" ]; then
+  LOCK_FILE="$PROJETO_DIR/.git/nexus-update.lock"
+else
+  LOCK_FILE="$PROJETO_DIR/.update.lock"
+fi
+if command -v flock >/dev/null 2>&1; then
+  exec 9>"$LOCK_FILE" || die "Não consegui abrir o lock $LOCK_FILE."
+  if ! flock -n 9; then
+    c_red "✗ Já existe uma atualização em andamento nesta instalação."
+    c_ylw "  Outro update.sh está rodando (lock: $LOCK_FILE). Espere ele terminar e rode de novo."
+    c_ylw "  Nada foi alterado por esta execução."
+    exit 4
+  fi
+fi
+
 enter_project
 
 FORCE=""; SKIP_BACKUP=""; TARGET_TAG=""
