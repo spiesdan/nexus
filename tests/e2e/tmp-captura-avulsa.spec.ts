@@ -130,6 +130,22 @@ async function contarNotas(page: Page): Promise<number> {
   return Array.isArray(corpo.data) ? corpo.data.length : 0;
 }
 
+/**
+ * Tela NOVA no estado "pronto para emitir": avulsa, um item com NCM e o cliente
+ * completo. Estado herdado da captura anterior deixa pendências invisíveis e o
+ * clique não sai — medido: botão habilitado, formulário pronto e ZERO request.
+ */
+async function prepararEmissao(page: Page, produto: string, clienteNome: string) {
+  await page.goto("/app/notas?aba=emitir", { waitUntil: "domcontentloaded", timeout: 240_000 });
+  await page.getByRole("button", { name: /venda avulsa/i }).first().click();
+  await page.getByTestId("nfe-busca-produto").getByRole("combobox").fill(produto);
+  await page.getByTestId("produto-resultados").getByRole("option").first().click();
+  await expect(page.getByTestId("nfe-item-ncm")).toContainText("19059090", { timeout: 60_000 });
+  const cliente = page.getByTestId("nfe-cliente").getByRole("textbox").first();
+  await cliente.fill(clienteNome);
+  await page.getByRole("button", { name: new RegExp(clienteNome) }).first().click();
+}
+
 test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
   await loginComoAdmin(page, lerCreds());
   const sementes = await semear(page);
@@ -193,16 +209,13 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     expect(postsDeNota, "cadastro incompleto não pode criar nota").toBe(0);
     await capturar(page, "cliente-incompleto", viewport.px, viewport.altura);
 
-    // 6. FALHA DE ENVIO — cliente completo, itens válidos e o POST da NOTA
-    //    interceptado com 500. Dois cuidados que a rodada anterior não teve:
-    //    esperar `nfe-formulario-pronto` (sem isso o botão pode estar
-    //    desabilitado e o clique nunca dispara) e casar a rota EXATA —
-    //    `/api/v1/invoices/validar` é outra chamada, e derrubá-la mediria a
-    //    pré-validação, não a emissão.
-    await cliente.fill(sementes.clienteCompleto);
-    await page.getByRole("button", { name: new RegExp(sementes.clienteCompleto) }).first().click();
+    // 6. FALHA DE ENVIO — em TELA NOVA. Estado herdado da captura anterior
+    //    deixa o clique sem efeito (medido: botão habilitado, formulário
+    //    pronto, ZERO request), então este estado recomeça do zero.
+    await prepararEmissao(page, sementes.produto, sementes.clienteCompleto);
+    await expect(page.getByTestId("nfe-pendencias")).toHaveCount(0, { timeout: 30_000 });
     await expect(page.getByTestId("nfe-formulario-pronto")).toBeAttached({ timeout: 60_000 });
-    await expect(page.getByTestId("nfe-emitir")).toBeEnabled({ timeout: 60_000 });
+    await expect(page.getByTestId("nfe-emitir")).toBeEnabled({ timeout: 30_000 });
 
     const notasAntes = await contarNotas(page);
     let postsDaEmissao = 0;
@@ -222,8 +235,8 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
     );
 
     await page.getByTestId("nfe-emitir").click();
-    const erro = page.getByTestId("nfe-erro");
-    const apareceu = await erro
+    const apareceu = await page
+      .getByTestId("nfe-erro")
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
