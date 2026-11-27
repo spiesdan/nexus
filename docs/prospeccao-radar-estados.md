@@ -46,9 +46,14 @@ origem. Até o Backend entregar (05/12), a tela mostra a mensagem da rota e o
 link da Configuração — nunca troca em silêncio.
 
 - **Places desabilitado** (sem flag ou sem chave): o botão fica desabilitado com
-  o motivo visível ao lado. Não some sem explicação.
+  o motivo visível ao lado ("Places indisponível: falta a chave do Google nesta
+  instalação" / "…e a organização não cadastrou a chave"). Não some sem
+  explicação.
+- **Chave do Google**: vale a do tenant primeiro, com fallback para a chave da
+  instalação. A tela diz de quem é a chave em uso — quem opera precisa saber
+  qual conta paga a consulta.
 - **OSM** sempre disponível.
-- **maps_browser** não aparece como opção antes de 12/12.
+- **maps_browser** não aparece como opção antes de 12/12: é esqueleto.
 
 ### Repetir na mesma coordenada
 
