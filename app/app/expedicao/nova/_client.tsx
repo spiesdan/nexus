@@ -664,18 +664,33 @@ export function NovaCargaClient({
         </Card>
       )}
 
-      {/* Avançar: o rótulo diz o QUE falta, sem abas. */}
+      {/* AVANÇAR — COMPÕE COM O DOCK, não o esconde.
+          O dock é fixo no rodapé (`MobileDock.tsx:49-51`, ~57 px + safe area) e
+          cobria o botão quando ele entrava na viewport: o primeiro toque caía
+          na barra de navegação. Esconder o dock aqui seria exceção, não
+          precedente (o comentário de `SEM_DOCK` fixa a regra). Esta barra fica
+          ACIMA dele — mesmo lugar no desktop, onde volta ao rodapé do conteúdo.
+          O `pb-24` do `main` (`AppShell.tsx:127-131`) já reserva a faixa do
+          dock; o respiro abaixo garante que o fim do conteúdo pare acima desta
+          barra, não atrás dela.
+          57 px = 44 do item + 12 do `py-1.5` + 1 da borda. O `env()` cobre o
+          aparelho com home indicator; sem ele a barra encostaria no dock. */}
       {passo < 3 && (
-        <Button
-          className="min-h-11"
-          onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
-        >
-          {passo === 1
-            ? selecionados.length === 0
-              ? t("Continuar: escolha os pedidos")
-              : t("Continuar: equipe e veículo")
-            : t("Continuar: revisão")}
-        </Button>
+        <>
+          <div aria-hidden className="h-4 md:hidden" />
+          <div className="fixed inset-x-0 bottom-[calc(3.5rem_+_1px_+_env(safe-area-inset-bottom))] z-30 border-t border-border bg-background px-4 py-2.5 md:static md:z-auto md:border-0 md:bg-transparent md:p-0">
+            <Button
+              className="min-h-11 w-full md:w-auto"
+              onClick={() => setPasso((p) => (p === 1 ? 2 : 3) as 2 | 3)}
+            >
+              {passo === 1
+                ? selecionados.length === 0
+                  ? t("Continuar: escolha os pedidos")
+                  : t("Continuar: equipe e veículo")
+                : t("Continuar: revisão")}
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
