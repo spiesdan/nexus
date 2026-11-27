@@ -9,6 +9,7 @@ import {
   entradaDeRepeticao,
   estaAtiva,
   estaParando,
+  motivoDaDegradacao,
   parouDeFato,
   parcialDaBusca,
   percentualDaBusca,
@@ -184,6 +185,30 @@ describe("busca no mapa — leitura dos quatro estados", () => {
     expect(DEGRADADA.degradacao_motivo).toContain("fast_mode");
     expect(deveMostrarParcial(DEGRADADA)).toBe(false);
     expect(deveMostrarZero(DEGRADADA)).toBe(false);
+  });
+
+  it("motivo da degradação sai em português; o código cru fica no detalhe", () => {
+    const sidecar = motivoDaDegradacao(
+      "sidecar_em_modo_navegador: o job não confirmou fast_mode=true; abortado antes de rodar.",
+    );
+    expect(sidecar.texto).toContain("navegador do Maps");
+    expect(sidecar.texto).not.toContain("sidecar_");
+    expect(sidecar.tecnico).toContain("fast_mode=true");
+
+    const trocado = motivoDaDegradacao(
+      "Descoberta Maps indisponível: provider ativo é osm_overpass; a busca caiu para o caminho degradado.",
+    );
+    expect(trocado.texto).toContain("provedor ativo");
+    expect(trocado.texto).not.toContain("osm_overpass");
+
+    const desconhecido = motivoDaDegradacao("novo_codigo_xyz: falhou");
+    expect(desconhecido.texto).toBe(
+      "A descoberta pelo Maps falhou nesta busca; o resultado pode estar incompleto.",
+    );
+    expect(desconhecido.texto).not.toContain("novo_codigo_xyz");
+    expect(desconhecido.tecnico).toBe("novo_codigo_xyz: falhou");
+
+    expect(motivoDaDegradacao(null).tecnico).toBe(null);
   });
 
   it("um bloco só: a ordem parando → degradada → parcial → zero decide", () => {

@@ -225,6 +225,48 @@ export function deveMostrarDegradada(busca: BuscaDaTela): boolean {
   return busca.degradada === true;
 }
 
+/**
+ * MOTIVO DA DEGRADAÇÃO EM PORTUGUÊS.
+ *
+ * O motor grava códigos/prefixos técnicos (`sidecar_em_modo_navegador: …`).
+ * Eles ficam no detalhe técnico; a frase principal é para o operador. Código
+ * novo sem tradução cai num texto genérico honesto — nunca no código cru.
+ */
+export function motivoDaDegradacao(motivo: string | null | undefined): {
+  texto: string;
+  tecnico: string | null;
+} {
+  const bruto = (motivo ?? "").trim();
+  if (!bruto) {
+    return {
+      texto: "A descoberta pelo Maps não rodou nesta busca; o resultado pode estar incompleto.",
+      tecnico: null,
+    };
+  }
+  const codigo = bruto.split(":")[0]?.trim() ?? "";
+  const mapa: Record<string, string> = {
+    sidecar_em_modo_navegador:
+      "O navegador do Maps não estava no modo rápido; a busca foi interrompida antes de rodar.",
+    sidecar_fora: "O serviço do Maps estava fora do ar; a busca não rodou.",
+    sidecar_indisponivel: "O serviço do Maps não respondeu; a busca não rodou.",
+    sidecar_timeout: "O serviço do Maps demorou demais; a busca foi interrompida.",
+    fast_mode_nao_confirmado:
+      "O Maps não confirmou o modo rápido; a busca foi interrompida antes de rodar.",
+    provider_trocado: "O provedor do Maps foi trocado; o resultado pode estar incompleto.",
+    maps_browser_desligado: "A descoberta pelo Maps está desligada nesta instalação.",
+    maps_browser_sem_url: "O endereço do serviço do Maps não está configurado nesta instalação.",
+    maps_browser_indisponivel: "O serviço do Maps não respondeu; a busca não rodou.",
+    maps_browser_timeout: "O Maps demorou demais; a busca foi interrompida.",
+    maps_browser_job_falhou:
+      "O trabalho do Maps falhou antes de terminar; o resultado pode estar incompleto.",
+  };
+  const texto = /provider ativo é/i.test(bruto)
+    ? "O Maps não é o provedor ativo desta organização; a busca caiu no caminho degradado."
+    : (mapa[codigo] ??
+      "A descoberta pelo Maps falhou nesta busca; o resultado pode estar incompleto.");
+  return { texto, tecnico: bruto };
+}
+
 export type BlocoDeEstado = "parando" | "degradada" | "parcial" | "zero" | null;
 
 /**

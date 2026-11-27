@@ -36,6 +36,7 @@ import {
   entradaDeRepeticao,
   estaAtiva,
   estaParando,
+  motivoDaDegradacao,
   percentualDaBusca,
   raioAmpliado,
   rotuloDoProgresso,
@@ -319,7 +320,10 @@ function AcoesDeOutroProvider({
           type="button"
           size="sm"
           variant="outline"
-          className="min-h-11"
+          className={cn(
+            "min-h-11",
+            !places.habilitado && "border-dashed bg-muted text-muted-foreground shadow-none",
+          )}
           disabled={!places.habilitado || ocupadoNeste !== null}
           aria-describedby={places.habilitado ? undefined : idDoMotivo}
           onClick={() => void aoRepetir(busca, { provider: PROVIDER_PLACES })}
@@ -380,6 +384,7 @@ function CartaoDaBusca({
   const local = [busca.cidade, busca.estado].filter(Boolean).join("/");
   const novoRaio = raioAmpliado(busca.raio_km);
   const podeRepetir = entradaDeRepeticao(busca, {}) !== null;
+  const motivoDegradada = motivoDaDegradacao(busca.degradacao_motivo);
 
   return (
     <li>
@@ -533,10 +538,15 @@ function CartaoDaBusca({
           <div className="space-y-2 rounded-lg border border-error/30 bg-error-bg/50 px-3 py-2.5 text-xs">
             <div>
               <p className="text-sm font-medium text-error-fg">{t("Descoberta degradada")}</p>
-              <p className="mt-0.5 text-text">
-                {busca.degradacao_motivo ??
-                  t("O Maps não executou esta busca, então o resultado pode estar incompleto.")}
-              </p>
+              <p className="mt-0.5 text-text">{t(motivoDegradada.texto)}</p>
+              {motivoDegradada.tecnico && (
+                <details className="mt-1 text-muted-foreground">
+                  <summary className="w-fit cursor-pointer text-[11px] underline underline-offset-2">
+                    {t("Detalhe técnico")}
+                  </summary>
+                  <p className="mt-1 break-words text-[11px]">{motivoDegradada.tecnico}</p>
+                </details>
+              )}
               <p className="mt-1 text-muted-foreground">
                 {t("Não existe troca automática de provedor. Escolha como seguir:")}
               </p>
