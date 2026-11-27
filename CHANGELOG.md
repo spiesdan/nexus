@@ -8,6 +8,29 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.0.17] — 2026-11-27
+
+### Corrigido
+
+- **No celular, o botão de avançar da nova carga não fica mais atrás da barra de navegação** Na tela de montar a carga pelo celular, o botão de avançar passou a ficar
+  acima da barra de navegação inferior: antes ele aparecia no rodapé, sob a
+  barra, e o toque caía na navegação em vez de avançar o passo.
+
+  A barra de navegação continua onde estava. No desktop, o botão segue no
+  rodapé do conteúdo, como antes.
+
+- **A fila da expedição mostra a carga concluída e a devolução devolve o pedido ao status certo** A tela de expedição deixou de esconder a carga que já foi concluída: o pedido
+  concluído agora aparece na fila, na mesma régua que o resto do sistema usa para
+  dizer o que pode ser embarcado.
+
+  Ao tirar um pedido de uma carga — sozinho ou devolvendo a carga inteira — o
+  pedido volta para o status comercial que ele tinha antes de embarcar, em vez de
+  voltar sempre como aprovado. Um pedido faturado continua faturado.
+
+  Quem publica a rota agora tem um caminho só: o banner "Pronta para sair" leva
+  para a tela de rota, que salva a ordem antes de mandar ao motorista. Antes dava
+  para publicar sem salvar a sequência que o operador tinha acabado de montar.
+
 ## [2.0.16] — 2026-11-26
 
 ### Corrigido
@@ -9309,7 +9332,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.16...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.0.17...HEAD
+[2.0.17]: https://github.com/spiesdan/nexus/compare/v2.0.16...v2.0.17
 [2.0.16]: https://github.com/spiesdan/nexus/compare/v2.0.15...v2.0.16
 [2.0.15]: https://github.com/spiesdan/nexus/compare/v2.0.14...v2.0.15
 [2.0.14]: https://github.com/spiesdan/nexus/compare/v2.0.13...v2.0.14
