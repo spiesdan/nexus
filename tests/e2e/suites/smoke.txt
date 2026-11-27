@@ -8,3 +8,5 @@ risk-radar.spec.ts
 jornada-venda.spec.ts
 inbox-scope.spec.ts
 expedicao-lacunas-qa.spec.ts
+expedicao-acao-do-cabecalho.spec.ts
+expedicao-nova-barra-mobile.spec.ts

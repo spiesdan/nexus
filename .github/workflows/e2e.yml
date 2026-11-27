@@ -346,6 +346,7 @@ jobs:
         multi-campanha-retomada.spec.ts
         gps-sem-sinal.spec.ts fila-offline-retry-conflito.spec.ts cabine-mobile-workbench.spec.ts
         expedicao-lacunas-qa.spec.ts
+        expedicao-acao-do-cabecalho.spec.ts expedicao-nova-barra-mobile.spec.ts
         meu-dia-alertas.spec.ts
         pedido-idempotencia.spec.ts        agente-marca-consulta.spec.ts agenda-marcar-pela-tela.spec.ts agenda-remarcar-e-cancelar.spec.ts
         agenda-tipos-de-agendamento.spec.ts agenda-grade-interativa.spec.ts
