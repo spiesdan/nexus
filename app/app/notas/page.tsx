@@ -510,11 +510,11 @@ export default async function NotasPage({
     }
   }
 
-  // `pb-24` no mobile: o dock fixo (57 px) cobria 37 px do botão de emitir no
-  // fim do formulário em 390 (produção: botão 780,5–824,5, dock a partir de
-  // 787). A folga é desta tela, não da barra; no desktop `md:pb-6` mantém.
+  // O scroll é o `main` do shell; este wrapper é `h-full` e NÃO cresce com o
+  // conteúdo, então padding aqui fica depois da caixa fixa, não no fluxo de
+  // rolagem. A folga do dock mora no espaçador dentro do TabsContent de emitir.
   return (
-    <div className="flex h-full flex-col gap-4 p-6 pb-24 md:pb-6">
+    <div className="flex h-full flex-col gap-4 p-6">
       <NexusPageHeader title={textos.titulo} subtitle={textos.subtitulo} />
 
       {/* A situação em quatro números. "A emitir" é porta para a aba de
@@ -669,6 +669,11 @@ export default async function NotasPage({
               configInicial={config as unknown as Parameters<typeof EmitirNota>[0]["configInicial"]}
               textos={textos}
             />
+            {/* FOLGA DO DOCK: o `main` é quem rola e o wrapper `h-full` não
+                cresce; este espaçador dentro do conteúdo entra no fluxo de
+                rolagem e garante que o botão de emitir pare acima da barra
+                fixa em 390 (antes: base 825, dock em 787). */}
+            <div aria-hidden data-testid="nfe-folga-dock" className="h-24 md:hidden" />
           </TabsContent>
         )}
 
