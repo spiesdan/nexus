@@ -32,7 +32,6 @@ const iso = (min) => new Date(agora - min * 60_000).toISOString();
 
 const linhas = [
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["oficina mecânica", "auto peças"],
     cidade: "Canoinhas",
@@ -57,7 +56,6 @@ const linhas = [
     started_at: iso(3),
   },
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["restaurante", "padaria"],
     cidade: "Mafra",
@@ -83,7 +81,6 @@ const linhas = [
     started_at: iso(6),
   },
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["clínica odontológica", "farmácia"],
     cidade: "Rio Negro",
@@ -109,7 +106,6 @@ const linhas = [
     finished_at: iso(12),
   },
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["cerâmica"],
     cidade: "Três Barras",
@@ -136,7 +132,6 @@ const linhas = [
     finished_at: iso(28),
   },
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["hotel", "pousada"],
     cidade: "São Bento do Sul",
@@ -169,7 +164,6 @@ const linhas = [
     finished_at: iso(40),
   },
   {
-    organization_id,
     search_hash: "seed-radar-estados",
     categorias: ["marcenaria"],
     cidade: "Itaiópolis",
