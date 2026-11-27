@@ -63,6 +63,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/prospeccao/chave", () => ({
   googlePlacesHabilitado: vi.fn(() => true),
+  mapsBrowserHabilitado: vi.fn(() => false),
   resolverChaveGoogle: vi.fn(async () => ({ chave: "AIza-teste", origem: "instalacao" })),
 }));
 vi.mock("@/lib/prospeccao/providers/registro", () => ({
@@ -448,20 +449,21 @@ describe("POST /api/v1/prospecting/searches — cache, budget e provider", () =>
     expect((await res.json()).error.code).toBe("validation_failed");
   });
 
-  it("provider mandado diferente do ativo → 422 nomeando a config", async () => {
+  it("provider explícito habilitado vence a configuração (OSM com ativo Google)", async () => {
     const db = makeDb({ prospecting_settings: [{ ...CFG_OSM, provider_ativo: "google_places" }] });
     session("agent", db);
     const res = await rotaSearches.POST(req("POST", { ...BUSCA_VALIDA, provider: "osm_overpass" }));
-    expect(res.status).toBe(422);
-    expect((await res.json()).error.message).toContain("Provider osm_overpass desligado");
+    expect(res.status).toBe(201);
+    const busca = db.inseridos.find((i) => i.tabela === "prospecting_searches");
+    expect(busca?.row.provider).toBe("osm_overpass");
   });
 
-  it("provider ativo maps_browser → 422 (esqueleto, nem geocodifica)", async () => {
+  it("provider ativo maps_browser desligado → 422, sem geocodificar", async () => {
     const db = makeDb({ prospecting_settings: [{ ...CFG_OSM, provider_ativo: "maps_browser" }] });
     session("agent", db);
     const res = await rotaSearches.POST(req("POST", BUSCA_VALIDA));
     expect(res.status).toBe(422);
-    expect((await res.json()).error.message).toContain("via navegador");
+    expect((await res.json()).error.message).toContain("Maps desligada");
     expect(geocodificar).not.toHaveBeenCalled();
   });
 

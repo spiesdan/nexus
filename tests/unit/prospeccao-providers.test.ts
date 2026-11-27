@@ -103,7 +103,7 @@ describe("MapsBrowserProvider", () => {
     const p = new MapsBrowserProvider();
     await expect(
       p.search({ categoria: "x", latitude: 0, longitude: 0, raioMetros: 1, limite: 1 }),
-    ).rejects.toThrowError("nao_implementado");
+    ).rejects.toThrowError("maps_browser_desligado");
   });
 });
 
@@ -123,6 +123,7 @@ describe("criarProvider", () => {
     }
     expect(METADADOS_PROVIDERS.map((m) => m.nome).sort()).toEqual([
       "google_places",
+      "maps_browser",
       "osm_overpass",
     ]);
   });

@@ -33112,6 +33112,244 @@ end $$;
 comment on column public.shipment_orders.status_comercial_ao_embarcar is
   'Status comercial do pedido no instante em que entrou nesta carga. Usado para devolvê-lo ao status certo ao sair da carga (NULL = carga anterior à 0362; fallback aprovado).';
 
+-- 0366 — PROSPECÇÃO MAPS: CHECKPOINT POR TERMO E TRAVAS VISÍVEIS.
+--
+-- O sidecar `gosom/google-maps-scraper` não tem `-resume`: a retomada é nossa e
+-- a unidade é TERMO × CIDADE (plano v5, §4). `progresso` guarda exatamente o
+-- que o tick precisa para continuar sem estado em memória:
+--   { termos_total, termos_concluidos[], termos_falhos[], termo_atual,
+--     tentativas, bloqueio: { motivo, em } | null }
+--
+-- `motivo_zero` responde à pergunta que "0 encontrados" não responde: foi
+-- zero de verdade, ou o sidecar estava fora? A tela mostra o motivo e as
+-- alternativas (ampliar raio, OSM, Places) em vez de uma lista vazia.
+--
+-- `degradada` marca a busca que rodou com o sidecar fora e caiu para outro
+-- provider; não é status novo (status continua queued/running/paused/...).
+--
+-- As travas por organização ganham colunas próprias porque `limite_diario`
+-- existente é o teto de RESULTADOS, não de BUSCAS. Padrão conservador do
+-- plano: 20 resultados/busca (`limite_por_busca` já existe), 20 buscas/hora,
+-- 100 buscas/dia e jitter de 1,5 s entre termos.
+--
+-- Aditiva e idempotente; sem backfill (buscas antigas ficam com `{}`, que o
+-- leitor trata como "sem checkpoint" e reexecuta do zero).
+
+alter table public.prospecting_searches
+  add column if not exists progresso jsonb not null default '{}'::jsonb;
+
+alter table public.prospecting_searches
+  add column if not exists motivo_zero text;
+
+alter table public.prospecting_searches
+  add column if not exists degradada boolean not null default false;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'prospecting_searches_progresso_objeto'
+  ) then
+    alter table public.prospecting_searches
+      add constraint prospecting_searches_progresso_objeto
+      check (jsonb_typeof(progresso) = 'object');
+  end if;
+end $$;
+
+alter table public.prospecting_settings
+  add column if not exists limite_buscas_hora integer not null default 20;
+
+alter table public.prospecting_settings
+  add column if not exists limite_buscas_dia integer not null default 100;
+
+alter table public.prospecting_settings
+  add column if not exists jitter_ms integer not null default 1500;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'prospecting_settings_buscas_positivas'
+  ) then
+    alter table public.prospecting_settings
+      add constraint prospecting_settings_buscas_positivas
+      check (limite_buscas_hora > 0 and limite_buscas_dia > 0);
+  end if;
+  if not exists (
+    select 1 from pg_constraint where conname = 'prospecting_settings_jitter_faixa'
+  ) then
+    alter table public.prospecting_settings
+      add constraint prospecting_settings_jitter_faixa
+      check (jitter_ms >= 0 and jitter_ms <= 60000);
+  end if;
+end $$;
+
+comment on column public.prospecting_searches.progresso is
+  'Checkpoint por termo×cidade (plano v5 §4): termos_total, termos_concluidos[], termos_falhos[], termo_atual, tentativas, bloqueio. Conclusão de termo grava contadores e upsert dos prospects na mesma transação.';
+comment on column public.prospecting_searches.motivo_zero is
+  'Por que a busca devolveu zero: sem resultados reais, sidecar fora, bloqueio etc. Zero nunca é tela vazia sem motivo.';
+comment on column public.prospecting_searches.degradada is
+  'A busca rodou com o sidecar Maps fora e caiu para OSM/Places. Não é status novo; a tela mostra a degradação.';
+comment on column public.prospecting_settings.limite_buscas_hora is
+  'Teto de buscas iniciadas por hora (relógio), separado do teto de resultados. Padrão 20.';
+comment on column public.prospecting_settings.limite_buscas_dia is
+  'Teto de buscas iniciadas por dia UTC. Padrão 100.';
+comment on column public.prospecting_settings.jitter_ms is
+  'Intervalo aleatório entre termos para não bater no fornecedor em rajada. Padrão 1500 ms.';
+
+-- 0367 — CONCLUSÃO DE UM TERMO MAPS: PROGRESSO E CONTADORES NA MESMA ESCRITA.
+--
+-- O tick do Maps faz o upsert dos prospects (idempotente por place_id) e os
+-- vínculos em `prospect_search_results`; aqui os CONTADORES são DERIVADOS
+-- desses vínculos, nunca somados em memória. Assim:
+--   * duas execuções do mesmo termo não dobram `novas`/`duplicadas`;
+--   * retomada depois de falha não perde o que já entrou;
+--   * `parcial` é derivado de `progresso` (termos fechados vs total), não é
+--     status novo.
+--
+-- A escrita é uma só: `progresso` + contadores + status/finished_at na mesma
+-- instrução. `encontradas` vem do mapa `termos_encontradas` que o checkpoint
+-- já carrega (sobrescreve o termo reexecutado, não soma duas vezes).
+--
+-- `security definer` porque o motor chama com service role e a RLS de
+-- `prospect_search_results`/`prospecting_searches` não pode depender do JWT do
+-- worker; a guarda confere org + papel (ou service_role/platform admin).
+
+create or replace function public.fn_concluir_termo_maps(
+  p_org uuid,
+  p_search uuid,
+  p_progresso jsonb,
+  p_encontradas integer,
+  p_motivo_zero text default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_novas integer;
+  v_dup integer;
+  v_status text;
+  v_fechados integer;
+  v_total integer;
+  v_concluida boolean;
+begin
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role'
+     and not public.fn_is_platform_admin()
+     and not public.fn_role_at_least(p_org, 'agent') then
+    raise exception 'sem_papel' using errcode = '42501';
+  end if;
+
+  if jsonb_typeof(p_progresso) <> 'object' then
+    raise exception 'progresso_invalido' using errcode = '22023';
+  end if;
+
+  v_total := coalesce((p_progresso ->> 'termos_total')::integer, 0);
+  v_fechados := coalesce(jsonb_array_length(p_progresso -> 'termos_concluidos'), 0)
+              + coalesce(jsonb_array_length(p_progresso -> 'termos_falhos'), 0);
+  v_concluida := v_total > 0 and v_fechados >= v_total;
+
+  select count(*)::integer into v_novas
+    from public.prospect_search_results r
+   where r.search_id = p_search
+     and r.organization_id = p_org
+     and r.primeira_vez;
+  select count(*)::integer into v_dup
+    from public.prospect_search_results r
+   where r.search_id = p_search
+     and r.organization_id = p_org
+     and not r.primeira_vez;
+
+  update public.prospecting_searches s
+     set progresso = p_progresso,
+         encontradas = greatest(0, coalesce(p_encontradas, 0)),
+         novas = v_novas,
+         duplicadas = v_dup,
+         motivo_zero = p_motivo_zero,
+         ultimo_erro = null,
+         status = case
+           when s.status in ('paused', 'cancelled') then s.status
+           when v_concluida then 'completed'
+           else 'running'
+         end,
+         finished_at = case
+           when v_concluida and s.status not in ('paused', 'cancelled') then now()
+           else s.finished_at
+         end
+   where s.id = p_search
+     and s.organization_id = p_org;
+
+  if not found then
+    raise exception 'busca_nao_encontrada' using errcode = 'P0002';
+  end if;
+
+  select s.status into v_status
+    from public.prospecting_searches s
+   where s.id = p_search and s.organization_id = p_org;
+
+  return jsonb_build_object(
+    'status', v_status,
+    'encontradas', greatest(0, coalesce(p_encontradas, 0)),
+    'novas', v_novas,
+    'duplicadas', v_dup,
+    'completa', v_concluida
+  );
+end;
+$$;
+
+revoke execute on function public.fn_concluir_termo_maps(uuid, uuid, jsonb, integer, text)
+  from public, anon;
+grant execute on function public.fn_concluir_termo_maps(uuid, uuid, jsonb, integer, text)
+  to authenticated, service_role;
+
+comment on function public.fn_concluir_termo_maps(uuid, uuid, jsonb, integer, text) is
+  'Conclui um termo Maps: grava progresso e deriva encontradas/novas/duplicadas dos vínculos idempotentes, tudo numa escrita. Parcial/completa sai do progresso, não de status novo.';
+
+-- 0368 — DEGRADAÇÃO VISÍVEL E PARADA DECLARADA DA PROSPECÇÃO MAPS.
+--
+-- `degradada` sozinho não conta a história: a tela precisa saber POR QUE o
+-- Maps não executou (sidecar fora, job em modo navegador, provider trocado).
+-- `degradacao_motivo` é esse texto, escrito pelo motor quando ele marca a
+-- busca como degradada; a rota devolve junto com o boolean.
+--
+-- Parada: o termo tem timeout de 120 s. Em vez de fingir que o stop é
+-- instantâneo, a rota grava `parada_solicitada_em` e o motor fecha o termo em
+-- curso; nesse intervalo a busca aparece como "parando", com o prazo máximo
+-- declarado (120 s + escrita). Não existe coluna de status novo: `status`
+-- continua queued/running/paused/..., e "parando" é DERIVADO de
+-- `parada_solicitada_em` + `status='running'`.
+--
+-- Aditiva e idempotente; sem backfill.
+
+alter table public.prospecting_searches
+  add column if not exists degradacao_motivo text;
+
+alter table public.prospecting_searches
+  add column if not exists parada_solicitada_em timestamptz;
+
+comment on column public.prospecting_searches.degradada is
+  'A descoberta Maps não foi o executor (sidecar fora, fast_mode não confirmado ou provider trocado). A tela mostra o motivo em degradacao_motivo.';
+comment on column public.prospecting_searches.degradacao_motivo is
+  'Texto legível do motivo da degradação; nunca vazio quando degradada=true.';
+comment on column public.prospecting_searches.parada_solicitada_em is
+  'Quando o operador pediu pause. O motor fecha o termo em curso (timeout 120 s) e só então grava paused; a rota mostra "parando" enquanto isso.';
+
+-- 0369 — A CONCLUSÃO DE TERMO MAPS É DO MOTOR, NÃO DA SESSÃO.
+--
+-- A 0367 nasceu com `grant execute ... to authenticated, service_role` e a
+-- varredura de hardening acusou, com razão: é uma SECURITY DEFINER que escreve
+-- em `prospecting_searches` e em `prospect_search_results`, e a sessão de
+-- qualquer tenant poderia chamá-la direto pelo PostgREST. O único call site é o
+-- motor (`processarMapas`), que usa o client de service role.
+--
+-- Revogar de `authenticated` fecha a porta sem quebrar o call site. A guarda
+-- interna (service_role / platform admin / agent) continua como defesa em
+-- profundidade para quem um dia chamar por outro caminho.
+
+revoke execute on function public.fn_concluir_termo_maps(uuid, uuid, jsonb, integer, text)
+  from authenticated;
+
+comment on function public.fn_concluir_termo_maps(uuid, uuid, jsonb, integer, text) is
+  'Conclui um termo Maps (motor/service role): grava progresso e deriva encontradas/novas/duplicadas dos vínculos idempotentes, tudo numa escrita. Executável por service_role apenas; a guarda interna continua.';
+
 -- ---- VARREDURA anon: função nova nasce exposta em quem ATUALIZA (migration 0116) ----
 --
 -- ⚠️ ESTE BLOCO É, DE PROPÓSITO, O ÚLTIMO DO ARQUIVO. Apêndice novo entra ANTES
