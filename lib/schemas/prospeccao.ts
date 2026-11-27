@@ -25,10 +25,11 @@ export const buscaCreateSchema = z.object({
   pais: z.string().trim().length(2).default("BR"),
   raio_km: z.number().int().min(1).max(500).default(30),
   max_empresas: z.number().int().min(1).max(10000).default(500),
-  // Opcional SEM default: quem escolhe o provider é Configurações →
-  // Prospecção (provider_ativo); a tela principal nem manda nem vê provider
-  // (§1 da spec 19). Mandado e diferente do ativo, a rota recusa na hora.
-  provider: z.enum(["google_places", "osm_overpass", "maps_browser"]).optional(),
+  // Opcional SEM default: sem ele vale `provider_ativo` (Configurações →
+  // Prospecção). Com ele, a busca usa um provider HABILITADO (OSM sempre;
+  // Google com flag + chave); a validação e a mensagem vivem na rota, para o
+  // erro nomear o provider em vez de "Dados inválidos".
+  provider: z.string().trim().max(40).optional(),
   campaign_id: z.string().uuid().nullable().optional(),
   /** "Buscar nesta área": centro direto do mapa — dispensa cidade/geocode. */
   latitude: z.number().min(-90).max(90).nullable().optional(),

@@ -91,7 +91,7 @@ export async function GET(_req: NextRequest): Promise<Response> {
   const { data, error } = await supabase
     .from("prospecting_searches")
     .select(
-      "id, categorias, cidade, estado, raio_km, max_empresas, provider, status, " +
+      "id, categorias, cidade, estado, latitude, longitude, raio_km, max_empresas, provider, status, " +
         "total_celulas, celulas_processadas, encontradas, novas, duplicadas, erros, " +
         "requisicoes, custo_estimado_cents, progresso, motivo_zero, degradada, " +
         "degradacao_motivo, parada_solicitada_em, ultimo_erro, created_at, finished_at",
@@ -150,20 +150,36 @@ export async function POST(req: NextRequest): Promise<Response> {
     return fail("validation_failed", "Informe ao menos a cidade (busca estadual usa campanha).", 422, { requestId });
   }
 
-  const admin = createAdminClient();
-  const { ttl, teto, providerAtivo, grade: cfgGrade, orcamentoMensalCents, preco } =
-    await cfgDaBusca(admin, authz.org.orgId);
-  // Provider escolhido é o da Configuração → Prospecção (a tela nem manda);
-  // quem mandar diferente é recusado na hora, igual o motor recusaria depois.
-  if (entrada.provider && entrada.provider !== providerAtivo) {
+  // Provider explícito: a tela do zero/degradada oferece OSM/Places em um
+  // clique. Sem o campo, vale `provider_ativo` (comportamento intacto).
+  const explicito = entrada.provider;
+  if (
+    explicito &&
+    explicito !== "osm_overpass" &&
+    explicito !== "google_places" &&
+    explicito !== "maps_browser"
+  ) {
     return fail(
       "validation_failed",
-      `Provider ${entrada.provider} desligado nas configurações (Configurações → Prospecção).`,
+      `Provider "${explicito}" desconhecido. Use osm_overpass (grátis) ou google_places.`,
       422,
       { requestId },
     );
   }
-  const provider = providerAtivo;
+  if (explicito === "maps_browser") {
+    // O CTO segura o Maps como opção até 12/12; hoje ele não entra no seletor.
+    return fail(
+      "validation_failed",
+      "maps_browser ainda não é uma opção de busca. Use osm_overpass (grátis) ou google_places.",
+      422,
+      { requestId },
+    );
+  }
+
+  const admin = createAdminClient();
+  const { ttl, teto, providerAtivo, grade: cfgGrade, orcamentoMensalCents, preco } =
+    await cfgDaBusca(admin, authz.org.orgId);
+  const provider = explicito ?? providerAtivo;
   if (provider === "maps_browser" && !mapsBrowserHabilitado()) {
     return fail(
       "validation_failed",
@@ -187,6 +203,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       { requestId },
     );
   }
+  const providerOrigem = explicito ? "explicito" : "configuracao";
 
   // Cache (§7/§30): o hash usa só a entrada (cidade/UF/raio/provider), então o
   // hit vem ANTES do geocode — mesma pesquisa dentro do TTL não paga nem uma
@@ -316,6 +333,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     resourceType: "prospecting_searches",
     resourceId: (data as unknown as { id: string }).id,
     requestId,
+    // Quem pediu qual provider, e se veio do corpo ou da configuração.
+    metadata: { provider, provider_origem: providerOrigem },
   });
 
   const criada = data as unknown as Record<string, unknown>;
