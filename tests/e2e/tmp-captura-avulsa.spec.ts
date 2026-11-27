@@ -280,7 +280,36 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
         }),
     );
 
-    await page.getByTestId("nfe-emitir").click();
+    // ── MEDIÇÃO da obstrução antes de concluir (pedido do BOSS) ────────────
+    const botao = page.getByTestId("nfe-emitir");
+    await botao.scrollIntoViewIfNeeded();
+    const caixaBotao = await botao.boundingBox();
+    const caixaDock = await page
+      .locator(DOCK)
+      .boundingBox()
+      .catch(() => null);
+    let noCentro = "(sem caixa)";
+    if (caixaBotao) {
+      noCentro = await page.evaluate(
+        ({ x, y }) => {
+          const el = document.elementFromPoint(x, y);
+          if (!el) return "nada";
+          const dono = el.closest("[data-testid]")?.getAttribute("data-testid");
+          const tag = el.tagName.toLowerCase();
+          return dono ? `testid=${dono}` : `${tag}${el.className ? "." + String(el.className).slice(0, 30) : ""}`;
+        },
+        { x: caixaBotao.x + caixaBotao.width / 2, y: caixaBotao.y + caixaBotao.height / 2 },
+      );
+    }
+    console.log(
+      `[medida] botão emitir: ${JSON.stringify(caixaBotao)} dock: ${JSON.stringify(caixaDock)} centro=${noCentro}`,
+    );
+    const obstruido = typeof noCentro === "string" && /testid=|nav/.test(noCentro) && !noCentro.includes("nfe-emitir");
+    if (obstruido) {
+      console.log(`[achado] nfe-emitir OBSTRUÍDO em ${viewport.px}px por ${noCentro} — captura com clique forçado`);
+    }
+
+    await page.getByTestId("nfe-emitir").click({ force: obstruido, timeout: 20_000 });
     const apareceu = await page
       .getByTestId("nfe-erro")
       .waitFor({ state: "visible", timeout: 15_000 })
