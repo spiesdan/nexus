@@ -7,18 +7,20 @@
 
 > **Quando em dúvida, consulte aqui antes de implementar.** Cada item tem o "por quê" curto.
 
-Lista canônica do que **não fazer** no Nexus. Anti-patterns ficam aqui pra preservar identidade visual e evitar convergência ao padrão SaaS genérico.
+> **O que morreu neste capítulo:** os itens **1** e **2** (proibir Inter, exigir Atkinson) descrevem a era Sage; o produto usa **Inter** desde 21/09/2026. O item **3** vale apenas contra *gradient* — roxo sólido (`--color-accent`) é a cor funcional. Os demais seguem como intenção; em conflito, o CSS vence.
+
+Lista de anti-patterns do Nexus, com o status de cada um (o topo diz o que morreu).
 
 ---
 
-## 1. ❌ Inter como font family
+## 1. ❌ Inter como font family — **MORTO (era Sage; o produto usa Inter)**
 
 **Por quê:** ~70% dos SaaS atuais usam Inter. É correta, mas saturada. Diluição de marca.
 **✅ Sim:** Atkinson Hyperlegible (display + body) + IBM Plex Mono (dados). Ver `03-typography.md`.
 
 ---
 
-## 2. ❌ Geist Sans, Space Grotesk, ou qualquer Vercel-default
+## 2. ❌ Geist Sans, Space Grotesk, ou qualquer Vercel-default — **MORTO (era Sage; a fonte é Inter)**
 
 **Por quê:** mesma razão de Inter. Geist é a "nova Inter" de 2024–2025. Anti-genérico exige distância.
 **✅ Sim:** Atkinson.

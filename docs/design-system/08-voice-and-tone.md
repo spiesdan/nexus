@@ -1,6 +1,8 @@
 # 08 — Voz e Tom
 
-> **Source of truth:** este documento. Todo microcopy do produto deve passar por aqui antes de ir pra produção.
+> **Fonte canônica hoje:** o microcopy do produto. Este capítulo continua valendo como régua de tom; em conflito, a tela em produção vence.
+
+> **Régua histórica de tom:** este documento. O microcopy vigente é o do produto; esta página orienta quem escreve, não corrige a tela.
 
 ## Personalidade
 

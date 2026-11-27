@@ -1,5 +1,7 @@
 # 05 — Iconografia Phosphor
 
+> **Fonte canônica hoje:** [`lib/ui/icons.ts`](../../lib/ui/icons.ts) e `@phosphor-icons/react`. Este capítulo continua valendo como intenção; em conflito, o código vence.
+
 > **Source of truth:** `@phosphor-icons/react`, peso default `duotone`.
 
 ## Por que Phosphor

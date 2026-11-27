@@ -2,21 +2,23 @@
 title: Screen Flow — Mapa de Jornadas e Telas do Nexus
 parent: docs/design-system/00-overview.md
 version: 0.1
-status: em revisão
+status: histórico (plano de abril/2026)
 date: 2026-04-28
 owner: Rafael Melgaço
 ---
 
 # Screen Flow — Índice
 
-> Mapeamento exaustivo de **quem usa**, **que jornadas existem**, **quais telas precisam ser construídas**, **como elas se conectam** e **quais estados cada uma carrega** — antes de qualquer linha de UI real. Esta pasta antecede stories e specs de UI; serve de contrato visual entre PRDs (PT-BR, prioridade MVP-B).
+> **Plano de abril/2026, não fonte do produto.** Rotas vivas: [`lib/navigation/registry.ts`](../../../lib/navigation/registry.ts); visual: [`DESIGN.md`](../../../DESIGN.md) + [`app/globals.css`](../../../app/globals.css); catálogo: [`components/nexus-ui/`](../../../components/nexus-ui). Em conflito, o código vence — não ajuste o produto para caber neste plano.
+
+> Mapeamento exaustivo de **quem usa**, **que jornadas existem**, **quais telas precisam ser construídas**, **como elas se conectam** e **quais estados cada uma carrega** — antes de qualquer linha de UI real. Esta pasta antecede stories e specs de UI; é o plano de 2026-04-28, não o contrato vigente.
 
 ## Ordem de leitura recomendada
 
 | # | Arquivo | O que entrega |
 |---|---|---|
 | 1 | [`00-personas.md`](./00-personas.md) | 5 personas com JTBD, frustrations e métricas |
-| 2 | [`01-sitemap.md`](./01-sitemap.md) | Árvore canônica de rotas Next.js (app + admin) |
+| 2 | [`01-sitemap.md`](./01-sitemap.md) | Árvore **planejada** de rotas (o registro vivo é `lib/navigation/registry.ts`) |
 | 3 | [`02-journeys.md`](./02-journeys.md) | 5 jornadas críticas passo-a-passo |
 | 4 | [`03-screen-inventory.md`](./03-screen-inventory.md) | Tabela exaustiva de ~70 telas com estados |
 | 5 | [`04-clickflows.md`](./04-clickflows.md) | Diagramas Mermaid `flowchart` por fluxo |
