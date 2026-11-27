@@ -9,3 +9,8 @@ O GET da configuração de prospecção passa a devolver `chave_origem` com
 agora ela mostra se o custo das consultas é da própria organização ou do dono da
 instalação, sem nunca devolver a chave em si. A origem segue a resolução já
 existente: a chave do tenant vence e a da instalação é o fallback.
+
+A configuração também recusa `maps_browser` enquanto a instalação não libera o
+sidecar (`mapsBrowserHabilitado()` falso), com erro nomeado; quando a flag e a
+URL existem, o valor passa a ser aceito. A UI já esconde o provedor; o schema é
+a segunda porta.

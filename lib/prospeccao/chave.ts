@@ -37,3 +37,11 @@ export async function resolverChaveGoogle(admin: SupabaseClient, orgId: string):
 export function googlePlacesHabilitado(): boolean {
   return process.env.GOOGLE_PLACES_ENABLED !== "false";
 }
+
+/** O sidecar Maps só existe com a flag ligada E a URL configurada. */
+export function mapsBrowserHabilitado(): boolean {
+  return (
+    process.env.MAPS_BROWSER_ENABLED === "true" &&
+    Boolean((process.env.MAPS_BROWSER_URL ?? "").trim())
+  );
+}

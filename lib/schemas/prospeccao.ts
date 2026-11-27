@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { Classificacao } from "@/lib/prospeccao/classificacao";
 import { semAcento } from "@/lib/prospeccao/categoria-pt";
+import { mapsBrowserHabilitado } from "@/lib/prospeccao/chave";
 import { ESPACO_MAXIMO_MS, MENSAGENS_POR_DISPARO_MAX } from "@/lib/prospeccao/disparo";
 
 /**
@@ -604,7 +605,22 @@ export const campanhaPatchSchema = z
   });
 
 export const settingsPutSchema = z.object({
-  provider_ativo: z.enum(["google_places", "osm_overpass", "maps_browser"]).optional(),
+  // `maps_browser` só entra depois que a instalação libera o sidecar
+  // (`mapsBrowserHabilitado()`: flag ligada e URL configurada). A UI já o
+  // esconde; o schema é a segunda porta e recusa com motivo próprio. Sem data
+  // fixa: a condição é a flag.
+  provider_ativo: z
+    .enum(["google_places", "osm_overpass", "maps_browser"])
+    .optional()
+    .superRefine((v, ctx) => {
+      if (v === "maps_browser" && !mapsBrowserHabilitado()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "maps_browser_ainda_nao_liberado: use osm_overpass (grátis) ou google_places até a instalação liberar o sidecar.",
+        });
+      }
+    }),
   google_api_key: z.string().trim().min(10).max(300).nullable().optional(),
   limite_por_busca: z.number().int().min(10).max(10000).optional(),
   limite_diario: z.number().int().min(10).max(100000).optional(),

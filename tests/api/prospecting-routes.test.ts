@@ -46,7 +46,7 @@ import { fail } from "@/lib/api/wrappers";
 import { canonicalPhoneBR } from "@/lib/channels/phone-variants";
 import { requireRole } from "@/lib/auth/require-role";
 import { ROLE_RANK, type AuthUser, type Role } from "@/lib/auth/types";
-import { googlePlacesHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
+import { googlePlacesHabilitado, mapsBrowserHabilitado, resolverChaveGoogle } from "@/lib/prospeccao/chave";
 import { hashDaBusca } from "@/lib/prospeccao/motor";
 import { MENSAGEM_ORCAMENTO_ATINGIDO } from "@/lib/prospeccao/uso";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -63,6 +63,7 @@ vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: vi.fn() }));
 vi.mock("@/lib/audit", () => ({ audit: vi.fn(async () => undefined) }));
 vi.mock("@/lib/prospeccao/chave", () => ({
   googlePlacesHabilitado: vi.fn(() => true),
+  mapsBrowserHabilitado: vi.fn(() => false),
   resolverChaveGoogle: vi.fn(async () => ({ chave: "AIza-teste", origem: "instalacao" })),
 }));
 vi.mock("@/lib/prospeccao/providers/registro", () => ({
@@ -696,6 +697,32 @@ describe("GET/PUT /api/v1/prospecting/settings — config", () => {
     const res = await rotaSettings.PUT(req("PUT", { orcamento_mensal_cents: -1 }, "http://localhost/api/v1/prospecting/settings"));
     expect(res.status).toBe(422);
     expect((await res.json()).error.code).toBe("validation_failed");
+  });
+
+  it("PUT com maps_browser e sidecar desligado → 422 nomeado, sem gravar", async () => {
+    vi.mocked(mapsBrowserHabilitado).mockReturnValue(false);
+    const db = makeDb({ prospecting_settings: [CFG_OSM] });
+    session("manager", db);
+    const res = await rotaSettings.PUT(
+      req("PUT", { provider_ativo: "maps_browser" }, "http://localhost/api/v1/prospecting/settings"),
+    );
+    expect(res.status).toBe(422);
+    const corpo = await res.json();
+    expect(corpo.error.code).toBe("validation_failed");
+    expect(corpo.error.message).toContain("maps_browser_ainda_nao_liberado");
+    expect(db.inseridos).toHaveLength(0);
+  });
+
+  it("PUT com maps_browser e sidecar liberado → 200 e grava", async () => {
+    vi.mocked(mapsBrowserHabilitado).mockReturnValue(true);
+    const db = makeDb({ prospecting_settings: [CFG_OSM] });
+    session("manager", db);
+    const res = await rotaSettings.PUT(
+      req("PUT", { provider_ativo: "maps_browser" }, "http://localhost/api/v1/prospecting/settings"),
+    );
+    expect(res.status).toBe(200);
+    const linhas = db.tabelas.prospecting_settings ?? [];
+    expect(linhas[0]?.provider_ativo).toBe("maps_browser");
   });
 
   it("PUT válido grava centavos, cifra a chave e audita (upsert na org)", async () => {

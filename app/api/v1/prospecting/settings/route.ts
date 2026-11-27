@@ -76,10 +76,14 @@ export async function PUT(req: NextRequest): Promise<Response> {
 
   const parsed = settingsPutSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
-    return fail("validation_failed", "Dados inválidos.", 422, {
-      requestId,
-      details: parsed.error.flatten().fieldErrors as Record<string, unknown>,
-    });
+    const detalhes = parsed.error.flatten().fieldErrors as Record<string, unknown>;
+    const doProvider = parsed.error.issues.find((i) => i.path[0] === "provider_ativo");
+    return fail(
+      "validation_failed",
+      doProvider?.message ?? "Dados inválidos.",
+      422,
+      { requestId, details: detalhes },
+    );
   }
 
   const { google_api_key, ...resto } = parsed.data;
