@@ -1,0 +1,117 @@
+name: tmp-medida-978b
+
+# TEMPORÁRIO — prova em pixel do #978 (folga do dock sob o botão de emitir da
+# avulsa em 390). Roda o MESMO ambiente do e2e (Supabase local + baseline +
+# build do head do PR) e publica os números. Branch descartável.
+
+on:
+  push:
+    branches: ["tmp/medida-978b"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  medida:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      E2E_PORT: "3001"
+      AUTH_RATE_LIMIT_LOGIN_IP: "1000"
+      SENTRY_DSN: "off"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.1
+      - name: Autenticar no GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Subir Supabase local (sem a cadeia de migrations)
+        run: |
+          mv supabase/migrations /tmp/migrations-off
+          mkdir -p supabase/migrations
+          for tentativa in 1 2 3 4 5; do
+            supabase start && break
+            sleep $((tentativa * 30))
+          done
+          supabase status
+      - name: Extensões do baseline
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q <<'SQL'
+          create schema if not exists extensions;
+          create extension if not exists "uuid-ossp" with schema extensions;
+          create extension if not exists pgcrypto with schema extensions;
+          create extension if not exists vector with schema public;
+          create extension if not exists citext with schema public;
+          create extension if not exists pg_trgm with schema public;
+          SQL
+      - name: Baseline
+        run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 -q -f supabase/baseline.sql
+      - name: Reiniciar o Realtime
+        run: |
+          IDS=$(docker ps -q --filter name=supabase_realtime)
+          [ -n "$IDS" ] || { echo "::error::sem realtime"; exit 1; }
+          docker restart $IDS
+          sleep 10
+      - name: Credenciais do stack
+        run: |
+          supabase status -o env > /tmp/sb.env
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(grep '^API_URL=' /tmp/sb.env | cut -d'"' -f2)"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(grep '^ANON_KEY=' /tmp/sb.env | cut -d'"' -f2)"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(grep '^SERVICE_ROLE_KEY=' /tmp/sb.env | cut -d'"' -f2)"
+          } >> "$GITHUB_ENV"
+      - run: pnpm e2e:env
+      - run: grep -vE '^[[:space:]]*(#|$)' .env.e2e >> "$GITHUB_ENV"
+      - name: Build de produção
+        run: pnpm e2e:build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+      - uses: actions/cache@v4
+        id: cache-chromium
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Instalar o browser
+        run: |
+          if [ "${{ steps.cache-chromium.outputs.cache-hit }}" = "true" ]; then
+            sudo "$(which pnpm)" exec playwright install-deps chromium
+          else
+            pnpm exec playwright install --with-deps chromium
+          fi
+      - name: Semear credenciais de teste
+        run: |
+          cp .env.e2e .env.local
+          pnpm exec tsx scripts/seed-e2e-credentials.ts
+      - name: Semear a chave de cifra do fiscal
+        run: pnpm exec tsx scripts/seed-e2e-fiscal-cifra.ts
+      - name: Medir a folga do botão no 390
+        id: medida
+        timeout-minutes: 20
+        run: pnpm exec playwright test tests/e2e/tmp-medida-avulsa-390.spec.ts --workers=1
+      - name: Veredito
+        if: always()
+        run: |
+          echo "medicao: ${{ steps.medida.outcome }}"
+          [ "${{ steps.medida.outcome }}" = "success" ]
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: medida-978b
+          path: |
+            evidence/medida-978/
+            test-results/**/*.png
+            test-results/**/*.md
+          retention-days: 14
+      - name: Diagnóstico
+        if: failure()
+        run: |
+          docker ps -a
+          df -h
