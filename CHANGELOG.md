@@ -8,6 +8,16 @@ Se você roda o DeskcommCRM numa VPS, **leia a seção da versão para a qual es
 
 ## [Não lançado]
 
+## [2.3.1] — 2026-11-27
+
+### Corrigido
+
+- **Emissão avulsa só fica pronta com o preço informado** O item de catálogo continua entrando sem preço — preço é o que o operador digita
+  no balcão. Mas a linha sem preço agora avisa, o marcador de formulário pronto e
+  o botão de emitir ficam bloqueados até o preço existir, e a reprovação do
+  payload aparece inline em vez de sumir no toast. Nada de copiar preço do
+  catálogo.
+
 ## [2.3.0] — 2026-11-27
 
 ### Adicionado
@@ -9437,7 +9447,8 @@ Primeira versão marcada do DeskcommCRM. O projeto vinha sendo desenvolvido publ
 
 - **Node 22 é obrigatório para desenvolvimento.** A suíte de invariantes instancia o cliente do Supabase, que exige o `WebSocket` global — nativo apenas a partir do Node 22. Isso não afeta quem apenas hospeda: a VPS roda a imagem pronta.
 
-[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.3.0...HEAD
+[Não lançado]: https://github.com/spiesdan/nexus/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/spiesdan/nexus/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/spiesdan/nexus/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/spiesdan/nexus/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/spiesdan/nexus/compare/v2.1.0...v2.1.1
