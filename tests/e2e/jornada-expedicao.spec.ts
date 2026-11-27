@@ -105,8 +105,12 @@ test("jornada 4 (expedição) — pedido vira carga, sai para rota e é concluí
 
   // 4. Rota: com 1 pedido não separado, publicar não é oferecido — a régua diz
   // quanto falta e a ação do banner é conferir a separação.
-  await expect(page.getByText(/Faltam separar 1 pedido/)).toBeVisible();
-  await expect(page.getByRole("link", { name: "Revisar e publicar" })).toHaveCount(0);
+  // Escopo pelo banner: o título do passo aparece DUAS vezes na ficha (faixa
+  // "Próxima ação" e a faixa "Próximo passo"), e um `getByText` solto casa nos
+  // dois — foi a violação de strict mode da rodada 3.
+  const proximaAcao = page.getByTestId("proxima-acao");
+  await expect(proximaAcao).toContainText("Faltam separar 1 pedido");
+  await expect(proximaAcao.getByRole("link", { name: "Revisar e publicar" })).toHaveCount(0);
   // Checkbox controlado: o `check()` do Playwright valida o estado logo após o
   // clique, mas ele só vira true quando o PATCH + recarregar voltam — por isso
   // `click` + `toBeChecked` com timeout.
