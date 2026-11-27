@@ -31,6 +31,7 @@ import { type PedidoComercial } from "@/lib/schemas/pedidos";
 import type { ContatoFiscal, DestinatarioDaNota } from "@/lib/fiscal/destinatario-da-nota";
 import { camposDaAvulsa, precedenciaDigitado } from "@/lib/fiscal/avulsa-preenchimento";
 import { comoMoeda, numeroDoPedido } from "@/lib/format/moeda";
+import { randomId } from "@/lib/random-id";
 import { Receipt } from "@/lib/ui/icons";
 
 import type { Produto } from "@/lib/schemas/produtos";
@@ -637,7 +638,7 @@ export function EmitirNota({
       }
       // Chave estável da emissão: nasce no formulário pronto e é reusada em
       // retry/reenvio até a nota sair; o client não gera outra por chamada.
-      const chaveIdempotencia = chaveIdempotenciaRef.current ?? crypto.randomUUID();
+      const chaveIdempotencia = chaveIdempotenciaRef.current ?? randomId();
       chaveIdempotenciaRef.current = chaveIdempotencia;
       await apiClient.post(
         "/api/v1/invoices",
@@ -757,7 +758,7 @@ export function EmitirNota({
    */
   React.useEffect(() => {
     if (!podeEmitirAvulsa) return;
-    if (!chaveIdempotenciaRef.current) chaveIdempotenciaRef.current = crypto.randomUUID();
+    if (!chaveIdempotenciaRef.current) chaveIdempotenciaRef.current = randomId();
   }, [podeEmitirAvulsa]);
 
   return (
