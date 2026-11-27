@@ -35,9 +35,9 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
   });
 
   // Se não houver cartão, o diagnóstico vem da própria API — não de suposição.
-  const cartoesVisiveis = await page.locator("li").evaluateAll((els) =>
-    els.filter((e) => e.getBoundingClientRect().height > 0).length,
-  );
+  const cartoesVisiveis = await page
+    .locator("main div.grid > div, main div.grid > article")
+    .evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height > 0).length);
   if (cartoesVisiveis === 0) {
     const resposta = await page.request.get("/api/v1/prospecting/prospects?limite=6");
     console.log(`[diagnostico] GET prospects status=${resposta.status()} corpo=${(await resposta.text()).slice(0, 600)}`);
@@ -57,7 +57,11 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
     const dock = document.querySelector(seletor);
     const topoDock = dock ? dock.getBoundingClientRect().top : window.innerHeight;
 
-    const todos = Array.from(document.querySelectorAll("li"));
+    // Os cartões de empresa são `Card` (div) dentro do grid, NÃO `li` — o `li`
+    // que existia era a barra lateral, e por isso a rodada anterior media 0.
+    const todos = Array.from(
+      document.querySelectorAll('main div.grid > div, main div.grid > article'),
+    );
     const candidatos = todos
       .map((el) => ({ texto: (el.textContent ?? "").trim().slice(0, 24), r: el.getBoundingClientRect() }))
       .filter(({ r }) => r.height > 0 && r.width > 0)
