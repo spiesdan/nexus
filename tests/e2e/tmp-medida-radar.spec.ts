@@ -26,18 +26,22 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
   await loginComoAdmin(page, lerCreds());
   await page.setViewportSize({ width: 390, height: 844 });
 
-  await page.goto("/app/prospeccao?aba=empresas", {
+  await page.goto("/app/prospeccao?aba=pesquisas", {
     waitUntil: "domcontentloaded",
     timeout: 240_000,
   });
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible({
+  await expect(page.getByRole("heading", { name: "Buscas no mapa" })).toBeVisible({
     timeout: 180_000,
   });
 
   // Se não houver cartão, o diagnóstico vem da própria API — não de suposição.
   const cartoesVisiveis = await page
-    .locator("main div.grid > div, main div.grid > article")
+    .locator("main ul.space-y-3 > li")
     .evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height > 0).length);
+  if (cartoesVisiveis !== 6) {
+    const html = await page.locator("main ul.space-y-3").first().innerHTML().catch(() => "(sem ul)");
+    console.log(`[diagnostico] cartoes=${cartoesVisiveis} html=${html.slice(0, 3000)}`);
+  }
   if (cartoesVisiveis === 0) {
     const resposta = await page.request.get("/api/v1/prospecting/prospects?limite=6");
     console.log(`[diagnostico] GET prospects status=${resposta.status()} corpo=${(await resposta.text()).slice(0, 600)}`);
@@ -57,11 +61,10 @@ test("mede a folga do dock no Radar em 390", async ({ page }) => {
     const dock = document.querySelector(seletor);
     const topoDock = dock ? dock.getBoundingClientRect().top : window.innerHeight;
 
-    // Os cartões de empresa são `Card` (div) dentro do grid, NÃO `li` — o `li`
-    // que existia era a barra lateral, e por isso a rodada anterior media 0.
-    const todos = Array.from(
-      document.querySelectorAll('main div.grid > div, main div.grid > article'),
-    );
+    // A lista do Radar (`_buscas.tsx:226`) é `ul.space-y-3` com um `li` por
+    // busca. Escopar nesse `ul` é o que separa o cartão da barra lateral.
+    const lista = document.querySelector('main ul.space-y-3');
+    const todos = lista ? Array.from(lista.children) : [];
     const candidatos = todos
       .map((el) => ({ texto: (el.textContent ?? "").trim().slice(0, 24), r: el.getBoundingClientRect() }))
       .filter(({ r }) => r.height > 0 && r.width > 0)

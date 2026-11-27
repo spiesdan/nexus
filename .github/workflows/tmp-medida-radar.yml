@@ -90,8 +90,8 @@ jobs:
         run: |
           cp .env.e2e .env.local
           pnpm exec tsx scripts/seed-e2e-credentials.ts
-      - name: Semear as seis empresas do Radar
-        run: node scripts/tmp-semear-radar-prospects.mjs
+      - name: Semear as seis buscas do Radar
+        run: node scripts/tmp-semear-radar.mjs
       - name: Medir a folga do dock
         id: medida
         timeout-minutes: 20
