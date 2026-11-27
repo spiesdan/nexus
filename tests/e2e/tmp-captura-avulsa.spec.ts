@@ -274,6 +274,22 @@ test("captura dos estados da NFe avulsa (7 em 1440)", async ({ page }) => {
       .waitFor({ state: "visible", timeout: 15_000 })
       .then(() => true)
       .catch(() => false);
+    await page.waitForTimeout(2000);
+    // Instrumentação pedida: QUEM come o clique. Toast (validação local) x
+    // clique morto se distinguem aqui.
+    const toasts = await page
+      .locator('[role="status"], [role="alert"], [data-sonner-toast], [data-toast]')
+      .allInnerTexts()
+      .catch(() => [] as string[]);
+    const itens = await page.getByTestId("nfe-item").evaluateAll((linhas) =>
+      linhas.map((l) => {
+        const q = l.querySelector('input[aria-label="Qtd."]') as HTMLInputElement | null;
+        const p = l.querySelector('input[aria-label="Preço (centavos)"]') as HTMLInputElement | null;
+        return { qtd: q?.value ?? "(sem input)", preco: p?.value ?? "(sem input)", texto: l.textContent?.trim().slice(0, 40) };
+      }),
+    );
+    console.log(`[medida] toasts visíveis: ${JSON.stringify(toasts.filter((t) => t.trim()))}`);
+    console.log(`[medida] itens da avulsa no DOM: ${JSON.stringify(itens)}`);
     console.log(
       `[medida] falha de envio: POST disparado=${postsDaEmissao} nfe-erro=${apareceu ? "visível" : "AUSENTE"}`,
     );
