@@ -197,6 +197,14 @@ qtd_fotos="$(ls -1 "$dir"/backups/uploads-product-images-*.tgz 2>/dev/null | wc 
 espera "retenção mantém 14 uploads-product-images (não 15+) — medido $qtd_fotos" \
   "$([ "$qtd_fotos" -le 14 ] && echo ok || echo nao)"
 
+# ── 5b. retenção é configurável: BACKUP_RETENTION=3 mantém 3, não 14 ────────
+# 14 dias cobre um deploy quebrado no fim de semana; não cobre o fechamento do
+# mês. Quem emite nota escolhe quanto guardar sem editar o script.
+BACKUP_RETENTION=3 roda "$dir" bash hostgator-setup-kit/backup.sh >/dev/null 2>&1
+qtd3="$(ls -1 "$dir"/backups/uploads-product-images-*.tgz 2>/dev/null | wc -l | tr -d ' ')"
+espera "BACKUP_RETENTION=3 mantém 3 uploads — medido $qtd3" \
+  "$([ "$qtd3" -eq 3 ] && echo ok || echo nao)"
+
 # ── 6. falha de superfície derruba o backup ─────────────────────────────────
 chmod 000 "$dir/uploads" 2>/dev/null || true
 roda "$dir" bash hostgator-setup-kit/backup.sh >/dev/null 2>&1

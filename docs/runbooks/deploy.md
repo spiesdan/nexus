@@ -6,18 +6,41 @@ está documentado no fim.
 
 ---
 
-## 1. O comando
+## 1. O comando — e por que são DOIS comandos
+
+O deploy não constrói nada na VPS: o CI publica a imagem e a VPS só puxa. Mas
+**qual `docker compose` rodar** depende do proxy reverso que a instalação
+escolheu, e isso fica gravado no `.env`:
 
 ```bash
 cd /var/www/crm
+grep '^REVERSE_PROXY=' .env        # caddy (padrão) | traefik
+```
+
+O `install.sh` decide na instalação (e grava no `.env`): VPS "crua" recebe o
+**Caddy do próprio compose**; VPS entregue com um proxy já ocupando 80/443
+(Hostinger, Coolify, Dokploy, CapRover…) recebe `REVERSE_PROXY=traefik` e passa a
+usar o **proxy da hospedagem**. Os dois caminhos existem, e o script do kit
+(`_common.sh` → `dc()`) escolhe sozinho — quem digita à mão precisa saber qual é
+o seu.
+
+### 1.1 Caddy do compose (`REVERSE_PROXY=caddy`, o padrão)
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env up -d app
+```
+
+O compose sobe o `caddy` nas portas 80/443 com o `Caddyfile` do repositório. Os
+erros se distinguem pelo código: `404` é o **app** respondendo "não achei a rota"
+(ou um Host que não casa com o `Caddyfile`); `502`/`503` é o Caddy sem alcançar o
+`app` — fora da rede `internal` ou caído.
+
+### 1.2 Proxy do host (`REVERSE_PROXY=traefik`)
+
+```bash
 docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml --env-file .env up -d app
 ```
 
-### Os DOIS `-f` são obrigatórios. Sempre.
-
-Esta é a pegadinha que já derrubou o site inteiro em produção (2026-08-05).
-
-A VPS (Hostinger) vem com um **Traefik próprio** ocupando as portas 80/443.
 `docker-compose.traefik.yml` é o ÚNICO lugar que:
 
 - coloca no contêiner `app` as labels de roteamento
@@ -26,34 +49,59 @@ A VPS (Hostinger) vem com um **Traefik próprio** ocupando as portas 80/443.
 - desliga o `caddy` do compose base por profile (senão dois processos brigam
   pela mesma porta).
 
-Rodar só com `-f docker-compose.prod.yml` recria o contêiner **sem labels
-nenhuma**. O Traefik deixa de enxergá-lo e o domínio inteiro passa a responder
-`404 page not found` — não é erro do Next, é o 404 genérico do Traefik. A app
-está no ar, saudável, e inalcançável.
+Rodar só com `-f docker-compose.prod.yml` numa instalação assim recria o
+contêiner **sem labels nenhuma**. O Traefik deixa de enxergá-lo e o domínio
+passa a responder `404 page not found` — não é erro do Next, é o 404 genérico do
+Traefik. A app está no ar, saudável, e inalcançável.
+
+> ⚠️ **Os dois `-f` não são universais.** Numa instalação com o Caddy do compose,
+> passar o override aborta o `up` com `network traefik declared as external, but
+> could not be found` (medido em 24/10/2026) — e aí o deploy morre no meio, com
+> o parque em estado misto. O erro clássico de 2026-08-05 foi o oposto: uma
+> instalação **com** Traefik recebeu `up -d` com um `-f` só e o site inteiro
+> ficou em 404, healthy no `docker ps`. Cada caminho tem o seu jeito de quebrar.
 
 ---
 
 ## 2. Verificação pós-deploy (não pule)
 
-`healthy` no `docker ps` **não prova que o site está acessível** — o healthcheck
-é um probe TCP interno e passa mesmo com o roteamento quebrado. Verifique as
-duas coisas:
+`healthy` no `docker ps` **não prova que o site está acessível**: o healthcheck
+é um probe TCP interno e passa mesmo com o roteamento quebrado.
+
+**Primeiro, qual proxy esta instalação usa:**
 
 ```bash
-# 1) as labels do Traefik existem?
-#    O nome do contêiner é <pasta-do-projeto>-app-1, então pergunte ao compose
-#    em vez de chutar. Aqui um -f só basta: o `ps -q` resolve pelo nome do
-#    projeto + serviço, não pelo conteúdo do arquivo (medido: com um -f ou com
-#    os dois, devolve o MESMO contêiner). Quem precisa dos dois é o `up -d`.
+grep '^REVERSE_PROXY=' .env
+docker ps --format '{{.Names}}' | grep -E 'caddy|traefik'   # quem está no ar
+```
+
+**Depois, a verificação do caminho certo:**
+
+```bash
+# (a) só em REVERSE_PROXY=traefik — as labels existem?
+#     O `ps -q` resolve pelo nome do projeto + serviço, não pelo conteúdo do
+#     arquivo: com um -f ou com os dois devolve o MESMO contêiner (medido).
+#     Quem precisa dos dois é o `up -d`, não esta consulta.
 docker inspect "$(docker compose -f docker-compose.prod.yml ps -q app)" \
   --format '{{.Config.Labels}}' | grep -o 'traefik.enable:[^ ]*'
 # esperado: traefik.enable:true   (vazio = roteamento quebrado)
 
-# 2) o domínio responde?
+# (b) o domínio responde? vale para os dois caminhos
 curl -s -o /dev/null -w "%{http_code}\n" https://<DOMAIN>/
 # esperado: 307 (redireciona pro login)
-# 404      = labels perdidas, refaça o deploy com os dois -f
 ```
+
+Se vier `404`, o conserto depende do proxy:
+
+| instalação | o que o 404 significa | comando |
+|---|---|---|
+| `REVERSE_PROXY=caddy` | `404` = o app não achou a rota; `502/503` = o Caddy não alcança o app | `docker compose -f docker-compose.prod.yml up -d app caddy` |
+| `REVERSE_PROXY=traefik` | labels perdidas (up sem o override) | refaça o `up -d` com os **dois** `-f` do §1.2 |
+
+Se o deploy já quebrou e a pergunta é "como volto", vá direto ao
+[§5](#5-rollback-por-tag-de-imagem). Para o retrato da instalação (disco, RAM,
+backup, A1, versão, borda), `bash hostgator-setup-kit/saude.sh` — leitura apenas,
+seguro a qualquer hora. Ver [`operacao-vps.md`](operacao-vps.md).
 
 ---
 
@@ -198,3 +246,94 @@ Consequência prática para quem opera: o deploy pode ser repetido sem medo (o
 baseline é idempotente), e ele falha alto e cedo quando a conexão do `.env` não
 é o dono do banco. O gate é `tests/shell/deploy-aplica-schema.test.sh`
 (roda no `pnpm test:shell`).
+
+---
+
+## 5. Rollback por tag de imagem
+
+Voltar de versão é **trocar sete tags no `.env` e recriar os contêineres** — nada
+de `git checkout` na VPS (o código que roda vem da imagem, não do clone) e nada
+de construir de novo.
+
+### 5.1 O que está no ar agora
+
+```bash
+cd /var/www/crm
+grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env
+```
+
+As sete apontam sempre para a **mesma** versão. É essa uniformidade que faz o
+rollback ser uma linha de `sed` em vez de sete edições à mão — o `update.sh` já
+grava as sete juntas, e é o rollback de `.env` que ele faz quando um passo falha
+no meio de uma atualização.
+
+### 5.2 Voltar para uma versão anterior
+
+```bash
+# 1) guarde a atual, para poder voltar do rollback
+cp .env .env.bak-$(date +%Y%m%d-%H%M%S)
+
+# 2) troque SÓ o número da tag nas sete imagens (ex.: volta de 2.0.17 para 2.0.16)
+NOVA=2.0.16
+sed -i -E "s#^([A-Z_]+_IMAGE=[^:]+:)[0-9]+\.[0-9]+\.[0-9]+$#\1${NOVA}#" .env
+
+# 3) confira antes de recriar
+grep -E '^(APP|WORKER|SCHEDULER|FISCAL|MERCOS|OCR|ROTA)_IMAGE=' .env
+
+# 4) recrie com os MESMOS -f do deploy — qual é o seu está no §1
+#    Caddy do compose (padrão):
+docker compose -f docker-compose.prod.yml \
+  --env-file .env up -d app worker scheduler fiscal mercos ocr rota
+#    Proxy do host (REVERSE_PROXY=traefik):
+# docker compose -f docker-compose.prod.yml -f docker-compose.traefik.yml \
+#   --env-file .env up -d app worker scheduler fiscal mercos ocr rota
+```
+
+> O `-f` errado não é neutro: no caminho com Caddy, o override aborta o `up`
+> (`network traefik declared as external`); no caminho com Traefik, esquecer o
+> override recria o parque **sem labels** e o domínio cai para 404.
+>
+> O caminho mais curto e o preferido é `bash hostgator-setup-kit/update.sh --to vX.Y.Z --force`:
+> ele puxa a tag, faz backup, grava as sete imagens e confere o health — o `--force`
+> é o que autoriza descer de versão (sem ele, o script recusa ir para trás).
+
+### 5.3 Provar que voltou
+
+```bash
+# a) a versão que responde é a que você pediu
+curl -fsS https://<DOMAIN>/api/v1/health
+#    → {"status":"healthy","version":"2.0.16",...}
+
+# b) o domínio ainda roteia (404 = labels perdidas)
+curl -s -o /dev/null -w "%{http_code}\n" https://<DOMAIN>/
+#    → 307
+
+# c) nada unhealthy, nada reiniciando
+bash hostgator-setup-kit/saude.sh
+```
+
+### 5.4 O limite do rollback: banco
+
+**Rollback de imagem não desfaz migration.** O `update.sh` aplica
+`supabase/baseline.sql` (append-only e idempotente) *antes* de subir a versão
+nova, e não existe "down". Na prática:
+
+| o que a versão nova fez | rollback de imagem basta? |
+|---|---|
+| só código (a maioria) | sim |
+| coluna/tabela nova, nada removido | sim — a versão antiga ignora o que não conhece |
+| coluna removida/renomeada, dado reescrito | **não** — `bash hostgator-setup-kit/restore.sh` com o dump que o `update.sh` fez antes |
+
+Por isso o `update.sh` faz backup antes e aborta se o backup falhar. Rodou com
+`--skip-backup`, não há dump *desta* atualização — o restore cai no último backup
+que existir. Em produção isso não é hipótese: o `backup.sh` só roda dentro do
+`update.sh`, então "o último backup" pode ser de dias antes. Ver
+[`operacao-vps.md`](operacao-vps.md).
+
+### 5.5 O que NÃO é rollback
+
+- `docker compose down && up` — derruba o site e sobe a **mesma** versão.
+- `APP_IMAGE=...` no shell — o compose lê o `.env`; a variável vale só para aquele
+  comando e o próximo `up -d` a desfaz.
+- Reverter a `main` no GitHub — não muda a imagem que a VPS já baixou.
+- Editar o `compose` à mão — a versão publicada já traz o que ela precisa.
