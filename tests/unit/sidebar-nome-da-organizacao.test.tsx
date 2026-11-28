@@ -34,7 +34,6 @@ vi.mock("@/components/connections/ConnectionHealthDot", () => ({
 vi.mock("@/components/shell/VersionFooter", () => ({ VersionFooter: () => null }));
 // O rodapé republicado usa react-query (conversation counts) e este teste olha
 // a MARCA, não a fila — dentro do partial do QueryClient, não há provider.
-vi.mock("@/components/shell/SidebarNotice", () => ({ SidebarNotice: () => null }));
 
 /**
  * A marca da INSTALAÇÃO, como o SERVIDOR a entrega.

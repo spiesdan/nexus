@@ -269,7 +269,7 @@ describe("os elos que somem sem barulho", () => {
     );
   });
 
-  it("a faixa usa a MESMA lista de estados que o aviso", () => {
+  it("o aviso chega à Central, e é a MESMA lista de estados", () => {
     // Duas listas divergem com o tempo, e uma faixa que não aparece para um
     // estado que a Central considera grave ensina que a tela está tranquila
     // quando não está.
@@ -282,9 +282,18 @@ describe("os elos que somem sem barulho", () => {
     // espera por ela é o `await Promise.all([...])` — provar aqui `await ` na
     // frente da chamada seria travar a FORMA serial que o layout deixou de ter.
     // O que importa é a tela chamar o seam, e é o que o regex abaixo prende.
+    //
+    // A FAIXA DO TOPO SAIU (decisão do dono, 26/11/2026): "deixe apenas na
+    // central de avisos". O que este caso passa a prender é o caminho que
+    // garante que o aviso NÃO morre junto — a conexão caída vira item de
+    // `agent_inbox_items`, que é exatamente a fonte da Central (o sino).
+    const seam = readFileSync("lib/channels/health.ts", "utf8");
+    expect(seam, "o aviso precisa entrar na fonte da Central").toMatch(
+      /from\("agent_inbox_items"\)\s*\n?\s*\.insert/,
+    );
+    const centro = readFileSync("components/shell/NotificationCenter.tsx", "utf8");
+    expect(centro, "a Central precisa ler a mesma fonte").toMatch(/useAgentInbox/);
     const layout = readFileSync("app/app/layout.tsx", "utf8");
-    expect(layout).toMatch(/listarConexoesCaidas\(/);
-    expect(layout).toMatch(/<ConexaoCaidaBanner/);
     expect(layout, "tela montando o select de canais à mão").not.toMatch(
       /from\(\s*["'`]channel_sessions/,
     );
