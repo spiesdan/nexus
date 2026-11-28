@@ -6,6 +6,8 @@ version: 0.1
 date: 2026-04-28
 ---
 
+> **Plano de abril/2026, não fonte do produto.** Rotas vivas: [`lib/navigation/registry.ts`](../../lib/navigation/registry.ts); visual: [`DESIGN.md`](../../../DESIGN.md) + [`app/globals.css`](../../../app/globals.css); catálogo: [`components/nexus-ui/`](../../../components/nexus-ui). Este documento descreve a intenção de 2026-04-28 e não deve ser usado para "corrigir" o código.
+
 # 06 — Empty States & Errors
 
 > Catálogo padronizado em PT-BR. Toda tela com estado `empty | error | no-permission | loading-failed` deve usar uma destas composições. Ícones do Phosphor Icons (consistência com design-system base).

@@ -6,6 +6,10 @@ version: 0.1
 date: 2026-04-28
 ---
 
+> **Plano de abril/2026, não fonte do produto.** Rotas vivas: [`lib/navigation/registry.ts`](../../lib/navigation/registry.ts); visual: [`DESIGN.md`](../../../DESIGN.md) + [`app/globals.css`](../../../app/globals.css); catálogo: [`components/nexus-ui/`](../../../components/nexus-ui). Este documento descreve a intenção de 2026-04-28 e não deve ser usado para "corrigir" o código.
+
+> O mapa abaixo é o **planejado** em abril/2026, não o mapa atual: o registro vivo é `lib/navigation/registry.ts`.
+
 # 01 — Sitemap
 
 > Árvore canônica de rotas do Nexus. Toda tela construída deve aparecer aqui. Persona, auth e prioridade por rota; layouts pais explícitos. Convenção Next.js 14 App Router.

@@ -129,3 +129,21 @@ describe("nenhum capítulo aponta a maquete como fonte do produto", () => {
     ).toBe(false);
   });
 });
+
+describe("o screen-flow é plano, não o mapa vivo", () => {
+  const FLOW = path.join(PASTA, "screen-flow");
+  const README = fs.readFileSync(path.join(FLOW, "README.md"), "utf8");
+
+  it("se declara plano e aponta o registro vivo de rotas", () => {
+    expect(README).toMatch(/Plano de abril\/2026/);
+    expect(README).toContain("lib/navigation/registry.ts");
+    expect(README.toLowerCase()).not.toContain("árvore canônica");
+  });
+
+  it.each(
+    fs.readdirSync(FLOW).filter((n) => n.endsWith(".md") && n !== "README.md"),
+  )("%s carrega a faixa de plano", (arquivo) => {
+    const texto = fs.readFileSync(path.join(FLOW, arquivo), "utf8");
+    expect(texto.split("\n").slice(0, 14).join("\n")).toMatch(/Plano de abril\/2026/);
+  });
+});

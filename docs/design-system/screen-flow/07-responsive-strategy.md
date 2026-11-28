@@ -6,6 +6,8 @@ version: 0.1
 date: 2026-04-28
 ---
 
+> **Plano de abril/2026, não fonte do produto.** Rotas vivas: [`lib/navigation/registry.ts`](../../lib/navigation/registry.ts); visual: [`DESIGN.md`](../../../DESIGN.md) + [`app/globals.css`](../../../app/globals.css); catálogo: [`components/nexus-ui/`](../../../components/nexus-ui). Este documento descreve a intenção de 2026-04-28 e não deve ser usado para "corrigir" o código.
+
 # 07 — Responsive Strategy
 
 > Como cada superfície responde a cada breakpoint. **Desktop ≥1280px é o foco MVP** (atendente passa o dia em laptop). Mobile não é foco mas degrada graciosamente para o atendente em deslocamento.

@@ -6,6 +6,8 @@ version: 0.1
 date: 2026-04-28
 ---
 
+> **Plano de abril/2026, não fonte do produto.** Rotas vivas: [`lib/navigation/registry.ts`](../../lib/navigation/registry.ts); visual: [`DESIGN.md`](../../../DESIGN.md) + [`app/globals.css`](../../../app/globals.css); catálogo: [`components/nexus-ui/`](../../../components/nexus-ui). Este documento descreve a intenção de 2026-04-28 e não deve ser usado para "corrigir" o código.
+
 # 00 — Personas (lente de UX)
 
 > Refresh sintético das 5 personas do PRD-Mestre §3, focado em decisões de produto: quem está na tela, o que quer fazer, o que dói, e como medimos sucesso.
