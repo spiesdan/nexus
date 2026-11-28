@@ -12,6 +12,7 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Postgres%2BAuth%2BStorage-3ecf8e?logo=supabase)](https://supabase.com)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-one%20command-orange)](hostgator-setup-kit/)
 [![CI](https://github.com/spiesdan/nexus/actions/workflows/ci.yml/badge.svg)](https://github.com/spiesdan/nexus/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/spiesdan/nexus?sort=semver)](https://github.com/spiesdan/nexus/releases/latest)
 
 [**⚡ Install**](#-install-on-your-vps-the-main-path) · [**🔄 Update**](#-updating) · [**🧭 Vision**](VISION.md) · [**🏗️ Architecture**](ARCHITECTURE.md) · [**🤝 Contributing**](CONTRIBUTING.md) · [**🗺️ Roadmap**](#%EF%B8%8F-roadmap)
 
@@ -19,10 +20,21 @@
 
 ---
 
+## In 30 seconds
+
+**What it is:** a CRM + AI agents for WhatsApp, running on your own infrastructure.
+**License:** MIT for the code; the name and logos are not licensed.
+**What you pay for:** only the infrastructure you use — a Docker VPS (2 vCPU / 4 GB), a domain, a Supabase database (free cloud or self-hosted), AI provider usage and **WAHA Plus** (a vendor license; WAHA Core does not support multi-tenant). Nexus itself has no subscription fee.
+**What you need:** an AI key (OpenRouter, Anthropic or OpenAI) and a WhatsApp number.
+**Install:** one command; update from the UI or with `update.sh`, with a backup first.
+**What you do not get:** an SLA or guaranteed support; backup, TLS and VPS operations are yours.
+
+> The **Billing** screen exists so whoever operates the installation can charge their own clients (optional; requires Stripe). It is not a Nexus subscription.
+
 > ### ☁️ Run this CRM in production with one command
 >
 > Nexus is developed in **partnership with HostGator**: the [`hostgator-setup-kit/`](hostgator-setup-kit/)
-> installs the full CRM (app + WhatsApp + database) on a VPS with a single command, and the
+> installs the CRM (app + WhatsApp) on a VPS and applies the schema to your Supabase with a single command; the
 > [production runbook](docs/runbooks/waha-hostgator.md) assumes that environment.
 >
 > **[👉 Get the HostGator VPS with the partnership discount](https://www.hostgator.com.br/52708-141-3-52.html)** —
@@ -80,7 +92,7 @@ prebuilt. If Docker is missing, the installer asks and installs it for you.
 |---|---|
 | **VPS with Docker** | [HostGator](https://www.hostgator.com.br/52708-141-3-52.html) (partnership) — or any VPS with Docker. 4 GB RAM recommended |
 | **Domain** | An **A** record pointing to your VPS IP (e.g. `crm.yourcompany.com`) |
-| **Database** | Free account at [supabase.com](https://supabase.com) — 3 keys + the **Session pooler** connection string |
+| **Database** | [Supabase](https://supabase.com) — free cloud account or self-hosted instance; 3 keys + the **Session pooler** connection string |
 | **AI** | An **OpenRouter**, **Anthropic** or **OpenAI** key — the installer asks which one you want |
 | **WhatsApp** | Your number, connected via QR code during onboarding (or Meta's official channel) |
 
@@ -163,7 +175,7 @@ immediately; (2) **backs up the database before touching anything**; (3) pulls t
 (it repairs data left inconsistent by older versions); (5) pulls the new app image; (6) checks
 health at the end.
 
-**The target is the latest published release** (`v1.2.3`), not the tip of `main` — updating
+**The target is the latest published release** (see [Releases](https://github.com/spiesdan/nexus/releases/latest)), not the tip of `main` — updating
 always lands on a tagged version described in [`CHANGELOG.md`](CHANGELOG.md), never on an
 untested commit. It **refuses** to go back to a version older than the installed one (that would
 turn off things you already have); `--force` exists for that, deliberately.
@@ -234,7 +246,7 @@ Under the hood, every event becomes a row in `event_log` — no database trigger
 | **AI Agent** | **Agents** · **Follow-ups** · **Routers** · **Providers** and **Credentials** · **Knowledge** (RAG) · **Memory** · **Skills** · **Cases** · **Alerts** · **Proposals** · **Runs** · **Usage & budget** |
 | **Channels** | **Connections** (QR or Meta's official channel, with health, reconnect and templates) · **Nuvemshop** · **Webhooks** |
 | **Analytics** | **Performance** (funnel and per-agent metrics) · **AI Evolution** · **Audit Log** |
-| **Organization** | **Team** · **Support distribution** · **Organization** · **LGPD** · **API Tokens** · **Security** (MFA, recovery codes, sessions) · Profile, Notifications, Billing |
+| **Organization** | **Team** · **Support distribution** · **Organization** · **LGPD** · **API Tokens** · **Security** (MFA, recovery codes, sessions) · Profile, Notifications, Billing (the operator charging their own clients; optional, requires Stripe) |
 
 Every screen has a door in the navigation — CI fails a screen that exists but can only be reached by typing its URL.
 
@@ -250,7 +262,7 @@ Every screen has a door in the navigation — CI fails a screen that exists but 
 | **Auth** | Supabase Auth via `@supabase/ssr` | SameSite=Strict, HttpOnly cookies |
 | **Realtime** | Supabase Realtime | postgres_changes + broadcast |
 | **Storage** | Supabase Storage (signed URLs) | Private `whatsapp-media` bucket |
-| **WhatsApp** | WAHA Plus (NOWEB engine) + Meta Cloud API | QR to start fast; official channel to scale |
+| **WhatsApp** | WAHA Plus (NOWEB engine; vendor license) + Meta Cloud API | QR to start fast; official channel to scale |
 | **Queues** | `event_log` table + workers (cron) | A database trigger never makes HTTP calls |
 | **Rate limit** | Upstash Redis (sliding window) | Serverless, free tier is enough |
 | **AI** | Vercel AI SDK v7 — OpenRouter, Anthropic, OpenAI and Google | The installer asks which; switch later from the screen |
@@ -304,23 +316,24 @@ pnpm test:db       # ephemeral Postgres + baseline install/update + invariants
 pnpm test:e2e      # Playwright (requires dev server)
 ```
 
-**These checks are required** to merge into `main`. This list has already said "four" and then "five" — **measure, don't trust it**:
+**These are the required checks** to merge into `main` — **six** today. The list ages; **measure it at the source**:
 
 ```bash
 gh api repos/spiesdan/nexus/branches/main/protection \
   --jq '.required_status_checks.contexts|join(", ")'
-# on 2026-08-14: verify, build-and-size, invariants, e2e, imagens-ok
+# on 2026-11-27: verify, invariants, e2e, build-and-size, imagens-ok, fragmento
 ```
-
 
 | Check | What it does |
 |---|---|
 | `verify` | typecheck + lint + `lint:channels` + `test:unit` + `test:shell` |
-| `invariants` | boots a clean Postgres, applies `baseline.sql` in **install** mode (`ON_ERROR_STOP=1`) and then in **update** mode (proving idempotency), and runs **618 invariants across 98 files** — RBAC, assignment, scoping, routing, follow-up, webhooks and automations |
+| `invariants` | boots a clean Postgres, applies `baseline.sql` in **install** mode (`ON_ERROR_STOP=1`) and then in **update** mode (proving idempotency), and runs the invariants — RBAC, assignment, scoping, routing, follow-up, webhooks and automations |
 | `build-and-size` | `pnpm build` on Node 22 |
-| `e2e` | boots a local Supabase, applies `baseline.sql` and runs **44 of the 45** Playwright specs through the frontend |
+| `e2e` | boots a local Supabase, applies `baseline.sql` and runs the event suite: **smoke** on PRs, **critical** on `main` pushes, **full** nightly. Disk has **113 specs**; **two** are outside CI (`vps-fresh-onboarding` and `inbox-tempo-real`, reasons in `FORA_DO_CI`) |
+| `imagens-ok` | fails when any of the three Docker images (`app`, `worker`, `scheduler`) does not build — that is what the self-hoster installs |
+| `fragmento` | a PR changing `app/`, `lib/`, `workers/`, `components/`, `supabase/` or `scripts/` must add a `.changes/` fragment; docs/CI are exempt. The `sem-fragmento` label (rare, with a reason) is the escape hatch |
 
-The only spec outside `e2e` is `vps-fresh-onboarding` — it needs a real WAHA + Redis + Resend + Nuvemshop. It is the **P0** of our visual-QA doctrine, so a green `e2e` does **not** prove the fresh-install journey; that one is proven on a VPS.
+A green `e2e` on a PR proves the **smoke**, not the whole suite. The two specs outside CI are the **P0** of the visual-QA doctrine — green `e2e` does **not** prove the fresh-install journey; that one is proven on a VPS.
 
 Among the invariants is the **RLS isolation test**: it creates 2 organizations, simulates JWT claims through the same `auth.uid()` / `fn_user_org_ids()` path production policies use, and proves a user of org A sees **zero rows** of org B in `conversations`, `messages`, `contacts` and `crm_leads`. A control case first proves org B's rows actually exist — without it, the test would pass against an empty table.
 
@@ -391,7 +404,7 @@ For **security vulnerabilities**, **do NOT open a public issue** — use [privat
 - **AI provider choice** — OpenRouter, Anthropic or OpenAI, decided at install time and switchable per part of the system from the screen.
 - **Living follow-up** — reviving cold conversations with adaptive timing, per-stage and per-case triggers, round-robin queue, and the Radar of what risks dying unanswered.
 - **Privacy (LGPD)** — export and redact via workers, cascading anonymization, audited consent.
-- **Self-host** — `hostgator-setup-kit` (app + WhatsApp + database with one command), self-healing `baseline.sql`, **updating from the screen** with automatic backup, production runbook.
+- **Self-host** — `hostgator-setup-kit` (app + WhatsApp on the VPS; schema in your Supabase, in one command), self-healing `baseline.sql`, **updating from the screen** with automatic backup, production runbook.
 - **Webhooks & automation** — capture sources + WHEN/IF/THEN rules + triggers for external systems.
 - **Support governance** — server-side RBAC across the API, audited assignment/transfer (AI as a first-class assignee), per-role visibility (RLS) + per-agent metrics, automatic routing with queue and management panel, and a governance contract for external AI agents ([`docs/specs/14`](docs/specs/14-contrato-governanca-agentes-externos.md)).
 - **Visible operation** — anti-ban hold reasons translated in the conversation, a notice center with severities, stuck-message alerts, send-protection controls (window/pace/cap), declared agent capabilities and flywheel proposals applicable as a new version (human-gated).
@@ -407,7 +420,7 @@ For **security vulnerabilities**, **do NOT open a public issue** — use [privat
 
 ## 💬 Community
 
-- **Discussions:** [GitHub Discussions](https://github.com/spiesdan/nexus/discussions)
+- **Questions & ideas:** open an [issue](https://github.com/spiesdan/nexus/issues/new/choose) with the `question` label — Discussions is disabled in this repository.
 - **Issues:** [GitHub Issues](https://github.com/spiesdan/nexus/issues)
 - **Instagram:** [@melgarafael](https://www.instagram.com/melgarafael)
 - **YouTube:** [youtube.com/@melgarafael](https://www.youtube.com/@melgarafael)
